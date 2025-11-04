@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Contract {{ contract.pk }}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        @page {
+            size: "A4";
+            margin: 1.0cm 1.0cm 1.0cm 1.0cm;
+        }
+
+        .logo {
+            width: 170px;
+            margin-bottom: 10px;
+            float: left;
+        }
+
+        body {
+            width: 100% !important;
+            height: 100%;
+            background: #fff;
+            color: black;
+            font-size: 13px;
+            font-family: 'Roboto', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -webkit-text-size-adjust: none;
+        }
+        .text-justify {
+            text-align: justify;
+        }
+
+
+    </style>
+</head>
+<body>
+<div class="container">
+
+    {% if logo_url %}
+        <img src="{{ logo_url }}" class="logo" />
+    {% endif %}
+
+    <!-- Title -->
+    <div class="row">
+        <div class="col-12 text-center mb-4">
+            <h2 class="fw-bold">CONTRACT PAY SHEET - {{ contract.type | upper }}</h2>
+        </div>
+    </div>
+
+    <!-- Contract Details -->
+    <div class="row mb-3">
+        <!-- Left Column -->
+        <div class="col-6">
+            <strong>BUILDERS:</strong> {{ contract.builder.name }} <br/>
+            <strong>JOB:</strong> {{ contract.job.name }} <br/>
+            <strong>HOUSE MODEL:</strong> {{ contract.house_model.name }} <br/>
+            <strong>ADDRESS:</strong> {{ contract.address }} <br/>
+            <strong>LOT:</strong> {{ contract.lot }} <br/>
+            <strong>SQFT:</strong> {{ contract.sqft }} <br/>
+        </div>
+        <!-- Right Column -->
+        <div class="col-6">
+            <strong>DATE CREATED:</strong> {{ contract.date_created |date:"F j, Y" }} <br/>
+            <strong>CONTRACT ID:</strong> {{ contract.id }} <br/>
+            {% if contract.comment %}
+                <div class="p-1 bg-info bg-opacity-10 border border-info">
+                    <strong>ADDITIONAL INFO:</strong>
+                    <p class="mb-0">{{ contract.comment }}</p>
+                </div>
+            {% endif %}
+            <strong>JOB PRICE: </strong> ${{ contract.job_price }} <br/>
+            <strong>TRAVEL PRICE: </strong>$ {{ contract.travel_price }} <br/>
+        </div>
+    </div>
+
+    <!-- Options -->
+    <div class="row mb-4">
+        <div class="col-12 text-center fs-4">
+            OPTIONS {{ contract.type | upper }}
+        </div>
+    </div>
+
+    <!-- Options Table (Two Columns) -->
+    <div class="row mb-4 justify-content-evenly" style="font-size: 10px">
+        <!-- Left Column -->
+        <div class="col-5">
+            <table class="table table-sm">
+                <thead>
+                <tr>
+                    <th>QTY</th>
+                    <th class="text-start">OPTION</th>
+                    <th class="text-end">AMOUNT</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for detail in left_details %}
+                    {% if contract.type == "Trim" and detail.cdtrim > 0 %}
+                        <tr>
+                            <td>{{ detail.cdtrim_qty }}</td>
+                            <td class="text-start">{{ detail.cdname }}</td>
+                            <td class="text-end">$ {{ detail.cdtrim }}</td>
+                        </tr>
+                    {% elif contract.type == "Rough" and detail.cdrough > 0 %}
+                        <tr>
+                            <td>{{ detail.cdrough_qty }}</td>
+                            <td class="text-start">{{ detail.cdname }}</td>
+                            <td class="text-end">$ {{ detail.cdrough }}</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Right Column -->
+        <div class="col-5">
+            <table class="table table-sm">
+                <thead>
+                <tr>
+                    <th>QTY</th>
+                    <th class="text-start">OPTION</th>
+                    <th class="text-end">AMOUNT</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for detail in right_details %}
+                    {% if contract.type == "Trim" and detail.cdtrim > 0 %}
+                        <tr>
+                            <td>{{ detail.cdtrim_qty }}</td>
+                            <td class="text-start">{{ detail.cdname }}</td>
+                            <td class="text-end">$ {{ detail.cdtrim }}</td>
+                        </tr>
+                    {% elif contract.type == "Rough" and detail.cdrough > 0 %}
+                        <tr>
+                            <td>{{ detail.cdrough_qty }}</td>
+                            <td class="text-start">{{ detail.cdname }}</td>
+                            <td class="text-end">$ {{ detail.cdrough }}</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Totals -->
+    <div class="row mb-2">
+        <div class="col-12 mb-2">
+            <strong>LIGHTING CIRCUITS:</strong> {{ lighting_circuits }}
+            <strong class="ms-3">OPTIONAL PAY: $</strong> {{ contract.total_options }}
+        </div>
+        <div class="col-12 text-end" style="font-size: 13px">
+            <span class="fw-bold">GRAND TOTAL:</span> $ {{ contract.total }} + ____________ = ____________
+        </div>
+    </div>
+    <!-- Sexto Row -->
+    <div class="row mb-3" style="font-size: 9px">
+        <div class="col-12">
+            <p class="fst-italic mb-1">Responsabilidades del Contratista</p>
+
+            <p class="text-justify mx-3 mb-1">El contratista es responsable de completar el
+                trabajo de
+                electricidad asignado al 100%. Por lo tanto, debe
+                asegurar que disponga de todo el material necesario y revisar todo el trabajo realizado para
+                entregar la
+                casa con un "Hot Check". Además, es responsable de cualquier vehículo que se le haya otorgado, así
+                como de
+                su propia seguridad mientras cumple con su deber de realizar el trabajo asignado por Division16
+                LLC.</p>
+
+            <p class="text-justify mx-3 mb-2">El contratista deberá tomar todas las medidas
+                necesarias
+                para garantizar que el trabajo se realice de manera
+                segura y conforme a los estándares de calidad requeridos. Cualquier incumplimiento en estas
+                responsabilidades será considerado como una violación de los términos del contrato y puede resultar
+                en
+                sanciones correspondientes.</p>
+
+            <p class="fst-italic mb-1">Contractor Responsibilities</p>
+
+            <p class="text-justify mx-3 mb-1">The contractor is responsible for completing the
+                assigned electrical work 100%. Therefore, they must ensure
+                that all necessary materials are available and review all completed work to deliver the house with a
+                "Hot
+                Check". Additionally, the contractor is responsible for any vehicle that has been provided to them,
+                as well as their own safety while performing the duties assigned by Division16 LLC.</p>
+
+            <p class="text-justify mx-3 mb-1">The contractor must take all necessary measures to
+                ensure that the work is carried out safely and in
+                accordance with the required quality standards. Any failure to meet these responsibilities will be
+                considered a breach of contract and may result in appropriate penalties.</p>
+        </div>
+    </div>
+    <div class="row mt-1" style="font-size: 11px">
+        <div class="col-6 fst-italic mb-0">
+            CREW LEADER: _________________________
+            <span class="ms-1">DATE: ___________</span>
+        </div>
+        <div class="col-6 fst-italic mb-0 text-end ">
+            SUPERVISOR: __________________________
+            <span class="ms-1">DATE: ___________</span>
+        </div>
+    </div>
+</div>
+</body>
+</html>

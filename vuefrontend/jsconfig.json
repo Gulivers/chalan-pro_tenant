@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"],
+      "@assets/*": ["assets/*"],
+      "@assets/css/*": ["assets/css/*"],
+      "@assets/img/*": ["assets/img/*"],
+      "@assets/scss/*": ["assets/scss/*"],
+      "@auth/*": ["auth/*"],
+      "@components/*": ["components/*"],
+      "@contracts/*": ["components/contracts/*"],
+      "@buttons/*": ["components/buttons/*"], // Oliver Hernandez
+      "@houses/*": ["components/houses/*"],
+      "@layout/*": ["components/layout/*"],
+      "@schedule/*": ["components/schedule/*"],
+      "@views/*": ["views/*"],
+      "@helpers/*": ["helpers/*"],
+      "@mixins/*": ["mixins/*"],
+      "@router/*": ["router/*"],
+      "@store/*": ["store/*"],
+      "@stores/*": ["stores/*"],
+      "@utils/*": ["utils/*"],
+      "@types/*": ["types/*"],
+      "@transactions/*": ["components/transactions/*"],
+      "@inventory/*": ["components/inventory/*"]
+    }
+  },
+  "include": ["src"]
+}

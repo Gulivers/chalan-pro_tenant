@@ -1,0 +1,198 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Schedule Report</title>
+  <style>
+    @page {
+    size: A4 landscape;
+    margin: 1.0cm;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 14px; /* Aumentado */
+    margin: 0;
+    padding: 0;
+    color: #111; /* Más contraste */
+    font-weight: bold;
+  }
+
+  .logo {
+    width: 200px;
+    margin-bottom: 10px;
+    float: left;
+  }
+
+  .header-title {
+    text-align: center;
+    font-size: 26px; /* Aumentado */
+    font-weight: bold;
+    margin-top: 10px;
+    margin-bottom: 35px;
+    clear: both;
+    color: #000;
+    border-bottom: 2px solid #444;
+    padding-bottom: 8px;
+  }
+
+  .category-block {
+    page-break-before: always;
+  }
+
+  .category-title {
+    font-size: 20px;
+    font-weight: bold;
+    background-color: #dcdcdc;
+    padding: 10px;
+    margin: 0;
+    text-align: left;
+    color: #000;
+    border-bottom: 2px solid #555;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    table-layout: fixed;
+  }
+
+  th, td {
+    border: 1px solid #444; /* Más oscuro */
+    padding: 8px;
+    text-align: center;
+    font-size: 13px; /* Aumentado */
+    width: 100px;
+    height: 90px;
+    word-wrap: break-word;
+  }
+
+  th {
+    background-color: #e0e0e0;
+    font-size: 14px;
+    color: #000;
+    border-bottom: 2px solid #555;
+  }
+
+  td.crew {
+    text-align: left;
+    font-weight: bold;
+    background-color: #f3f3f3;
+    width: 130px;
+    font-size: 13px;
+  }
+
+  .no-events {
+    color: #bbb;
+    font-style: italic;
+  }
+
+  .event-entry {
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: #000;
+  }
+
+  .event-entry.absence {
+    color: #000;
+    font-weight: bold;
+    background-color: #ffffff;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
+  .event-entry.finishing {
+    color: #6c757d;
+    font-style: italic;
+  }
+
+  .ext-service {
+    color: red;
+    font-weight: bold;
+    margin-left: 4px;
+  }
+
+  .extended {
+    color: #000;
+    font-weight: bold;
+    background-color: #ffffff;
+    border-radius: 4px;
+    padding: 2px 4px;
+  }
+
+  .finishing-up {
+    color: #666;
+    font-style: italic;
+  }
+</style>
+
+</head>
+<body> 
+
+  {% if logo_url %}
+    <img src="{{ logo_url }}" class="logo" />
+  {% endif %}
+
+  <div class="header-title">Schedule Report: {{ date_range }}</div>
+
+  {% with 0 as counter %}
+    {% for category, crews in categorized_events.items %}
+      {% if category != '5️⃣ Slabs' %}
+        {% if counter > 0 %}
+          <div style="page-break-before: always;"></div>
+        {% endif %}
+        <div class="category-title">{{ category }}</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Crew</th>
+              {% for day in days %}
+                <th>{{ day|date:"l, M d" }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for crew_name, events_by_day in crews.items %}
+              <tr>
+                <td class="crew">{{ crew_name }}</td>
+                {% for day in days %}
+                  <td>
+                    {% with events=events_by_day|get_item:day %}
+                      {% if events %}
+                        {% for event in events %}
+                          {% if "🛑 Absence" in event|stringformat:"s" %}
+                            <div class="event-entry absence">{{ event }}</div>
+                          {% elif event|stringformat:"s" == "Finishing up work" %}
+                            <div class="event-entry finishing">🔧 Finishing up work</div>
+                          {% else %}
+                            <div class="event-entry{% if event.extended_service %} extended{% endif %}">
+                              {{ event.title }}
+                              {% if event.extended_service %}
+                                <span class="ext-service">⚡ Ext. Service</span>
+                              {% endif %}
+                              {% if event.description %}
+                                – {{ event.description }}
+                              {% endif %}
+                            </div>
+                          {% endif %}
+                        {% endfor %}
+                      {% else %}
+                        <span class="no-events">–</span>
+                      {% endif %}
+                    {% endwith %}
+                  </td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% with counter|add:"1" as counter %}
+        {% endwith %}
+      {% endif %}
+    {% endfor %}
+  {% endwith %}
+
+</body>
+</html>

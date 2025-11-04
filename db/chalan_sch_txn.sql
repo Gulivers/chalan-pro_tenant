@@ -1,0 +1,5750 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: localhost
+-- Generation Time: Oct 19, 2025 at 06:55 AM
+-- Server version: 8.0.36
+-- PHP Version: 7.4.33
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `chalan_sch_txn`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appcore_manualcategory`
+--
+
+CREATE TABLE `appcore_manualcategory` (
+  `id` bigint NOT NULL,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `description` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appcore_manualcategory`
+--
+
+INSERT INTO `appcore_manualcategory` (`id`, `name`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'Programmer\'s Manual', 'Programmer\'s Manual', '2025-07-10 23:37:32.330736', '2025-07-10 23:37:32.330736'),
+(2, 'User Manual', 'User Manual', '2025-07-10 23:37:53.097945', '2025-07-10 23:37:53.097945');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appcore_manualentry`
+--
+
+CREATE TABLE `appcore_manualentry` (
+  `id` bigint NOT NULL,
+  `title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `slug` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `module` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `summary` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `category_id` bigint NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appcore_manualentry`
+--
+
+INSERT INTO `appcore_manualentry` (`id`, `title`, `slug`, `module`, `summary`, `content`, `is_active`, `created_at`, `updated_at`, `category_id`) VALUES
+(1, 'Lógica de Negocio para Clientes y Proveedores en Chalan-Pro', 'logica-de-negocio-para-clientes-y-proveedores-en-c', 'Transacciones', 'Chalan-Pro maneja a los clientes y proveedores mediante el modelo de res.partner, permitiendo gestionar tanto la información de contacto como sus relaciones comerciales. La lógica de negocio se organiza alrededor de los módulos de Ventas y Compras, que se integran con otros módulos como Inventario y Contabilidad para garantizar una gestión fluida de las operaciones. Las unidades de medida, condiciones de pago, precios y el historial de transacciones están disponibles para ambos tipos de entidades, lo que facilita una administración eficiente de las relaciones comerciales tanto con clientes como con proveedores.', 'Chalan-Pro utiliza un modelo de datos orientado a objetos que organiza las entidades principales (como clientes y proveedores) dentro de diferentes modelos de negocio. A continuación, te explico los modelos de datos principales involucrados en la gestión de clientes y proveedores:\r\nModelo de Clientes:\r\nEl modelo de datos para clientes está principalmente basado en el modelo de \"res.partner\", que es el modelo genérico de Chalan-Pro para manejar tanto contactos como empresas. Este modelo tiene una serie de campos que pueden indicar si un contacto es un cliente, un proveedor o ambos.\r\nres.partner: Este modelo gestiona la información de los contactos (clientes o proveedores), incluyendo nombres, direcciones, teléfonos, correos electrónicos, y categorías.\r\n\r\n\r\nCampo customer_rank: Este campo indica el estado del cliente. Si tiene un valor mayor que 0, significa que el contacto es un cliente.\r\n\r\n\r\nCampo supplier_rank: Similar al anterior, pero para proveedores. Si el valor es mayor que 0, el contacto es considerado un proveedor.\r\n\r\n\r\nModelo \"sale.order\": El modelo de orden de venta gestiona las transacciones comerciales con los clientes. Este modelo incluye detalles como productos, precios, descuentos, fechas de entrega, condiciones de pago, etc.\r\n\r\n\r\nModelo \"account.invoice\": Las facturas de cliente se gestionan en este modelo. Cada factura se asocia con un cliente (a través del campo partner_id), y contiene detalles como la fecha de la factura, el monto total, los impuestos, y el estado de la factura.\r\n\r\n\r\nModelo de Proveedores:\r\nLos proveedores también se gestionan en el modelo \"res.partner\", al igual que los clientes, pero con un enfoque en el ciclo de compras.\r\nres.partner: Al igual que los clientes, los proveedores se gestionan a través de este modelo.\r\n\r\n\r\nCampo supplier_rank: Este campo indica si el contacto es un proveedor. Si el valor es mayor que 0, es un proveedor.\r\n\r\n\r\nModelo \"purchase.order\": Este modelo se utiliza para gestionar las órdenes de compra realizadas a los proveedores. Aquí se registra toda la información relacionada con la adquisición de productos o servicios, incluyendo precios, cantidades, condiciones de pago y entrega.\r\n\r\n\r\nModelo \"account.invoice\": Las facturas de proveedor se gestionan de manera similar a las de los clientes, pero en este caso se asocian a las compras realizadas al proveedor.\r\n\r\n\r\nRelación entre Clientes y Proveedores:\r\nEn Chalan-Pro, un contacto (persona o empresa) puede ser tanto un cliente como un proveedor al mismo tiempo. La estructura de los modelos es flexible, permitiendo que un mismo contacto se gestione como cliente en el módulo de ventas y proveedor en el módulo de compras, todo bajo un único registro de contacto en el sistema.\r\nEjemplo:\r\nUn contacto puede tener:\r\n\r\n\r\nCliente: Para recibir pedidos de ventas y generar facturas a los clientes.\r\n\r\n\r\nProveedor: Para gestionar órdenes de compra y facturas de proveedor.', 1, '2025-04-06 06:24:34.839934', '2025-04-06 06:24:45.381466', 1),
+(2, 'Cómo validar precios por unidad en Chalan-Pro', 'como-validar-precios-por-unidad-en-chalan-pro', 'Inventory & Transactions', 'Validación de precios por unidad (auditoría validate_unit_prices)\r\n\r\nEste módulo incluye una auditoría offline para verificar que los precios por unidad (ProductPrice) sean proporcionales entre sí cuando se expresan en la unidad de referencia de su categoría de medida. Sirve para detectar errores de carga (p. ej., precio por rollo que no coincide con el precio por pie dentro de una tolerancia razonable).', 'Validación de precios por unidad (auditoría validate_unit_prices)\r\n\r\nEste módulo incluye una auditoría offline para verificar que los precios por unidad (ProductPrice) sean proporcionales entre sí cuando se expresan en la unidad de referencia de su categoría de medida. Sirve para detectar errores de carga (p. ej., precio por rollo que no coincide con el precio por pie dentro de una tolerancia razonable).\r\n\r\nNota: Esta validación no se ejecuta en tiempo real al guardar documentos ni líneas; se corre bajo demanda como management command.\r\n\r\n¿Qué se valida?\r\n\r\nPara cada producto con múltiples ProductPrice activos (distintas unidades y/o price_type):\r\nSe convierte cada precio a precio por unidad de referencia (ej. “precio por 1 FT ref”).\r\nSe elige un baseline (el ProductPrice marcado como is_default=True; si no, el primero encontrado).\r\nSe compara cada precio convertido contra el baseline y se marca inconsistencia si la diferencia relativa supera la tolerancia (por defecto, 2%).\r\n\r\nFórmula clave:\r\n\r\nprecio_por_unidad_referencia = precio / (cantidad_de_referencia_en_1_unidad)\r\n\r\nLa cantidad de referencia se calcula con convert_to_reference_unit(product, unit, 1).\r\n\r\nEjemplo práctico\r\n\r\nProducto: Cable THHN 12 AWG\r\nPrecios activos:\r\n\r\nROLL (1000 ft): 630.00 USD\r\nFT: 0.65 USD\r\nConversión: 1 ROLL = 1000 FT (referencia = FT)\r\nPrecio/ref(Roll) = 630.00 / 1000 = 0.6300 USD/FT\r\nBaseline (por ejemplo, FT=0.6500 USD/FT)\r\nDiferencia = |0.6300 − 0.6500| / 0.6500 = 3.08% → ⚠️ sobrepasa tolerancia 2%\r\n\r\nSalida típica:\r\n⚠️ Cable THHN 12 | Retail | ROLL → precio/ref=0.6300 difiere de baseline=0.6500 por 3.08%\r\n\r\n¿Cómo ejecutar la validación?\r\n\r\npython manage.py validate_unit_prices\r\npython manage.py validate_unit_prices --csv reports/unit_prices_auditoria.csv\r\n\r\nCambiar tolerancia (equivalente a 5%):\r\n\r\npython manage.py validate_unit_prices --tolerance 0.05\r\npython manage.py validate_unit_prices --tolerance 5%\r\npython manage.py validate_unit_prices --per-price-type\r\npython manage.py validate_unit_prices --include-inactive\r\n\r\nInterpretación del reporte\r\n\r\nprecio/ref: precio convertido a la unidad de referencia.\r\nbaseline: precio/ref tomado como referencia (default o primero).\r\n% diferencia: desviación relativa respecto al baseline.\r\nSi supera la tolerancia, puede indicar:\r\nCarga incorrecta del precio.\r\nDiferentes políticas de precio para presentaciones (ej. rollo con descuento por volumen).\r\n\r\nParámetros y tolerancia:\r\n\r\nLa tolerancia por defecto es 2% (TOLERANCE = 0.02) en el comando.\r\nPuedes ajustar el valor si tu negocio permite mayores diferencias entre presentaciones (p. ej., 5% o 10%).\r\n\r\nLimitaciones y notas:\r\n\r\nDescuentos por volumen: si son parte de tu política comercial, es normal que existan diferencias. Ajusta la tolerancia o interpreta los avisos como insights, no como errores.\r\nNo bloquea operación: al ser una auditoría offline, no impide crear/editar ProductPrice ni procesar documentos.\r\nCoherencia de unidades: la auditoría depende de que convert_to_reference_unit esté bien configurado (unidad de referencia por categoría, factores y signo correctos).\r\n\r\nRelación con DocumentLine y Stock:\r\n\r\nEl stock se mantiene en unidad de referencia y los movimientos (InventoryMovement) convierten cantidades al guardar.\r\nLa validación de salidas (stock disponible) se hace en DocumentLine conversión de cantidades, no de precios.\r\nEste comando no valida documentos; valida la coherencia de lista de precios.', 1, '2025-04-06 18:11:35.879728', '2025-09-02 00:43:49.406290', 1),
+(3, 'Unit Conversion Factor Validation', 'unit-conversion-factor-validation', 'Inventory', 'Detects common configuration issues in product units, such as exaggerated conversion factors or duplicated base units, helping you avoid pricing chaos.', 'This smart validation helps you catch two of the most frequent errors when setting up product units in Chalan-Pro:\r\n\r\nDisproportionate Conversion Factors\r\nIf you define that 1 ROLL equals 250 feet, but by mistake you enter 25,000, your price calculations in transactions will go completely off the rails .\r\n\r\n Example:\r\n\r\nProduct: 12/2 Romex\r\n\r\nUnit: FT\r\n\r\nIncorrect Factor Detected: 0.6800 (Expected: 1.0000)\r\n\r\n Duplicated Base Unit\r\nDefining the same unit more than once with a 1.0000 conversion factor can create confusion and inconsistencies in pricing or reporting.\r\n\r\nHow to Run This Validation\r\nYou can validate all unit configurations by making a request to this built-in Chalan-Pro API:\r\n\r\nswift\r\nCopy\r\nEdit\r\nGET /inventory/api/validate-product-units/\r\nThe system will return a JSON list of any problems found, like this:\r\n\r\njson\r\nCopy\r\nEdit\r\n[\r\n  {\r\n    \"product\": \"12/2 Romex\",\r\n    \"unit\": \"FT\",\r\n    \"issue\": \"The conversion factor 0.6800 seems disproportionate. Please review.\"\r\n  }\r\n]\r\nWhy This Matters\r\nThis is more than a validation—it\'s your safeguard against bad data.\r\nNobody wants to accidentally charge $25,000 for a roll of cable, right? hahaha\r\nChalan-Pro helps you catch those issues before they cause trouble.', 1, '2025-04-07 01:01:30.280193', '2025-04-07 01:32:13.611705', 1),
+(4, 'Preventing Duplicate Units per Product', 'preventing-duplicate-units-per-product', 'Inventory', 'Explains why each product can only have one record per unit of measure and how to properly manage unit conversions without duplicates.', '###  Why can\'t I assign the same unit twice to a product?\r\n\r\nIn Chalan-Pro, every unit of measure (UoM) assigned to a product must be **unique**. This means you **cannot register the same unit more than once** for the same product.\r\n\r\nFor example:\r\n\r\n| Product     | Unit | Conversion Factor |\r\n|-------------|------|-------------------|\r\n| 12/2 Romex  | ROLL | 250               |\r\n| 12/2 Romex  | FT   | 1                 |\r\n\r\nThis is valid — but if you try to add another ROLL for 12/2 Romex, the system will raise an error.\r\n\r\n###  Why this restriction exists\r\n\r\nThis design ensures that calculations for inventory movements, sales, and purchases remain consistent and avoid conflicts. Allowing duplicate units would lead to:\r\n\r\n- Ambiguous conversion logic\r\n- Incorrect inventory updates\r\n- Price calculation errors\r\n\r\n###  Best practice\r\n\r\nIf you need to change the conversion factor of a unit already assigned to a product:\r\n\r\n1. **Edit the existing unit** instead of creating a new one.\r\n2. Make sure the `conversion_factor` accurately reflects the number of base units (e.g., FT) in the defined unit (e.g., ROLL).\r\n\r\n###  Validation logic\r\n\r\nThe system will also check that:\r\n\r\n- The conversion factor is **greater than 0**\r\n- The conversion factor is **not excessively high** (like 99999)\r\n- At least one use case is marked: `is_sale` or `is_purchase`\r\n\r\n---\r\n\r\n> Example error message:\r\n>  \"This product already has a unit with this conversion. Edit it instead of duplicating it.\"\r\n\r\nWith this smart validation, Chalan-Pro keeps your unit configurations clean, accurate, and fool-proof.', 1, '2025-04-07 01:28:16.910945', '2025-04-07 01:28:16.910945', 1),
+(5, 'Why the Stock Doesn’t Store Unit of Measure', 'stock-reference-unit', 'Inventory', 'In Chalan-Pro, all stock quantities are tracked using the product’s reference unit. This design simplifies inventory control, reporting, and conversion between sales and inventory units.', '- Content:\r\nIn the Chalan-Pro system, the stock is always stored using the reference unit of each product. That’s why the Stock model does not include a unit of measure field.\r\n\r\nThis decision is intentional and helps keep the inventory engine:\r\n\r\n- Simple\r\n- Accurate\r\n- Scalable\r\n\r\nExample\r\nLet’s say you have a product:\r\n\r\nProduct: 12/2 Romex Cable\r\n\r\nReference Unit: FT (feet)\r\n\r\nSales Unit: ROLL (1 ROLL = 250 FT)\r\n\r\nNow imagine you sell 2 rolls:\r\n\r\n- You sell: 2 ROLL\r\n- Internally converted to: 500 FT\r\n- Stock recorded as: -500 (in FT)\r\n\r\nEven though the sale was in ROLL, the inventory is stored in FT, because that’s the unit used for physical control.\r\n\r\nHow to Know the Unit Used in the Transaction?\r\nCheck the DocumentLine.unit field — this tells you in which unit the product was sold, bought, or transferred.\r\n\r\nMeanwhile, Stock.quantity always refers to the amount in the reference unit.\r\n\r\nBenefits of this Design\r\nFeature	Advantage\r\n\r\n- Simplicity	Avoids confusion with multiple units\r\n- Easy math	Reporting, alerts, and analytics are unified\r\n- Better performance	No need to join with unit data\r\n- Clearer logic	Every product has one main unit for inventory control\r\n\r\nTL;DR\r\nDon’t worry about seeing unit codes in the stock table. Chalan-Pro always speaks reference units when it comes to inventory.', 1, '2025-04-11 01:06:45.462857', '2025-04-11 01:06:45.462857', 1),
+(6, 'Convert Units to Reference Unit', 'convert-units-to-reference-unit', 'Inventory', 'Helper to convert product quantities from any sale or purchase unit to the inventory reference unit.', 'In inventory systems, products may be sold in ROLLS, BOXES, or TUBES, but stored internally in a standard unit like FEET (FT) or PCS.\r\n\r\nThis helper allows you to convert any unit into the product’s reference unit (used in stock tracking, analytics, and reporting).\r\n\r\nUse Cases\r\n- Normalize product quantities for stock display, charts, and PDF exports.\r\n\r\n- Ensure that stock validations (like reorder checks or alerts) are based on the correct unit.\r\n\r\n- Improve frontend UX by dynamically showing conversion values on forms.\r\n\r\n- Power Vue.js forms where users can switch units and see totals adjusted in real time.\r\n\r\nIf you sell 3 ROLLs of Romex cable and each roll equals 250 FT:\r\n\r\nExample:\r\nconvert_to_reference_unit(romex, roll, 3)\r\n# ➜ Returns 750.0\r\n\r\nSo now your stock says:  +750 FT added instead of a confusing +3 ROLLs.', 1, '2025-04-11 01:16:58.284190', '2025-04-11 01:16:58.284190', 1),
+(7, 'Análisis de Comportamiento de un Producto', 'analisis-de-comportamiento-de-un-producto', 'Inventario', 'Descripción de cómo interactúa un producto con unidades de medida, precios y stock en el sistema.', '\n## Análisis de Comportamiento de un Producto\n\n### 1. Relación con Unidades de Medida\n\n- **Unidad por defecto:** Cada producto tiene una unidad de medida principal.\n- **Unidades adicionales:** Se pueden asociar varias unidades a un producto, indicando si son para compra, venta o ambas.\n- **Conversión:** El sistema permite convertir cantidades entre unidades de la misma categoría (ejemplo: metros a centímetros).\n\n### 2. Relación con Precios\n\n- **Precios múltiples:** Un producto puede tener varios precios según el tipo (mayoreo, menudeo, etc.) y la unidad.\n- **Vigencia:** Los precios pueden tener fechas de inicio y fin de validez.\n- **Precio por unidad:** Se pueden definir precios específicos para cada unidad de medida.\n\n### 3. Relación con Inventario\n\n- **Stock por almacén:** El inventario se gestiona por producto y almacén.\n- **Movimientos:** Cada entrada, salida o ajuste de inventario afecta el stock y puede realizarse en cualquier unidad asociada al producto.\n- **Conversión automática:** Las cantidades se convierten a la unidad de referencia para mantener la consistencia.\n\n### 4. Otras Relaciones\n\n- **Categoría y marca:** Los productos pueden clasificarse por categoría y marca para facilitar su gestión.\n\n---\n\n**Resumen:**  \nEl modelo permite una gestión flexible y consistente de productos, unidades, precios y stock, adaptándose a distintos escenarios de compra y venta.\n', 1, '2025-07-10 19:56:39.324829', '2025-07-10 19:56:39.324829', 1),
+(8, 'Gestión de precios y unidades de productos ( Español )', 'productos-precios-unidades', 'Inventario', 'Cómo funciona la relación entre productos, unidades de medida y múltiples precios según distintos tipos de venta en el sistema Chalan-Pro.', '# ? Gestión de precios y unidades de productos\r\n\r\nEn **Chalan-Pro**, un producto puede tener múltiples unidades de medida asociadas y, a su vez, múltiples precios por unidad. Esta flexibilidad permite adaptarse a distintas estrategias comerciales como:\r\n\r\n- ? Ventas al detal o al mayor  \r\n- ?‍♂️ Precios especiales para empleados  \r\n- ? Precios para el counter de ventas  \r\n- ? Promociones por períodos de tiempo  \r\n\r\n---\r\n\r\n## ? Relación entre modelos\r\n\r\n- **Product**: modelo principal del producto.\r\n- **ProductUnit**: indica en qué unidades se puede comprar o vender un producto.\r\n- **ProductPrice**: permite definir precios por unidad y tipo de precio.\r\n\r\n---\r\n\r\n## ? Estructura de `ProductUnit`\r\n\r\nUn producto puede tener varias unidades de medida registradas. Ya no existe una restricción `unique_together` sobre `(product, unit)`, lo cual permite asignar la misma unidad varias veces si es necesario, por ejemplo, para definir diferentes roles (`is_purchase`, `is_sale`).\r\n\r\n```python\r\nclass ProductUnit(models.Model):\r\n    product = ForeignKey(Product)\r\n    unit = ForeignKey(UnitOfMeasure)\r\n    is_purchase = BooleanField()\r\n    is_sale = BooleanField()\r\n\r\n## ? Estructura de `ProductPrice`\r\n\r\n```python\r\nclass ProductPrice(models.Model):\r\n    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name=\"prices\")\r\n    price_type = models.ForeignKey(PriceType, on_delete=models.CASCADE)\r\n    unit = models.ForeignKey(UnitOfMeasure, on_delete=models.CASCADE)\r\n    price = models.DecimalField(max_digits=10, decimal_places=2)\r\n    is_default = models.BooleanField(default=False)\r\n    valid_from = models.DateField(null=True, blank=True)\r\n    valid_until = models.DateField(null=True, blank=True)\r\n    is_active = models.BooleanField(default=True)\r\n\r\nEste modelo usa una restricción unique_together para evitar duplicados exactos en:\r\nunique_together = (\"product\", \"price_type\", \"unit\", \"valid_from\", \"valid_until\")', 1, '2025-07-13 17:55:59.784024', '2025-07-13 17:55:59.784024', 1),
+(9, 'Product Pricing and Unit Management', 'product-pricing-units', 'Inventory', 'How the relationship between products, units of measure, and multiple prices by sales type works in the Chalan-Pro system.', '# ? Product Pricing and Unit Management\r\n\r\nIn **Chalan-Pro**, a product can be associated with multiple units of measure, and each unit can have multiple price entries. This flexibility allows the system to support various business strategies such as:\r\n\r\n- ? Retail and wholesale pricing  \r\n- ?‍♂️ Special employee pricing  \r\n- ? Point-of-sale (counter) pricing  \r\n- ? Promotional pricing by date range  \r\n\r\n---\r\n\r\n## ? Model Relationships\r\n\r\n- **Product**: the main product model.\r\n- **ProductUnit**: defines in which units the product can be bought or sold.\r\n- **ProductPrice**: allows setting prices per unit and price type.\r\n\r\n---\r\n\r\n## ? Structure of `ProductUnit`\r\n\r\nA product can have several registered units of measure. The restriction `unique_together = (product, unit)` **has been removed**, allowing the same unit to be assigned multiple times if needed—for example, to differentiate roles such as `is_purchase` and `is_sale`.\r\n\r\n```python\r\nclass ProductUnit(models.Model):\r\n    product = ForeignKey(Product)\r\n    unit = ForeignKey(UnitOfMeasure)\r\n    is_purchase = BooleanField()\r\n    is_sale = BooleanField()\r\n\r\n## Structure of `ProductPrice`\r\n\r\n```python\r\nclass ProductPrice(models.Model):\r\n    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name=\"prices\")\r\n    price_type = models.ForeignKey(PriceType, on_delete=models.CASCADE)\r\n    unit = models.ForeignKey(UnitOfMeasure, on_delete=models.CASCADE)\r\n    price = models.DecimalField(max_digits=10, decimal_places=2)\r\n    is_default = models.BooleanField(default=False)\r\n    valid_from = models.DateField(null=True, blank=True)\r\n    valid_until = models.DateField(null=True, blank=True)\r\n    is_active = models.BooleanField(default=True)\r\n\r\nThis model uses a unique_together constraint to prevent exact duplicates\r\n\r\nunique_together = (\"product\", \"price_type\", \"unit\", \"valid_from\", \"valid_until\")', 1, '2025-07-13 18:16:07.708757', '2025-07-13 18:16:07.708757', 1),
+(10, 'Patrón global: on_delete=PROTECT + handler 409 + interceptor Axios', 'crud-protect-409-axios-swal', 'Inventario', 'Cómo bloquear borrados de maestros referenciados con on_delete=PROTECT, devolver 409 de forma global en DRF y mostrar un Swal automático desde un interceptor de Axios.', '# Objetivo\r\nEstándar para maestros relacionales: **no eliminar si hay referencias**, devolver **409 Conflict** con un cuerpo JSON consistente y mostrar un **Swal** automáticamente en el frontend. Esto evita 500 y elimina lógica repetida en cada vista.\r\n\r\n---\r\n\r\n## 1) Modelo: proteger integridad con on_delete=PROTECT\r\nEjemplo mínimo (maestro Unidad de medida referenciado por Producto):\r\n```python\r\nclass UnitOfMeasure(models.Model):\r\n    name = models.CharField(max_length=100)\r\n    is_active = models.BooleanField(default=True)\r\n\r\nclass Product(models.Model):\r\n    name = models.CharField(max_length=150)\r\n    unit_default = models.ForeignKey(UnitOfMeasure, on_delete=models.PROTECT, null=True)', 1, '2025-08-21 03:36:14.818560', '2025-08-21 03:36:14.818560', 1),
+(11, 'Patrón CRUD (Chalan-Pro): Formularios, Listas, Rutas y Validaciones', 'patron-crud-chalan-pro', 'Inventario y Transacciones', 'Patrón CRUD unificado: formularios Bootstrap con éxito silencioso + redirección; listas con b-table y acciones; manejo global de errores y unicidad. Aplica a todo el sistema.', '# ?️ Patrón CRUD en el Sistema\r\n\r\nEste patrón aplica a **todos los CRUD** del sistema:\r\n\r\n- **Forms**: Bootstrap puro (sin `bootstrap-vue-next`).  \r\n  ➜ Éxito silencioso + **redirección inmediata** (sin toast/alert de éxito).  \r\n- **Listas**: `bootstrap-vue-next` (`b-table`) para **búsqueda/paginación client-side** y acciones (view/edit/delete).  \r\n- **Auth/Axios**: No setear headers manualmente; la **store** de auth ya inyecta el token.\r\n\r\n---\r\n\r\n## ? Formularios (Bootstrap only)\r\n\r\n### Estado y modos\r\n- `id = route.query.id`  \r\n- `isViewMode = route.query.mode === \'view\'`  \r\n- `isEditMode = !!id && !isViewMode`  \r\n- `submitting = ref(false)`\r\n\r\n### Carga\r\n- **onMounted**: si hay `id` → `GET /api/<resource>/:id/` → `form.value = data`.\r\n\r\n### Envío (handleSubmit)\r\n- **Trim** + validación mínima (requeridos/longitudes).\r\n- **Create**: `POST /api/<resource>/`  \r\n- **Edit**: `PUT /api/<resource>/:id/`\r\n- **Éxito**: **sin** alertas → `router.push({ name: \'<list-route>\' })`\r\n- **Errores**:\r\n  - `400`: mostrar campos y mensajes con **SweetAlert** (agrupar por campo).\r\n  - `403`: **SweetAlert** (Forbidden).\r\n  - Otros: **SweetAlert** genérico.\r\n\r\n### UI (deshabilitar/spinner)\r\n- Deshabilitar todo cuando `isViewMode || submitting`.\r\n- **Save** con spinner:\r\n\r\n```vue\r\n<button class=\\\"btn btn-primary\\\" :disabled=\\\"isViewMode || submitting\\\">\r\n  <span v-if=\\\"submitting\\\" class=\\\"spinner-border spinner-border-sm me-1\\\" role=\\\"status\\\" aria-hidden=\\\"true\\\"></span>\r\n  <i v-else class=\\\"fas fa-save me-1\\\"></i>\r\n  {{ submitting ? \'Saving...\' : \'Save\' }}\r\n</button>', 1, '2025-08-21 03:42:49.417129', '2025-08-21 03:42:49.418132', 1),
+(12, 'Exception Handler Personalizado', 'exception-handler-personalizado', 'Project', 'Ubicación\r\nproject/api/exception_handler.py', 'Tipos de Errores Manejados\r\n\r\n#### ProtectedError\r\n- **Causa**: Intento de eliminar registros en uso\r\n- **Respuesta**: HTTP 409 Conflict\r\n- **Mensaje**: \"This record is in use and cannot be deleted. Inactivate it instead.\"\r\n\r\n#### IntegrityError\r\n- **Causa**: Violaciones de restricciones de BD\r\n- **Respuesta**: HTTP 409 Conflict\r\n- **Mensaje**: Mismo formato que ProtectedError\r\n\r\n## ? Respuesta del API\r\n\r\n```json\r\n{\r\n    \"detail\": \"This record is in use and cannot be deleted. Inactivate it instead.\",\r\n    \"code\": \"in_use\",\r\n    \"examples\": [\"Ejemplo 1\", \"Ejemplo 2\", \"Ejemplo 3\"]\r\n}\r\n```', 1, '2025-08-22 23:53:30.567779', '2025-08-22 23:53:30.567779', 1),
+(13, 'Creating Products with Prices', 'user-manual-creating-products-prices', 'Inventory', 'Complete step-by-step guide for creating products, configuring prices, and performing transactions in the ChalanPro system. Includes practical examples, common problem solutions, and best practices.\r\n\r\n## ? What You Will Learn in This Manual\r\n\r\nThis manual will teach you step-by-step how to create products in the ChalanPro system, configure their prices, and perform successful transactions. Upon completion, you will be able to:\r\n\r\n- ✅ Create new products with complete information\r\n- ✅ Configure prices for different customer types\r\n- ✅ Handle different units of measure (pieces, rolls, gallons, etc.)\r\n- ✅ Perform sales and purchases correctly\r\n- ✅ Solve common problems', '## ? Step 1: Prepare Product Information\r\n\r\n### Before creating a product, you need to have:\r\n\r\n**? Basic Information:**\r\n- **Product name**: Ex: \"THHN Cable 12 AWG Black\"\r\n- **SKU code**: Ex: \"THHN-12-BLK\" (must be unique)\r\n- **Category**: Ex: \"Cables and Wires\", \"Electrical Equipment\"\r\n- **Brand**: Ex: \"SIEMENS\", \"LEVITON\" (optional)\r\n\r\n**? Price Information:**\r\n- **List price**: Base product price\r\n- **Cost price**: What it costs you to buy it\r\n- **Special prices**: For wholesalers, contractors, etc.\r\n\r\n**? Measurement Information:**\r\n- **Primary unit**: Is it sold by piece, by foot, by roll, by gallon?\r\n- **Other units**: Can it also be sold in other presentations?\r\n\r\n---\r\n\r\n## ? Step 2: Create the Product\r\n\r\n### 2.1 Access the Inventory Module\r\n\r\n1. **Log in** to ChalanPro\r\n2. **Navigate** to \"Inventory\" → \"Products\" menu\r\n3. **Click** on \"New Product\"\r\n\r\n### 2.2 Fill in Basic Information\r\n\r\n**Required Fields:**\r\n- **Name**: Descriptive product name\r\n- **SKU**: Unique code (no spaces, use hyphens)\r\n- **Category**: Select from dropdown list\r\n- **Default Unit**: Primary sales unit\r\n\r\n**Optional Fields:**\r\n- **Brand**: If the product has a specific brand\r\n- **Reorder Level**: Minimum quantity before restocking\r\n\r\n### 2.3 Practical Example: THHN Cable\r\n\r\n```\r\nName: THHN Cable 12 AWG Black\r\nSKU: THHN-12-BLK\r\nCategory: Cables and Wires\r\nBrand: SIEMENS\r\nDefault Unit: Foot (FT)\r\nReorder Level: 100\r\n```\r\n\r\n---\r\n\r\n## ? Step 3: Configure Prices\r\n\r\n### 3.1 Available Price Types\r\n\r\nThe system handles different price types:\r\n\r\n| Type | Description | When to use |\r\n|------|-------------|-------------|\r\n| **LIST** | List price | Base reference price |\r\n| **COST** | Cost price | To calculate profits |\r\n| **SALE** | Sale price | Price for general public |\r\n| **WHOLESALE** | Wholesale price | For large buyers |\r\n| **CONTRACTOR** | Contractor price | For specialized contractors |\r\n\r\n### 3.2 Configure Prices by Unit\r\n\r\n**Example: THHN Cable with multiple presentations**\r\n\r\n**Per Foot (primary unit):**\r\n- LIST Price: $1.25 per foot\r\n- COST Price: $0.81 per foot (65% of list price)\r\n- WHOLESALE Price: $1.00 per foot (80% of list price)\r\n\r\n**Per 250-foot Roll:**\r\n- LIST Price: $275.00 per roll\r\n- COST Price: $178.75 per roll\r\n\r\n**Per 1000-foot Roll:**\r\n- LIST Price: $1,050.00 per roll\r\n- COST Price: $682.50 per roll\r\n\r\n### 3.3 Configure Prices Step by Step\r\n\r\n1. **In the \"Prices\" section** of the product form\r\n2. **Click** on \"Add Price\"\r\n3. **Select** the price type\r\n4. **Select** the unit of measure\r\n5. **Enter** the price\r\n6. **Mark** if it\'\'s the default price (only one per unit)\r\n7. **Mark** if it\'\'s used for sales and/or purchases\r\n8. **Repeat** for each different price\r\n\r\n---\r\n\r\n## ? Step 4: Configure Warehouse\r\n\r\n### 4.1 Default Warehouse\r\n\r\nThe system needs to know which warehouse stores the product:\r\n\r\n1. **Go** to \"Inventory\" → \"Warehouses\"\r\n2. **Verify** that a warehouse marked as \"Default\" exists\r\n3. **If it doesn\'\'t exist**, create one and mark it as default\r\n\r\n**Important**: There can only be one default warehouse in the entire system.\r\n\r\n### 4.2 Configuration Example\r\n\r\n```\r\nName: Main Warehouse\r\nLocation: Central Warehouse - Floor 1\r\nDefault: ✓ (marked)\r\nActive: ✓ (marked)\r\n```\r\n\r\n---\r\n\r\n## ? Step 5: Perform Transactions\r\n\r\n### 5.1 Create a Sale\r\n\r\n1. **Go** to \"Transactions\" → \"New Sale\"\r\n2. **Select** the customer\r\n3. **Add products**:\r\n   - Search for the product by name or SKU\r\n   - The system automatically loads:\r\n     - Default price\r\n     - Default unit\r\n     - Default warehouse\r\n     - Product brand\r\n4. **Adjust** if necessary:\r\n   - Change quantity\r\n   - Change unit (foot → roll)\r\n   - Change price\r\n   - Change warehouse\r\n5. **Save** the transaction\r\n\r\n### 5.2 Sale Line Example\r\n\r\n```\r\nProduct: THHN Cable 12 AWG Black\r\nQuantity: 50\r\nUnit: Foot (FT)\r\nUnit Price: $1.25\r\nDiscount: 0%\r\nSubtotal: $62.50\r\nWarehouse: Main Warehouse\r\nBrand: SIEMENS\r\n```\r\n\r\n---\r\n\r\n## ? Step 6: Automatic Conversions\r\n\r\n### 6.1 How It Works?\r\n\r\nThe system automatically converts between units:\r\n\r\n**Examples:**\r\n- You sell 1 roll of 250FT → System records 250 feet in inventory\r\n- You sell 24 inches → System records 2 feet in inventory\r\n- You buy 1 gallon → System records 1 gallon in inventory\r\n\r\n### 6.2 Common Units\r\n\r\n| Product | Purchase | Sale | Inventory |\r\n|---------|----------|------|-----------|\r\n| **Cables** | 250FT Rolls | By foot or roll | In total feet |\r\n| **Pipes** | 10FT Sticks | By foot or stick | In total feet |\r\n| **Switches** | Boxes of 25 | Individual | By piece |\r\n| **Liquids** | Gallons | By gallon, quart or pint | In gallons |\r\n\r\n---\r\n\r\n## ⚠️ Common Problems and Solutions\r\n\r\n### Problem 1: \"No default price found\"\r\n\r\n**What does it mean?** The product doesn\'\'t have a price marked as default.\r\n\r\n**Solution:**\r\n1. Go to the product\r\n2. In the prices section\r\n3. Mark one of the prices as \"Default\"\r\n4. Save changes\r\n\r\n### Problem 2: \"No default warehouse\"\r\n\r\n**What does it mean?** The system doesn\'\'t know where to store the product.\r\n\r\n**Solution:**\r\n1. Go to \"Inventory\" → \"Warehouses\"\r\n2. Create a warehouse if it doesn\'\'t exist\r\n3. Mark it as \"Default\"\r\n4. Make sure it\'\'s active\r\n\r\n### Problem 3: \"SKU already exists\"\r\n\r\n**What does it mean?** There\'\'s already another product with the same code.\r\n\r\n**Solution:**\r\n1. Change the SKU to a unique one\r\n2. Use format: BRAND-TYPE-SIZE-COLOR\r\n3. Example: \"THHN-12-BLK\" instead of \"Black Cable\"\r\n\r\n### Problem 4: \"Unit conversion fails\"\r\n\r\n**What does it mean?** The units are not configured correctly.\r\n\r\n**Solution:**\r\n1. Contact the system administrator\r\n2. Verify that units of measure are configured\r\n3. Make sure to use the correct units\r\n\r\n---\r\n\r\n## ? Tips to Improve Your Work\r\n\r\n### ✅ Best Practices\r\n\r\n**For Product Names:**\r\n- Use descriptive and clear names\r\n- Include important technical information\r\n- Maintain consistency in format\r\n\r\n**For SKUs:**\r\n- Use short and easy-to-remember codes\r\n- Include product information in the code\r\n- Avoid spaces and special characters\r\n\r\n**For Prices:**\r\n- Always configure a default price\r\n- Keep prices updated\r\n- Use different types according to your business\r\n\r\n**For Inventory:**\r\n- Review reorder levels regularly\r\n- Keep warehouses organized\r\n- Update quantities after movements\r\n\r\n### ? Real Use Cases\r\n\r\n**Case 1: Electrical Company**\r\n- Products: Cables, switches, pipes\r\n- Units: Feet, rolls, pieces\r\n- Prices: LIST, COST, CONTRACTOR\r\n\r\n**Case 2: Hardware Store**\r\n- Products: Tools, materials\r\n- Units: Pieces, boxes, gallons\r\n- Prices: LIST, COST, WHOLESALE\r\n\r\n**Case 3: Distributor**\r\n- Products: Wide variety\r\n- Units: Multiple per product\r\n- Prices: All types available\r\n\r\n---\r\n\r\n## ? Verify Everything Works\r\n\r\n### Final Checklist\r\n\r\nBefore using the product in transactions, verify:\r\n\r\n- [ ] **Product created** with unique name and SKU\r\n- [ ] **Category assigned** correctly\r\n- [ ] **Brand configured** if applicable\r\n- [ ] **Default unit** selected\r\n- [ ] **At least one price** configured\r\n- [ ] **Default price** marked\r\n- [ ] **Default warehouse** configured\r\n- [ ] **Reorder level** established\r\n\r\n### Quick Test\r\n\r\n1. **Create a test sale** with the product\r\n2. **Verify** that data loads automatically\r\n3. **Change** unit and price if necessary\r\n4. **Save** the transaction\r\n5. **Check** that inventory updates correctly\r\n\r\n---\r\n\r\n## ? Need Help?\r\n\r\n### Available Resources\r\n\r\n**In the System:**\r\n- **Contextual help**: Information icons in each field\r\n- **Validations**: The system alerts you if something is missing\r\n- **Error messages**: They tell you what to correct\r\n\r\n**Contact:**\r\n- **System administrator**: For technical problems\r\n- **Supervisor**: For process questions\r\n- **Technical manual**: For advanced information\r\n\r\n### Updates\r\n\r\nThis manual is updated regularly. Always consult the latest version to get the most up-to-date information.\r\n\r\n---\r\n\r\n## ✨ Summary\r\n\r\nCreating products in ChalanPro is a simple process when you follow these steps:\r\n\r\n1. **Prepare** all necessary information\r\n2. **Create** the product with basic data\r\n3. **Configure** prices for different customer types\r\n4. **Verify** that the default warehouse is configured\r\n5. **Test** by creating a sample transaction\r\n\r\nWith this complete configuration, you will be able to perform sales and purchases efficiently and accurately.\r\n\r\n**Your system is ready to handle products professionally!** ?\',\r\n    TRUE,\r\n    NOW(),\r\n    NOW(),\r\n    2', 1, '2025-09-24 22:02:51.582420', '2025-09-24 22:02:51.582420', 2);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appinventory_inventorymovement`
+--
+
+CREATE TABLE `appinventory_inventorymovement` (
+  `id` bigint NOT NULL,
+  `quantity` decimal(12,2) NOT NULL,
+  `movement_type` smallint NOT NULL,
+  `reason` varchar(255) DEFAULT NULL,
+  `document` varchar(100) DEFAULT NULL,
+  `line_id` int UNSIGNED DEFAULT NULL,
+  `timestamp` datetime(6) NOT NULL,
+  `created_by_id` int DEFAULT NULL,
+  `product_id` bigint NOT NULL,
+  `unit_id` bigint DEFAULT NULL,
+  `warehouse_id` bigint NOT NULL
+) ;
+
+--
+-- Dumping data for table `appinventory_inventorymovement`
+--
+
+INSERT INTO `appinventory_inventorymovement` (`id`, `quantity`, `movement_type`, `reason`, `document`, `line_id`, `timestamp`, `created_by_id`, `product_id`, `unit_id`, `warehouse_id`) VALUES
+(1, 50.00, -1, 'Sales Order - Material Packing #1', '1', 1, '2025-10-19 05:09:06.525776', 1, 292, 1, 1),
+(2, 30.00, -1, 'Sales Order - Material Packing #1', '1', 2, '2025-10-19 05:09:06.565786', 1, 317, 1, 1),
+(3, 65.00, -1, 'Sales Order - Material Packing #1', '1', 3, '2025-10-19 05:09:06.600782', 1, 315, 1, 1),
+(4, 25.00, -1, 'Sales Order - Material Packing #1', '1', 4, '2025-10-19 05:09:06.628771', 1, 330, 1, 1),
+(5, 20.00, -1, 'Sales Order - Material Packing #1', '1', 5, '2025-10-19 05:09:06.656797', 1, 328, 1, 1),
+(6, 750.00, -1, 'Sales Order - Material Packing #1', '1', 6, '2025-10-19 05:09:06.685784', 1, 123, 1, 1),
+(7, 500.00, -1, 'Sales Order - Material Packing #1', '1', 7, '2025-10-19 05:09:06.713788', 1, 136, 1, 1),
+(8, 1250.00, -1, 'Sales Order - Material Packing #1', '1', 8, '2025-10-19 05:09:06.745776', 1, 129, 1, 1),
+(9, 5.00, -1, 'Sales Order - Material Packing #1', '1', 9, '2025-10-19 05:09:06.773783', 1, 290, 14, 1),
+(10, 7.00, -1, 'Sales Order - Material Packing #1', '1', 10, '2025-10-19 05:09:06.805779', 1, 282, 14, 1),
+(11, 2.00, -1, 'Sales Order - Material Packing #1', '1', 11, '2025-10-19 05:09:06.839775', 1, 284, 14, 1),
+(12, 3.00, -1, 'Sales Order - Material Packing #1', '1', 12, '2025-10-19 05:09:06.869784', 1, 278, 14, 1),
+(13, 4.00, -1, 'Sales Order - Material Packing #1', '1', 13, '2025-10-19 05:09:06.902776', 1, 277, 14, 1),
+(14, 6.00, -1, 'Sales Order - Material Packing #1', '1', 14, '2025-10-19 05:09:06.929777', 1, 617, 14, 1),
+(15, 16.00, -1, 'Sales Order - Material Packing #1', '1', 15, '2025-10-19 05:09:06.960771', 1, 616, 14, 1),
+(16, 50.00, -1, 'Sales Order - Material Packing #1', '1', 16, '2025-10-19 05:09:06.991771', 1, 611, 14, 1),
+(17, 8.00, -1, 'Sales Order - Material Packing #1', '1', 17, '2025-10-19 05:09:07.023777', 1, 952, 14, 1),
+(18, 3.00, -1, 'Sales Order - Material Packing #1', '1', 18, '2025-10-19 05:09:07.053784', 1, 953, 14, 1),
+(19, 1.00, -1, 'Sales Order - Material Packing #1', '1', 19, '2025-10-19 05:09:07.081787', 1, 954, 14, 1),
+(20, 100.00, -1, 'Sales Order - Material Packing #1', '1', 20, '2025-10-19 05:09:07.108789', 1, 950, 14, 1),
+(21, 200.00, -1, 'Sales Order - Material Packing #1', '1', 21, '2025-10-19 05:09:07.137803', 1, 400, 14, 1),
+(22, 2.00, -1, 'Sales Order - Material Packing #1', '1', 22, '2025-10-19 05:09:07.195787', 1, 279, 14, 1),
+(23, 2.00, -1, 'Sales Order - Material Packing #1', '1', 23, '2025-10-19 05:09:07.223543', 1, 687, 14, 1),
+(24, 4.00, -1, 'Sales Order - Material Packing #1', '1', 24, '2025-10-19 05:09:07.257394', 1, 698, 14, 1),
+(25, 8.00, -1, 'Sales Order - Material Packing #1', '1', 25, '2025-10-19 05:09:07.288550', 1, 688, 14, 1),
+(26, 70.00, -1, 'Sales Order - Material Packing #1', '1', 26, '2025-10-19 05:09:07.318419', 1, 720, 14, 1),
+(27, 2.00, -1, 'Sales Order - Material Packing #1', '1', 27, '2025-10-19 05:09:07.351134', 1, 178, 1, 1),
+(28, 2.00, -1, 'Sales Order - Material Packing #1', '1', 28, '2025-10-19 05:09:07.382347', 1, 235, 1, 1),
+(29, 5.00, -1, 'Sales Order - Material Packing #1', '1', 29, '2025-10-19 05:09:07.417350', 1, 177, 1, 1),
+(30, 5.00, -1, 'Sales Order - Material Packing #1', '1', 30, '2025-10-19 05:09:07.458347', 1, 93, 1, 1),
+(31, 1.00, -1, 'Sales Order - Material Packing #1', '1', 31, '2025-10-19 05:09:07.504343', 1, 199, 14, 1),
+(32, 1.00, -1, 'Sales Order - Material Packing #1', '1', 32, '2025-10-19 05:09:07.547339', 1, 187, 14, 1),
+(33, 1.00, -1, 'Sales Order - Material Packing #1', '1', 33, '2025-10-19 05:09:07.594349', 1, 104, 14, 1),
+(34, 1.00, -1, 'Sales Order - Material Packing #1', '1', 34, '2025-10-19 05:09:07.636341', 1, 60, 14, 1),
+(35, 1.00, -1, 'Sales Order - Material Packing #1', '1', 35, '2025-10-19 05:09:07.693339', 1, 534, 14, 1),
+(36, 1.00, -1, 'Sales Order - Material Packing #1', '1', 36, '2025-10-19 05:09:07.730337', 1, 926, 14, 1),
+(37, 1.00, -1, 'Sales Order - Material Packing #1', '1', 37, '2025-10-19 05:09:07.759341', 1, 551, 14, 1),
+(38, 2.00, -1, 'Sales Order - Material Packing #1', '1', 38, '2025-10-19 05:09:07.788343', 1, 951, 14, 1),
+(39, 2.00, -1, 'Sales Order - Material Packing #1', '1', 39, '2025-10-19 05:09:07.822337', 1, 425, 14, 1),
+(40, 1.00, -1, 'Sales Order - Material Packing #1', '1', 40, '2025-10-19 05:09:07.853335', 1, 521, 14, 1),
+(41, 1.00, -1, 'Sales Order - Material Packing #1', '1', 41, '2025-10-19 05:09:07.888344', 1, 583, 14, 1),
+(42, 1.00, -1, 'Sales Order - Material Packing #1', '1', 42, '2025-10-19 05:09:07.923337', 1, 489, 14, 1),
+(43, 1.00, -1, 'Sales Order - Material Packing #1', '1', 43, '2025-10-19 05:09:07.963340', 1, 333, 14, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appinventory_pricetype`
+--
+
+CREATE TABLE `appinventory_pricetype` (
+  `id` bigint NOT NULL,
+  `name` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `description` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appinventory_pricetype`
+--
+
+INSERT INTO `appinventory_pricetype` (`id`, `name`, `description`, `is_active`) VALUES
+(1, 'RETAIL', 'Standard price list', 1),
+(2, 'COST', 'Purchase cost', 1),
+(3, 'PURCHASE', 'Sale price', 1),
+(4, 'WHOLESALE', 'Wholesale price', 1),
+(5, 'CONTRACTOR', 'Contractor price', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appinventory_product`
+--
+
+CREATE TABLE `appinventory_product` (
+  `id` bigint NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `sku` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `reorder_level` decimal(10,2) NOT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `category_id` bigint DEFAULT NULL,
+  `unit_default_id` bigint DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appinventory_product`
+--
+
+INSERT INTO `appinventory_product` (`id`, `name`, `sku`, `reorder_level`, `created_at`, `is_active`, `category_id`, `unit_default_id`) VALUES
+(1, '#1 THHN Stranded Black', '000000', 1.00, '2025-09-22 20:22:17.000000', 1, 9, 17),
+(2, '#1 XHHW Stranded Aluminum Black', 'XHHW-1-STR-BLK-AL', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(3, '#10 THHN Stranded Black', 'THHN-10-STR-BLK', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(4, '#10 THHN Stranded Black Copper Clad', '10/1THHN-7/0-BK-NG-1000-SP-Copperweld', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(5, '#10 THHN Stranded Blue', 'THHN-10-STR-BLU', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(6, '#10 THHN Stranded Blue Copper Clad', '10/1THHN-7/0-BL-NG-1000-SP-Copperweld', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(7, '#10 THHN Stranded Green', 'THHN-10-STR-GRN', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(8, '#10 THHN Stranded Green Copper Clad', '10/1THHN-7/0-GN-NG-1000-SP-Copperweld', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(9, '#10 THHN Stranded Red Copper Clad', '10/1THHN-7/0-RD-NG-1000-SP-Copperweld', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(10, '#10 THHN Stranded White', 'THHN-10-STR-WHT', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(11, '#10 THHN Stranded White Copper Clad', '10/1THHN-7/0-WT-NG-1000-SP-Copperweld', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(12, '#12 THHN Stranded Black', 'THHN-12-STR-BLK', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(13, '#12 THHN Stranded Blue', 'THHN-12-STR-BLU', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(14, '#12 THHN Stranded Green', 'THHN-12-STR-GRN', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(15, '#12 THHN Stranded Red', 'THHN-12-STR-RED', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(16, '#12 THHN Stranded White', 'THHN-12-STR-WHT', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(17, '#2 THHN Stranded Black', 'THHN-2-STR-BLK', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(18, '#2 XHHW Stranded Aluminum Black', 'XHHW-2-STR-BLK-AL', 10.00, '2025-09-22 22:52:13.000000', 1, 9, 1),
+(19, '#3 THHN Stranded Black', 'THHN-3-STR-BLK', 10.00, '2025-09-22 22:52:14.000000', 1, 9, 1),
+(20, '#3 x 2 ft. Rebar', 'REBAR', 10.00, '2025-09-22 22:52:14.000000', 1, 7, 14),
+(21, '#4 Butt Splice', 'BS-4', 10.00, '2025-09-22 22:52:14.000000', 1, 7, 14),
+(22, '#4 CU Split Bolt Connector', 'SBC-CU-4', 10.00, '2025-09-22 22:52:14.000000', 1, 11, 14),
+(23, '#4 Solid Bare Copper Wire', 'SOLBARE-4', 10.00, '2025-09-22 22:52:14.000000', 1, 9, 1),
+(24, '#4 THHN Stranded Black', 'THHN-4-STR-BLK', 10.00, '2025-09-22 22:52:14.000000', 1, 9, 1),
+(25, '#4 THHN Stranded Green', 'THHN-4-STR-GRN', 10.00, '2025-09-22 22:52:14.000000', 1, 9, 1),
+(26, '#4 THHN Stranded Green Copper Clad', '4/1THHN-7/0-GN-NG-1000-SP-Copperweld', 10.00, '2025-09-22 22:52:14.000000', 1, 9, 1),
+(27, '#4 XHHW Stranded Aluminum Black', 'XHHW-4-STR-BLK-AL', 10.00, '2025-09-22 22:52:14.000000', 1, 9, 1),
+(28, '#6 THHN Stranded Black', 'THHN-6-STR-BLK', 10.00, '2025-09-22 22:52:14.000000', 1, 9, 1),
+(29, '#6 THHN Stranded Green', 'THHN-6-STR-GRN', 10.00, '2025-09-22 22:52:14.000000', 1, 9, 1),
+(30, '#6 THHN Stranded White', 'THHN-6-STR-WHT', 10.00, '2025-09-22 22:52:14.000000', 1, 9, 1),
+(31, '#6 X 1 in. 1/4 in. Phillips Head Bugle Coarse Drywall Screw', 'PHBCDWS-6X114', 10.00, '2025-09-22 22:52:14.000000', 1, 11, 14),
+(32, '#8 CU Split Bolt Connector', 'SBC-CU-8', 10.00, '2025-09-22 22:52:14.000000', 1, 11, 14),
+(33, '#8 THHN Stranded Black', 'THHN-8-STR-BLK', 10.00, '2025-09-22 22:52:14.000000', 1, 9, 1),
+(34, '#8 THHN Stranded Green', 'THHN-8-STR-GRN', 10.00, '2025-09-22 22:52:14.000000', 1, 9, 1),
+(35, '#8 THHN Stranded White', 'THHN-8-STR-WHT', 10.00, '2025-09-22 22:52:14.000000', 1, 9, 1),
+(36, '1 in. 1/2 in. ENT', 'ENT-150', 10.00, '2025-09-22 22:52:14.000000', 1, 8, 1),
+(37, '1 in. 1/2 in. ENT Male Adapter', 'ENT-MA-150', 10.00, '2025-09-22 22:52:14.000000', 1, 8, 1),
+(38, '1 in. 1/2 in. Locknut (50)', 'LN-150', 2.00, '2025-09-22 22:52:14.000000', 1, 11, 15),
+(39, '1 in. 1/2 in. Plastic Bushing', 'PB-150', 30.00, '2025-09-22 22:52:14.000000', 1, 7, 32),
+(40, '1 in. 1/2 in. PVC 90 (20)', 'PVC-90-150', 10.00, '2025-09-22 22:52:14.000000', 1, 8, 1),
+(41, '1 in. 1/2 in. PVC Conduit Cap (40)', 'PVC-CC-150', 10.00, '2025-09-22 22:52:14.000000', 1, 8, 1),
+(42, '1 in. 1/2 in. PVC Coupling (25)', 'PVC-CP-150', 10.00, '2025-09-22 22:52:14.000000', 1, 8, 1),
+(43, '1 in. 1/2 in. PVC Female Adapter', 'PVC-FA-150', 10.00, '2025-09-22 22:52:14.000000', 1, 8, 1),
+(44, '1 in. 1/2 in. PVC Male Adapter (30)', 'PVC-MA-150', 10.00, '2025-09-22 22:52:14.000000', 1, 8, 1),
+(45, '1 in. 1/2 in. PVC SCH40', 'PVC-SCH40-150', 10.00, '2025-09-22 22:52:14.000000', 1, 8, 1),
+(46, '1 in. 1/2 in. PVC SCH80', 'PVC-SCH80-150', 10.00, '2025-09-22 22:52:15.000000', 1, 8, 1),
+(47, '1 in. 1/2 in. Strut Strap', 'SS-150', 10.00, '2025-09-22 22:52:15.000000', 1, 7, 14),
+(48, '1 in. 1/4 in. KO Seal', 'KO-125', 10.00, '2025-09-22 22:52:15.000000', 1, 7, 14),
+(49, '1 in. 1/4 in. Liquid Tight Straight Connector', 'LT-SC-125', 10.00, '2025-09-22 22:52:15.000000', 1, 7, 14),
+(50, '1 in. 1/4 in. Locknut (50)', 'LN-125', 2.00, '2025-09-22 22:52:15.000000', 1, 11, 15),
+(51, '1 in. 1/4 in. One Hole Rigid Strap', 'RS-1H-125', 10.00, '2025-09-22 22:52:15.000000', 1, 7, 14),
+(52, '1 in. 1/4 in. Plastic Bushing (25)', 'PB-125', 10.00, '2025-09-22 22:52:15.000000', 1, 7, 14),
+(53, '1 in. 1/4 in. PVC 2 Hole Strap', 'PVC-2HS-125', 10.00, '2025-09-22 22:52:15.000000', 1, 8, 1),
+(54, '1 in. 1/4 in. PVC 90 (25)', 'PVC-90-125', 10.00, '2025-09-22 22:52:15.000000', 1, 8, 1),
+(55, '1 in. 1/4 in. PVC Coupling (50)', 'PVC-CP-125', 10.00, '2025-09-22 22:52:15.000000', 1, 8, 1),
+(56, '1 in. 1/4 in. PVC LB (20)', 'PVC-LB-125', 10.00, '2025-09-22 22:52:15.000000', 1, 8, 1),
+(57, '1 in. 1/4 in. PVC Male Adapter (50)', 'PVC-MA-125', 10.00, '2025-09-22 22:52:15.000000', 1, 8, 1),
+(58, '1 in. 1/4 in. PVC SCH40', 'PVC-SCH40-125', 10.00, '2025-09-22 22:52:15.000000', 1, 8, 1),
+(59, '1 in. 1/4 in. Strut Strap', 'SS-125', 10.00, '2025-09-22 22:52:15.000000', 1, 7, 14),
+(60, '1 Gang Bell Box 3 Hole 1/2 in.', 'BB-1G-3H-05', 10.00, '2025-09-22 22:52:15.000000', 1, 10, 14),
+(61, '1 Gang Bell Box 3 Hole 3/4 in.', 'BB-1G-3H-075', 10.00, '2025-09-22 22:52:15.000000', 1, 10, 14),
+(62, '1 Gang Bell Box 5 Hole 1/2 in.', 'BB-1G-5H-05', 10.00, '2025-09-22 22:52:15.000000', 1, 10, 14),
+(63, '1 Gang Bell Box 5 Hole 3/4 in.', 'BB-1G-5H-075', 10.00, '2025-09-22 22:52:15.000000', 1, 10, 14),
+(64, '1 Gang Horizontal Mount Plastic Box 22 Cu In', 'PHB-1G-22CI', 10.00, '2025-09-22 22:52:15.000000', 1, 10, 14),
+(65, '1 Gang Weatherproof Blank Plate', 'WPBP-1G', 10.00, '2025-09-22 22:52:15.000000', 1, 10, 14),
+(66, '1 Hole Terminal Lug 350 KCMIL (For use in Side-by-Side Meter Can)', 'LUG-350-1HT', 10.00, '2025-09-22 22:52:15.000000', 1, 7, 14),
+(67, '1 in. 1/2 in. DEEP', 'HANDY BOX', 10.00, '2025-09-22 22:52:15.000000', 1, 7, 14),
+(68, '1 in. 1/4 in. DEEP', 'SHALLOW HANDY BOX', 10.00, '2025-09-22 22:52:15.000000', 1, 7, 14),
+(69, '1-5/8 x 10 ft. Deep Strut', 'DS-158X10', 10.00, '2025-09-22 22:52:15.000000', 1, 7, 14),
+(70, '1 EMT', 'EMT-100', 10.00, '2025-09-22 22:52:15.000000', 1, 8, 1),
+(71, '1 EMT Bushing', 'EMT-B-100', 10.00, '2025-09-22 22:52:15.000000', 1, 8, 1),
+(72, '1 EMT Coupling', 'EMT-CP-100', 10.00, '2025-09-22 22:52:16.000000', 1, 8, 1),
+(73, '1 EMT Set Screw Connector', 'EMT-SSC-100', 10.00, '2025-09-22 22:52:16.000000', 1, 8, 1),
+(74, '1 ENT', 'ENT-100', 10.00, '2025-09-22 22:52:16.000000', 1, 8, 1),
+(75, '1 KO Seal', 'KO-100', 10.00, '2025-09-22 22:52:16.000000', 1, 7, 14),
+(76, '1 Locknut (100)', 'LN-100', 2.00, '2025-09-22 22:52:16.000000', 1, 11, 15),
+(77, '1 One Hole Rigid Strap', 'RS-1H-100', 10.00, '2025-09-22 22:52:16.000000', 1, 7, 14),
+(78, '1 Plastic Bushing (50)', 'PB-100', 10.00, '2025-09-22 22:52:16.000000', 1, 7, 14),
+(79, '1 Pool Pack', '\"1\"\" Pool Pack\"', 10.00, '2025-09-22 22:52:16.000000', 1, 7, 14),
+(80, '1 PVC 90 (50)', 'PVC-90-100', 10.00, '2025-09-22 22:52:16.000000', 1, 8, 1),
+(81, '1 PVC Coupling (50)', 'PVC-CP-100', 10.00, '2025-09-22 22:52:16.000000', 1, 8, 1),
+(82, '1 PVC LB', 'PVC-LB-100', 10.00, '2025-09-22 22:52:16.000000', 1, 8, 1),
+(83, '1 PVC Male Adapter (100)', 'PVC-MA-100', 10.00, '2025-09-22 22:52:16.000000', 1, 8, 1),
+(84, '1 PVC SCH40', 'PVC-SCH40-100', 10.00, '2025-09-22 22:52:16.000000', 1, 8, 1),
+(85, '1 Sheathed Cable Connector', 'SCC-100', 10.00, '2025-09-22 22:52:16.000000', 1, 9, 1),
+(86, '1 Strut Strap', 'SS-100', 10.00, '2025-09-22 22:52:16.000000', 1, 7, 14),
+(87, '1 Stud Bushing', 'SB-100', 10.00, '2025-09-22 22:52:16.000000', 1, 7, 14),
+(88, '1/0 Stranded Aluminum', 'XHHW-1/0-STR-BLK-AL', 10.00, '2025-09-22 22:52:16.000000', 1, 9, 14),
+(90, '1/2 in. 90 Aluminum Flex Connector', 'AF-90-050', 10.00, '2025-09-22 22:52:16.000000', 1, 7, 14),
+(91, '1/2 in. 90 Liquid Tight Connector', 'NMLT-90-050', 10.00, '2025-09-22 22:52:16.000000', 1, 7, 14),
+(92, '1/2 in. Aluminum Flex Conduit', 'AF-050', 10.00, '2025-09-22 22:52:16.000000', 1, 8, 1),
+(93, '1/2 in. EMT', 'EMT-050', 10.00, '2025-09-22 22:52:16.000000', 1, 8, 1),
+(94, '1/2 in. EMT Bushing', 'EMT-B-050', 10.00, '2025-09-22 22:52:16.000000', 1, 8, 1),
+(95, '1/2 in. EMT Coupling', 'EMT-CP-050', 10.00, '2025-09-22 22:52:16.000000', 1, 8, 1),
+(96, '1/2 in. EMT Set Screw Connector', 'EMT-SSC-050', 10.00, '2025-09-22 22:52:16.000000', 1, 8, 1),
+(97, '1/2 in. ENT', 'ENT-050', 10.00, '2025-09-22 22:52:17.000000', 1, 8, 1),
+(98, '1/2 in. ENT Coupling (150)', 'ENT-CP-050', 10.00, '2025-09-22 22:52:17.000000', 1, 8, 1),
+(99, '1/2 in. ENT Male Adapter (150)', 'ENT-MA-050', 10.00, '2025-09-22 22:52:17.000000', 1, 8, 1),
+(101, '1/2 in. Liquid Tight (100 ft.)', 'NMLT-050', 10.00, '2025-09-22 22:52:17.000000', 1, 7, 14),
+(102, '1/2 in. Locknut (100)', 'LN-050', 2.00, '2025-09-22 22:52:17.000000', 1, 11, 15),
+(103, '1/2 in. NM Cable Staples', 'NMCS-050', 10.00, '2025-09-22 22:52:17.000000', 1, 9, 1),
+(104, '1/2 in. Offset Nipple', 'OFN-050', 10.00, '2025-09-22 22:52:17.000000', 1, 7, 14),
+(105, '1/2 in. One Hole Rigid Strap', 'RS-1H-050', 10.00, '2025-09-22 22:52:17.000000', 1, 7, 14),
+(106, '1/2 in. Plastic Bushing (100)', 'PB-050', 10.00, '2025-09-22 22:52:17.000000', 1, 7, 14),
+(107, '1/2 in. PVC 90 (40)', 'PVC-90-050', 10.00, '2025-09-22 22:52:17.000000', 1, 8, 1),
+(108, '1/2 in. PVC Coupling (150)', 'PVC-CP-050', 10.00, '2025-09-22 22:52:17.000000', 1, 8, 1),
+(109, '1/2 in. PVC Female Adapter (150)', 'PVC-FA-050', 10.00, '2025-09-22 22:52:17.000000', 1, 8, 1),
+(110, '1/2 in. PVC LB (25)', 'PVC-LB-050', 10.00, '2025-09-22 22:52:17.000000', 1, 8, 1),
+(111, '1/2 in. PVC Male Adapter (200)', 'PVC-MA-050', 10.00, '2025-09-22 22:52:17.000000', 1, 8, 1),
+(112, '1/2 in. PVC SCH40', 'PVC-SCH40-050', 10.00, '2025-09-22 22:52:17.000000', 1, 8, 1),
+(113, '1/2 in. PVC T (30)', 'PVC-T-050', 10.00, '2025-09-22 22:52:17.000000', 1, 8, 1),
+(114, '1/2 in. Straight Aluminum Flex Connector', 'AF-SC-050', 10.00, '2025-09-22 22:52:17.000000', 1, 7, 14),
+(115, '1/2 in. Straight Liquid Tight Connector', 'NMLT-SC-050', 10.00, '2025-09-22 22:52:17.000000', 1, 7, 14),
+(116, '1/2 in. Strut Strap', 'SS-050', 10.00, '2025-09-22 22:52:17.000000', 1, 7, 14),
+(117, '1/4 in. x 1 in. 1/4 in. Fender Washer', 'FW-025X125', 10.00, '2025-09-22 22:52:17.000000', 1, 11, 14),
+(118, '1/4 in. x 1 Hex Cap Screw', 'HCS-025X1', 10.00, '2025-09-22 22:52:17.000000', 1, 11, 14),
+(119, '1/4 in.-20 Hex Nut', 'HN-025-20', 10.00, '2025-09-22 22:52:17.000000', 1, 11, 14),
+(120, '1/4 in.-20 Spring Nut', 'SN-025-20', 10.00, '2025-09-22 22:52:17.000000', 1, 6, 14),
+(121, '1/4 in.-20 x 1 Bolt', 'B-025-20X1', 10.00, '2025-09-22 22:52:17.000000', 1, 11, 14),
+(122, '10 ft. Ladder', 'LAD-10', 10.00, '2025-09-22 22:52:18.000000', 1, 4, 14),
+(123, '10/2 Copper Clad', '10/2NMB-1/1', 500.00, '2025-09-22 22:52:18.000000', 1, 9, 1),
+(124, '10/2 Romex', 'NM-B-10/2-CU-1000', 10.00, '2025-09-22 22:52:18.000000', 1, 7, 1),
+(125, '10/3 Romex', 'NM-B-10/3-CU-1000', 10.00, '2025-09-22 22:52:18.000000', 1, 7, 1),
+(126, '10/32 x 3/8 in. Green Grounding Screw', 'GGS-1032X038', 10.00, '2025-09-22 22:52:18.000000', 1, 11, 14),
+(127, '12 ft. Ladder', 'LAD-12', 10.00, '2025-09-22 22:52:18.000000', 1, 4, 14),
+(128, '12 Tape Light Interconnect Cable 2 Pin', 'TL-12IC-2P', 10.00, '2025-09-22 22:52:18.000000', 1, 9, 1),
+(129, '12/2 Copper Clad', '12/2NMB-1/1', 10.00, '2025-09-22 22:52:18.000000', 1, 9, 1),
+(130, '12/2 MC', 'MC-12/2', 10.00, '2025-09-22 22:52:18.000000', 1, 7, 1),
+(131, '12/2 Romex', 'NM-B-12/2-CU-250C', 10030.00, '2025-09-22 22:52:18.000000', 1, 7, 1),
+(132, '12/2 UF Direct Burial Cable', 'UFDB-12/2', 10.00, '2025-09-22 22:52:18.000000', 1, 9, 1),
+(133, '12/3 100 ft. Extension Cord', 'EC-12/3-100', 10.00, '2025-09-22 22:52:18.000000', 1, 7, 14),
+(134, '12/3 25 ft. Extension Cord', 'EC-12/3-25', 10.00, '2025-09-22 22:52:18.000000', 1, 7, 14),
+(135, '12/3 50 ft.  Extension Cord', 'EC-12/3-50', 10.00, '2025-09-22 22:52:18.000000', 1, 7, 14),
+(136, '12/3 Copper Clad', '12/3NMB-1/1', 10.00, '2025-09-22 22:52:18.000000', 1, 9, 1),
+(137, '12/3 MC', 'MC-12/3', 10.00, '2025-09-22 22:52:18.000000', 1, 7, 1),
+(138, '12v 30w Dimmable Driver', 'DD-12V-30W', 10.00, '2025-09-22 22:52:18.000000', 1, 7, 14),
+(139, '13 sw 36th pl', '13 SW 36th PL', 10.00, '2025-09-22 22:52:18.000000', 1, 7, 14),
+(140, '13/16 x 10 ft. Shallow Strut', 'SHS-1316X10', 10.00, '2025-09-22 22:52:18.000000', 1, 7, 14),
+(143, '14/2 Romex', 'NM-B-14/2-CU-250C', 10.00, '2025-09-22 22:52:18.000000', 1, 7, 1),
+(144, '14/2-12/2 MC Anti-Shorts', 'MCAS', 10.00, '2025-09-22 22:52:18.000000', 1, 7, 1),
+(145, '14/3 Romex', 'NM-B-14/3-CU-250C', 10.00, '2025-09-22 22:52:18.000000', 1, 7, 1),
+(146, '16 ft. Extension Ladder', 'EXTLAD-16', 10.00, '2025-09-22 22:52:18.000000', 1, 4, 14),
+(147, '16418 CAPTIVA DRIVE', 'REID RESIDENCE', 10.00, '2025-09-22 22:52:18.000000', 1, 7, 14),
+(148, '16D x 3 1/2 in. Common Nail', 'CN-16D-350', 10.00, '2025-09-22 22:52:19.000000', 1, 7, 14),
+(149, '18/2 Thermostat Wire', 'TW-18/2', 10.00, '2025-09-22 22:52:19.000000', 1, 9, 1),
+(150, '2 1/2 in. PVC SCH80', 'PVC-SCH80-250', 10.00, '2025-09-22 22:52:19.000000', 1, 8, 1),
+(151, '2 1/2 in. 24 PVC Radius Sweep', 'PVC-24RS-250', 10.00, '2025-09-22 22:52:19.000000', 1, 8, 1),
+(152, '2 1/2 in. Deep Gangable Box', 'DGB-250', 20.00, '2025-09-22 22:52:19.000000', 1, 10, 14),
+(153, '2 1/2 in. Galvanized Riser 10 ft.', 'GR-250X10', 10.00, '2025-09-22 22:52:19.000000', 1, 7, 1),
+(154, '2 1/2 in. Hub for Meter Can', 'A7518', 10.00, '2025-09-22 22:52:19.000000', 1, 7, 14),
+(155, '2 1/2 in. Locknut (30)', 'LN-250', 10.00, '2025-09-22 22:52:19.000000', 1, 11, 14),
+(156, '2 1/2 in. Plastic Bushing (10)', 'PB-250', 10.00, '2025-09-22 22:52:19.000000', 1, 7, 14),
+(157, '2 1/2 in. PVC 90', 'PVC-90-250', 10.00, '2025-09-22 22:52:19.000000', 1, 8, 1),
+(158, '2 1/2 in. PVC Coupling', 'PVC-CP-250', 10.00, '2025-09-22 22:52:19.000000', 1, 8, 1),
+(159, '2 1/2 in. PVC Male Adapter (25)', 'PVC-MA-250', 10.00, '2025-09-22 22:52:19.000000', 1, 8, 1),
+(160, '2 1/2 in. PVC SCH40 10 ft. Stick', 'PVC-SCH40-250-10', 10.00, '2025-09-22 22:52:19.000000', 1, 8, 25),
+(161, '2 1/2 in. PVC SCH40 20 ft. Stick', 'PVC-SCH40-250-20', 10.00, '2025-09-22 22:52:19.000000', 1, 8, 26),
+(162, '2 1/2 in. Strut Strap', 'SS-250', 10.00, '2025-09-22 22:52:19.000000', 1, 7, 14),
+(163, '2 1/2 in. Two Hole Rigid Strap', 'RS-2H-250', 10.00, '2025-09-22 22:52:19.000000', 1, 7, 14),
+(164, '2 1/2 in. Weatherhead', 'WH-250', 10.00, '2025-09-22 22:52:19.000000', 1, 7, 14),
+(165, '2 Gang Bell Box 3 Hole 1/2 in.', 'BB-2G-3H-05', 10.00, '2025-09-22 22:52:19.000000', 1, 10, 14),
+(166, '2 Gang Weatherproof Blank Plate', 'WPBP-2G', 10.00, '2025-09-22 22:52:19.000000', 1, 10, 14),
+(167, '2 Hole Terminal Lug #6 AWG - 250 KCMIL', 'LUG-6-250-2HT', 10.00, '2025-09-22 22:52:19.000000', 1, 7, 14),
+(168, '2 Pack End Caps For Tape Light Track (New)', 'TL-EC2PK', 10.00, '2025-09-22 22:52:19.000000', 1, 2, 14),
+(169, '2 Pack Mounting Clips for Tape Light Track (New)', 'TL-MCT2PK', 10.00, '2025-09-22 22:52:19.000000', 1, 2, 14),
+(170, '2 small boxes', '24745 marin', 10.00, '2025-09-22 22:52:19.000000', 1, 10, 14),
+(171, '2 small brown box', '25008 surfh', 10.00, '2025-09-22 22:52:19.000000', 1, 10, 14),
+(172, '2 small brown box 1 box got delivered on a later date 8/11/2 in.5', '24838 surfh', 10.00, '2025-09-22 22:52:20.000000', 1, 10, 14),
+(173, '2 ft. Led Wrap Light Bulb', 'FDK-LT8G-2-104', 10.00, '2025-09-22 22:52:20.000000', 1, 2, 14),
+(174, '2 ft. Wrap Light Bulb', 'FL17T8/841/ECO', 10.00, '2025-09-22 22:52:20.000000', 1, 2, 14),
+(175, '2 24 PVC Radius Sweep', 'PVC-24RS-200', 10.00, '2025-09-22 22:52:20.000000', 1, 8, 1),
+(176, '2 Conduit Hanger with Bolt', 'CHB-200', 10.00, '2025-09-22 22:52:20.000000', 1, 8, 1),
+(177, '2 in. EMT', 'EMT-200', 10.00, '2025-09-22 22:52:20.000000', 1, 8, 1),
+(178, '2 in.EMT Bushing', 'EMT-B-200', 10.00, '2025-09-22 22:52:20.000000', 1, 8, 1),
+(179, '2 in. EMT Coupling', 'EMT-CP-200', 10.00, '2025-09-22 22:52:20.000000', 1, 8, 1),
+(180, '2 in. EMT Set Screw Connector', 'EMT-SSC-200', 10.00, '2025-09-22 22:52:20.000000', 1, 8, 1),
+(181, '2 Flash Guard', 'FG-200', 10.00, '2025-09-22 22:52:20.000000', 1, 7, 14),
+(182, '2 in. Galvanized Riser 10 ft.', 'GR-200-10', 300.00, '2025-09-22 22:52:20.000000', 1, 7, 14),
+(183, '2 in. Hub for Meter Can', 'A7517', 10.00, '2025-09-22 22:52:20.000000', 1, 7, 14),
+(184, '2 in. KO Seal', 'KO-200', 10.00, '2025-09-22 22:52:20.000000', 1, 7, 14),
+(185, '2 in. Locknut (50)', 'LN-200', 2.00, '2025-09-22 22:52:20.000000', 1, 11, 15),
+(186, '2 in. Neoprene Roof Flashing', 'NRF-200', 10.00, '2025-09-22 22:52:20.000000', 1, 7, 14),
+(187, '2 in. Plastic Bushing', 'PB-200', 10.00, '2025-09-22 22:52:20.000000', 1, 7, 14),
+(188, '2 in. PVC 45 (15)', 'PVC-45-200', 10.00, '2025-09-22 22:52:20.000000', 1, 8, 1),
+(189, '2 in. PVC 90 (15)', 'PVC-90-200', 10.00, '2025-09-22 22:52:20.000000', 1, 8, 1),
+(190, '2 in. PVC Coupling (40)', 'PVC-CP-200', 10.00, '2025-09-22 22:52:20.000000', 1, 8, 1),
+(191, '2 in. PVC LB', 'PVC-LB-200', 10.00, '2025-09-22 22:52:20.000000', 1, 8, 1),
+(192, '2 in. PVC Long Line Coupling (15)', 'PVC-LLCP-200', 10.00, '2025-09-22 22:52:20.000000', 1, 8, 1),
+(193, '2 in. PVC LR', 'PVC-LR-200', 10.00, '2025-09-22 22:52:20.000000', 1, 8, 1),
+(194, '2 in. PVC Male Adapter (50)', 'PVC-MA-200', 10.00, '2025-09-22 22:52:20.000000', 1, 8, 1),
+(195, '2 in. PVC SCH40', '2-IN-PVC-SCH40', 10.00, '2025-09-22 22:52:20.000000', 1, 8, 1),
+(196, '2 in. PVC SCH40 10 ft. Stick', 'PVC-SCH40-200-10', 10.00, '2025-09-22 22:52:21.000000', 1, 8, 25),
+(197, '2 in. PVC SCH40 20 ft. Stick', 'PVC-SCH40-200-20', 10.00, '2025-09-22 22:52:21.000000', 1, 8, 26),
+(198, '2 in. PVC SCH80', 'PVC-SCH80-200-10', 10.00, '2025-09-22 22:52:21.000000', 1, 8, 1),
+(199, '2 in. SER Cable Connector', 'SER-CC-200', 10.00, '2025-09-22 22:52:21.000000', 1, 9, 14),
+(200, '2 in. Strut Strap', 'SS-200', 10.00, '2025-09-22 22:52:21.000000', 1, 7, 14),
+(201, '2 in. Two Hole Rigid Strap', 'RS-2H-200', 10.00, '2025-09-22 22:52:21.000000', 1, 7, 14),
+(202, '2 in. Weatherhead', 'WH-200', 10.00, '2025-09-22 22:52:21.000000', 1, 7, 14),
+(203, '2 x 12 Chisel SDS Max', 'SDSCH-2X12', 10.00, '2025-09-22 22:52:21.000000', 1, 7, 14),
+(204, '2/0 Stranded Aluminum', 'XHHW-2/0-STR-BLK-AL', 10.00, '2025-09-22 22:52:21.000000', 1, 9, 14),
+(205, '200A 2 Position Meter Socket', 'UA2716-ZGF', 10.00, '2025-09-22 22:52:21.000000', 1, 7, 14),
+(206, '200A Meter Socket', 'U7040-XL-TG-HSP', 10.00, '2025-09-22 22:52:21.000000', 1, 7, 14),
+(207, '200A Side by Side Meter (Duplex Service)', '200A Side by Side Meter (Duplex Service)', 10.00, '2025-09-22 22:52:21.000000', 1, 7, 1),
+(208, '24 Heavy Duty Magnetic Sweep', 'EMP27060', 10.00, '2025-09-22 22:52:21.000000', 1, 7, 14),
+(209, '24 Tape Light Interconnect Cable 2 Pin', 'TL-24IC-2P', 10.00, '2025-09-22 22:52:21.000000', 1, 9, 1),
+(210, '24v 200w Dimmable Driver', 'DD-24V-200W', 10.00, '2025-09-22 22:52:21.000000', 1, 7, 14),
+(211, '24v 30w Dimmable Driver', 'DD-24V-30W', 10.00, '2025-09-22 22:52:21.000000', 1, 7, 14),
+(212, '24v 60w Dimmable Driver', 'DD-24V-60W', 10.00, '2025-09-22 22:52:21.000000', 1, 7, 14),
+(213, '24v 96w Dimmable Driver', 'DD-24V-96W', 10.00, '2025-09-22 22:52:21.000000', 1, 7, 14),
+(214, '24v Tape Light', 'STLWW100', 10.00, '2025-09-22 22:52:21.000000', 1, 2, 14),
+(215, '24v Tape Light', 'TL-24V', 10.00, '2025-09-22 22:52:21.000000', 1, 2, 14),
+(216, '250 KCMIL Black Stranded Aluminum', 'XHHW-250-STR-BLK-AL', 10.00, '2025-09-22 22:52:21.000000', 1, 9, 14),
+(217, '3 boxes / large and 2 small', '24683 marin', 10.00, '2025-09-22 22:52:21.000000', 1, 10, 14),
+(218, '3 Gang Metal Box', 'MB-3G', 10.00, '2025-09-22 22:52:21.000000', 1, 10, 14),
+(219, '3 Gang Mudring', 'MR-3G', 10.00, '2025-09-22 22:52:21.000000', 1, 6, 14),
+(220, '3 ft. Pigtail', 'SW 9733SW8809', 10.00, '2025-09-22 22:52:21.000000', 1, 7, 14),
+(221, '3 24 PVC Radius Sweep', 'PVC-24RS-300', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(222, '3 Locknut (25)', 'LN-300', 2.00, '2025-09-22 22:52:22.000000', 1, 11, 15),
+(223, '3 Plastic Bushing (10)', 'PB-300', 10.00, '2025-09-22 22:52:22.000000', 1, 7, 14),
+(224, '3 PVC 90', 'PVC-90-300', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(225, '3 PVC Coupling', 'PVC-CP-300', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(226, '3 PVC Male Adapter (15)', 'PVC-MA-300', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(227, '3 PVC SCH40', 'PVC-SCH40-300', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(228, '3 PVC SCH80', 'PVC-SCH80-300', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(229, '3 Two Hole Rigid Strap', 'RS-2H-300', 10.00, '2025-09-22 22:52:22.000000', 1, 7, 14),
+(230, '3/4 in. PVC SCH80', 'PVC-SCH80-075', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(231, '3/4 in. 90 Aluminum Flex Connector', 'AF-90-075', 10.00, '2025-09-22 22:52:22.000000', 1, 7, 14),
+(232, '3/4 in. 90 Liquid Tight Connector', 'NMLT-90-075', 10.00, '2025-09-22 22:52:22.000000', 1, 7, 14),
+(233, '3/4 in. Aluminum Flex Conduit', 'AF-075', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(234, '3/4 in. EMT', 'EMT-075', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(235, '3/4 in. EMT Bushing', 'EMT-B-075', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(236, '3/4 in. EMT Coupling', 'EMT-CP-075', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(237, '3/4 in. EMT Set Screw Connector', 'EMT-SSC-075', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(238, '3/4 in. ENT', 'ENT-075', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(239, '3/4 in. ENT Coupling (100)', 'ENT-CP-075', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(240, '3/4 in. ENT Male Adapter (100)', 'ENT-MA-075', 10.00, '2025-09-22 22:52:22.000000', 1, 8, 1),
+(241, '3/4 in. Ground Rod Driver SDS Max', 'SDSGRD-075', 10.00, '2025-09-22 22:52:22.000000', 1, 7, 14),
+(242, '3/4 in. KO Seal', 'KO-075', 10.00, '2025-09-22 22:52:22.000000', 1, 7, 14),
+(243, '3/4 in. Liquid Tight (100 ft.)', 'NMLT-075', 10.00, '2025-09-22 22:52:22.000000', 1, 7, 14),
+(244, '3/4 in. Locknut (100)', 'LN-075', 2.00, '2025-09-22 22:52:22.000000', 1, 11, 15),
+(245, '3/4 in. One Hole Rigid Strap', 'RS-1H-075', 10.00, '2025-09-22 22:52:23.000000', 1, 7, 14),
+(246, '3/4 in. Plastic Bushing (100)', 'PB-075', 10.00, '2025-09-22 22:52:23.000000', 1, 7, 14),
+(247, '3/4 in. Pool Pack', '\"3/4\"\" Pool Pack\"', 10.00, '2025-09-22 22:52:23.000000', 1, 7, 14),
+(248, '3/4 in. PVC 90 (40)', 'PVC-90-075', 10.00, '2025-09-22 22:52:23.000000', 1, 8, 1),
+(249, '3/4 in. PVC Conduit Cap (150)', 'PVC-CC-075', 10.00, '2025-09-22 22:52:23.000000', 1, 8, 1),
+(250, '3/4 in. PVC Coupling (100)', 'PVC-CP-075', 10.00, '2025-09-22 22:52:23.000000', 1, 8, 1),
+(251, '3/4 in. PVC Female Adapter (100)', 'PVC-FA-075', 10.00, '2025-09-22 22:52:23.000000', 1, 8, 1),
+(252, '3/4 in. PVC LB (25)', 'PVC-LB-075', 10.00, '2025-09-22 22:52:23.000000', 1, 8, 1),
+(253, '3/4 in. PVC Male Adapter (150)', 'PVC-MA-075', 10.00, '2025-09-22 22:52:23.000000', 1, 8, 1),
+(254, '3/4 in. PVC SCH40', 'PVC-SCH40-075', 10.00, '2025-09-22 22:52:23.000000', 1, 8, 1),
+(255, '3/4 in. PVC T (20)', 'PVC-T-075', 10.00, '2025-09-22 22:52:23.000000', 1, 8, 1),
+(256, '3/4 in. Sheathed Cable Connector', 'SCC-075', 10.00, '2025-09-22 22:52:23.000000', 1, 9, 1),
+(257, '3/4 in. Straight Aluminum Flex Connector', 'AF-SC-075', 10.00, '2025-09-22 22:52:23.000000', 1, 7, 14),
+(258, '3/4 in. Straight Liquid Tight Connector', 'NMLT-SC-075', 10.00, '2025-09-22 22:52:23.000000', 1, 7, 14),
+(259, '3/4 in. Strut Strap', 'SS-075', 10.00, '2025-09-22 22:52:23.000000', 1, 7, 14),
+(260, '3/4 in. x 1/2 in. Reducing Washer', 'RW-075X050', 10.00, '2025-09-22 22:52:23.000000', 1, 11, 14),
+(261, '3/4 in. x 23 Single Tipped SDS Max Drill Bit', 'SDSDB-075X23', 10.00, '2025-09-22 22:52:23.000000', 1, 4, 14),
+(262, '3/8 in. MC 90 Connector', 'MC-90-038', 10.00, '2025-09-22 22:52:23.000000', 1, 7, 1),
+(263, '3/8 in. MC Duplex Straight Connector', 'MC-DS-038', 10.00, '2025-09-22 22:52:23.000000', 1, 7, 1),
+(264, '3/8 in. MC Straight Connector', 'MC-SC-038', 10.00, '2025-09-22 22:52:23.000000', 1, 7, 1),
+(265, '3/8 One Hole MC Strap', 'MC-1H-038', 10.00, '2025-09-22 22:52:23.000000', 1, 7, 1),
+(266, '320A Meter Socket', 'UAP5864-X-HSP', 10.00, '2025-09-22 22:52:23.000000', 1, 7, 14),
+(267, '350 KCMIL Black Stranded Aluminum', 'XHHW-350-STR-BLK-AL', 10.00, '2025-09-22 22:52:23.000000', 1, 9, 14),
+(268, '4 AWG Crimp', 'CTL4', 10.00, '2025-09-22 22:52:23.000000', 1, 7, 14),
+(269, '4vGang Metal Box', 'MB-4G', 10.00, '2025-09-22 22:52:23.000000', 1, 10, 14),
+(270, '4 Gang Mudring', 'MR-4G', 10.00, '2025-09-22 22:52:24.000000', 1, 6, 14),
+(271, '4 ft. Ladder', 'LAD-4', 10.00, '2025-09-22 22:52:24.000000', 1, 4, 14),
+(272, '4 ft. Led Wrap Light Bulb', 'FDK-LT8G-F1-4-184', 10.00, '2025-09-22 22:52:24.000000', 1, 2, 14),
+(273, '4 ft. Lighting Track with Frosted Lens and Endcaps', 'TL-4FT-FL', 10.00, '2025-09-22 22:52:24.000000', 1, 2, 14),
+(274, '4 ft. Wrap Light Bulb', 'FL32T8/841/ECO', 10.00, '2025-09-22 22:52:24.000000', 1, 2, 14),
+(275, '4 IC Rated Remodel Housing', 'IC104RAT', 10.00, '2025-09-22 22:52:24.000000', 1, 7, 14),
+(276, '4 in. Octagon 1 in. 1/2 in. Deep', '4O-150D', 10.00, '2025-09-22 22:52:24.000000', 1, 7, 14),
+(277, '4 in.Plastic L-Shaped Fan Box', '4P-LFB', 10.00, '2025-09-22 22:52:24.000000', 1, 10, 14),
+(278, '4 Round Ceiling Pan', '4M-RCP', 10.00, '2025-09-22 22:52:24.000000', 1, 7, 14),
+(279, '4 in. Square 1 in. 1/2', '1007804458', 250.00, '2025-09-22 22:52:24.000000', 1, 7, 14),
+(280, '4 in. in. Plastic L-Shaped Fan Box', '4S-SMBR150D', 10.00, '2025-09-22 22:52:24.000000', 1, 10, 14),
+(281, '4 Square 1  1/4 in. Shallow Box', '4S-125S', 10.00, '2025-09-22 22:52:24.000000', 1, 10, 14),
+(282, '4 in. Square 1 Gang Mudring', 'MR-1G', 10.00, '2025-09-22 22:52:24.000000', 1, 6, 14),
+(283, '4 in. Square 2 1/8 in. Deep Box', '4S-218D', 10.00, '2025-09-22 22:52:24.000000', 1, 10, 14),
+(284, '4 in. Square 2 Gang Mudring', 'MR-2G', 10.00, '2025-09-22 22:52:24.000000', 1, 6, 14),
+(285, '4 in. in. Plastic L-Shaped Fan Box', '4S-BP', 10.00, '2025-09-22 22:52:24.000000', 1, 10, 14),
+(288, '4 Square RS 30/50A Cover', '4S-3050RS', 10.00, '2025-09-22 22:52:24.000000', 1, 10, 14),
+(289, '4 in. Square Single 20A RS Cover', '4S-S20RS', 10.00, '2025-09-22 22:52:24.000000', 1, 10, 14),
+(290, '4 in. Square with Bracket', '4S-BR150D', 10.00, '2025-09-22 22:52:24.000000', 1, 7, 14),
+(291, '4/0 Stranded Aluminum', 'XHHW-4/0-STR-BLK-AL', 10.00, '2025-09-22 22:52:24.000000', 1, 9, 14),
+(292, '4/2 Copper Clad', '4/2NMB-7/1', 500.00, '2025-09-22 22:52:24.000000', 1, 9, 1),
+(293, '4/3 Copper Clad', '4/3NMB-7/1', 10.00, '2025-09-22 22:52:24.000000', 1, 9, 1),
+(294, '400A 250V RK5 TD Fuse', 'ECNR400', 10.00, '2025-09-22 22:52:24.000000', 1, 7, 14),
+(299, '40125EN3-05', '40125EN3-05', 10.00, '2025-09-22 22:52:25.000000', 1, 7, 14),
+(300, '44 Line Shield', 'LINE 44', 10.00, '2025-09-22 22:52:25.000000', 1, 7, 14),
+(301, '5 Gallon Metal Gas Can', 'GC-M5G', 10.00, '2025-09-22 22:52:25.000000', 1, 7, 14),
+(302, '5 Gang Metal Box', 'MB-5G', 10.00, '2025-09-22 22:52:25.000000', 1, 10, 14),
+(303, '5 Gang Mudring', 'MR-5G', 10.00, '2025-09-22 22:52:25.000000', 1, 6, 14),
+(304, '5/8 x 8 ft. Galvanized Ground Rod', 'GR-058X8', 10.00, '2025-09-22 22:52:25.000000', 1, 7, 14),
+(305, '500 KCMIL Black Stranded Aluminum', 'XHHW-500-STR-BLK-AL', 10.00, '2025-09-22 22:52:25.000000', 1, 9, 14),
+(307, '6 Gang Metal Box', 'MB-6G', 10.00, '2025-09-22 22:52:25.000000', 1, 10, 14),
+(308, '6 Gang Mudring', 'MR-6G', 10.00, '2025-09-22 22:52:25.000000', 1, 6, 14),
+(309, '6-32 x 2 Flat Phillips Screw', 'FPS-632X2', 10.00, '2025-09-22 22:52:25.000000', 1, 11, 14),
+(310, '6-32 x 3 Flat Phillips Screw', 'FPS-632X3', 10.00, '2025-09-22 22:52:25.000000', 1, 11, 14),
+(311, '6 ft. Ladder', 'LAD-6', 10.00, '2025-09-22 22:52:25.000000', 1, 4, 14),
+(312, '6 ft. Pigtail', 'PT-6FT', 10.00, '2025-09-22 22:52:25.000000', 1, 7, 14),
+(313, '6 ft. Pigtail', 'SW 9736SW8809', 10.00, '2025-09-22 22:52:25.000000', 1, 7, 14),
+(314, '6 IC Rated Remodel Housing', 'IC206RAT', 10.00, '2025-09-22 22:52:25.000000', 1, 7, 14),
+(315, '6/2 Copper Clad', '6/2NMB-7/1', 10.00, '2025-09-22 22:52:25.000000', 1, 9, 1),
+(316, '6/2 Romex', 'NM-B-6/2-CU-1000R', 10.00, '2025-09-22 22:52:25.000000', 1, 7, 1),
+(317, '6/3 Copper Clad', '6/3NMB-7/1', 10.00, '2025-09-22 22:52:25.000000', 1, 9, 1),
+(318, '6/3 Romex', 'NM-B-6/3-CU-500', 10.00, '2025-09-22 22:52:25.000000', 1, 7, 1),
+(319, '60 Line Shield', 'LS-60', 10.00, '2025-09-22 22:52:25.000000', 1, 7, 14),
+(320, '6678 yomama', '6678 yomama', 10.00, '2025-09-22 22:52:25.000000', 1, 7, 14),
+(321, '4 in. Square 1  1/4 in. Shallow Box', 'PVC-JB-664', 10.00, '2025-09-22 22:52:25.000000', 1, 8, 1),
+(322, '7-1/2 in. Concrete Banjo', 'BANJO-8', 10.00, '2025-09-22 22:52:26.000000', 1, 7, 14),
+(323, '7 Screw Mount Cable Tie', 'SMCT-7', 10.00, '2025-09-22 22:52:26.000000', 1, 9, 1),
+(324, '8 x 3/4 in. Phillips Modified Truss Screw', 'PMTS-8X075', 10.00, '2025-09-22 22:52:26.000000', 1, 11, 14),
+(325, '8 x 9/16 in. Phillips Modified Truss Screw', 'PMTS-8X056', 10.00, '2025-09-22 22:52:26.000000', 1, 11, 14),
+(326, '8-32 x 2 in. Flat Phillips Head', 'FPS-832X2', 10.00, '2025-09-22 22:52:26.000000', 1, 7, 14),
+(327, '8 ft. Ladder', 'LAD-8', 10.00, '2025-09-22 22:52:26.000000', 1, 4, 14),
+(328, '8/2 Copper Clad', '8/2NMB-7/1', 10.00, '2025-09-22 22:52:26.000000', 1, 9, 1),
+(329, '8/2 Romex', 'NM-B-8/2-CU-1000R', 300.00, '2025-09-22 22:52:26.000000', 1, 9, 1),
+(330, '8/3 Copper Clad', '8/3NMB-7/1', 10.00, '2025-09-22 22:52:26.000000', 1, 9, 1),
+(331, '8/3 Romex', 'NM-B-8/3-CU-1000R', 10.00, '2025-09-22 22:52:26.000000', 1, 7, 1),
+(332, '8038-71', '8038-71', 10.00, '2025-09-22 22:52:26.000000', 1, 7, 14),
+(333, 'A19 Led Bulb', 'BULB-A19', 10.00, '2025-09-22 22:52:26.000000', 1, 2, 14),
+(345, '2 ft. Led Wrap Light', 'SPRL052424L40WV', 10.00, '2025-09-22 22:52:26.000000', 1, 2, 14),
+(346, '4 ft. Led Wrap Light', 'SPRL054836L40MV', 10.00, '2025-09-22 22:52:26.000000', 1, 2, 14),
+(347, 'Lighting 6 Quick Disc LED', 'QD6-30WH', 10.00, '2025-09-22 22:52:26.000000', 1, 2, 14),
+(348, 'Lighting Led Rope Light 3000k', 'ULRL-LED-WW-150', 10.00, '2025-09-22 22:52:27.000000', 1, 2, 14),
+(349, 'Lighting Rope Light Starter', 'RL-LED-CONKIT-1.6AMP', 10.00, '2025-09-22 22:52:27.000000', 1, 2, 14),
+(350, 'Lighting Tape Light Connector with Lead', 'TLCONKIT', 10.00, '2025-09-22 22:52:27.000000', 1, 2, 14),
+(352, 'Arlington 1 Gang Box Extender with Larger Flange', 'BE1X', 10.00, '2025-09-22 22:52:27.000000', 1, 3, 14),
+(354, 'Arlington 2 1/2 in. Weatherhead', '146', 10.00, '2025-09-22 22:52:27.000000', 1, 3, 14),
+(356, 'Arlington Cable Entrance Device with Slotted Cover', 'CED130', 10.00, '2025-09-22 22:52:27.000000', 1, 3, 1),
+(357, 'Arlington Inviso Plate', 'CP3540', 10.00, '2025-09-22 22:52:27.000000', 1, 3, 14),
+(358, 'Arlington Stucco Box White', 'DBVM1W', 10.00, '2025-09-22 22:52:27.000000', 1, 3, 14),
+(359, 'Arlington Stud Bushing', 'SB13', 10.00, '2025-09-22 22:52:27.000000', 1, 3, 14),
+(360, 'ASI 55 Gray Hybrid Caulk', 'AMESEA-55GRAYC24', 10.00, '2025-09-22 22:52:27.000000', 1, 5, 8),
+(361, 'ASI Clear Silicone', 'AMESEA-502CLC24', 10.00, '2025-09-22 22:52:27.000000', 1, 5, 8),
+(362, 'Black Electrical Tape', 'ET-BLK', 10.00, '2025-09-22 22:52:27.000000', 1, 5, 14),
+(363, 'Black Lumber Crayon', 'CRAYON', 10.00, '2025-09-22 22:52:27.000000', 1, 7, 14),
+(364, 'BLUE HERON DR - TRI-TOWN', '1057 BLUE HERON DR - TRI-TOWN', 10.00, '2025-09-22 22:52:27.000000', 1, 7, 14),
+(367, 'Bronze Flood Light', 'P5212-20', 10.00, '2025-09-22 22:52:27.000000', 1, 2, 14),
+(368, 'Bronze Ground Clamp #2 STR AWG (25)', 'BGC-2STR', 10.00, '2025-09-22 22:52:27.000000', 1, 7, 14),
+(369, 'Buried Electric Detection Tape 1', 'TAPE-BEDT', 10.00, '2025-09-22 22:52:27.000000', 1, 5, 14),
+(373, 'Cable Stacker', 'CSTACKER', 10.00, '2025-09-22 22:52:27.000000', 1, 9, 1),
+(374, 'Candelabra LED Bulb', 'BULB-CANDLE', 10.00, '2025-09-22 22:52:27.000000', 1, 2, 14),
+(376, 'Cantex 3/4 in. PVC Female Adapter', '5140044', 10.00, '2025-09-22 22:52:28.000000', 1, 3, 1),
+(378, 'CAR CHARGER MISC', 'CAR CHARGER MISC', 10.00, '2025-09-22 22:52:28.000000', 1, 7, 14),
+(381, 'Cat5e', 'CAT5E', 10.00, '2025-09-22 22:52:28.000000', 1, 7, 14),
+(391, 'Chair lug', 'Chair lug', 10.00, '2025-09-22 22:52:28.000000', 1, 7, 14),
+(392, 'Chair Lug #4-#14AWG', 'CL4-14AWG', 10.00, '2025-09-22 22:52:28.000000', 1, 7, 14),
+(393, 'Clear Metal Roof Sealent', '63991', 10.00, '2025-09-22 22:52:28.000000', 1, 8, 1),
+(394, 'Clear Safety Glasses', 'GLASSES-CLR', 10.00, '2025-09-22 22:52:28.000000', 1, 7, 14),
+(395, 'Copperweld Wire Strippers', 'CW-STRP-01', 10.00, '2025-09-22 22:52:28.000000', 1, 9, 1),
+(396, 'Dewalt Toggle Bolts 3/16 x 3', 'TB-316X3', 10.00, '2025-09-22 22:52:28.000000', 1, 4, 14),
+(399, 'Doorbell Chime Kit with Transformer', 'DBCK-WH', 10.00, '2025-09-22 22:52:28.000000', 1, 7, 14),
+(400, 'Drive Pins', 'DPIN', 10.00, '2025-09-22 22:52:28.000000', 1, 7, 14),
+(401, 'Duct Tape', 'TAPE-DUCT', 10.00, '2025-09-22 22:52:29.000000', 1, 5, 14),
+(403, 'Eaton 200A Disconnect', 'ECCVH200R', 10.00, '2025-09-22 22:52:29.000000', 1, 1, 14),
+(404, 'Eaton 4 Round Ceiling Pan', 'TP269', 10.00, '2025-09-22 22:52:29.000000', 1, 1, 14),
+(421, 'F4P 14 Cable Tie', 'F4P14-50W', 10.00, '2025-09-22 22:52:29.000000', 1, 7, 1),
+(422, 'F4P 6-32 x 2 Flat Phillips Screw', 'CES632X2FHPMSZJ', 10.00, '2025-09-22 22:52:29.000000', 1, 7, 14),
+(423, 'Expanding Foam', 'FOAM', 30.00, '2025-09-22 22:52:29.000000', 1, 7, 14),
+(424, 'Fire Foam', 'FOAM-FIRE', 10.00, '2025-09-22 22:52:29.000000', 1, 7, 14),
+(425, 'Fire Putty', 'FIREPUTTY', 10.00, '2025-09-22 22:52:29.000000', 1, 7, 14),
+(426, 'Flashing Tape 4 x 75 ft.', 'FT-4X75', 10.00, '2025-09-22 22:52:29.000000', 1, 5, 14),
+(427, 'Fudakin LED A19 Bulb', 'FDK-A19-F3-9W-30K', 10.00, '2025-09-22 22:52:29.000000', 1, 2, 14),
+(428, 'Galvanized Conduit Nipple 2 in. x 12 in.', 'GCN-200X12', 10.00, '2025-09-22 22:52:30.000000', 1, 8, 1),
+(429, 'GARY WILLIAMS', '6788 DANAH', 10.00, '2025-09-22 22:52:30.000000', 1, 7, 14),
+(430, 'Generac 200A Transfer Switch', 'GEN-TS-200A', 10.00, '2025-09-22 22:52:30.000000', 1, 6, 14),
+(438, 'Generation Lighting Black Dog House', '7567EN3-32', 10.00, '2025-09-22 22:52:30.000000', 1, 2, 14),
+(446, 'Generation Lighting Brushed Nickel 4 Bulb Vanity', '4428904-962', 10.00, '2025-09-22 22:52:30.000000', 1, 2, 14),
+(447, 'Generation Lighting Brushed Nickel Deco Mushroom', '77064-962', 10.00, '2025-09-22 22:52:30.000000', 1, 2, 14),
+(459, 'GM Lighting 24v Puck Light Slim', 'PL24V-30-W', 10.00, '2025-09-22 22:52:31.000000', 1, 2, 14),
+(460, 'Green Electrical Tape', 'ET-GRN', 10.00, '2025-09-22 22:52:31.000000', 1, 5, 14),
+(461, 'Green Spray Paint', 'PAINT-G', 10.00, '2025-09-22 22:52:31.000000', 1, 7, 14),
+(462, 'Ground Rod Acorn Clamp 5/8 in.', 'GRAC-058', 10.00, '2025-09-22 22:52:31.000000', 1, 7, 14),
+(463, 'Grounding Bridge #2 - #6 AWG', 'GB2-6AWG', 10.00, '2025-09-22 22:52:31.000000', 1, 7, 14),
+(464, 'Halco BR30 Flood Style Bulb', 'HALCO 82170', 10.00, '2025-09-22 22:52:31.000000', 1, 2, 14),
+(465, 'Halco R20 LED Bulb', 'HALCO 80986', 10.00, '2025-09-22 22:52:31.000000', 1, 2, 14),
+(466, 'Handy Box Cover 1/2 in. KO', 'HB-COVER05KO', 10.00, '2025-09-22 22:52:31.000000', 1, 10, 14),
+(467, 'Hinkley 12v Bronze Step Light', '1565BZ', 10.00, '2025-09-22 22:52:31.000000', 1, 6, 14),
+(468, 'Hubbell Brass Quad Floor Outlet Plate', 'S1TFCBRS', 10.00, '2025-09-22 22:52:31.000000', 1, 6, 14),
+(469, 'Hubbell Round Plastic Floor Box Quad', 'S1PFB', 10.00, '2025-09-22 22:52:31.000000', 1, 6, 14),
+(470, 'Intermatic Double Bubble Cover', 'WP5220C', 10.00, '2025-09-22 22:52:31.000000', 1, 6, 14),
+(471, 'Intermatic Photocell', 'K4321C', 10.00, '2025-09-22 22:52:31.000000', 1, 6, 14),
+(473, 'Jet Line 6500 ft.', 'JL-6500', 10.00, '2025-09-22 22:52:31.000000', 1, 4, 14),
+(476, 'Kichler 21 in. Interconnect Cable', '10573WH', 10.00, '2025-09-22 22:52:31.000000', 1, 2, 1),
+(479, 'Kichler 49830OZ (CR)', '49830OZ', 10.00, '2025-09-22 22:52:31.000000', 1, 2, 14),
+(480, 'Kichler 49961AVI (CO)', '49961AVI', 10.00, '2025-09-22 22:52:31.000000', 1, 2, 14),
+(483, 'Kichler 9246AZ (MO', '9246AZ', 10.00, '2025-09-22 22:52:32.000000', 1, 2, 14),
+(484, 'Kichler 9776BK (West Indies and Low Country)', '9776BK', 10.00, '2025-09-22 22:52:32.000000', 1, 2, 14),
+(485, 'Klein Steel Fish Tape 240 ft.', 'KLEIN 56341', 10.00, '2025-09-22 22:52:32.000000', 1, 4, 14),
+(488, '1 Gang Blank Plate', 'TPJ13-W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(489, '1 Gang Plate', 'TPJ26-W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(490, '1 Gang Screwless Plate', 'RWP26W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(491, '2 Gang Blank Plate', 'TP23-W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(492, '2 Gang Duplex Plate', 'TPJ82-W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(493, '2 Gang Plate', 'TPJ262-W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(494, '2 Gang Screwless Plate', 'RWP262W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(495, '20A Duplex Outlet', 'CR20-W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(496, '20A Single Outlet', 'TR5351-W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(497, '3 Gang Plate', 'TPJ263-W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(498, '3 Gang Screwless Plate', 'RWP263W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(499, '3 Way Switch', 'TM873-W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(500, '30A Flush Mount Outlet', '3864', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(501, '4 Gang Plate', 'TPJ264-W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(502, '4 Gang Screwless Plate', 'RWP264W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(503, '4 Way Switch', 'TM874-W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(504, '5 Gang Plate', 'TP265-W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(505, '5 Gang Screwless Plate', 'RWP265W', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(506, '5 ft. Plug Mold White', 'WH20GB506TR', 10.00, '2025-09-22 22:52:32.000000', 1, 1, 14),
+(507, '50A Flush Mount Outlet', '3894', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(508, '50A Surface Mount Outlet', '3854', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(509, '6 Gang Plate', 'TP266-W', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(510, '6 Gang Screwless Plate', 'RWP266W', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(511, 'Black 1 Gang Plate', 'TP26-BK', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(512, 'Black Decora Outlet', '885TRBK', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(513, 'Black Duplex Plate', 'TP8-BK', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(514, 'Cable Plate', 'TPCATV-W', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 1),
+(515, 'Cable/Telephone Combo Plate', 'TPTELTV-W', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 1),
+(516, 'Decora Outlet', '885TRW', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(517, 'Dryer Plate', 'S3862-C', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(518, 'Duplex Outlet with Pressure Plates', '3232-TREXW', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(519, 'Duplex Outlet WR', '3232-TRWRW', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(520, 'Duplex Plate', 'TPJ8-W', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(521, 'Keyless', '276-WH', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(522, 'ON-Q 1 Port Plate', 'WP3401-WH', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(523, 'ON-Q 2 Port Plate', 'WP3402-WH', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(524, 'ON-Q Plastic Enclosure', 'ENP42805-NA', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(525, 'ON-Q RG6 Connector', 'WP3479-WH', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(526, 'ON-Q RJ45 Connector', 'WP3450-WH-50', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(527, 'Plug Mold Starter', 'WH2010A2', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(528, 'Radiant Dimmer', 'RHCL453PW', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(529, 'Recessed Single Outlet 15A', 'S3713-W', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(530, 'Single Outlet Plate', 'TPJ7-W', 10.00, '2025-09-22 22:52:33.000000', 1, 1, 14),
+(531, 'Single Pole Stack Switch', 'RCD11W', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(533, 'Telephone Plate', 'TPTE1-W', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(534, 'TR GFI', '1597TRW', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(535, 'USB Outlet', 'R26USBAC6W', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(537, '1 Gang Blank Plate', 'PJ13-W', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(539, '115 Breaker', 'LB115-T', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(540, '115AF/GFI Breaker', 'LB115-DFT', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(542, '120AF/GFI Breaker', 'LB120-DFT', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(543, '2 Gang Blank Plate', 'PJ23-W', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(544, '2 Gang Plate', 'PJ262-W', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(545, '2 Pole 20A Surge Breaker', 'LSPD2-TR', 3.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(546, '200A Meter Main Combo', 'LS820-BTD', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(547, '20A Single Outlet', 'T5020-W', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(548, '220 Breaker', 'LB220-T', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(549, '220GFI Breaker', 'LB220-G', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(550, '225 Breaker', 'LB225-T', 10.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(551, '225A Main Lug Panel 42S', 'LP422-LPD', 3.00, '2025-09-22 22:52:34.000000', 1, 1, 14),
+(552, '225GFI Breaker', 'LB225-G', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(555, '235 Breaker', 'LB235-T', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(556, '235GFI Breaker', 'LB235-G', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(557, '240 Breaker', 'LB240-T', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(558, '240GFI Breaker', 'LB240-G', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(559, '245 Breaker', 'LB245-T', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(560, '245GFI Breaker', 'LB245-G', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(561, '250 Breaker', 'LB250-T', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(562, '250GFI Breaker', 'LB250-G', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(563, '260 Breaker', 'LB260-T', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(564, '260GFI Breaker', 'LB260-G', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(565, '3 Gang Plate', 'PJ263-W', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(566, '3 Way Switch', '5603-2W', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(567, '30A Flush Mount Outlet', '278-S00', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(568, '4 Gang Plate', 'PJ264-W', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(569, '50A Flush Mount Outlet', '279-S00', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(570, '50A Surface Mount Outlet', '55050-P00', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(571, 'Decora Evolve 15 Amp Receptacle Base', 'VBTR1-1W', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(572, 'Decora Evolve Multiway Companion Switch Base', 'VBCS1-1W', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(573, 'Decora Evolve Multiway Primary Switch Base', 'VBPS1-1W', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(574, 'Decora Evolve Single-Pole Switch Base', 'VBSS1-1W', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(575, 'Decora Outlet', 'T5325-W', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(576, 'Dryer Plate', '4934', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(577, 'Duplex Outlet', 'T5320-W', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(578, 'Duplex Outlet WR', 'W5320-TOW', 10.00, '2025-09-22 22:52:35.000000', 1, 1, 14),
+(579, 'Duplex Plate', 'PJ8-W', 10.00, '2025-09-22 22:52:36.000000', 1, 1, 14),
+(580, 'Fan Control Switch', 'DHS05-1LW', 10.00, '2025-09-22 22:52:36.000000', 1, 1, 14),
+(581, 'Panel Cover 42S', 'LDC42', 3.00, '2025-09-22 22:52:36.000000', 1, 1, 14),
+(582, 'Single Outlet Plate', 'PJ7-W', 10.00, '2025-09-22 22:52:36.000000', 1, 1, 14),
+(583, 'Single Pole Switch', '5601-2W', 10.00, '2025-09-22 22:52:36.000000', 1, 1, 14),
+(584, 'TR GFI', 'GFTR1-W', 10.00, '2025-09-22 22:52:36.000000', 1, 1, 14),
+(585, 'USB Outlet', 'T5638-20W', 10.00, '2025-09-22 22:52:36.000000', 1, 1, 14),
+(586, 'Lighting Track', '10174WH', 10.00, '2025-09-22 22:52:36.000000', 1, 2, 14),
+(587, 'Lighting Track Diffuser', '10179', 10.00, '2025-09-22 22:52:36.000000', 1, 2, 1),
+(588, 'Lithonia Emergency Light', 'EU2C M6', 10.00, '2025-09-22 22:52:36.000000', 1, 2, 14),
+(589, 'Lithonia Red/Green Exit Light', 'EXRG EL M6', 10.00, '2025-09-22 22:52:36.000000', 1, 2, 14),
+(591, 'Lutron Pico Dimmer Kit', 'PPKG1WWH', 10.00, '2025-09-22 22:52:36.000000', 1, 6, 14),
+(592, 'Lutron Pico Remote Wall Bracket', 'PICO-WBX-ADAPT', 10.00, '2025-09-22 22:52:36.000000', 1, 6, 14),
+(593, 'Lutron Slide Dimmer', 'DVCL153PWH', 10.00, '2025-09-22 22:52:36.000000', 1, 6, 14),
+(594, 'Makita 1 9/16 Rotary Hammer', 'MAKHR4002', 10.00, '2025-09-22 22:52:36.000000', 1, 4, 14),
+(598, 'Metal 60A Non-Fused Disconnect', 'DISCO-60ANF', 10.00, '2025-09-22 22:52:36.000000', 1, 7, 14),
+(599, 'Metal Anchor Kit Jar (50)', 'ANCHORS', 10.00, '2025-09-22 22:52:36.000000', 1, 7, 14),
+(600, 'Metal Fan Box 1 in. 1/2 in. Deep', 'MFB-150D', 10.00, '2025-09-22 22:52:36.000000', 1, 10, 14),
+(601, 'Metal Fan Box 1/2 in. Deep', 'MFB-050D', 10.00, '2025-09-22 22:52:36.000000', 1, 10, 14),
+(602, 'Milbank 200A 2 Position Meter Can', 'U1252-X-HSP', 10.00, '2025-09-22 22:52:36.000000', 1, 1, 14),
+(603, 'Milbank Hub Adapter Plate', 'S8324', 10.00, '2025-09-22 22:52:36.000000', 1, 1, 14),
+(604, 'Mortar Mix 60lb', 'MORTOR', 10.00, '2025-09-22 22:52:36.000000', 1, 7, 14),
+(606, 'No Service Keyless Pack', 'No Service Keyless Pack', 10.00, '2025-09-22 22:52:37.000000', 1, 7, 1),
+(607, 'Noox-x Oxide Inhibitor', 'NOOX', 10.00, '2025-09-22 22:52:37.000000', 1, 7, 14),
+(609, 'OL8701ORB', 'OL8701ORB', 10.00, '2025-09-22 22:52:37.000000', 1, 7, 14),
+(610, 'Old Work Shallow Box', '1 Gang Plastic Shallow Box', 10.00, '2025-09-22 22:52:37.000000', 1, 10, 14),
+(611, '1 Gang Box', 'CA-1020', 10.00, '2025-09-22 22:52:37.000000', 1, 10, 14),
+(612, 'OS 1 Gang Plastic Bracket Box', 'OS-B01R', 2000.00, '2025-09-22 22:52:37.000000', 1, 10, 14),
+(613, 'OS 2 Gang Plastic Bracket Box', 'OS-02R', 10.00, '2025-09-22 22:52:37.000000', 1, 10, 14),
+(614, 'OS 3 Gang Plastic Bracket Box', 'OS-03DN', 10.00, '2025-09-22 22:52:37.000000', 1, 10, 14),
+(615, 'OS 4 Gang Plastic Bracket Box', 'OS-04DN', 10.00, '2025-09-22 22:52:37.000000', 1, 10, 14),
+(616, 'Round Bar Hanger Box', 'OS-06N', 10.00, '2025-09-22 22:52:37.000000', 1, 10, 14),
+(617, 'Round Nail on Box', 'OS-05N', 10.00, '2025-09-22 22:52:37.000000', 1, 10, 14),
+(618, 'Overhead Extended Service (Siemens)', 'Overhead Extended Service (Siemens)', 10.00, '2025-09-22 22:52:37.000000', 1, 1, 1),
+(619, 'Overhead Extended Service (Square D)', 'Overhead Extended Service (Square D)', 10.00, '2025-09-22 22:52:37.000000', 1, 1, 1),
+(622, 'P&S 1 Gang Plastic Bracket Box 22 Cu In with QC Offset Bracket', 'S1-22-S50', 10.00, '2025-09-22 22:52:37.000000', 1, 3, 14),
+(627, 'P&S Bar Hanger', 'S1-20-HAC', 10.00, '2025-09-22 22:52:37.000000', 1, 3, 14),
+(630, 'Pico On/Off Master Switch', 'PD5SDVWH', 10.00, '2025-09-22 22:52:37.000000', 1, 6, 14),
+(631, 'Pico Remote On/Off', 'PJ22BGWHL01', 10.00, '2025-09-22 22:52:38.000000', 1, 6, 14),
+(634, 'Pool Kit Collier', 'Pool Kit Collier', 10.00, '2025-09-22 22:52:38.000000', 1, 7, 14),
+(635, 'Pool with Metermain Kit', 'Pool with Metermain Kit', 10.00, '2025-09-22 22:52:38.000000', 1, 7, 14),
+(647, 'progress island pendant chandaleer vintage brass', 'p400298-163', 10.00, '2025-09-22 22:52:38.000000', 1, 2, 14),
+(648, 'progress pendant light vintage brass', 'p5196-163', 10.00, '2025-09-22 22:52:38.000000', 1, 2, 14),
+(649, 'Push Broom', 'BROOM', 10.00, '2025-09-22 22:52:38.000000', 1, 7, 14),
+(650, 'PVC Glue', 'PVC-GLUE', 10.00, '2025-09-22 22:52:38.000000', 1, 8, 1),
+(651, 'QO 1 Pole Breaker Lock', 'QO1PA', 3.00, '2025-09-22 22:52:38.000000', 1, 7, 14),
+(652, 'QO 1 Pole Breaker Lock (New)', 'QOADV1PAF', 3.00, '2025-09-22 22:52:38.000000', 1, 7, 14),
+(653, '2100 Breaker', 'QO2100', 10.00, '2025-09-22 22:52:38.000000', 1, 7, 14),
+(658, '120AF Breaker', 'QO120PCAFI', 10.00, '2025-09-22 22:52:39.000000', 1, 1, 14),
+(660, 'QO 2 Pole Breaker Lock', 'QO1PL', 3.00, '2025-09-22 22:52:39.000000', 1, 7, 14),
+(661, 'QO 2 Pole GFI Breaker Lock', 'GFI2PA', 3.00, '2025-09-22 22:52:39.000000', 1, 7, 14),
+(662, 'QO 200A Breaker (For 400A Meter/Main Combo)', 'QDL22200', 3.00, '2025-09-22 22:52:39.000000', 1, 7, 14),
+(667, '230GFI Breaker', 'SLAQO230GFI', 10.00, '2025-09-22 22:52:39.000000', 1, 7, 14),
+(676, '290 Breaker', 'QO290', 10.00, '2025-09-22 22:52:39.000000', 1, 7, 14),
+(677, 'QO 3 Pole 40A Breaker', 'QO340', 3.00, '2025-09-22 22:52:39.000000', 1, 7, 14),
+(678, 'QO Back Fed Barrier', 'PKSB1QOBF', 10.00, '2025-09-22 22:52:39.000000', 1, 7, 14),
+(679, 'QO Interlock Kit', 'QOCGK2C', 10.00, '2025-09-22 22:52:39.000000', 1, 7, 14),
+(680, 'QO Surge Breaker', 'QO2175SB', 3.00, '2025-09-22 22:52:39.000000', 1, 7, 14),
+(682, 'Raco 2 1/2 in. Deep Gangable', '500', 10.00, '2025-09-22 22:52:39.000000', 1, 3, 14),
+(686, 'Raco 30A/50A RS Cover', '810C', 10.00, '2025-09-22 22:52:40.000000', 1, 3, 14),
+(687, '4 in. Square Extension Ring', '203', 10.00, '2025-09-22 22:52:40.000000', 1, 3, 14),
+(688, '4 Square Shallow Box', '185', 10.00, '2025-09-22 22:52:40.000000', 1, 3, 14),
+(690, 'Raco MC 3/8 in. Duplex Connector', '2611', 10.00, '2025-09-22 22:52:40.000000', 1, 3, 1),
+(695, 'Red Electrical Tape', 'ET-RD', 10.00, '2025-09-22 22:52:40.000000', 1, 5, 14),
+(696, 'Red Stucco Tape', 'TAPE-STUCCO', 10.00, '2025-09-22 22:52:40.000000', 1, 5, 14),
+(697, 'Red Wire Nut', 'WNUT-R', 10.00, '2025-09-22 22:52:40.000000', 1, 9, 1);
+INSERT INTO `appinventory_product` (`id`, `name`, `sku`, `reorder_level`, `created_at`, `is_active`, `category_id`, `unit_default_id`) VALUES
+(698, '14 Natural Cable Tie', 'NN14-50', 10.00, '2025-09-22 22:52:40.000000', 1, 7, 1),
+(699, 'RG6', 'RG6', 10.00, '2025-09-22 22:52:40.000000', 1, 7, 14),
+(700, 'RG6 Twist-on Connector', 'RG6-TC', 10.00, '2025-09-22 22:52:40.000000', 1, 7, 14),
+(701, 'Ring Video Doorbell', '8VR1P6-0EN0', 10.00, '2025-09-22 22:52:40.000000', 1, 6, 14),
+(702, 'Round Bell Box 5 Hole 1/2', 'BB-RND1G-5H-050', 10.00, '2025-09-22 22:52:40.000000', 1, 10, 14),
+(710, 'Satco Candelabra Bulbs', 'A3684', 10.00, '2025-09-22 22:52:41.000000', 1, 7, 14),
+(712, 'Scepter 2 24 Radius Sweep', '8644', 10.00, '2025-09-22 22:52:41.000000', 1, 5, 14),
+(714, 'Screwless Ceiling Plate', 'SCP-INVISO', 10.00, '2025-09-22 22:52:41.000000', 1, 11, 14),
+(715, 'SDS Max Clay Spade', 'CCLAYTE', 10.00, '2025-09-22 22:52:41.000000', 1, 7, 14),
+(716, 'Seamless Knit Gloves', 'GLOVES', 10.00, '2025-09-22 22:52:41.000000', 1, 7, 14),
+(717, 'SELBY RGH', 'TOLL BROTHERS 55', 10.00, '2025-09-22 22:52:41.000000', 1, 2, 14),
+(718, 'SER 2-2-2-4 Aluminum', 'SER-2-2-2-4-AL', 10.00, '2025-09-22 22:52:41.000000', 1, 7, 1),
+(719, 'SER 4-4-4-6 Copper', 'SER 4-4-4-6-CU', 10.00, '2025-09-22 22:52:41.000000', 1, 9, 1),
+(720, 'SER 4/0-4/0-4/0-2/0', 'SER-4/0-4/0-4/0-2/0-AL', 10.00, '2025-09-22 22:52:41.000000', 1, 7, 1),
+(721, 'SF76-131 MUSHROOM DECO', 'SF76-131 MUSHROOM DECO', 10.00, '2025-09-22 22:52:41.000000', 1, 7, 14),
+(722, 'Shallow Handy Box 1 in. 1/2 in. Deep', 'HB-150DSH', 10.00, '2025-09-22 22:52:41.000000', 1, 10, 14),
+(746, 'Siemens 200A Plug On Breaker 10KAIC', 'QN2200', 3.00, '2025-09-22 22:52:42.000000', 1, 1, 14),
+(748, 'Siemens 215', 'Q215', 10.00, '2025-09-22 22:52:42.000000', 1, 1, 14),
+(756, '230 Breaker', 'S230', 60.00, '2025-09-22 22:52:42.000000', 1, 1, 14),
+(768, '270 Breaker', 'Q270', 10.00, '2025-09-22 22:52:43.000000', 1, 1, 14),
+(769, '280 Breaker', 'Q280', 10.00, '2025-09-22 22:52:43.000000', 1, 1, 14),
+(771, 'Siemens 3 Phase 60A Safety Switch', 'GNF322RA', 10.00, '2025-09-22 22:52:43.000000', 1, 1, 14),
+(776, 'Siemens Filler Plate', 'ECQF3', 10.00, '2025-09-22 22:52:43.000000', 1, 1, 14),
+(777, 'Siemens Interlock Kit', 'ECSBPK03', 10.00, '2025-09-22 22:52:43.000000', 1, 1, 14),
+(778, 'Siemens Interlock Kit for Meter Main Combo', 'ECSBPK05', 10.00, '2025-09-22 22:52:43.000000', 1, 1, 14),
+(779, 'Siemens Panel Label', 'SIEMENS LABEL', 3.00, '2025-09-22 22:52:43.000000', 1, 1, 14),
+(780, 'Sikaflex Black Polyurethane Sealent', 'Sikaflex-1A', 10.00, '2025-09-22 22:52:43.000000', 1, 8, 1),
+(781, 'Single Teardrop Lug for 320A', 'K1540L', 10.00, '2025-09-22 22:52:43.000000', 1, 7, 14),
+(782, 'SOLANA RGH', 'TOLL BROTHERS 200', 10.00, '2025-09-22 22:52:43.000000', 1, 7, 14),
+(792, '200A Disconnect (With Internal Breaker)', '2200MRBE', 3.00, '2025-09-22 22:52:44.000000', 1, 1, 14),
+(796, 'Square D 225A Main Panel', 'QO142L225PG', 3.00, '2025-09-22 22:52:44.000000', 1, 1, 14),
+(809, 'Square D 50A Flush Mount Outlet', 'SQR46501BK', 10.00, '2025-09-22 22:52:44.000000', 1, 1, 14),
+(810, 'Square D 8 Space 100A Sub Panel', 'QO816L100RB', 3.00, '2025-09-22 22:52:44.000000', 1, 1, 14),
+(815, 'Square D Dryer Plate', 'SQWS461011WH', 10.00, '2025-09-22 22:52:45.000000', 1, 1, 14),
+(817, 'Square D Duplex Plate', 'SQWS-42-2011-WH', 10.00, '2025-09-22 22:52:45.000000', 1, 1, 14),
+(818, 'Square D Ground Lug Kit (2/0 AWG)', 'PKOGTA2', 10.00, '2025-09-22 22:52:45.000000', 1, 1, 14),
+(819, 'Square D High Amperage Feed Lug Kit (For 400A Meter/Main Combo)', 'CMELK4', 10.00, '2025-09-22 22:52:45.000000', 1, 1, 14),
+(823, 'Square D Single Gang Bubble Cover', 'SQWS-83-211-XX', 10.00, '2025-09-22 22:52:45.000000', 1, 1, 14),
+(826, 'Square D Switch Faceplate', 'SQR16100WH', 10.00, '2025-09-22 22:52:45.000000', 1, 1, 14),
+(833, 'Standard Leviton Well Kit', 'Standard Leviton Well Kit', 10.00, '2025-09-22 22:52:45.000000', 1, 1, 14),
+(834, 'Standard Mushroom Light', 'P3410-30', 10.00, '2025-09-22 22:52:45.000000', 1, 2, 14),
+(835, 'Standard Siemens Well Kit', 'Standard Siemens Well Kit', 10.00, '2025-09-22 22:52:45.000000', 1, 1, 14),
+(837, 'Stud Punch', 'STUD', 10.00, '2025-09-22 22:52:45.000000', 1, 7, 14),
+(838, 'Talon 200A Meter Socket', 'UAT437-XGF', 10.00, '2025-09-22 22:52:45.000000', 1, 1, 14),
+(847, '6 Slim Square Wafer CCT', 'CLY6SQ-5CCTA/WH', 10.00, '2025-09-22 22:52:46.000000', 1, 2, 14),
+(848, 'Tamlite LED Motion Flood Light', 'CMS2180WH', 10.00, '2025-09-22 22:52:46.000000', 1, 2, 14),
+(849, 'Tan Wire Nut', 'WNUT-T', 10.00, '2025-09-22 22:52:46.000000', 1, 9, 1),
+(850, 'Tapcon 1/4 in. x 1 in. 1/4 in. (100)', 'TAP-025-125', 10.00, '2025-09-22 22:52:46.000000', 1, 7, 14),
+(851, 'Tapcon 1/4 in. x 2 3/4 in. (100)', 'TAP-025-275', 10.00, '2025-09-22 22:52:46.000000', 1, 7, 14),
+(852, 'Tape Light With Tracks', 'Tape Light With Tracks', 10.00, '2025-09-22 22:52:46.000000', 1, 2, 14),
+(853, 'Tape to Tape Terminal Block', 'TLTB-TT-1', 10.00, '2025-09-22 22:52:46.000000', 1, 5, 14),
+(854, 'Tape to Wire Terminal Block', 'TLTB-TW-1', 10.00, '2025-09-22 22:52:46.000000', 1, 9, 1),
+(856, 'Tie Wire', 'TIEWIRE', 10.00, '2025-09-22 22:52:46.000000', 1, 9, 1),
+(857, 'Tite Bond Gray Sealant', '229915', 10.00, '2025-09-22 22:52:46.000000', 1, 5, 8),
+(864, '250v 20A Single Outlet WR', 'RR205WWR', 10.00, '2025-09-22 22:52:46.000000', 1, 6, 14),
+(865, 'Aluminum Floor Outlet', 'RF406ALU', 10.00, '2025-09-22 22:52:46.000000', 1, 6, 14),
+(866, 'Brass Floor Outlet', 'RF406BR', 10.00, '2025-09-22 22:52:46.000000', 1, 6, 14),
+(867, 'Plastic Floor Box', 'RF400', 10.00, '2025-09-22 22:52:46.000000', 1, 6, 14),
+(868, 'Trenching Shovel', 'TRENCHSHOVEL', 10.00, '2025-09-22 22:52:47.000000', 1, 7, 14),
+(870, 'Tru-Fuel 50/1 32OZ', 'Tru-Fuel 6525638', 10.00, '2025-09-22 22:52:47.000000', 1, 7, 14),
+(875, 'Vulkem Gray Caulk', 'TREMCO-960712323', 10.00, '2025-09-22 22:52:47.000000', 1, 5, 8),
+(876, 'White Electrical Tape', 'ET-WH', 10.00, '2025-09-22 22:52:47.000000', 1, 5, 14),
+(877, 'White Hard Hat', 'HARDHAT', 10.00, '2025-09-22 22:52:47.000000', 1, 7, 14),
+(882, 'Wire Lube', 'WLUBE', 10.00, '2025-09-22 22:52:47.000000', 1, 9, 1),
+(883, 'Yellow Wire Nut', 'WNUT-Y', 10.00, '2025-09-22 22:52:47.000000', 1, 9, 1),
+(886, '1 Gang Adjustable Box 21 Cu In', 'UNIFIED-351', 10.00, '2025-10-04 13:42:13.678885', 1, 3, 14),
+(887, '1/2 in. Romex Push Connector', 'UNIFIED-353', 10.00, '2025-10-04 13:42:13.763897', 1, 3, 1),
+(888, '3/8 in. MC Straight Connector', 'UNIFIED-365', 10.00, '2025-10-04 13:42:13.780879', 1, 3, 1),
+(889, '3/8 in. MC Strap', 'UNIFIED-366', 10.00, '2025-10-04 13:42:13.795883', 1, 3, 1),
+(890, '1/2 in. 90 Liquid Tight Connector', 'UNIFIED-370', 10.00, '2025-10-04 13:42:13.809878', 1, 5, 14),
+(891, '3 Gang Plastic Bracket Box 74 Cu in', 'UNIFIED-375', 10.00, '2025-10-04 13:42:13.825234', 1, 3, 14),
+(892, '1/2 in. ENT 200 ft.', 'UNIFIED-379', 10.00, '2025-10-04 13:42:13.843517', 1, 3, 1),
+(893, '1/2 in. Plastic Pop In Connector', 'UNIFIED-383', 10.00, '2025-10-04 13:42:13.857511', 1, 3, 1),
+(894, '3/4 in. ENT', 'UNIFIED-386', 10.00, '2025-10-04 13:42:13.870270', 1, 3, 1),
+(895, 'Plastic Bar Hanger 20 CU IN', 'UNIFIED-389', 10.00, '2025-10-04 13:42:13.882266', 1, 3, 1),
+(896, '6 Metal Sawzall Blade', 'UNIFIED-397', 10.00, '2025-10-04 13:42:13.893261', 1, 4, 14),
+(897, '2 Hub', 'UNIFIED-402', 10.00, '2025-10-04 13:42:13.906256', 1, 1, 14),
+(898, '400A Meter Main Combo', 'UNIFIED-412', 10.00, '2025-10-04 13:42:13.923449', 1, 1, 14),
+(900, 'Decora RS Cover', 'UNIFIED-414', 10.00, '2025-10-04 13:42:13.972261', 1, 1, 14),
+(901, 'Single Outlet RS Cover', 'UNIFIED-416', 10.00, '2025-10-04 13:42:14.003618', 1, 1, 14),
+(902, 'Z-Wave Switch', 'UNIFIED-417', 10.00, '2025-10-04 13:42:14.023622', 1, 1, 14),
+(903, 'Chime Kit', 'UNIFIED-418', 10.00, '2025-10-04 13:42:14.038596', 1, 6, 14),
+(904, '4 Slim Square Wafer 5CCT', 'UNIFIED-419', 10.00, '2025-10-04 13:42:14.050597', 1, 2, 14),
+(905, '2 ft. LED Wrap Light', 'UNIFIED-431', 10.00, '2025-10-04 13:42:14.064724', 1, 2, 14),
+(906, 'Black 3 Bulb Vanity', 'UNIFIED-434', 10.00, '2025-10-04 13:42:14.085705', 1, 2, 14),
+(907, 'Black Coach Light', 'UNIFIED-437', 10.00, '2025-10-04 13:42:14.120761', 1, 2, 14),
+(908, 'Black Post', 'UNIFIED-440', 10.00, '2025-10-04 13:42:14.139765', 1, 2, 14),
+(909, 'Traverse LED', 'UNIFIED-456', 10.00, '2025-10-04 13:42:14.154766', 1, 2, 14),
+(910, 'White Flood Light', 'UNIFIED-458', 10.00, '2025-10-04 13:42:14.174535', 1, 2, 14),
+(911, '5000k Surface Mount LED', 'UNIFIED-474', 10.00, '2025-10-04 13:42:14.187118', 1, 6, 14),
+(912, '12 in. Under Cabinet Light', 'UNIFIED-475', 10.00, '2025-10-04 13:42:14.203063', 1, 2, 14),
+(913, '4 Round Slim Microdisk 5CCT', 'UNIFIED-486', 10.00, '2025-10-04 13:42:14.223370', 1, 2, 14),
+(914, 'WR GFI', 'UNIFIED-536', 10.00, '2025-10-04 13:42:14.237352', 1, 1, 14),
+(915, 'CAT 5E', 'UNIFIED-590', 10.00, '2025-10-04 13:42:14.257358', 1, 6, 14),
+(916, '1 Gang Cut-in Box', 'UNIFIED-620', 10.00, '2025-10-04 13:42:14.269368', 1, 3, 14),
+(917, 'Tap AWG 4-14', 'UNIFIED-632', 10.00, '2025-10-04 13:42:14.285372', 1, 6, 14),
+(918, '3 Bulb Dining Chandelier Brushed Nickel', 'UNIFIED-637', 10.00, '2025-10-04 13:42:14.297353', 1, 2, 14),
+(919, '36 Fan Downrod Black', 'UNIFIED-638', 10.00, '2025-10-04 13:42:14.311605', 1, 2, 14),
+(920, '6 New Construction Housing', 'UNIFIED-644', 10.00, '2025-10-04 13:42:14.323670', 1, 2, 14),
+(921, '30A 20 ft. Generator Cord', 'UNIFIED-703', 10.00, '2025-10-04 13:42:14.340923', 1, 6, 14),
+(922, '30A Power Inlet Box', 'UNIFIED-704', 10.00, '2025-10-04 13:42:14.352905', 1, 6, 14),
+(923, '1 in. 1/4 in. Hub', 'UNIFIED-723', 10.00, '2025-10-04 13:42:14.364911', 1, 1, 14),
+(924, '1 Pole Breaker Lock', 'UNIFIED-724', 3.00, '2025-10-04 13:42:14.377915', 1, 1, 14),
+(925, '115AF Breaker', 'UNIFIED-726', 10.00, '2025-10-04 13:42:14.391553', 1, 1, 14),
+(926, '120 Breaker', 'UNIFIED-729', 10.00, '2025-10-04 13:42:14.409565', 1, 1, 14),
+(927, '120GFI Breaker', 'UNIFIED-732', 10.00, '2025-10-04 13:42:14.426554', 1, 1, 14),
+(928, '125A 12 Space Outdoor Main Lug Panel', 'UNIFIED-733', 3.00, '2025-10-04 13:42:14.464562', 1, 1, 14),
+(929, '125A Breaker', 'UNIFIED-735', 3.00, '2025-10-04 13:42:14.486559', 1, 1, 14),
+(930, '150A Breaker 22 KAIC', 'UNIFIED-736', 3.00, '2025-10-04 13:42:14.503555', 1, 1, 14),
+(931, '200A Main Breaker', 'UNIFIED-741', 3.00, '2025-10-04 13:42:14.520567', 1, 1, 14),
+(932, '200A Main Lug Panel 40S/40C', 'UNIFIED-743', 3.00, '2025-10-04 13:42:14.537556', 1, 1, 14),
+(933, '215GFI Breaker', 'UNIFIED-749', 10.00, '2025-10-04 13:42:14.554561', 1, 1, 14),
+(934, '3 Stack Meter', 'UNIFIED-772', 10.00, '2025-10-04 13:42:14.584560', 1, 1, 14),
+(935, '60A Non-Fused Disconnect', 'UNIFIED-775', 10.00, '2025-10-04 13:42:14.605555', 1, 1, 14),
+(936, '1 Gang Blank Plate', 'UNIFIED-785', 10.00, '2025-10-04 13:42:14.621558', 1, 1, 14),
+(937, '20A Duplex Outlet', 'UNIFIED-795', 10.00, '2025-10-04 13:42:14.657556', 1, 1, 14),
+(938, '225A Outdoor Breaker Enclosure', 'UNIFIED-797', 3.00, '2025-10-04 13:42:14.674555', 1, 1, 14),
+(939, '4 Terminal Ground Bar Kit', 'UNIFIED-804', 10.00, '2025-10-04 13:42:14.687558', 1, 1, 14),
+(940, 'Cable Outlet', 'UNIFIED-813', 10.00, '2025-10-04 13:42:14.701549', 1, 1, 1),
+(941, 'Panel Cover', 'UNIFIED-821', 3.00, '2025-10-04 13:42:14.718558', 1, 1, 14),
+(942, 'Telephone Outlet', 'UNIFIED-827', 10.00, '2025-10-04 13:42:14.731559', 1, 1, 14),
+(943, '24v 25w Driver', 'UNIFIED-839', 10.00, '2025-10-04 13:42:14.743553', 1, 2, 14),
+(944, '1 in. 1/2 in. x 1 in. 1/4 in. Reducing Washer', 'UNIFIED-858', 10.00, '2025-10-04 13:42:14.757552', 1, 5, 14),
+(948, 'Test refresh List', '6543', 20.00, '2025-10-06 20:31:42.950411', 1, 6, 4),
+(949, 'Flex 4 ft.', '001', 10.00, '2025-10-14 20:29:24.963961', 1, 12, 16),
+(950, 'Marvin Bochner 1.5 in. x 3 in. Kickplate', '15x3', 0.00, '2025-10-15 02:29:00.134440', 1, 11, 14),
+(951, 'All In One Rough Plate 3 in.,4 in.,6 in.', 'Plate 346', 100.00, '2025-10-15 03:14:10.989833', 1, 2, 14),
+(952, '2 Gang Box', 'CA-0325', 250.00, '2025-10-15 23:07:03.421585', 1, 3, 14),
+(953, '3 Gang Box', 'CAR-2420', 250.00, '2025-10-15 23:10:24.867128', 1, 3, 14),
+(954, '4 Gang Box', 'CAR-9843', 0.00, '2025-10-15 23:12:53.543356', 1, 3, 14);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appinventory_productbrand`
+--
+
+CREATE TABLE `appinventory_productbrand` (
+  `id` bigint NOT NULL,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `is_default` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appinventory_productbrand`
+--
+
+INSERT INTO `appinventory_productbrand` (`id`, `name`, `is_active`, `is_default`) VALUES
+(1, 'ABB', 1, 0),
+(2, 'AMERICAN LIGHTING', 1, 1),
+(3, 'ARLINGTON', 1, 1),
+(4, 'ASI', 1, 1),
+(5, 'BRIDGEPORT', 1, 1),
+(6, 'BWF', 1, 1),
+(7, 'CANTEX', 1, 1),
+(8, 'CARLON', 1, 1),
+(9, 'CENTAUR', 1, 1),
+(10, 'DEWALT', 1, 1),
+(11, 'DIABLO', 1, 1),
+(12, 'EATON', 1, 0),
+(13, 'EDWARDS', 1, 1),
+(14, 'ENVISION', 1, 1),
+(16, 'FUDAKIN', 1, 1),
+(17, 'GENERATION LIGHTING', 1, 1),
+(18, 'GM LIGHTING', 1, 1),
+(19, 'HALCO', 1, 1),
+(20, 'HINKLEY', 1, 1),
+(21, 'HUBBELL', 1, 1),
+(22, 'INTERMATIC', 1, 1),
+(23, 'JULLISON', 1, 1),
+(24, 'KICHLER', 1, 1),
+(25, 'KLEIN', 1, 1),
+(26, 'LEDVANCE', 1, 1),
+(27, 'LEGRAND', 1, 1),
+(28, 'LEVITON', 1, 0),
+(29, 'LITHONIA', 1, 1),
+(30, 'LOGICO', 1, 1),
+(31, 'LUTRON', 1, 1),
+(32, 'MAKITA', 1, 1),
+(33, 'MAXIM', 1, 1),
+(34, 'MILBANK', 1, 1),
+(35, 'NATURALED', 1, 1),
+(36, 'NUTONE', 1, 1),
+(37, 'P&S', 1, 1),
+(38, 'PICO', 1, 1),
+(39, 'POLARIS', 1, 1),
+(40, 'PROGRESS', 1, 1),
+(41, 'RACO', 1, 1),
+(42, 'RADIANT', 1, 1),
+(43, 'REGAL', 1, 1),
+(44, 'RING', 1, 1),
+(45, 'RPP', 1, 1),
+(46, 'SATCO', 1, 1),
+(47, 'SCEPTER', 1, 1),
+(48, 'SIEMENS', 1, 1),
+(49, 'SQUARE D', 1, 0),
+(50, 'TALON', 1, 1),
+(51, 'TAMLITE', 1, 1),
+(52, 'TOPAZ', 1, 1),
+(53, 'TRADE SELECT', 1, 1),
+(54, 'VULITE', 1, 1),
+(55, 'VULKEM', 1, 1),
+(56, 'AFX', 1, 1),
+(57, 'GENERAC', 1, 1),
+(58, 'TRU-FUEL', 1, 1),
+(59, 'SELBY', 0, 1),
+(60, 'NO BRAND', 1, 1),
+(61, 'SOUTHWIRE', 1, 1),
+(64, 'A_Test 4 Brand', 1, 0),
+(65, 'COPPERWELD', 1, 1),
+(66, 'F4P', 1, 1),
+(67, 'Steel City', 1, 1),
+(68, 'Roco', 1, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appinventory_productcategory`
+--
+
+CREATE TABLE `appinventory_productcategory` (
+  `id` bigint NOT NULL,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `description` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appinventory_productcategory`
+--
+
+INSERT INTO `appinventory_productcategory` (`id`, `name`, `description`, `is_active`) VALUES
+(1, 'Electrical Componet', 'Classification Electrical Componet', 1),
+(2, 'Lighting', 'Classification Lighting', 1),
+(3, 'Boxes and Connectors', 'Classification Boxes and Connectors', 1),
+(4, 'Tools', 'Classification Tools', 1),
+(5, 'Construction Materials', 'Classification Construction Materials', 1),
+(6, 'Specialized Equipment', 'Classification Specialized Equipment', 1),
+(7, 'General Products', 'Classification General Products', 1),
+(8, 'Pipes and Conduit', 'Classification Pipes and Conduit', 1),
+(9, 'Cables and Wires', 'Classification Cables and Wires', 1),
+(10, 'Boxes and Covers', 'Classification Boxes and Covers', 1),
+(11, 'General Hardware', 'Classification General Hardware', 1),
+(12, 'FLex 4\'', '', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appinventory_productprice`
+--
+
+CREATE TABLE `appinventory_productprice` (
+  `id` bigint NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `is_default` tinyint(1) NOT NULL,
+  `valid_from` date DEFAULT NULL,
+  `valid_until` date DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `price_type_id` bigint NOT NULL,
+  `product_id` bigint NOT NULL,
+  `unit_id` bigint NOT NULL,
+  `is_sale` tinyint(1) NOT NULL,
+  `is_purchase` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appinventory_productprice`
+--
+
+INSERT INTO `appinventory_productprice` (`id`, `price`, `is_default`, `valid_from`, `valid_until`, `is_active`, `price_type_id`, `product_id`, `unit_id`, `is_sale`, `is_purchase`) VALUES
+(1, 1.28, 0, '2025-09-23', NULL, 1, 2, 1, 1, 0, 1),
+(2, 0.00, 0, '2025-09-23', NULL, 1, 2, 2, 1, 0, 1),
+(3, 0.22, 0, '2025-09-23', NULL, 1, 2, 3, 1, 0, 1),
+(4, 3.25, 0, '2025-09-23', NULL, 1, 2, 4, 1, 0, 1),
+(5, 3.25, 0, '2025-09-23', NULL, 1, 2, 5, 1, 0, 1),
+(6, 3.25, 0, '2025-09-23', NULL, 1, 2, 6, 1, 0, 1),
+(7, 0.23, 0, '2025-09-23', NULL, 1, 2, 7, 1, 0, 1),
+(8, 3.25, 0, '2025-09-23', NULL, 1, 2, 8, 1, 0, 1),
+(9, 3.25, 0, '2025-09-23', NULL, 1, 2, 9, 1, 0, 1),
+(10, 0.20, 0, '2025-09-23', NULL, 1, 2, 10, 1, 0, 1),
+(11, 3.25, 0, '2025-09-23', NULL, 1, 2, 11, 1, 0, 1),
+(12, 0.12, 0, '2025-09-23', NULL, 1, 2, 12, 1, 0, 1),
+(13, 0.15, 0, '2025-09-23', NULL, 1, 2, 13, 1, 0, 1),
+(14, 0.12, 0, '2025-09-23', NULL, 1, 2, 14, 1, 0, 1),
+(15, 0.12, 0, '2025-09-23', NULL, 1, 2, 15, 1, 0, 1),
+(16, 0.12, 0, '2025-09-23', NULL, 1, 2, 16, 1, 0, 1),
+(17, 1.16, 0, '2025-09-23', NULL, 1, 2, 17, 1, 0, 1),
+(18, 0.34, 0, '2025-09-23', NULL, 1, 2, 18, 1, 0, 1),
+(19, 0.96, 0, '2025-09-23', NULL, 1, 2, 19, 1, 0, 1),
+(20, 3.25, 0, '2025-09-23', NULL, 1, 2, 20, 14, 0, 1),
+(21, 2.28, 0, '2025-09-23', NULL, 1, 2, 21, 14, 0, 1),
+(22, 2.76, 0, '2025-09-23', NULL, 1, 2, 22, 14, 0, 1),
+(23, 3.25, 0, '2025-09-23', NULL, 1, 2, 23, 1, 0, 1),
+(24, 0.95, 0, '2025-09-23', NULL, 1, 2, 24, 1, 0, 1),
+(25, 3.25, 0, '2025-09-23', NULL, 1, 2, 25, 1, 0, 1),
+(26, 3.25, 0, '2025-09-23', NULL, 1, 2, 26, 1, 0, 1),
+(27, 0.32, 0, '2025-09-23', NULL, 1, 2, 27, 1, 0, 1),
+(28, 0.50, 0, '2025-09-23', NULL, 1, 2, 28, 1, 0, 1),
+(29, 0.50, 0, '2025-09-23', NULL, 1, 2, 29, 1, 0, 1),
+(30, 0.82, 0, '2025-09-23', NULL, 1, 2, 30, 1, 0, 1),
+(31, 0.01, 0, '2025-09-23', NULL, 1, 2, 31, 14, 0, 1),
+(32, 2.14, 0, '2025-09-23', NULL, 1, 2, 32, 14, 0, 1),
+(33, 0.33, 0, '2025-09-23', NULL, 1, 2, 33, 1, 0, 1),
+(34, 3.25, 0, '2025-09-23', NULL, 1, 2, 34, 1, 0, 1),
+(35, 0.36, 0, '2025-09-23', NULL, 1, 2, 35, 1, 0, 1),
+(36, 2.08, 0, '2025-09-23', NULL, 1, 2, 36, 1, 0, 1),
+(37, 7.60, 0, '2025-09-23', NULL, 1, 2, 37, 1, 0, 1),
+(38, 3.25, 0, '2025-09-23', NULL, 1, 2, 38, 14, 0, 1),
+(40, 3.25, 0, '2025-09-23', NULL, 1, 2, 40, 1, 0, 1),
+(41, 3.25, 0, '2025-09-23', NULL, 1, 2, 41, 1, 0, 1),
+(42, 3.25, 0, '2025-09-23', NULL, 1, 2, 42, 1, 0, 1),
+(43, 3.25, 0, '2025-09-23', NULL, 1, 2, 43, 1, 0, 1),
+(44, 3.25, 0, '2025-09-23', NULL, 1, 2, 44, 1, 0, 1),
+(45, 1.00, 0, '2025-09-23', NULL, 1, 2, 45, 1, 0, 1),
+(46, 1.63, 0, '2025-09-23', NULL, 1, 2, 46, 1, 0, 1),
+(47, 3.25, 0, '2025-09-23', NULL, 1, 2, 47, 14, 0, 1),
+(48, 3.25, 0, '2025-09-23', NULL, 1, 2, 48, 14, 0, 1),
+(49, 5.34, 0, '2025-09-23', NULL, 1, 2, 49, 14, 0, 1),
+(50, 3.25, 0, '2025-09-23', NULL, 1, 2, 50, 14, 0, 1),
+(51, 3.25, 0, '2025-09-23', NULL, 1, 2, 51, 14, 0, 1),
+(52, 3.25, 0, '2025-09-23', NULL, 1, 2, 52, 14, 0, 1),
+(53, 3.25, 0, '2025-09-23', NULL, 1, 2, 53, 1, 0, 1),
+(54, 3.25, 0, '2025-09-23', NULL, 1, 2, 54, 1, 0, 1),
+(55, 3.25, 0, '2025-09-23', NULL, 1, 2, 55, 1, 0, 1),
+(56, 3.25, 0, '2025-09-23', NULL, 1, 2, 56, 1, 0, 1),
+(57, 3.25, 0, '2025-09-23', NULL, 1, 2, 57, 1, 0, 1),
+(58, 0.87, 0, '2025-09-23', NULL, 1, 2, 58, 1, 0, 1),
+(59, 3.25, 0, '2025-09-23', NULL, 1, 2, 59, 14, 0, 1),
+(60, 1.58, 0, '2025-09-23', NULL, 1, 2, 60, 14, 0, 1),
+(61, 1.81, 0, '2025-09-23', NULL, 1, 2, 61, 14, 0, 1),
+(62, 3.25, 0, '2025-09-23', NULL, 1, 2, 62, 14, 0, 1),
+(63, 4.30, 0, '2025-09-23', NULL, 1, 2, 63, 14, 0, 1),
+(64, 1.92, 0, '2025-09-23', NULL, 1, 2, 64, 14, 0, 1),
+(65, 3.25, 0, '2025-09-23', NULL, 1, 2, 65, 14, 0, 1),
+(66, 3.25, 0, '2025-09-23', NULL, 1, 2, 66, 14, 0, 1),
+(67, 3.25, 0, '2025-09-23', NULL, 1, 2, 67, 14, 0, 1),
+(68, 3.25, 0, '2025-09-23', NULL, 1, 2, 68, 14, 0, 1),
+(69, 3.25, 0, '2025-09-23', NULL, 1, 2, 69, 14, 0, 1),
+(70, 3.25, 0, '2025-09-23', NULL, 1, 2, 70, 1, 0, 1),
+(71, 3.25, 0, '2025-09-23', NULL, 1, 2, 71, 1, 0, 1),
+(72, 3.25, 0, '2025-09-23', NULL, 1, 2, 72, 1, 0, 1),
+(73, 3.25, 0, '2025-09-23', NULL, 1, 2, 73, 1, 0, 1),
+(74, 3.25, 0, '2025-09-23', NULL, 1, 2, 74, 1, 0, 1),
+(75, 3.25, 0, '2025-09-23', NULL, 1, 2, 75, 14, 0, 1),
+(76, 3.25, 0, '2025-09-23', NULL, 1, 2, 76, 14, 0, 1),
+(77, 3.25, 0, '2025-09-23', NULL, 1, 2, 77, 14, 0, 1),
+(78, 3.25, 0, '2025-09-23', NULL, 1, 2, 78, 14, 0, 1),
+(79, 3.25, 0, '2025-09-23', NULL, 1, 2, 79, 14, 0, 1),
+(80, 3.25, 0, '2025-09-23', NULL, 1, 2, 80, 1, 0, 1),
+(81, 3.25, 0, '2025-09-23', NULL, 1, 2, 81, 1, 0, 1),
+(82, 3.25, 0, '2025-09-23', NULL, 1, 2, 82, 1, 0, 1),
+(83, 3.25, 0, '2025-09-23', NULL, 1, 2, 83, 1, 0, 1),
+(84, 3.25, 0, '2025-09-23', NULL, 1, 2, 84, 1, 0, 1),
+(85, 3.25, 0, '2025-09-23', NULL, 1, 2, 85, 1, 0, 1),
+(86, 3.25, 0, '2025-09-23', NULL, 1, 2, 86, 14, 0, 1),
+(87, 3.25, 0, '2025-09-23', NULL, 1, 2, 87, 14, 0, 1),
+(88, 0.35, 0, '2025-09-23', NULL, 1, 2, 88, 14, 0, 1),
+(90, 3.25, 0, '2025-09-23', NULL, 1, 2, 90, 14, 0, 1),
+(91, 0.89, 0, '2025-09-23', NULL, 1, 2, 91, 14, 0, 1),
+(92, 3.25, 0, '2025-09-23', NULL, 1, 2, 92, 14, 0, 1),
+(93, 0.34, 0, '2025-09-23', NULL, 1, 2, 93, 1, 0, 1),
+(94, 3.25, 0, '2025-09-23', NULL, 1, 2, 94, 1, 0, 1),
+(95, 3.25, 0, '2025-09-23', NULL, 1, 2, 95, 1, 0, 1),
+(96, 3.25, 0, '2025-09-23', NULL, 1, 2, 96, 1, 0, 1),
+(97, 0.26, 0, '2025-09-23', NULL, 1, 2, 97, 1, 0, 1),
+(98, 3.25, 0, '2025-09-23', NULL, 1, 2, 98, 1, 0, 1),
+(99, 3.25, 0, '2025-09-23', NULL, 1, 2, 99, 1, 0, 1),
+(101, 0.37, 0, '2025-09-23', NULL, 1, 2, 101, 14, 0, 1),
+(102, 3.25, 0, '2025-09-23', NULL, 1, 2, 102, 14, 0, 1),
+(103, 3.25, 0, '2025-09-23', NULL, 1, 2, 103, 1, 0, 1),
+(104, 3.25, 0, '2025-09-23', NULL, 1, 2, 104, 14, 0, 1),
+(105, 3.25, 0, '2025-09-23', NULL, 1, 2, 105, 14, 0, 1),
+(106, 3.25, 0, '2025-09-23', NULL, 1, 2, 106, 14, 0, 1),
+(107, 3.25, 0, '2025-09-23', NULL, 1, 2, 107, 1, 0, 1),
+(108, 3.25, 0, '2025-09-23', NULL, 1, 2, 108, 1, 0, 1),
+(109, 3.25, 0, '2025-09-23', NULL, 1, 2, 109, 1, 0, 1),
+(110, 3.25, 0, '2025-09-23', NULL, 1, 2, 110, 1, 0, 1),
+(111, 3.25, 0, '2025-09-23', NULL, 1, 2, 111, 1, 0, 1),
+(112, 0.32, 0, '2025-09-23', NULL, 1, 2, 112, 1, 0, 1),
+(113, 3.25, 0, '2025-09-23', NULL, 1, 2, 113, 1, 0, 1),
+(114, 3.25, 0, '2025-09-23', NULL, 1, 2, 114, 14, 0, 1),
+(115, 3.25, 0, '2025-09-23', NULL, 1, 2, 115, 14, 0, 1),
+(116, 3.25, 0, '2025-09-23', NULL, 1, 2, 116, 14, 0, 1),
+(117, 3.25, 0, '2025-09-23', NULL, 1, 2, 117, 14, 0, 1),
+(118, 3.25, 0, '2025-09-23', NULL, 1, 2, 118, 14, 0, 1),
+(119, 3.25, 0, '2025-09-23', NULL, 1, 2, 119, 14, 0, 1),
+(120, 3.25, 0, '2025-09-23', NULL, 1, 2, 120, 14, 0, 1),
+(121, 3.25, 0, '2025-09-23', NULL, 1, 2, 121, 14, 0, 1),
+(122, 185.01, 0, '2025-09-23', NULL, 1, 2, 122, 14, 0, 1),
+(124, 0.57, 0, '2025-09-23', NULL, 1, 2, 124, 1, 0, 1),
+(125, 0.71, 0, '2025-09-23', NULL, 1, 2, 125, 1, 0, 1),
+(126, 3.25, 0, '2025-09-23', NULL, 1, 2, 126, 14, 0, 1),
+(127, 213.79, 0, '2025-09-23', NULL, 1, 2, 127, 14, 0, 1),
+(128, 3.25, 0, '2025-09-23', NULL, 1, 2, 128, 1, 0, 1),
+(130, 0.48, 0, '2025-09-23', NULL, 1, 2, 130, 14, 0, 1),
+(132, 3.25, 0, '2025-09-23', NULL, 1, 2, 132, 1, 0, 1),
+(133, 3.25, 0, '2025-09-23', NULL, 1, 2, 133, 14, 0, 1),
+(134, 3.25, 0, '2025-09-23', NULL, 1, 2, 134, 14, 0, 1),
+(135, 3.25, 0, '2025-09-23', NULL, 1, 2, 135, 14, 0, 1),
+(137, 3.25, 0, '2025-09-23', NULL, 1, 2, 137, 14, 0, 1),
+(138, 3.25, 0, '2025-09-23', NULL, 1, 2, 138, 14, 0, 1),
+(139, 3.25, 0, '2025-09-23', NULL, 1, 2, 139, 14, 0, 1),
+(140, 3.25, 0, '2025-09-23', NULL, 1, 2, 140, 14, 0, 1),
+(144, 3.25, 0, '2025-09-23', NULL, 1, 2, 144, 14, 0, 1),
+(145, 0.29, 0, '2025-09-23', NULL, 1, 2, 145, 1, 0, 1),
+(146, 196.52, 0, '2025-09-23', NULL, 1, 2, 146, 14, 0, 1),
+(147, 3.25, 0, '2025-09-23', NULL, 1, 2, 147, 14, 0, 1),
+(148, 3.25, 0, '2025-09-23', NULL, 1, 2, 148, 14, 0, 1),
+(149, 3.25, 0, '2025-09-23', NULL, 1, 2, 149, 1, 0, 1),
+(151, 3.25, 0, '2025-09-23', NULL, 1, 2, 151, 1, 0, 1),
+(153, 3.25, 0, '2025-09-23', NULL, 1, 2, 153, 14, 0, 1),
+(154, 3.25, 0, '2025-09-23', NULL, 1, 2, 154, 14, 0, 1),
+(155, 3.25, 0, '2025-09-23', NULL, 1, 2, 155, 14, 0, 1),
+(156, 3.25, 0, '2025-09-23', NULL, 1, 2, 156, 14, 0, 1),
+(157, 3.25, 0, '2025-09-23', NULL, 1, 2, 157, 1, 0, 1),
+(158, 3.25, 0, '2025-09-23', NULL, 1, 2, 158, 1, 0, 1),
+(159, 3.25, 0, '2025-09-23', NULL, 1, 2, 159, 1, 0, 1),
+(160, 3.25, 0, '2025-09-23', NULL, 1, 2, 160, 1, 0, 1),
+(161, 3.25, 0, '2025-09-23', NULL, 1, 2, 161, 1, 0, 1),
+(162, 3.25, 0, '2025-09-23', NULL, 1, 2, 162, 14, 0, 1),
+(163, 3.25, 0, '2025-09-23', NULL, 1, 2, 163, 14, 0, 1),
+(164, 3.25, 0, '2025-09-23', NULL, 1, 2, 164, 14, 0, 1),
+(165, 5.44, 0, '2025-09-23', NULL, 1, 2, 165, 14, 0, 1),
+(166, 3.25, 0, '2025-09-23', NULL, 1, 2, 166, 14, 0, 1),
+(167, 3.25, 0, '2025-09-23', NULL, 1, 2, 167, 14, 0, 1),
+(168, 3.25, 0, '2025-09-23', NULL, 1, 2, 168, 14, 0, 1),
+(169, 3.25, 0, '2025-09-23', NULL, 1, 2, 169, 14, 0, 1),
+(170, 3.25, 0, '2025-09-23', NULL, 1, 2, 170, 14, 0, 1),
+(171, 3.25, 0, '2025-09-23', NULL, 1, 2, 171, 14, 0, 1),
+(172, 3.25, 0, '2025-09-23', NULL, 1, 2, 172, 14, 0, 1),
+(173, 6.24, 0, '2025-09-23', NULL, 1, 2, 173, 14, 0, 1),
+(174, 1.76, 0, '2025-09-23', NULL, 1, 2, 174, 14, 0, 1),
+(175, 3.25, 0, '2025-09-23', NULL, 1, 2, 175, 1, 0, 1),
+(176, 3.25, 0, '2025-09-23', NULL, 1, 2, 176, 14, 0, 1),
+(177, 3.25, 0, '2025-09-23', NULL, 1, 2, 177, 1, 0, 1),
+(178, 3.25, 0, '2025-09-23', NULL, 1, 2, 178, 1, 0, 1),
+(179, 3.25, 0, '2025-09-23', NULL, 1, 2, 179, 1, 0, 1),
+(180, 3.25, 0, '2025-09-23', NULL, 1, 2, 180, 1, 0, 1),
+(181, 3.25, 0, '2025-09-23', NULL, 1, 2, 181, 14, 0, 1),
+(183, 3.25, 0, '2025-09-23', NULL, 1, 2, 183, 14, 0, 1),
+(184, 3.25, 0, '2025-09-23', NULL, 1, 2, 184, 14, 0, 1),
+(185, 3.25, 0, '2025-09-23', NULL, 1, 2, 185, 14, 0, 1),
+(186, 3.25, 0, '2025-09-23', NULL, 1, 2, 186, 14, 0, 1),
+(188, 3.25, 0, '2025-09-23', NULL, 1, 2, 188, 1, 0, 1),
+(189, 3.25, 0, '2025-09-23', NULL, 1, 2, 189, 1, 0, 1),
+(190, 3.25, 0, '2025-09-23', NULL, 1, 2, 190, 1, 0, 1),
+(191, 3.25, 0, '2025-09-23', NULL, 1, 2, 191, 1, 0, 1),
+(192, 3.25, 0, '2025-09-23', NULL, 1, 2, 192, 1, 0, 1),
+(193, 3.25, 0, '2025-09-23', NULL, 1, 2, 193, 1, 0, 1),
+(194, 3.25, 0, '2025-09-23', NULL, 1, 2, 194, 1, 0, 1),
+(195, 3.25, 0, '2025-09-23', NULL, 1, 2, 195, 1, 0, 1),
+(196, 3.25, 0, '2025-09-23', NULL, 1, 2, 196, 1, 0, 1),
+(197, 3.25, 0, '2025-09-23', NULL, 1, 2, 197, 1, 0, 1),
+(200, 3.25, 0, '2025-09-23', NULL, 1, 2, 200, 14, 0, 1),
+(201, 3.25, 0, '2025-09-23', NULL, 1, 2, 201, 14, 0, 1),
+(202, 3.25, 0, '2025-09-23', NULL, 1, 2, 202, 14, 0, 1),
+(203, 3.25, 0, '2025-09-23', NULL, 1, 2, 203, 14, 0, 1),
+(204, 0.41, 0, '2025-09-23', NULL, 1, 2, 204, 14, 0, 1),
+(205, 3.25, 0, '2025-09-23', NULL, 1, 2, 205, 14, 0, 1),
+(206, 3.25, 0, '2025-09-23', NULL, 1, 2, 206, 14, 0, 1),
+(207, 3.25, 0, '2025-09-23', NULL, 1, 2, 207, 14, 0, 1),
+(208, 3.25, 0, '2025-09-23', NULL, 1, 2, 208, 14, 0, 1),
+(209, 3.25, 0, '2025-09-23', NULL, 1, 2, 209, 1, 0, 1),
+(210, 3.25, 0, '2025-09-23', NULL, 1, 2, 210, 14, 0, 1),
+(211, 3.25, 0, '2025-09-23', NULL, 1, 2, 211, 14, 0, 1),
+(212, 3.25, 0, '2025-09-23', NULL, 1, 2, 212, 14, 0, 1),
+(213, 3.25, 0, '2025-09-23', NULL, 1, 2, 213, 14, 0, 1),
+(214, 3.25, 0, '2025-09-23', NULL, 1, 2, 214, 14, 0, 1),
+(215, 3.25, 0, '2025-09-23', NULL, 1, 2, 215, 14, 0, 1),
+(216, 0.73, 0, '2025-09-23', NULL, 1, 2, 216, 14, 0, 1),
+(217, 3.25, 0, '2025-09-23', NULL, 1, 2, 217, 14, 0, 1),
+(218, 3.25, 0, '2025-09-23', NULL, 1, 2, 218, 14, 0, 1),
+(219, 3.25, 0, '2025-09-23', NULL, 1, 2, 219, 14, 0, 1),
+(220, 3.25, 0, '2025-09-23', NULL, 1, 2, 220, 14, 0, 1),
+(221, 3.25, 0, '2025-09-23', NULL, 1, 2, 221, 1, 0, 1),
+(222, 3.25, 0, '2025-09-23', NULL, 1, 2, 222, 14, 0, 1),
+(223, 3.25, 0, '2025-09-23', NULL, 1, 2, 223, 14, 0, 1),
+(224, 3.25, 0, '2025-09-23', NULL, 1, 2, 224, 1, 0, 1),
+(225, 3.25, 0, '2025-09-23', NULL, 1, 2, 225, 1, 0, 1),
+(226, 3.25, 0, '2025-09-23', NULL, 1, 2, 226, 1, 0, 1),
+(227, 3.25, 0, '2025-09-23', NULL, 1, 2, 227, 1, 0, 1),
+(228, 3.25, 0, '2025-09-23', NULL, 1, 2, 228, 1, 0, 1),
+(229, 3.25, 0, '2025-09-23', NULL, 1, 2, 229, 14, 0, 1),
+(230, 1.09, 0, '2025-09-23', NULL, 1, 2, 230, 1, 0, 1),
+(231, 3.25, 0, '2025-09-23', NULL, 1, 2, 231, 14, 0, 1),
+(232, 1.22, 0, '2025-09-23', NULL, 1, 2, 232, 14, 0, 1),
+(233, 3.25, 0, '2025-09-23', NULL, 1, 2, 233, 14, 0, 1),
+(234, 0.60, 0, '2025-09-23', NULL, 1, 2, 234, 1, 0, 1),
+(235, 3.25, 0, '2025-09-23', NULL, 1, 2, 235, 1, 0, 1),
+(236, 3.25, 0, '2025-09-23', NULL, 1, 2, 236, 1, 0, 1),
+(237, 3.25, 0, '2025-09-23', NULL, 1, 2, 237, 1, 0, 1),
+(238, 0.40, 0, '2025-09-23', NULL, 1, 2, 238, 1, 0, 1),
+(239, 3.25, 0, '2025-09-23', NULL, 1, 2, 239, 1, 0, 1),
+(240, 3.25, 0, '2025-09-23', NULL, 1, 2, 240, 1, 0, 1),
+(241, 3.25, 0, '2025-09-23', NULL, 1, 2, 241, 14, 0, 1),
+(242, 3.25, 0, '2025-09-23', NULL, 1, 2, 242, 14, 0, 1),
+(243, 0.45, 0, '2025-09-23', NULL, 1, 2, 243, 14, 0, 1),
+(244, 3.25, 0, '2025-09-23', NULL, 1, 2, 244, 14, 0, 1),
+(245, 3.25, 0, '2025-09-23', NULL, 1, 2, 245, 14, 0, 1),
+(246, 3.25, 0, '2025-09-23', NULL, 1, 2, 246, 14, 0, 1),
+(247, 3.25, 0, '2025-09-23', NULL, 1, 2, 247, 14, 0, 1),
+(248, 3.25, 0, '2025-09-23', NULL, 1, 2, 248, 1, 0, 1),
+(249, 3.25, 0, '2025-09-23', NULL, 1, 2, 249, 1, 0, 1),
+(250, 3.25, 0, '2025-09-23', NULL, 1, 2, 250, 1, 0, 1),
+(251, 3.25, 0, '2025-09-23', NULL, 1, 2, 251, 1, 0, 1),
+(252, 3.25, 0, '2025-09-23', NULL, 1, 2, 252, 1, 0, 1),
+(253, 3.25, 0, '2025-09-23', NULL, 1, 2, 253, 1, 0, 1),
+(254, 0.41, 0, '2025-09-23', NULL, 1, 2, 254, 1, 0, 1),
+(255, 3.25, 0, '2025-09-23', NULL, 1, 2, 255, 1, 0, 1),
+(256, 3.25, 0, '2025-09-23', NULL, 1, 2, 256, 1, 0, 1),
+(257, 3.25, 0, '2025-09-23', NULL, 1, 2, 257, 14, 0, 1),
+(258, 3.25, 0, '2025-09-23', NULL, 1, 2, 258, 14, 0, 1),
+(259, 3.25, 0, '2025-09-23', NULL, 1, 2, 259, 14, 0, 1),
+(260, 3.25, 0, '2025-09-23', NULL, 1, 2, 260, 14, 0, 1),
+(261, 3.25, 0, '2025-09-23', NULL, 1, 2, 261, 14, 0, 1),
+(262, 3.25, 0, '2025-09-23', NULL, 1, 2, 262, 14, 0, 1),
+(263, 3.25, 0, '2025-09-23', NULL, 1, 2, 263, 14, 0, 1),
+(264, 3.25, 0, '2025-09-23', NULL, 1, 2, 264, 14, 0, 1),
+(265, 3.25, 0, '2025-09-23', NULL, 1, 2, 265, 14, 0, 1),
+(266, 3.25, 0, '2025-09-23', NULL, 1, 2, 266, 14, 0, 1),
+(267, 0.91, 0, '2025-09-23', NULL, 1, 2, 267, 14, 0, 1),
+(268, 3.25, 0, '2025-09-23', NULL, 1, 2, 268, 14, 0, 1),
+(269, 3.25, 0, '2025-09-23', NULL, 1, 2, 269, 14, 0, 1),
+(270, 3.25, 0, '2025-09-23', NULL, 1, 2, 270, 14, 0, 1),
+(271, 75.18, 0, '2025-09-23', NULL, 1, 2, 271, 14, 0, 1),
+(272, 6.37, 0, '2025-09-23', NULL, 1, 2, 272, 14, 0, 1),
+(273, 3.25, 0, '2025-09-23', NULL, 1, 2, 273, 14, 0, 1),
+(274, 1.43, 0, '2025-09-23', NULL, 1, 2, 274, 14, 0, 1),
+(275, 3.25, 0, '2025-09-23', NULL, 1, 2, 275, 14, 0, 1),
+(276, 3.25, 0, '2025-09-23', NULL, 1, 2, 276, 14, 0, 1),
+(278, 3.25, 0, '2025-09-23', NULL, 1, 2, 278, 14, 0, 1),
+(281, 3.25, 0, '2025-09-23', NULL, 1, 2, 281, 14, 0, 1),
+(282, 3.25, 0, '2025-09-23', NULL, 1, 2, 282, 14, 0, 1),
+(283, 3.25, 0, '2025-09-23', NULL, 1, 2, 283, 14, 0, 1),
+(284, 3.25, 0, '2025-09-23', NULL, 1, 2, 284, 14, 0, 1),
+(285, 3.25, 0, '2025-09-23', NULL, 1, 2, 285, 14, 0, 1),
+(288, 3.25, 0, '2025-09-23', NULL, 1, 2, 288, 14, 0, 1),
+(289, 3.25, 0, '2025-09-23', NULL, 1, 2, 289, 14, 0, 1),
+(290, 3.25, 0, '2025-09-23', NULL, 1, 2, 290, 14, 0, 1),
+(291, 0.68, 0, '2025-09-23', NULL, 1, 2, 291, 14, 0, 1),
+(293, 3.25, 0, '2025-09-23', NULL, 1, 2, 293, 14, 0, 1),
+(294, 3.25, 0, '2025-09-23', NULL, 1, 2, 294, 14, 0, 1),
+(299, 3.25, 0, '2025-09-23', NULL, 1, 2, 299, 14, 0, 1),
+(300, 3.25, 0, '2025-09-23', NULL, 1, 2, 300, 14, 0, 1),
+(301, 3.25, 0, '2025-09-23', NULL, 1, 2, 301, 14, 0, 1),
+(302, 3.25, 0, '2025-09-23', NULL, 1, 2, 302, 14, 0, 1),
+(303, 3.25, 0, '2025-09-23', NULL, 1, 2, 303, 14, 0, 1),
+(304, 3.25, 0, '2025-09-23', NULL, 1, 2, 304, 14, 0, 1),
+(305, 1.31, 0, '2025-09-23', NULL, 1, 2, 305, 14, 0, 1),
+(307, 3.25, 0, '2025-09-23', NULL, 1, 2, 307, 14, 0, 1),
+(308, 3.25, 0, '2025-09-23', NULL, 1, 2, 308, 14, 0, 1),
+(309, 3.25, 0, '2025-09-23', NULL, 1, 2, 309, 14, 0, 1),
+(310, 3.25, 0, '2025-09-23', NULL, 1, 2, 310, 14, 0, 1),
+(311, 89.63, 0, '2025-09-23', NULL, 1, 2, 311, 14, 0, 1),
+(312, 3.25, 0, '2025-09-23', NULL, 1, 2, 312, 14, 0, 1),
+(313, 3.25, 0, '2025-09-23', NULL, 1, 2, 313, 14, 0, 1),
+(314, 3.25, 0, '2025-09-23', NULL, 1, 2, 314, 14, 0, 1),
+(316, 1.34, 0, '2025-09-23', NULL, 1, 2, 316, 1, 0, 1),
+(318, 2.42, 0, '2025-09-23', NULL, 1, 2, 318, 1, 0, 1),
+(319, 3.25, 0, '2025-09-23', NULL, 1, 2, 319, 14, 0, 1),
+(320, 3.25, 0, '2025-09-23', NULL, 1, 2, 320, 14, 0, 1),
+(321, 3.25, 0, '2025-09-23', NULL, 1, 2, 321, 1, 0, 1),
+(322, 3.25, 0, '2025-09-23', NULL, 1, 2, 322, 14, 0, 1),
+(323, 3.25, 0, '2025-09-23', NULL, 1, 2, 323, 1, 0, 1),
+(324, 3.25, 0, '2025-09-23', NULL, 1, 2, 324, 14, 0, 1),
+(325, 3.25, 0, '2025-09-23', NULL, 1, 2, 325, 14, 0, 1),
+(326, 3.25, 0, '2025-09-23', NULL, 1, 2, 326, 14, 0, 1),
+(327, 119.23, 0, '2025-09-23', NULL, 1, 2, 327, 14, 0, 1),
+(331, 1.33, 0, '2025-09-23', NULL, 1, 2, 331, 1, 0, 1),
+(332, 3.25, 0, '2025-09-23', NULL, 1, 2, 332, 14, 0, 1),
+(333, 1.16, 0, '2025-09-23', NULL, 1, 2, 333, 14, 0, 1),
+(345, 3.25, 0, '2025-09-23', NULL, 1, 2, 345, 14, 0, 1),
+(346, 3.25, 0, '2025-09-23', NULL, 1, 2, 346, 14, 0, 1),
+(347, 3.25, 0, '2025-09-23', NULL, 1, 2, 347, 14, 0, 1),
+(348, 3.25, 0, '2025-09-23', NULL, 1, 2, 348, 14, 0, 1),
+(349, 3.25, 0, '2025-09-23', NULL, 1, 2, 349, 14, 0, 1),
+(350, 3.25, 0, '2025-09-23', NULL, 1, 2, 350, 14, 0, 1),
+(352, 3.25, 0, '2025-09-23', NULL, 1, 2, 352, 14, 0, 1),
+(354, 3.25, 0, '2025-09-23', NULL, 1, 2, 354, 14, 0, 1),
+(356, 3.25, 0, '2025-09-23', NULL, 1, 2, 356, 1, 0, 1),
+(357, 3.25, 0, '2025-09-23', NULL, 1, 2, 357, 14, 0, 1),
+(358, 3.25, 0, '2025-09-23', NULL, 1, 2, 358, 14, 0, 1),
+(359, 3.25, 0, '2025-09-23', NULL, 1, 2, 359, 14, 0, 1),
+(360, 3.25, 0, '2025-09-23', NULL, 1, 2, 360, 14, 0, 1),
+(361, 3.25, 0, '2025-09-23', NULL, 1, 2, 361, 14, 0, 1),
+(362, 3.25, 0, '2025-09-23', NULL, 1, 2, 362, 14, 0, 1),
+(363, 3.25, 0, '2025-09-23', NULL, 1, 2, 363, 14, 0, 1),
+(364, 3.25, 0, '2025-09-23', NULL, 1, 2, 364, 14, 0, 1),
+(367, 3.25, 0, '2025-09-23', NULL, 1, 2, 367, 14, 0, 1),
+(368, 3.25, 0, '2025-09-23', NULL, 1, 2, 368, 14, 0, 1),
+(369, 3.25, 0, '2025-09-23', NULL, 1, 2, 369, 14, 0, 1),
+(373, 3.25, 0, '2025-09-23', NULL, 1, 2, 373, 1, 0, 1),
+(374, 1.98, 0, '2025-09-23', NULL, 1, 2, 374, 14, 0, 1),
+(376, 3.25, 0, '2025-09-23', NULL, 1, 2, 376, 1, 0, 1),
+(378, 3.25, 0, '2025-09-23', NULL, 1, 2, 378, 14, 0, 1),
+(381, 3.25, 0, '2025-09-23', NULL, 1, 2, 381, 14, 0, 1),
+(391, 3.25, 0, '2025-09-23', NULL, 1, 2, 391, 14, 0, 1),
+(392, 3.25, 0, '2025-09-23', NULL, 1, 2, 392, 14, 0, 1),
+(393, 3.25, 0, '2025-09-23', NULL, 1, 2, 393, 1, 0, 1),
+(394, 3.25, 0, '2025-09-23', NULL, 1, 2, 394, 14, 0, 1),
+(395, 3.25, 0, '2025-09-23', NULL, 1, 2, 395, 1, 0, 1),
+(396, 3.25, 0, '2025-09-23', NULL, 1, 2, 396, 14, 0, 1),
+(399, 3.25, 0, '2025-09-23', NULL, 1, 2, 399, 14, 0, 1),
+(400, 3.25, 0, '2025-09-23', NULL, 1, 2, 400, 14, 0, 1),
+(401, 3.25, 0, '2025-09-23', NULL, 1, 2, 401, 14, 0, 1),
+(403, 3.25, 0, '2025-09-23', NULL, 1, 2, 403, 14, 0, 1),
+(404, 3.25, 0, '2025-09-23', NULL, 1, 2, 404, 14, 0, 1),
+(421, 3.25, 0, '2025-09-23', NULL, 1, 2, 421, 1, 0, 1),
+(422, 3.25, 0, '2025-09-23', NULL, 1, 2, 422, 14, 0, 1),
+(424, 3.25, 0, '2025-09-23', NULL, 1, 2, 424, 14, 0, 1),
+(425, 3.25, 0, '2025-09-23', NULL, 1, 2, 425, 14, 0, 1),
+(426, 3.25, 0, '2025-09-23', NULL, 1, 2, 426, 14, 0, 1),
+(427, 3.25, 0, '2025-09-23', NULL, 1, 2, 427, 14, 0, 1),
+(428, 3.25, 0, '2025-09-23', NULL, 1, 2, 428, 14, 0, 1),
+(429, 3.25, 0, '2025-09-23', NULL, 1, 2, 429, 14, 0, 1),
+(430, 3.25, 0, '2025-09-23', NULL, 1, 2, 430, 14, 0, 1),
+(438, 3.25, 0, '2025-09-23', NULL, 1, 2, 438, 14, 0, 1),
+(446, 3.25, 0, '2025-09-23', NULL, 1, 2, 446, 14, 0, 1),
+(447, 3.25, 0, '2025-09-23', NULL, 1, 2, 447, 14, 0, 1),
+(459, 3.25, 0, '2025-09-23', NULL, 1, 2, 459, 14, 0, 1),
+(460, 3.25, 0, '2025-09-23', NULL, 1, 2, 460, 14, 0, 1),
+(461, 3.25, 0, '2025-09-23', NULL, 1, 2, 461, 14, 0, 1),
+(462, 3.25, 0, '2025-09-23', NULL, 1, 2, 462, 14, 0, 1),
+(463, 3.25, 0, '2025-09-23', NULL, 1, 2, 463, 14, 0, 1),
+(464, 3.25, 0, '2025-09-23', NULL, 1, 2, 464, 14, 0, 1),
+(465, 3.25, 0, '2025-09-23', NULL, 1, 2, 465, 14, 0, 1),
+(466, 3.25, 0, '2025-09-23', NULL, 1, 2, 466, 14, 0, 1),
+(467, 3.25, 0, '2025-09-23', NULL, 1, 2, 467, 14, 0, 1),
+(468, 3.25, 0, '2025-09-23', NULL, 1, 2, 468, 14, 0, 1),
+(469, 3.25, 0, '2025-09-23', NULL, 1, 2, 469, 14, 0, 1),
+(470, 3.25, 0, '2025-09-23', NULL, 1, 2, 470, 14, 0, 1),
+(471, 3.25, 0, '2025-09-23', NULL, 1, 2, 471, 14, 0, 1),
+(473, 3.25, 0, '2025-09-23', NULL, 1, 2, 473, 14, 0, 1),
+(476, 3.25, 0, '2025-09-23', NULL, 1, 2, 476, 1, 0, 1),
+(479, 3.25, 0, '2025-09-23', NULL, 1, 2, 479, 14, 0, 1),
+(480, 3.25, 0, '2025-09-23', NULL, 1, 2, 480, 14, 0, 1),
+(483, 3.25, 0, '2025-09-23', NULL, 1, 2, 483, 14, 0, 1),
+(484, 3.25, 0, '2025-09-23', NULL, 1, 2, 484, 14, 0, 1),
+(485, 3.25, 0, '2025-09-23', NULL, 1, 2, 485, 14, 0, 1),
+(488, 3.25, 0, '2025-09-23', NULL, 1, 2, 488, 14, 0, 1),
+(490, 3.25, 0, '2025-09-23', NULL, 1, 2, 490, 14, 0, 1),
+(491, 3.25, 0, '2025-09-23', NULL, 1, 2, 491, 14, 0, 1),
+(492, 3.25, 0, '2025-09-23', NULL, 1, 2, 492, 14, 0, 1),
+(493, 3.25, 0, '2025-09-23', NULL, 1, 2, 493, 14, 0, 1),
+(494, 3.25, 0, '2025-09-23', NULL, 1, 2, 494, 14, 0, 1),
+(495, 3.25, 0, '2025-09-23', NULL, 1, 2, 495, 14, 0, 1),
+(496, 3.25, 0, '2025-09-23', NULL, 1, 2, 496, 14, 0, 1),
+(497, 3.25, 0, '2025-09-23', NULL, 1, 2, 497, 14, 0, 1),
+(498, 3.25, 0, '2025-09-23', NULL, 1, 2, 498, 14, 0, 1),
+(500, 3.25, 0, '2025-09-23', NULL, 1, 2, 500, 14, 0, 1),
+(501, 3.25, 0, '2025-09-23', NULL, 1, 2, 501, 14, 0, 1),
+(502, 3.25, 0, '2025-09-23', NULL, 1, 2, 502, 14, 0, 1),
+(503, 3.25, 0, '2025-09-23', NULL, 1, 2, 503, 14, 0, 1),
+(504, 3.25, 0, '2025-09-23', NULL, 1, 2, 504, 14, 0, 1),
+(505, 3.25, 0, '2025-09-23', NULL, 1, 2, 505, 14, 0, 1),
+(506, 3.25, 0, '2025-09-23', NULL, 1, 2, 506, 14, 0, 1),
+(507, 3.25, 0, '2025-09-23', NULL, 1, 2, 507, 14, 0, 1),
+(508, 3.25, 0, '2025-09-23', NULL, 1, 2, 508, 14, 0, 1),
+(509, 3.25, 0, '2025-09-23', NULL, 1, 2, 509, 14, 0, 1),
+(510, 3.25, 0, '2025-09-23', NULL, 1, 2, 510, 14, 0, 1),
+(511, 3.25, 0, '2025-09-23', NULL, 1, 2, 511, 14, 0, 1),
+(512, 3.25, 0, '2025-09-23', NULL, 1, 2, 512, 14, 0, 1),
+(513, 3.25, 0, '2025-09-23', NULL, 1, 2, 513, 14, 0, 1),
+(514, 3.25, 0, '2025-09-23', NULL, 1, 2, 514, 1, 0, 1),
+(515, 3.25, 0, '2025-09-23', NULL, 1, 2, 515, 1, 0, 1),
+(516, 3.25, 0, '2025-09-23', NULL, 1, 2, 516, 14, 0, 1),
+(517, 3.25, 0, '2025-09-23', NULL, 1, 2, 517, 14, 0, 1),
+(519, 3.25, 0, '2025-09-23', NULL, 1, 2, 519, 14, 0, 1),
+(521, 3.25, 0, '2025-09-23', NULL, 1, 2, 521, 14, 0, 1),
+(522, 3.25, 0, '2025-09-23', NULL, 1, 2, 522, 14, 0, 1),
+(523, 3.25, 0, '2025-09-23', NULL, 1, 2, 523, 14, 0, 1),
+(524, 3.25, 0, '2025-09-23', NULL, 1, 2, 524, 14, 0, 1),
+(525, 3.25, 0, '2025-09-23', NULL, 1, 2, 525, 14, 0, 1),
+(526, 3.25, 0, '2025-09-23', NULL, 1, 2, 526, 14, 0, 1),
+(527, 3.25, 0, '2025-09-23', NULL, 1, 2, 527, 14, 0, 1),
+(528, 3.25, 0, '2025-09-23', NULL, 1, 2, 528, 14, 0, 1),
+(529, 3.25, 0, '2025-09-23', NULL, 1, 2, 529, 14, 0, 1),
+(531, 3.25, 0, '2025-09-23', NULL, 1, 2, 531, 14, 0, 1),
+(533, 3.25, 0, '2025-09-23', NULL, 1, 2, 533, 14, 0, 1),
+(534, 3.25, 0, '2025-09-23', NULL, 1, 2, 534, 14, 0, 1),
+(535, 3.25, 0, '2025-09-23', NULL, 1, 2, 535, 14, 0, 1),
+(537, 3.25, 0, '2025-09-23', NULL, 1, 2, 537, 14, 0, 1),
+(543, 3.25, 0, '2025-09-23', NULL, 1, 2, 543, 14, 0, 1),
+(544, 3.25, 0, '2025-09-23', NULL, 1, 2, 544, 14, 0, 1),
+(545, 3.25, 0, '2025-09-23', NULL, 1, 2, 545, 14, 0, 1),
+(546, 3.25, 0, '2025-09-23', NULL, 1, 2, 546, 14, 0, 1),
+(547, 3.25, 0, '2025-09-23', NULL, 1, 2, 547, 14, 0, 1),
+(552, 3.25, 0, '2025-09-23', NULL, 1, 2, 552, 14, 0, 1),
+(565, 3.25, 0, '2025-09-23', NULL, 1, 2, 565, 14, 0, 1),
+(566, 3.25, 0, '2025-09-23', NULL, 1, 2, 566, 14, 0, 1),
+(567, 3.25, 0, '2025-09-23', NULL, 1, 2, 567, 14, 0, 1),
+(568, 3.25, 0, '2025-09-23', NULL, 1, 2, 568, 14, 0, 1),
+(569, 3.25, 0, '2025-09-23', NULL, 1, 2, 569, 14, 0, 1),
+(570, 3.25, 0, '2025-09-23', NULL, 1, 2, 570, 14, 0, 1),
+(571, 3.25, 0, '2025-09-23', NULL, 1, 2, 571, 14, 0, 1),
+(572, 3.25, 0, '2025-09-23', NULL, 1, 2, 572, 14, 0, 1),
+(573, 3.25, 0, '2025-09-23', NULL, 1, 2, 573, 14, 0, 1),
+(574, 3.25, 0, '2025-09-23', NULL, 1, 2, 574, 14, 0, 1),
+(575, 3.25, 0, '2025-09-23', NULL, 1, 2, 575, 14, 0, 1),
+(576, 3.25, 0, '2025-09-23', NULL, 1, 2, 576, 14, 0, 1),
+(577, 3.25, 0, '2025-09-23', NULL, 1, 2, 577, 14, 0, 1),
+(578, 3.25, 0, '2025-09-23', NULL, 1, 2, 578, 14, 0, 1),
+(579, 3.25, 0, '2025-09-23', NULL, 1, 2, 579, 14, 0, 1),
+(580, 3.25, 0, '2025-09-23', NULL, 1, 2, 580, 14, 0, 1),
+(581, 3.25, 0, '2025-09-23', NULL, 1, 2, 581, 14, 0, 1),
+(582, 3.25, 0, '2025-09-23', NULL, 1, 2, 582, 14, 0, 1),
+(584, 3.25, 0, '2025-09-23', NULL, 1, 2, 584, 14, 0, 1),
+(585, 3.25, 0, '2025-09-23', NULL, 1, 2, 585, 14, 0, 1),
+(586, 3.25, 0, '2025-09-23', NULL, 1, 2, 586, 14, 0, 1),
+(587, 3.25, 0, '2025-09-23', NULL, 1, 2, 587, 14, 0, 1),
+(588, 3.25, 0, '2025-09-23', NULL, 1, 2, 588, 14, 0, 1),
+(589, 3.25, 0, '2025-09-23', NULL, 1, 2, 589, 14, 0, 1),
+(591, 3.25, 0, '2025-09-23', NULL, 1, 2, 591, 14, 0, 1),
+(592, 3.25, 0, '2025-09-23', NULL, 1, 2, 592, 14, 0, 1),
+(593, 3.25, 0, '2025-09-23', NULL, 1, 2, 593, 14, 0, 1),
+(594, 3.25, 0, '2025-09-23', NULL, 1, 2, 594, 14, 0, 1),
+(598, 3.25, 0, '2025-09-23', NULL, 1, 2, 598, 14, 0, 1),
+(599, 3.25, 0, '2025-09-23', NULL, 1, 2, 599, 14, 0, 1),
+(600, 3.25, 0, '2025-09-23', NULL, 1, 2, 600, 14, 0, 1),
+(601, 3.25, 0, '2025-09-23', NULL, 1, 2, 601, 14, 0, 1),
+(602, 3.25, 0, '2025-09-23', NULL, 1, 2, 602, 14, 0, 1),
+(603, 3.25, 0, '2025-09-23', NULL, 1, 2, 603, 14, 0, 1),
+(604, 3.25, 0, '2025-09-23', NULL, 1, 2, 604, 14, 0, 1),
+(606, 3.25, 0, '2025-09-23', NULL, 1, 2, 606, 14, 0, 1),
+(607, 3.25, 0, '2025-09-23', NULL, 1, 2, 607, 14, 0, 1),
+(609, 3.25, 0, '2025-09-23', NULL, 1, 2, 609, 14, 0, 1),
+(610, 3.25, 0, '2025-09-23', NULL, 1, 2, 610, 14, 0, 1),
+(614, 3.25, 0, '2025-09-23', NULL, 1, 2, 614, 14, 0, 1),
+(615, 3.25, 0, '2025-09-23', NULL, 1, 2, 615, 14, 0, 1),
+(618, 3.25, 0, '2025-09-23', NULL, 1, 2, 618, 14, 0, 1),
+(619, 3.25, 0, '2025-09-23', NULL, 1, 2, 619, 14, 0, 1),
+(622, 3.25, 0, '2025-09-23', NULL, 1, 2, 622, 14, 0, 1),
+(627, 3.25, 0, '2025-09-23', NULL, 1, 2, 627, 14, 0, 1),
+(630, 3.25, 0, '2025-09-23', NULL, 1, 2, 630, 14, 0, 1),
+(631, 3.25, 0, '2025-09-23', NULL, 1, 2, 631, 14, 0, 1),
+(634, 3.25, 0, '2025-09-23', NULL, 1, 2, 634, 14, 0, 1),
+(635, 3.25, 0, '2025-09-23', NULL, 1, 2, 635, 14, 0, 1),
+(647, 3.25, 0, '2025-09-23', NULL, 1, 2, 647, 14, 0, 1),
+(648, 3.25, 0, '2025-09-23', NULL, 1, 2, 648, 14, 0, 1),
+(649, 3.25, 0, '2025-09-23', NULL, 1, 2, 649, 14, 0, 1),
+(650, 3.25, 0, '2025-09-23', NULL, 1, 2, 650, 1, 0, 1),
+(651, 3.25, 0, '2025-09-23', NULL, 1, 2, 651, 14, 0, 1),
+(652, 3.25, 0, '2025-09-23', NULL, 1, 2, 652, 14, 0, 1),
+(660, 3.25, 0, '2025-09-23', NULL, 1, 2, 660, 14, 0, 1),
+(661, 3.25, 0, '2025-09-23', NULL, 1, 2, 661, 14, 0, 1),
+(677, 3.25, 0, '2025-09-23', NULL, 1, 2, 677, 14, 0, 1),
+(678, 3.25, 0, '2025-09-23', NULL, 1, 2, 678, 14, 0, 1),
+(679, 3.25, 0, '2025-09-23', NULL, 1, 2, 679, 14, 0, 1),
+(680, 3.25, 0, '2025-09-23', NULL, 1, 2, 680, 14, 0, 1),
+(682, 3.25, 0, '2025-09-23', NULL, 1, 2, 682, 14, 0, 1),
+(686, 3.25, 0, '2025-09-23', NULL, 1, 2, 686, 14, 0, 1),
+(690, 3.25, 0, '2025-09-23', NULL, 1, 2, 690, 14, 0, 1),
+(695, 3.25, 0, '2025-09-23', NULL, 1, 2, 695, 14, 0, 1),
+(696, 3.25, 0, '2025-09-23', NULL, 1, 2, 696, 14, 0, 1),
+(697, 3.25, 0, '2025-09-23', NULL, 1, 2, 697, 1, 0, 1),
+(699, 3.25, 0, '2025-09-23', NULL, 1, 2, 699, 14, 0, 1),
+(700, 3.25, 0, '2025-09-23', NULL, 1, 2, 700, 14, 0, 1),
+(701, 3.25, 0, '2025-09-23', NULL, 1, 2, 701, 14, 0, 1),
+(702, 3.25, 0, '2025-09-23', NULL, 1, 2, 702, 14, 0, 1),
+(710, 3.25, 0, '2025-09-23', NULL, 1, 2, 710, 14, 0, 1),
+(712, 3.25, 0, '2025-09-23', NULL, 1, 2, 712, 14, 0, 1),
+(714, 3.25, 0, '2025-09-23', NULL, 1, 2, 714, 14, 0, 1),
+(715, 3.25, 0, '2025-09-23', NULL, 1, 2, 715, 14, 0, 1),
+(716, 3.25, 0, '2025-09-23', NULL, 1, 2, 716, 14, 0, 1),
+(717, 3.25, 0, '2025-09-23', NULL, 1, 2, 717, 14, 0, 1),
+(718, 1.13, 0, '2025-09-23', NULL, 1, 2, 718, 14, 0, 1),
+(719, 5.33, 0, '2025-09-23', NULL, 1, 2, 719, 14, 0, 1),
+(720, 2.60, 0, '2025-09-23', NULL, 1, 2, 720, 14, 0, 1),
+(721, 3.25, 0, '2025-09-23', NULL, 1, 2, 721, 14, 0, 1),
+(722, 3.25, 0, '2025-09-23', NULL, 1, 2, 722, 14, 0, 1),
+(746, 3.25, 0, '2025-09-23', NULL, 1, 2, 746, 14, 0, 1),
+(771, 3.25, 0, '2025-09-23', NULL, 1, 2, 771, 14, 0, 1),
+(776, 3.25, 0, '2025-09-23', NULL, 1, 2, 776, 14, 0, 1),
+(777, 3.25, 0, '2025-09-23', NULL, 1, 2, 777, 14, 0, 1),
+(778, 3.25, 0, '2025-09-23', NULL, 1, 2, 778, 14, 0, 1),
+(779, 3.25, 0, '2025-09-23', NULL, 1, 2, 779, 14, 0, 1),
+(780, 3.25, 0, '2025-09-23', NULL, 1, 2, 780, 1, 0, 1),
+(781, 3.25, 0, '2025-09-23', NULL, 1, 2, 781, 14, 0, 1),
+(782, 3.25, 0, '2025-09-23', NULL, 1, 2, 782, 14, 0, 1),
+(796, 3.25, 0, '2025-09-23', NULL, 1, 2, 796, 14, 0, 1),
+(809, 3.25, 0, '2025-09-23', NULL, 1, 2, 809, 14, 0, 1),
+(810, 3.25, 0, '2025-09-23', NULL, 1, 2, 810, 14, 0, 1),
+(815, 3.25, 0, '2025-09-23', NULL, 1, 2, 815, 14, 0, 1),
+(817, 3.25, 0, '2025-09-23', NULL, 1, 2, 817, 14, 0, 1),
+(818, 3.25, 0, '2025-09-23', NULL, 1, 2, 818, 14, 0, 1),
+(819, 3.25, 0, '2025-09-23', NULL, 1, 2, 819, 14, 0, 1),
+(823, 3.25, 0, '2025-09-23', NULL, 1, 2, 823, 14, 0, 1),
+(826, 3.25, 0, '2025-09-23', NULL, 1, 2, 826, 14, 0, 1),
+(833, 3.25, 0, '2025-09-23', NULL, 1, 2, 833, 14, 0, 1),
+(834, 3.25, 0, '2025-09-23', NULL, 1, 2, 834, 14, 0, 1),
+(835, 3.25, 0, '2025-09-23', NULL, 1, 2, 835, 14, 0, 1),
+(837, 3.25, 0, '2025-09-23', NULL, 1, 2, 837, 14, 0, 1),
+(838, 3.25, 0, '2025-09-23', NULL, 1, 2, 838, 14, 0, 1),
+(848, 3.25, 0, '2025-09-23', NULL, 1, 2, 848, 14, 0, 1),
+(849, 3.25, 0, '2025-09-23', NULL, 1, 2, 849, 1, 0, 1),
+(850, 3.25, 0, '2025-09-23', NULL, 1, 2, 850, 14, 0, 1),
+(851, 3.25, 0, '2025-09-23', NULL, 1, 2, 851, 14, 0, 1),
+(852, 3.25, 0, '2025-09-23', NULL, 1, 2, 852, 14, 0, 1),
+(853, 3.25, 0, '2025-09-23', NULL, 1, 2, 853, 14, 0, 1),
+(854, 3.25, 0, '2025-09-23', NULL, 1, 2, 854, 1, 0, 1),
+(856, 3.25, 0, '2025-09-23', NULL, 1, 2, 856, 1, 0, 1),
+(857, 3.25, 0, '2025-09-23', NULL, 1, 2, 857, 14, 0, 1),
+(864, 3.25, 0, '2025-09-23', NULL, 1, 2, 864, 14, 0, 1),
+(865, 3.25, 0, '2025-09-23', NULL, 1, 2, 865, 14, 0, 1),
+(866, 3.25, 0, '2025-09-23', NULL, 1, 2, 866, 14, 0, 1),
+(867, 3.25, 0, '2025-09-23', NULL, 1, 2, 867, 14, 0, 1),
+(868, 3.25, 0, '2025-09-23', NULL, 1, 2, 868, 14, 0, 1),
+(870, 3.25, 0, '2025-09-23', NULL, 1, 2, 870, 14, 0, 1),
+(875, 3.25, 0, '2025-09-23', NULL, 1, 2, 875, 14, 0, 1),
+(876, 3.25, 0, '2025-09-23', NULL, 1, 2, 876, 14, 0, 1),
+(877, 3.25, 0, '2025-09-23', NULL, 1, 2, 877, 14, 0, 1),
+(878, 3.25, 0, '2025-09-23', NULL, 1, 2, 882, 1, 0, 1),
+(1024, 1.68, 0, '2025-09-23', NULL, 1, 5, 1, 1, 1, 0),
+(1025, 0.00, 0, '2025-09-23', NULL, 1, 5, 2, 1, 1, 0),
+(1026, 0.29, 0, '2025-09-23', NULL, 1, 5, 3, 1, 1, 0),
+(1027, 4.25, 0, '2025-09-23', NULL, 1, 5, 4, 1, 1, 0),
+(1028, 4.25, 0, '2025-09-23', NULL, 1, 5, 5, 1, 1, 0),
+(1029, 4.25, 0, '2025-09-23', NULL, 1, 5, 6, 1, 1, 0),
+(1030, 0.30, 0, '2025-09-23', NULL, 1, 5, 7, 1, 1, 0),
+(1031, 4.25, 0, '2025-09-23', NULL, 1, 5, 8, 1, 1, 0),
+(1032, 4.25, 0, '2025-09-23', NULL, 1, 5, 9, 1, 1, 0),
+(1033, 0.27, 0, '2025-09-23', NULL, 1, 5, 10, 1, 1, 0),
+(1034, 4.25, 0, '2025-09-23', NULL, 1, 5, 11, 1, 1, 0),
+(1035, 0.15, 0, '2025-09-23', NULL, 1, 5, 12, 1, 1, 0),
+(1036, 0.19, 0, '2025-09-23', NULL, 1, 5, 13, 1, 1, 0),
+(1037, 0.15, 0, '2025-09-23', NULL, 1, 5, 14, 1, 1, 0),
+(1038, 0.15, 0, '2025-09-23', NULL, 1, 5, 15, 1, 1, 0),
+(1039, 0.15, 0, '2025-09-23', NULL, 1, 5, 16, 1, 1, 0),
+(1040, 1.51, 0, '2025-09-23', NULL, 1, 5, 17, 1, 1, 0),
+(1041, 0.44, 0, '2025-09-23', NULL, 1, 5, 18, 1, 1, 0),
+(1042, 1.25, 0, '2025-09-23', NULL, 1, 5, 19, 1, 1, 0),
+(1043, 4.25, 0, '2025-09-23', NULL, 1, 5, 20, 14, 1, 0),
+(1044, 2.98, 0, '2025-09-23', NULL, 1, 5, 21, 14, 1, 0),
+(1045, 3.61, 0, '2025-09-23', NULL, 1, 5, 22, 14, 1, 0),
+(1046, 4.25, 0, '2025-09-23', NULL, 1, 5, 23, 1, 1, 0),
+(1047, 1.25, 0, '2025-09-23', NULL, 1, 5, 24, 1, 1, 0),
+(1048, 4.25, 0, '2025-09-23', NULL, 1, 5, 25, 1, 1, 0),
+(1049, 4.25, 0, '2025-09-23', NULL, 1, 5, 26, 1, 1, 0),
+(1050, 0.42, 0, '2025-09-23', NULL, 1, 5, 27, 1, 1, 0),
+(1051, 0.66, 0, '2025-09-23', NULL, 1, 5, 28, 1, 1, 0),
+(1052, 0.66, 0, '2025-09-23', NULL, 1, 5, 29, 1, 1, 0),
+(1053, 1.07, 0, '2025-09-23', NULL, 1, 5, 30, 1, 1, 0),
+(1054, 0.02, 0, '2025-09-23', NULL, 1, 5, 31, 14, 1, 0),
+(1055, 2.80, 0, '2025-09-23', NULL, 1, 5, 32, 14, 1, 0),
+(1056, 0.43, 0, '2025-09-23', NULL, 1, 5, 33, 1, 1, 0),
+(1057, 4.25, 0, '2025-09-23', NULL, 1, 5, 34, 1, 1, 0),
+(1058, 0.47, 0, '2025-09-23', NULL, 1, 5, 35, 1, 1, 0),
+(1059, 2.72, 0, '2025-09-23', NULL, 1, 5, 36, 1, 1, 0),
+(1060, 9.93, 0, '2025-09-23', NULL, 1, 5, 37, 1, 1, 0),
+(1061, 4.25, 0, '2025-09-23', NULL, 1, 5, 38, 14, 1, 0),
+(1063, 4.25, 0, '2025-09-23', NULL, 1, 5, 40, 1, 1, 0),
+(1064, 4.25, 0, '2025-09-23', NULL, 1, 5, 41, 1, 1, 0),
+(1065, 4.25, 0, '2025-09-23', NULL, 1, 5, 42, 1, 1, 0),
+(1066, 4.25, 0, '2025-09-23', NULL, 1, 5, 43, 1, 1, 0),
+(1067, 4.25, 0, '2025-09-23', NULL, 1, 5, 44, 1, 1, 0),
+(1068, 1.31, 0, '2025-09-23', NULL, 1, 5, 45, 1, 1, 0),
+(1069, 2.13, 0, '2025-09-23', NULL, 1, 5, 46, 1, 1, 0),
+(1070, 4.25, 0, '2025-09-23', NULL, 1, 5, 47, 14, 1, 0),
+(1071, 4.25, 0, '2025-09-23', NULL, 1, 5, 48, 14, 1, 0),
+(1072, 6.99, 0, '2025-09-23', NULL, 1, 5, 49, 14, 1, 0),
+(1073, 4.25, 0, '2025-09-23', NULL, 1, 5, 50, 14, 1, 0),
+(1074, 4.25, 0, '2025-09-23', NULL, 1, 5, 51, 14, 1, 0),
+(1075, 4.25, 0, '2025-09-23', NULL, 1, 5, 52, 14, 1, 0),
+(1076, 4.25, 0, '2025-09-23', NULL, 1, 5, 53, 1, 1, 0),
+(1077, 4.25, 0, '2025-09-23', NULL, 1, 5, 54, 1, 1, 0),
+(1078, 4.25, 0, '2025-09-23', NULL, 1, 5, 55, 1, 1, 0),
+(1079, 4.25, 0, '2025-09-23', NULL, 1, 5, 56, 1, 1, 0),
+(1080, 4.25, 0, '2025-09-23', NULL, 1, 5, 57, 1, 1, 0),
+(1081, 1.14, 0, '2025-09-23', NULL, 1, 5, 58, 1, 1, 0),
+(1082, 4.25, 0, '2025-09-23', NULL, 1, 5, 59, 14, 1, 0),
+(1083, 2.06, 0, '2025-09-23', NULL, 1, 5, 60, 14, 1, 0),
+(1084, 2.37, 0, '2025-09-23', NULL, 1, 5, 61, 14, 1, 0),
+(1085, 4.25, 0, '2025-09-23', NULL, 1, 5, 62, 14, 1, 0),
+(1086, 5.63, 0, '2025-09-23', NULL, 1, 5, 63, 14, 1, 0),
+(1087, 2.52, 0, '2025-09-23', NULL, 1, 5, 64, 14, 1, 0),
+(1088, 4.25, 0, '2025-09-23', NULL, 1, 5, 65, 14, 1, 0),
+(1089, 4.25, 0, '2025-09-23', NULL, 1, 5, 66, 14, 1, 0),
+(1090, 4.25, 0, '2025-09-23', NULL, 1, 5, 67, 14, 1, 0),
+(1091, 4.25, 0, '2025-09-23', NULL, 1, 5, 68, 14, 1, 0),
+(1092, 4.25, 0, '2025-09-23', NULL, 1, 5, 69, 14, 1, 0),
+(1093, 4.25, 0, '2025-09-23', NULL, 1, 5, 70, 1, 1, 0),
+(1094, 4.25, 0, '2025-09-23', NULL, 1, 5, 71, 1, 1, 0),
+(1095, 4.25, 0, '2025-09-23', NULL, 1, 5, 72, 1, 1, 0),
+(1096, 4.25, 0, '2025-09-23', NULL, 1, 5, 73, 1, 1, 0),
+(1097, 4.25, 0, '2025-09-23', NULL, 1, 5, 74, 1, 1, 0),
+(1098, 4.25, 0, '2025-09-23', NULL, 1, 5, 75, 14, 1, 0),
+(1099, 4.25, 0, '2025-09-23', NULL, 1, 5, 76, 14, 1, 0),
+(1100, 4.25, 0, '2025-09-23', NULL, 1, 5, 77, 14, 1, 0),
+(1101, 4.25, 0, '2025-09-23', NULL, 1, 5, 78, 14, 1, 0),
+(1102, 4.25, 0, '2025-09-23', NULL, 1, 5, 79, 14, 1, 0),
+(1103, 4.25, 0, '2025-09-23', NULL, 1, 5, 80, 1, 1, 0),
+(1104, 4.25, 0, '2025-09-23', NULL, 1, 5, 81, 1, 1, 0),
+(1105, 4.25, 0, '2025-09-23', NULL, 1, 5, 82, 1, 1, 0),
+(1106, 4.25, 0, '2025-09-23', NULL, 1, 5, 83, 1, 1, 0),
+(1107, 4.25, 0, '2025-09-23', NULL, 1, 5, 84, 1, 1, 0),
+(1108, 4.25, 0, '2025-09-23', NULL, 1, 5, 85, 1, 1, 0),
+(1109, 4.25, 0, '2025-09-23', NULL, 1, 5, 86, 14, 1, 0),
+(1110, 4.25, 0, '2025-09-23', NULL, 1, 5, 87, 14, 1, 0),
+(1111, 0.46, 0, '2025-09-23', NULL, 1, 5, 88, 14, 1, 0),
+(1113, 4.25, 0, '2025-09-23', NULL, 1, 5, 90, 14, 1, 0),
+(1114, 1.17, 0, '2025-09-23', NULL, 1, 5, 91, 14, 1, 0),
+(1115, 4.25, 0, '2025-09-23', NULL, 1, 5, 92, 14, 1, 0),
+(1116, 0.45, 0, '2025-09-23', NULL, 1, 5, 93, 1, 1, 0),
+(1117, 4.25, 0, '2025-09-23', NULL, 1, 5, 94, 1, 1, 0),
+(1118, 4.25, 0, '2025-09-23', NULL, 1, 5, 95, 1, 1, 0),
+(1119, 4.25, 0, '2025-09-23', NULL, 1, 5, 96, 1, 1, 0),
+(1120, 0.34, 0, '2025-09-23', NULL, 1, 5, 97, 1, 1, 0),
+(1121, 4.25, 0, '2025-09-23', NULL, 1, 5, 98, 1, 1, 0),
+(1122, 4.25, 0, '2025-09-23', NULL, 1, 5, 99, 1, 1, 0),
+(1124, 0.48, 0, '2025-09-23', NULL, 1, 5, 101, 14, 1, 0),
+(1125, 4.25, 0, '2025-09-23', NULL, 1, 5, 102, 14, 1, 0),
+(1126, 4.25, 0, '2025-09-23', NULL, 1, 5, 103, 1, 1, 0),
+(1127, 4.25, 0, '2025-09-23', NULL, 1, 5, 104, 14, 1, 0),
+(1128, 4.25, 0, '2025-09-23', NULL, 1, 5, 105, 14, 1, 0),
+(1129, 4.25, 0, '2025-09-23', NULL, 1, 5, 106, 14, 1, 0),
+(1130, 4.25, 0, '2025-09-23', NULL, 1, 5, 107, 1, 1, 0),
+(1131, 4.25, 0, '2025-09-23', NULL, 1, 5, 108, 1, 1, 0),
+(1132, 4.25, 0, '2025-09-23', NULL, 1, 5, 109, 1, 1, 0),
+(1133, 4.25, 0, '2025-09-23', NULL, 1, 5, 110, 1, 1, 0),
+(1134, 4.25, 0, '2025-09-23', NULL, 1, 5, 111, 1, 1, 0),
+(1135, 0.42, 0, '2025-09-23', NULL, 1, 5, 112, 1, 1, 0),
+(1136, 4.25, 0, '2025-09-23', NULL, 1, 5, 113, 1, 1, 0),
+(1137, 4.25, 0, '2025-09-23', NULL, 1, 5, 114, 14, 1, 0),
+(1138, 4.25, 0, '2025-09-23', NULL, 1, 5, 115, 14, 1, 0),
+(1139, 4.25, 0, '2025-09-23', NULL, 1, 5, 116, 14, 1, 0),
+(1140, 4.25, 0, '2025-09-23', NULL, 1, 5, 117, 14, 1, 0),
+(1141, 4.25, 0, '2025-09-23', NULL, 1, 5, 118, 14, 1, 0),
+(1142, 4.25, 0, '2025-09-23', NULL, 1, 5, 119, 14, 1, 0),
+(1143, 4.25, 0, '2025-09-23', NULL, 1, 5, 120, 14, 1, 0),
+(1144, 4.25, 0, '2025-09-23', NULL, 1, 5, 121, 14, 1, 0),
+(1145, 241.93, 0, '2025-09-23', NULL, 1, 5, 122, 14, 1, 0),
+(1147, 0.74, 0, '2025-09-23', NULL, 1, 5, 124, 1, 1, 0),
+(1148, 0.92, 0, '2025-09-23', NULL, 1, 5, 125, 1, 1, 0),
+(1149, 4.25, 0, '2025-09-23', NULL, 1, 5, 126, 14, 1, 0),
+(1150, 279.57, 0, '2025-09-23', NULL, 1, 5, 127, 14, 1, 0),
+(1151, 4.25, 0, '2025-09-23', NULL, 1, 5, 128, 1, 1, 0),
+(1153, 0.62, 0, '2025-09-23', NULL, 1, 5, 130, 14, 1, 0),
+(1155, 4.25, 0, '2025-09-23', NULL, 1, 5, 132, 1, 1, 0),
+(1156, 4.25, 0, '2025-09-23', NULL, 1, 5, 133, 14, 1, 0),
+(1157, 4.25, 0, '2025-09-23', NULL, 1, 5, 134, 14, 1, 0),
+(1158, 4.25, 0, '2025-09-23', NULL, 1, 5, 135, 14, 1, 0),
+(1160, 4.25, 0, '2025-09-23', NULL, 1, 5, 137, 14, 1, 0),
+(1161, 4.25, 0, '2025-09-23', NULL, 1, 5, 138, 14, 1, 0),
+(1162, 4.25, 0, '2025-09-23', NULL, 1, 5, 139, 14, 1, 0),
+(1163, 4.25, 0, '2025-09-23', NULL, 1, 5, 140, 14, 1, 0),
+(1167, 4.25, 0, '2025-09-23', NULL, 1, 5, 144, 14, 1, 0),
+(1168, 0.38, 0, '2025-09-23', NULL, 1, 5, 145, 1, 1, 0),
+(1169, 256.98, 0, '2025-09-23', NULL, 1, 5, 146, 14, 1, 0),
+(1170, 4.25, 0, '2025-09-23', NULL, 1, 5, 147, 14, 1, 0),
+(1171, 4.25, 0, '2025-09-23', NULL, 1, 5, 148, 14, 1, 0),
+(1172, 4.25, 0, '2025-09-23', NULL, 1, 5, 149, 1, 1, 0),
+(1174, 4.25, 0, '2025-09-23', NULL, 1, 5, 151, 1, 1, 0),
+(1176, 4.25, 0, '2025-09-23', NULL, 1, 5, 153, 14, 1, 0),
+(1177, 4.25, 0, '2025-09-23', NULL, 1, 5, 154, 14, 1, 0),
+(1178, 4.25, 0, '2025-09-23', NULL, 1, 5, 155, 14, 1, 0),
+(1179, 4.25, 0, '2025-09-23', NULL, 1, 5, 156, 14, 1, 0),
+(1180, 4.25, 0, '2025-09-23', NULL, 1, 5, 157, 1, 1, 0),
+(1181, 4.25, 0, '2025-09-23', NULL, 1, 5, 158, 1, 1, 0),
+(1182, 4.25, 0, '2025-09-23', NULL, 1, 5, 159, 1, 1, 0),
+(1183, 4.25, 0, '2025-09-23', NULL, 1, 5, 160, 1, 1, 0),
+(1184, 4.25, 0, '2025-09-23', NULL, 1, 5, 161, 1, 1, 0),
+(1185, 4.25, 0, '2025-09-23', NULL, 1, 5, 162, 14, 1, 0),
+(1186, 4.25, 0, '2025-09-23', NULL, 1, 5, 163, 14, 1, 0),
+(1187, 4.25, 0, '2025-09-23', NULL, 1, 5, 164, 14, 1, 0),
+(1188, 7.11, 0, '2025-09-23', NULL, 1, 5, 165, 14, 1, 0),
+(1189, 4.25, 0, '2025-09-23', NULL, 1, 5, 166, 14, 1, 0),
+(1190, 4.25, 0, '2025-09-23', NULL, 1, 5, 167, 14, 1, 0),
+(1191, 4.25, 0, '2025-09-23', NULL, 1, 5, 168, 14, 1, 0),
+(1192, 4.25, 0, '2025-09-23', NULL, 1, 5, 169, 14, 1, 0),
+(1193, 4.25, 0, '2025-09-23', NULL, 1, 5, 170, 14, 1, 0),
+(1194, 4.25, 0, '2025-09-23', NULL, 1, 5, 171, 14, 1, 0),
+(1195, 4.25, 0, '2025-09-23', NULL, 1, 5, 172, 14, 1, 0),
+(1196, 8.16, 0, '2025-09-23', NULL, 1, 5, 173, 14, 1, 0),
+(1197, 2.30, 0, '2025-09-23', NULL, 1, 5, 174, 14, 1, 0),
+(1198, 4.25, 0, '2025-09-23', NULL, 1, 5, 175, 1, 1, 0),
+(1199, 4.25, 0, '2025-09-23', NULL, 1, 5, 176, 14, 1, 0),
+(1200, 4.25, 0, '2025-09-23', NULL, 1, 5, 177, 1, 1, 0),
+(1201, 4.25, 0, '2025-09-23', NULL, 1, 5, 178, 1, 1, 0),
+(1202, 4.25, 0, '2025-09-23', NULL, 1, 5, 179, 1, 1, 0),
+(1203, 4.25, 0, '2025-09-23', NULL, 1, 5, 180, 1, 1, 0),
+(1204, 4.25, 0, '2025-09-23', NULL, 1, 5, 181, 14, 1, 0),
+(1206, 4.25, 0, '2025-09-23', NULL, 1, 5, 183, 14, 1, 0),
+(1207, 4.25, 0, '2025-09-23', NULL, 1, 5, 184, 14, 1, 0),
+(1208, 4.25, 0, '2025-09-23', NULL, 1, 5, 185, 14, 1, 0),
+(1209, 4.25, 0, '2025-09-23', NULL, 1, 5, 186, 14, 1, 0),
+(1211, 4.25, 0, '2025-09-23', NULL, 1, 5, 188, 1, 1, 0),
+(1212, 4.25, 0, '2025-09-23', NULL, 1, 5, 189, 1, 1, 0),
+(1213, 4.25, 0, '2025-09-23', NULL, 1, 5, 190, 1, 1, 0),
+(1214, 4.25, 0, '2025-09-23', NULL, 1, 5, 191, 1, 1, 0),
+(1215, 4.25, 0, '2025-09-23', NULL, 1, 5, 192, 1, 1, 0),
+(1216, 4.25, 0, '2025-09-23', NULL, 1, 5, 193, 1, 1, 0),
+(1217, 4.25, 0, '2025-09-23', NULL, 1, 5, 194, 1, 1, 0),
+(1218, 4.25, 0, '2025-09-23', NULL, 1, 5, 195, 1, 1, 0),
+(1219, 4.25, 0, '2025-09-23', NULL, 1, 5, 196, 1, 1, 0),
+(1220, 4.25, 0, '2025-09-23', NULL, 1, 5, 197, 1, 1, 0),
+(1223, 4.25, 0, '2025-09-23', NULL, 1, 5, 200, 14, 1, 0),
+(1224, 4.25, 0, '2025-09-23', NULL, 1, 5, 201, 14, 1, 0),
+(1225, 4.25, 0, '2025-09-23', NULL, 1, 5, 202, 14, 1, 0),
+(1226, 4.25, 0, '2025-09-23', NULL, 1, 5, 203, 14, 1, 0),
+(1227, 0.54, 0, '2025-09-23', NULL, 1, 5, 204, 14, 1, 0),
+(1228, 4.25, 0, '2025-09-23', NULL, 1, 5, 205, 14, 1, 0),
+(1229, 4.25, 0, '2025-09-23', NULL, 1, 5, 206, 14, 1, 0),
+(1230, 4.25, 0, '2025-09-23', NULL, 1, 5, 207, 14, 1, 0),
+(1231, 4.25, 0, '2025-09-23', NULL, 1, 5, 208, 14, 1, 0),
+(1232, 4.25, 0, '2025-09-23', NULL, 1, 5, 209, 1, 1, 0),
+(1233, 4.25, 0, '2025-09-23', NULL, 1, 5, 210, 14, 1, 0),
+(1234, 4.25, 0, '2025-09-23', NULL, 1, 5, 211, 14, 1, 0),
+(1235, 4.25, 0, '2025-09-23', NULL, 1, 5, 212, 14, 1, 0),
+(1236, 4.25, 0, '2025-09-23', NULL, 1, 5, 213, 14, 1, 0),
+(1237, 4.25, 0, '2025-09-23', NULL, 1, 5, 214, 14, 1, 0),
+(1238, 4.25, 0, '2025-09-23', NULL, 1, 5, 215, 14, 1, 0),
+(1239, 0.95, 0, '2025-09-23', NULL, 1, 5, 216, 14, 1, 0),
+(1240, 4.25, 0, '2025-09-23', NULL, 1, 5, 217, 14, 1, 0),
+(1241, 4.25, 0, '2025-09-23', NULL, 1, 5, 218, 14, 1, 0),
+(1242, 4.25, 0, '2025-09-23', NULL, 1, 5, 219, 14, 1, 0),
+(1243, 4.25, 0, '2025-09-23', NULL, 1, 5, 220, 14, 1, 0),
+(1244, 4.25, 0, '2025-09-23', NULL, 1, 5, 221, 1, 1, 0),
+(1245, 4.25, 0, '2025-09-23', NULL, 1, 5, 222, 14, 1, 0),
+(1246, 4.25, 0, '2025-09-23', NULL, 1, 5, 223, 14, 1, 0),
+(1247, 4.25, 0, '2025-09-23', NULL, 1, 5, 224, 1, 1, 0),
+(1248, 4.25, 0, '2025-09-23', NULL, 1, 5, 225, 1, 1, 0),
+(1249, 4.25, 0, '2025-09-23', NULL, 1, 5, 226, 1, 1, 0),
+(1250, 4.25, 0, '2025-09-23', NULL, 1, 5, 227, 1, 1, 0),
+(1251, 4.25, 0, '2025-09-23', NULL, 1, 5, 228, 1, 1, 0),
+(1252, 4.25, 0, '2025-09-23', NULL, 1, 5, 229, 14, 1, 0),
+(1253, 1.42, 0, '2025-09-23', NULL, 1, 5, 230, 1, 1, 0),
+(1254, 4.25, 0, '2025-09-23', NULL, 1, 5, 231, 14, 1, 0),
+(1255, 1.59, 0, '2025-09-23', NULL, 1, 5, 232, 14, 1, 0),
+(1256, 4.25, 0, '2025-09-23', NULL, 1, 5, 233, 14, 1, 0),
+(1257, 0.79, 0, '2025-09-23', NULL, 1, 5, 234, 1, 1, 0),
+(1258, 4.25, 0, '2025-09-23', NULL, 1, 5, 235, 1, 1, 0),
+(1259, 4.25, 0, '2025-09-23', NULL, 1, 5, 236, 1, 1, 0),
+(1260, 4.25, 0, '2025-09-23', NULL, 1, 5, 237, 1, 1, 0),
+(1261, 0.52, 0, '2025-09-23', NULL, 1, 5, 238, 1, 1, 0),
+(1262, 4.25, 0, '2025-09-23', NULL, 1, 5, 239, 1, 1, 0),
+(1263, 4.25, 0, '2025-09-23', NULL, 1, 5, 240, 1, 1, 0),
+(1264, 4.25, 0, '2025-09-23', NULL, 1, 5, 241, 14, 1, 0),
+(1265, 4.25, 0, '2025-09-23', NULL, 1, 5, 242, 14, 1, 0),
+(1266, 0.59, 0, '2025-09-23', NULL, 1, 5, 243, 14, 1, 0),
+(1267, 4.25, 0, '2025-09-23', NULL, 1, 5, 244, 14, 1, 0),
+(1268, 4.25, 0, '2025-09-23', NULL, 1, 5, 245, 14, 1, 0),
+(1269, 4.25, 0, '2025-09-23', NULL, 1, 5, 246, 14, 1, 0),
+(1270, 4.25, 0, '2025-09-23', NULL, 1, 5, 247, 14, 1, 0),
+(1271, 4.25, 0, '2025-09-23', NULL, 1, 5, 248, 1, 1, 0),
+(1272, 4.25, 0, '2025-09-23', NULL, 1, 5, 249, 1, 1, 0),
+(1273, 4.25, 0, '2025-09-23', NULL, 1, 5, 250, 1, 1, 0),
+(1274, 4.25, 0, '2025-09-23', NULL, 1, 5, 251, 1, 1, 0),
+(1275, 4.25, 0, '2025-09-23', NULL, 1, 5, 252, 1, 1, 0),
+(1276, 4.25, 0, '2025-09-23', NULL, 1, 5, 253, 1, 1, 0),
+(1277, 0.54, 0, '2025-09-23', NULL, 1, 5, 254, 1, 1, 0),
+(1278, 4.25, 0, '2025-09-23', NULL, 1, 5, 255, 1, 1, 0),
+(1279, 4.25, 0, '2025-09-23', NULL, 1, 5, 256, 1, 1, 0),
+(1280, 4.25, 0, '2025-09-23', NULL, 1, 5, 257, 14, 1, 0),
+(1281, 4.25, 0, '2025-09-23', NULL, 1, 5, 258, 14, 1, 0),
+(1282, 4.25, 0, '2025-09-23', NULL, 1, 5, 259, 14, 1, 0),
+(1283, 4.25, 0, '2025-09-23', NULL, 1, 5, 260, 14, 1, 0),
+(1284, 4.25, 0, '2025-09-23', NULL, 1, 5, 261, 14, 1, 0),
+(1285, 4.25, 0, '2025-09-23', NULL, 1, 5, 262, 14, 1, 0),
+(1286, 4.25, 0, '2025-09-23', NULL, 1, 5, 263, 14, 1, 0),
+(1287, 4.25, 0, '2025-09-23', NULL, 1, 5, 264, 14, 1, 0),
+(1288, 4.25, 0, '2025-09-23', NULL, 1, 5, 265, 14, 1, 0),
+(1289, 4.25, 0, '2025-09-23', NULL, 1, 5, 266, 14, 1, 0),
+(1290, 1.19, 0, '2025-09-23', NULL, 1, 5, 267, 14, 1, 0),
+(1291, 4.25, 0, '2025-09-23', NULL, 1, 5, 268, 14, 1, 0),
+(1292, 4.25, 0, '2025-09-23', NULL, 1, 5, 269, 14, 1, 0),
+(1293, 4.25, 0, '2025-09-23', NULL, 1, 5, 270, 14, 1, 0),
+(1294, 98.32, 0, '2025-09-23', NULL, 1, 5, 271, 14, 1, 0),
+(1295, 8.33, 0, '2025-09-23', NULL, 1, 5, 272, 14, 1, 0),
+(1296, 4.25, 0, '2025-09-23', NULL, 1, 5, 273, 14, 1, 0),
+(1297, 1.87, 0, '2025-09-23', NULL, 1, 5, 274, 14, 1, 0),
+(1298, 4.25, 0, '2025-09-23', NULL, 1, 5, 275, 14, 1, 0),
+(1299, 4.25, 0, '2025-09-23', NULL, 1, 5, 276, 14, 1, 0),
+(1301, 4.25, 0, '2025-09-23', NULL, 1, 5, 278, 14, 1, 0),
+(1304, 4.25, 0, '2025-09-23', NULL, 1, 5, 281, 14, 1, 0),
+(1305, 4.25, 0, '2025-09-23', NULL, 1, 5, 282, 14, 1, 0),
+(1306, 4.25, 0, '2025-09-23', NULL, 1, 5, 283, 14, 1, 0),
+(1307, 4.25, 0, '2025-09-23', NULL, 1, 5, 284, 14, 1, 0),
+(1308, 4.25, 0, '2025-09-23', NULL, 1, 5, 285, 14, 1, 0),
+(1311, 4.25, 0, '2025-09-23', NULL, 1, 5, 288, 14, 1, 0),
+(1312, 4.25, 0, '2025-09-23', NULL, 1, 5, 289, 14, 1, 0),
+(1313, 4.25, 0, '2025-09-23', NULL, 1, 5, 290, 14, 1, 0),
+(1314, 0.89, 0, '2025-09-23', NULL, 1, 5, 291, 14, 1, 0),
+(1316, 4.25, 0, '2025-09-23', NULL, 1, 5, 293, 14, 1, 0),
+(1317, 4.25, 0, '2025-09-23', NULL, 1, 5, 294, 14, 1, 0),
+(1322, 4.25, 0, '2025-09-23', NULL, 1, 5, 299, 14, 1, 0),
+(1323, 4.25, 0, '2025-09-23', NULL, 1, 5, 300, 14, 1, 0),
+(1324, 4.25, 0, '2025-09-23', NULL, 1, 5, 301, 14, 1, 0),
+(1325, 4.25, 0, '2025-09-23', NULL, 1, 5, 302, 14, 1, 0),
+(1326, 4.25, 0, '2025-09-23', NULL, 1, 5, 303, 14, 1, 0),
+(1327, 4.25, 0, '2025-09-23', NULL, 1, 5, 304, 14, 1, 0),
+(1328, 1.72, 0, '2025-09-23', NULL, 1, 5, 305, 14, 1, 0),
+(1330, 4.25, 0, '2025-09-23', NULL, 1, 5, 307, 14, 1, 0),
+(1331, 4.25, 0, '2025-09-23', NULL, 1, 5, 308, 14, 1, 0),
+(1332, 4.25, 0, '2025-09-23', NULL, 1, 5, 309, 14, 1, 0),
+(1333, 4.25, 0, '2025-09-23', NULL, 1, 5, 310, 14, 1, 0),
+(1334, 117.20, 0, '2025-09-23', NULL, 1, 5, 311, 14, 1, 0),
+(1335, 4.25, 0, '2025-09-23', NULL, 1, 5, 312, 14, 1, 0),
+(1336, 4.25, 0, '2025-09-23', NULL, 1, 5, 313, 14, 1, 0),
+(1337, 4.25, 0, '2025-09-23', NULL, 1, 5, 314, 14, 1, 0),
+(1339, 1.75, 0, '2025-09-23', NULL, 1, 5, 316, 1, 1, 0),
+(1341, 3.17, 0, '2025-09-23', NULL, 1, 5, 318, 1, 1, 0),
+(1342, 4.25, 0, '2025-09-23', NULL, 1, 5, 319, 14, 1, 0),
+(1343, 4.25, 0, '2025-09-23', NULL, 1, 5, 320, 14, 1, 0),
+(1344, 4.25, 0, '2025-09-23', NULL, 1, 5, 321, 1, 1, 0),
+(1345, 4.25, 0, '2025-09-23', NULL, 1, 5, 322, 14, 1, 0),
+(1346, 4.25, 0, '2025-09-23', NULL, 1, 5, 323, 1, 1, 0),
+(1347, 4.25, 0, '2025-09-23', NULL, 1, 5, 324, 14, 1, 0),
+(1348, 4.25, 0, '2025-09-23', NULL, 1, 5, 325, 14, 1, 0),
+(1349, 4.25, 0, '2025-09-23', NULL, 1, 5, 326, 14, 1, 0),
+(1350, 155.91, 0, '2025-09-23', NULL, 1, 5, 327, 14, 1, 0),
+(1354, 1.74, 0, '2025-09-23', NULL, 1, 5, 331, 1, 1, 0),
+(1355, 4.25, 0, '2025-09-23', NULL, 1, 5, 332, 14, 1, 0),
+(1356, 1.52, 0, '2025-09-23', NULL, 1, 5, 333, 14, 1, 0),
+(1368, 4.25, 0, '2025-09-23', NULL, 1, 5, 345, 14, 1, 0),
+(1369, 4.25, 0, '2025-09-23', NULL, 1, 5, 346, 14, 1, 0),
+(1370, 4.25, 0, '2025-09-23', NULL, 1, 5, 347, 14, 1, 0),
+(1371, 4.25, 0, '2025-09-23', NULL, 1, 5, 348, 14, 1, 0),
+(1372, 4.25, 0, '2025-09-23', NULL, 1, 5, 349, 14, 1, 0),
+(1373, 4.25, 0, '2025-09-23', NULL, 1, 5, 350, 14, 1, 0),
+(1375, 4.25, 0, '2025-09-23', NULL, 1, 5, 352, 14, 1, 0),
+(1377, 4.25, 0, '2025-09-23', NULL, 1, 5, 354, 14, 1, 0),
+(1379, 4.25, 0, '2025-09-23', NULL, 1, 5, 356, 1, 1, 0),
+(1380, 4.25, 0, '2025-09-23', NULL, 1, 5, 357, 14, 1, 0),
+(1381, 4.25, 0, '2025-09-23', NULL, 1, 5, 358, 14, 1, 0),
+(1382, 4.25, 0, '2025-09-23', NULL, 1, 5, 359, 14, 1, 0),
+(1383, 4.25, 0, '2025-09-23', NULL, 1, 5, 360, 14, 1, 0),
+(1384, 4.25, 0, '2025-09-23', NULL, 1, 5, 361, 14, 1, 0),
+(1385, 4.25, 0, '2025-09-23', NULL, 1, 5, 362, 14, 1, 0),
+(1386, 4.25, 0, '2025-09-23', NULL, 1, 5, 363, 14, 1, 0),
+(1387, 4.25, 0, '2025-09-23', NULL, 1, 5, 364, 14, 1, 0),
+(1390, 4.25, 0, '2025-09-23', NULL, 1, 5, 367, 14, 1, 0),
+(1391, 4.25, 0, '2025-09-23', NULL, 1, 5, 368, 14, 1, 0),
+(1392, 4.25, 0, '2025-09-23', NULL, 1, 5, 369, 14, 1, 0),
+(1396, 4.25, 0, '2025-09-23', NULL, 1, 5, 373, 1, 1, 0),
+(1397, 2.59, 0, '2025-09-23', NULL, 1, 5, 374, 14, 1, 0),
+(1399, 4.25, 0, '2025-09-23', NULL, 1, 5, 376, 1, 1, 0),
+(1401, 4.25, 0, '2025-09-23', NULL, 1, 5, 378, 14, 1, 0),
+(1404, 4.25, 0, '2025-09-23', NULL, 1, 5, 381, 14, 1, 0),
+(1414, 4.25, 0, '2025-09-23', NULL, 1, 5, 391, 14, 1, 0),
+(1415, 4.25, 0, '2025-09-23', NULL, 1, 5, 392, 14, 1, 0),
+(1416, 4.25, 0, '2025-09-23', NULL, 1, 5, 393, 1, 1, 0),
+(1417, 4.25, 0, '2025-09-23', NULL, 1, 5, 394, 14, 1, 0),
+(1418, 4.25, 0, '2025-09-23', NULL, 1, 5, 395, 1, 1, 0),
+(1419, 4.25, 0, '2025-09-23', NULL, 1, 5, 396, 14, 1, 0),
+(1422, 4.25, 0, '2025-09-23', NULL, 1, 5, 399, 14, 1, 0),
+(1423, 4.25, 0, '2025-09-23', NULL, 1, 5, 400, 14, 1, 0),
+(1424, 4.25, 0, '2025-09-23', NULL, 1, 5, 401, 14, 1, 0),
+(1426, 4.25, 0, '2025-09-23', NULL, 1, 5, 403, 14, 1, 0),
+(1427, 4.25, 0, '2025-09-23', NULL, 1, 5, 404, 14, 1, 0),
+(1444, 4.25, 0, '2025-09-23', NULL, 1, 5, 421, 1, 1, 0),
+(1445, 4.25, 0, '2025-09-23', NULL, 1, 5, 422, 14, 1, 0),
+(1447, 4.25, 0, '2025-09-23', NULL, 1, 5, 424, 14, 1, 0),
+(1448, 4.25, 0, '2025-09-23', NULL, 1, 5, 425, 14, 1, 0),
+(1449, 4.25, 0, '2025-09-23', NULL, 1, 5, 426, 14, 1, 0),
+(1450, 4.25, 0, '2025-09-23', NULL, 1, 5, 427, 14, 1, 0),
+(1451, 4.25, 0, '2025-09-23', NULL, 1, 5, 428, 14, 1, 0),
+(1452, 4.25, 0, '2025-09-23', NULL, 1, 5, 429, 14, 1, 0),
+(1453, 4.25, 0, '2025-09-23', NULL, 1, 5, 430, 14, 1, 0),
+(1461, 4.25, 0, '2025-09-23', NULL, 1, 5, 438, 14, 1, 0),
+(1469, 4.25, 0, '2025-09-23', NULL, 1, 5, 446, 14, 1, 0),
+(1470, 4.25, 0, '2025-09-23', NULL, 1, 5, 447, 14, 1, 0),
+(1482, 4.25, 0, '2025-09-23', NULL, 1, 5, 459, 14, 1, 0),
+(1483, 4.25, 0, '2025-09-23', NULL, 1, 5, 460, 14, 1, 0),
+(1484, 4.25, 0, '2025-09-23', NULL, 1, 5, 461, 14, 1, 0),
+(1485, 4.25, 0, '2025-09-23', NULL, 1, 5, 462, 14, 1, 0),
+(1486, 4.25, 0, '2025-09-23', NULL, 1, 5, 463, 14, 1, 0),
+(1487, 4.25, 0, '2025-09-23', NULL, 1, 5, 464, 14, 1, 0),
+(1488, 4.25, 0, '2025-09-23', NULL, 1, 5, 465, 14, 1, 0),
+(1489, 4.25, 0, '2025-09-23', NULL, 1, 5, 466, 14, 1, 0),
+(1490, 4.25, 0, '2025-09-23', NULL, 1, 5, 467, 14, 1, 0),
+(1491, 4.25, 0, '2025-09-23', NULL, 1, 5, 468, 14, 1, 0),
+(1492, 4.25, 0, '2025-09-23', NULL, 1, 5, 469, 14, 1, 0),
+(1493, 4.25, 0, '2025-09-23', NULL, 1, 5, 470, 14, 1, 0),
+(1494, 4.25, 0, '2025-09-23', NULL, 1, 5, 471, 14, 1, 0),
+(1496, 4.25, 0, '2025-09-23', NULL, 1, 5, 473, 14, 1, 0),
+(1499, 4.25, 0, '2025-09-23', NULL, 1, 5, 476, 1, 1, 0),
+(1502, 4.25, 0, '2025-09-23', NULL, 1, 5, 479, 14, 1, 0),
+(1503, 4.25, 0, '2025-09-23', NULL, 1, 5, 480, 14, 1, 0),
+(1506, 4.25, 0, '2025-09-23', NULL, 1, 5, 483, 14, 1, 0);
+INSERT INTO `appinventory_productprice` (`id`, `price`, `is_default`, `valid_from`, `valid_until`, `is_active`, `price_type_id`, `product_id`, `unit_id`, `is_sale`, `is_purchase`) VALUES
+(1507, 4.25, 0, '2025-09-23', NULL, 1, 5, 484, 14, 1, 0),
+(1508, 4.25, 0, '2025-09-23', NULL, 1, 5, 485, 14, 1, 0),
+(1511, 4.25, 0, '2025-09-23', NULL, 1, 5, 488, 14, 1, 0),
+(1513, 4.25, 0, '2025-09-23', NULL, 1, 5, 490, 14, 1, 0),
+(1514, 4.25, 0, '2025-09-23', NULL, 1, 5, 491, 14, 1, 0),
+(1515, 4.25, 0, '2025-09-23', NULL, 1, 5, 492, 14, 1, 0),
+(1516, 4.25, 0, '2025-09-23', NULL, 1, 5, 493, 14, 1, 0),
+(1517, 4.25, 0, '2025-09-23', NULL, 1, 5, 494, 14, 1, 0),
+(1518, 4.25, 0, '2025-09-23', NULL, 1, 5, 495, 14, 1, 0),
+(1519, 4.25, 0, '2025-09-23', NULL, 1, 5, 496, 14, 1, 0),
+(1520, 4.25, 0, '2025-09-23', NULL, 1, 5, 497, 14, 1, 0),
+(1521, 4.25, 0, '2025-09-23', NULL, 1, 5, 498, 14, 1, 0),
+(1523, 4.25, 0, '2025-09-23', NULL, 1, 5, 500, 14, 1, 0),
+(1524, 4.25, 0, '2025-09-23', NULL, 1, 5, 501, 14, 1, 0),
+(1525, 4.25, 0, '2025-09-23', NULL, 1, 5, 502, 14, 1, 0),
+(1526, 4.25, 0, '2025-09-23', NULL, 1, 5, 503, 14, 1, 0),
+(1527, 4.25, 0, '2025-09-23', NULL, 1, 5, 504, 14, 1, 0),
+(1528, 4.25, 0, '2025-09-23', NULL, 1, 5, 505, 14, 1, 0),
+(1529, 4.25, 0, '2025-09-23', NULL, 1, 5, 506, 14, 1, 0),
+(1530, 4.25, 0, '2025-09-23', NULL, 1, 5, 507, 14, 1, 0),
+(1531, 4.25, 0, '2025-09-23', NULL, 1, 5, 508, 14, 1, 0),
+(1532, 4.25, 0, '2025-09-23', NULL, 1, 5, 509, 14, 1, 0),
+(1533, 4.25, 0, '2025-09-23', NULL, 1, 5, 510, 14, 1, 0),
+(1534, 4.25, 0, '2025-09-23', NULL, 1, 5, 511, 14, 1, 0),
+(1535, 4.25, 0, '2025-09-23', NULL, 1, 5, 512, 14, 1, 0),
+(1536, 4.25, 0, '2025-09-23', NULL, 1, 5, 513, 14, 1, 0),
+(1537, 4.25, 0, '2025-09-23', NULL, 1, 5, 514, 1, 1, 0),
+(1538, 4.25, 0, '2025-09-23', NULL, 1, 5, 515, 1, 1, 0),
+(1539, 4.25, 0, '2025-09-23', NULL, 1, 5, 516, 14, 1, 0),
+(1540, 4.25, 0, '2025-09-23', NULL, 1, 5, 517, 14, 1, 0),
+(1542, 4.25, 0, '2025-09-23', NULL, 1, 5, 519, 14, 1, 0),
+(1544, 4.25, 0, '2025-09-23', NULL, 1, 5, 521, 14, 1, 0),
+(1545, 4.25, 0, '2025-09-23', NULL, 1, 5, 522, 14, 1, 0),
+(1546, 4.25, 0, '2025-09-23', NULL, 1, 5, 523, 14, 1, 0),
+(1547, 4.25, 0, '2025-09-23', NULL, 1, 5, 524, 14, 1, 0),
+(1548, 4.25, 0, '2025-09-23', NULL, 1, 5, 525, 14, 1, 0),
+(1549, 4.25, 0, '2025-09-23', NULL, 1, 5, 526, 14, 1, 0),
+(1550, 4.25, 0, '2025-09-23', NULL, 1, 5, 527, 14, 1, 0),
+(1551, 4.25, 0, '2025-09-23', NULL, 1, 5, 528, 14, 1, 0),
+(1552, 4.25, 0, '2025-09-23', NULL, 1, 5, 529, 14, 1, 0),
+(1554, 4.25, 0, '2025-09-23', NULL, 1, 5, 531, 14, 1, 0),
+(1556, 4.25, 0, '2025-09-23', NULL, 1, 5, 533, 14, 1, 0),
+(1557, 4.25, 0, '2025-09-23', NULL, 1, 5, 534, 14, 1, 0),
+(1558, 4.25, 0, '2025-09-23', NULL, 1, 5, 535, 14, 1, 0),
+(1560, 4.25, 0, '2025-09-23', NULL, 1, 5, 537, 14, 1, 0),
+(1566, 4.25, 0, '2025-09-23', NULL, 1, 5, 543, 14, 1, 0),
+(1567, 4.25, 0, '2025-09-23', NULL, 1, 5, 544, 14, 1, 0),
+(1568, 4.25, 0, '2025-09-23', NULL, 1, 5, 545, 14, 1, 0),
+(1569, 4.25, 0, '2025-09-23', NULL, 1, 5, 546, 14, 1, 0),
+(1570, 4.25, 0, '2025-09-23', NULL, 1, 5, 547, 14, 1, 0),
+(1575, 4.25, 0, '2025-09-23', NULL, 1, 5, 552, 14, 1, 0),
+(1588, 4.25, 0, '2025-09-23', NULL, 1, 5, 565, 14, 1, 0),
+(1589, 4.25, 0, '2025-09-23', NULL, 1, 5, 566, 14, 1, 0),
+(1590, 4.25, 0, '2025-09-23', NULL, 1, 5, 567, 14, 1, 0),
+(1591, 4.25, 0, '2025-09-23', NULL, 1, 5, 568, 14, 1, 0),
+(1592, 4.25, 0, '2025-09-23', NULL, 1, 5, 569, 14, 1, 0),
+(1593, 4.25, 0, '2025-09-23', NULL, 1, 5, 570, 14, 1, 0),
+(1594, 4.25, 0, '2025-09-23', NULL, 1, 5, 571, 14, 1, 0),
+(1595, 4.25, 0, '2025-09-23', NULL, 1, 5, 572, 14, 1, 0),
+(1596, 4.25, 0, '2025-09-23', NULL, 1, 5, 573, 14, 1, 0),
+(1597, 4.25, 0, '2025-09-23', NULL, 1, 5, 574, 14, 1, 0),
+(1598, 4.25, 0, '2025-09-23', NULL, 1, 5, 575, 14, 1, 0),
+(1599, 4.25, 0, '2025-09-23', NULL, 1, 5, 576, 14, 1, 0),
+(1600, 4.25, 0, '2025-09-23', NULL, 1, 5, 577, 14, 1, 0),
+(1601, 4.25, 0, '2025-09-23', NULL, 1, 5, 578, 14, 1, 0),
+(1602, 4.25, 0, '2025-09-23', NULL, 1, 5, 579, 14, 1, 0),
+(1603, 4.25, 0, '2025-09-23', NULL, 1, 5, 580, 14, 1, 0),
+(1604, 4.25, 0, '2025-09-23', NULL, 1, 5, 581, 14, 1, 0),
+(1605, 4.25, 0, '2025-09-23', NULL, 1, 5, 582, 14, 1, 0),
+(1607, 4.25, 0, '2025-09-23', NULL, 1, 5, 584, 14, 1, 0),
+(1608, 4.25, 0, '2025-09-23', NULL, 1, 5, 585, 14, 1, 0),
+(1609, 4.25, 0, '2025-09-23', NULL, 1, 5, 586, 14, 1, 0),
+(1610, 4.25, 0, '2025-09-23', NULL, 1, 5, 587, 14, 1, 0),
+(1611, 4.25, 0, '2025-09-23', NULL, 1, 5, 588, 14, 1, 0),
+(1612, 4.25, 0, '2025-09-23', NULL, 1, 5, 589, 14, 1, 0),
+(1614, 4.25, 0, '2025-09-23', NULL, 1, 5, 591, 14, 1, 0),
+(1615, 4.25, 0, '2025-09-23', NULL, 1, 5, 592, 14, 1, 0),
+(1616, 4.25, 0, '2025-09-23', NULL, 1, 5, 593, 14, 1, 0),
+(1617, 4.25, 0, '2025-09-23', NULL, 1, 5, 594, 14, 1, 0),
+(1621, 4.25, 0, '2025-09-23', NULL, 1, 5, 598, 14, 1, 0),
+(1622, 4.25, 0, '2025-09-23', NULL, 1, 5, 599, 14, 1, 0),
+(1623, 4.25, 0, '2025-09-23', NULL, 1, 5, 600, 14, 1, 0),
+(1624, 4.25, 0, '2025-09-23', NULL, 1, 5, 601, 14, 1, 0),
+(1625, 4.25, 0, '2025-09-23', NULL, 1, 5, 602, 14, 1, 0),
+(1626, 4.25, 0, '2025-09-23', NULL, 1, 5, 603, 14, 1, 0),
+(1627, 4.25, 0, '2025-09-23', NULL, 1, 5, 604, 14, 1, 0),
+(1629, 4.25, 0, '2025-09-23', NULL, 1, 5, 606, 14, 1, 0),
+(1630, 4.25, 0, '2025-09-23', NULL, 1, 5, 607, 14, 1, 0),
+(1632, 4.25, 0, '2025-09-23', NULL, 1, 5, 609, 14, 1, 0),
+(1633, 4.25, 0, '2025-09-23', NULL, 1, 5, 610, 14, 1, 0),
+(1637, 4.25, 0, '2025-09-23', NULL, 1, 5, 614, 14, 1, 0),
+(1638, 4.25, 0, '2025-09-23', NULL, 1, 5, 615, 14, 1, 0),
+(1641, 4.25, 0, '2025-09-23', NULL, 1, 5, 618, 14, 1, 0),
+(1642, 4.25, 0, '2025-09-23', NULL, 1, 5, 619, 14, 1, 0),
+(1645, 4.25, 0, '2025-09-23', NULL, 1, 5, 622, 14, 1, 0),
+(1650, 4.25, 0, '2025-09-23', NULL, 1, 5, 627, 14, 1, 0),
+(1653, 4.25, 0, '2025-09-23', NULL, 1, 5, 630, 14, 1, 0),
+(1654, 4.25, 0, '2025-09-23', NULL, 1, 5, 631, 14, 1, 0),
+(1657, 4.25, 0, '2025-09-23', NULL, 1, 5, 634, 14, 1, 0),
+(1658, 4.25, 0, '2025-09-23', NULL, 1, 5, 635, 14, 1, 0),
+(1670, 4.25, 0, '2025-09-23', NULL, 1, 5, 647, 14, 1, 0),
+(1671, 4.25, 0, '2025-09-23', NULL, 1, 5, 648, 14, 1, 0),
+(1672, 4.25, 0, '2025-09-23', NULL, 1, 5, 649, 14, 1, 0),
+(1673, 4.25, 0, '2025-09-23', NULL, 1, 5, 650, 1, 1, 0),
+(1674, 4.25, 0, '2025-09-23', NULL, 1, 5, 651, 14, 1, 0),
+(1675, 4.25, 0, '2025-09-23', NULL, 1, 5, 652, 14, 1, 0),
+(1683, 4.25, 0, '2025-09-23', NULL, 1, 5, 660, 14, 1, 0),
+(1684, 4.25, 0, '2025-09-23', NULL, 1, 5, 661, 14, 1, 0),
+(1700, 4.25, 0, '2025-09-23', NULL, 1, 5, 677, 14, 1, 0),
+(1701, 4.25, 0, '2025-09-23', NULL, 1, 5, 678, 14, 1, 0),
+(1702, 4.25, 0, '2025-09-23', NULL, 1, 5, 679, 14, 1, 0),
+(1703, 4.25, 0, '2025-09-23', NULL, 1, 5, 680, 14, 1, 0),
+(1705, 4.25, 0, '2025-09-23', NULL, 1, 5, 682, 14, 1, 0),
+(1709, 4.25, 0, '2025-09-23', NULL, 1, 5, 686, 14, 1, 0),
+(1713, 4.25, 0, '2025-09-23', NULL, 1, 5, 690, 14, 1, 0),
+(1718, 4.25, 0, '2025-09-23', NULL, 1, 5, 695, 14, 1, 0),
+(1719, 4.25, 0, '2025-09-23', NULL, 1, 5, 696, 14, 1, 0),
+(1720, 4.25, 0, '2025-09-23', NULL, 1, 5, 697, 1, 1, 0),
+(1722, 4.25, 0, '2025-09-23', NULL, 1, 5, 699, 14, 1, 0),
+(1723, 4.25, 0, '2025-09-23', NULL, 1, 5, 700, 14, 1, 0),
+(1724, 4.25, 0, '2025-09-23', NULL, 1, 5, 701, 14, 1, 0),
+(1725, 4.25, 0, '2025-09-23', NULL, 1, 5, 702, 14, 1, 0),
+(1733, 4.25, 0, '2025-09-23', NULL, 1, 5, 710, 14, 1, 0),
+(1735, 4.25, 0, '2025-09-23', NULL, 1, 5, 712, 14, 1, 0),
+(1737, 4.25, 0, '2025-09-23', NULL, 1, 5, 714, 14, 1, 0),
+(1738, 4.25, 0, '2025-09-23', NULL, 1, 5, 715, 14, 1, 0),
+(1739, 4.25, 0, '2025-09-23', NULL, 1, 5, 716, 14, 1, 0),
+(1740, 4.25, 0, '2025-09-23', NULL, 1, 5, 717, 14, 1, 0),
+(1741, 1.48, 0, '2025-09-23', NULL, 1, 5, 718, 14, 1, 0),
+(1742, 6.97, 0, '2025-09-23', NULL, 1, 5, 719, 14, 1, 0),
+(1743, 3.40, 0, '2025-09-23', NULL, 1, 5, 720, 14, 1, 0),
+(1744, 4.25, 0, '2025-09-23', NULL, 1, 5, 721, 14, 1, 0),
+(1745, 4.25, 0, '2025-09-23', NULL, 1, 5, 722, 14, 1, 0),
+(1769, 4.25, 0, '2025-09-23', NULL, 1, 5, 746, 14, 1, 0),
+(1794, 4.25, 0, '2025-09-23', NULL, 1, 5, 771, 14, 1, 0),
+(1799, 4.25, 0, '2025-09-23', NULL, 1, 5, 776, 14, 1, 0),
+(1800, 4.25, 0, '2025-09-23', NULL, 1, 5, 777, 14, 1, 0),
+(1801, 4.25, 0, '2025-09-23', NULL, 1, 5, 778, 14, 1, 0),
+(1802, 4.25, 0, '2025-09-23', NULL, 1, 5, 779, 14, 1, 0),
+(1803, 4.25, 0, '2025-09-23', NULL, 1, 5, 780, 1, 1, 0),
+(1804, 4.25, 0, '2025-09-23', NULL, 1, 5, 781, 14, 1, 0),
+(1805, 4.25, 0, '2025-09-23', NULL, 1, 5, 782, 14, 1, 0),
+(1819, 4.25, 0, '2025-09-23', NULL, 1, 5, 796, 14, 1, 0),
+(1832, 4.25, 0, '2025-09-23', NULL, 1, 5, 809, 14, 1, 0),
+(1833, 4.25, 0, '2025-09-23', NULL, 1, 5, 810, 14, 1, 0),
+(1838, 4.25, 0, '2025-09-23', NULL, 1, 5, 815, 14, 1, 0),
+(1840, 4.25, 0, '2025-09-23', NULL, 1, 5, 817, 14, 1, 0),
+(1841, 4.25, 0, '2025-09-23', NULL, 1, 5, 818, 14, 1, 0),
+(1842, 4.25, 0, '2025-09-23', NULL, 1, 5, 819, 14, 1, 0),
+(1846, 4.25, 0, '2025-09-23', NULL, 1, 5, 823, 14, 1, 0),
+(1849, 4.25, 0, '2025-09-23', NULL, 1, 5, 826, 14, 1, 0),
+(1856, 4.25, 0, '2025-09-23', NULL, 1, 5, 833, 14, 1, 0),
+(1857, 4.25, 0, '2025-09-23', NULL, 1, 5, 834, 14, 1, 0),
+(1858, 4.25, 0, '2025-09-23', NULL, 1, 5, 835, 14, 1, 0),
+(1860, 4.25, 0, '2025-09-23', NULL, 1, 5, 837, 14, 1, 0),
+(1861, 4.25, 0, '2025-09-23', NULL, 1, 5, 838, 14, 1, 0),
+(1871, 4.25, 0, '2025-09-23', NULL, 1, 5, 848, 14, 1, 0),
+(1872, 4.25, 0, '2025-09-23', NULL, 1, 5, 849, 1, 1, 0),
+(1873, 4.25, 0, '2025-09-23', NULL, 1, 5, 850, 14, 1, 0),
+(1874, 4.25, 0, '2025-09-23', NULL, 1, 5, 851, 14, 1, 0),
+(1875, 4.25, 0, '2025-09-23', NULL, 1, 5, 852, 14, 1, 0),
+(1876, 4.25, 0, '2025-09-23', NULL, 1, 5, 853, 14, 1, 0),
+(1877, 4.25, 0, '2025-09-23', NULL, 1, 5, 854, 1, 1, 0),
+(1879, 4.25, 0, '2025-09-23', NULL, 1, 5, 856, 1, 1, 0),
+(1880, 4.25, 0, '2025-09-23', NULL, 1, 5, 857, 14, 1, 0),
+(1887, 4.25, 0, '2025-09-23', NULL, 1, 5, 864, 14, 1, 0),
+(1888, 4.25, 0, '2025-09-23', NULL, 1, 5, 865, 14, 1, 0),
+(1889, 4.25, 0, '2025-09-23', NULL, 1, 5, 866, 14, 1, 0),
+(1890, 4.25, 0, '2025-09-23', NULL, 1, 5, 867, 14, 1, 0),
+(1891, 4.25, 0, '2025-09-23', NULL, 1, 5, 868, 14, 1, 0),
+(1893, 4.25, 0, '2025-09-23', NULL, 1, 5, 870, 14, 1, 0),
+(1898, 4.25, 0, '2025-09-23', NULL, 1, 5, 875, 14, 1, 0),
+(1899, 4.25, 0, '2025-09-23', NULL, 1, 5, 876, 14, 1, 0),
+(1900, 4.25, 0, '2025-09-23', NULL, 1, 5, 877, 14, 1, 0),
+(1901, 4.25, 0, '2025-09-23', NULL, 1, 5, 882, 1, 1, 0),
+(2068, 3.25, 0, '2025-09-23', NULL, 1, 2, 613, 14, 0, 1),
+(2069, 4.25, 1, '2025-09-23', NULL, 1, 5, 613, 14, 1, 0),
+(2072, 50.00, 0, '2025-09-23', NULL, 1, 2, 883, 15, 0, 1),
+(2073, 4.25, 1, '2025-09-23', NULL, 1, 5, 883, 16, 1, 0),
+(2074, 53.00, 1, NULL, NULL, 1, 1, 143, 22, 1, 0),
+(2075, 0.22, 0, '2025-09-23', NULL, 1, 2, 143, 1, 0, 1),
+(2076, 50.00, 0, NULL, NULL, 1, 3, 143, 22, 0, 1),
+(2077, 0.29, 0, '2025-09-23', NULL, 1, 5, 143, 1, 1, 0),
+(2078, 3.25, 0, '2025-09-23', NULL, 1, 2, 518, 14, 0, 1),
+(2079, 4.25, 1, '2025-09-23', NULL, 1, 5, 518, 14, 1, 0),
+(2080, 3.25, 0, '2025-09-23', NULL, 1, 2, 520, 14, 0, 1),
+(2081, 1.25, 1, '2025-09-23', NULL, 1, 5, 520, 14, 1, 0),
+(2082, 3.25, 0, '2025-09-23', NULL, 1, 2, 530, 14, 0, 1),
+(2083, 1.25, 1, '2025-09-23', NULL, 1, 5, 530, 14, 1, 0),
+(2084, 3.25, 0, '2025-09-23', NULL, 1, 2, 499, 14, 0, 1),
+(2085, 4.25, 1, '2025-09-23', NULL, 1, 5, 499, 14, 1, 0),
+(2088, 0.95, 0, '2025-09-23', NULL, 1, 2, 329, 1, 0, 1),
+(2089, 1.24, 1, '2025-09-23', NULL, 1, 5, 329, 1, 1, 0),
+(2090, 2.76, 0, '2025-09-23', NULL, 1, 2, 150, 1, 0, 1),
+(2091, 10.60, 1, '2025-09-23', NULL, 1, 5, 150, 31, 1, 0),
+(2108, 3.25, 0, '2025-09-23', NULL, 1, 2, 182, 14, 0, 1),
+(2109, 12.25, 1, '2025-09-23', NULL, 1, 5, 182, 31, 1, 0),
+(2110, 3.25, 0, '2025-09-23', NULL, 1, 2, 612, 14, 0, 1),
+(2111, 4.25, 1, '2025-09-23', NULL, 1, 5, 612, 14, 1, 0),
+(2120, 3.25, 0, '2025-09-23', NULL, 1, 2, 847, 14, 0, 1),
+(2121, 4.25, 0, '2025-09-23', NULL, 1, 5, 847, 14, 1, 0),
+(2134, 3.25, 0, '2025-09-23', NULL, 1, 2, 658, 14, 0, 1),
+(2135, 4.25, 0, '2025-09-23', NULL, 1, 5, 658, 14, 1, 0),
+(2143, 3.25, 0, '2025-09-23', NULL, 1, 2, 540, 14, 0, 1),
+(2144, 4.25, 0, '2025-09-23', NULL, 1, 5, 540, 14, 1, 0),
+(2145, 3.25, 0, '2025-09-23', NULL, 1, 2, 539, 14, 0, 1),
+(2146, 4.25, 0, '2025-09-23', NULL, 1, 5, 539, 14, 1, 0),
+(2147, 23.00, 0, NULL, NULL, 1, 3, 948, 2, 1, 0),
+(2155, 65.00, 0, NULL, NULL, 1, 1, 926, 1, 1, 0),
+(2156, 45.00, 0, NULL, NULL, 1, 2, 926, 14, 0, 1),
+(2157, 55.00, 1, NULL, NULL, 1, 5, 926, 14, 1, 0),
+(2160, 3.25, 0, '2025-09-23', NULL, 1, 2, 667, 14, 0, 1),
+(2161, 4.25, 0, '2025-09-23', NULL, 1, 5, 667, 14, 1, 0),
+(2162, 3.25, 0, '2025-09-23', NULL, 1, 2, 756, 14, 0, 1),
+(2163, 4.25, 0, '2025-09-23', NULL, 1, 5, 756, 14, 1, 0),
+(2172, 0.33, 0, '2025-09-23', NULL, 1, 2, 131, 1, 0, 1),
+(2173, 66.00, 0, NULL, NULL, 1, 2, 131, 22, 0, 1),
+(2174, 63.00, 1, NULL, NULL, 1, 4, 131, 22, 1, 0),
+(2175, 0.65, 0, '2025-09-23', '2025-10-30', 1, 5, 131, 1, 1, 0),
+(2176, 35.00, 0, NULL, NULL, 1, 2, 949, 16, 0, 1),
+(2177, 45.00, 1, NULL, NULL, 1, 5, 949, 16, 1, 0),
+(2182, 3.25, 0, '2025-09-23', NULL, 1, 2, 292, 1, 0, 1),
+(2183, 4.25, 0, '2025-09-23', NULL, 1, 5, 292, 1, 1, 0),
+(2184, 0.35, 0, NULL, NULL, 1, 2, 950, 14, 0, 1),
+(2185, 0.45, 0, NULL, NULL, 1, 5, 950, 14, 1, 0),
+(2188, 3.25, 0, '2025-09-23', NULL, 1, 2, 280, 14, 0, 1),
+(2189, 4.25, 0, '2025-09-23', NULL, 1, 5, 280, 14, 1, 0),
+(2190, 50.00, 0, '2025-09-23', NULL, 1, 2, 551, 14, 0, 1),
+(2191, 70.00, 0, '2025-09-23', NULL, 1, 5, 551, 14, 1, 0),
+(2192, 45.00, 0, '2025-09-23', NULL, 1, 2, 792, 14, 0, 1),
+(2193, 56.00, 0, '2025-09-23', NULL, 1, 5, 792, 14, 1, 0),
+(2194, 3.25, 0, '2025-09-23', NULL, 1, 2, 198, 1, 0, 1),
+(2195, 4.25, 0, '2025-09-23', NULL, 1, 5, 198, 1, 1, 0),
+(2196, 3.50, 0, NULL, NULL, 1, 2, 951, 14, 0, 1),
+(2197, 4.50, 0, NULL, NULL, 1, 5, 951, 14, 1, 0),
+(2198, 3.25, 0, '2025-09-23', NULL, 1, 2, 317, 1, 0, 1),
+(2199, 4.25, 0, '2025-09-23', NULL, 1, 5, 317, 1, 1, 0),
+(2200, 3.25, 0, '2025-09-23', NULL, 1, 2, 315, 1, 0, 1),
+(2201, 4.25, 0, '2025-09-23', NULL, 1, 5, 315, 1, 1, 0),
+(2202, 3.25, 0, '2025-09-23', NULL, 1, 2, 330, 1, 0, 1),
+(2203, 4.25, 0, '2025-09-23', NULL, 1, 5, 330, 1, 1, 0),
+(2204, 3.25, 0, '2025-09-23', NULL, 1, 2, 328, 1, 0, 1),
+(2205, 4.25, 0, '2025-09-23', NULL, 1, 5, 328, 1, 1, 0),
+(2206, 3.25, 0, '2025-09-23', NULL, 1, 2, 123, 1, 0, 1),
+(2207, 4.25, 0, '2025-09-23', NULL, 1, 5, 123, 1, 1, 0),
+(2208, 0.24, 0, '2025-09-23', NULL, 1, 2, 136, 1, 0, 1),
+(2209, 0.31, 0, '2025-09-23', NULL, 1, 5, 136, 1, 1, 0),
+(2210, 3.25, 0, '2025-09-23', NULL, 1, 2, 129, 1, 0, 1),
+(2211, 4.25, 0, '2025-09-23', NULL, 1, 5, 129, 1, 1, 0),
+(2212, 3.25, 0, '2025-09-23', NULL, 1, 2, 277, 14, 0, 1),
+(2213, 4.25, 0, '2025-09-23', NULL, 1, 5, 277, 14, 1, 0),
+(2218, 3.25, 0, '2025-09-23', NULL, 1, 2, 616, 14, 0, 1),
+(2219, 4.25, 0, '2025-09-23', NULL, 1, 5, 616, 14, 1, 0),
+(2220, 3.25, 0, '2025-09-23', NULL, 1, 2, 617, 14, 0, 1),
+(2221, 4.25, 0, '2025-09-23', NULL, 1, 5, 617, 14, 1, 0),
+(2222, 3.25, 0, '2025-09-23', NULL, 1, 2, 611, 14, 0, 1),
+(2223, 4.25, 0, '2025-09-23', NULL, 1, 5, 611, 14, 1, 0),
+(2224, 3.90, 0, NULL, NULL, 1, 2, 952, 14, 0, 1),
+(2225, 4.20, 0, NULL, NULL, 1, 5, 952, 14, 1, 0),
+(2226, 4.17, 0, NULL, NULL, 1, 2, 953, 14, 0, 1),
+(2227, 4.87, 1, NULL, NULL, 1, 5, 953, 14, 1, 0),
+(2228, 7.98, 0, NULL, NULL, 1, 2, 954, 14, 0, 1),
+(2229, 9.40, 1, NULL, NULL, 1, 5, 954, 14, 1, 0),
+(2230, 1.99, 0, '2025-09-23', NULL, 1, 2, 279, 14, 0, 1),
+(2231, 3.25, 1, '2025-09-23', NULL, 1, 5, 279, 14, 1, 0),
+(2232, 3.25, 0, '2025-09-23', NULL, 1, 2, 687, 14, 0, 1),
+(2233, 4.25, 1, '2025-09-23', NULL, 1, 5, 687, 14, 1, 0),
+(2234, 3.25, 0, '2025-09-23', NULL, 1, 2, 423, 14, 0, 1),
+(2235, 4.25, 1, '2025-09-23', NULL, 1, 5, 423, 14, 1, 0),
+(2236, 3.25, 0, '2025-09-23', NULL, 1, 2, 152, 14, 0, 1),
+(2237, 4.25, 1, '2025-09-23', NULL, 1, 5, 152, 14, 1, 0),
+(2238, 13.25, 0, '2025-09-23', NULL, 1, 2, 698, 14, 0, 1),
+(2239, 18.25, 1, '2025-09-23', NULL, 1, 5, 698, 14, 1, 0),
+(2240, 2.25, 0, '2025-09-23', NULL, 1, 2, 688, 14, 0, 1),
+(2241, 3.25, 1, '2025-09-23', NULL, 1, 5, 688, 14, 1, 0),
+(2244, 3.25, 0, '2025-09-23', NULL, 1, 2, 39, 32, 0, 1),
+(2245, 4.25, 1, '2025-09-23', NULL, 1, 5, 39, 32, 1, 0),
+(2250, 9.99, 0, '2025-09-23', NULL, 1, 2, 199, 14, 0, 1),
+(2251, 9.11, 1, '2025-09-23', NULL, 1, 5, 199, 14, 1, 0),
+(2252, 23.25, 0, '2025-09-23', NULL, 1, 2, 187, 32, 0, 1),
+(2253, 4.25, 0, '2025-09-23', NULL, 1, 5, 187, 14, 1, 0),
+(2254, 2.25, 0, '2025-09-23', NULL, 1, 2, 583, 14, 0, 1),
+(2255, 3.25, 1, '2025-09-23', NULL, 1, 5, 583, 14, 1, 0),
+(2256, 3.25, 0, '2025-09-23', NULL, 1, 2, 489, 14, 0, 1),
+(2257, 4.25, 1, '2025-09-23', NULL, 1, 5, 489, 14, 1, 0),
+(2258, 3.25, 0, '2025-09-23', NULL, 1, 2, 548, 14, 0, 1),
+(2259, 4.25, 0, '2025-09-23', NULL, 1, 5, 548, 14, 1, 0),
+(2260, 3.25, 0, '2025-09-23', NULL, 1, 2, 549, 14, 0, 1),
+(2261, 4.25, 0, '2025-09-23', NULL, 1, 5, 549, 14, 1, 0),
+(2262, 3.25, 0, '2025-09-23', NULL, 1, 2, 662, 14, 0, 1),
+(2263, 4.25, 0, '2025-09-23', NULL, 1, 5, 662, 14, 1, 0),
+(2264, 3.25, 0, '2025-09-23', NULL, 1, 2, 555, 14, 0, 1),
+(2265, 4.25, 0, '2025-09-23', NULL, 1, 5, 555, 14, 1, 0),
+(2266, 3.25, 0, '2025-09-23', NULL, 1, 2, 556, 14, 0, 1),
+(2267, 4.25, 0, '2025-09-23', NULL, 1, 5, 556, 14, 1, 0),
+(2268, 3.25, 0, '2025-09-23', NULL, 1, 2, 550, 14, 0, 1),
+(2269, 4.25, 0, '2025-09-23', NULL, 1, 5, 550, 14, 1, 0),
+(2270, 3.25, 0, '2025-09-23', NULL, 1, 2, 557, 14, 0, 1),
+(2271, 4.25, 0, '2025-09-23', NULL, 1, 5, 557, 14, 1, 0),
+(2272, 3.25, 0, '2025-09-23', NULL, 1, 2, 558, 14, 0, 1),
+(2273, 4.25, 0, '2025-09-23', NULL, 1, 5, 558, 14, 1, 0),
+(2274, 3.25, 0, '2025-09-23', NULL, 1, 2, 560, 14, 0, 1),
+(2275, 4.25, 0, '2025-09-23', NULL, 1, 5, 560, 14, 1, 0),
+(2276, 3.25, 0, '2025-09-23', NULL, 1, 2, 559, 14, 0, 1),
+(2277, 4.25, 0, '2025-09-23', NULL, 1, 5, 559, 14, 1, 0),
+(2278, 3.25, 0, '2025-09-23', NULL, 1, 2, 561, 14, 0, 1),
+(2279, 4.25, 0, '2025-09-23', NULL, 1, 5, 561, 14, 1, 0),
+(2280, 3.25, 0, '2025-09-23', NULL, 1, 2, 562, 14, 0, 1),
+(2281, 4.25, 0, '2025-09-23', NULL, 1, 5, 562, 14, 1, 0),
+(2282, 3.25, 0, '2025-09-23', NULL, 1, 2, 564, 14, 0, 1),
+(2283, 4.25, 0, '2025-09-23', NULL, 1, 5, 564, 14, 1, 0),
+(2284, 3.25, 0, '2025-09-23', NULL, 1, 2, 563, 14, 0, 1),
+(2285, 4.25, 0, '2025-09-23', NULL, 1, 5, 563, 14, 1, 0),
+(2296, 3.25, 0, '2025-09-23', NULL, 1, 2, 748, 14, 0, 1),
+(2297, 4.25, 0, '2025-09-23', NULL, 1, 5, 748, 14, 1, 0),
+(2298, 3.25, 0, '2025-09-23', NULL, 1, 2, 768, 14, 0, 1),
+(2299, 4.25, 0, '2025-09-23', NULL, 1, 5, 768, 14, 1, 0),
+(2300, 3.25, 0, '2025-09-23', NULL, 1, 2, 769, 14, 0, 1),
+(2301, 4.25, 0, '2025-09-23', NULL, 1, 5, 769, 14, 1, 0),
+(2302, 20.67, 0, '2025-09-23', NULL, 1, 2, 676, 14, 0, 1),
+(2303, 27.03, 0, '2025-09-23', NULL, 1, 5, 676, 14, 1, 0),
+(2304, 24.40, 0, '2025-09-23', NULL, 1, 2, 653, 14, 0, 1),
+(2305, 31.90, 0, '2025-09-23', NULL, 1, 5, 653, 14, 1, 0),
+(2308, 3.25, 0, '2025-09-23', NULL, 1, 2, 542, 14, 0, 1),
+(2309, 4.25, 1, '2025-09-23', NULL, 1, 5, 542, 14, 1, 0),
+(2310, 58.00, 0, NULL, NULL, 1, 2, 927, 14, 0, 1),
+(2311, 68.00, 1, NULL, NULL, 1, 5, 927, 14, 1, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appinventory_product_brands`
+--
+
+CREATE TABLE `appinventory_product_brands` (
+  `id` bigint NOT NULL,
+  `product_id` bigint NOT NULL,
+  `productbrand_id` bigint NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appinventory_product_brands`
+--
+
+INSERT INTO `appinventory_product_brands` (`id`, `product_id`, `productbrand_id`) VALUES
+(1, 1, 60),
+(2, 2, 60),
+(3, 3, 60),
+(4, 4, 60),
+(5, 5, 60),
+(6, 6, 60),
+(7, 7, 60),
+(8, 8, 60),
+(9, 9, 60),
+(10, 10, 60),
+(11, 11, 60),
+(12, 12, 60),
+(13, 13, 60),
+(14, 14, 60),
+(15, 15, 60),
+(16, 16, 60),
+(17, 17, 60),
+(18, 18, 60),
+(19, 19, 60),
+(20, 20, 60),
+(21, 21, 60),
+(22, 22, 60),
+(23, 23, 60),
+(24, 24, 60),
+(25, 25, 60),
+(26, 26, 60),
+(27, 27, 60),
+(28, 28, 60),
+(29, 29, 60),
+(30, 30, 60),
+(31, 31, 60),
+(32, 32, 60),
+(881, 33, 20),
+(880, 33, 57),
+(34, 34, 60),
+(35, 35, 60),
+(36, 36, 60),
+(37, 37, 60),
+(38, 38, 60),
+(39, 39, 60),
+(40, 40, 60),
+(41, 41, 60),
+(42, 42, 60),
+(43, 43, 60),
+(44, 44, 60),
+(45, 45, 60),
+(46, 46, 60),
+(47, 47, 60),
+(48, 48, 60),
+(49, 49, 60),
+(50, 50, 60),
+(51, 51, 60),
+(52, 52, 60),
+(53, 53, 60),
+(54, 54, 60),
+(55, 55, 60),
+(56, 56, 60),
+(57, 57, 60),
+(58, 58, 60),
+(59, 59, 60),
+(60, 60, 60),
+(61, 61, 60),
+(62, 62, 60),
+(63, 63, 60),
+(64, 64, 60),
+(65, 65, 60),
+(66, 66, 60),
+(67, 67, 60),
+(68, 68, 60),
+(69, 69, 60),
+(70, 70, 60),
+(71, 71, 60),
+(72, 72, 60),
+(73, 73, 60),
+(74, 74, 60),
+(75, 75, 60),
+(76, 76, 60),
+(77, 77, 60),
+(78, 78, 60),
+(79, 79, 60),
+(80, 80, 60),
+(81, 81, 60),
+(82, 82, 60),
+(83, 83, 60),
+(84, 84, 60),
+(85, 85, 60),
+(86, 86, 60),
+(87, 87, 60),
+(88, 88, 60),
+(90, 90, 60),
+(91, 91, 60),
+(92, 92, 60),
+(93, 93, 60),
+(94, 94, 60),
+(95, 95, 60),
+(96, 96, 60),
+(97, 97, 60),
+(98, 98, 60),
+(99, 99, 60),
+(101, 101, 60),
+(102, 102, 60),
+(103, 103, 60),
+(104, 104, 60),
+(105, 105, 60),
+(106, 106, 60),
+(107, 107, 60),
+(108, 108, 60),
+(109, 109, 60),
+(110, 110, 60),
+(111, 111, 60),
+(112, 112, 60),
+(113, 113, 60),
+(114, 114, 60),
+(115, 115, 60),
+(116, 116, 60),
+(117, 117, 60),
+(118, 118, 60),
+(119, 119, 60),
+(120, 120, 44),
+(121, 121, 60),
+(122, 122, 60),
+(1044, 123, 61),
+(124, 124, 60),
+(125, 125, 60),
+(126, 126, 60),
+(127, 127, 60),
+(128, 128, 60),
+(1046, 129, 61),
+(130, 130, 60),
+(131, 131, 61),
+(132, 132, 60),
+(133, 133, 60),
+(134, 134, 60),
+(135, 135, 60),
+(1045, 136, 61),
+(137, 137, 60),
+(138, 138, 60),
+(139, 139, 60),
+(140, 140, 60),
+(143, 143, 61),
+(144, 144, 60),
+(145, 145, 60),
+(146, 146, 60),
+(147, 147, 60),
+(148, 148, 60),
+(149, 149, 60),
+(150, 150, 60),
+(151, 151, 60),
+(1055, 152, 67),
+(153, 153, 60),
+(154, 154, 60),
+(155, 155, 60),
+(156, 156, 60),
+(157, 157, 60),
+(158, 158, 60),
+(159, 159, 60),
+(160, 160, 60),
+(161, 161, 60),
+(162, 162, 60),
+(163, 163, 60),
+(164, 164, 60),
+(165, 165, 60),
+(166, 166, 60),
+(167, 167, 60),
+(168, 168, 60),
+(169, 169, 60),
+(170, 170, 60),
+(171, 171, 60),
+(172, 172, 60),
+(173, 173, 60),
+(174, 174, 60),
+(175, 175, 60),
+(176, 176, 60),
+(177, 177, 60),
+(178, 178, 60),
+(179, 179, 60),
+(180, 180, 60),
+(181, 181, 60),
+(182, 182, 60),
+(183, 183, 60),
+(184, 184, 60),
+(185, 185, 60),
+(186, 186, 60),
+(187, 187, 60),
+(188, 188, 60),
+(189, 189, 60),
+(190, 190, 60),
+(191, 191, 60),
+(192, 192, 60),
+(193, 193, 60),
+(194, 194, 60),
+(195, 195, 60),
+(196, 196, 60),
+(197, 197, 60),
+(198, 198, 60),
+(1056, 199, 68),
+(200, 200, 60),
+(201, 201, 60),
+(202, 202, 60),
+(203, 203, 60),
+(204, 204, 60),
+(205, 205, 60),
+(206, 206, 60),
+(207, 207, 60),
+(208, 208, 60),
+(209, 209, 60),
+(210, 210, 60),
+(211, 211, 60),
+(212, 212, 60),
+(213, 213, 60),
+(214, 214, 60),
+(215, 215, 60),
+(216, 216, 60),
+(217, 217, 60),
+(218, 218, 60),
+(219, 219, 44),
+(220, 220, 60),
+(221, 221, 60),
+(222, 222, 60),
+(223, 223, 60),
+(224, 224, 60),
+(225, 225, 60),
+(226, 226, 60),
+(227, 227, 60),
+(228, 228, 60),
+(229, 229, 60),
+(230, 230, 60),
+(231, 231, 60),
+(232, 232, 60),
+(233, 233, 60),
+(234, 234, 60),
+(235, 235, 60),
+(236, 236, 60),
+(237, 237, 60),
+(238, 238, 60),
+(239, 239, 60),
+(240, 240, 60),
+(241, 241, 60),
+(242, 242, 60),
+(243, 243, 60),
+(244, 244, 60),
+(245, 245, 60),
+(246, 246, 60),
+(247, 247, 60),
+(248, 248, 60),
+(249, 249, 60),
+(250, 250, 60),
+(251, 251, 60),
+(252, 252, 60),
+(253, 253, 60),
+(254, 254, 60),
+(255, 255, 60),
+(256, 256, 60),
+(257, 257, 60),
+(258, 258, 60),
+(259, 259, 60),
+(260, 260, 60),
+(261, 261, 60),
+(262, 262, 60),
+(263, 263, 60),
+(264, 264, 60),
+(265, 265, 60),
+(266, 266, 60),
+(267, 267, 60),
+(268, 268, 60),
+(269, 269, 60),
+(270, 270, 44),
+(271, 271, 60),
+(272, 272, 60),
+(273, 273, 60),
+(274, 274, 60),
+(275, 275, 60),
+(276, 276, 60),
+(1047, 277, 9),
+(278, 278, 60),
+(1053, 279, 61),
+(280, 280, 60),
+(281, 281, 60),
+(282, 282, 44),
+(283, 283, 60),
+(284, 284, 44),
+(285, 285, 60),
+(288, 288, 60),
+(289, 289, 60),
+(290, 290, 60),
+(291, 291, 60),
+(1031, 292, 65),
+(293, 293, 60),
+(294, 294, 60),
+(299, 299, 60),
+(300, 300, 60),
+(301, 301, 60),
+(302, 302, 60),
+(303, 303, 44),
+(304, 304, 60),
+(305, 305, 60),
+(307, 307, 60),
+(308, 308, 44),
+(309, 309, 60),
+(310, 310, 60),
+(311, 311, 60),
+(312, 312, 60),
+(313, 313, 60),
+(314, 314, 60),
+(1041, 315, 61),
+(316, 316, 60),
+(1040, 317, 61),
+(318, 318, 60),
+(319, 319, 60),
+(320, 320, 60),
+(321, 321, 60),
+(322, 322, 60),
+(323, 323, 60),
+(324, 324, 60),
+(325, 325, 60),
+(326, 326, 60),
+(327, 327, 60),
+(1043, 328, 61),
+(329, 329, 61),
+(1042, 330, 61),
+(331, 331, 60),
+(332, 332, 60),
+(333, 333, 60),
+(345, 345, 56),
+(346, 346, 56),
+(347, 347, 2),
+(348, 348, 2),
+(349, 349, 2),
+(350, 350, 2),
+(352, 352, 3),
+(354, 354, 3),
+(356, 356, 3),
+(357, 357, 3),
+(358, 358, 3),
+(359, 359, 3),
+(360, 360, 4),
+(361, 361, 4),
+(362, 362, 60),
+(363, 363, 60),
+(364, 364, 60),
+(367, 367, 60),
+(368, 368, 60),
+(369, 369, 60),
+(373, 373, 60),
+(374, 374, 60),
+(376, 376, 7),
+(378, 378, 60),
+(381, 381, 60),
+(391, 391, 60),
+(392, 392, 60),
+(393, 393, 60),
+(394, 394, 60),
+(395, 395, 60),
+(396, 396, 10),
+(399, 399, 60),
+(400, 400, 60),
+(401, 401, 60),
+(403, 403, 12),
+(404, 404, 12),
+(1054, 423, 66),
+(424, 424, 60),
+(425, 425, 60),
+(426, 426, 60),
+(427, 427, 16),
+(428, 428, 60),
+(429, 429, 60),
+(430, 430, 57),
+(438, 438, 17),
+(446, 446, 17),
+(447, 447, 17),
+(459, 459, 18),
+(460, 460, 60),
+(461, 461, 60),
+(462, 462, 60),
+(463, 463, 60),
+(464, 464, 19),
+(465, 465, 19),
+(466, 466, 60),
+(467, 467, 20),
+(468, 468, 21),
+(469, 469, 21),
+(470, 470, 22),
+(471, 471, 22),
+(473, 473, 60),
+(476, 476, 24),
+(479, 479, 24),
+(480, 480, 24),
+(483, 483, 24),
+(484, 484, 24),
+(485, 485, 25),
+(488, 488, 27),
+(489, 489, 27),
+(1060, 489, 28),
+(1059, 489, 49),
+(490, 490, 27),
+(491, 491, 27),
+(492, 492, 27),
+(493, 493, 27),
+(494, 494, 27),
+(495, 495, 27),
+(496, 496, 27),
+(497, 497, 27),
+(498, 498, 27),
+(499, 499, 27),
+(500, 500, 27),
+(501, 501, 27),
+(502, 502, 27),
+(503, 503, 27),
+(504, 504, 27),
+(505, 505, 27),
+(506, 506, 27),
+(507, 507, 27),
+(508, 508, 27),
+(509, 509, 27),
+(510, 510, 27),
+(511, 511, 27),
+(512, 512, 27),
+(513, 513, 27),
+(514, 514, 27),
+(515, 515, 27),
+(516, 516, 27),
+(517, 517, 27),
+(518, 518, 27),
+(519, 519, 27),
+(520, 520, 27),
+(521, 521, 27),
+(522, 522, 27),
+(523, 523, 27),
+(524, 524, 27),
+(525, 525, 27),
+(526, 526, 27),
+(527, 527, 27),
+(528, 528, 27),
+(529, 529, 27),
+(530, 530, 27),
+(531, 531, 27),
+(533, 533, 27),
+(534, 534, 27),
+(535, 535, 27),
+(537, 537, 28),
+(1013, 539, 1),
+(539, 539, 28),
+(1012, 539, 48),
+(1014, 539, 49),
+(1010, 540, 1),
+(540, 540, 28),
+(1009, 540, 48),
+(1011, 540, 49),
+(997, 542, 1),
+(542, 542, 28),
+(991, 542, 48),
+(992, 542, 49),
+(543, 543, 28),
+(544, 544, 28),
+(545, 545, 28),
+(546, 546, 28),
+(547, 547, 28),
+(1062, 548, 1),
+(548, 548, 28),
+(1061, 548, 48),
+(1063, 548, 49),
+(1065, 549, 1),
+(549, 549, 28),
+(1064, 549, 48),
+(1066, 549, 49),
+(1075, 550, 1),
+(550, 550, 28),
+(1074, 550, 48),
+(1076, 550, 49),
+(1034, 551, 1),
+(551, 551, 28),
+(1033, 551, 48),
+(1035, 551, 49),
+(552, 552, 28),
+(1069, 555, 1),
+(555, 555, 28),
+(1068, 555, 48),
+(1070, 555, 49),
+(1072, 556, 1),
+(556, 556, 28),
+(1071, 556, 48),
+(1073, 556, 49),
+(1078, 557, 1),
+(557, 557, 28),
+(1077, 557, 48),
+(1079, 557, 49),
+(1081, 558, 1),
+(558, 558, 28),
+(1080, 558, 48),
+(1082, 558, 49),
+(1087, 559, 1),
+(559, 559, 28),
+(1086, 559, 48),
+(1088, 559, 49),
+(1084, 560, 1),
+(560, 560, 28),
+(1083, 560, 48),
+(1085, 560, 49),
+(1090, 561, 1),
+(561, 561, 28),
+(1089, 561, 48),
+(1091, 561, 49),
+(1093, 562, 1),
+(562, 562, 28),
+(1092, 562, 48),
+(1094, 562, 49),
+(1099, 563, 1),
+(563, 563, 28),
+(1098, 563, 48),
+(1100, 563, 49),
+(1096, 564, 1),
+(564, 564, 28),
+(1095, 564, 48),
+(1097, 564, 49),
+(565, 565, 28),
+(566, 566, 28),
+(567, 567, 28),
+(568, 568, 28),
+(569, 569, 28),
+(570, 570, 28),
+(571, 571, 28),
+(572, 572, 28),
+(573, 573, 28),
+(574, 574, 28),
+(575, 575, 28),
+(576, 576, 28),
+(577, 577, 28),
+(578, 578, 28),
+(579, 579, 28),
+(580, 580, 28),
+(581, 581, 28),
+(582, 582, 28),
+(1058, 583, 27),
+(583, 583, 28),
+(1057, 583, 49),
+(584, 584, 28),
+(585, 585, 28),
+(586, 586, 60),
+(587, 587, 60),
+(588, 588, 29),
+(589, 589, 29),
+(591, 591, 31),
+(592, 592, 31),
+(593, 593, 31),
+(594, 594, 32),
+(598, 598, 60),
+(599, 599, 60),
+(600, 600, 60),
+(601, 601, 60),
+(602, 602, 34),
+(603, 603, 34),
+(604, 604, 60),
+(606, 606, 60),
+(607, 607, 60),
+(609, 609, 60),
+(610, 610, 60),
+(611, 611, 8),
+(612, 612, 8),
+(613, 613, 8),
+(614, 614, 8),
+(615, 615, 8),
+(616, 616, 8),
+(1048, 617, 9),
+(1049, 617, 37),
+(618, 618, 48),
+(619, 619, 49),
+(622, 622, 37),
+(627, 627, 37),
+(630, 630, 38),
+(631, 631, 38),
+(634, 634, 60),
+(635, 635, 60),
+(647, 647, 40),
+(648, 648, 40),
+(649, 649, 60),
+(650, 650, 60),
+(651, 651, 60),
+(652, 652, 60),
+(1112, 653, 1),
+(1113, 653, 28),
+(1111, 653, 48),
+(1114, 653, 49),
+(994, 658, 1),
+(998, 658, 28),
+(993, 658, 48),
+(996, 658, 49),
+(660, 660, 60),
+(661, 661, 60),
+(1067, 662, 49),
+(1027, 667, 1),
+(1028, 667, 28),
+(1026, 667, 48),
+(1029, 667, 49),
+(1108, 676, 1),
+(1109, 676, 28),
+(1107, 676, 48),
+(1110, 676, 49),
+(677, 677, 60),
+(678, 678, 60),
+(679, 679, 60),
+(680, 680, 60),
+(682, 682, 41),
+(686, 686, 41),
+(687, 687, 41),
+(688, 688, 41),
+(690, 690, 41),
+(695, 695, 60),
+(696, 696, 60),
+(697, 697, 60),
+(698, 698, 43),
+(699, 699, 60),
+(700, 700, 60),
+(701, 701, 44),
+(702, 702, 60),
+(710, 710, 46),
+(712, 712, 47),
+(714, 714, 60),
+(715, 715, 60),
+(716, 716, 60),
+(717, 717, 59),
+(718, 718, 60),
+(719, 719, 60),
+(720, 720, 60),
+(721, 721, 60),
+(722, 722, 60),
+(746, 746, 48),
+(1118, 748, 1),
+(1119, 748, 28),
+(748, 748, 48),
+(1120, 748, 49),
+(1023, 756, 1),
+(1024, 756, 28),
+(756, 756, 48),
+(1025, 756, 49),
+(1101, 768, 1),
+(1102, 768, 28),
+(768, 768, 48),
+(1103, 768, 49),
+(1104, 769, 1),
+(1105, 769, 28),
+(769, 769, 48),
+(1106, 769, 49),
+(771, 771, 48),
+(776, 776, 48),
+(777, 777, 48),
+(778, 778, 48),
+(779, 779, 48),
+(780, 780, 60),
+(781, 781, 60),
+(782, 782, 60),
+(1037, 792, 1),
+(1038, 792, 28),
+(1036, 792, 48),
+(792, 792, 49),
+(796, 796, 49),
+(809, 809, 49),
+(810, 810, 49),
+(815, 815, 49),
+(817, 817, 49),
+(818, 818, 49),
+(819, 819, 49),
+(823, 823, 49),
+(826, 826, 49),
+(833, 833, 28),
+(834, 834, 60),
+(835, 835, 48),
+(837, 837, 60),
+(838, 838, 50),
+(893, 847, 14),
+(847, 847, 51),
+(848, 848, 51),
+(849, 849, 60),
+(850, 850, 60),
+(851, 851, 60),
+(852, 852, 60),
+(853, 853, 60),
+(854, 854, 60),
+(856, 856, 60),
+(857, 857, 60),
+(864, 864, 53),
+(865, 865, 53),
+(866, 866, 53),
+(867, 867, 53),
+(868, 868, 60),
+(870, 870, 58),
+(875, 875, 55),
+(876, 876, 60),
+(877, 877, 60),
+(878, 882, 60),
+(879, 883, 60),
+(896, 886, 3),
+(895, 886, 9),
+(897, 886, 37),
+(894, 886, 61),
+(898, 887, 3),
+(900, 888, 5),
+(899, 888, 41),
+(902, 889, 5),
+(901, 889, 41),
+(903, 890, 6),
+(905, 891, 7),
+(904, 891, 37),
+(906, 892, 8),
+(907, 892, 47),
+(908, 893, 9),
+(909, 894, 9),
+(910, 894, 47),
+(911, 895, 9),
+(912, 896, 11),
+(915, 897, 12),
+(913, 897, 48),
+(914, 897, 49),
+(918, 898, 12),
+(916, 898, 48),
+(917, 898, 49),
+(922, 900, 12),
+(921, 900, 41),
+(924, 901, 12),
+(925, 901, 22),
+(923, 901, 41),
+(926, 901, 49),
+(928, 902, 12),
+(927, 902, 49),
+(930, 903, 13),
+(929, 903, 36),
+(932, 904, 14),
+(931, 904, 51),
+(934, 905, 17),
+(933, 905, 40),
+(935, 906, 17),
+(936, 907, 17),
+(937, 908, 17),
+(938, 909, 17),
+(939, 910, 17),
+(940, 910, 35),
+(943, 911, 23),
+(941, 911, 24),
+(942, 911, 40),
+(944, 912, 24),
+(945, 912, 40),
+(946, 913, 26),
+(947, 913, 51),
+(949, 914, 27),
+(950, 914, 45),
+(948, 914, 49),
+(952, 915, 30),
+(951, 915, 45),
+(953, 916, 37),
+(954, 917, 39),
+(955, 918, 40),
+(956, 919, 40),
+(957, 920, 40),
+(958, 920, 51),
+(959, 920, 54),
+(960, 921, 45),
+(961, 922, 45),
+(962, 923, 48),
+(963, 923, 49),
+(964, 924, 48),
+(1015, 925, 1),
+(1016, 925, 28),
+(965, 925, 48),
+(1017, 925, 49),
+(999, 926, 1),
+(1000, 926, 28),
+(966, 926, 48),
+(1001, 926, 49),
+(1020, 927, 1),
+(1021, 927, 28),
+(967, 927, 48),
+(1022, 927, 49),
+(968, 928, 48),
+(969, 929, 48),
+(970, 929, 49),
+(971, 930, 48),
+(972, 931, 48),
+(973, 931, 49),
+(974, 932, 48),
+(1115, 933, 1),
+(1116, 933, 28),
+(975, 933, 48),
+(1117, 933, 49),
+(976, 934, 48),
+(977, 934, 49),
+(978, 935, 48),
+(979, 935, 49),
+(980, 936, 49),
+(981, 937, 49),
+(982, 938, 49),
+(983, 939, 49),
+(984, 940, 49),
+(985, 941, 49),
+(986, 942, 49),
+(987, 943, 51),
+(988, 944, 52),
+(1018, 948, 4),
+(1019, 948, 6),
+(1030, 949, 60),
+(1032, 950, 60),
+(1039, 951, 51),
+(1050, 952, 8),
+(1051, 953, 8),
+(1052, 954, 8);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appinventory_stock`
+--
+
+CREATE TABLE `appinventory_stock` (
+  `id` bigint NOT NULL,
+  `quantity` decimal(10,2) NOT NULL,
+  `product_id` bigint NOT NULL,
+  `warehouse_id` bigint NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appinventory_stock`
+--
+
+INSERT INTO `appinventory_stock` (`id`, `quantity`, `product_id`, `warehouse_id`) VALUES
+(1, -50.00, 292, 1),
+(2, -30.00, 317, 1),
+(3, -65.00, 315, 1),
+(4, -25.00, 330, 1),
+(5, -20.00, 328, 1),
+(6, -750.00, 123, 1),
+(7, -500.00, 136, 1),
+(8, -1250.00, 129, 1),
+(9, -5.00, 290, 1),
+(10, -7.00, 282, 1),
+(11, -2.00, 284, 1),
+(12, -3.00, 278, 1),
+(13, -4.00, 277, 1),
+(14, -6.00, 617, 1),
+(15, -16.00, 616, 1),
+(16, -50.00, 611, 1),
+(17, -8.00, 952, 1),
+(18, -3.00, 953, 1),
+(19, -1.00, 954, 1),
+(20, -100.00, 950, 1),
+(21, -200.00, 400, 1),
+(22, -2.00, 279, 1),
+(23, -2.00, 687, 1),
+(24, -4.00, 698, 1),
+(25, -8.00, 688, 1),
+(26, -70.00, 720, 1),
+(27, -2.00, 178, 1),
+(28, -2.00, 235, 1),
+(29, -5.00, 177, 1),
+(30, -5.00, 93, 1),
+(31, -1.00, 199, 1),
+(32, -1.00, 187, 1),
+(33, -1.00, 104, 1),
+(34, -1.00, 60, 1),
+(35, -1.00, 534, 1),
+(36, -1.00, 926, 1),
+(37, -1.00, 551, 1),
+(38, -2.00, 951, 1),
+(39, -2.00, 425, 1),
+(40, -1.00, 521, 1),
+(41, -1.00, 583, 1),
+(42, -1.00, 489, 1),
+(43, -1.00, 333, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appinventory_unitcategory`
+--
+
+CREATE TABLE `appinventory_unitcategory` (
+  `id` bigint NOT NULL,
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `description` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appinventory_unitcategory`
+--
+
+INSERT INTO `appinventory_unitcategory` (`id`, `name`, `description`, `is_active`) VALUES
+(1, 'Length', 'Length units for cables, pipes, and electrical materials', 1),
+(2, 'Weight', 'Weight units for materials and equipment', 1),
+(3, 'Volume', 'Volume units for liquids and gases', 1),
+(4, 'Area', 'Area units for surfaces and coverings', 1),
+(5, 'Count', 'Counting units for individual parts and assemblies', 1),
+(6, 'Electrical', 'Electrical-specific units (amperes, volts, etc.)', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appinventory_unitofmeasure`
+--
+
+CREATE TABLE `appinventory_unitofmeasure` (
+  `id` bigint NOT NULL,
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `code` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `reference_unit` tinyint(1) NOT NULL,
+  `conversion_sign` varchar(4) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `conversion_factor` decimal(10,4) NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `category_id` bigint NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appinventory_unitofmeasure`
+--
+
+INSERT INTO `appinventory_unitofmeasure` (`id`, `name`, `code`, `reference_unit`, `conversion_sign`, `conversion_factor`, `is_active`, `category_id`) VALUES
+(1, 'Foot', 'FT', 1, 'ref', 1.0000, 1, 1),
+(2, 'Inch', 'IN', 0, '/', 12.0000, 1, 1),
+(3, 'Yard', 'YD', 0, '*', 3.0000, 1, 1),
+(4, 'Meter', 'M', 0, '*', 3.2808, 1, 1),
+(5, 'Pound', 'LB', 1, 'ref', 1.0000, 1, 2),
+(6, 'Ounce', 'OZ', 0, '/', 16.0000, 1, 2),
+(7, 'Kilogram', 'KG', 0, '*', 2.2046, 1, 2),
+(8, 'Gallon', 'GAL', 1, 'ref', 1.0000, 1, 3),
+(9, 'Quart', 'QT', 0, '/', 4.0000, 1, 3),
+(10, 'Pint', 'PT', 0, '/', 8.0000, 1, 3),
+(11, 'Liter', 'L', 0, '*', 3.7854, 1, 3),
+(12, 'Square Foot', 'SQFT', 1, 'ref', 1.0000, 1, 4),
+(13, 'Square Inch', 'SQIN', 0, '/', 144.0000, 1, 4),
+(14, 'Each', 'EA', 1, 'ref', 1.0000, 1, 5),
+(15, 'Box', 'BOX', 0, '*', 1.0000, 1, 5),
+(16, 'Pack', 'PK', 0, '*', 1.0000, 1, 5),
+(17, 'Set', 'SET', 0, '*', 1.0000, 1, 5),
+(18, 'Kit', 'KIT', 0, '*', 1.0000, 1, 5),
+(19, 'Roll', 'ROLL', 0, '*', 1.0000, 1, 5),
+(20, 'Stick', 'STK', 0, '*', 1.0000, 1, 5),
+(21, '100 Foot Roll', '100FT', 0, '*', 100.0000, 1, 1),
+(22, '250 Foot Roll', '250FT', 0, '*', 250.0000, 1, 1),
+(23, '500 Foot Roll', '500FT', 0, '*', 500.0000, 1, 1),
+(24, '1000 Foot Roll', '1000FT', 0, '*', 1000.0000, 1, 1),
+(25, '10 Foot Stick', '10FT', 0, '*', 10.0000, 1, 1),
+(26, '20 Foot Stick', '20FT', 0, '*', 20.0000, 1, 1),
+(27, 'Ampere', 'A', 1, 'ref', 1.0000, 1, 6),
+(28, 'Volt', 'V', 0, 'ref', 1.0000, 1, 6),
+(29, 'Watt', 'W', 0, 'ref', 1.0000, 1, 6),
+(31, 'Pipe 10 Ft', 'Pipe 10Ft', 0, '/', 1.0000, 1, 1),
+(32, '25 Box', '25Box', 0, '*', 25.0000, 1, 5);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appinventory_warehouse`
+--
+
+CREATE TABLE `appinventory_warehouse` (
+  `id` bigint NOT NULL,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `location` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `is_default` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appinventory_warehouse`
+--
+
+INSERT INTO `appinventory_warehouse` (`id`, `name`, `location`, `is_active`, `is_default`) VALUES
+(1, 'Main Warehouse', 'Cape Coral', 1, 1),
+(3, 'Mobile Warehouse', 'Mobile Warehouse', 1, 0),
+(4, 'Van 1 Stock', 'Van 1', 1, 0),
+(5, 'Van 2 Stock', 'Van 2', 1, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appschedule_absencereason`
+--
+
+CREATE TABLE `appschedule_absencereason` (
+  `id` bigint NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `description` longtext,
+  `is_active` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appschedule_absencereason`
+--
+
+INSERT INTO `appschedule_absencereason` (`id`, `name`, `description`, `is_active`) VALUES
+(1, 'Scheduled Day Off', 'Scheduled Day Off', 1),
+(2, 'Medical Appointments', 'Medical Appointments', 1),
+(3, 'Unscheduled Day Off', 'Unscheduled Day Off', 1),
+(4, 'Vacation Leave', 'Vacation Leave', 1),
+(5, 'Personal Leave', 'Personal Leave', 1),
+(6, 'Sick Leave', 'Sick Leave', 1),
+(7, 'Bereavement Leave', 'Bereavement Leave', 1),
+(8, 'No Call, No Show', '', 1),
+(9, 'Holiday - Office Closed', '', 1),
+(10, 'FINISH', '', 1),
+(11, 'HOURLY', '', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appschedule_event`
+--
+
+CREATE TABLE `appschedule_event` (
+  `id` bigint NOT NULL,
+  `date` date NOT NULL,
+  `end_dt` date NOT NULL,
+  `lot` varchar(255) DEFAULT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `description` longtext,
+  `notes` longtext,
+  `extended_service` tinyint(1) NOT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `is_absence` tinyint(1) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `deleted` tinyint(1) NOT NULL,
+  `absence_reason_id` bigint DEFAULT NULL,
+  `builder_id` bigint DEFAULT NULL,
+  `created_by_id` int DEFAULT NULL,
+  `crew_id` bigint NOT NULL,
+  `house_model_id` bigint DEFAULT NULL,
+  `job_id` bigint DEFAULT NULL,
+  `work_account_id` bigint DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appschedule_event`
+--
+
+INSERT INTO `appschedule_event` (`id`, `date`, `end_dt`, `lot`, `address`, `title`, `description`, `notes`, `extended_service`, `created_at`, `is_absence`, `updated_at`, `deleted`, `absence_reason_id`, `builder_id`, `created_by_id`, `crew_id`, `house_model_id`, `job_id`, `work_account_id`) VALUES
+(1, '2025-10-14', '2025-10-15', NULL, NULL, 'VACATION LEAVE', '', NULL, 0, '2025-10-19 00:53:41.945041', 1, '2025-10-19 00:53:41.945041', 0, 4, NULL, 1, 5, NULL, NULL, NULL),
+(2, '2025-10-14', '2025-10-15', '881001', '', 'PANTHER SOUTH 881001', '', NULL, 0, '2025-10-19 01:21:20.410588', 0, '2025-10-19 03:21:07.792120', 0, NULL, 2, 1, 2, 2, 1, 1),
+(3, '2025-10-15', '2025-10-16', '08899', '', 'PANTHER SOUTH 08899', '', NULL, 0, '2025-10-19 01:21:34.468682', 0, '2025-10-19 03:44:12.000285', 0, NULL, 2, 1, 5, 1, 1, 2),
+(4, '2025-10-16', '2025-10-17', '44444', '1136 Southwest 3rd Street', 'SPOSEN CC 44444', '', NULL, 1, '2025-10-19 01:21:47.642738', 0, '2025-10-19 03:31:24.357244', 0, NULL, 3, 1, 5, 3, 2, 3),
+(5, '2025-10-15', '2025-10-16', '881001', '', 'PANTHER SOUTH 881001', '', NULL, 0, '2025-10-19 01:23:40.602009', 0, '2025-10-19 01:23:40.602009', 0, NULL, 2, 1, 4, 2, 1, 1),
+(6, '2025-10-15', '2025-10-16', '08899', '', 'PANTHER SOUTH 08899', '', NULL, 0, '2025-10-19 02:29:56.078036', 0, '2025-10-19 02:32:03.864473', 0, NULL, 2, 1, 2, 1, 1, 2),
+(7, '2025-10-16', '2025-10-17', '44444', '1136 Southwest 3rd Street', 'SPOSEN CC 44444', 'aqui', NULL, 0, '2025-10-19 02:39:29.931800', 0, '2025-10-19 03:52:48.101909', 0, NULL, 3, 1, 7, 3, 2, 3),
+(8, '2025-10-16', '2025-10-17', NULL, NULL, 'FINISH', '', NULL, 0, '2025-10-19 03:32:34.399995', 1, '2025-10-19 03:32:56.626171', 0, 10, NULL, 1, 2, NULL, NULL, NULL),
+(9, '2025-10-13', '2025-10-14', '2222', '', 'PANTHER SOUTH 2222', '', NULL, 0, '2025-10-19 04:50:04.994763', 0, '2025-10-19 04:50:04.994763', 0, NULL, 2, 1, 2, 2, 1, 5);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appschedule_eventchatmessage`
+--
+
+CREATE TABLE `appschedule_eventchatmessage` (
+  `id` bigint NOT NULL,
+  `message` longtext NOT NULL,
+  `timestamp` datetime(6) NOT NULL,
+  `author_id` int NOT NULL,
+  `event_id` bigint NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appschedule_eventchatreadstatus`
+--
+
+CREATE TABLE `appschedule_eventchatreadstatus` (
+  `id` bigint NOT NULL,
+  `read_at` datetime(6) NOT NULL,
+  `message_id` bigint NOT NULL,
+  `user_id` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appschedule_eventdraft`
+--
+
+CREATE TABLE `appschedule_eventdraft` (
+  `id` bigint NOT NULL,
+  `date` date NOT NULL,
+  `end_dt` date NOT NULL,
+  `lot` varchar(255) DEFAULT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `description` longtext,
+  `notes` longtext,
+  `extended_service` tinyint(1) NOT NULL,
+  `is_absence` tinyint(1) NOT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `absence_reason_id` bigint DEFAULT NULL,
+  `builder_id` bigint DEFAULT NULL,
+  `created_by_id` int DEFAULT NULL,
+  `crew_id` bigint NOT NULL,
+  `event_id` bigint DEFAULT NULL,
+  `house_model_id` bigint DEFAULT NULL,
+  `job_id` bigint DEFAULT NULL,
+  `work_account_id` bigint DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appschedule_eventimage`
+--
+
+CREATE TABLE `appschedule_eventimage` (
+  `id` bigint NOT NULL,
+  `image` varchar(100) NOT NULL,
+  `uploaded_at` datetime(6) NOT NULL,
+  `event_id` bigint NOT NULL,
+  `uploaded_by_id` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appschedule_eventimage`
+--
+
+INSERT INTO `appschedule_eventimage` (`id`, `image`, `uploaded_at`, `event_id`, `uploaded_by_id`) VALUES
+(1, 'event_images/4/GP45-1886_Survey_Site_Plan.PDF', '2025-10-19 02:02:17.156823', 4, 1),
+(2, 'event_images/4/GP45-1886Options.PDF', '2025-10-19 02:02:17.165822', 4, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appschedule_eventnote`
+--
+
+CREATE TABLE `appschedule_eventnote` (
+  `id` bigint NOT NULL,
+  `notes` longtext,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `event_id` bigint NOT NULL,
+  `updated_by_id` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `appschedule_eventnote`
+--
+
+INSERT INTO `appschedule_eventnote` (`id`, `notes`, `created_at`, `updated_at`, `event_id`, `updated_by_id`) VALUES
+(1, '<p>Esto es  una nota</p><p>📝  oliver: Oct 18, 2025, 10:11 PM</p><p> </p><p> </p>', '2025-10-19 02:11:10.043747', '2025-10-19 02:11:10.043747', 3, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `apptransactions_document`
+--
+
+CREATE TABLE `apptransactions_document` (
+  `id` bigint NOT NULL,
+  `date` date NOT NULL,
+  `notes` longtext,
+  `total_discount` decimal(10,2) NOT NULL,
+  `total_amount` decimal(12,2) NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `builder_id` bigint DEFAULT NULL,
+  `created_by_id` int DEFAULT NULL,
+  `document_type_id` bigint NOT NULL,
+  `work_account_id` bigint DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `apptransactions_document`
+--
+
+INSERT INTO `apptransactions_document` (`id`, `date`, `notes`, `total_discount`, `total_amount`, `is_active`, `builder_id`, `created_by_id`, `document_type_id`, `work_account_id`) VALUES
+(1, '2025-10-19', '', 0.00, 11382.55, 1, 3, 1, 8, 3);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `apptransactions_documentline`
+--
+
+CREATE TABLE `apptransactions_documentline` (
+  `id` bigint NOT NULL,
+  `quantity` decimal(10,2) NOT NULL,
+  `unit_price` decimal(10,2) NOT NULL,
+  `discount_percentage` decimal(5,2) NOT NULL,
+  `final_price` decimal(10,2) DEFAULT NULL,
+  `brand_id` bigint DEFAULT NULL,
+  `document_id` bigint NOT NULL,
+  `price_type_id` bigint DEFAULT NULL,
+  `product_id` bigint NOT NULL,
+  `unit_id` bigint DEFAULT NULL,
+  `warehouse_id` bigint DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `apptransactions_documentline`
+--
+
+INSERT INTO `apptransactions_documentline` (`id`, `quantity`, `unit_price`, `discount_percentage`, `final_price`, `brand_id`, `document_id`, `price_type_id`, `product_id`, `unit_id`, `warehouse_id`) VALUES
+(1, 50.00, 4.25, 0.00, 212.50, 65, 1, 5, 292, 1, 1),
+(2, 30.00, 4.25, 0.00, 127.50, 61, 1, 5, 317, 1, 1),
+(3, 65.00, 4.25, 0.00, 276.25, 60, 1, 5, 315, 1, 1),
+(4, 25.00, 4.25, 0.00, 106.25, 60, 1, 5, 330, 1, 1),
+(5, 20.00, 4.25, 0.00, 85.00, 60, 1, 5, 328, 1, 1),
+(6, 750.00, 4.25, 0.00, 3187.50, 60, 1, 5, 123, 1, 1),
+(7, 500.00, 0.31, 0.00, 155.00, 60, 1, 5, 136, 1, 1),
+(8, 1250.00, 4.25, 0.00, 5312.50, 61, 1, 5, 129, 1, 1),
+(9, 5.00, 4.25, 0.00, 21.25, 60, 1, 5, 290, 14, 1),
+(10, 7.00, 4.25, 0.00, 29.75, 44, 1, 5, 282, 14, 1),
+(11, 2.00, 4.25, 0.00, 8.50, 44, 1, 5, 284, 14, 1),
+(12, 3.00, 4.25, 0.00, 12.75, 60, 1, 5, 278, 14, 1),
+(13, 4.00, 4.25, 0.00, 17.00, 9, 1, 5, 277, 14, 1),
+(14, 6.00, 4.25, 0.00, 25.50, 9, 1, 5, 617, 14, 1),
+(15, 16.00, 4.25, 0.00, 68.00, 8, 1, 5, 616, 14, 1),
+(16, 50.00, 4.25, 0.00, 212.50, 8, 1, 5, 611, 14, 1),
+(17, 8.00, 4.20, 0.00, 33.60, 8, 1, 5, 952, 14, 1),
+(18, 3.00, 4.87, 0.00, 14.61, 8, 1, 5, 953, 14, 1),
+(19, 1.00, 9.40, 0.00, 9.40, 8, 1, 5, 954, 14, 1),
+(20, 100.00, 0.45, 0.00, 45.00, 60, 1, 5, 950, 14, 1),
+(21, 200.00, 4.25, 0.00, 850.00, 60, 1, 5, 400, 14, 1),
+(22, 2.00, 3.25, 0.00, 6.50, 61, 1, 5, 279, 14, 1),
+(23, 2.00, 4.25, 0.00, 8.50, 41, 1, 5, 687, 14, 1),
+(24, 4.00, 18.25, 0.00, 73.00, 43, 1, 5, 698, 14, 1),
+(25, 8.00, 3.25, 0.00, 26.00, 41, 1, 5, 688, 14, 1),
+(26, 70.00, 3.40, 0.00, 238.00, 60, 1, 5, 720, 14, 1),
+(27, 2.00, 4.25, 0.00, 8.50, 60, 1, 5, 178, 1, 1),
+(28, 2.00, 4.25, 0.00, 8.50, 60, 1, 5, 235, 1, 1),
+(29, 5.00, 4.25, 0.00, 21.25, 60, 1, 5, 177, 1, 1),
+(30, 5.00, 0.45, 0.00, 2.25, 60, 1, 5, 93, 1, 1),
+(31, 1.00, 9.11, 0.00, 9.11, 68, 1, 5, 199, 14, 1),
+(32, 1.00, 4.25, 0.00, 4.25, 60, 1, 5, 187, 14, 1),
+(33, 1.00, 4.25, 0.00, 4.25, 60, 1, 5, 104, 14, 1),
+(34, 1.00, 2.06, 0.00, 2.06, 60, 1, 5, 60, 14, 1),
+(35, 1.00, 4.25, 0.00, 4.25, 27, 1, 5, 534, 14, 1),
+(36, 1.00, 55.00, 0.00, 55.00, 48, 1, 5, 926, 14, 1),
+(37, 1.00, 70.00, 0.00, 70.00, 48, 1, 5, 551, 14, 1),
+(38, 2.00, 4.50, 0.00, 9.00, 51, 1, 5, 951, 14, 1),
+(39, 2.00, 4.25, 0.00, 8.50, 60, 1, 5, 425, 14, 1),
+(40, 1.00, 4.25, 0.00, 4.25, 27, 1, 5, 521, 14, 1),
+(41, 1.00, 3.25, 0.00, 3.25, 27, 1, 5, 583, 14, 1),
+(42, 1.00, 4.25, 0.00, 4.25, 27, 1, 5, 489, 14, 1),
+(43, 1.00, 1.52, 0.00, 1.52, 60, 1, 5, 333, 14, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `apptransactions_documenttype`
+--
+
+CREATE TABLE `apptransactions_documenttype` (
+  `id` bigint NOT NULL,
+  `type_code` varchar(20) NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `affects_physical` tinyint(1) NOT NULL,
+  `affects_logical` tinyint(1) NOT NULL,
+  `affects_accounting` tinyint(1) NOT NULL,
+  `is_taxable` tinyint(1) NOT NULL,
+  `is_purchase` tinyint(1) NOT NULL,
+  `is_sales` tinyint(1) NOT NULL,
+  `warehouse_required` tinyint(1) NOT NULL,
+  `is_operational` tinyint(1) NOT NULL,
+  `allow_negative_sales` tinyint(1) NOT NULL,
+  `stock_movement` smallint NOT NULL,
+  `is_active` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `apptransactions_documenttype`
+--
+
+INSERT INTO `apptransactions_documenttype` (`id`, `type_code`, `description`, `affects_physical`, `affects_logical`, `affects_accounting`, `is_taxable`, `is_purchase`, `is_sales`, `warehouse_required`, `is_operational`, `allow_negative_sales`, `stock_movement`, `is_active`) VALUES
+(1, 'SELL-INV', 'Sales Invoice', 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1),
+(2, 'INV-INT', 'International Sales Invoice', 1, 1, 1, 1, 0, 1, 1, 1, 0, -1, 0),
+(3, 'CN', 'Credit Note', 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1),
+(4, 'DN', 'Debit Note', 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1),
+(5, 'QUOTE', 'Quote', 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0),
+(6, 'EST', 'Estimate', 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1),
+(7, 'PROP', 'Commercial Proposal', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1),
+(8, 'SO-PACK', 'Sales Order - Material Packing', 1, 1, 0, 0, 0, 1, 1, 1, 1, -1, 1),
+(9, 'PO-INV', 'Purchase Invoice', 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1),
+(10, 'PO', 'Purchase Order', 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0),
+(11, 'ADJ-INV', 'Inventory Adjustment', 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0),
+(12, 'TRANS', 'Warehouse Transfer', 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1),
+(13, 'INV-PHY', 'Physical Inventory', 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1),
+(14, 'Test', 'Test 1 Transaction Types', 1, 1, 0, 0, 0, 0, 1, 0, 0, -1, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `apptransactions_party`
+--
+
+CREATE TABLE `apptransactions_party` (
+  `id` bigint NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `rfc` varchar(50) NOT NULL,
+  `street` varchar(100) NOT NULL,
+  `floor_office` varchar(100) NOT NULL,
+  `city` varchar(100) NOT NULL,
+  `state` varchar(100) NOT NULL,
+  `zipcode` varchar(20) NOT NULL,
+  `country` varchar(100) NOT NULL,
+  `phone` varchar(20) NOT NULL,
+  `email` varchar(254) NOT NULL,
+  `customer_rank` int UNSIGNED NOT NULL,
+  `supplier_rank` int UNSIGNED NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `default_price_type_id` bigint DEFAULT NULL,
+  `category_id` bigint DEFAULT NULL
+) ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `apptransactions_partycategory`
+--
+
+CREATE TABLE `apptransactions_partycategory` (
+  `id` bigint NOT NULL,
+  `name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `description` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bg_0900_ai_ci;
+
+--
+-- Dumping data for table `apptransactions_partycategory`
+--
+
+INSERT INTO `apptransactions_partycategory` (`id`, `name`, `description`, `is_active`) VALUES
+(2, 'Residential Customer', 'Generals Constructors', 1),
+(3, 'Commercial Customer', 'Comercial Constructors', 1),
+(4, 'Electrical Supplier', 'Suppliers', 1),
+(5, 'Electrical Contractor', 'Contractors', 1),
+(7, 'Partner', 'Partners', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `apptransactions_partytype`
+--
+
+CREATE TABLE `apptransactions_partytype` (
+  `id` bigint NOT NULL,
+  `name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `description` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bg_0900_ai_ci;
+
+--
+-- Dumping data for table `apptransactions_partytype`
+--
+
+INSERT INTO `apptransactions_partytype` (`id`, `name`, `description`, `is_active`) VALUES
+(1, 'Supplier ', 'Suppliers', 1),
+(2, 'Subcontractor', 'Subcontractors', 1),
+(3, 'Employees', 'Sales to Friend', 1),
+(4, 'Customers', 'Customers', 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `apptransactions_party_types`
+--
+
+CREATE TABLE `apptransactions_party_types` (
+  `id` bigint NOT NULL,
+  `party_id` bigint NOT NULL,
+  `partytype_id` bigint NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bg_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `apptransactions_transactionfavorite`
+--
+
+CREATE TABLE `apptransactions_transactionfavorite` (
+  `id` bigint NOT NULL,
+  `name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `description` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `document_data` json NOT NULL,
+  `lines_data` json NOT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `created_by_id` int NOT NULL,
+  `name_ci_active` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci GENERATED ALWAYS AS ((case when (`is_active` = 1) then lower(`name`) else NULL end)) STORED
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bg_0900_ai_ci;
+
+--
+-- Dumping data for table `apptransactions_transactionfavorite`
+--
+
+INSERT INTO `apptransactions_transactionfavorite` (`id`, `name`, `description`, `document_data`, `lines_data`, `created_at`, `updated_at`, `is_active`, `created_by_id`) VALUES
+(1, 'Panther Duplex 1196 Rough Side by Side Meter Copper Clap', 'Panther Duplex 1196 Rough Side by Side Meter (Duplex Service) Copper Clap', '{\"date\": \"2025-10-15\", \"lines\": [{\"id\": null, \"unit\": 1, \"__key\": \"aos51uu3vdhmgrgwysy\", \"brand\": 65, \"brands\": [], \"_errors\": {}, \"product\": 292, \"quantity\": 20, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 85, \"product_label\": \"4/2 Copper Clad\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"v3jl2knlvpmgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 317, \"quantity\": 30, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 127.5, \"product_label\": \"6/3 Copper Clad\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"s2z18hnre1kmgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 315, \"quantity\": 40, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 170, \"product_label\": \"6/2 Copper Clad\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"mf5iccp2xmmgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 330, \"quantity\": 25, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 106.25, \"product_label\": \"8/3 Copper Clad\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"d5y36ou997jmgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 123, \"quantity\": 750, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 3187.5, \"product_label\": \"10/2 Copper Clad\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"a2w5jzqy2rnmgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 328, \"quantity\": 35, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 148.75, \"product_label\": \"8/2 Copper Clad\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"lbvcq9a5cwmgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 136, \"quantity\": 500, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 0.31, \"final_price\": 155, \"product_label\": \"12/3 Copper Clad\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"q25les91zmmgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 280, \"quantity\": 5, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 21.25, \"product_label\": \"4 Square 1 1/2\\\" Box with Side Bracket\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"hklbcb3xvy6mgrgwysy\", \"brand\": 44, \"brands\": [], \"_errors\": {}, \"product\": 282, \"quantity\": 12, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 51, \"product_label\": \"4 Square 1 Gang Mudring\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"6d4hp7dfhrcmgrgwysy\", \"brand\": 44, \"brands\": [], \"_errors\": {}, \"product\": 284, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"4 Square 2 Gang Mudring\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"6k1qxrvjogymgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 278, \"quantity\": 3, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 12.75, \"product_label\": \"4 Round Ceiling Pan\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"gi2w9z1gchamgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 277, \"quantity\": 4, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 17, \"product_label\": \"4 Plastic L-Shaped Fan Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"6n2njvhc68imgrgwysy\", \"brand\": 8, \"brands\": [], \"_errors\": {}, \"product\": 617, \"quantity\": 6, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 25.5, \"product_label\": \"OS Round Nail on Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"zq5jqig22emgrgwysy\", \"brand\": 8, \"brands\": [], \"_errors\": {}, \"product\": 616, \"quantity\": 16, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 68, \"product_label\": \"OS Round Bar Hanger Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"lqoy569dncnmgrgwysy\", \"brand\": 8, \"brands\": [], \"_errors\": {}, \"product\": 612, \"quantity\": 50, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 212.5, \"product_label\": \"OS 1 Gang Plastic Bracket Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"g21ski78izjmgrgwysz\", \"brand\": 8, \"brands\": [], \"_errors\": {}, \"product\": 613, \"quantity\": 8, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 34, \"product_label\": \"OS 2 Gang Plastic Bracket Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"dhxxnqib5enmgrgwysz\", \"brand\": 8, \"brands\": [], \"_errors\": {}, \"product\": 614, \"quantity\": 3, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 12.75, \"product_label\": \"OS 3 Gang Plastic Bracket Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"uzcbpsbolromgrgwysz\", \"brand\": 8, \"brands\": [], \"_errors\": {}, \"product\": 615, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"OS 4 Gang Plastic Bracket Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"008f8tct4w9lkmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 950, \"quantity\": 100, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 0.45, \"final_price\": 45, \"product_label\": \"Marvin Bochner 1.5\\\" x 3\\\" Kickplate\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"s8hxuzao73mgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 400, \"quantity\": 200, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 850, \"product_label\": \"Drive Pins\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"muchxjb0w8mgrgwysz\", \"brand\": 44, \"brands\": [], \"_errors\": {}, \"product\": 287, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"4 Square Extension Ring\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"ulpjjfwixzmgrgwysz\", \"brand\": null, \"brands\": [], \"_errors\": {}, \"product\": 423, \"quantity\": 3, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 12.75, \"product_label\": \"F4P Expanding Foam\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"jetj2og83xgmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 152, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"2 1/2\\\" Deep Gangable Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"5sj0b21wh6mgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 141, \"quantity\": 400, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 1700, \"product_label\": \"14 Natural Cable Tie\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"rlaq7na1o1lmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 281, \"quantity\": 8, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 34, \"product_label\": \"4 Square 1 1/4\\\" Shallow Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"mkym6tq8vemgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 720, \"quantity\": 40, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 3.4, \"final_price\": 136, \"product_label\": \"SER 4/0-4/0-4/0-2/0\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"ruktf9r969bmgrgwysz\", \"brand\": 34, \"brands\": [], \"_errors\": {}, \"product\": 603, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"Milbank Hub Adapter Plate\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"z8q41xo0aamgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 154, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"2 1/2\\\" Hub for Meter Can\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"53888zlmcnmgrgwysz\", \"brand\": 49, \"brands\": [], \"_errors\": {}, \"product\": 792, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 56, \"final_price\": 112, \"product_label\": \"200A Disconnect (With Internal Breaker)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"7atorhors3imgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 164, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"2 1/2\\\" Weatherhead\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"9avl60hqepomgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 186, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"2 Neoprene Roof Flashing\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"2z8df95a2wamgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 267, \"quantity\": 45, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 1.19, \"final_price\": 53.55, \"product_label\": \"350 KCMIL Black Stranded Aluminum\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"cjk79r2sctmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 188, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"2 PVC 45 (15)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"szo3nvbgwncmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 194, \"quantity\": 6, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 25.5, \"product_label\": \"2 PVC Male Adapter (50)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"tsp68yjp9tcmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 185, \"quantity\": 6, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 25.5, \"product_label\": \"2 Locknut (50)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"rmf14zcke4gmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 187, \"quantity\": 8, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 34, \"product_label\": \"2 Plastic Bushing (25)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"9qvykf847ojmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 198, \"quantity\": 10, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 42.5, \"product_label\": \"2 PVC SCH80\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"ccxzjzjnjlbmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 190, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"2 PVC Coupling (40)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"dgd6o70b5semgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 463, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"Grounding Bridge #2 - #6 AWG\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"71jc8xlw3eymgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 23, \"quantity\": 15, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 63.75, \"product_label\": \"#4 Solid Bare Copper Wire\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"z629k3zyhi9mgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 45, \"quantity\": 10, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 1.31, \"final_price\": 13.1, \"product_label\": \"1 1/2\\\" PVC SCH40\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"m649we2s8pkmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 105, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"1/2\\\" One Hole Rigid Strap\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"9bnkv6h0njmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 111, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"1/2\\\" PVC Male Adapter (200)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"vuflmej2crkmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 102, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"1/2\\\" Locknut (100)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"88orsqjcxu4mgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 106, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"1/2\\\" Plastic Bushing (100)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"s09unak8omgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 205, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"200A 2 Position Meter Socket\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"yogkx31qq7mgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 163, \"quantity\": 6, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 25.5, \"product_label\": \"2 1/2\\\" Two Hole Rigid Strap\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"9crxd4ljw5rmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 291, \"quantity\": 20, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 0.89, \"final_price\": 17.8, \"product_label\": \"4/0 Stranded Aluminum\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"7ch2w1cxelvmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 153, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"2 1/2\\\" Galvanized Riser 10\'\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"nch6ig93a6mgrgwysz\", \"brand\": 48, \"brands\": [], \"_errors\": {}, \"product\": 551, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 70, \"final_price\": 70, \"product_label\": \"225A Main Lug Panel 42S\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"07xv4eqcj7rmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 199, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"2 SER Cable Connector\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"wl1ewxrexskmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 229, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"3 Two Hole Rigid Strap\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"l1q09vyw85mgrgwysz\", \"brand\": 12, \"brands\": [], \"_errors\": {}, \"product\": 897, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 0, \"final_price\": 0, \"product_label\": \"2 Hub\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"18adfl8lz1amgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 104, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"1/2\\\" Offset Nipple\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"vt7zi3dtlvmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 60, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 2.06, \"final_price\": 2.06, \"product_label\": \"1 Gang Bell Box 3 Hole 1/2\\\"\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"5u2175eqb19mgrgwysz\", \"brand\": 27, \"brands\": [], \"_errors\": {}, \"product\": 534, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"TR GFI\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"v28drrh2ox9mgrgwysz\", \"brand\": 48, \"brands\": [], \"_errors\": {}, \"product\": 926, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 55, \"final_price\": 55, \"product_label\": \"120\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"dsj54dngk4gmgrgwysz\", \"brand\": 27, \"brands\": [], \"_errors\": {}, \"product\": 521, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"Keyless\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"639p1pi03lamgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 333, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 1.52, \"final_price\": 1.52, \"product_label\": \"A19 Led Bulb\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"w3f18pw4gjpmgrgwysz\", \"brand\": 27, \"brands\": [], \"_errors\": {}, \"product\": 532, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"Single Pole Switch\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"q4gvlp4irkamgrgwysz\", \"brand\": 27, \"brands\": [], \"_errors\": {}, \"product\": 489, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"1 Gang Plate\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"yppbgkseyimgrgwysz\", \"brand\": 51, \"brands\": [], \"_errors\": {}, \"product\": 951, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.5, \"final_price\": 9, \"product_label\": \"All In One Rough Plate 3\\\",4\\\",6\\\"\", \"discount_percentage\": 0}], \"notes\": \"\", \"builder\": 1, \"is_active\": true, \"work_account\": null, \"document_type\": 9}', '[{\"id\": null, \"unit\": 1, \"__key\": \"aos51uu3vdhmgrgwysy\", \"brand\": 65, \"brands\": [], \"_errors\": {}, \"product\": 292, \"quantity\": 20, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 85, \"product_label\": \"4/2 Copper Clad\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"v3jl2knlvpmgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 317, \"quantity\": 30, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 127.5, \"product_label\": \"6/3 Copper Clad\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"s2z18hnre1kmgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 315, \"quantity\": 40, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 170, \"product_label\": \"6/2 Copper Clad\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"mf5iccp2xmmgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 330, \"quantity\": 25, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 106.25, \"product_label\": \"8/3 Copper Clad\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"d5y36ou997jmgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 123, \"quantity\": 750, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 3187.5, \"product_label\": \"10/2 Copper Clad\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"a2w5jzqy2rnmgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 328, \"quantity\": 35, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 148.75, \"product_label\": \"8/2 Copper Clad\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"lbvcq9a5cwmgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 136, \"quantity\": 500, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 0.31, \"final_price\": 155, \"product_label\": \"12/3 Copper Clad\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"q25les91zmmgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 280, \"quantity\": 5, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 21.25, \"product_label\": \"4 Square 1 1/2\\\" Box with Side Bracket\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"hklbcb3xvy6mgrgwysy\", \"brand\": 44, \"brands\": [], \"_errors\": {}, \"product\": 282, \"quantity\": 12, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 51, \"product_label\": \"4 Square 1 Gang Mudring\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"6d4hp7dfhrcmgrgwysy\", \"brand\": 44, \"brands\": [], \"_errors\": {}, \"product\": 284, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"4 Square 2 Gang Mudring\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"6k1qxrvjogymgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 278, \"quantity\": 3, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 12.75, \"product_label\": \"4 Round Ceiling Pan\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"gi2w9z1gchamgrgwysy\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 277, \"quantity\": 4, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 17, \"product_label\": \"4 Plastic L-Shaped Fan Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"6n2njvhc68imgrgwysy\", \"brand\": 8, \"brands\": [], \"_errors\": {}, \"product\": 617, \"quantity\": 6, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 25.5, \"product_label\": \"OS Round Nail on Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"zq5jqig22emgrgwysy\", \"brand\": 8, \"brands\": [], \"_errors\": {}, \"product\": 616, \"quantity\": 16, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 68, \"product_label\": \"OS Round Bar Hanger Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"lqoy569dncnmgrgwysy\", \"brand\": 8, \"brands\": [], \"_errors\": {}, \"product\": 612, \"quantity\": 50, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 212.5, \"product_label\": \"OS 1 Gang Plastic Bracket Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"g21ski78izjmgrgwysz\", \"brand\": 8, \"brands\": [], \"_errors\": {}, \"product\": 613, \"quantity\": 8, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 34, \"product_label\": \"OS 2 Gang Plastic Bracket Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"dhxxnqib5enmgrgwysz\", \"brand\": 8, \"brands\": [], \"_errors\": {}, \"product\": 614, \"quantity\": 3, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 12.75, \"product_label\": \"OS 3 Gang Plastic Bracket Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"uzcbpsbolromgrgwysz\", \"brand\": 8, \"brands\": [], \"_errors\": {}, \"product\": 615, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"OS 4 Gang Plastic Bracket Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"008f8tct4w9lkmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 950, \"quantity\": 100, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 0.45, \"final_price\": 45, \"product_label\": \"Marvin Bochner 1.5\\\" x 3\\\" Kickplate\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"s8hxuzao73mgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 400, \"quantity\": 200, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 850, \"product_label\": \"Drive Pins\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"muchxjb0w8mgrgwysz\", \"brand\": 44, \"brands\": [], \"_errors\": {}, \"product\": 287, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"4 Square Extension Ring\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"ulpjjfwixzmgrgwysz\", \"brand\": null, \"brands\": [], \"_errors\": {}, \"product\": 423, \"quantity\": 3, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 12.75, \"product_label\": \"F4P Expanding Foam\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"jetj2og83xgmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 152, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"2 1/2\\\" Deep Gangable Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"5sj0b21wh6mgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 141, \"quantity\": 400, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 1700, \"product_label\": \"14 Natural Cable Tie\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"rlaq7na1o1lmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 281, \"quantity\": 8, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 34, \"product_label\": \"4 Square 1 1/4\\\" Shallow Box\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"mkym6tq8vemgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 720, \"quantity\": 40, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 3.4, \"final_price\": 136, \"product_label\": \"SER 4/0-4/0-4/0-2/0\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"ruktf9r969bmgrgwysz\", \"brand\": 34, \"brands\": [], \"_errors\": {}, \"product\": 603, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"Milbank Hub Adapter Plate\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"z8q41xo0aamgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 154, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"2 1/2\\\" Hub for Meter Can\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"53888zlmcnmgrgwysz\", \"brand\": 49, \"brands\": [], \"_errors\": {}, \"product\": 792, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 56, \"final_price\": 112, \"product_label\": \"200A Disconnect (With Internal Breaker)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"7atorhors3imgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 164, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"2 1/2\\\" Weatherhead\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"9avl60hqepomgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 186, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"2 Neoprene Roof Flashing\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"2z8df95a2wamgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 267, \"quantity\": 45, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 1.19, \"final_price\": 53.55, \"product_label\": \"350 KCMIL Black Stranded Aluminum\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"cjk79r2sctmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 188, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"2 PVC 45 (15)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"szo3nvbgwncmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 194, \"quantity\": 6, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 25.5, \"product_label\": \"2 PVC Male Adapter (50)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"tsp68yjp9tcmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 185, \"quantity\": 6, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 25.5, \"product_label\": \"2 Locknut (50)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"rmf14zcke4gmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 187, \"quantity\": 8, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 34, \"product_label\": \"2 Plastic Bushing (25)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"9qvykf847ojmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 198, \"quantity\": 10, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 42.5, \"product_label\": \"2 PVC SCH80\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"ccxzjzjnjlbmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 190, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"2 PVC Coupling (40)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"dgd6o70b5semgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 463, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"Grounding Bridge #2 - #6 AWG\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"71jc8xlw3eymgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 23, \"quantity\": 15, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 63.75, \"product_label\": \"#4 Solid Bare Copper Wire\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"z629k3zyhi9mgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 45, \"quantity\": 10, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 1.31, \"final_price\": 13.1, \"product_label\": \"1 1/2\\\" PVC SCH40\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"m649we2s8pkmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 105, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"1/2\\\" One Hole Rigid Strap\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"9bnkv6h0njmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 111, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"1/2\\\" PVC Male Adapter (200)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"vuflmej2crkmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 102, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"1/2\\\" Locknut (100)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"88orsqjcxu4mgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 106, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"1/2\\\" Plastic Bushing (100)\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"s09unak8omgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 205, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"200A 2 Position Meter Socket\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"yogkx31qq7mgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 163, \"quantity\": 6, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 25.5, \"product_label\": \"2 1/2\\\" Two Hole Rigid Strap\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"9crxd4ljw5rmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 291, \"quantity\": 20, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 0.89, \"final_price\": 17.8, \"product_label\": \"4/0 Stranded Aluminum\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"7ch2w1cxelvmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 153, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"2 1/2\\\" Galvanized Riser 10\'\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"nch6ig93a6mgrgwysz\", \"brand\": 48, \"brands\": [], \"_errors\": {}, \"product\": 551, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 70, \"final_price\": 70, \"product_label\": \"225A Main Lug Panel 42S\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 1, \"__key\": \"07xv4eqcj7rmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 199, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"2 SER Cable Connector\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"wl1ewxrexskmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 229, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"3 Two Hole Rigid Strap\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"l1q09vyw85mgrgwysz\", \"brand\": 12, \"brands\": [], \"_errors\": {}, \"product\": 897, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 0, \"final_price\": 0, \"product_label\": \"2 Hub\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"18adfl8lz1amgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 104, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"1/2\\\" Offset Nipple\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"vt7zi3dtlvmgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 60, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 2.06, \"final_price\": 2.06, \"product_label\": \"1 Gang Bell Box 3 Hole 1/2\\\"\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"5u2175eqb19mgrgwysz\", \"brand\": 27, \"brands\": [], \"_errors\": {}, \"product\": 534, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"TR GFI\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"v28drrh2ox9mgrgwysz\", \"brand\": 48, \"brands\": [], \"_errors\": {}, \"product\": 926, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 55, \"final_price\": 55, \"product_label\": \"120\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"dsj54dngk4gmgrgwysz\", \"brand\": 27, \"brands\": [], \"_errors\": {}, \"product\": 521, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"Keyless\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"639p1pi03lamgrgwysz\", \"brand\": 60, \"brands\": [], \"_errors\": {}, \"product\": 333, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 1.52, \"final_price\": 1.52, \"product_label\": \"A19 Led Bulb\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"w3f18pw4gjpmgrgwysz\", \"brand\": 27, \"brands\": [], \"_errors\": {}, \"product\": 532, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"Single Pole Switch\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"q4gvlp4irkamgrgwysz\", \"brand\": 27, \"brands\": [], \"_errors\": {}, \"product\": 489, \"quantity\": 1, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"1 Gang Plate\", \"discount_percentage\": 0}, {\"id\": null, \"unit\": 14, \"__key\": \"yppbgkseyimgrgwysz\", \"brand\": 51, \"brands\": [], \"_errors\": {}, \"product\": 951, \"quantity\": 2, \"selected\": false, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.5, \"final_price\": 9, \"product_label\": \"All In One Rough Plate 3\\\",4\\\",6\\\"\", \"discount_percentage\": 0}]', '2025-10-15 02:01:47.528647', '2025-10-15 04:18:27.692473', 1, 1);
+INSERT INTO `apptransactions_transactionfavorite` (`id`, `name`, `description`, `document_data`, `lines_data`, `created_at`, `updated_at`, `is_active`, `created_by_id`) VALUES
+(2, 'Panther Duplex 1196 Rough Copper Clap', 'Panther Duplex 1196 Rough (Side B) Copper Clap', '{\"date\": \"2025-10-15\", \"notes\": \"\", \"builder\": null, \"is_active\": true, \"work_account\": null, \"document_type\": 8}', '[{\"unit\": 1, \"brand\": 65, \"product\": 292, \"quantity\": 50, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 212.5, \"product_label\": \"4/2 Copper Clad\", \"discount_percentage\": 0}, {\"unit\": 1, \"brand\": 61, \"product\": 317, \"quantity\": 30, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 127.5, \"product_label\": \"6/3 Copper Clad\", \"discount_percentage\": 0}, {\"unit\": 1, \"brand\": 60, \"product\": 315, \"quantity\": 65, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 276.25, \"product_label\": \"6/2 Copper Clad\", \"discount_percentage\": 0}, {\"unit\": 1, \"brand\": 60, \"product\": 330, \"quantity\": 25, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 106.25, \"product_label\": \"8/3 Copper Clad\", \"discount_percentage\": 0}, {\"unit\": 1, \"brand\": 60, \"product\": 328, \"quantity\": 20, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 85, \"product_label\": \"8/2 Copper Clad\", \"discount_percentage\": 0}, {\"unit\": 1, \"brand\": 60, \"product\": 123, \"quantity\": 750, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 3187.5, \"product_label\": \"10/2 Copper Clad\", \"discount_percentage\": 0}, {\"unit\": 1, \"brand\": 60, \"product\": 136, \"quantity\": 500, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 0.31, \"final_price\": 155, \"product_label\": \"12/3 Copper Clad\", \"discount_percentage\": 0}, {\"unit\": 1, \"brand\": 61, \"product\": 129, \"quantity\": 1250, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 5312.5, \"product_label\": \"12/2 Copper Clad\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 60, \"product\": 290, \"quantity\": 5, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 21.25, \"product_label\": \"4 Square with Bracket\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 44, \"product\": 282, \"quantity\": 7, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 29.75, \"product_label\": \"4 Square 1 Gang Mudring\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 44, \"product\": 284, \"quantity\": 2, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"4 Square 2 Gang Mudring\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 60, \"product\": 278, \"quantity\": 3, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 12.75, \"product_label\": \"4 Round Ceiling Pan\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 9, \"product\": 277, \"quantity\": 4, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 17, \"product_label\": \"4 Plastic L-Shaped Fan Box\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 9, \"product\": 617, \"quantity\": 6, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 25.5, \"product_label\": \"Round Nail on Box\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 8, \"product\": 616, \"quantity\": 16, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 68, \"product_label\": \"Round Bar Hanger Box\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 8, \"product\": 611, \"quantity\": 50, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 212.5, \"product_label\": \"1 Gang Box\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 8, \"product\": 952, \"quantity\": 8, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.2, \"final_price\": 33.6, \"product_label\": \"2 Gang Box\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 8, \"product\": 953, \"quantity\": 3, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.87, \"final_price\": 14.61, \"product_label\": \"3 Gang Box\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 8, \"product\": 954, \"quantity\": 1, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 9.4, \"final_price\": 9.4, \"product_label\": \"4 Gang Box\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 60, \"product\": 950, \"quantity\": 100, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 0.45, \"final_price\": 45, \"product_label\": \"Marvin Bochner 1.5\\\" x 3\\\" Kickplate\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 60, \"product\": 400, \"quantity\": 200, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 850, \"product_label\": \"Drive Pins\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 61, \"product\": 279, \"quantity\": 2, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 3.25, \"final_price\": 6.5, \"product_label\": \"4\\\" Square 1 1/2\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 41, \"product\": 687, \"quantity\": 2, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"4\\\" Square Extension Ring\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 43, \"product\": 698, \"quantity\": 4, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 18.25, \"final_price\": 73, \"product_label\": \"14 Natural Cable Tie\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 41, \"product\": 688, \"quantity\": 8, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 3.25, \"final_price\": 26, \"product_label\": \"4 Square Shallow Box\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 60, \"product\": 720, \"quantity\": 70, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 3.4, \"final_price\": 238, \"product_label\": \"SER 4/0-4/0-4/0-2/0\", \"discount_percentage\": 0}, {\"unit\": 1, \"brand\": 60, \"product\": 178, \"quantity\": 2, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"2 EMT Bushing\", \"discount_percentage\": 0}, {\"unit\": 1, \"brand\": 60, \"product\": 235, \"quantity\": 2, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"3/4\\\" EMT Bushing\", \"discount_percentage\": 0}, {\"unit\": 1, \"brand\": 60, \"product\": 177, \"quantity\": 5, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 21.25, \"product_label\": \"2 EMT\", \"discount_percentage\": 0}, {\"unit\": 1, \"brand\": 60, \"product\": 93, \"quantity\": 5, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 0.45, \"final_price\": 2.25, \"product_label\": \"1/2\\\" EMT\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 68, \"product\": 199, \"quantity\": 1, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 9.11, \"final_price\": 9.11, \"product_label\": \"2 SER Cable Connector\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 60, \"product\": 187, \"quantity\": 1, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"2 Plastic Bushing\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 60, \"product\": 104, \"quantity\": 1, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"1/2\\\" Offset Nipple\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 60, \"product\": 60, \"quantity\": 1, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 2.06, \"final_price\": 2.06, \"product_label\": \"1 Gang Bell Box 3 Hole 1/2\\\"\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 27, \"product\": 534, \"quantity\": 1, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"TR GFI\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 48, \"product\": 926, \"quantity\": 1, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 55, \"final_price\": 55, \"product_label\": \"120\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 48, \"product\": 551, \"quantity\": 1, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 70, \"final_price\": 70, \"product_label\": \"225A Main Lug Panel 42S\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 51, \"product\": 951, \"quantity\": 2, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.5, \"final_price\": 9, \"product_label\": \"All In One Rough Plate 3\\\",4\\\",6\\\"\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 60, \"product\": 425, \"quantity\": 2, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 8.5, \"product_label\": \"Fire Putty\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 27, \"product\": 521, \"quantity\": 1, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"Keyless\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 27, \"product\": 583, \"quantity\": 1, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 3.25, \"final_price\": 3.25, \"product_label\": \"Single Pole Switch\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 27, \"product\": 489, \"quantity\": 1, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 4.25, \"final_price\": 4.25, \"product_label\": \"1 Gang Plate\", \"discount_percentage\": 0}, {\"unit\": 14, \"brand\": 60, \"product\": 333, \"quantity\": 1, \"warehouse\": 1, \"price_type\": 5, \"unit_price\": 1.52, \"final_price\": 1.52, \"product_label\": \"A19 Led Bulb\", \"discount_percentage\": 0}]', '2025-10-15 23:14:21.268030', '2025-10-16 00:27:59.370606', 1, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `apptransactions_workaccount`
+--
+
+CREATE TABLE `apptransactions_workaccount` (
+  `id` bigint NOT NULL,
+  `title` varchar(200) NOT NULL,
+  `lot` varchar(100) NOT NULL,
+  `address` varchar(255) NOT NULL,
+  `city` varchar(100) NOT NULL,
+  `state` varchar(50) NOT NULL,
+  `zipcode` varchar(20) NOT NULL,
+  `notes` longtext NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `created_at` date NOT NULL,
+  `builder_id` bigint NOT NULL,
+  `created_by_id` int DEFAULT NULL,
+  `default_price_type_id` bigint DEFAULT NULL,
+  `house_model_id` bigint DEFAULT NULL,
+  `job_id` bigint DEFAULT NULL,
+  `title_ci_active` varchar(200) GENERATED ALWAYS AS ((case when (`is_active` = 1) then lower(`title`) else NULL end)) STORED,
+  `lot_ci_active` varchar(100) GENERATED ALWAYS AS ((case when (`is_active` = 1) then lower(`lot`) else NULL end)) STORED
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `apptransactions_workaccount`
+--
+
+INSERT INTO `apptransactions_workaccount` (`id`, `title`, `lot`, `address`, `city`, `state`, `zipcode`, `notes`, `is_active`, `created_at`, `builder_id`, `created_by_id`, `default_price_type_id`, `house_model_id`, `job_id`) VALUES
+(1, 'PANTHER SOUTH 881001', '881001', '', '', '', '', '', 1, '2025-10-18', 2, 1, 5, 2, 1),
+(2, 'PANTHER SOUTH 08899', '08899', '', '', '', '', '', 1, '2025-10-18', 2, 1, 5, 1, 1),
+(3, 'SPOSEN CC 44444', '44444', '1136 Southwest 3rd Street', 'Cape Coral', 'Florida', '33991', '', 1, '2025-10-18', 3, 1, 5, 3, 2),
+(4, 'PANTHER SOUTH 989898', '989898', '', '', '', '', '', 1, '2025-10-19', 2, 1, NULL, 2, 1),
+(5, 'PANTHER SOUTH 2222', '2222', '', '', '', '', '', 1, '2025-10-19', 2, 1, NULL, 2, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `auditapp_useractionlog`
+--
+
+CREATE TABLE `auditapp_useractionlog` (
+  `id` bigint NOT NULL,
+  `action` varchar(10) NOT NULL,
+  `model_name` varchar(255) NOT NULL,
+  `object_id` varchar(255) DEFAULT NULL,
+  `action_time` datetime(6) NOT NULL,
+  `details` longtext,
+  `user_id` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `auditapp_useractionlog`
+--
+
+INSERT INTO `auditapp_useractionlog` (`id`, `action`, `model_name`, `object_id`, `action_time`, `details`, `user_id`) VALUES
+(1, 'login', 'User', '1', '2025-10-18 22:56:43.776102', 'User logged in successfully', 1),
+(2, 'login', 'User', '1', '2025-10-19 00:42:14.611490', 'User logged in successfully', 1),
+(3, 'login', 'User', '1', '2025-10-19 01:24:24.105771', 'User logged in successfully', 1),
+(4, 'login', 'User', '1', '2025-10-19 02:27:32.276123', 'User logged in successfully', 1),
+(5, 'login', 'User', '1', '2025-10-19 04:22:35.752898', 'User logged in successfully', 1),
+(6, 'POST', 'Contract', '1', '2025-10-19 05:06:25.305144', 'Action logged at /api/contract/ with method POST', 1),
+(7, 'POST', 'Contract', '2', '2025-10-19 05:11:58.419693', 'Action logged at /api/contract/ with method POST', 1),
+(8, 'PUT', 'Contract', '2', '2025-10-19 05:54:58.382215', 'Action logged at /api/contract/2/ with method PUT', 1),
+(9, 'DELETE', 'Contract', NULL, '2025-10-19 06:52:17.627699', 'Action logged at /api/contract/1/ with method DELETE', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `authtoken_token`
+--
+
+CREATE TABLE `authtoken_token` (
+  `key` varchar(40) NOT NULL,
+  `created` datetime(6) NOT NULL,
+  `user_id` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `authtoken_token`
+--
+
+INSERT INTO `authtoken_token` (`key`, `created`, `user_id`) VALUES
+('19764c639502b513edcaa9226131666059f248ae', '2025-10-18 22:56:43.086708', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `auth_group`
+--
+
+CREATE TABLE `auth_group` (
+  `id` int NOT NULL,
+  `name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bg_0900_ai_ci;
+
+--
+-- Dumping data for table `auth_group`
+--
+
+INSERT INTO `auth_group` (`id`, `name`) VALUES
+(7, 'CEO'),
+(6, 'CHIEF EXECUTIVE OFFICER'),
+(2, 'ELECTRICAL AND HVAC SUPERVISOR'),
+(5, 'ELECTRICAL ESTIMATION SPECIALIST AND RED LINE'),
+(4, 'ELECTRICAL FLEET COORDINATOR'),
+(1, 'ELECTRICAL TECHNICIAN'),
+(3, 'ELECTRICAL WORKS SCHEDULING COORDINATOR'),
+(8, 'OFFICE MANAGER');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `auth_group_permissions`
+--
+
+CREATE TABLE `auth_group_permissions` (
+  `id` bigint NOT NULL,
+  `group_id` int NOT NULL,
+  `permission_id` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `auth_permission`
+--
+
+CREATE TABLE `auth_permission` (
+  `id` int NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `content_type_id` int NOT NULL,
+  `codename` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `auth_permission`
+--
+
+INSERT INTO `auth_permission` (`id`, `name`, `content_type_id`, `codename`) VALUES
+(1, 'Can add log entry', 1, 'add_logentry'),
+(2, 'Can change log entry', 1, 'change_logentry'),
+(3, 'Can delete log entry', 1, 'delete_logentry'),
+(4, 'Can view log entry', 1, 'view_logentry'),
+(5, 'Can add permission', 2, 'add_permission'),
+(6, 'Can change permission', 2, 'change_permission'),
+(7, 'Can delete permission', 2, 'delete_permission'),
+(8, 'Can view permission', 2, 'view_permission'),
+(9, 'Can add group', 3, 'add_group'),
+(10, 'Can change group', 3, 'change_group'),
+(11, 'Can delete group', 3, 'delete_group'),
+(12, 'Can view group', 3, 'view_group'),
+(13, 'Can add user', 4, 'add_user'),
+(14, 'Can change user', 4, 'change_user'),
+(15, 'Can delete user', 4, 'delete_user'),
+(16, 'Can view user', 4, 'view_user'),
+(17, 'Can add content type', 5, 'add_contenttype'),
+(18, 'Can change content type', 5, 'change_contenttype'),
+(19, 'Can delete content type', 5, 'delete_contenttype'),
+(20, 'Can view content type', 5, 'view_contenttype'),
+(21, 'Can add session', 6, 'add_session'),
+(22, 'Can change session', 6, 'change_session'),
+(23, 'Can delete session', 6, 'delete_session'),
+(24, 'Can view session', 6, 'view_session'),
+(25, 'Can add Token', 7, 'add_token'),
+(26, 'Can change Token', 7, 'change_token'),
+(27, 'Can delete Token', 7, 'delete_token'),
+(28, 'Can view Token', 7, 'view_token'),
+(29, 'Can add token', 8, 'add_tokenproxy'),
+(30, 'Can change token', 8, 'change_tokenproxy'),
+(31, 'Can delete token', 8, 'delete_tokenproxy'),
+(32, 'Can view token', 8, 'view_tokenproxy'),
+(33, 'Can add user action log', 9, 'add_useractionlog'),
+(34, 'Can change user action log', 9, 'change_useractionlog'),
+(35, 'Can delete user action log', 9, 'delete_useractionlog'),
+(36, 'Can view user action log', 9, 'view_useractionlog'),
+(37, 'Can add Builder', 10, 'add_builder'),
+(38, 'Can change Builder', 10, 'change_builder'),
+(39, 'Can delete Builder', 10, 'delete_builder'),
+(40, 'Can view Builder', 10, 'view_builder'),
+(41, 'Can add Community', 11, 'add_job'),
+(42, 'Can change Community', 11, 'change_job'),
+(43, 'Can delete Community', 11, 'delete_job'),
+(44, 'Can view Community', 11, 'view_job'),
+(45, 'Can add House Model', 12, 'add_housemodel'),
+(46, 'Can change House Model', 12, 'change_housemodel'),
+(47, 'Can delete House Model', 12, 'delete_housemodel'),
+(48, 'Can view House Model', 12, 'view_housemodel'),
+(49, 'Can add Contract', 13, 'add_contract'),
+(50, 'Can change Contract', 13, 'change_contract'),
+(51, 'Can delete Contract', 13, 'delete_contract'),
+(52, 'Can view Contract', 13, 'view_contract'),
+(53, 'Can add Work Price', 14, 'add_workprice'),
+(54, 'Can change Work Price', 14, 'change_workprice'),
+(55, 'Can delete Work Price', 14, 'delete_workprice'),
+(56, 'Can view Work Price', 14, 'view_workprice'),
+(57, 'Can add Contract Detail', 15, 'add_contractdetails'),
+(58, 'Can change Contract Detail', 15, 'change_contractdetails'),
+(59, 'Can delete Contract Detail', 15, 'delete_contractdetails'),
+(60, 'Can view Contract Detail', 15, 'view_contractdetails'),
+(61, 'Can add Category', 16, 'add_category'),
+(62, 'Can change Category', 16, 'change_category'),
+(63, 'Can delete Category', 16, 'delete_category'),
+(64, 'Can view Category', 16, 'view_category'),
+(65, 'Can add Truck', 17, 'add_truck'),
+(66, 'Can change Truck', 17, 'change_truck'),
+(67, 'Can delete Truck', 17, 'delete_truck'),
+(68, 'Can view Truck', 17, 'view_truck'),
+(69, 'Can add Crew', 18, 'add_crew'),
+(70, 'Can change Crew', 18, 'change_crew'),
+(71, 'Can delete Crew', 18, 'delete_crew'),
+(72, 'Can view Crew', 18, 'view_crew'),
+(73, 'Can add truck assignment', 19, 'add_truckassignment'),
+(74, 'Can change truck assignment', 19, 'change_truckassignment'),
+(75, 'Can delete truck assignment', 19, 'delete_truckassignment'),
+(76, 'Can view truck assignment', 19, 'view_truckassignment'),
+(77, 'Can add Absence Reasons', 20, 'add_absencereason'),
+(78, 'Can change Absence Reasons', 20, 'change_absencereason'),
+(79, 'Can delete Absence Reasons', 20, 'delete_absencereason'),
+(80, 'Can view Absence Reasons', 20, 'view_absencereason'),
+(81, 'Can add event chat message', 21, 'add_eventchatmessage'),
+(82, 'Can change event chat message', 21, 'change_eventchatmessage'),
+(83, 'Can delete event chat message', 21, 'delete_eventchatmessage'),
+(84, 'Can view event chat message', 21, 'view_eventchatmessage'),
+(85, 'Can add Event Chat Read Status', 22, 'add_eventchatreadstatus'),
+(86, 'Can change Event Chat Read Status', 22, 'change_eventchatreadstatus'),
+(87, 'Can delete Event Chat Read Status', 22, 'delete_eventchatreadstatus'),
+(88, 'Can view Event Chat Read Status', 22, 'view_eventchatreadstatus'),
+(89, 'Can add Event Draft', 23, 'add_eventdraft'),
+(90, 'Can change Event Draft', 23, 'change_eventdraft'),
+(91, 'Can delete Event Draft', 23, 'delete_eventdraft'),
+(92, 'Can view Event Draft', 23, 'view_eventdraft'),
+(93, 'Can add event image', 24, 'add_eventimage'),
+(94, 'Can change event image', 24, 'change_eventimage'),
+(95, 'Can delete event image', 24, 'delete_eventimage'),
+(96, 'Can view event image', 24, 'view_eventimage'),
+(97, 'Can add event note', 25, 'add_eventnote'),
+(98, 'Can change event note', 25, 'change_eventnote'),
+(99, 'Can delete event note', 25, 'delete_eventnote'),
+(100, 'Can view event note', 25, 'view_eventnote'),
+(101, 'Can add Event', 26, 'add_event'),
+(102, 'Can change Event', 26, 'change_event'),
+(103, 'Can delete Event', 26, 'delete_event'),
+(104, 'Can view Event', 26, 'view_event'),
+(105, 'Can add price type', 27, 'add_pricetype'),
+(106, 'Can change price type', 27, 'change_pricetype'),
+(107, 'Can delete price type', 27, 'delete_pricetype'),
+(108, 'Can view price type', 27, 'view_pricetype'),
+(109, 'Can add product brand', 28, 'add_productbrand'),
+(110, 'Can change product brand', 28, 'change_productbrand'),
+(111, 'Can delete product brand', 28, 'delete_productbrand'),
+(112, 'Can view product brand', 28, 'view_productbrand'),
+(113, 'Can add product category', 29, 'add_productcategory'),
+(114, 'Can change product category', 29, 'change_productcategory'),
+(115, 'Can delete product category', 29, 'delete_productcategory'),
+(116, 'Can view product category', 29, 'view_productcategory'),
+(117, 'Can add unit category', 30, 'add_unitcategory'),
+(118, 'Can change unit category', 30, 'change_unitcategory'),
+(119, 'Can delete unit category', 30, 'delete_unitcategory'),
+(120, 'Can view unit category', 30, 'view_unitcategory'),
+(121, 'Can add warehouse', 31, 'add_warehouse'),
+(122, 'Can change warehouse', 31, 'change_warehouse'),
+(123, 'Can delete warehouse', 31, 'delete_warehouse'),
+(124, 'Can view warehouse', 31, 'view_warehouse'),
+(125, 'Can add unit of measure', 32, 'add_unitofmeasure'),
+(126, 'Can change unit of measure', 32, 'change_unitofmeasure'),
+(127, 'Can delete unit of measure', 32, 'delete_unitofmeasure'),
+(128, 'Can view unit of measure', 32, 'view_unitofmeasure'),
+(129, 'Can add product', 33, 'add_product'),
+(130, 'Can change product', 33, 'change_product'),
+(131, 'Can delete product', 33, 'delete_product'),
+(132, 'Can view product', 33, 'view_product'),
+(133, 'Can add inventory movement', 34, 'add_inventorymovement'),
+(134, 'Can change inventory movement', 34, 'change_inventorymovement'),
+(135, 'Can delete inventory movement', 34, 'delete_inventorymovement'),
+(136, 'Can view inventory movement', 34, 'view_inventorymovement'),
+(137, 'Can add product price', 35, 'add_productprice'),
+(138, 'Can change product price', 35, 'change_productprice'),
+(139, 'Can delete product price', 35, 'delete_productprice'),
+(140, 'Can view product price', 35, 'view_productprice'),
+(141, 'Can add stock', 36, 'add_stock'),
+(142, 'Can change stock', 36, 'change_stock'),
+(143, 'Can delete stock', 36, 'delete_stock'),
+(144, 'Can view stock', 36, 'view_stock'),
+(145, 'Can add document', 37, 'add_document'),
+(146, 'Can change document', 37, 'change_document'),
+(147, 'Can delete document', 37, 'delete_document'),
+(148, 'Can view document', 37, 'view_document'),
+(149, 'Can add document line', 38, 'add_documentline'),
+(150, 'Can change document line', 38, 'change_documentline'),
+(151, 'Can delete document line', 38, 'delete_documentline'),
+(152, 'Can view document line', 38, 'view_documentline'),
+(153, 'Can add Document Type', 39, 'add_documenttype'),
+(154, 'Can change Document Type', 39, 'change_documenttype'),
+(155, 'Can delete Document Type', 39, 'delete_documenttype'),
+(156, 'Can view Document Type', 39, 'view_documenttype'),
+(157, 'Can add party', 40, 'add_party'),
+(158, 'Can change party', 40, 'change_party'),
+(159, 'Can delete party', 40, 'delete_party'),
+(160, 'Can view party', 40, 'view_party'),
+(161, 'Can add Party Category', 41, 'add_partycategory'),
+(162, 'Can change Party Category', 41, 'change_partycategory'),
+(163, 'Can delete Party Category', 41, 'delete_partycategory'),
+(164, 'Can view Party Category', 41, 'view_partycategory'),
+(165, 'Can add Party Type', 42, 'add_partytype'),
+(166, 'Can change Party Type', 42, 'change_partytype'),
+(167, 'Can delete Party Type', 42, 'delete_partytype'),
+(168, 'Can view Party Type', 42, 'view_partytype'),
+(169, 'Can add Transaction Favorite', 43, 'add_transactionfavorite'),
+(170, 'Can change Transaction Favorite', 43, 'change_transactionfavorite'),
+(171, 'Can delete Transaction Favorite', 43, 'delete_transactionfavorite'),
+(172, 'Can view Transaction Favorite', 43, 'view_transactionfavorite'),
+(173, 'Can add Work Account', 44, 'add_workaccount'),
+(174, 'Can change Work Account', 44, 'change_workaccount'),
+(175, 'Can delete Work Account', 44, 'delete_workaccount'),
+(176, 'Can view Work Account', 44, 'view_workaccount'),
+(177, 'Can add Categoría de Manual', 45, 'add_manualcategory'),
+(178, 'Can change Categoría de Manual', 45, 'change_manualcategory'),
+(179, 'Can delete Categoría de Manual', 45, 'delete_manualcategory'),
+(180, 'Can view Categoría de Manual', 45, 'view_manualcategory'),
+(181, 'Can add Manual Entry', 46, 'add_manualentry'),
+(182, 'Can change Manual Entry', 46, 'change_manualentry'),
+(183, 'Can delete Manual Entry', 46, 'delete_manualentry'),
+(184, 'Can view Manual Entry', 46, 'view_manualentry');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `auth_user`
+--
+
+CREATE TABLE `auth_user` (
+  `id` int NOT NULL,
+  `password` varchar(128) NOT NULL,
+  `last_login` datetime(6) DEFAULT NULL,
+  `is_superuser` tinyint(1) NOT NULL,
+  `username` varchar(150) NOT NULL,
+  `first_name` varchar(150) NOT NULL,
+  `last_name` varchar(150) NOT NULL,
+  `email` varchar(254) NOT NULL,
+  `is_staff` tinyint(1) NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `date_joined` datetime(6) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `auth_user`
+--
+
+INSERT INTO `auth_user` (`id`, `password`, `last_login`, `is_superuser`, `username`, `first_name`, `last_name`, `email`, `is_staff`, `is_active`, `date_joined`) VALUES
+(1, 'pbkdf2_sha256$720000$FNcRFDu9rzdsFMkuPASCcG$hByUC8Ll3vF7hN/QCPdkXor4yoNNtu0rncksr0yubPs=', '2025-10-18 22:53:54.000000', 1, 'oliver', 'Oliver', 'Hernandez', 'oliver.usa1017@gmail.com', 1, 1, '2025-10-18 22:52:47.000000');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `auth_user_groups`
+--
+
+CREATE TABLE `auth_user_groups` (
+  `id` bigint NOT NULL,
+  `user_id` int NOT NULL,
+  `group_id` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `auth_user_user_permissions`
+--
+
+CREATE TABLE `auth_user_user_permissions` (
+  `id` bigint NOT NULL,
+  `user_id` int NOT NULL,
+  `permission_id` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `crewsapp_category`
+--
+
+CREATE TABLE `crewsapp_category` (
+  `id` bigint NOT NULL,
+  `name` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `crewsapp_category`
+--
+
+INSERT INTO `crewsapp_category` (`id`, `name`) VALUES
+(2, '1️⃣ Electrical Rough'),
+(1, '2️⃣ Electrical Trim'),
+(3, '3️⃣ Undergrounds'),
+(4, '4️⃣ Skill Set'),
+(5, '5️⃣ Slabs'),
+(6, '6️⃣ Services Call'),
+(7, '7️⃣ Hvac Rough'),
+(8, '8️⃣ Hvac Trim'),
+(9, '9️⃣ Start Up');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `crewsapp_crew`
+--
+
+CREATE TABLE `crewsapp_crew` (
+  `id` bigint NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `status` tinyint(1) NOT NULL,
+  `permission_create_event` tinyint(1) NOT NULL,
+  `category_id` bigint DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `crewsapp_crew`
+--
+
+INSERT INTO `crewsapp_crew` (`id`, `name`, `status`, `permission_create_event`, `category_id`) VALUES
+(2, 'Yosvany', 1, 0, 1),
+(3, 'Guido', 1, 0, 3),
+(4, 'Guido', 1, 0, 5),
+(5, 'Mario', 1, 0, 2),
+(6, 'Guido', 1, 0, 6),
+(7, 'Joel', 1, 0, 7),
+(8, 'Willi', 1, 0, 8),
+(9, 'Julio', 1, 0, 8),
+(10, 'Evaristo', 1, 0, 6),
+(11, 'Javier', 1, 0, 9);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `crewsapp_crew_jobs`
+--
+
+CREATE TABLE `crewsapp_crew_jobs` (
+  `id` bigint NOT NULL,
+  `crew_id` bigint NOT NULL,
+  `job_id` bigint NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `crewsapp_crew_members`
+--
+
+CREATE TABLE `crewsapp_crew_members` (
+  `id` bigint NOT NULL,
+  `crew_id` bigint NOT NULL,
+  `user_id` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `crewsapp_truck`
+--
+
+CREATE TABLE `crewsapp_truck` (
+  `id` bigint NOT NULL,
+  `plate_number` varchar(20) NOT NULL,
+  `model` varchar(255) NOT NULL,
+  `year` int NOT NULL,
+  `status` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `crewsapp_truckassignment`
+--
+
+CREATE TABLE `crewsapp_truckassignment` (
+  `id` bigint NOT NULL,
+  `assigned_at` datetime(6) NOT NULL,
+  `unassigned_at` datetime(6) DEFAULT NULL,
+  `crew_id` bigint NOT NULL,
+  `truck_id` bigint NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ctrctsapp_builder`
+--
+
+CREATE TABLE `ctrctsapp_builder` (
+  `id` bigint NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci DEFAULT NULL,
+  `trim_amount` decimal(10,2) NOT NULL,
+  `rough_amount` decimal(10,2) NOT NULL,
+  `travel_price_amount` decimal(10,2) NOT NULL,
+  `rfc` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `street` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `floor_office` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `city` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `state` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `zipcode` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `country` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `email` varchar(254) CHARACTER SET utf8mb4 COLLATE utf8mb4_bg_0900_ai_ci NOT NULL,
+  `customer_rank` int UNSIGNED NOT NULL,
+  `supplier_rank` int UNSIGNED NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `category_id` bigint DEFAULT NULL,
+  `default_price_type_id` bigint DEFAULT NULL,
+  `party_id` bigint DEFAULT NULL
+) ;
+
+--
+-- Dumping data for table `ctrctsapp_builder`
+--
+
+INSERT INTO `ctrctsapp_builder` (`id`, `name`, `trim_amount`, `rough_amount`, `travel_price_amount`, `rfc`, `street`, `floor_office`, `city`, `state`, `zipcode`, `country`, `phone`, `email`, `customer_rank`, `supplier_rank`, `is_active`, `category_id`, `default_price_type_id`, `party_id`) VALUES
+(1, 'The Home Depot', 0.00, 0.00, 0.00, '', '', '', '', '', '', '', '', '', 0, 1, 1, 4, 1, NULL),
+(2, 'Panther Construction', 0.30, 0.40, 0.00, '', '9160 Forum Corporate Pkwy', 'Suite 350', 'Fort Myers', 'Florida', '33905', 'United States', '239 232-5112', 'hello@pantherbuilt.com', 1, 0, 1, 5, 5, NULL),
+(3, 'Spocen', 0.25, 0.40, 0.00, '', '5598 SW 4th Pl', '', 'Cape Coral', 'Florida', '33991', 'United States', '', '', 1, 0, 0, 2, 5, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ctrctsapp_builder_types`
+--
+
+CREATE TABLE `ctrctsapp_builder_types` (
+  `id` bigint NOT NULL,
+  `builder_id` bigint NOT NULL,
+  `partytype_id` bigint NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ctrctsapp_contract`
+--
+
+CREATE TABLE `ctrctsapp_contract` (
+  `id` bigint NOT NULL,
+  `date_created` datetime(6) NOT NULL,
+  `last_updated` datetime(6) NOT NULL,
+  `type` varchar(5) NOT NULL,
+  `doc_type` varchar(10) NOT NULL,
+  `lot` varchar(10) DEFAULT NULL,
+  `sqft` int NOT NULL,
+  `address` varchar(255) NOT NULL,
+  `job_price` decimal(10,2) NOT NULL,
+  `travel_price` decimal(10,2) NOT NULL,
+  `total_options` decimal(10,2) DEFAULT NULL,
+  `total` decimal(10,2) DEFAULT NULL,
+  `comment` longtext,
+  `file` varchar(100) DEFAULT NULL,
+  `needs_reprint` tinyint(1) NOT NULL,
+  `builder_id` bigint NOT NULL,
+  `created_by_id` int DEFAULT NULL,
+  `house_model_id` bigint NOT NULL,
+  `job_id` bigint NOT NULL,
+  `work_account_id` bigint DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `ctrctsapp_contract`
+--
+
+INSERT INTO `ctrctsapp_contract` (`id`, `date_created`, `last_updated`, `type`, `doc_type`, `lot`, `sqft`, `address`, `job_price`, `travel_price`, `total_options`, `total`, `comment`, `file`, `needs_reprint`, `builder_id`, `created_by_id`, `house_model_id`, `job_id`, `work_account_id`) VALUES
+(2, '2025-10-19 05:11:58.291689', '2025-10-19 05:54:58.254220', 'Rough', 'Contract', '2222', 1300, '1136 Southwest 3rd Street', 520.00, 0.00, 49.00, 569.00, 'Required to finish at 100%', '', 1, 2, 1, 2, 1, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ctrctsapp_contractdetails`
+--
+
+CREATE TABLE `ctrctsapp_contractdetails` (
+  `id` bigint NOT NULL,
+  `cdname` varchar(255) NOT NULL,
+  `cdtrim` decimal(10,2) NOT NULL,
+  `cdtrim_qty` decimal(10,2) NOT NULL,
+  `cdrough` decimal(10,2) NOT NULL,
+  `cdrough_qty` decimal(10,2) NOT NULL,
+  `cdunit_price` varchar(255) NOT NULL,
+  `contract_details_id` bigint DEFAULT NULL,
+  `cdwork_price_id` bigint DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `ctrctsapp_contractdetails`
+--
+
+INSERT INTO `ctrctsapp_contractdetails` (`id`, `cdname`, `cdtrim`, `cdtrim_qty`, `cdrough`, `cdrough_qty`, `cdunit_price`, `contract_details_id`, `cdwork_price_id`) VALUES
+(115, 'FAN INSTALATION UPGRADED', 25.00, 0.00, 0.00, 0.00, 'Ea', 2, 44),
+(116, 'GROUND ROD INSTALLATION', 0.00, 0.00, 25.00, 0.00, 'Total', 2, 43),
+(117, 'HOOD INSTALLATION', 20.00, 0.00, 0.00, 0.00, 'Total', 2, 42),
+(118, 'MICROWAVE INSTALLATION', 20.00, 0.00, 0.00, 0.00, 'Total', 2, 41),
+(119, 'CHIPP > 6 Ft²', 0.00, 0.00, 100.00, 0.00, 'Total', 2, 40),
+(120, 'CHIPP > 1 Ft² <= 6 Ft²', 0.00, 0.00, 50.00, 0.00, 'Total', 2, 39),
+(121, 'CHIPP <= 1 Ft²', 0.00, 0.00, 20.00, 0.00, 'Total', 2, 38),
+(122, 'UNDERCABINETS PREWIRE', 11.00, 0.00, 0.00, 0.00, 'Total', 2, 37),
+(123, 'STUCCO BOX TRIM', 0.00, 0.00, 4.50, 0.00, 'Ea', 2, 36),
+(124, 'OVEN INSTALLATION', 20.00, 0.00, 0.00, 0.00, 'Ea', 2, 35),
+(125, 'FAN INSTALATION', 20.00, 0.00, 0.00, 0.00, 'Ea', 2, 34),
+(126, 'PLUG MOLD', 22.50, 0.00, 0.00, 0.00, 'Total', 2, 33),
+(127, 'ROPE LIGHT', 20.00, 0.00, 0.00, 0.00, 'TOTAL', 2, 32),
+(128, 'DIMMER', 3.00, 0.00, 0.00, 0.00, 'Ea', 2, 30),
+(129, 'GARAGE PACK', 25.00, 0.00, 25.00, 0.00, 'Total', 2, 29),
+(130, 'RECESSED CANS', 3.00, 0.00, 6.00, 0.00, 'Ea', 2, 28),
+(131, 'MINI FRIDGE', 3.00, 0.00, 4.50, 0.00, 'Ea', 2, 27),
+(132, 'WELL', 12.50, 0.00, 12.50, 0.00, 'Total', 2, 26),
+(133, 'WAFFER RCAN', 4.00, 0.00, 5.00, 0.00, 'Ea', 2, 25),
+(134, 'UNDERCABINETS LIGHT', 22.50, 0.00, 22.50, 0.00, 'Total', 2, 24),
+(135, 'POOL (PREWIRE)', 10.00, 0.00, 50.00, 0.00, 'Total', 2, 21),
+(136, 'PENDANT LIGHT', 15.00, 0.00, 18.50, 0.00, 'Total', 2, 20),
+(137, 'DEDICATED 220 V', 3.00, 0.00, 9.00, 0.00, 'Ea', 2, 19),
+(138, 'OUTLETS', 3.00, 0.00, 4.50, 0.00, 'Ea', 2, 18),
+(139, 'ODK', 12.50, 0.00, 25.00, 1.00, 'Total', 2, 17),
+(140, 'LOW VOLTAGE', 0.00, 0.00, 40.00, 0.00, 'Total', 2, 15),
+(141, 'HOCKEY PUCKS', 3.00, 0.00, 4.50, 1.00, 'Ea', 2, 13),
+(142, 'GAS TANKLESS WH', 10.00, 0.00, 4.50, 0.00, 'Ea', 2, 12),
+(143, 'FLOOR OUTLET', 4.50, 0.00, 4.50, 0.00, 'Ea', 2, 11),
+(144, 'FLOOD LIGHTS', 13.50, 0.00, 13.50, 1.00, 'Total', 2, 10),
+(145, 'FAN', 0.00, 0.00, 6.00, 1.00, 'Ea', 2, 8),
+(146, 'EXTENDED SERVICE', 0.00, 0.00, 25.00, 0.00, 'Total', 2, 7),
+(147, 'ELECTRIC TANKLESS WH', 25.00, 0.00, 4.50, 0.00, 'Ea', 2, 6),
+(148, 'DEDICATED 110 V', 0.00, 0.00, 4.50, 0.00, 'Ea', 2, 5),
+(149, 'CHANDELIER UPGRADED', 20.00, 0.00, 0.00, 0.00, 'Ea', 2, 4),
+(150, 'CHANDELIER', 15.00, 0.00, 0.00, 0.00, 'Ea', 2, 3),
+(151, 'B2B SERVICE', 0.00, 0.00, 50.00, 0.00, 'Total', 2, 2),
+(152, 'ABOVE CABINETS', 22.50, 0.00, 22.50, 0.00, 'Ea', 2, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ctrctsapp_housemodel`
+--
+
+CREATE TABLE `ctrctsapp_housemodel` (
+  `id` bigint NOT NULL,
+  `name` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `ctrctsapp_housemodel`
+--
+
+INSERT INTO `ctrctsapp_housemodel` (`id`, `name`) VALUES
+(1, 'PAN1343 Duplex'),
+(2, 'PAN1196 Duplex'),
+(3, 'Magnolia-'),
+(4, 'Margarita 1');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ctrctsapp_housemodel_jobs`
+--
+
+CREATE TABLE `ctrctsapp_housemodel_jobs` (
+  `id` bigint NOT NULL,
+  `housemodel_id` bigint NOT NULL,
+  `job_id` bigint NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `ctrctsapp_housemodel_jobs`
+--
+
+INSERT INTO `ctrctsapp_housemodel_jobs` (`id`, `housemodel_id`, `job_id`) VALUES
+(2, 1, 1),
+(1, 2, 1),
+(3, 3, 2),
+(4, 4, 2);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ctrctsapp_job`
+--
+
+CREATE TABLE `ctrctsapp_job` (
+  `id` bigint NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `latitude` decimal(9,6) DEFAULT NULL,
+  `longitude` decimal(9,6) DEFAULT NULL,
+  `builder_id` bigint DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `ctrctsapp_job`
+--
+
+INSERT INTO `ctrctsapp_job` (`id`, `name`, `address`, `latitude`, `longitude`, `builder_id`) VALUES
+(1, 'Panther South', '', NULL, NULL, 2),
+(2, 'Sposen CyC', '', NULL, NULL, 3);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ctrctsapp_workprice`
+--
+
+CREATE TABLE `ctrctsapp_workprice` (
+  `id` bigint NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `trim` decimal(10,2) NOT NULL,
+  `rough` decimal(10,2) NOT NULL,
+  `unit_price` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `ctrctsapp_workprice`
+--
+
+INSERT INTO `ctrctsapp_workprice` (`id`, `name`, `trim`, `rough`, `unit_price`) VALUES
+(1, 'ABOVE CABINETS', 22.50, 22.50, 'Ea'),
+(2, 'B2B SERVICE', 0.00, 50.00, 'Total'),
+(3, 'CHANDELIER', 15.00, 0.00, 'Ea'),
+(4, 'CHANDELIER UPGRADED', 20.00, 0.00, 'Ea'),
+(5, 'DEDICATED 110 V', 0.00, 4.50, 'Ea'),
+(6, 'ELECTRIC TANKLESS WH', 25.00, 4.50, 'Ea'),
+(7, 'EXTENDED SERVICE', 0.00, 25.00, 'Total'),
+(8, 'FAN', 0.00, 6.00, 'Ea'),
+(10, 'FLOOD LIGHTS', 13.50, 13.50, 'Total'),
+(11, 'FLOOR OUTLET', 4.50, 4.50, 'Ea'),
+(12, 'GAS TANKLESS WH', 10.00, 4.50, 'Ea'),
+(13, 'HOCKEY PUCKS', 3.00, 4.50, 'Ea'),
+(15, 'LOW VOLTAGE', 0.00, 40.00, 'Total'),
+(17, 'ODK', 12.50, 25.00, 'Total'),
+(18, 'OUTLETS', 3.00, 4.50, 'Ea'),
+(19, 'DEDICATED 220 V', 3.00, 9.00, 'Ea'),
+(20, 'PENDANT LIGHT', 15.00, 18.50, 'Total'),
+(21, 'POOL (PREWIRE)', 10.00, 50.00, 'Total'),
+(24, 'UNDERCABINETS LIGHT', 22.50, 22.50, 'Total'),
+(25, 'WAFFER RCAN', 4.00, 5.00, 'Ea'),
+(26, 'WELL', 12.50, 12.50, 'Total'),
+(27, 'MINI FRIDGE', 3.00, 4.50, 'Ea'),
+(28, 'RECESSED CANS', 3.00, 6.00, 'Ea'),
+(29, 'GARAGE PACK', 25.00, 25.00, 'Total'),
+(30, 'DIMMER', 3.00, 0.00, 'Ea'),
+(32, 'ROPE LIGHT', 20.00, 0.00, 'TOTAL'),
+(33, 'PLUG MOLD', 22.50, 0.00, 'Total'),
+(34, 'FAN INSTALATION', 20.00, 0.00, 'Ea'),
+(35, 'OVEN INSTALLATION', 20.00, 0.00, 'Ea'),
+(36, 'STUCCO BOX TRIM', 0.00, 4.50, 'Ea'),
+(37, 'UNDERCABINETS PREWIRE', 11.00, 0.00, 'Total'),
+(38, 'CHIPP <= 1 Ft²', 0.00, 20.00, 'Total'),
+(39, 'CHIPP > 1 Ft² <= 6 Ft²', 0.00, 50.00, 'Total'),
+(40, 'CHIPP > 6 Ft²', 0.00, 100.00, 'Total'),
+(41, 'MICROWAVE INSTALLATION', 20.00, 0.00, 'Total'),
+(42, 'HOOD INSTALLATION', 20.00, 0.00, 'Total'),
+(43, 'GROUND ROD INSTALLATION', 0.00, 25.00, 'Total'),
+(44, 'FAN INSTALATION UPGRADED', 25.00, 0.00, 'Ea');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ctrctsapp_workprice_builders`
+--
+
+CREATE TABLE `ctrctsapp_workprice_builders` (
+  `id` bigint NOT NULL,
+  `workprice_id` bigint NOT NULL,
+  `builder_id` bigint NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `ctrctsapp_workprice_builders`
+--
+
+INSERT INTO `ctrctsapp_workprice_builders` (`id`, `workprice_id`, `builder_id`) VALUES
+(1, 1, 2),
+(39, 1, 3),
+(2, 2, 2),
+(40, 2, 3),
+(3, 3, 2),
+(41, 3, 3),
+(4, 4, 2),
+(42, 4, 3),
+(5, 5, 2),
+(43, 5, 3),
+(6, 6, 2),
+(44, 6, 3),
+(7, 7, 2),
+(45, 7, 3),
+(8, 8, 2),
+(46, 8, 3),
+(9, 10, 2),
+(47, 10, 3),
+(10, 11, 2),
+(48, 11, 3),
+(11, 12, 2),
+(49, 12, 3),
+(12, 13, 2),
+(50, 13, 3),
+(13, 15, 2),
+(51, 15, 3),
+(14, 17, 2),
+(52, 17, 3),
+(15, 18, 2),
+(53, 18, 3),
+(16, 19, 2),
+(54, 19, 3),
+(17, 20, 2),
+(55, 20, 3),
+(18, 21, 2),
+(56, 21, 3),
+(19, 24, 2),
+(57, 24, 3),
+(20, 25, 2),
+(58, 25, 3),
+(21, 26, 2),
+(59, 26, 3),
+(22, 27, 2),
+(60, 27, 3),
+(23, 28, 2),
+(61, 28, 3),
+(24, 29, 2),
+(62, 29, 3),
+(25, 30, 2),
+(63, 30, 3),
+(26, 32, 2),
+(64, 32, 3),
+(27, 33, 2),
+(65, 33, 3),
+(28, 34, 2),
+(66, 34, 3),
+(29, 35, 2),
+(67, 35, 3),
+(30, 36, 2),
+(68, 36, 3),
+(31, 37, 2),
+(69, 37, 3),
+(32, 38, 2),
+(70, 38, 3),
+(33, 39, 2),
+(71, 39, 3),
+(34, 40, 2),
+(72, 40, 3),
+(35, 41, 2),
+(73, 41, 3),
+(36, 42, 2),
+(74, 42, 3),
+(37, 43, 2),
+(75, 43, 3),
+(38, 44, 2),
+(76, 44, 3);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `django_admin_log`
+--
+
+CREATE TABLE `django_admin_log` (
+  `id` int NOT NULL,
+  `action_time` datetime(6) NOT NULL,
+  `object_id` longtext,
+  `object_repr` varchar(200) NOT NULL,
+  `action_flag` smallint UNSIGNED NOT NULL,
+  `change_message` longtext NOT NULL,
+  `content_type_id` int DEFAULT NULL,
+  `user_id` int NOT NULL
+) ;
+
+--
+-- Dumping data for table `django_admin_log`
+--
+
+INSERT INTO `django_admin_log` (`id`, `action_time`, `object_id`, `object_repr`, `action_flag`, `change_message`, `content_type_id`, `user_id`) VALUES
+(1, '2025-10-18 22:55:03.357622', '1', 'oliver', 2, '[{\"changed\": {\"fields\": [\"First name\", \"Last name\"]}}]', 4, 1),
+(2, '2025-10-19 00:57:17.984202', '1', 'Panther Southwest Florida', 1, '[{\"added\": {}}]', 11, 1),
+(3, '2025-10-19 01:18:10.701190', '2', 'PAN1196 Duplex', 2, '[{\"changed\": {\"fields\": [\"Jobs\"]}}]', 12, 1),
+(4, '2025-10-19 01:18:19.368746', '1', 'PAN1343 Duplex', 2, '[{\"changed\": {\"fields\": [\"Jobs\"]}}]', 12, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `django_content_type`
+--
+
+CREATE TABLE `django_content_type` (
+  `id` int NOT NULL,
+  `app_label` varchar(100) NOT NULL,
+  `model` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `django_content_type`
+--
+
+INSERT INTO `django_content_type` (`id`, `app_label`, `model`) VALUES
+(1, 'admin', 'logentry'),
+(45, 'appcore', 'manualcategory'),
+(46, 'appcore', 'manualentry'),
+(34, 'appinventory', 'inventorymovement'),
+(27, 'appinventory', 'pricetype'),
+(33, 'appinventory', 'product'),
+(28, 'appinventory', 'productbrand'),
+(29, 'appinventory', 'productcategory'),
+(35, 'appinventory', 'productprice'),
+(36, 'appinventory', 'stock'),
+(30, 'appinventory', 'unitcategory'),
+(32, 'appinventory', 'unitofmeasure'),
+(31, 'appinventory', 'warehouse'),
+(20, 'appschedule', 'absencereason'),
+(26, 'appschedule', 'event'),
+(21, 'appschedule', 'eventchatmessage'),
+(22, 'appschedule', 'eventchatreadstatus'),
+(23, 'appschedule', 'eventdraft'),
+(24, 'appschedule', 'eventimage'),
+(25, 'appschedule', 'eventnote'),
+(37, 'apptransactions', 'document'),
+(38, 'apptransactions', 'documentline'),
+(39, 'apptransactions', 'documenttype'),
+(40, 'apptransactions', 'party'),
+(41, 'apptransactions', 'partycategory'),
+(42, 'apptransactions', 'partytype'),
+(43, 'apptransactions', 'transactionfavorite'),
+(44, 'apptransactions', 'workaccount'),
+(9, 'auditapp', 'useractionlog'),
+(3, 'auth', 'group'),
+(2, 'auth', 'permission'),
+(4, 'auth', 'user'),
+(7, 'authtoken', 'token'),
+(8, 'authtoken', 'tokenproxy'),
+(5, 'contenttypes', 'contenttype'),
+(16, 'crewsapp', 'category'),
+(18, 'crewsapp', 'crew'),
+(17, 'crewsapp', 'truck'),
+(19, 'crewsapp', 'truckassignment'),
+(10, 'ctrctsapp', 'builder'),
+(13, 'ctrctsapp', 'contract'),
+(15, 'ctrctsapp', 'contractdetails'),
+(12, 'ctrctsapp', 'housemodel'),
+(11, 'ctrctsapp', 'job'),
+(14, 'ctrctsapp', 'workprice'),
+(6, 'sessions', 'session');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `django_migrations`
+--
+
+CREATE TABLE `django_migrations` (
+  `id` bigint NOT NULL,
+  `app` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `applied` datetime(6) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `django_migrations`
+--
+
+INSERT INTO `django_migrations` (`id`, `app`, `name`, `applied`) VALUES
+(1, 'contenttypes', '0001_initial', '2025-10-18 22:42:41.967496'),
+(2, 'auth', '0001_initial', '2025-10-18 22:42:43.036478'),
+(3, 'admin', '0001_initial', '2025-10-18 22:42:43.300468'),
+(4, 'admin', '0002_logentry_remove_auto_add', '2025-10-18 22:42:43.312478'),
+(5, 'admin', '0003_logentry_add_action_flag_choices', '2025-10-18 22:42:43.323479'),
+(6, 'appcore', '0001_initial', '2025-10-18 22:42:43.610479'),
+(7, 'appinventory', '0001_initial', '2025-10-18 22:42:45.486740'),
+(8, 'apptransactions', '0001_initial', '2025-10-18 22:42:45.790733'),
+(9, 'ctrctsapp', '0001_initial', '2025-10-18 22:42:48.165145'),
+(10, 'crewsapp', '0001_initial', '2025-10-18 22:42:49.020317'),
+(11, 'apptransactions', '0002_initial', '2025-10-18 22:42:52.024321'),
+(12, 'appschedule', '0001_initial', '2025-10-18 22:42:52.382664'),
+(13, 'appschedule', '0002_initial', '2025-10-18 22:42:56.160841'),
+(14, 'auditapp', '0001_initial', '2025-10-18 22:42:56.332133'),
+(15, 'contenttypes', '0002_remove_content_type_name', '2025-10-18 22:42:56.566132'),
+(16, 'auth', '0002_alter_permission_name_max_length', '2025-10-18 22:42:56.731137'),
+(17, 'auth', '0003_alter_user_email_max_length', '2025-10-18 22:42:56.897128'),
+(18, 'auth', '0004_alter_user_username_opts', '2025-10-18 22:42:56.959127'),
+(19, 'auth', '0005_alter_user_last_login_null', '2025-10-18 22:42:57.152144'),
+(20, 'auth', '0006_require_contenttypes_0002', '2025-10-18 22:42:57.160896'),
+(21, 'auth', '0007_alter_validators_add_error_messages', '2025-10-18 22:42:57.346910'),
+(22, 'auth', '0008_alter_user_username_max_length', '2025-10-18 22:42:57.539738'),
+(23, 'auth', '0009_alter_user_last_name_max_length', '2025-10-18 22:42:57.724202'),
+(24, 'auth', '0010_alter_group_name_max_length', '2025-10-18 22:42:57.802017'),
+(25, 'auth', '0011_update_proxy_permissions', '2025-10-18 22:42:57.862014'),
+(26, 'auth', '0012_alter_user_first_name_max_length', '2025-10-18 22:42:58.125002'),
+(27, 'authtoken', '0001_initial', '2025-10-18 22:42:58.315029'),
+(28, 'authtoken', '0002_auto_20160226_1747', '2025-10-18 22:42:58.475012'),
+(29, 'authtoken', '0003_tokenproxy', '2025-10-18 22:42:58.482997'),
+(30, 'sessions', '0001_initial', '2025-10-18 22:42:58.546995'),
+(31, 'appschedule', '0003_event_appschedule_work_ac_f8021e_idx_and_more', '2025-10-19 03:14:44.316594'),
+(32, 'ctrctsapp', '0002_contract_work_account', '2025-10-19 04:20:36.106338');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `django_session`
+--
+
+CREATE TABLE `django_session` (
+  `session_key` varchar(40) NOT NULL,
+  `session_data` longtext NOT NULL,
+  `expire_date` datetime(6) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `django_session`
+--
+
+INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALUES
+('e3yycap7qrpopkulrjgpvdnaokydwzm6', '.eJxVjEEOwiAQRe_C2hCGAlNcuvcMZBhAqoYmpV0Z765NutDtf-_9lwi0rTVsPS9hSuIsQJx-t0j8yG0H6U7tNkue27pMUe6KPGiX1znl5-Vw_w4q9fqtefDAYzHJGIQIWo-RgUq0CNqiA1ZWOwdGDQWLJq8Ik7feoUJXErJ4fwDCVjbk:1vAFoA:MWMlFICfgT6NoSlW829y-9RbOAcahSVLopWsApfEh_0', '2025-11-01 22:53:54.881895');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `appcore_manualcategory`
+--
+ALTER TABLE `appcore_manualcategory`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`) USING BTREE;
+
+--
+-- Indexes for table `appcore_manualentry`
+--
+ALTER TABLE `appcore_manualentry`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`) USING BTREE,
+  ADD KEY `fk_manualentry_category` (`category_id`) USING BTREE;
+
+--
+-- Indexes for table `appinventory_inventorymovement`
+--
+ALTER TABLE `appinventory_inventorymovement`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `appinventory_invento_created_by_id_028c5202_fk_auth_user` (`created_by_id`),
+  ADD KEY `appinventory_invento_product_id_7df2f2cc_fk_appinvent` (`product_id`),
+  ADD KEY `appinventory_invento_unit_id_de29ba89_fk_appinvent` (`unit_id`),
+  ADD KEY `appinventory_invento_warehouse_id_7a4d55f2_fk_appinvent` (`warehouse_id`);
+
+--
+-- Indexes for table `appinventory_pricetype`
+--
+ALTER TABLE `appinventory_pricetype`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`) USING BTREE;
+
+--
+-- Indexes for table `appinventory_product`
+--
+ALTER TABLE `appinventory_product`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `sku` (`sku`) USING BTREE,
+  ADD KEY `appinventory_product_category_id_928a9360_fk_appinvent` (`category_id`) USING BTREE,
+  ADD KEY `appinventory_product_unit_default_id_91ee198a_fk_appinvent` (`unit_default_id`) USING BTREE;
+
+--
+-- Indexes for table `appinventory_productbrand`
+--
+ALTER TABLE `appinventory_productbrand`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `appinventory_productbrand_name_df5513e8_uniq` (`name`) USING BTREE;
+
+--
+-- Indexes for table `appinventory_productcategory`
+--
+ALTER TABLE `appinventory_productcategory`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `appinventory_productcategory_name_c2a2e5ae_uniq` (`name`) USING BTREE;
+
+--
+-- Indexes for table `appinventory_productprice`
+--
+ALTER TABLE `appinventory_productprice`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `appinventory_productpric_product_id_price_type_id_3230274c_uniq` (`product_id`,`price_type_id`,`unit_id`,`valid_from`,`valid_until`) USING BTREE,
+  ADD KEY `appinventory_product_price_type_id_7e45c1a2_fk_appinvent` (`price_type_id`) USING BTREE,
+  ADD KEY `appinventory_product_unit_id_0b7b77c7_fk_appinvent` (`unit_id`) USING BTREE,
+  ADD KEY `appinventory_productprice_product_id_2248890d` (`product_id`) USING BTREE;
+
+--
+-- Indexes for table `appinventory_product_brands`
+--
+ALTER TABLE `appinventory_product_brands`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `appinventory_product_bra_product_id_productbrand__07f94e98_uniq` (`product_id`,`productbrand_id`) USING BTREE,
+  ADD KEY `appinventory_product_productbrand_id_07961da8_fk_appinvent` (`productbrand_id`) USING BTREE;
+
+--
+-- Indexes for table `appinventory_stock`
+--
+ALTER TABLE `appinventory_stock`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `appinventory_stock_product_id_warehouse_id_4b68c445_uniq` (`product_id`,`warehouse_id`),
+  ADD KEY `appinventory_stock_warehouse_id_0ba59025_fk_appinvent` (`warehouse_id`);
+
+--
+-- Indexes for table `appinventory_unitcategory`
+--
+ALTER TABLE `appinventory_unitcategory`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`) USING BTREE;
+
+--
+-- Indexes for table `appinventory_unitofmeasure`
+--
+ALTER TABLE `appinventory_unitofmeasure`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`) USING BTREE,
+  ADD UNIQUE KEY `code` (`code`) USING BTREE,
+  ADD KEY `appinventory_unitofm_category_id_84c4526d_fk_appinvent` (`category_id`) USING BTREE;
+
+--
+-- Indexes for table `appinventory_warehouse`
+--
+ALTER TABLE `appinventory_warehouse`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `appinventory_warehouse_name_f88ca2b6_uniq` (`name`) USING BTREE;
+
+--
+-- Indexes for table `appschedule_absencereason`
+--
+ALTER TABLE `appschedule_absencereason`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`);
+
+--
+-- Indexes for table `appschedule_event`
+--
+ALTER TABLE `appschedule_event`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_event_crew_date_title` (`crew_id`,`date`,`title`),
+  ADD KEY `appschedule_event_absence_reason_id_b86cb2ea_fk_appschedu` (`absence_reason_id`),
+  ADD KEY `appschedule_event_builder_id_b81a4b55_fk_ctrctsapp_builder_id` (`builder_id`),
+  ADD KEY `appschedule_event_created_by_id_637d153b_fk_auth_user_id` (`created_by_id`),
+  ADD KEY `appschedule_event_house_model_id_a52db6ad_fk_ctrctsapp` (`house_model_id`),
+  ADD KEY `appschedule_event_job_id_a08bf75f_fk_ctrctsapp_job_id` (`job_id`),
+  ADD KEY `appschedule_date_e53183_idx` (`date`,`end_dt`),
+  ADD KEY `appschedule_work_ac_f8021e_idx` (`work_account_id`,`is_absence`);
+
+--
+-- Indexes for table `appschedule_eventchatmessage`
+--
+ALTER TABLE `appschedule_eventchatmessage`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `appschedule_eventchatmessage_author_id_9dd8b80e_fk_auth_user_id` (`author_id`),
+  ADD KEY `appschedule_eventcha_event_id_ea021cb2_fk_appschedu` (`event_id`);
+
+--
+-- Indexes for table `appschedule_eventchatreadstatus`
+--
+ALTER TABLE `appschedule_eventchatreadstatus`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `appschedule_eventchatreadstatus_user_id_message_id_ca1259c3_uniq` (`user_id`,`message_id`),
+  ADD KEY `appschedule_eventcha_message_id_09371584_fk_appschedu` (`message_id`);
+
+--
+-- Indexes for table `appschedule_eventdraft`
+--
+ALTER TABLE `appschedule_eventdraft`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `event_id` (`event_id`),
+  ADD KEY `appschedule_eventdra_absence_reason_id_e129ff14_fk_appschedu` (`absence_reason_id`),
+  ADD KEY `appschedule_eventdra_builder_id_4afb8bc5_fk_ctrctsapp` (`builder_id`),
+  ADD KEY `appschedule_eventdraft_created_by_id_b5cc0282_fk_auth_user_id` (`created_by_id`),
+  ADD KEY `appschedule_eventdraft_crew_id_bd3f05d5_fk_crewsapp_crew_id` (`crew_id`),
+  ADD KEY `appschedule_eventdra_house_model_id_1ac8fde6_fk_ctrctsapp` (`house_model_id`),
+  ADD KEY `appschedule_eventdraft_job_id_046a28cd_fk_ctrctsapp_job_id` (`job_id`),
+  ADD KEY `appschedule_date_e9ad61_idx` (`date`,`end_dt`),
+  ADD KEY `appschedule_work_ac_cac00a_idx` (`work_account_id`,`is_absence`);
+
+--
+-- Indexes for table `appschedule_eventimage`
+--
+ALTER TABLE `appschedule_eventimage`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `appschedule_eventimage_event_id_a33dcde4_fk_appschedule_event_id` (`event_id`),
+  ADD KEY `appschedule_eventimage_uploaded_by_id_7d8ada57_fk_auth_user_id` (`uploaded_by_id`);
+
+--
+-- Indexes for table `appschedule_eventnote`
+--
+ALTER TABLE `appschedule_eventnote`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `event_id` (`event_id`),
+  ADD KEY `appschedule_eventnote_updated_by_id_6cb49d6e_fk_auth_user_id` (`updated_by_id`);
+
+--
+-- Indexes for table `apptransactions_document`
+--
+ALTER TABLE `apptransactions_document`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `apptransactions_docu_builder_id_60716138_fk_ctrctsapp` (`builder_id`),
+  ADD KEY `apptransactions_document_created_by_id_0cf550a4_fk_auth_user_id` (`created_by_id`),
+  ADD KEY `apptransactions_docu_document_type_id_fcddad03_fk_apptransa` (`document_type_id`),
+  ADD KEY `apptransactions_docu_work_account_id_2ff1d276_fk_apptransa` (`work_account_id`);
+
+--
+-- Indexes for table `apptransactions_documentline`
+--
+ALTER TABLE `apptransactions_documentline`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `apptransactions_docu_brand_id_16ce1907_fk_appinvent` (`brand_id`),
+  ADD KEY `apptransactions_docu_document_id_1ca4808b_fk_apptransa` (`document_id`),
+  ADD KEY `apptransactions_docu_price_type_id_6eca680c_fk_appinvent` (`price_type_id`),
+  ADD KEY `apptransactions_docu_product_id_ad5ce4ec_fk_appinvent` (`product_id`),
+  ADD KEY `apptransactions_docu_unit_id_565f80ed_fk_appinvent` (`unit_id`),
+  ADD KEY `apptransactions_docu_warehouse_id_9d227502_fk_appinvent` (`warehouse_id`);
+
+--
+-- Indexes for table `apptransactions_documenttype`
+--
+ALTER TABLE `apptransactions_documenttype`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `type_code` (`type_code`);
+
+--
+-- Indexes for table `apptransactions_party`
+--
+ALTER TABLE `apptransactions_party`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`),
+  ADD KEY `apptransactions_part_default_price_type_i_d5ec0122_fk_appinvent` (`default_price_type_id`),
+  ADD KEY `apptransactions_part_category_id_ce7dc842_fk_apptransa` (`category_id`);
+
+--
+-- Indexes for table `apptransactions_partycategory`
+--
+ALTER TABLE `apptransactions_partycategory`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`) USING BTREE;
+
+--
+-- Indexes for table `apptransactions_partytype`
+--
+ALTER TABLE `apptransactions_partytype`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`) USING BTREE;
+
+--
+-- Indexes for table `apptransactions_party_types`
+--
+ALTER TABLE `apptransactions_party_types`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `apptransactions_party_types_party_id_partytype_id_fab8ad0a_uniq` (`party_id`,`partytype_id`) USING BTREE,
+  ADD KEY `apptransactions_part_partytype_id_14bde8a3_fk_apptransa` (`partytype_id`) USING BTREE;
+
+--
+-- Indexes for table `apptransactions_transactionfavorite`
+--
+ALTER TABLE `apptransactions_transactionfavorite`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_fav_name_user_active` (`created_by_id`,`name_ci_active`),
+  ADD KEY `apptransact_created_5c5bb6_idx` (`created_by_id`,`is_active`),
+  ADD KEY `apptransact_name_5d9ca8_idx` (`name`);
+
+--
+-- Indexes for table `apptransactions_workaccount`
+--
+ALTER TABLE `apptransactions_workaccount`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_workaccount_title_ci_active` (`title_ci_active`),
+  ADD UNIQUE KEY `uq_workaccount_builder_job_lot_ci_active` (`builder_id`,`job_id`,`lot_ci_active`),
+  ADD KEY `apptransactions_work_created_by_id_7739a749_fk_auth_user` (`created_by_id`),
+  ADD KEY `apptransactions_work_default_price_type_i_f204af48_fk_appinvent` (`default_price_type_id`),
+  ADD KEY `apptransactions_work_house_model_id_97df3a67_fk_ctrctsapp` (`house_model_id`),
+  ADD KEY `apptransactions_workaccount_job_id_8457211e_fk_ctrctsapp_job_id` (`job_id`),
+  ADD KEY `idx_workaccount_title_ci` ((lower(`title`)));
+
+--
+-- Indexes for table `auditapp_useractionlog`
+--
+ALTER TABLE `auditapp_useractionlog`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `auditapp_useractionlog_user_id_6449bf59_fk_auth_user_id` (`user_id`);
+
+--
+-- Indexes for table `authtoken_token`
+--
+ALTER TABLE `authtoken_token`
+  ADD PRIMARY KEY (`key`),
+  ADD UNIQUE KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `auth_group`
+--
+ALTER TABLE `auth_group`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`) USING BTREE;
+
+--
+-- Indexes for table `auth_group_permissions`
+--
+ALTER TABLE `auth_group_permissions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `auth_group_permissions_group_id_permission_id_0cd325b0_uniq` (`group_id`,`permission_id`),
+  ADD KEY `auth_group_permissio_permission_id_84c5c92e_fk_auth_perm` (`permission_id`);
+
+--
+-- Indexes for table `auth_permission`
+--
+ALTER TABLE `auth_permission`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `auth_permission_content_type_id_codename_01ab375a_uniq` (`content_type_id`,`codename`);
+
+--
+-- Indexes for table `auth_user`
+--
+ALTER TABLE `auth_user`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `username` (`username`);
+
+--
+-- Indexes for table `auth_user_groups`
+--
+ALTER TABLE `auth_user_groups`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `auth_user_groups_user_id_group_id_94350c0c_uniq` (`user_id`,`group_id`),
+  ADD KEY `auth_user_groups_group_id_97559544_fk_auth_group_id` (`group_id`);
+
+--
+-- Indexes for table `auth_user_user_permissions`
+--
+ALTER TABLE `auth_user_user_permissions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `auth_user_user_permissions_user_id_permission_id_14a6b632_uniq` (`user_id`,`permission_id`),
+  ADD KEY `auth_user_user_permi_permission_id_1fbb5f2c_fk_auth_perm` (`permission_id`);
+
+--
+-- Indexes for table `crewsapp_category`
+--
+ALTER TABLE `crewsapp_category`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `name` (`name`);
+
+--
+-- Indexes for table `crewsapp_crew`
+--
+ALTER TABLE `crewsapp_crew`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `crewsapp_crew_category_id_d47f8ee7_fk_crewsapp_category_id` (`category_id`);
+
+--
+-- Indexes for table `crewsapp_crew_jobs`
+--
+ALTER TABLE `crewsapp_crew_jobs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `crewsapp_crew_jobs_crew_id_job_id_2a8c0473_uniq` (`crew_id`,`job_id`),
+  ADD KEY `crewsapp_crew_jobs_job_id_341ebba8_fk_ctrctsapp_job_id` (`job_id`);
+
+--
+-- Indexes for table `crewsapp_crew_members`
+--
+ALTER TABLE `crewsapp_crew_members`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `crewsapp_crew_members_crew_id_user_id_61e2bc2b_uniq` (`crew_id`,`user_id`),
+  ADD KEY `crewsapp_crew_members_user_id_c4c4b43d_fk_auth_user_id` (`user_id`);
+
+--
+-- Indexes for table `crewsapp_truck`
+--
+ALTER TABLE `crewsapp_truck`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `plate_number` (`plate_number`);
+
+--
+-- Indexes for table `crewsapp_truckassignment`
+--
+ALTER TABLE `crewsapp_truckassignment`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `crewsapp_truckassignment_crew_id_f2fe6704_fk_crewsapp_crew_id` (`crew_id`),
+  ADD KEY `crewsapp_truckassignment_truck_id_5c8e835b_fk_crewsapp_truck_id` (`truck_id`);
+
+--
+-- Indexes for table `ctrctsapp_builder`
+--
+ALTER TABLE `ctrctsapp_builder`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_builder_name_party_ci` ((lower(`name`)), ),
+  ADD UNIQUE KEY `uniq_builder_name_ci` ((lower(`name`))),
+  ADD KEY `ctrctsapp_builder_category_id_5fc04d45_fk_apptransa` (`category_id`),
+  ADD KEY `ctrctsapp_builder_default_price_type_i_5b3e2990_fk_appinvent` (`default_price_type_id`),
+  ADD KEY `ctrctsapp_builder_party_id_d172b3f7_fk_apptransactions_party_id` (`party_id`);
+
+--
+-- Indexes for table `ctrctsapp_builder_types`
+--
+ALTER TABLE `ctrctsapp_builder_types`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `ctrctsapp_builder_types_builder_id_partytype_id_19cb552b_uniq` (`builder_id`,`partytype_id`),
+  ADD KEY `ctrctsapp_builder_ty_partytype_id_ecec2bb5_fk_apptransa` (`partytype_id`);
+
+--
+-- Indexes for table `ctrctsapp_contract`
+--
+ALTER TABLE `ctrctsapp_contract`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `ctrctsapp_contract_builder_id_27a36f05_fk_ctrctsapp_builder_id` (`builder_id`),
+  ADD KEY `ctrctsapp_contract_created_by_id_583e2e19_fk_auth_user_id` (`created_by_id`),
+  ADD KEY `ctrctsapp_contract_house_model_id_223712fc_fk_ctrctsapp` (`house_model_id`),
+  ADD KEY `ctrctsapp_contract_job_id_8d3c20fd_fk_ctrctsapp_job_id` (`job_id`),
+  ADD KEY `ctrctsapp_contract_work_account_id_262c5aef_fk_apptransa` (`work_account_id`);
+
+--
+-- Indexes for table `ctrctsapp_contractdetails`
+--
+ALTER TABLE `ctrctsapp_contractdetails`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `ctrctsapp_contractde_contract_details_id_0f162212_fk_ctrctsapp` (`contract_details_id`),
+  ADD KEY `ctrctsapp_contractde_cdwork_price_id_6130667e_fk_ctrctsapp` (`cdwork_price_id`);
+
+--
+-- Indexes for table `ctrctsapp_housemodel`
+--
+ALTER TABLE `ctrctsapp_housemodel`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `ctrctsapp_housemodel_jobs`
+--
+ALTER TABLE `ctrctsapp_housemodel_jobs`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `ctrctsapp_housemodel_jobs_housemodel_id_job_id_74140e7f_uniq` (`housemodel_id`,`job_id`),
+  ADD KEY `ctrctsapp_housemodel_jobs_job_id_ab6add61_fk_ctrctsapp_job_id` (`job_id`);
+
+--
+-- Indexes for table `ctrctsapp_job`
+--
+ALTER TABLE `ctrctsapp_job`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `ctrctsapp_job_builder_id_d5a1ae86_fk_ctrctsapp_builder_id` (`builder_id`);
+
+--
+-- Indexes for table `ctrctsapp_workprice`
+--
+ALTER TABLE `ctrctsapp_workprice`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `ctrctsapp_workprice_builders`
+--
+ALTER TABLE `ctrctsapp_workprice_builders`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `ctrctsapp_workprice_buil_workprice_id_builder_id_ff4d9b5f_uniq` (`workprice_id`,`builder_id`),
+  ADD KEY `ctrctsapp_workprice__builder_id_777fed9d_fk_ctrctsapp` (`builder_id`);
+
+--
+-- Indexes for table `django_admin_log`
+--
+ALTER TABLE `django_admin_log`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `django_admin_log_content_type_id_c4bce8eb_fk_django_co` (`content_type_id`),
+  ADD KEY `django_admin_log_user_id_c564eba6_fk_auth_user_id` (`user_id`);
+
+--
+-- Indexes for table `django_content_type`
+--
+ALTER TABLE `django_content_type`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `django_content_type_app_label_model_76bd3d3b_uniq` (`app_label`,`model`);
+
+--
+-- Indexes for table `django_migrations`
+--
+ALTER TABLE `django_migrations`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `django_session`
+--
+ALTER TABLE `django_session`
+  ADD PRIMARY KEY (`session_key`),
+  ADD KEY `django_session_expire_date_a5c62663` (`expire_date`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `appcore_manualcategory`
+--
+ALTER TABLE `appcore_manualcategory`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `appcore_manualentry`
+--
+ALTER TABLE `appcore_manualentry`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT for table `appinventory_inventorymovement`
+--
+ALTER TABLE `appinventory_inventorymovement`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `appinventory_pricetype`
+--
+ALTER TABLE `appinventory_pricetype`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `appinventory_product`
+--
+ALTER TABLE `appinventory_product`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=955;
+
+--
+-- AUTO_INCREMENT for table `appinventory_productbrand`
+--
+ALTER TABLE `appinventory_productbrand`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
+
+--
+-- AUTO_INCREMENT for table `appinventory_productcategory`
+--
+ALTER TABLE `appinventory_productcategory`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT for table `appinventory_productprice`
+--
+ALTER TABLE `appinventory_productprice`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2312;
+
+--
+-- AUTO_INCREMENT for table `appinventory_product_brands`
+--
+ALTER TABLE `appinventory_product_brands`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1121;
+
+--
+-- AUTO_INCREMENT for table `appinventory_stock`
+--
+ALTER TABLE `appinventory_stock`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+
+--
+-- AUTO_INCREMENT for table `appinventory_unitcategory`
+--
+ALTER TABLE `appinventory_unitcategory`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `appinventory_unitofmeasure`
+--
+ALTER TABLE `appinventory_unitofmeasure`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+
+--
+-- AUTO_INCREMENT for table `appinventory_warehouse`
+--
+ALTER TABLE `appinventory_warehouse`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `appschedule_absencereason`
+--
+ALTER TABLE `appschedule_absencereason`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `appschedule_event`
+--
+ALTER TABLE `appschedule_event`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `appschedule_eventchatmessage`
+--
+ALTER TABLE `appschedule_eventchatmessage`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `appschedule_eventchatreadstatus`
+--
+ALTER TABLE `appschedule_eventchatreadstatus`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `appschedule_eventdraft`
+--
+ALTER TABLE `appschedule_eventdraft`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+
+--
+-- AUTO_INCREMENT for table `appschedule_eventimage`
+--
+ALTER TABLE `appschedule_eventimage`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `appschedule_eventnote`
+--
+ALTER TABLE `appschedule_eventnote`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `apptransactions_document`
+--
+ALTER TABLE `apptransactions_document`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `apptransactions_documentline`
+--
+ALTER TABLE `apptransactions_documentline`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+
+--
+-- AUTO_INCREMENT for table `apptransactions_documenttype`
+--
+ALTER TABLE `apptransactions_documenttype`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT for table `apptransactions_party`
+--
+ALTER TABLE `apptransactions_party`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `apptransactions_partycategory`
+--
+ALTER TABLE `apptransactions_partycategory`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `apptransactions_partytype`
+--
+ALTER TABLE `apptransactions_partytype`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `apptransactions_party_types`
+--
+ALTER TABLE `apptransactions_party_types`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `apptransactions_transactionfavorite`
+--
+ALTER TABLE `apptransactions_transactionfavorite`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `apptransactions_workaccount`
+--
+ALTER TABLE `apptransactions_workaccount`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `auditapp_useractionlog`
+--
+ALTER TABLE `auditapp_useractionlog`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `auth_group`
+--
+ALTER TABLE `auth_group`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `auth_group_permissions`
+--
+ALTER TABLE `auth_group_permissions`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `auth_permission`
+--
+ALTER TABLE `auth_permission`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=185;
+
+--
+-- AUTO_INCREMENT for table `auth_user`
+--
+ALTER TABLE `auth_user`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `auth_user_groups`
+--
+ALTER TABLE `auth_user_groups`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `auth_user_user_permissions`
+--
+ALTER TABLE `auth_user_user_permissions`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `crewsapp_category`
+--
+ALTER TABLE `crewsapp_category`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `crewsapp_crew`
+--
+ALTER TABLE `crewsapp_crew`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `crewsapp_crew_jobs`
+--
+ALTER TABLE `crewsapp_crew_jobs`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `crewsapp_crew_members`
+--
+ALTER TABLE `crewsapp_crew_members`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `crewsapp_truck`
+--
+ALTER TABLE `crewsapp_truck`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `crewsapp_truckassignment`
+--
+ALTER TABLE `crewsapp_truckassignment`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ctrctsapp_builder`
+--
+ALTER TABLE `ctrctsapp_builder`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ctrctsapp_builder_types`
+--
+ALTER TABLE `ctrctsapp_builder_types`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ctrctsapp_contract`
+--
+ALTER TABLE `ctrctsapp_contract`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `ctrctsapp_contractdetails`
+--
+ALTER TABLE `ctrctsapp_contractdetails`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=153;
+
+--
+-- AUTO_INCREMENT for table `ctrctsapp_housemodel`
+--
+ALTER TABLE `ctrctsapp_housemodel`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `ctrctsapp_housemodel_jobs`
+--
+ALTER TABLE `ctrctsapp_housemodel_jobs`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `ctrctsapp_job`
+--
+ALTER TABLE `ctrctsapp_job`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `ctrctsapp_workprice`
+--
+ALTER TABLE `ctrctsapp_workprice`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+
+--
+-- AUTO_INCREMENT for table `ctrctsapp_workprice_builders`
+--
+ALTER TABLE `ctrctsapp_workprice_builders`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=77;
+
+--
+-- AUTO_INCREMENT for table `django_admin_log`
+--
+ALTER TABLE `django_admin_log`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `django_content_type`
+--
+ALTER TABLE `django_content_type`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+
+--
+-- AUTO_INCREMENT for table `django_migrations`
+--
+ALTER TABLE `django_migrations`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `appcore_manualentry`
+--
+ALTER TABLE `appcore_manualentry`
+  ADD CONSTRAINT `appcore_manualentry_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `appcore_manualcategory` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+--
+-- Constraints for table `appinventory_inventorymovement`
+--
+ALTER TABLE `appinventory_inventorymovement`
+  ADD CONSTRAINT `appinventory_invento_created_by_id_028c5202_fk_auth_user` FOREIGN KEY (`created_by_id`) REFERENCES `auth_user` (`id`),
+  ADD CONSTRAINT `appinventory_invento_product_id_7df2f2cc_fk_appinvent` FOREIGN KEY (`product_id`) REFERENCES `appinventory_product` (`id`),
+  ADD CONSTRAINT `appinventory_invento_unit_id_de29ba89_fk_appinvent` FOREIGN KEY (`unit_id`) REFERENCES `appinventory_unitofmeasure` (`id`),
+  ADD CONSTRAINT `appinventory_invento_warehouse_id_7a4d55f2_fk_appinvent` FOREIGN KEY (`warehouse_id`) REFERENCES `appinventory_warehouse` (`id`);
+
+--
+-- Constraints for table `appinventory_product`
+--
+ALTER TABLE `appinventory_product`
+  ADD CONSTRAINT `appinventory_product_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `appinventory_productcategory` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `appinventory_product_ibfk_2` FOREIGN KEY (`unit_default_id`) REFERENCES `appinventory_unitofmeasure` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `appinventory_productprice`
+--
+ALTER TABLE `appinventory_productprice`
+  ADD CONSTRAINT `appinventory_productprice_ibfk_1` FOREIGN KEY (`price_type_id`) REFERENCES `appinventory_pricetype` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `appinventory_productprice_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `appinventory_product` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `appinventory_productprice_ibfk_3` FOREIGN KEY (`unit_id`) REFERENCES `appinventory_unitofmeasure` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `appinventory_product_brands`
+--
+ALTER TABLE `appinventory_product_brands`
+  ADD CONSTRAINT `appinventory_product_brands_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `appinventory_product` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `appinventory_product_brands_ibfk_2` FOREIGN KEY (`productbrand_id`) REFERENCES `appinventory_productbrand` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `appinventory_stock`
+--
+ALTER TABLE `appinventory_stock`
+  ADD CONSTRAINT `appinventory_stock_product_id_de2e57ed_fk_appinvent` FOREIGN KEY (`product_id`) REFERENCES `appinventory_product` (`id`),
+  ADD CONSTRAINT `appinventory_stock_warehouse_id_0ba59025_fk_appinvent` FOREIGN KEY (`warehouse_id`) REFERENCES `appinventory_warehouse` (`id`);
+
+--
+-- Constraints for table `appinventory_unitofmeasure`
+--
+ALTER TABLE `appinventory_unitofmeasure`
+  ADD CONSTRAINT `appinventory_unitofmeasure_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `appinventory_unitcategory` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `appschedule_event`
+--
+ALTER TABLE `appschedule_event`
+  ADD CONSTRAINT `appschedule_event_absence_reason_id_b86cb2ea_fk_appschedu` FOREIGN KEY (`absence_reason_id`) REFERENCES `appschedule_absencereason` (`id`),
+  ADD CONSTRAINT `appschedule_event_builder_id_b81a4b55_fk_ctrctsapp_builder_id` FOREIGN KEY (`builder_id`) REFERENCES `ctrctsapp_builder` (`id`),
+  ADD CONSTRAINT `appschedule_event_created_by_id_637d153b_fk_auth_user_id` FOREIGN KEY (`created_by_id`) REFERENCES `auth_user` (`id`),
+  ADD CONSTRAINT `appschedule_event_crew_id_30269961_fk_crewsapp_crew_id` FOREIGN KEY (`crew_id`) REFERENCES `crewsapp_crew` (`id`),
+  ADD CONSTRAINT `appschedule_event_house_model_id_a52db6ad_fk_ctrctsapp` FOREIGN KEY (`house_model_id`) REFERENCES `ctrctsapp_housemodel` (`id`),
+  ADD CONSTRAINT `appschedule_event_job_id_a08bf75f_fk_ctrctsapp_job_id` FOREIGN KEY (`job_id`) REFERENCES `ctrctsapp_job` (`id`),
+  ADD CONSTRAINT `appschedule_event_work_account_id_600da039_fk_apptransa` FOREIGN KEY (`work_account_id`) REFERENCES `apptransactions_workaccount` (`id`);
+
+--
+-- Constraints for table `appschedule_eventchatmessage`
+--
+ALTER TABLE `appschedule_eventchatmessage`
+  ADD CONSTRAINT `appschedule_eventcha_event_id_ea021cb2_fk_appschedu` FOREIGN KEY (`event_id`) REFERENCES `appschedule_event` (`id`),
+  ADD CONSTRAINT `appschedule_eventchatmessage_author_id_9dd8b80e_fk_auth_user_id` FOREIGN KEY (`author_id`) REFERENCES `auth_user` (`id`);
+
+--
+-- Constraints for table `appschedule_eventchatreadstatus`
+--
+ALTER TABLE `appschedule_eventchatreadstatus`
+  ADD CONSTRAINT `appschedule_eventcha_message_id_09371584_fk_appschedu` FOREIGN KEY (`message_id`) REFERENCES `appschedule_eventchatmessage` (`id`),
+  ADD CONSTRAINT `appschedule_eventchatreadstatus_user_id_d0244918_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`);
+
+--
+-- Constraints for table `appschedule_eventdraft`
+--
+ALTER TABLE `appschedule_eventdraft`
+  ADD CONSTRAINT `appschedule_eventdra_absence_reason_id_e129ff14_fk_appschedu` FOREIGN KEY (`absence_reason_id`) REFERENCES `appschedule_absencereason` (`id`),
+  ADD CONSTRAINT `appschedule_eventdra_builder_id_4afb8bc5_fk_ctrctsapp` FOREIGN KEY (`builder_id`) REFERENCES `ctrctsapp_builder` (`id`),
+  ADD CONSTRAINT `appschedule_eventdra_house_model_id_1ac8fde6_fk_ctrctsapp` FOREIGN KEY (`house_model_id`) REFERENCES `ctrctsapp_housemodel` (`id`),
+  ADD CONSTRAINT `appschedule_eventdra_work_account_id_afdba139_fk_apptransa` FOREIGN KEY (`work_account_id`) REFERENCES `apptransactions_workaccount` (`id`),
+  ADD CONSTRAINT `appschedule_eventdraft_created_by_id_b5cc0282_fk_auth_user_id` FOREIGN KEY (`created_by_id`) REFERENCES `auth_user` (`id`),
+  ADD CONSTRAINT `appschedule_eventdraft_crew_id_bd3f05d5_fk_crewsapp_crew_id` FOREIGN KEY (`crew_id`) REFERENCES `crewsapp_crew` (`id`),
+  ADD CONSTRAINT `appschedule_eventdraft_event_id_152097b9_fk_appschedule_event_id` FOREIGN KEY (`event_id`) REFERENCES `appschedule_event` (`id`),
+  ADD CONSTRAINT `appschedule_eventdraft_job_id_046a28cd_fk_ctrctsapp_job_id` FOREIGN KEY (`job_id`) REFERENCES `ctrctsapp_job` (`id`);
+
+--
+-- Constraints for table `appschedule_eventimage`
+--
+ALTER TABLE `appschedule_eventimage`
+  ADD CONSTRAINT `appschedule_eventimage_event_id_a33dcde4_fk_appschedule_event_id` FOREIGN KEY (`event_id`) REFERENCES `appschedule_event` (`id`),
+  ADD CONSTRAINT `appschedule_eventimage_uploaded_by_id_7d8ada57_fk_auth_user_id` FOREIGN KEY (`uploaded_by_id`) REFERENCES `auth_user` (`id`);
+
+--
+-- Constraints for table `appschedule_eventnote`
+--
+ALTER TABLE `appschedule_eventnote`
+  ADD CONSTRAINT `appschedule_eventnote_event_id_2f2b1c2a_fk_appschedule_event_id` FOREIGN KEY (`event_id`) REFERENCES `appschedule_event` (`id`),
+  ADD CONSTRAINT `appschedule_eventnote_updated_by_id_6cb49d6e_fk_auth_user_id` FOREIGN KEY (`updated_by_id`) REFERENCES `auth_user` (`id`);
+
+--
+-- Constraints for table `apptransactions_document`
+--
+ALTER TABLE `apptransactions_document`
+  ADD CONSTRAINT `apptransactions_docu_builder_id_60716138_fk_ctrctsapp` FOREIGN KEY (`builder_id`) REFERENCES `ctrctsapp_builder` (`id`),
+  ADD CONSTRAINT `apptransactions_docu_document_type_id_fcddad03_fk_apptransa` FOREIGN KEY (`document_type_id`) REFERENCES `apptransactions_documenttype` (`id`),
+  ADD CONSTRAINT `apptransactions_docu_work_account_id_2ff1d276_fk_apptransa` FOREIGN KEY (`work_account_id`) REFERENCES `apptransactions_workaccount` (`id`),
+  ADD CONSTRAINT `apptransactions_document_created_by_id_0cf550a4_fk_auth_user_id` FOREIGN KEY (`created_by_id`) REFERENCES `auth_user` (`id`);
+
+--
+-- Constraints for table `apptransactions_documentline`
+--
+ALTER TABLE `apptransactions_documentline`
+  ADD CONSTRAINT `apptransactions_docu_brand_id_16ce1907_fk_appinvent` FOREIGN KEY (`brand_id`) REFERENCES `appinventory_productbrand` (`id`),
+  ADD CONSTRAINT `apptransactions_docu_document_id_1ca4808b_fk_apptransa` FOREIGN KEY (`document_id`) REFERENCES `apptransactions_document` (`id`),
+  ADD CONSTRAINT `apptransactions_docu_price_type_id_6eca680c_fk_appinvent` FOREIGN KEY (`price_type_id`) REFERENCES `appinventory_pricetype` (`id`),
+  ADD CONSTRAINT `apptransactions_docu_product_id_ad5ce4ec_fk_appinvent` FOREIGN KEY (`product_id`) REFERENCES `appinventory_product` (`id`),
+  ADD CONSTRAINT `apptransactions_docu_unit_id_565f80ed_fk_appinvent` FOREIGN KEY (`unit_id`) REFERENCES `appinventory_unitofmeasure` (`id`),
+  ADD CONSTRAINT `apptransactions_docu_warehouse_id_9d227502_fk_appinvent` FOREIGN KEY (`warehouse_id`) REFERENCES `appinventory_warehouse` (`id`);
+
+--
+-- Constraints for table `apptransactions_party`
+--
+ALTER TABLE `apptransactions_party`
+  ADD CONSTRAINT `apptransactions_part_category_id_ce7dc842_fk_apptransa` FOREIGN KEY (`category_id`) REFERENCES `apptransactions_partycategory` (`id`),
+  ADD CONSTRAINT `apptransactions_part_default_price_type_i_d5ec0122_fk_appinvent` FOREIGN KEY (`default_price_type_id`) REFERENCES `appinventory_pricetype` (`id`);
+
+--
+-- Constraints for table `apptransactions_party_types`
+--
+ALTER TABLE `apptransactions_party_types`
+  ADD CONSTRAINT `apptransactions_party_types_ibfk_1` FOREIGN KEY (`party_id`) REFERENCES `apptransactions_party` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `apptransactions_party_types_ibfk_2` FOREIGN KEY (`partytype_id`) REFERENCES `apptransactions_partytype` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `apptransactions_transactionfavorite`
+--
+ALTER TABLE `apptransactions_transactionfavorite`
+  ADD CONSTRAINT `apptransactions_tran_created_by_id_ef6a228d_fk_auth_user` FOREIGN KEY (`created_by_id`) REFERENCES `auth_user` (`id`);
+
+--
+-- Constraints for table `apptransactions_workaccount`
+--
+ALTER TABLE `apptransactions_workaccount`
+  ADD CONSTRAINT `apptransactions_work_builder_id_cbccbda9_fk_ctrctsapp` FOREIGN KEY (`builder_id`) REFERENCES `ctrctsapp_builder` (`id`),
+  ADD CONSTRAINT `apptransactions_work_created_by_id_7739a749_fk_auth_user` FOREIGN KEY (`created_by_id`) REFERENCES `auth_user` (`id`),
+  ADD CONSTRAINT `apptransactions_work_default_price_type_i_f204af48_fk_appinvent` FOREIGN KEY (`default_price_type_id`) REFERENCES `appinventory_pricetype` (`id`),
+  ADD CONSTRAINT `apptransactions_work_house_model_id_97df3a67_fk_ctrctsapp` FOREIGN KEY (`house_model_id`) REFERENCES `ctrctsapp_housemodel` (`id`),
+  ADD CONSTRAINT `apptransactions_workaccount_job_id_8457211e_fk_ctrctsapp_job_id` FOREIGN KEY (`job_id`) REFERENCES `ctrctsapp_job` (`id`);
+
+--
+-- Constraints for table `auditapp_useractionlog`
+--
+ALTER TABLE `auditapp_useractionlog`
+  ADD CONSTRAINT `auditapp_useractionlog_user_id_6449bf59_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`);
+
+--
+-- Constraints for table `authtoken_token`
+--
+ALTER TABLE `authtoken_token`
+  ADD CONSTRAINT `authtoken_token_user_id_35299eff_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`);
+
+--
+-- Constraints for table `auth_group_permissions`
+--
+ALTER TABLE `auth_group_permissions`
+  ADD CONSTRAINT `auth_group_permissio_permission_id_84c5c92e_fk_auth_perm` FOREIGN KEY (`permission_id`) REFERENCES `auth_permission` (`id`),
+  ADD CONSTRAINT `auth_group_permissions_group_id_b120cbf9_fk_auth_group_id` FOREIGN KEY (`group_id`) REFERENCES `auth_group` (`id`);
+
+--
+-- Constraints for table `auth_permission`
+--
+ALTER TABLE `auth_permission`
+  ADD CONSTRAINT `auth_permission_content_type_id_2f476e4b_fk_django_co` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`);
+
+--
+-- Constraints for table `auth_user_groups`
+--
+ALTER TABLE `auth_user_groups`
+  ADD CONSTRAINT `auth_user_groups_group_id_97559544_fk_auth_group_id` FOREIGN KEY (`group_id`) REFERENCES `auth_group` (`id`),
+  ADD CONSTRAINT `auth_user_groups_user_id_6a12ed8b_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`);
+
+--
+-- Constraints for table `auth_user_user_permissions`
+--
+ALTER TABLE `auth_user_user_permissions`
+  ADD CONSTRAINT `auth_user_user_permi_permission_id_1fbb5f2c_fk_auth_perm` FOREIGN KEY (`permission_id`) REFERENCES `auth_permission` (`id`),
+  ADD CONSTRAINT `auth_user_user_permissions_user_id_a95ead1b_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`);
+
+--
+-- Constraints for table `crewsapp_crew`
+--
+ALTER TABLE `crewsapp_crew`
+  ADD CONSTRAINT `crewsapp_crew_category_id_d47f8ee7_fk_crewsapp_category_id` FOREIGN KEY (`category_id`) REFERENCES `crewsapp_category` (`id`);
+
+--
+-- Constraints for table `crewsapp_crew_jobs`
+--
+ALTER TABLE `crewsapp_crew_jobs`
+  ADD CONSTRAINT `crewsapp_crew_jobs_crew_id_c7207a9b_fk_crewsapp_crew_id` FOREIGN KEY (`crew_id`) REFERENCES `crewsapp_crew` (`id`),
+  ADD CONSTRAINT `crewsapp_crew_jobs_job_id_341ebba8_fk_ctrctsapp_job_id` FOREIGN KEY (`job_id`) REFERENCES `ctrctsapp_job` (`id`);
+
+--
+-- Constraints for table `crewsapp_crew_members`
+--
+ALTER TABLE `crewsapp_crew_members`
+  ADD CONSTRAINT `crewsapp_crew_members_crew_id_8026ec8d_fk_crewsapp_crew_id` FOREIGN KEY (`crew_id`) REFERENCES `crewsapp_crew` (`id`),
+  ADD CONSTRAINT `crewsapp_crew_members_user_id_c4c4b43d_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`);
+
+--
+-- Constraints for table `crewsapp_truckassignment`
+--
+ALTER TABLE `crewsapp_truckassignment`
+  ADD CONSTRAINT `crewsapp_truckassignment_crew_id_f2fe6704_fk_crewsapp_crew_id` FOREIGN KEY (`crew_id`) REFERENCES `crewsapp_crew` (`id`),
+  ADD CONSTRAINT `crewsapp_truckassignment_truck_id_5c8e835b_fk_crewsapp_truck_id` FOREIGN KEY (`truck_id`) REFERENCES `crewsapp_truck` (`id`);
+
+--
+-- Constraints for table `ctrctsapp_builder`
+--
+ALTER TABLE `ctrctsapp_builder`
+  ADD CONSTRAINT `ctrctsapp_builder_category_id_5fc04d45_fk_apptransa` FOREIGN KEY (`category_id`) REFERENCES `apptransactions_partycategory` (`id`),
+  ADD CONSTRAINT `ctrctsapp_builder_default_price_type_i_5b3e2990_fk_appinvent` FOREIGN KEY (`default_price_type_id`) REFERENCES `appinventory_pricetype` (`id`),
+  ADD CONSTRAINT `ctrctsapp_builder_party_id_d172b3f7_fk_apptransactions_party_id` FOREIGN KEY (`party_id`) REFERENCES `apptransactions_party` (`id`);
+
+--
+-- Constraints for table `ctrctsapp_builder_types`
+--
+ALTER TABLE `ctrctsapp_builder_types`
+  ADD CONSTRAINT `ctrctsapp_builder_ty_builder_id_bc482a5d_fk_ctrctsapp` FOREIGN KEY (`builder_id`) REFERENCES `ctrctsapp_builder` (`id`),
+  ADD CONSTRAINT `ctrctsapp_builder_ty_partytype_id_ecec2bb5_fk_apptransa` FOREIGN KEY (`partytype_id`) REFERENCES `apptransactions_partytype` (`id`);
+
+--
+-- Constraints for table `ctrctsapp_contract`
+--
+ALTER TABLE `ctrctsapp_contract`
+  ADD CONSTRAINT `ctrctsapp_contract_builder_id_27a36f05_fk_ctrctsapp_builder_id` FOREIGN KEY (`builder_id`) REFERENCES `ctrctsapp_builder` (`id`),
+  ADD CONSTRAINT `ctrctsapp_contract_created_by_id_583e2e19_fk_auth_user_id` FOREIGN KEY (`created_by_id`) REFERENCES `auth_user` (`id`),
+  ADD CONSTRAINT `ctrctsapp_contract_house_model_id_223712fc_fk_ctrctsapp` FOREIGN KEY (`house_model_id`) REFERENCES `ctrctsapp_housemodel` (`id`),
+  ADD CONSTRAINT `ctrctsapp_contract_job_id_8d3c20fd_fk_ctrctsapp_job_id` FOREIGN KEY (`job_id`) REFERENCES `ctrctsapp_job` (`id`),
+  ADD CONSTRAINT `ctrctsapp_contract_work_account_id_262c5aef_fk_apptransa` FOREIGN KEY (`work_account_id`) REFERENCES `apptransactions_workaccount` (`id`);
+
+--
+-- Constraints for table `ctrctsapp_contractdetails`
+--
+ALTER TABLE `ctrctsapp_contractdetails`
+  ADD CONSTRAINT `ctrctsapp_contractde_cdwork_price_id_6130667e_fk_ctrctsapp` FOREIGN KEY (`cdwork_price_id`) REFERENCES `ctrctsapp_workprice` (`id`),
+  ADD CONSTRAINT `ctrctsapp_contractde_contract_details_id_0f162212_fk_ctrctsapp` FOREIGN KEY (`contract_details_id`) REFERENCES `ctrctsapp_contract` (`id`);
+
+--
+-- Constraints for table `ctrctsapp_housemodel_jobs`
+--
+ALTER TABLE `ctrctsapp_housemodel_jobs`
+  ADD CONSTRAINT `ctrctsapp_housemodel_housemodel_id_b42f459f_fk_ctrctsapp` FOREIGN KEY (`housemodel_id`) REFERENCES `ctrctsapp_housemodel` (`id`),
+  ADD CONSTRAINT `ctrctsapp_housemodel_jobs_job_id_ab6add61_fk_ctrctsapp_job_id` FOREIGN KEY (`job_id`) REFERENCES `ctrctsapp_job` (`id`);
+
+--
+-- Constraints for table `ctrctsapp_job`
+--
+ALTER TABLE `ctrctsapp_job`
+  ADD CONSTRAINT `ctrctsapp_job_builder_id_d5a1ae86_fk_ctrctsapp_builder_id` FOREIGN KEY (`builder_id`) REFERENCES `ctrctsapp_builder` (`id`);
+
+--
+-- Constraints for table `ctrctsapp_workprice_builders`
+--
+ALTER TABLE `ctrctsapp_workprice_builders`
+  ADD CONSTRAINT `ctrctsapp_workprice__builder_id_777fed9d_fk_ctrctsapp` FOREIGN KEY (`builder_id`) REFERENCES `ctrctsapp_builder` (`id`),
+  ADD CONSTRAINT `ctrctsapp_workprice__workprice_id_593795b1_fk_ctrctsapp` FOREIGN KEY (`workprice_id`) REFERENCES `ctrctsapp_workprice` (`id`);
+
+--
+-- Constraints for table `django_admin_log`
+--
+ALTER TABLE `django_admin_log`
+  ADD CONSTRAINT `django_admin_log_content_type_id_c4bce8eb_fk_django_co` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`),
+  ADD CONSTRAINT `django_admin_log_user_id_c564eba6_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`);
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

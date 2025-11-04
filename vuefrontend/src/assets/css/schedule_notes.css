@@ -1,0 +1,68 @@
+/* ScheduleHouseNotes.css */
+
+/* Contenedor principal del editor y las notas */
+.container-notes {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+/* Estilos para la barra de herramientas del editor */
+.toolbar {
+    margin-bottom: 10px;
+    background-color: #e9ecef;
+    border-radius: 6px;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between; /* Distribuye los botones uniformemente */
+    flex-wrap: wrap;
+}
+
+.toolbar button {
+    margin: 5px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.toolbar button.is-active,
+.toolbar button:hover {
+    background-color: #9aa5c1;
+    color: #fff;
+}
+
+/* Estilos para el contenido del editor */
+.editor-content {
+    border: 1px solid #ced4da;
+    min-height: 150px; /* Altura mínima */
+    padding: 10px;
+    border-radius: 6px;
+    background-color: #fff;
+}
+
+/* Estilos para la lista de notas guardadas */
+.notes-list {
+    margin-top: 20px;
+}
+
+.note-card {
+    background-color: #fff;
+    border-left: 5px solid #007bff; /* Agrega un indicador de color a la izquierda */
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Sombra ligera para resaltar */
+}
+
+.note-card p {
+    margin-bottom: 0; /* Evita márgenes extra */
+}
+
+.note-card small {
+    display: block;
+    text-align: right;
+    color: #6c757d;
+}
