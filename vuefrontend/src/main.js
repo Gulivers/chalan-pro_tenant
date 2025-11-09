@@ -73,7 +73,14 @@ const resolveApiBaseUrl = () => {
     return ensureTrailingSlash(`${protocol}//${hostname}:${apiPort}`);
   }
 
-  // Producción: mismo host, diferente subdominio gestionado por env en Render.
+  // Render (producción): detectar patrón "-frontend.onrender.com" y mapear a "-backend".
+  const renderMatch = hostname.match(/^(?<prefix>.+)-frontend(\.onrender\.com)$/);
+  if (renderMatch?.groups?.prefix) {
+    const backendHost = `${renderMatch.groups.prefix}-backend.onrender.com`;
+    return ensureTrailingSlash(`${protocol}//${backendHost}`);
+  }
+
+  // Producción genérica: mismo host (backend reverso o env configurado).
   return ensureTrailingSlash(`${protocol}//${hostname}`);
 };
 
