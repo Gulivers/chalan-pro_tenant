@@ -21,6 +21,25 @@ import envelopeIcon from '@/assets/img/envelope-arrow-up.svg'
 import axios from 'axios'
 import messageSound from '@/assets/sounds/mixkit-sci-fi-confirmation-914.wav'
 
+const ensureTrailingSlash = (url = '') => (url.endsWith('/') ? url : `${url}/`); // Añade slash final.
+const stripTrailingSlash = (url = '') => url.replace(/\/+$/, ''); // Quita slashes extra.
+const stripLeadingSlash = (path = '') => path.replace(/^\/+/, ''); // Quita slashes al inicio.
+
+const getWsBaseUrl = () => {
+  const explicit = window.__WS_BASE_URL || '';
+  if (explicit) return ensureTrailingSlash(explicit);
+  const api = window.__API_BASE_URL || '';
+  if (api.startsWith('https://')) return ensureTrailingSlash(`wss://${api.slice(8)}`);
+  if (api.startsWith('http://')) return ensureTrailingSlash(`ws://${api.slice(7)}`);
+  return ensureTrailingSlash(api);
+};
+
+const buildWsUrl = (path = '') => {
+  const base = stripTrailingSlash(getWsBaseUrl());
+  const cleanPath = stripLeadingSlash(path);
+  return `${base}/${cleanPath}`;
+};
+
 export default {
   setup() {
     const chatStore = useChatStore()
@@ -36,7 +55,7 @@ export default {
 
         if (!userId.value) throw new Error('User ID not found.')
 
-        ws.value = new WebSocket(`${process.env.VUE_APP_WS_BASE_URL}ws/schedule/unread/user/${userId.value}/`)
+        ws.value = new WebSocket(buildWsUrl(`ws/schedule/unread/user/${userId.value}/`))
 
         ws.value.onopen = () => console.log('[WS] Connected to unread chat count.')
 

@@ -1,8 +1,27 @@
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
+const ensureTrailingSlash = (url = '') => (url.endsWith('/') ? url : `${url}/`); // Asegura slash final.
+const stripTrailingSlash = (url = '') => url.replace(/\/+$/, ''); // Quita slashes duplicados al final.
+const stripLeadingSlash = (path = '') => path.replace(/^\/+/, ''); // Quita slashes iniciales.
+
 export const appMixin = {
   methods: {
+    getApiBaseUrl() {
+      const base = window.__API_BASE_URL || axios.defaults.baseURL || '';
+      return ensureTrailingSlash(base);
+    },
+
+    getWsBaseUrl() {
+      const base = window.__WS_BASE_URL || this.getApiBaseUrl();
+      return ensureTrailingSlash(base);
+    },
+
+    buildWsUrl(path = '') {
+      const base = this.getWsBaseUrl();
+      return `${stripTrailingSlash(base)}/${stripLeadingSlash(path)}`;
+    },
+
     // ───────────────────────────────────────────────────────────────
     // AUTHENTICATION & USER DATA
     // ───────────────────────────────────────────────────────────────

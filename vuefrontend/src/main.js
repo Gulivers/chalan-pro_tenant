@@ -45,13 +45,65 @@ import authService from './auth/authService';
 // Directivas
 import TooltipDirective from '@/directives/tooltip'
 
+// ───────────────────────────────────────────────────────────────
+// Helpers para URLs según el entorno actual
+// ───────────────────────────────────────────────────────────────
+const ensureTrailingSlash = (url = '') => (url.endsWith('/') ? url : `${url}/`); // Añade slash final si falta.
+const stripTrailingSlash = (url = '') => url.replace(/\/+$/, ''); // Quita slashes repetidos al final.
+const stripLeadingSlash = (path = '') => path.replace(/^\/+/, ''); // Quita slashes iniciales.
 
+const isLocalLikeHost = (hostname) => {
+  if (!hostname) return false;
+  const localHosts = ['localhost', '127.0.0.1'];
+  if (localHosts.includes(hostname)) return true;
+  return /^192\.168\./.test(hostname) || /^10\./.test(hostname) || /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname);
+};
+
+const resolveApiBaseUrl = () => {
+  const envUrl = (process.env.VUE_APP_API_BASE_URL || '').trim();
+  if (envUrl.length > 0) {
+    return ensureTrailingSlash(envUrl);
+  }
+
+  const { protocol, hostname, port } = window.location;
+  const devPorts = new Set(['', '3000', '3001', '8080', '8081', '5173', '5174']);
+  if (isLocalLikeHost(hostname) || devPorts.has(port)) {
+    const apiPort = '8000';
+    return ensureTrailingSlash(`${protocol}//${hostname}:${apiPort}`);
+  }
+
+  // Producción: mismo host, diferente subdominio gestionado por env en Render.
+  return ensureTrailingSlash(`${protocol}//${hostname}`);
+};
+
+const resolveWsBaseUrl = (apiUrl) => {
+  const envWs = (process.env.VUE_APP_WS_BASE_URL || '').trim();
+  const base = envWs.length > 0 ? envWs : apiUrl;
+  if (base.startsWith('https://')) {
+    return ensureTrailingSlash(`wss://${base.slice(8)}`);
+  }
+  if (base.startsWith('http://')) {
+    return ensureTrailingSlash(`ws://${base.slice(7)}`);
+  }
+  return ensureTrailingSlash(base);
+};
+
+const joinUrl = (base, path = '') => {
+  const cleanBase = stripTrailingSlash(base);
+  const cleanPath = stripLeadingSlash(path);
+  return `${cleanBase}/${cleanPath}`;
+};
+
+// Determinar URLs base y exponerlas globalmente
+const API_BASE_URL = resolveApiBaseUrl();
+const WS_BASE_URL = resolveWsBaseUrl(API_BASE_URL);
+window.__API_BASE_URL = API_BASE_URL;
+window.__WS_BASE_URL = WS_BASE_URL;
+window.__BUILD_WS_URL = (path = '') => joinUrl(WS_BASE_URL, path); // Helper global simple.
 
 // Permite que las cookies se envíen con cada solicitud
 axios.defaults.withCredentials = true;
-// La URL base de la API
-// axios.defaults.baseURL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8000/';
-axios.defaults.baseURL = process.env.VUE_APP_API_BASE_URL || 'https://chalan-backend.onrender.com';
+axios.defaults.baseURL = API_BASE_URL;
 setupAxiosInterceptors();
 
 // Crea la aplicación de Vue

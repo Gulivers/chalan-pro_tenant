@@ -110,7 +110,7 @@
       });
 
       // WebSocket + carga inicial
-      this.wsUrl = `${process.env.VUE_APP_WS_BASE_URL}ws/schedule/event/${this.$props.eventId}/`;
+      this.wsUrl = this.buildWsUrl(`ws/schedule/event/${this.$props.eventId}/`);
       this.connectWebSocket();
       this.getNote();
       this.getContracts();
@@ -221,6 +221,10 @@
       },
 
       connectWebSocket() {
+        if (!this.wsUrl) {
+          console.warn('WebSocket URL no configurada (Notes); se omite la conexión.');
+          return;
+        }
         this.websocket = new WebSocket(this.wsUrl);
         this.websocket.onmessage = event => {
           const data = JSON.parse(event.data);

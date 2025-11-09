@@ -247,7 +247,8 @@
       connectUnreadWebSocket() {
         if (!this.userId) return;
 
-        this.wsNotify = new WebSocket(`${process.env.VUE_APP_WS_BASE_URL}ws/schedule/unread/user/${this.userId}/`);
+        const wsUrl = this.buildWsUrl(`ws/schedule/unread/user/${this.userId}/`);
+        this.wsNotify = new WebSocket(wsUrl);
 
         this.wsNotify.onopen = () => {
           console.log('[WS] Connected to unread counter for user', this.userId);

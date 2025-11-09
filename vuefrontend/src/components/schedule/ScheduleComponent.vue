@@ -87,7 +87,7 @@ export default {
       categoryTotals: [],
       // filteredEvents: [],
       websocket: null,
-      wsUrl: `${process.env.VUE_APP_WS_BASE_URL}ws/calendar-updates/`,
+      wsUrl: null,
       // categoryOrder: ['Rough', 'Roug-hWaitList', 'Trim', 'TrimWaitList', 'Others', 'Hourly'],
       initialCalendarOptions: {
         plugins: [interactionPlugin, resourceTimelinePlugin],
@@ -175,6 +175,7 @@ export default {
       authStore.setUser(data);
       this.userId = data.id;
       this.getCrews();
+      this.wsUrl = this.buildWsUrl('ws/calendar-updates/');
       this.connectWebSocket();
       this.updateCalendarPermissions();
   },

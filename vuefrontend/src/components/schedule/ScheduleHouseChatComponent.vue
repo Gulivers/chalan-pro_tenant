@@ -58,7 +58,7 @@ export default {
     const authStore = useAuthStore()
     this.user = authStore.user.value
     this.canSendMessage = this.hasPermission('appschedule.add_eventchatmessage')
-    this.wsUrl = `${process.env.VUE_APP_WS_BASE_URL}ws/schedule/event/${this.$props.eventId}/chat/`
+    this.wsUrl = this.buildWsUrl(`ws/schedule/event/${this.$props.eventId}/chat/`)
     console.log(`connect to WS event ${this.wsUrl}`)
     this.connectWebSocket()
     this.getMessages()
@@ -98,6 +98,10 @@ export default {
     },
 
     connectWebSocket() {
+      if (!this.wsUrl) {
+        console.warn('WebSocket URL no configurada (Chat); se omite la conexión.');
+        return;
+      }
       this.websocket = new WebSocket(this.wsUrl);
       this.websocket.onopen = () => {
         console.log('WebSocket connection established.');

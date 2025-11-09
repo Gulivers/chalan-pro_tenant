@@ -25,6 +25,13 @@ services:
         fromDatabase:
           name: chalan-db
           property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: chalan-redis
+          type: redis
+          property: connectionString
+      - key: ENABLE_WEBSOCKET_NOTIFICATIONS
+        value: "True"
   - type: static
     name: chalan-frontend
     rootDir: vuefrontend
@@ -39,3 +46,11 @@ services:
     envVars:
       - key: VUE_APP_API_BASE_URL
         value: https://chalan-backend.onrender.com
+      - key: VUE_APP_WS_BASE_URL
+        value: wss://chalan-backend.onrender.com/
+  - type: redis
+    name: chalan-redis
+    region: oregon
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+    plan: free

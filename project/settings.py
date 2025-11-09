@@ -30,7 +30,10 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-zf^1c+5%cj8m5k
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 # Parse ALLOWED_HOSTS from environment variable or use defaults
-allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', 'chalan-pro-cristian.onrender.com,chalan-pro-cristian.onrender.com,localhost,127.0.0.1')
+allowed_hosts_env = os.environ.get(
+    'ALLOWED_HOSTS',
+    'chalan-frontend.onrender.com,chalan-backend.onrender.com,localhost,127.0.0.1,192.168.0.248'
+)
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',')]
 
 MEDIA_URL = '/media/'
@@ -295,7 +298,7 @@ DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_DEFAULT_FROM', 'oliver@division16llc.
 FRONT_URL = os.environ.get('FRONT_URL', 'http://192.168.0.248:8080')
 
 # Channel Layers - Redis configuration
-REDIS_URL = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/0')
+REDIS_URL = os.environ.get('REDIS_URL')
 
 if REDIS_URL:
     CHANNEL_LAYERS = {
@@ -314,7 +317,7 @@ else:
         },
     }
 
-ENABLE_WEBSOCKET_NOTIFICATIONS = True
+ENABLE_WEBSOCKET_NOTIFICATIONS = os.environ.get('ENABLE_WEBSOCKET_NOTIFICATIONS', 'True') == 'True'
 
 LOG_DIR = os.path.join(BASE_DIR, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
