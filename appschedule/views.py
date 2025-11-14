@@ -620,14 +620,25 @@ class WeeklySupervisorStatsChartView(APIView):
         start_date_str = request.query_params.get('start_date')
         end_date_str = request.query_params.get('end_date')
         category = request.query_params.get('category')
+        weeks_param = request.query_params.get('weeks')
 
-        # Si no hay fechas en los query params, usar 12 semanas atrás hasta hoy
         today = datetime.today().date()
+
         try:
-            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date() if start_date_str else today - timedelta(weeks=12)
+            range_weeks = int(weeks_param) if weeks_param is not None else 16
+            if range_weeks < 1:
+                raise ValueError
+        except ValueError:
+            return Response({"error": "Invalid weeks parameter. It must be a positive integer."}, status=400)
+
+        try:
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date() if start_date_str else today - timedelta(weeks=range_weeks)
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date() if end_date_str else today
         except ValueError:
             return Response({"error": "Invalid date format. Use YYYY-MM-DD."}, status=400)
+
+        if start_date > end_date:
+            return Response({"error": "start_date cannot be after end_date."}, status=400)
 
         # Armamos filtro dinámico y lista de parámetros
         category_filter = ""
@@ -640,7 +651,7 @@ class WeeklySupervisorStatsChartView(APIView):
         with connection.cursor() as cursor:
             cursor.execute(f"""
                 SELECT
-                    DATE_SUB(e.date, INTERVAL WEEKDAY(e.date) DAY) AS week,
+                    DATE_TRUNC('week', e.date)::date AS week_start,
                     au.username AS supervisor,
                     COUNT(DISTINCT e.id) AS total_events
                 FROM appschedule_event e
@@ -653,8 +664,8 @@ class WeeklySupervisorStatsChartView(APIView):
                   AND e.is_absence = FALSE
                   AND e.date BETWEEN %s AND %s
                   {category_filter}
-                GROUP BY week, au.username
-                ORDER BY week, au.username
+                GROUP BY week_start, au.username
+                ORDER BY week_start, au.username
             """, params)
 
             rows = cursor.fetchall()
@@ -664,7 +675,7 @@ class WeeklySupervisorStatsChartView(APIView):
         labels_set = set()
 
         for week, supervisor, total in rows:
-            week_str = week.strftime('%m-%d-%Y')
+            week_str = week.strftime('%Y-%m-%d')
             labels_set.add(week_str)
             if supervisor not in data_map:
                 data_map[supervisor] = {}
@@ -691,8 +702,15 @@ class WeeklySupervisorStatsExcelView(APIView):
 
     def get(self, request):
         # Rango por semanas
-        range_weeks = int(request.query_params.get('weeks', 16))
+        weeks_param = request.query_params.get('weeks')
         today = datetime.today().date()
+
+        try:
+            range_weeks = int(weeks_param) if weeks_param is not None else 16
+            if range_weeks < 1:
+                raise ValueError
+        except ValueError:
+            return Response({"error": "Invalid weeks parameter. It must be a positive integer."}, status=400)
 
         # Fechas de filtro
         start_date_str = request.query_params.get('start_date')
@@ -705,6 +723,9 @@ class WeeklySupervisorStatsExcelView(APIView):
         except ValueError:
             return Response({"error": "Invalid date format. Use YYYY-MM-DD."}, status=400)
 
+        if start_date > end_date:
+            return Response({"error": "start_date cannot be after end_date."}, status=400)
+
         # Agregar filtro de categoría si se envía
         category_filter = ""
         params = [start_date, end_date]
@@ -716,7 +737,7 @@ class WeeklySupervisorStatsExcelView(APIView):
             cursor.execute(f"""
                 SELECT
                     cc.name AS category,
-                    DATE_SUB(e.date, INTERVAL WEEKDAY(e.date) DAY) AS week,
+                    DATE_TRUNC('week', e.date)::date AS week_start,
                     au.username AS supervisor,
                     COUNT(DISTINCT e.id) AS total_events
                 FROM appschedule_event e
@@ -729,8 +750,8 @@ class WeeklySupervisorStatsExcelView(APIView):
                   AND e.is_absence = FALSE
                   AND e.date BETWEEN %s AND %s
                   {category_filter}
-                GROUP BY cc.name, week, au.username
-                ORDER BY cc.name, week, au.username
+                GROUP BY cc.name, week_start, au.username
+                ORDER BY cc.name, week_start, au.username
             """, params)
 
             rows = cursor.fetchall()

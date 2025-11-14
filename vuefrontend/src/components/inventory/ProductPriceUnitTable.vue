@@ -242,6 +242,7 @@
       addRow(prefill = null) {
         const row = Object.assign(
           {
+            id: null,
             price_type: '',
             unit: '',
             is_purchase: false,

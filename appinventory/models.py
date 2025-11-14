@@ -135,7 +135,15 @@ class ProductPrice(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        unique_together = ("product", "price_type", "unit", "valid_from", "valid_until")
+        unique_together = (
+            "product",
+            "price_type",
+            "unit",
+            "is_purchase",
+            "is_sale",
+            "valid_from",
+            "valid_until",
+        )
         
     def clean(self):
         if not self.is_purchase and not self.is_sale:

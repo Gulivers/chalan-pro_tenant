@@ -377,6 +377,7 @@
             const ptid = typeof p.price_type === 'object' ? p.price_type?.id : p.price_type;
             const fb = flagsByUnit.get(uid) || { is_purchase: false, is_sale: false };
             return {
+              id: p.id || null,
               price_type: ptid,
               unit: uid,
               is_purchase: typeof p.is_purchase !== 'undefined' ? !!p.is_purchase : fb.is_purchase,
@@ -394,6 +395,7 @@
             const uid = this.normalizeId(u.unit);
             if (uid && !rows.some(r => r.unit === uid)) {
               rows.push({
+                id: null,
                 price_type: '',
                 unit: uid,
                 is_purchase: !!u.is_purchase,
@@ -411,6 +413,7 @@
           if (!this.productPriceUnits.length && !this.isReadOnly) {
             // ensure at least one empty row for UX on fresh create
             this.productPriceUnits.push({
+              id: null,
               price_type: '',
               unit: '',
               is_purchase: false,
@@ -473,8 +476,16 @@
           }
 
           if (priceTypeId && unitId) {
-            const key = `${unitId}|${priceTypeId}`;
-            if (comboSet.has(key)) errors.push(`Row ${idx + 1}: Duplicate (Unit, PriceType).`);
+            const key = [
+              unitId,
+              priceTypeId,
+              pu.is_purchase ? 1 : 0,
+              pu.is_sale ? 1 : 0,
+              pu.valid_from || null,
+              pu.valid_until || null,
+            ].join('|');
+            if (comboSet.has(key))
+              errors.push(`Row ${idx + 1}: Duplicate combination (Unit, Price Type, Flags, Dates).`);
             comboSet.add(key);
           }
 
@@ -517,26 +528,28 @@
           // 2) Clean payload (per Chalan‑Pro Policy: sanitize before sending)
           const cleanedPriceUnits = [];
           const cleanedPrices = [];
-          const unitSeen = new Set();
+          const unitFlags = new Map();
 
           this.productPriceUnits.forEach(pu => {
             const unitId = this.normalizeId(pu.unit);
             const priceTypeId = this.normalizeId(pu.price_type);
+            const priceId =
+              pu.id === undefined || pu.id === null ? null : this.normalizeId(pu.id);
 
-            // units table for flags (dedupe per unit)
-            if (unitId && !unitSeen.has(unitId)) {
-              cleanedPriceUnits.push({
-                unit: unitId,
-                is_purchase: !!pu.is_purchase,
-                is_sale: !!pu.is_sale,
+            // units table for flags (agrupar por unidad con OR lógico)
+            if (unitId) {
+              const prev = unitFlags.get(unitId) || { is_purchase: false, is_sale: false };
+              unitFlags.set(unitId, {
+                is_purchase: prev.is_purchase || !!pu.is_purchase,
+                is_sale: prev.is_sale || !!pu.is_sale,
               });
-              unitSeen.add(unitId);
             }
 
             // prices table (complete entries only)
             const priceValue = pu.price === '' || pu.price === null || pu.price === undefined ? null : Number(pu.price);
             if (unitId && priceTypeId && priceValue !== null && !Number.isNaN(priceValue)) {
               cleanedPrices.push({
+                id: priceId,
                 unit: unitId,
                 price_type: priceTypeId,
                 price: priceValue,
@@ -548,6 +561,14 @@
                 is_active: pu.is_active !== false,
               });
             }
+          });
+
+          unitFlags.forEach((flags, unitId) => {
+            cleanedPriceUnits.push({
+              unit: unitId,
+              is_purchase: flags.is_purchase,
+              is_sale: flags.is_sale,
+            });
           });
 
           const payload = {

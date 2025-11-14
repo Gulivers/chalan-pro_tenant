@@ -3,7 +3,9 @@ from appinventory.models import (
     Warehouse, ProductCategory, ProductBrand, Product, UnitOfMeasure, 
     UnitCategory, PriceType, ProductPrice
 )
-from django.db import transaction
+from django.db import transaction, IntegrityError
+import logging
+logger = logging.getLogger(__name__)
 
 # Serializador para almacenes
 class WarehouseSerializer(serializers.ModelSerializer):
@@ -31,6 +33,8 @@ class ProductBrandSerializer(serializers.ModelSerializer):
 
 # Serializador para precios de productos
 class ProductPriceSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+
     class Meta:
         model = ProductPrice
         fields = [
@@ -55,10 +59,28 @@ class ProductSerializer(serializers.ModelSerializer):
     def validate_prices(self, value):
         seen = set()
         for item in value:
-            key = (item.get('price_type'), item.get('unit'), item.get('valid_from'), item.get('valid_until'))
+            price_type_id = item.get('price_type')
+            unit_id = item.get('unit')
+            is_purchase = bool(item.get('is_purchase'))
+            is_sale = bool(item.get('is_sale'))
+            valid_from = item.get('valid_from') or None
+            valid_until = item.get('valid_until') or None
+
+            # Normalizar fechas: cadenas vacías → None
+            key = (
+                price_type_id,
+                unit_id,
+                is_purchase,
+                is_sale,
+                valid_from,
+                valid_until,
+            )
             if key in seen:
-                raise serializers.ValidationError(f"Duplicate price for type/unit/period: {key}")
+                raise serializers.ValidationError(
+                    "Duplicate price combination (unit, price type, flags, dates)."
+                )
             seen.add(key)
+
         return value
 
     def validate_brands_data(self, value):
@@ -95,37 +117,70 @@ class ProductSerializer(serializers.ModelSerializer):
                 product.ensure_default_brand()
 
             for price_data in prices_data:
-                ProductPrice.objects.create(product=product, **price_data)
+                payload = price_data.copy()
+                payload.pop('id', None)
+                ProductPrice.objects.create(product=product, **payload)
 
         return product
 
     def update(self, instance, validated_data):
-        prices_data = validated_data.pop('prices', [])
+        prices_data = validated_data.pop('prices', None)
         brands_data = validated_data.pop('brands_data', None)
 
-        # Actualizar marcas si se proporcionan
-        if brands_data is not None:
-            brands = ProductBrand.objects.filter(id__in=brands_data)
-            instance.brands.set(brands)
-            
-            # Mantener validación: debe tener al menos una marca
-            if len(brands_data) == 0:
-                raise serializers.ValidationError({
-                    'brands_data': 'El producto debe tener al menos una marca asignada.'
-                })
-            
-            # Reajustar marca default si es necesario
-            instance.ensure_default_brand()
+        with transaction.atomic():
+            # Actualizar marcas si se proporcionan
+            if brands_data is not None:
+                brands = ProductBrand.objects.filter(id__in=brands_data)
+                instance.brands.set(brands)
 
-        # Actualiza campos del producto
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
+                # Mantener validación: debe tener al menos una marca
+                if len(brands_data) == 0:
+                    raise serializers.ValidationError({
+                        'brands_data': 'El producto debe tener al menos una marca asignada.'
+                    })
 
-        # Elimina precios anteriores y guarda nuevos
-        instance.prices.all().delete()
-        for price_data in prices_data:
-            ProductPrice.objects.create(product=instance, **price_data)
+                # Reajustar marca default si es necesario
+                instance.ensure_default_brand()
+
+            # Actualiza campos del producto
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+            instance.save()
+
+            if prices_data is not None:
+                existing_prices = {price.id: price for price in instance.prices.all()}
+                seen_ids = set()
+
+                for price_data in prices_data:
+                    payload = price_data.copy()
+                    price_id = payload.pop('id', None)
+
+                    # Normalizar fechas vacías a None
+                    if payload.get('valid_from') in ('', None):
+                        payload['valid_from'] = None
+                    if payload.get('valid_until') in ('', None):
+                        payload['valid_until'] = None
+
+                    try:
+                        if price_id and price_id in existing_prices:
+                            price_obj = existing_prices[price_id]
+                            for attr, value in payload.items():
+                                setattr(price_obj, attr, value)
+                            price_obj.full_clean()
+                            price_obj.save()
+                            seen_ids.add(price_id)
+                        else:
+                            new_price = ProductPrice.objects.create(product=instance, **payload)
+                            seen_ids.add(new_price.id)
+                    except IntegrityError as exc:
+                        raise serializers.ValidationError({
+                            'prices': [f'Duplicate price combination (unit, price type, flags, dates). DB says: {exc}']
+                        }) from exc
+
+                # Eliminar precios que ya no vienen en el payload
+                for price_id, price_obj in existing_prices.items():
+                    if price_id not in seen_ids:
+                        price_obj.delete()
 
         return instance
 

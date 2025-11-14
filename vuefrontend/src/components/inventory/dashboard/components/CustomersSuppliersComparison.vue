@@ -1,15 +1,14 @@
 <template>
   <div class="customers-suppliers-comparison">
-    <div v-if="loading" class="text-center py-4">
-      <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+    <div v-if="!hasData" class="text-center py-4">
+      <div v-if="loading">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+        </div>
+        <div class="mt-2">
+          <small class="text-muted">Loading ...</small>
+        </div>
       </div>
-      <div class="mt-2">
-        <small class="text-muted">Loading ...</small>
-      </div>
-    </div>
-    
-    <div v-else-if="!Array.isArray(comparisonData) || comparisonData.length === 0" class="text-center py-4">
-      <div class="alert alert-info">
+      <div v-else class="alert alert-info">
         <i class="fas fa-info-circle"></i>
         No comparison data available
       </div>
@@ -35,6 +34,10 @@
       <!-- Canvas del gráfico -->
       <div class="chart-container mb-3">
         <canvas ref="chartCanvas"></canvas>
+        <div v-if="loading" class="loading-overlay d-flex flex-column align-items-center justify-content-center">
+          <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
+          <small class="text-muted mt-2">Refreshing data...</small>
+        </div>
       </div>
 
         <!-- Resumen de métricas -->
@@ -109,7 +112,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted, onUnmounted, watch, computed, nextTick } from 'vue';
+import { defineComponent, ref, shallowRef, onMounted, onUnmounted, watch, computed, nextTick } from 'vue';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 
@@ -128,8 +131,8 @@ export default defineComponent({
   emits: ['refresh'],
   setup(props, { emit }) {
     const chartCanvas = ref(null);
-    const chartInstance = ref(null);
-    const isCreatingChart = ref(false);
+    const chartInstance = shallowRef(null);
+    const hasData = computed(() => Array.isArray(props.comparisonData) && props.comparisonData.length > 0);
 
     const formatCurrency = (value) => {
       if (!value) return '0.00';
@@ -193,26 +196,12 @@ export default defineComponent({
       return Math.round(totalPurchases.value / 1000); // Estimación aproximada
     });
 
-    const createChart = (retryCount = 0) => {
-      // Evitar múltiples llamadas simultáneas
-      if (isCreatingChart.value && retryCount === 0) {
+    const renderChart = async () => {
+      if (props.loading) {
         return;
       }
-      
-      isCreatingChart.value = true;
-      
-      try {
-        // Verificar si el componente sigue montado
-        if (!chartCanvas.value || !chartCanvas.value.getContext) {
-          if (retryCount < 3) {
-            setTimeout(() => {
-              createChart(retryCount + 1);
-            }, 200);
-          }
-          return;
-        }
 
-        // Destruir instancia anterior de forma segura
+      if (!hasData.value) {
         if (chartInstance.value) {
           try {
             chartInstance.value.destroy();
@@ -221,169 +210,145 @@ export default defineComponent({
           }
           chartInstance.value = null;
         }
+        return;
+      }
 
-        if (!Array.isArray(props.comparisonData) || props.comparisonData.length === 0) {
-          return;
-        }
+      await nextTick();
 
-        // Verificar que el canvas sigue siendo válido
-        if (!chartCanvas.value || !chartCanvas.value.getContext) {
-          return;
-        }
+      const canvasEl = chartCanvas.value;
+      if (!canvasEl) {
+        return;
+      }
 
       const labels = props.comparisonData.map(item => item.month || 'N/A');
       const salesData = props.comparisonData.map(item => item.sales || 0);
       const purchasesData = props.comparisonData.map(item => item.purchases || 0);
 
-      chartInstance.value = new Chart(chartCanvas.value, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: 'Customer Sales',
-              data: salesData,
-              borderColor: 'rgba(40, 167, 69, 1)',
-              backgroundColor: 'rgba(40, 167, 69, 0.1)',
-              fill: true,
-              tension: 0.4
-            },
-            {
-              label: 'Supplier Purchases',
-              data: purchasesData,
-              borderColor: 'rgba(220, 53, 69, 1)',
-              backgroundColor: 'rgba(220, 53, 69, 0.1)',
-              fill: true,
-              tension: 0.4
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: {
-            duration: 0
+      if (!chartInstance.value) {
+        chartInstance.value = new Chart(canvasEl, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Customer Sales',
+                data: salesData,
+                borderColor: 'rgba(40, 167, 69, 1)',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                fill: true,
+                tension: 0.4,
+              },
+              {
+                label: 'Supplier Purchases',
+                data: purchasesData,
+                borderColor: 'rgba(220, 53, 69, 1)',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                fill: true,
+                tension: 0.4,
+              },
+            ],
           },
-          plugins: {
-            title: {
-              display: true,
-              text: 'Sales vs Purchases Comparison (Last 12 Months)',
-              font: {
-                size: 16,
-                weight: 'bold'
-              }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+              duration: 0,
             },
-            legend: {
-              display: true,
-              position: 'top'
+            plugins: {
+              title: {
+                display: true,
+                text: 'Sales vs Purchases Comparison (Last 12 Months)',
+                font: {
+                  size: 16,
+                  weight: 'bold',
+                },
+              },
+              legend: {
+                display: true,
+                position: 'top',
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                  label: function (context) {
+                    const month = props.comparisonData[context.dataIndex];
+                    const margin = getMarginPercentage(month);
+                    return [
+                      `${context.dataset.label}: $${(context.parsed.y || 0).toLocaleString()}`,
+                      `Margin: ${margin}%`,
+                    ];
+                  },
+                },
+              },
             },
-            tooltip: {
-              mode: 'index',
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: 'Month',
+                },
+              },
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Amount ($)',
+                },
+              },
+            },
+            interaction: {
+              mode: 'nearest',
+              axis: 'x',
               intersect: false,
-              callbacks: {
-                label: function(context) {
-                  const month = props.comparisonData[context.dataIndex];
-                  const margin = getMarginPercentage(month);
-                  return [
-                    `${context.dataset.label}: $${(context.parsed.y || 0).toLocaleString()}`,
-                    `Margin: ${margin}%`
-                  ];
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              title: {
-                display: true,
-                text: 'Month'
-              }
             },
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: 'Amount ($)'
-              }
-            }
           },
-          interaction: {
-            mode: 'nearest',
-            axis: 'x',
-            intersect: false
-          }
-        }
-      });
-      
-      // Chart creado exitosamente
-      isCreatingChart.value = false;
-      
-      } catch (error) {
-        console.warn('Chart creation error:', error);
-        
-        // Limpiar instancia de forma segura
-        if (chartInstance.value) {
-          try {
-            chartInstance.value.destroy();
-          } catch (destroyError) {
-            console.warn('Error destroying chart after creation error:', destroyError);
-          }
-          chartInstance.value = null;
-        }
-        
-        // Reintentar si hay error y el componente sigue montado
-        if (retryCount < 3 && chartCanvas.value) {
-          setTimeout(() => {
-            createChart(retryCount + 1);
-          }, 500);
-        } else {
-          // Si no se puede reintentar, liberar el flag
-          isCreatingChart.value = false;
-        }
+        });
+        return;
       }
+
+      const chart = chartInstance.value;
+      chart.data.labels = labels;
+      if (chart.data.datasets.length >= 2) {
+        chart.data.datasets[0].data = salesData;
+        chart.data.datasets[1].data = purchasesData;
+      }
+      chart.update('none');
     };
 
     const refreshChart = () => {
       emit('refresh');
-      // Solo crear chart si no está en proceso de creación
-      if (!isCreatingChart.value) {
-        setTimeout(() => {
-          createChart();
-        }, 300);
-      }
     };
 
     // Watch for changes in comparisonData
     watch(
       () => props.comparisonData,
       async (newData) => {
-        if (newData && Array.isArray(newData) && newData.length > 0 && !isCreatingChart.value) {
-          await nextTick();
-          await nextTick();
-          setTimeout(() => {
-            if (!isCreatingChart.value) {
-              createChart();
-            }
-          }, 100);
+        if (newData && Array.isArray(newData)) {
+          await renderChart();
+        } else if (chartInstance.value) {
+          chartInstance.value.destroy();
+          chartInstance.value = null;
         }
       },
       { deep: true, immediate: true }
     );
 
-    onMounted(async () => {
-      await nextTick();
-      await nextTick();
-      setTimeout(() => {
-        if (!isCreatingChart.value) {
-          createChart();
+    watch(
+      () => props.loading,
+      async (isLoading) => {
+        if (!isLoading) {
+          await renderChart();
         }
-      }, 100);
+      },
+      { immediate: true }
+    );
+
+    onMounted(async () => {
+      await renderChart();
     });
 
     onUnmounted(() => {
-      // Marcar que el componente se está desmontando
-      isCreatingChart.value = true;
-      
       // Destruir chart de forma segura
       if (chartInstance.value) {
         try {
@@ -407,7 +372,8 @@ export default defineComponent({
       totalPurchases,
       salesCount,
       purchasesCount,
-      refreshChart
+      refreshChart,
+      hasData
     };
   }
 });
