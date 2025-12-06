@@ -88,7 +88,7 @@ if DEBUG:
 # Nota: Django no soporta wildcards (*) directamente, pero django-tenants maneja esto
 allowed_hosts_env = os.environ.get(
     'ALLOWED_HOSTS',
-    'chalan-frontend.onrender.com,chalan-backend.onrender.com,localhost,127.0.0.1,192.168.0.248,www.chalanpro.net,chalanpro.net,.chalan-pro.net,.onrender.com'
+    'chalan-frontend.onrender.com,chalan-backend.onrender.com,localhost,127.0.0.1,192.168.0.248,www.chalanpro.net,chalanpro.net,api.chalanpro.net,www.api.chalanpro.net,.chalan-pro.net,.onrender.com'
 )
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',')]
 
@@ -213,7 +213,7 @@ MIDDLEWARE = [
 # Ver: tenants/apps.py (TenantsConfig.ready) y project/middleware/dynamic_csrf.py
 # No es necesario agregar dominios manualmente - se cargan automáticamente al iniciar Django
 # CSRF Trusted Origins - Incluir dominios de producción
-default_csrf_origins = 'http://localhost:8080,http://192.168.0.248:8080,http://192.168.0.248:3000,http://localhost:8000,http://192.168.0.248:8000,http://localhost:3000,https://www.chalanpro.net,https://chalanpro.net,https://chalan-backend.onrender.com,https://chalan-frontend.onrender.com'
+default_csrf_origins = 'http://localhost:8080,http://192.168.0.248:8080,http://192.168.0.248:3000,http://localhost:8000,http://192.168.0.248:8000,http://localhost:3000,https://www.chalanpro.net,https://chalanpro.net,https://api.chalanpro.net,https://www.api.chalanpro.net,https://chalan-backend.onrender.com,https://chalan-frontend.onrender.com'
 csrf_origins_env = os.environ.get('CSRF_TRUSTED_ORIGINS', default_csrf_origins)
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins_env.split(',') if origin.strip()]
 
@@ -222,6 +222,8 @@ if not DEBUG:
     production_origins = [
         'https://www.chalanpro.net',
         'https://chalanpro.net',
+        'https://api.chalanpro.net',
+        'https://www.api.chalanpro.net',
         'https://chalan-backend.onrender.com',
         'https://chalan-frontend.onrender.com',
     ]
