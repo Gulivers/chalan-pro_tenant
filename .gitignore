@@ -53,6 +53,9 @@ appcontacts/migrations/*
 appinventory/migrations/*
 !appinventory/migrations/__init__.py
 
+tenants/migrations/*
+!tenants/migrations/__init__.py
+
 # Ignore settings.py (commented out - needed for Render deployment)
 # project/settings.py
 
