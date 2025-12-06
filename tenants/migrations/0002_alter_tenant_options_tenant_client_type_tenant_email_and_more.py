@@ -35,11 +35,18 @@ class Migration(migrations.Migration):
                 DROP COLUMN IF EXISTS client_type;
             """,
         ),
-        # Agregar el campo al modelo para que Django lo reconozca
-        migrations.AddField(
-            model_name='tenant',
-            name='client_type',
-            field=models.CharField(choices=[('electric', 'Electric'), ('air_conditioning', 'Air Conditioning'), ('solar', 'Solar'), ('plumbing', 'Plumbing'), ('hvac', 'HVAC'), ('general', 'General')], default='general', max_length=50, verbose_name='Tipo de Cliente'),
+        # Usar SeparateDatabaseAndState para agregar el campo al modelo sin tocar la BD
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                # No hacer nada en la BD, ya lo hicimos arriba
+            ],
+            state_operations=[
+                migrations.AddField(
+                    model_name='tenant',
+                    name='client_type',
+                    field=models.CharField(choices=[('electric', 'Electric'), ('air_conditioning', 'Air Conditioning'), ('solar', 'Solar'), ('plumbing', 'Plumbing'), ('hvac', 'HVAC'), ('general', 'General')], default='general', max_length=50, verbose_name='Tipo de Cliente'),
+                ),
+            ],
         ),
         migrations.AddField(
             model_name='tenant',
