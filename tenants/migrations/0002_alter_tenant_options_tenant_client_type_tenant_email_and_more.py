@@ -14,6 +14,28 @@ class Migration(migrations.Migration):
             name='tenant',
             options={'ordering': ['name'], 'verbose_name': 'Tenant', 'verbose_name_plural': 'Tenants'},
         ),
+        # Usar RunSQL para agregar client_type solo si no existe
+        migrations.RunSQL(
+            sql="""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_schema = 'public' 
+                        AND table_name = 'tenants_tenant' 
+                        AND column_name = 'client_type'
+                    ) THEN
+                        ALTER TABLE public.tenants_tenant 
+                        ADD COLUMN client_type VARCHAR(50) DEFAULT 'general';
+                    END IF;
+                END $$;
+            """,
+            reverse_sql="""
+                ALTER TABLE public.tenants_tenant 
+                DROP COLUMN IF EXISTS client_type;
+            """,
+        ),
+        # Agregar el campo al modelo para que Django lo reconozca
         migrations.AddField(
             model_name='tenant',
             name='client_type',
