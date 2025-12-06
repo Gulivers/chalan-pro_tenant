@@ -8,7 +8,6 @@ services:
       pip install --upgrade pip
       pip install -r requirements.txt
     startCommand: |
-      python manage.py migrate --noinput || echo "Migration failed, continuing..."
       python manage.py collectstatic --noinput || echo "Collectstatic failed, continuing..."
       daphne -b 0.0.0.0 -p $PORT project.asgi:application
     autoDeploy: true

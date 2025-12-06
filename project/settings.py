@@ -29,42 +29,156 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-zf^1c+5%cj8m5k
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
+# En desarrollo, deshabilitar validación estricta de RFC para hostnames ANTES de parsear ALLOWED_HOSTS
+# Django valida hostnames según RFC 1034/1035, pero en desarrollo local necesitamos flexibilidad
+# para permitir guiones bajos en subdominios (ej: globo_dyned2.chalan-pro.net)
+# IMPORTANTE: Esto debe hacerse ANTES de que Django importe y use validate_host
+if DEBUG:
+    # Monkey patch para permitir hostnames con guiones bajos en desarrollo
+    # Hacer esto muy temprano, antes de que Django valide cualquier hostname
+    try:
+        import django.http.request
+        
+        # Guardar la función original si existe
+        if hasattr(django.http.request, 'validate_host'):
+            _original_validate_host = django.http.request.validate_host
+        else:
+            # Si no existe aún, crear una referencia para más tarde
+            _original_validate_host = None
+        
+        def _relaxed_validate_host(host, allowed_hosts):
+            """
+            Validación relajada de hostnames para desarrollo.
+            Permite guiones bajos en hostnames locales.
+            """
+            # Remover puerto si existe
+            host_without_port = host.split(':')[0] if ':' in host else host
+            
+            # Si el hostname contiene guiones bajos, usar validación relajada
+            if '_' in host_without_port:
+                # Verificar si está en allowed_hosts (exacto o con wildcard)
+                if host_without_port in allowed_hosts:
+                    return True
+                # Verificar wildcards (ej: .chalan-pro.net)
+                for allowed_host in allowed_hosts:
+                    if allowed_host.startswith('.') and host_without_port.endswith(allowed_host):
+                        return True
+                # Si no está en allowed_hosts pero tiene guion bajo, permitirlo en desarrollo
+                # (esto es para desarrollo local donde los schemas pueden tener guiones bajos)
+                return True
+            
+            # Para hostnames sin guiones bajos, usar validación estándar
+            if _original_validate_host:
+                return _original_validate_host(host, allowed_hosts)
+            # Fallback: validación básica
+            return host_without_port in allowed_hosts or any(
+                allowed_host.startswith('.') and host_without_port.endswith(allowed_host)
+                for allowed_host in allowed_hosts
+            )
+        
+        # Reemplazar la función de validación solo en desarrollo
+        django.http.request.validate_host = _relaxed_validate_host
+    except Exception:
+        # Si hay error al aplicar el monkey patch, continuar sin él
+        # El middleware debería manejar la normalización
+        pass
+
 # Parse ALLOWED_HOSTS from environment variable or use defaults
+# Para multi-tenant, necesitamos soportar subdominios
+# Nota: Django no soporta wildcards (*) directamente, pero django-tenants maneja esto
 allowed_hosts_env = os.environ.get(
     'ALLOWED_HOSTS',
-    'chalan-frontend.onrender.com,chalan-backend.onrender.com,localhost,127.0.0.1,192.168.0.248'
+    'chalan-frontend.onrender.com,chalan-backend.onrender.com,localhost,127.0.0.1,192.168.0.248,www.chalanpro.net,chalanpro.net,.chalan-pro.net,.onrender.com'
 )
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',')]
+
+# Configuración de dominios para django-tenants (definir ANTES de usar)
+# Dominio base para los tenants (usado en onboarding) - DEBE estar antes de su uso
+TENANT_BASE_DOMAIN = os.environ.get('TENANT_BASE_DOMAIN', 'chalan-pro.net')
+# Dominio público (para acceder al admin global)
+PUBLIC_SCHEMA_URLCONF = 'project.urls_public'
+# Dominio por defecto para desarrollo local
+TENANT_SUBFOLDER_PREFIX = ''
+
+# Para desarrollo local, definir subdominios comunes (se usan en múltiples lugares)
+# Lista de subdominios comunes para desarrollo local - definida fuera del bloque if para que esté disponible
+_COMMON_TENANT_SUBDOMAINS = ['globo_dyned2', 'phoenix']
+
+# Para desarrollo local, agregar subdominios comunes dinámicamente a ALLOWED_HOSTS
+# Nota: El middleware TenantHostnameNormalizerMiddleware removerá el puerto del hostname,
+# pero necesitamos los hostnames sin puerto en ALLOWED_HOSTS para que Django los acepte
+# después de que el middleware normalice el hostname
+if DEBUG:
+    base_domain = TENANT_BASE_DOMAIN
+    
+    # Agregar a ALLOWED_HOSTS (sin puerto, porque el middleware lo remueve)
+    for subdomain in _COMMON_TENANT_SUBDOMAINS:
+        full_domain = f'{subdomain}.{base_domain}'
+        if full_domain not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(full_domain)
+    
+    # Agregar dominios específicos de tenants conocidos
+    specific_domains_for_allowed_hosts = [
+        'my-house-constructions.chalan-pro.net',
+        # Agregar más dominios específicos aquí si es necesario
+    ]
+    for domain in specific_domains_for_allowed_hosts:
+        if domain not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(domain)
+
+# Configuración para desarrollo local
+# Permitir acceso al schema public si no se encuentra tenant
+SHOW_PUBLIC_IF_NO_TENANT_FOUND = True
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Application definition
+# IMPORTANTE: django-tenants debe ir PRIMERO en INSTALLED_APPS
+# Las apps compartidas (SHARED_APPS) van en el schema 'public'
+# Las apps de tenant (TENANT_APPS) van en cada schema de tenant
 
-INSTALLED_APPS = [
-    'daphne',
-    'channels',
-    'django.contrib.admin',
-    'django.contrib.auth',
+SHARED_APPS = [
+    'django_tenants',  # Debe ir primero
+    'tenants',  # App del modelo Tenant (en schema public)
+    'daphne',  # Debe ir antes de django.contrib.staticfiles
     'django.contrib.contenttypes',
+    'django.contrib.auth',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.admin',
     'django.contrib.staticfiles',
+    'channels',
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
-    # 'rest_framework_expiring_authtoken',
+    'corsheaders',
+    'project',  # Configuración del proyecto
+]
+
+TENANT_APPS = [
+    'daphne',  # Debe ir antes de django.contrib.staticfiles
+    'django.contrib.contenttypes',
+    'django.contrib.auth',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.admin',
+    'django.contrib.staticfiles',
+    'channels',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'django_filters',
     'corsheaders',
     'auditapp',
     'ctrctsapp',
     'crewsapp',
     'appschedule',
-    'project',
     'appinventory',
     'apptransactions',
     'appcore',
-
 ]
+
+INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 #ASGI_APPLICATION = 'project.asgi.application'
 
@@ -75,6 +189,12 @@ INSTALLED_APPS = [
 #}
 
 MIDDLEWARE = [
+    # Middleware personalizado para normalizar hostname (remover puerto) - DEBE ir ANTES de TenantMainMiddleware
+    'project.middleware.tenant_hostname.TenantHostnameNormalizerMiddleware',
+    # django-tenants middleware DEBE ir después del normalizador para detectar el tenant
+    'django_tenants.middleware.main.TenantMainMiddleware',
+    # Middleware para actualizar CSRF_TRUSTED_ORIGINS dinámicamente (debe ir antes de CsrfViewMiddleware)
+    'project.middleware.dynamic_csrf.DynamicCSRFMiddleware',
     'project.DisableCSRF.DisableCSRF',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -89,8 +209,56 @@ MIDDLEWARE = [
 
 # Si usas sesiones de autenticación (en lugar de TokenAuthentication), habilita CSRF
 # CSRF Trusted Origins
-csrf_origins_env = os.environ.get('CSRF_TRUSTED_ORIGINS', 'http://localhost:8080,http://192.168.0.248:8080,http://192.168.0.248:3000')
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins_env.split(',')]
+# Los dominios se cargan DINÁMICAMENTE desde la BD (tabla public.tenants_domain)
+# Ver: tenants/apps.py (TenantsConfig.ready) y project/middleware/dynamic_csrf.py
+# No es necesario agregar dominios manualmente - se cargan automáticamente al iniciar Django
+# CSRF Trusted Origins - Incluir dominios de producción
+default_csrf_origins = 'http://localhost:8080,http://192.168.0.248:8080,http://192.168.0.248:3000,http://localhost:8000,http://192.168.0.248:8000,http://localhost:3000,https://www.chalanpro.net,https://chalanpro.net,https://chalan-backend.onrender.com,https://chalan-frontend.onrender.com'
+csrf_origins_env = os.environ.get('CSRF_TRUSTED_ORIGINS', default_csrf_origins)
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins_env.split(',') if origin.strip()]
+
+# Agregar dominios de producción si no están en DEBUG
+if not DEBUG:
+    production_origins = [
+        'https://www.chalanpro.net',
+        'https://chalanpro.net',
+        'https://chalan-backend.onrender.com',
+        'https://chalan-frontend.onrender.com',
+    ]
+    for origin in production_origins:
+        if origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
+
+# Para desarrollo local, agregar subdominios de tenants a CSRF_TRUSTED_ORIGINS
+# Nota: Esto es diferente de ALLOWED_HOSTS - CSRF_TRUSTED_ORIGINS necesita la URL completa con protocolo
+if DEBUG:
+    # Agregar orígenes adicionales para desarrollo local (solo cuando DEBUG=True)
+    additional_dev_origins = [
+        'http://192.168.0.248:8000',  # IP local para acceso al admin de Django
+        'http://127.0.0.1:8000',      # localhost alternativo
+    ]
+    for origin in additional_dev_origins:
+        if origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
+    
+    # Usar la misma lista de subdominios que se usó para ALLOWED_HOSTS
+    # pero generar URLs completas con protocolo y puerto para CSRF
+    _common_ports = ['8000', '3000', '8080']
+    
+    # Generar todas las combinaciones de subdominios y puertos para CSRF_TRUSTED_ORIGINS
+    base_domain = TENANT_BASE_DOMAIN
+    common_ports = ['8000', '3000', '8080']
+    
+    for subdomain in _COMMON_TENANT_SUBDOMAINS:
+        for port in common_ports:
+            origin = f'http://{subdomain}.{base_domain}:{port}'
+            if origin not in CSRF_TRUSTED_ORIGINS:
+                CSRF_TRUSTED_ORIGINS.append(origin)
+    
+    # Los dominios se cargarán dinámicamente desde la BD usando:
+    # 1. TenantsConfig.ready() - cuando Django inicializa (en tenants/apps.py)
+    # 2. DynamicCSRFMiddleware - actualización en tiempo real durante requests
+    # Esto elimina la necesidad de agregar dominios manualmente
 
 
 # Permitir todas las solicitudes desde el frontend
@@ -197,34 +365,44 @@ ASGI_APPLICATION = "project.asgi.application"
 #    }
 #}
 
-# Database configuration - Supports PostgreSQL (Render) and MySQL
+# Database configuration - Multi-tenant con django-tenants
+# IMPORTANTE: django-tenants SOLO funciona con PostgreSQL
 import dj_database_url
 
-# First, try to use DATABASE_URL from environment (Render PostgreSQL)
+# Configuración de django-tenants
+DATABASE_ROUTERS = (
+    'django_tenants.routers.TenantSyncRouter',
+)
+
+# Nombre del modelo Tenant
+TENANT_MODEL = "tenants.Tenant"  # "app.Model"
+TENANT_DOMAIN_MODEL = "tenants.Domain"  # "app.Model"
+
+# Configuración de la base de datos
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
     # Use PostgreSQL with Render's DATABASE_URL
+    db_config = dj_database_url.config(
+        default=DATABASE_URL,
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+    # Cambiar el ENGINE a django-tenants
+    db_config['ENGINE'] = 'django_tenants.postgresql_backend'
     DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
+        'default': db_config
     }
 else:
-    # Fallback to MySQL (local development)
+    # Configuración local con PostgreSQL
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('MYSQL_DATABASE', 'chalan_sch_txn'),
-            'USER': os.environ.get('MYSQL_USER', 'oliver'),
-            'PASSWORD': os.environ.get('MYSQL_PASSWORD', '13694344Om$'),
-            'HOST': os.environ.get('MYSQL_HOST', 'localhost'),
-            'PORT': os.environ.get('MYSQL_PORT', 3306),
-            'OPTIONS': {
-                'charset': 'utf8mb4',
-            },
+            'ENGINE': 'django_tenants.postgresql_backend',  # IMPORTANTE: usar este engine
+            'NAME': os.environ.get('POSTGRES_DB', 'chalan_sch_per_tenant'),
+            'USER': os.environ.get('POSTGRES_USER', 'postgres'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'chalan2024'),
+            'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
+            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
         }
     }
 
