@@ -63,3 +63,6 @@ tenants/migrations/*
 vuefrontend/src/main.js
 vuefrontend/.env.local
 vuefrontend/.env
+
+# Ignore readme directory
+readme/
