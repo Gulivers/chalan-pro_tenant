@@ -1,0 +1,637 @@
+/* ==============================================================
+   CHALAN-PRO — THEME SYSTEM (Ocean Dark + Light Corporate) (v5.0)
+   Base: Ocean Dark (landing CSS) + Light mode estilo Bootstrap 5.3
+   CSS Variables powered (Bootstrap style) + data-theme switch
+   ============================================================== */
+
+/* ----------------------------------------------------------------
+   BASE VARIABLES (DEFAULT = OCEAN DARK)
+   ---------------------------------------------------------------- */
+
+   :root {
+    /* Brand Colors (Ocean) */
+    --cp-indigo:#395ecb;
+    --cp-indigo-2:#4e73df;
+    --cp-cyan:#00d4ff;
+    --cp-blue:#0088ff;
+  
+    /* Backgrounds (Ocean) */
+    --cp-bg-1:#0f1419;
+    --cp-bg-2:#1a2332;
+  
+    /* Text Colors (Ocean) */
+    --cp-text-1:#8b95a5;
+    --cp-text-2:#f5f7fa;
+  
+    /* Glass */
+    --cp-glass:rgba(255,255,255,.06);
+    --cp-border:rgba(0,212,255,.35);
+  
+    /* Bootstrap tokens (default tuned to Ocean) */
+    --bs-body-bg: transparent !important;
+    --bs-body-color: var(--cp-text-2);
+    --bs-card-bg: rgba(255,255,255,.03);
+    --bs-card-color: var(--cp-text-2);
+    --bs-border-color: rgba(255,255,255,.08);
+  
+    --bs-primary: var(--cp-indigo-2);
+    --bs-secondary: #2a3242;
+    --bs-success: #1cc88a;
+    --bs-info: var(--cp-cyan);
+    --bs-warning: #ffcc67;
+    --bs-danger: #ff6b6b;
+  }
+  
+  /* Ocean Dark explicit (for data-theme="ocean") */
+  :root[data-theme="ocean"] {
+    --cp-indigo:#395ecb;
+    --cp-indigo-2:#4e73df;
+    --cp-cyan:#00d4ff;
+    --cp-blue:#0088ff;
+  
+    --cp-bg-1:#0f1419;
+    --cp-bg-2:#1a2332;
+  
+    --cp-text-1:#8b95a5;
+    --cp-text-2:#f5f7fa;
+  
+    --cp-glass:rgba(255,255,255,.06);
+    --cp-border:rgba(0,212,255,.35);
+  
+    --bs-body-bg: transparent !important;
+    --bs-body-color: var(--cp-text-2);
+    --bs-card-bg: rgba(255,255,255,.03);
+    --bs-card-color: var(--cp-text-2);
+    --bs-border-color: rgba(255,255,255,.08);
+  
+    --bs-primary: var(--cp-indigo-2);
+    --bs-secondary: #2a3242;
+    --bs-success: #1cc88a;
+    --bs-info: var(--cp-cyan);
+    --bs-warning: #ffcc67;
+    --bs-danger: #ff6b6b;
+  }
+  
+  /* Light Corporate (for data-theme="light") */
+  :root[data-theme="light"] {
+    /* mantenemos branding azul Chalan-Pro */
+    --cp-indigo:#395ecb;
+    --cp-indigo-2:#4e73df;
+    --cp-cyan:#0d6efd;
+    --cp-blue:#0088ff;
+  
+    --cp-bg-1:#f8f9fa;
+    --cp-bg-2:#ffffff;
+  
+    --cp-text-1:#6c757d;
+    --cp-text-2:#212529;
+  
+    --cp-glass:rgba(0,0,0,.02);
+    --cp-border:rgba(0,0,0,.08);
+  
+    --bs-body-bg:#f8f9fa !important;
+    --bs-body-color:#212529;
+    --bs-card-bg:#ffffff;
+    --bs-card-color:#212529;
+    --bs-border-color:#dee2e6;
+  
+    --bs-primary:#0d6efd;
+    --bs-secondary:#6c757d;
+    --bs-success:#198754;
+    --bs-info:#0dcaf0;
+    --bs-warning:#ffc107;
+    --bs-danger:#dc3545;
+  }
+  
+  /* -----------------------------------------
+     GLOBAL BACKGROUND + TYPOGRAPHY
+     ----------------------------------------- */
+  
+  body {
+    background: 
+      radial-gradient(1200px 600px at 20% -10%, rgba(0,136,255,.15), transparent),
+      linear-gradient(180deg, var(--cp-bg-1) 0%, var(--cp-bg-2) 100%);
+    color: var(--cp-text-2) !important;
+    font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    transition: background .25s ease, color .25s ease;
+  }
+  
+  /* Light: fondo plano tipo dashboard Bootstrap */
+  html[data-theme="light"] body {
+    background: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+  }
+  
+  /* -----------------------------------------
+     NAVBAR (Glass + Gradient)
+     ----------------------------------------- */
+  
+  .navbar {
+    background: linear-gradient(180deg, rgba(15,20,25,.85), rgba(26,35,50,.7)) !important;
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  
+  .navbar .nav-link,
+  .navbar-brand {
+    color: var(--cp-text-2) !important;
+  }
+  
+  .navbar .nav-link:hover {
+    color: var(--cp-cyan) !important;
+  }
+  
+  /* Light navbar */
+  html[data-theme="light"] .navbar {
+    background:#ffffff !important;
+    border-bottom:1px solid var(--bs-border-color);
+  }
+  html[data-theme="light"] .navbar .nav-link,
+  html[data-theme="light"] .navbar-brand {
+    color:#212529 !important;
+  }
+  html[data-theme="light"] .navbar .nav-link:hover {
+    color:var(--bs-primary) !important;
+  }
+  
+  /* -----------------------------------------
+     CARDS (Glass-Frame Style)
+     ----------------------------------------- */
+  
+  .card {
+    background: linear-gradient(180deg, var(--cp-glass), rgba(255,255,255,.02));
+    border: 1px solid rgba(78, 115, 223, 0.35) !important;
+    border-radius: 14px !important;
+    box-shadow:
+      0 18px 60px -20px rgba(0,212,255,.20),
+      inset 0 0 0 1px rgba(255,255,255,.05);
+    backdrop-filter: blur(6px);
+  }
+  
+  .card-header {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(78, 115, 223, 0.25) !important;
+    color: var(--cp-text-2) !important;
+  }
+  
+  /* Light cards */
+  html[data-theme="light"] .card {
+    background:#ffffff !important;
+    border:1px solid var(--bs-border-color) !important;
+    box-shadow:0 .125rem .25rem rgba(0,0,0,.075);
+    backdrop-filter:none;
+  }
+  html[data-theme="light"] .card-header {
+    background:#f8f9fa !important;
+    border-bottom:1px solid var(--bs-border-color) !important;
+    color:#212529 !important;
+  }
+  
+  /* -----------------------------------------
+     INPUTS
+     ----------------------------------------- */
+  
+  .form-control,
+  .form-select {
+    background: rgba(255,255,255,.04) !important;
+    color: var(--cp-text-2) !important;
+    border: 1px solid rgba(255,255,255,.10) !important;
+    border-radius: 10px !important;
+  }
+  
+  .form-control::placeholder {
+    color: var(--cp-text-1) !important;
+  }
+  
+  .form-control:focus {
+    border-color: var(--cp-indigo-2) !important;
+    box-shadow: 0 0 0 0.25rem rgba(78,115,223,.35) !important;
+  }
+  
+  /* Light inputs */
+  html[data-theme="light"] .form-control,
+  html[data-theme="light"] .form-select {
+    background:#ffffff !important;
+    color:#212529 !important;
+    border:1px solid var(--bs-border-color) !important;
+  }
+  html[data-theme="light"] .form-control::placeholder {
+    color:var(--cp-text-1) !important;
+  }
+  
+  /* -----------------------------------------
+     BUTTONS
+     ----------------------------------------- */
+  
+  .btn-primary {
+    background: linear-gradient(180deg, var(--cp-indigo-2), var(--cp-indigo));
+    border: 1px solid var(--cp-border);
+    box-shadow:
+      0 0 0 1px inset rgba(255,255,255,.06),
+      0 10px 30px -12px var(--cp-blue);
+    color: var(--cp-text-2);
+    transition: all .2s ease;
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+  }
+  
+  /* Secondary button */
+  .btn-secondary {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.1);
+    color: var(--cp-text-2);
+  }
+  
+  .btn-secondary:hover {
+    background: rgba(255,255,255,.10);
+  }
+  
+  /* Light buttons (se apoyan en tokens Bootstrap) */
+  html[data-theme="light"] .btn-primary {
+    background-color:var(--bs-primary) !important;
+    background-image:none;
+    box-shadow:none;
+  }
+  html[data-theme="light"] .btn-secondary {
+    background-color:var(--bs-secondary) !important;
+    color:#fff;
+  }
+  
+  /* -----------------------------------------
+     TABLES
+     ----------------------------------------- */
+  
+  .table {
+    color: var(--cp-text-2);
+    background: transparent;
+  }
+  
+  .table thead th {
+    background: rgba(255,255,255,.06);
+    border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+  
+  .table tbody tr:hover {
+    background: rgba(255,255,255,.04) !important;
+  }
+  
+  /* Light tables */
+  html[data-theme="light"] .table {
+    color:#212529;
+  }
+  html[data-theme="light"] .table thead th {
+    background:#f8f9fa;
+    border-bottom:1px solid var(--bs-border-color);
+  }
+  html[data-theme="light"] .table tbody tr:hover {
+    background:#f1f3f5 !important;
+  }
+  
+  /* ==========================================================
+     CHALAN-PRO FOOTER (Glass Style matching Landing)
+     ========================================================== */
+  
+  .chp-footer {
+    background: linear-gradient(
+        180deg,
+        rgba(15,20,25,0.85),
+        rgba(26,35,50,0.70)
+      );
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(255,255,255,.06);
+  
+    color: var(--cp-text-2);
+    text-align: center;
+  }
+  
+  /* Footer Links */
+  .chp-footer .footer-link {
+    color: var(--cp-cyan) !important;
+    margin: 0 8px;
+    text-decoration: none;
+    transition: 0.2s ease;
+  }
+  
+  .chp-footer .footer-link:hover {
+    color: var(--cp-text-2) !important;
+    text-decoration: underline;
+  }
+  
+  /* Brand Text Styling (matches landing) */
+  .chp-footer .footer-brand,
+  .chp-footer span strong {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 1px;
+  
+    background: linear-gradient(90deg, var(--cp-indigo-2), var(--cp-cyan));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent !important;
+  }
+  
+  /* System Status */
+  .chp-footer small {
+    color: var(--cp-text-1) !important;
+  }
+  
+  /* Light footer */
+  html[data-theme="light"] .chp-footer {
+    background:#f8f9fa !important;
+    border-top:1px solid var(--bs-border-color);
+    color:#212529 !important;
+  }
+  html[data-theme="light"] .chp-footer .footer-link {
+    color:var(--bs-primary) !important;
+  }
+  html[data-theme="light"] .chp-footer small {
+    color:#6c757d !important;
+  }
+  
+  /* ==========================================================
+     FIXES: Form Labels, Modal Opacity, Dropdown Z-Index
+     ========================================================== */
+  
+  /* --- Labels in forms --- */
+  .form-label,
+  label {
+    color: var(--cp-text-2) !important;
+    font-weight: 500;
+  }
+  
+  /* Light labels */
+  html[data-theme="light"] .form-label,
+  html[data-theme="light"] label {
+    color:#212529 !important;
+  }
+  
+  /* --- Modal glass panel (visible, not transparent) --- */
+  .modal-content {
+    background: linear-gradient(
+      180deg,
+      rgba(255,255,255,0.08),
+      rgba(255,255,255,0.04)
+    ) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    backdrop-filter: blur(12px);
+    border-radius: 14px;
+    color: var(--cp-text-2) !important;
+    box-shadow: 0 18px 50px -12px rgba(0,212,255,0.25);
+  }
+  
+  .modal-backdrop.show {
+    opacity: 0.65 !important;
+    background-color: #000 !important;
+  }
+  
+  /* Light modal */
+  html[data-theme="light"] .modal-content {
+    background:#ffffff !important;
+    border:1px solid var(--bs-border-color) !important;
+    box-shadow:0 .5rem 1rem rgba(0,0,0,.15);
+    color:#212529 !important;
+  }
+  
+  /* --- Dropdown menus ALWAYS visible above cards --- */
+  .dropdown-menu {
+    z-index: 5000 !important;
+    background: var(--cp-bg-2) !important;
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  }
+  
+  .dropdown-item {
+    color: var(--cp-text-2) !important;
+  }
+  
+  .dropdown-item:hover,
+  .dropdown-item:focus {
+    background: rgba(255,255,255,0.06) !important;
+    color: var(--cp-cyan) !important;
+  }
+  
+  /* Light dropdowns */
+  html[data-theme="light"] .dropdown-menu {
+    background:#ffffff !important;
+    border:1px solid var(--bs-border-color);
+    box-shadow:0 .5rem 1rem rgba(0,0,0,.15);
+  }
+  html[data-theme="light"] .dropdown-item {
+    color:#212529 !important;
+  }
+  html[data-theme="light"] .dropdown-item:hover,
+  html[data-theme="light"] .dropdown-item:focus {
+    background:#f8f9fa !important;
+    color:var(--bs-primary) !important;
+  }
+  
+  /* NAVBAR always on top */
+  .navbar,
+  .navbar * {
+    z-index: 20000 !important;
+  }
+  
+  .navbar .dropdown-menu {
+    position: absolute !important;
+    z-index: 21000 !important;
+    background: var(--cp-bg-2) !important;
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 8px 30px rgba(0,0,0,.45);
+    backdrop-filter: blur(6px);
+  }
+  
+  .v-select .vs__dropdown-menu,
+  .vs__dropdown-toggle,
+  .v-select * {
+    z-index: 25000 !important;
+  }
+  
+  .card {
+    position: static !important;
+    overflow: visible !important;
+    z-index: auto !important;
+  }
+  
+  /* Table + Price Unit Settings styles */
+  .price-unit-settings-section table {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    color: var(--cp-text-2);
+  }
+  
+  .price-unit-settings-section thead th {
+    background: rgba(255,255,255,0.06) !important;
+    color: var(--cp-cyan) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  
+  .price-unit-settings-section tbody tr td {
+    border-color: rgba(255,255,255,0.08) !important;
+  }
+  
+  /* Buttons inside table */
+  .price-unit-settings-section button.btn-outline-secondary {
+    border-color: rgba(255,255,255,0.25);
+    color: var(--cp-text-2);
+  }
+  .price-unit-settings-section button.btn-outline-secondary:hover {
+    border-color: var(--cp-cyan);
+    color: var(--cp-cyan);
+  }
+  
+  .form-control,
+  .vs__dropdown-toggle {
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    color: var(--cp-text-2) !important;
+    border-radius: 10px;
+  }
+  
+  .form-control:focus {
+    border-color: var(--cp-cyan) !important;
+    box-shadow: 0 0 0 3px rgba(0,212,255,0.25) !important;
+  }
+  
+  /* ==========================================================
+     V-SELECT — FIX INVISIBLE OPTIONS IN DARK MODE
+     ========================================================== */
+  
+  /* Dropdown menu container */
+  .v-select .vs__dropdown-menu {
+    background: rgba(15, 20, 25, 0.96) !important; /* Dark glass */
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(0, 212, 255, 0.25) !important; /* neon border */
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.55) !important;
+    color: var(--cp-text-2) !important;
+    z-index: 99999 !important; /* ABOVE cards, tables, navbar */
+  }
+  
+  /* Individual option */
+  .v-select .vs__dropdown-option {
+    background: transparent !important;
+    color: var(--cp-text-2) !important; /* visible white */
+    padding: 10px 14px !important;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  /* Highlight hover */
+  .v-select .vs__dropdown-option--highlight {
+    background: rgba(0, 212, 255, 0.18) !important;
+    color: var(--cp-text-2) !important;
+  }
+  
+  /* Selected option inside toggle */
+  .v-select .vs__selected {
+    color: var(--cp-text-2) !important; /* visible text */
+  }
+  
+  /* Placeholder */
+  .v-select .vs__placeholder {
+    color: var(--cp-text-1) !important; /* soft gray */
+  }
+  
+  /* Toggle (input area) */
+  .v-select .vs__dropdown-toggle {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: var(--cp-text-2) !important;
+  }
+  
+  /* Indicator arrow */
+  .v-select .vs__open-indicator {
+    fill: var(--cp-cyan) !important;
+  }
+  
+  /* Light v-select */
+  html[data-theme="light"] .v-select .vs__dropdown-menu {
+    background:#ffffff !important;
+    border:1px solid var(--bs-border-color) !important;
+    color:#212529 !important;
+  }
+  html[data-theme="light"] .v-select .vs__dropdown-option {
+    color:#212529 !important;
+  }
+  
+  /* ==========================================================
+     BASE SELECT (HTML <select>) — DARK PREMIUM STYLE
+     ========================================================== */
+  
+  select.form-select,
+  select {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: var(--cp-text-2) !important;
+    border-radius: 10px !important;
+    padding: 8px 12px !important;
+    height: 40px !important;
+  
+    /* Custom arrow */
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--cp-cyan) 50%),
+      linear-gradient(135deg, var(--cp-cyan) 50%, transparent 50%),
+      linear-gradient(to right, rgba(255,255,255,0.06), rgba(255,255,255,0.06));
+    background-position:
+      calc(100% - 20px) calc(1em + 2px),
+      calc(100% - 15px) calc(1em + 2px),
+      calc(100% - 2.5em) 0.5em;
+    background-size:
+      5px 5px,
+      5px 5px,
+      1px 1.5em;
+    background-repeat: no-repeat;
+  }
+  
+  /* Placeholder-like first option (if empty) */
+  select:invalid {
+    color: var(--cp-text-1) !important;
+  }
+  
+  /* Focus (glow) */
+  select:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.25) !important;
+    border-color: var(--cp-cyan) !important;
+  }
+  
+  /* Disabled */
+  select:disabled {
+    background: rgba(255, 255, 255, 0.03) !important;
+    color: var(--cp-text-1) !important;
+    opacity: 0.6;
+  }
+  
+  /* <option> styling (dropdown menu) */
+  select option {
+    background: rgba(15, 20, 25, 0.95) !important; /* dark menu */
+    color: var(--cp-text-2) !important;
+    padding: 10px !important;
+  }
+  
+  /* Selected option – NO highlight celeste */
+  select option:checked {
+    background-color: rgba(15,20,25,0.95) !important;
+    color: var(--cp-text-2) !important;
+  }
+  
+  /* Hover highlight elegante */
+  select option:hover {
+    background-color: rgba(0, 212, 255, 0.18) !important;
+    color: var(--cp-text-2) !important;
+  }
+  
+  /* Light select options */
+  html[data-theme="light"] select {
+    background:#ffffff !important;
+    color:#212529 !important;
+    border:1px solid var(--bs-border-color) !important;
+  }
+  html[data-theme="light"] select option {
+    background:#ffffff !important;
+    color:#212529 !important;
+  }
+  
