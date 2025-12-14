@@ -15,7 +15,10 @@ class DynamicCSRFMiddleware(MiddlewareMixin):
     basado en los dominios de tenants activos en la base de datos.
     
     Esto permite que nuevos tenants creados después del inicio del servidor
-    sean automáticamente incluidos en CSRF_TRUSTED_ORIGINS.
+    sean automáticamente incluidos en CSRF_TRUSTED_ORIGINS sin necesidad de reiniciar.
+    
+    IMPORTANTE: Este middleware DEBE ejecutarse ANTES de CsrfViewMiddleware
+    para que los orígenes estén disponibles antes de la validación de CSRF.
     """
     
     # Cache para evitar consultas excesivas a la BD
@@ -36,15 +39,16 @@ class DynamicCSRFMiddleware(MiddlewareMixin):
             current_time - self._last_domain_check > self._domain_cache_ttl):
             
             try:
+                # Importar desde tenants.models (schema público) donde están los dominios
                 from tenants.models import Domain
                 
                 # Obtener todos los dominios activos
                 active_domains = Domain.objects.filter(
                     tenant__is_active=True
-                ).values_list('domain', flat=True)
+                ).values_list('domain', flat=True).distinct()
                 
                 # Determinar qué orígenes agregar según el entorno
-                domains_added = 0
+                origins_added = 0
                 for domain in active_domains:
                     origins_to_add = []
                     
@@ -63,10 +67,11 @@ class DynamicCSRFMiddleware(MiddlewareMixin):
                     for origin in origins_to_add:
                         if origin not in settings.CSRF_TRUSTED_ORIGINS:
                             settings.CSRF_TRUSTED_ORIGINS.append(origin)
-                            domains_added += 1
+                            origins_added += 1
+                            logger.debug(f"Agregado origen a CSRF_TRUSTED_ORIGINS: {origin}")
                 
-                if domains_added > 0:
-                    logger.debug(f"Actualizados {domains_added} orígenes CSRF dinámicamente ({'desarrollo' if settings.DEBUG else 'producción'})")
+                if origins_added > 0:
+                    logger.info(f"Actualizados {origins_added} orígenes CSRF dinámicamente ({'desarrollo' if settings.DEBUG else 'producción'})")
                 
                 self._last_domain_check = current_time
                 

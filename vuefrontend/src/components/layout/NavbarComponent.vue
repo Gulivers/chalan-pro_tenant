@@ -1,12 +1,12 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-body py-1">
+  <nav v-if="shouldShowNavbar" class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-body py-1">
     <div class="container d-flex align-items-center">
       <!-- Marca -->
       <a class="navbar-brand py-0" href="/">CHALAN-PRO</a>
       <!-- Botón de mensajes (fuera del collapsible, se mantiene) -->
-      <ul class="navbar-nav me-2">
+      <ul v-if="shouldShowNavbar" class="navbar-nav me-2">
         <li class="nav-item d-flex align-items-center">
-          <NavbarMessagesDropdown />
+          <NavbarMessagesDropdown v-if="shouldShowNavbar" />
         </li>
       </ul>
       <button
@@ -139,6 +139,10 @@
       };
     },
     computed: {
+      shouldShowNavbar() {
+        // Verificar si la ruta actual tiene hideNavbar en su meta
+        return !this.$route.meta.hideNavbar;
+      },
       isDropdownActive() {
         return item => {
           return item.children && item.children.some(subItem => this.$route.path === subItem.route);

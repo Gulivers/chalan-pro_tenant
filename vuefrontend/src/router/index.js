@@ -667,47 +667,60 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authToken = localStorage.getItem('authToken');
   console.log(`Auth Token in Router>>: ${authToken ? 'true' : 'false'}`);
+  console.log(`Navigating to: ${to.name || to.path}, requiresAuth: ${to.matched.some(record => record.meta.requiresAuth)}`);
   const userPermissions = JSON.parse(localStorage.getItem('userPermissions') || '[]');
   //console.log(`User Permissions in Router>>: ${JSON.stringify(userPermissions)}`);
 
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!authToken) {
+  // Si la ruta NO requiere autenticación, permitir acceso inmediatamente
+  if (!to.matched.some(record => record.meta.requiresAuth)) {
+    console.log('Route does not require auth, allowing access');
+    next();
+    return;
+  }
+
+  // Solo validar token si la ruta requiere autenticación
+  if (!authToken) {
+    console.log('No auth token, redirecting to login');
+    next({ name: 'login' });
+    return;
+  }
+
+  try {
+    const response = await axios.get('/api/validate-token/', {
+      headers: { 'Authorization': `Token ${authToken}` }
+    });
+
+    if (response.data.valid) {
+      const requiredPermissions = to.meta.requiredPermissions || [];
+      const userPermissionsArray = userPermissions.permissions || [];
+      const userPermissionsSet = new Set(userPermissionsArray);
+
+      const hasPermission = requiredPermissions.length === 0 ||
+        requiredPermissions.every(permission => userPermissionsSet.has(permission));
+      console.log('Has permission:', hasPermission);
+
+      if (hasPermission) {
+        next();
+      } else {
+        alert('You do not have permission to access this page');
+        next(false);
+      }
+    } else {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userPermissions');
+      next({ name: 'login' });
+    }
+  } catch (error) {
+    console.error('Error validating token:', error);
+    // Si estamos en una ruta pública, no redirigir
+    const publicRoutes = ['onboarding', 'login', 'reset_password', 'reset-password-confirm'];
+    if (!publicRoutes.includes(to.name)) {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userPermissions');
       next({ name: 'login' });
     } else {
-      try {
-        const response = await axios.get('/api/validate-token/', {
-          headers: { 'Authorization': `Token ${authToken}` }
-        });
-
-        if (response.data.valid) {
-          const requiredPermissions = to.meta.requiredPermissions || [];
-          const userPermissionsArray = userPermissions.permissions || [];
-          const userPermissionsSet = new Set(userPermissionsArray);
-
-          const hasPermission = requiredPermissions.length === 0 ||
-            requiredPermissions.every(permission => userPermissionsSet.has(permission));
-          console.log('Has permission:', hasPermission);
-
-          if (hasPermission) {
-            next();
-          } else {
-            alert('You do not have permission to access this page');
-            next(false);
-          }
-        } else {
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userPermissions');
-          next({ name: 'login' });
-        }
-      } catch (error) {
-        console.error('Error validating token:', error);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userPermissions');
-        next({ name: 'login' });
-      }
+      next();
     }
-  } else {
-    next();
   }
 });
 

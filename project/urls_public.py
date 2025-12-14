@@ -7,10 +7,47 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 import os
+
+# Vista raíz del API
+@api_view(['GET'])
+def api_root(request):
+    """
+    Vista raíz del API REST que muestra los endpoints disponibles.
+    """
+    return Response({
+        'message': 'Chalan-Pro API',
+        'version': '1.0',
+        'endpoints': {
+            'contracts': '/api/contract/',
+            'builders': '/api/builder/',
+            'jobs': '/api/job/',
+            'house_models': '/api/house_model/',
+            'workprices': '/api/workprice/',
+            'crews': '/api/crews/',
+            'trucks': '/api/trucks/',
+            'schedule': '/api/schedule/',
+            'events': '/api/event/',
+            'products': '/api/products/',
+            'warehouses': '/api/warehouses/',
+            'parties': '/api/parties/',
+            'documents': '/api/documents/',
+            'admin': '/admin/',
+        }
+    })
 
 urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
+    path('api/', api_root, name='api-root'),  # Vista raíz del API
+    # Incluir URLs de las apps (ya tienen el prefijo api/ en sus rutas)
+    path('', include('ctrctsapp.urls')),
+    path('', include('auditapp.urls')),
+    path('', include('crewsapp.urls')),
+    path('', include('appschedule.urls')),
+    path('', include('appinventory.urls')),
+    path('', include('apptransactions.urls')),
     path('', include('tenants.urls')),  # Incluir URLs de onboarding
 ]
 

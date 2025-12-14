@@ -4,9 +4,11 @@
   <h1 id="site-name">
     <a href="{% url 'admin:index' %}">Chalan Admin</a>
   </h1>
+  {% comment %}
   <div style="margin-top: 10px;">
     <a href="{% url 'inventory-dashboard' %}" class="button default" style="margin-top:5px;">
         📊 Go to Dashboard
       </a>
   </div>
+  {% endcomment %}
 {% endblock %}

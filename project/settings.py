@@ -191,6 +191,8 @@ INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in S
 MIDDLEWARE = [
     # Middleware personalizado para normalizar hostname (remover puerto) - DEBE ir ANTES de TenantMainMiddleware
     'project.middleware.tenant_hostname.TenantHostnameNormalizerMiddleware',
+    # Middleware para actualizar ALLOWED_HOSTS dinámicamente - DEBE ir ANTES de SecurityMiddleware
+    'project.middleware.dynamic_allowed_hosts.DynamicAllowedHostsMiddleware',
     # django-tenants middleware DEBE ir después del normalizador para detectar el tenant
     'django_tenants.middleware.main.TenantMainMiddleware',
     # Middleware para actualizar CSRF_TRUSTED_ORIGINS dinámicamente (debe ir antes de CsrfViewMiddleware)

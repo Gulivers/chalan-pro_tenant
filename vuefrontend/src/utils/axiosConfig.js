@@ -54,12 +54,68 @@ export function setupAxiosInterceptors() {
       const data = error?.response?.data || {};
       const method = (originalRequest?.method || '').toUpperCase();
 
-      // 401 → limpiar y redirigir a login
+      // 401 → limpiar y redirigir a login (excepto en rutas públicas o endpoints opcionales)
       if (status === 401 && !originalRequest?._retry) {
         originalRequest._retry = true;
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userPermissions');
-        router.push('/login');
+        
+        // Endpoints opcionales que pueden devolver 401 sin causar redirección
+        const optionalEndpoints = ['/api/unread-chat-counts/', '/api/user_detail/', '/api/validate-token/'];
+        const requestUrl = originalRequest?.url || '';
+        const isOptionalEndpoint = optionalEndpoints.some(endpoint => requestUrl.includes(endpoint));
+        
+        // Verificar si estamos en una ruta pública usando window.location.pathname (más confiable)
+        // IMPORTANTE: Verificar PRIMERO window.location.pathname ya que es más confiable
+        let isPublicRoute = false;
+        let currentPath = '';
+        let routeName = '';
+        
+        if (typeof window !== 'undefined') {
+          currentPath = window.location.pathname || '';
+          const publicPaths = ['/onboarding', '/login', '/reset_password', '/reset-password-confirm'];
+          isPublicRoute = publicPaths.some(path => currentPath.startsWith(path));
+          
+          // También verificar el router si está disponible (como fallback)
+          if (!isPublicRoute) {
+            try {
+              const currentRoute = router.currentRoute?.value;
+              routeName = currentRoute?.name || 'unknown';
+              const publicRoutes = ['onboarding', 'login', 'reset_password', 'reset-password-confirm'];
+              isPublicRoute = currentRoute && publicRoutes.includes(currentRoute.name);
+            } catch (e) {
+              console.warn('[Axios Interceptor] Error accessing router:', e);
+            }
+          }
+          
+          // Verificación adicional: si la URL contiene "onboarding" o "login", considerarla pública
+          if (!isPublicRoute && currentPath) {
+            const urlLower = currentPath.toLowerCase();
+            if (urlLower.includes('onboarding') || urlLower.includes('login') || urlLower.includes('reset')) {
+              isPublicRoute = true;
+              console.log('[Axios Interceptor] Detected public route from URL pattern:', currentPath);
+            }
+          }
+        }
+        
+        // Log detallado para depuración
+        console.log('[Axios Interceptor] 401 Error:', {
+          requestUrl,
+          currentPath,
+          routeName,
+          isOptionalEndpoint,
+          isPublicRoute,
+          willRedirect: !isOptionalEndpoint && !isPublicRoute
+        });
+        
+        // Solo limpiar localStorage y redirigir si NO es un endpoint opcional y NO es una ruta pública
+        if (!isOptionalEndpoint && !isPublicRoute) {
+          console.log('[Axios Interceptor] Redirecting to login - protected route without auth');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userPermissions');
+          router.push('/login');
+        } else {
+          console.log('[Axios Interceptor] NOT redirecting - public route or optional endpoint');
+        }
+        
         return Promise.reject(error);
       }
 
