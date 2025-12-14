@@ -64,5 +64,6 @@ tenants/migrations/*
 vuefrontend/.env.local
 vuefrontend/.env
 
-# Ignore readme directory
-readme/
+# Ignore readme directory except README_RESUMEN_GENERAL.md
+readme/*
+!readme/README_RESUMEN_GENERAL.md
