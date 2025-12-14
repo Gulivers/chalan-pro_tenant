@@ -59,8 +59,8 @@ tenants/migrations/*
 # Ignore settings.py (commented out - needed for Render deployment)
 # project/settings.py
 
-# Ignore main.js
-vuefrontend/src/main.js
+# Ignore main.js (comentado - ahora se incluye en el repo)
+# vuefrontend/src/main.js
 vuefrontend/.env.local
 vuefrontend/.env
 
