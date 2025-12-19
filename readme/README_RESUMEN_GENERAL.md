@@ -582,6 +582,8 @@ docker compose exec backend python manage.py collectstatic --noinput
 
 # 6. Verificar logs
 docker compose logs -f backend
+
+docker compose logs -f nginx backend
 ```
 
 **Nota:** Si solo cambias código Python (sin cambios en modelos), no necesitas ejecutar migraciones. Solo reconstruye y reinicia.
