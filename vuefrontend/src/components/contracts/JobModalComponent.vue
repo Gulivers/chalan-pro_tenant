@@ -204,7 +204,7 @@
       async fetchCrews() {
         try {
           // Segun tu router: /api/crews/
-          const { data } = await axios.get('/crews/');
+          const { data } = await axios.get('/api/crews/');
           this.crews = (Array.isArray(data) ? data : []).map(c => ({
             id: c.id,
             name: c.name || c.title || `Crew #${c.id}`,

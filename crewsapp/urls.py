@@ -6,8 +6,8 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register(r'crews', CrewViewSet)
-router.register(r'trucks', TruckViewSet)
+router.register(r'api/crews', CrewViewSet)
+router.register(r'api/trucks', TruckViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

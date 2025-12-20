@@ -58,17 +58,18 @@ dayjs.extend(localizedFormat)
 import {useAuthStore} from '@stores/auth'
 import { openPdf } from '@helpers';
 import SearchIcon from "@components/icons/searchIcon.vue";
+import { appMixin } from '@mixins/appMixin';
 
 // npm install @fullcalendar/vue3 @fullcalendar/interaction @fullcalendar/resource-timeline
 
 export default {
   components: {SearchIcon, FullCalendar, EventModal},
+  mixins: [appMixin],
   data() {
     return {
       search: '',
       calendar_start: null,
       calendar_end: null,
-      calendarRef: null,
       resizeObserver: null,
       resources: [],
       events: [],
@@ -127,7 +128,7 @@ export default {
             event_class = `p-1 ${!arg.event.extendedProps?.deleted ? 'bg-success': 'bg-danger'} bg-opacity-25`
           }
           if (isAbsence) {
-            event_class = 'p-1 bg-success-subtle opacity-75" border border-success-subtle '; // Azulito pa’ las ausencias
+            event_class = 'p-1 bg-success-subtle opacity-75 border border-success-subtle'; // Azulito pa' las ausencias
           }
           return {
             html: `<div class="${event_class}">
@@ -165,6 +166,7 @@ export default {
     calendarOptions(){
       return {
         ...this.initialCalendarOptions,
+        resources: this.resources,
         events: this.filteredEvents
       }
     }
@@ -248,27 +250,57 @@ export default {
     async getCrews() {
       this.showFullCalendar = false
       try {
-        const response = await axios.get('/crews/');
+        const response = await axios.get('/api/crews/');
+        console.log('🔍 Respuesta completa de /api/crews/:', response.data);
+        
         if (response.status === 200) {
           // Manejar respuesta paginada o directa
           const data = response.data.results || response.data;
           const crews = Array.isArray(data) ? data : [];
           
-          this.resources = crews
-            .filter(item => item && item.category_name)
-            .map((item) => ({
-              id: item.id,
-              title: item.name.toUpperCase(),
-              category: item.category_name.toUpperCase(),
-            }));
+          console.log('📦 Total crews recibidos:', crews.length);
+          console.log('📦 Estructura del primer crew (si existe):', crews.length > 0 ? crews[0] : 'No hay crews');
           
-          this.initialCalendarOptions.resources = this.resources;
+          // Filtrar crews que tengan category_name válido
+          const crewsWithCategory = crews.filter(item => {
+            const hasCategory = item && item.category_name;
+            if (!hasCategory) {
+              console.log('⚠️ Crew sin category_name:', item);
+            }
+            return hasCategory;
+          });
+          
+          console.log('✅ Crews con categoría:', crewsWithCategory.length);
+          
+          this.resources = crewsWithCategory.map((item) => ({
+            id: item.id,
+            title: item.name.toUpperCase(),
+            category: item.category_name.toUpperCase(),
+          }));
+          
+          // No necesitamos asignar a initialCalendarOptions.resources porque
+          // el computed calendarOptions ya incluye this.resources reactivamente
+          console.log('✅ Recursos cargados:', this.resources.length, 'crews');
+          console.log('📋 Categorías encontradas:', [...new Set(this.resources.map(r => r.category))]);
+          console.log('📋 Recursos finales:', this.resources);
           
           if (this.resources.length === 0) {
             console.warn('⚠️ No crews found with category_name. Calendar will be empty.');
+            console.warn('⚠️ Datos recibidos de la API:', JSON.stringify(crews, null, 2));
           }
         }
+        // Mostrar calendario después de cargar recursos (o si hay error)
         this.showFullCalendar = true
+        // Esperar a que Vue actualice el DOM antes de intentar refetch
+        await this.$nextTick();
+        // Si el calendario ya está montado, refrescar recursos
+        if (this.$refs.calendarRef && this.$refs.calendarRef.getApi) {
+          try {
+            this.$refs.calendarRef.getApi().refetchResources();
+          } catch (e) {
+            console.log('ℹ️ Calendar API not ready yet, resources will load on next render');
+          }
+        }
       } catch (error) {
         console.error('❌ Error fetching crews data:', error);
         // Mostrar calendario incluso si hay error para que el usuario vea el problema

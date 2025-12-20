@@ -37,13 +37,17 @@ module.exports = defineConfig({
   devServer: {
     host: '0.0.0.0',
     port: 3000,
-    allowedHosts: ['.192.168.0.248:3000'],
+    allowedHosts: ['72.60.168.62'],
     proxy: {
       '/api': {
-        target: 'http://192.168.0.248:3000',
+        target: 'http://72.60.168.62:8000',
         changeOrigin: true,
         secure: false,
-        // pathRewrite: { '^/api': '' },
+      },
+      '/crews': {
+        target: 'http://72.60.168.62:8000',
+        changeOrigin: true,
+        secure: false,
       },
     },
   },
