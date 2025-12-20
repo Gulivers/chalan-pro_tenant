@@ -106,9 +106,10 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
    ┌────▼────┐        ┌─────▼─────┐      ┌─────▼─────┐
    │ Frontend│        │  Backend  │      │ PostgreSQL│
    │ Vue.js  │        │  Django   │      │    15     │
-   │         │        │ Gunicorn  │      │           │
-   │  Build  │        │  :8000    │      │  :5432    │
-   │  Static │        │           │      │           │
+   │         │        │ Daphne    │      │           │
+   │  Build  │        │ (ASGI)    │      │  :5432    │
+   │  Static │        │  :8000    │      │           │
+   │         │        │ WebSocket │      │           │
    └─────────┘        └─────┬─────┘      └─────┬─────┘
                             │                   │
                             │                   │
@@ -129,7 +130,7 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 | Servicio | Contenedor | Puerto | Descripción |
 |----------|-----------|--------|-------------|
 | **Nginx** | `chalanpro_nginx` | 80, 443 | Reverse proxy, SSL/TLS termination, enrutamiento de requests |
-| **Backend** | `chalanpro_backend` | 8000 (interno) | API Django REST + Admin, Gunicorn con 3 workers |
+| **Backend** | `chalanpro_backend` | 8000 (interno) | API Django REST + Admin, Daphne (ASGI) para soporte WebSocket |
 | **Frontend** | `chalanpro_frontend` | - | Build de Vue.js, archivos estáticos servidos por Nginx |
 | **PostgreSQL** | `chalanpro_postgres` | 5432 | Base de datos multi-tenant con schemas aislados |
 | **pgAdmin** | `chalanpro_pgadmin` | 5050 | Interfaz web para administración de PostgreSQL |
@@ -147,6 +148,16 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 3. **Tenants (*.chalanpro.net):**
    - Cliente → Nginx (443) → Archivos estáticos Vue.js
    - `/api/*` → Nginx → Backend (8000) → Middleware detecta tenant → Schema específico
+
+4. **WebSocket (Actualizaciones en tiempo real):**
+   - Cliente → Nginx (443) → `/ws/*` → Backend Daphne (8000)
+   - Middleware `TenantASGIMiddleware` identifica tenant desde hostname
+   - Configura schema del tenant → Conexión WebSocket establecida
+   - Rutas WebSocket:
+     - `/ws/calendar-updates/` - Actualizaciones del calendario
+     - `/ws/schedule/event/{id}/` - Notas de eventos
+     - `/ws/schedule/event/{id}/chat/` - Chat de eventos
+     - `/ws/schedule/unread/user/{id}/` - Notificaciones no leídas
 
 ---
 
@@ -166,12 +177,14 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 │   │   ├── settings.py                    # Configuración Django (ALLOWED_HOSTS, CSRF, etc.)
 │   │   ├── urls.py                        # URLs principales (tenant-specific)
 │   │   ├── urls_public.py                 # URLs para schema público (onboarding, admin global)
-│   │   ├── wsgi.py                        # WSGI application para Gunicorn
+│   │   ├── wsgi.py                        # WSGI application (legacy, no usado)
+│   │   ├── asgi.py                        # ASGI application para Daphne (WebSocket)
 │   │   │
 │   │   └── middleware/                    # Middlewares personalizados
 │   │       ├── tenant_hostname.py         # Normaliza hostname (remueve puerto)
 │   │       ├── dynamic_allowed_hosts.py   # Actualiza ALLOWED_HOSTS dinámicamente
-│   │       └── dynamic_csrf.py            # Actualiza CSRF_TRUSTED_ORIGINS dinámicamente
+│   │       ├── dynamic_csrf.py            # Actualiza CSRF_TRUSTED_ORIGINS dinámicamente
+│   │       └── tenant_asgi.py             # Middleware ASGI para identificar tenant en WebSocket
 │   │
 │   ├── tenants/                           # App de gestión multi-tenant
 │   │   ├── models.py                      # Modelos Tenant y Domain
@@ -584,9 +597,14 @@ docker compose exec backend python manage.py collectstatic --noinput
 docker compose logs -f backend
 
 docker compose logs -f nginx backend
+
+# 7. Log de WebSocket
+docker compose logs -f backend | grep -i "websocket\|tenant"
 ```
 
 **Nota:** Si solo cambias código Python (sin cambios en modelos), no necesitas ejecutar migraciones. Solo reconstruye y reinicia.
+
+**Importante sobre WebSocket:** El servidor backend usa **Daphne (ASGI)** en lugar de Gunicorn (WSGI) para soportar conexiones WebSocket. Esto permite actualizaciones en tiempo real del calendario y notificaciones. El cambio se realizó en `docker-compose.yml` y `Dockerfile.backend`.
 
 ### 4.2 Desplegar Cambios en el Frontend
 
@@ -1055,6 +1073,49 @@ sudo certbot certificates
    ```bash
    docker compose ps nginx
    ```
+
+### 9.5 Problemas con WebSocket
+
+**Importante:** El servidor usa **Daphne (ASGI)** en lugar de Gunicorn (WSGI) para soportar conexiones WebSocket.
+
+1. **Verificar que Daphne esté corriendo:**
+   ```bash
+   docker compose logs backend | grep -i "daphne\|listening"
+   ```
+   Deberías ver: `Listening on TCP address 0.0.0.0:8000`
+
+2. **Verificar conexiones WebSocket en los logs:**
+   ```bash
+   docker compose logs -f backend | grep -i "websocket\|tenant"
+   ```
+   Deberías ver mensajes como: `✅ Tenant configurado para WebSocket: [schema_name]`
+
+3. **Si WebSocket no conecta:**
+   - Verificar que el servidor esté usando Daphne (no Gunicorn):
+     ```bash
+     docker compose exec backend ps aux | grep daphne
+     ```
+   - Verificar configuración de Nginx para `/ws/`:
+     ```bash
+     cat nginx/default.conf | grep -A 10 "location /ws/"
+     ```
+   - Verificar que el middleware de tenant esté funcionando:
+     ```bash
+     docker compose logs backend | grep "Tenant configurado"
+     ```
+
+4. **Reiniciar el backend si es necesario:**
+   ```bash
+   docker compose restart backend
+   ```
+
+5. **Verificar en el navegador:**
+   - Abrir consola del navegador (F12)
+   - Buscar mensajes de conexión WebSocket
+   - Deberías ver: `🔌 Conectando WebSocket a: wss://[dominio]/ws/calendar-updates/`
+   - Y luego: `Conexión WebSocket establecida.`
+
+**Nota:** Las conexiones WebSocket requieren que el servidor use ASGI (Daphne). Si el servidor está usando Gunicorn, las conexiones WebSocket fallarán con errores 404.
 
 ---
 

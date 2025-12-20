@@ -86,14 +86,35 @@ const resolveApiBaseUrl = () => {
 
 const resolveWsBaseUrl = (apiUrl) => {
   const envWs = (process.env.VUE_APP_WS_BASE_URL || '').trim();
-  const base = envWs.length > 0 ? envWs : apiUrl;
-  if (base.startsWith('https://')) {
-    return ensureTrailingSlash(`wss://${base.slice(8)}`);
+  
+  // Si hay una URL de WebSocket configurada explícitamente, usarla
+  if (envWs.length > 0) {
+    return ensureTrailingSlash(envWs);
   }
-  if (base.startsWith('http://')) {
-    return ensureTrailingSlash(`ws://${base.slice(7)}`);
+  
+  // En producción multi-tenant, usar el hostname actual para mantener el dominio del tenant
+  const { protocol, hostname, port } = window.location;
+  const devPorts = new Set(['3000', '3001', '8080', '8081', '5173', '5174']);
+  const isDevPort = Boolean(port) && devPorts.has(port);
+  
+  // En desarrollo local, usar la URL de la API
+  if (isLocalLikeHost(hostname) || isDevPort) {
+    const base = apiUrl;
+    if (base.startsWith('https://')) {
+      return ensureTrailingSlash(`wss://${base.slice(8)}`);
+    }
+    if (base.startsWith('http://')) {
+      return ensureTrailingSlash(`ws://${base.slice(7)}`);
+    }
+    return ensureTrailingSlash(base);
   }
-  return ensureTrailingSlash(base);
+  
+  // En producción, usar el hostname actual (mantiene el dominio del tenant)
+  const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
+  if (port && !['80', '443'].includes(port)) {
+    return ensureTrailingSlash(`${wsProtocol}//${hostname}:${port}`);
+  }
+  return ensureTrailingSlash(`${wsProtocol}//${hostname}`);
 };
 
 const joinUrl = (base, path = '') => {

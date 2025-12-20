@@ -31,5 +31,6 @@ RUN mkdir -p staticfiles
 EXPOSE 8000
 
 # Default command (can be overridden in docker-compose.yml)
-CMD ["gunicorn", "project.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+# Usar daphne para soportar WebSocket (ASGI) en lugar de gunicorn (WSGI)
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "project.asgi:application"]
 

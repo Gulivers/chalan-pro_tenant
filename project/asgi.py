@@ -12,12 +12,19 @@ django_asgi_app = get_asgi_application()
 
 # Import routing after Django is initialized
 from appschedule import routing
+from project.middleware.tenant_asgi import TenantASGIMiddleware
 
-application = ProtocolTypeRouter({
-    "http": django_asgi_app,
-    "websocket": AuthMiddlewareStack(
+# Aplicar middleware de tenant ANTES de AuthMiddlewareStack
+# El orden es importante: TenantASGIMiddleware -> AuthMiddlewareStack -> URLRouter
+websocket_stack = TenantASGIMiddleware(
+    AuthMiddlewareStack(
         URLRouter(
             routing.websocket_urlpatterns
         )
-    ),
+    )
+)
+
+application = ProtocolTypeRouter({
+    "http": django_asgi_app,
+    "websocket": websocket_stack,
 })
