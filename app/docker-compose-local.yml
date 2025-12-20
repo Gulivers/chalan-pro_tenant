@@ -1,0 +1,46 @@
+services:
+  postgres:
+    container_name: chalan-postgres
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: chalan2024
+      POSTGRES_DB: chalan_inv_txn
+    ports:
+      - "5432:5432"
+    volumes:
+      - chalan-postgres-data:/var/lib/postgresql/data
+    networks:
+      - chalan-network
+    command: >
+      -c shared_buffers=256MB
+      -c max_connections=100
+      -c effective_cache_size=1GB
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: chalan-pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@chalan.com
+      PGADMIN_DEFAULT_PASSWORD: chalan2024
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - chalan-network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+networks:
+  chalan-network:
+    driver: bridge
+
+volumes:
+  chalan-postgres-data:
+  pgadmin-data:
+

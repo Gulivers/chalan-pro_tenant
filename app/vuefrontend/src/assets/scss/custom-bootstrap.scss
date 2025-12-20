@@ -1,0 +1,117 @@
+// Import Bootstrap functions and variables
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/mixins";
+
+// Manually redefine $primary before importing Bootstrap
+$blue-indigo-mix: mix($blue-500, $indigo-500, 50%); // 50% blend
+$primary: $blue-indigo-mix;  
+
+// Define theme colors explicitly
+$theme-colors: (
+  "primary":    $primary,
+  "secondary":  $gray-600,
+  "success":    $teal-600,
+  "info":       $cyan-500,
+  "warning":    $yellow-500,
+  "danger":     $red-500,
+  "light":      $gray-200,
+  "dark":       $gray-900
+);
+
+// Import Bootstrap with new theme colors
+@import "bootstrap/scss/bootstrap";
+
+// Navbar Styles Using Bootstrap Variables
+.navbar {
+  background-color: $primary;
+  // background-color: #4e51df;
+  background-image: linear-gradient(180deg, lighten($primary, 8%) 15%, darken($primary, 20%) 100%);
+  // background-image: linear-gradient(180deg, lighten(#4e51df, 8%) 15%, darken(#4e51df, 20%) 100%);
+
+  padding: 12px;
+}
+
+.navbar-brand {
+  font-weight: bold;
+  color: white;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: $light;
+  font-weight: bold;
+
+  &.router-link-exact-active {
+    color: $warning !important; // Orange for active links
+  }
+}
+
+/* Dropdown Styling */
+.dropdown-menu {
+  background-color: $primary;
+  // background-color: #4e73df;
+  background-image: linear-gradient(180deg, lighten($primary, 8%) 315%, darken($primary, 20%) 100%);
+  background-image: linear-gradient(180deg, lighten($primary, 8%) 15%, darken($primary, 20%) 100%);
+  //background-image: linear-gradient(180deg, lighten(#4e51df, 8%) 15%, darken(#4e51df, 20%) 100%);
+  border: none;
+}
+
+.dropdown-item {
+  color: white;
+
+  &:hover {
+    background-color: lighten($primary, 15%);
+    // background-color: lighten(#4e73df, 10%);
+  }
+
+  &.router-link-exact-active {
+    color: $warning !important;
+    font-weight: bold;
+  }
+}
+
+/* Ensure dropdown works on mobile */
+@media (max-width: 991.98px) {
+  .navbar-nav {
+    padding-top: 1rem;
+  }
+
+  .nav-item {
+    padding: 0.5rem 0;
+  }
+
+  .dropdown-menu {
+    position: relative;
+    width: 100%;
+  }
+}
+
+// Ensure FullCalendar buttons reflect the correct primary color
+.fc .fc-button-primary {
+    background-color: $primary !important;  
+    border-color: $primary !important;
+    color: white !important; 
+
+    &:hover {
+        background-color: darken($primary, 10%) !important; 
+        border-color: darken($primary, 15%) !important;
+    }
+    
+    &:active,
+    &:focus {
+        background-color: darken($primary, 15%) !important;
+        border-color: darken($primary, 20%) !important;
+        box-shadow: 0 0 0 0.2rem rgba($primary, 0.5) !important;
+    }
+}
+
+// Apply primary color to Bootstrap switch-style checkboxes
+.form-check-input:checked {
+    background-color: $primary !important; 
+    border-color: $primary !important;
+}
+
+// If using switch-style checkboxes, update the slider color
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba($primary, 0.25) !important;
+}

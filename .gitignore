@@ -1,9 +1,9 @@
 # Ignore virtual environment
 venv/
 
-# Ignore node_modules in vuefrontend and root
-vuefrontend/node_modules/
-vuefrontend/dist/
+# Ignore node_modules
+app/vuefrontend/node_modules/
+app/vuefrontend/dist/
 node_modules/
 
 # Ignore build artifacts and logs
@@ -19,51 +19,50 @@ __pycache__/
 # Ignore system files
 .DS_Store
 
-# Ignore .env files
+# Ignore .env files (con secretos) - CRÍTICO
 .env
 .env_mysql
+envs/*.env
+!envs/*.example.env
+!envs/*.dev.example.env
 
+# Ignore IDE
 .idea/
+*.swp
 
-### VisualStudioCode template
+# Ignore VisualStudioCode (excepto configuraciones útiles)
 .vscode/
 !.vscode/settings.json
-# !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# Ignore database data - CRÍTICO
+postgres_data/
+pgadmin_data/
 
-*.swp
-# Ignore the migrations folder (if you don't want to commit migrations)
-ctrctsapp/migrations/*
-!ctrctsapp/migrations/__init__.py
-crewsapp/migrations/*
-!crewsapp/migrations/__init__.py
-auditapp/migrations/*
-!auditapp/migrations/__init__.py
-appschedule/migrations/*
-!appschedule/migrations/__init__.py
+# Ignore SSL certificates (solo en producción)
+# /etc/letsencrypt/ (comentado, no está en el repo)
 
-apptransactions/migrations/*
-!apptransactions/migrations/__init__.py
+# Ignore migrations (si no quieres commitearlas)
+# app/ctrctsapp/migrations/*
+# !app/ctrctsapp/migrations/__init__.py
+# (repetir para cada app según necesidad)
 
-appcontacts/migrations/*
-!appcontacts/migrations/__init__.py
+# Ignore Vue env files
+app/vuefrontend/.env.local
+app/vuefrontend/.env
 
-appinventory/migrations/*
-!appinventory/migrations/__init__.py
+# Ignore workspace files
+*.code-workspace
+!root.code-workspace
 
-tenants/migrations/*
-!tenants/migrations/__init__.py
-
-# Ignore settings.py (commented out - needed for Render deployment)
-# project/settings.py
-
-# Ignore main.js (comentado - ahora se incluye en el repo)
-# vuefrontend/src/main.js
-vuefrontend/.env.local
-vuefrontend/.env
-
-# Ignore readme directory except README_RESUMEN_GENERAL.md
+# Ignore readme directory except specific files
 readme/*
 !readme/README_RESUMEN_GENERAL.md
+
+# Ignore certbot directory
+certbot/
+
+# Ignore backups directory
+backups/
+

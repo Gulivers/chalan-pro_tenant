@@ -1,0 +1,215 @@
+/* Estilo para móviles */
+@media (max-width: 768px) {
+
+
+    .fc .fc-resource-timeline-divider {
+        width: 12px !important;
+        /* Ajusta según necesidad */
+    }
+
+    .fc .fc-datagrid-expander-placeholder {
+        display: none !important;
+        /* Oculta el placeholder del ícono */
+    }
+
+    span .fc fc-icon:empty {
+        display: none !important;
+    }
+
+      .fc .fc-datagrid-expander .fc-icon {
+    display: none !important;
+  }
+
+    .fc .fc-datagrid-cell-cushion {
+        font-size: 13px;
+        padding-left: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block
+    }
+
+
+
+    .fc .fc-button {
+        padding: 4px 8px !important;
+        font-size: 0.85rem !important;
+        min-width: 36px !important;
+        height: auto !important;
+        line-height: 1.2 !important;
+        border-radius: 4px !important;
+    }
+
+    .fc .fc-button .fc-icon {
+        font-size: 1rem !important;
+    }
+}
+
+/* Fin Estilo para móviles */
+
+.fc .fc-scrollgrid-section-header {
+    position: -webkit-sticky;
+    /* Para soporte en Safari */
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background-color: white;
+    /* Asegúrate que el fondo no sea transparente */
+}
+
+.fc-scroller {
+    overflow-y: visible !important;
+    /* Asegurarse de que el overflow en y no esté restringido */
+}
+
+/* Estilo adicional para asegurar que el texto se resalte adecuadamente */
+.fc .fc-day-today .fc-timeline-slot-cushion {
+    /* background-color: #f1f9fe; */
+    color: #f6a000;
+    font-weight: bold;
+    z-index: 0;
+}
+
+/* Resaltar el fondo de las celdas de la columna del día actual */
+/*
+.fc .fc-day-today  {
+    background-color: #f1f9fe;
+}
+
+
+/* Para ajustar alto de las filas */
+.fc .fc-resource-timeline .fc-resource {
+    height: 80px !important;
+}
+
+/* Ajusta el tamaño de los eventos */
+.fc-event {
+    height: auto !important;
+    /* Hace que los eventos ocupen toda la celda */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /*
+      font-family: Avenir, Helvetica, Arial, sans-serif; 
+      Fuente personalizada 
+      */
+    font-size: 1rem;
+    background-color: #ebf8ed;
+    /* Fondo del evento */
+    border: 1px solid #395ecb;
+    /* Borde con un tono más oscuro de verde */
+    color: white;
+    border-radius: 5px;
+    font-weight: bold;
+    padding: 4px;
+    overflow: hidden;
+    /* Asegura que el contenido no se desborde */
+    white-space: normal;
+    /* Permite que el texto pase a la siguiente línea */
+}
+
+
+.fc .fc-button-primary {
+    background-color: #0d6efd;
+    border-color: var(--fc-button-border-color);
+    color: var(--fc-button-text-color);
+}
+
+/* Evita que los eventos se vean aplastados */
+.fc-event-title {
+    white-space: normal !important;
+    word-break: break-word;
+    text-align: center;
+}
+
+/* Estilo para la cabecera del calendario */
+.fc-toolbar {
+    background-color: #f5f5f5;
+    /* Fondo gris claro */
+    border-bottom: 2px solid #ffa500;
+    /* Línea inferior */
+    padding: 10px;
+    /* Espaciado interno */
+}
+
+:root {
+    --fc-event-text-color: rgb(11, 11, 11);
+    /* Color del text de los eventos */
+    --bs-link-color-rgb: #a12121;
+    /* Color de los días */
+}
+
+/* Estilo para eventos importantes */
+.evento-importante {
+    background-color: #f2744d;
+    border-color: #E64A19;
+    font-weight: bold;
+}
+
+/* Estilo para el contenido personalizado de los eventos */
+.evento-personalizado {
+    background-color: #ebf8ed;
+    color: #2522d7;
+    /* padding: 4px; */
+    border-radius: 5px;
+}
+
+/* Estilos para los días en el calendario */
+.fc-timeline-slot-cushion {
+    font-weight: bold;
+    /* Texto en negrita para mayor visibilidad */
+    color: #333;
+    /* Color oscuro para el texto */
+    text-decoration: none;
+    /* Elimina el subrayado */
+}
+
+/* Hace que los títulos de los recursos (crew) sean negrita */
+.fc-datagrid-cell-main {
+    font-weight: bold;
+}
+
+/* Margen de los eventos dentro de las celdas */
+.fc-timeline-event-harness {
+    margin-top: 2px;
+    margin-left: 1px;
+    padding: 2px;
+}
+
+/* Fila de los nombres de los dias */
+.fc-scrollgrid-section-header {
+    background-color: #bcbfc3;
+}
+
+/* Asegura que el contenedor del calendario se expanda con el contenido */
+.fc {
+    overflow: visible !important;
+}
+
+/* Para el contenedor específico del timeline */
+.fc .fc-scroller {
+    overflow-y: visible !important;
+    /* Permite que el contenido se extienda verticalmente */
+    overflow-x: auto;
+    /* Mantiene el scroll horizontal si es necesario */
+}
+
+
+.fc-event .fc-event-title,
+.fc-event .fc-event-time {
+    word-wrap: break-word;
+    overflow: hidden;
+    /* Asegura que el contenido no se desborde */
+    white-space: normal;
+    /* Permite que el texto pase a la siguiente línea */
+    height: auto
+}
+
+.fc-event.absence-event {
+    background-color: #0c72df !important;
+    /* Azul claro */
+    border-color: #3399ff !important;
+    /* Azul más fuerte */
+    color: #003366 !important;
+    /* Azul oscuro para el texto */
+}
