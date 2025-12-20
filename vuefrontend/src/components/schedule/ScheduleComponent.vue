@@ -250,16 +250,35 @@ export default {
       try {
         const response = await axios.get('/crews/');
         if (response.status === 200) {
-          this.resources = response.data.filter(item => item.category_name).map((item) => ({
-            id: item.id,
-            title: item.name.toUpperCase(),
-            category: item.category_name.toUpperCase(),
-          }))
-          this.initialCalendarOptions.resources = this.resources
+          // Manejar respuesta paginada o directa
+          const data = response.data.results || response.data;
+          const crews = Array.isArray(data) ? data : [];
+          
+          this.resources = crews
+            .filter(item => item && item.category_name)
+            .map((item) => ({
+              id: item.id,
+              title: item.name.toUpperCase(),
+              category: item.category_name.toUpperCase(),
+            }));
+          
+          this.initialCalendarOptions.resources = this.resources;
+          
+          if (this.resources.length === 0) {
+            console.warn('⚠️ No crews found with category_name. Calendar will be empty.');
+          }
         }
         this.showFullCalendar = true
       } catch (error) {
-        console.error('Error fetching crews data:', error);
+        console.error('❌ Error fetching crews data:', error);
+        // Mostrar calendario incluso si hay error para que el usuario vea el problema
+        this.showFullCalendar = true
+        Swal.fire({
+          icon: 'error',
+          title: 'Error loading crews',
+          text: error.response?.data?.detail || error.message || 'Could not load crews data. Please refresh the page.',
+          confirmButtonText: 'OK'
+        });
       }
     },
 
@@ -457,7 +476,9 @@ export default {
     },
 
     connectWebSocket() {
-      // console.log('connectWebSocket:: ', this.wsUrl)
+      console.log('🔌 Conectando WebSocket a:', this.wsUrl);
+      console.log('🔌 URL completa construida:', this.wsUrl);
+      console.log('🔌 Base URL:', this.getWsBaseUrl());
       this.websocket = new WebSocket(this.wsUrl);
 
       this.websocket.onopen = () => {
