@@ -60,6 +60,9 @@
   - [9.2 El Backend No Responde](#92-el-backend-no-responde)
   - [9.3 Problemas con Multi-Tenant](#93-problemas-con-multi-tenant)
   - [9.4 Certificados SSL No Se Generan](#94-certificados-ssl-no-se-generan)
+  - [9.5 Errores 502 Bad Gateway](#95-errores-502-bad-gateway)
+  - [9.6 Problemas con WebSocket](#96-problemas-con-websocket)
+- [9.5 Errores 502 Bad Gateway](#95-errores-502-bad-gateway)
 - [10. Contacto y Soporte](#10-contacto-y-soporte)
 
 ---
@@ -289,6 +292,7 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
   - Servidor para `api.chalanpro.net` (API/Admin)
   - Servidor wildcard `*.chalanpro.net` (tenants)
   - Headers de seguridad (HSTS, X-Frame-Options, etc.)
+  - **Resolución DNS dinámica**: Configurado con `resolver 127.0.0.11 valid=10s` y variables `$backend_upstream` para evitar errores 502 cuando el backend cambia de IP. Esto fuerza a Nginx a re-resolver el nombre del servicio `backend` en cada petición, evitando problemas de caché DNS cuando los contenedores se reinician.
 
 - **`envs/backend.env`**: Variables de entorno del backend:
   - `DEBUG=False`
@@ -1101,7 +1105,57 @@ sudo certbot certificates
    docker compose ps nginx
    ```
 
-### 9.5 Problemas con WebSocket
+### 9.5 Errores 502 Bad Gateway
+
+**Síntomas:**
+- Errores 502 en el navegador al intentar acceder a `/api/` o `/media/`
+- Nginx no puede conectar con el backend
+
+**Diagnóstico:**
+
+1. **Revisar logs de Nginx para errores de conexión:**
+   ```bash
+   docker compose logs --since "2025-12-21T00:00:00" nginx 2>&1 | grep -E "error|502|Connection refused" | tail -30
+   ```
+
+2. **Verificar estado del backend:**
+   ```bash
+   docker compose ps backend
+   docker compose logs --tail=20 backend
+   ```
+
+3. **Verificar resolución DNS desde Nginx:**
+   ```bash
+   docker compose exec nginx getent hosts backend
+   ```
+
+4. **Verificar conectividad:**
+   ```bash
+   docker compose exec nginx ping -c 2 chalanpro_backend
+   ```
+
+**Soluciones:**
+
+1. **Si el backend está caído:**
+   ```bash
+   docker compose restart backend
+   docker compose logs -f backend
+   ```
+
+2. **Si hay problema de resolución DNS (IP cacheada):**
+   - La configuración actual de Nginx ya incluye resolución DNS dinámica
+   - Reiniciar Nginx para refrescar la caché:
+   ```bash
+   docker compose restart nginx
+   ```
+
+3. **Verificar que la configuración de Nginx tenga resolver DNS:**
+   - Debe incluir `resolver 127.0.0.11 valid=10s;` en cada bloque `server`
+   - Los `proxy_pass` deben usar variables: `set $backend_upstream http://backend:8000; proxy_pass $backend_upstream;`
+
+**Nota:** Desde Diciembre 2024, la configuración de Nginx incluye resolución DNS dinámica para evitar este problema automáticamente.
+
+### 9.6 Problemas con WebSocket
 
 **Importante:** El servidor usa **Daphne (ASGI)** en lugar de Gunicorn (WSGI) para soportar conexiones WebSocket.
 
