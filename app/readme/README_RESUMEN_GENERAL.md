@@ -168,7 +168,9 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 ```
 /opt/chalanpro/
 │
-├── app/                                    # Monorepo principal (clonado de Git)
+├── .git/                                  # Repositorio Git (movido a la raíz - Diciembre 2024)
+│
+├── app/                                    # Código de la aplicación (subdirectorio)
 │   ├── manage.py                          # Script de gestión de Django
 │   ├── requirements.txt                   # Dependencias Python del backend
 │   ├── Dockerfile.backend                 # Imagen Docker para backend Django
@@ -229,7 +231,9 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 │
 ├── certbot/                               # Certificados SSL (Let's Encrypt)
 │
-├── docker-compose.yml                     # Orquestación de contenedores Docker
+├── docker-compose.yml                     # Orquestación de contenedores Docker (producción)
+│
+├── .gitignore                             # Reglas de Git (excluye .env, postgres_data, etc.)
 │
 ├── setup.sh                               # Script de inicialización del sistema
 ├── init-certbot.sh                        # Script para certificados SSL (dominio principal)
@@ -237,6 +241,12 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 ├── init-certbot-wildcard.sh               # Script para certificado SSL wildcard (*.chalanpro.net)
 └── enable-https.sh                        # Script para habilitar HTTPS en Nginx
 ```
+
+**Nota importante sobre la estructura del repositorio:**
+- El repositorio Git (`.git/`) está ubicado en la raíz `/opt/chalanpro/` (desde Diciembre 2024)
+- Esto permite incluir toda la configuración de infraestructura (Docker, Nginx, scripts) en el repositorio
+- El código de la aplicación está en el subdirectorio `app/`
+- Cualquier desarrollador que clone el repo tendrá todo lo necesario para levantar el stack completo
 
 ### 2.2 Descripción de Archivos Clave
 
@@ -577,8 +587,8 @@ docker compose exec backend python manage.py create_tenant_superuser \
 ### 4.1 Desplegar Cambios en el Backend
 
 ```bash
-# 1. Acceder al directorio del proyecto
-cd /opt/chalanpro/app
+# 1. Acceder al directorio raíz del proyecto (donde está .git)
+cd /opt/chalanpro
 
 # 2. Actualizar código desde Git
 git pull origin main
@@ -609,8 +619,8 @@ docker compose logs -f backend | grep -i "websocket\|tenant"
 ### 4.2 Desplegar Cambios en el Frontend
 
 ```bash
-# 1. Acceder al directorio del proyecto
-cd /opt/chalanpro/app
+# 1. Acceder al directorio raíz del proyecto (donde está .git)
+cd /opt/chalanpro
 
 # 2. Actualizar código desde Git
 git pull origin main
@@ -632,7 +642,7 @@ docker compose logs -f frontend
 
 ```bash
 # 1. Actualizar código
-cd /opt/chalanpro/app
+cd /opt/chalanpro
 git pull origin main
 
 # 2. Reconstruir ambos servicios
@@ -655,11 +665,28 @@ docker compose logs -f
 
 ## 4.1 Estructura de Branches de Git
 
+**⚠️ IMPORTANTE - Cambio en la Estructura del Repositorio (Diciembre 2024):**
+
+El repositorio Git se movió de `/opt/chalanpro/app/` a `/opt/chalanpro/` para incluir toda la configuración de infraestructura (Docker, Nginx, scripts) en el repositorio. Esto permite que cualquier desarrollador que clone el repo tenga todo lo necesario para levantar el stack completo.
+
+**Estructura actual:**
+- Repositorio Git: `/opt/chalanpro/.git/` (raíz del proyecto)
+- Código de aplicación: `/opt/chalanpro/app/` (subdirectorio)
+- Configuración Docker: `/opt/chalanpro/docker-compose.yml` (en el repo)
+- Configuración Nginx: `/opt/chalanpro/nginx/` (en el repo)
+- Scripts de utilidad: `/opt/chalanpro/*.sh` (en el repo)
+
+**Archivos excluidos del repositorio (en `.gitignore`):**
+- `envs/*.env` (archivos con secretos, solo templates `.example.env` están en el repo)
+- `postgres_data/` (datos de base de datos)
+- `certbot/` (certificados SSL)
+- `backups/` (backups de base de datos)
+
 ### 4.1.1 Branches Actuales
 
 ```bash
 # Ver branches locales
-cd /opt/chalanpro/app
+cd /opt/chalanpro
 git branch
 
 # Ver branches remotos
@@ -677,7 +704,7 @@ git branch -a
 
 ```bash
 # 1. Asegurarse de estar en main
-cd /opt/chalanpro/app
+cd /opt/chalanpro
 git checkout main
 
 # 2. Obtener últimos cambios del remoto
@@ -728,7 +755,7 @@ git status --short
 
 1. **Antes de desplegar:**
    ```bash
-   cd /opt/chalanpro/app
+   cd /opt/chalanpro
    git fetch origin
    git status
    git log HEAD..origin/main  # Ver qué cambios hay
