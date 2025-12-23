@@ -693,6 +693,209 @@ chmod +x scripts/backup_completo.sh
 
 ---
 
+## 🔄 Flujo de Trabajo Git
+
+### Objetivo
+
+Mantener `main` local siempre sincronizado con `main` remoto, trabajar en `dev_local`, y actualizar producción de forma controlada.
+
+### Flujo Completo
+
+```
+1. main local = main remoto (siempre sincronizados)
+   ↓
+2. Programar en dev_local (commits pequeños y frecuentes)
+   ↓
+3. Pasar cambios de dev_local → main local (merge)
+   ↓
+4. Pasar cambios de main local → main remoto (GitHub) (push)
+   ↓
+5. Pasar cambios de main remoto → main del VPS (Hostinger - Producción) (pull)
+```
+
+### Pasos Detallados
+
+#### 1. Sincronizar main local con main remoto
+
+**Antes de empezar a trabajar, siempre sincronizar:**
+
+```bash
+# Opción A: Usar el script (recomendado)
+./scripts/sync_main_with_remote.sh
+
+# Opción B: Manualmente
+git checkout main
+git fetch origin main
+git reset --hard origin/main
+```
+
+**Script disponible**: `scripts/sync_main_with_remote.sh`
+
+#### 2. Trabajar en dev_local
+
+```bash
+# Cambiar a dev_local
+git checkout dev_local
+
+# Hacer cambios, commits pequeños y frecuentes
+# ... editar archivos ...
+git add .
+git commit -m "Descripción clara del cambio"
+```
+
+#### 3. Pasar cambios de dev_local a main local
+
+```bash
+# Cambiar a main
+git checkout main
+
+# Asegurarse de que main está actualizado con remoto
+./scripts/sync_main_with_remote.sh  # o manualmente
+
+# Fusionar dev_local en main
+git merge dev_local
+
+# O si prefieres un merge con mensaje:
+git merge --no-ff dev_local -m "Merge dev_local: descripción de cambios"
+```
+
+**¿Qué hace `git merge dev_local`?**
+- Fusiona **solo los commits** que están en `dev_local` y **NO están en `main`**
+- No copia todo el contenido, solo aplica los cambios (diffs) de los commits nuevos según `git status`
+- Si hay conflictos, Git te avisará y tendrás que resolverlos manualmente
+- Para ver qué commits se van a fusionar antes de hacer merge: `git log main..dev_local --oneline`
+
+#### 4. Pasar cambios de main local a main remoto (GitHub)
+
+```bash
+# Ya estás en main (del paso anterior)
+git push origin main
+```
+
+#### 5. Pasar cambios de main remoto a main del VPS (Hostinger - Producción)
+
+**En el servidor VPS de Hostinger:**
+
+```bash
+# Conectarse al VPS
+ssh usuario@hostinger-vps
+
+# Ir al directorio del proyecto
+cd /ruta/al/proyecto/chalanpro
+
+# Actualizar desde el remoto
+git fetch origin main
+git checkout main
+git pull origin main  # o git reset --hard origin/main para forzar sincronización
+
+# Reiniciar servicios si es necesario
+docker compose restart  # o el comando que uses en producción
+```
+
+### Comandos Rápidos
+
+```bash
+# Sincronizar main local con remoto
+./scripts/sync_main_with_remote.sh
+
+# Ver estado de las ramas
+git branch -vv
+
+# Ver diferencias entre ramas
+git log main..dev_local --oneline  # Ver commits en dev_local que no están en main
+git log dev_local..main --oneline   # Ver commits en main que no están en dev_local
+
+# Ver historial gráfico
+git log --oneline --graph --all --decorate -10
+```
+
+### Revertir Cambios (Si algo se rompe)
+
+Si algo sale mal y necesitas restablecer el estado anterior:
+
+#### Revertir main local
+
+```bash
+# Si aún no has hecho push al remoto, puedes resetear main local
+git checkout main
+git reset --hard origin/main  # Restaura main local al estado del remoto
+
+# O si quieres volver a un commit específico:
+git reset --hard <commit-hash>  # Reemplaza <commit-hash> con el hash del commit deseado
+```
+
+#### Revertir main remoto (GitHub)
+
+```bash
+# Si ya hiciste push pero quieres revertir el último commit en el remoto:
+git checkout main
+git revert HEAD  # Crea un commit que revierte los cambios
+git push origin main
+
+# O si quieres eliminar completamente el último commit (⚠️ CUIDADO):
+git reset --hard HEAD~1  # Elimina el último commit localmente
+git push origin main --force  # ⚠️ FORCE PUSH - solo si estás seguro
+```
+
+#### Revertir main del VPS (Hostinger - Producción)
+
+**En el servidor VPS:**
+
+```bash
+# Conectarse al VPS
+ssh usuario@hostinger-vps
+cd /ruta/al/proyecto/chalanpro
+
+# Opción 1: Volver al estado del remoto (recomendado)
+git fetch origin main
+git checkout main
+git reset --hard origin/main
+
+# Opción 2: Volver a un commit específico
+git reset --hard <commit-hash>
+
+# Opción 3: Revertir el último commit (mantiene historial)
+git revert HEAD
+git push origin main  # Si tienes permisos de push desde VPS
+
+# Después de revertir, reiniciar servicios
+docker compose restart  # o el comando que uses
+```
+
+#### Ver Historial de Commits (Para encontrar el commit al que volver)
+
+```bash
+# Ver historial completo
+git log --oneline -20
+
+# Ver historial con fechas
+git log --oneline --date=short --format="%h %ad %s" -20
+
+# Ver diferencias entre commits
+git diff <commit-hash-1>..<commit-hash-2>
+```
+
+### Recomendaciones
+
+1. **Siempre sincronizar main antes de empezar a trabajar**: Usa `./scripts/sync_main_with_remote.sh`
+2. **Commits pequeños y frecuentes**: Facilita el debugging y el rollback si es necesario
+3. **Verificar antes de mergear**: Asegúrate de que main esté actualizado antes de hacer merge
+4. **En producción (VPS)**: Siempre hacer `git pull` o `git reset --hard origin/main` para estar seguro
+5. **Antes de hacer push importante**: Considera crear un tag para poder volver fácilmente: `git tag -a v1.0.0 -m "Versión estable antes de cambios"`
+
+¿git merge dev_local copia todo dev_local a main o solo los cambios según git status?
+Solo los cambios (diffs) de los commits nuevos
+No copia todo el contenido
+Aplica únicamente las diferencias entre main y dev_local
+Es equivalente a aplicar los cambios que muestra git status entre las dos rama
+
+### Scripts Disponibles
+
+- `scripts/sync_main_with_remote.sh`: Sincroniza main local con main remoto
+- `scripts/backup_completo.sh`: Crea backup completo del sistema y base de datos
+
+---
+
 ## 📝 Notas Importantes
 
 1. **Daphne vs Gunicorn**: En desarrollo local, siempre usar Daphne para soportar WebSockets. Gunicorn solo soporta WSGI (HTTP), no ASGI (WebSocket).
