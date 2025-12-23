@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: chalanpro_postgres
+    env_file:
+      - ./envs/postgres.env
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - chalanpro_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chalanpro_user -d chalanpro"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.backend
+    container_name: chalanpro_backend
+    env_file:
+      - ./envs/backend.dev.env
+    volumes:
+      - ./app:/app
+      - staticfiles_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - chalanpro_network
+    ports:
+      - "8000:8000"  # Exponer para desarrollo frontend
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+             daphne -b 0.0.0.0 -p 8000 project.asgi:application"
+    restart: unless-stopped
+
+  # Servicio opcional para desarrollo frontend con hot-reload
+  # Usar: docker compose -f docker-compose.dev.yml up frontend-dev
+  # O ejecutar directamente: cd app/vuefrontend && npm run serve
+  frontend-dev:
+    image: node:22-alpine
+    container_name: chalanpro_frontend_dev
+    working_dir: /app
+    volumes:
+      - ./app/vuefrontend:/app
+      - /app/node_modules  # Evitar sobrescribir node_modules del host
+    ports:
+      - "8080:8080"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080
+    command: sh -c "npm ci && npm run serve -- --host 0.0.0.0 --port 8080"
+    networks:
+      - chalanpro_network
+    profiles:
+      - dev  # Solo se levanta con --profile dev
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./app/vuefrontend
+      dockerfile: Dockerfile.frontend
+    container_name: chalanpro_frontend
+    volumes:
+      - ./app/vuefrontend/dist:/app/dist
+      - ./app/vuefrontend/dist:/usr/share/nginx/html
+    networks:
+      - chalanpro_network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: chalanpro_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.dev.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./app/vuefrontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - chalanpro_network
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: chalanpro_pgadmin
+    env_file:
+      - ./envs/pgadmin.env
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - chalanpro_network
+    restart: unless-stopped
+
+volumes:
+  staticfiles_volume:
+  media_volume:
+  pgadmin_data:
+
+networks:
+  chalanpro_network:
+    driver: bridge
+
