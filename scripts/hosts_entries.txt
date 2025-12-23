@@ -1,0 +1,11 @@
+# Chalan-Pro - Entradas para /etc/hosts
+# Copia estas líneas al archivo /etc/hosts de tu máquina (laptop/teléfono)
+# Windows: C:\Windows\System32\drivers\etc\hosts (como Administrador)
+# Linux/Mac: /etc/hosts (con sudo)
+
+192.168.0.105 chalanpro.net
+192.168.0.105 api.chalanpro.net
+192.168.0.105 samuel.chalanpro.net
+192.168.0.105 test-2-npm.chalanpro.net
+192.168.0.105 test-dominio-local.chalanpro.net
+

@@ -2,6 +2,8 @@
 Comando para listar todos los tenants y sus dominios
 """
 from django.core.management.base import BaseCommand
+from django.conf import settings
+from urllib.parse import urlparse
 from tenants.models import Tenant, Domain
 from django_tenants.utils import schema_context
 from django.contrib.auth import get_user_model
@@ -37,9 +39,13 @@ class Command(BaseCommand):
             
             # URL de acceso
             if domain:
+                # Obtener el puerto del frontend desde FRONT_URL
+                front_url_parsed = urlparse(settings.FRONT_URL)
+                frontend_port = front_url_parsed.port if front_url_parsed.port else 8080
+                
                 self.stdout.write(self.style.SUCCESS(f'\n   🌐 URLs de Acceso:'))
                 self.stdout.write(f'      Admin: http://{domain_name}:8000/admin/')
-                self.stdout.write(f'      Frontend: http://{domain_name}:3000/')
+                self.stdout.write(f'      Frontend: http://{domain_name}:{frontend_port}/')
             
             # Información de usuarios admin
             try:

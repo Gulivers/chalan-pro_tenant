@@ -68,9 +68,11 @@ const resolveApiBaseUrl = () => {
   const { protocol, hostname, port } = window.location;
   const devPorts = new Set(['3000', '3001', '8080', '8081', '5173', '5174']);
   const isDevPort = Boolean(port) && devPorts.has(port);
+  
+  // En desarrollo local con npm run serve, usar ruta relativa para que el proxy funcione
   if (isLocalLikeHost(hostname) || isDevPort) {
-    const apiPort = '8000';
-    return ensureTrailingSlash(`${protocol}//${hostname}:${apiPort}`);
+    // Retornar '/' para que las peticiones pasen por el proxy de vue.config.js
+    return '/';
   }
 
   // Render (producción): detectar patrón "-frontend.onrender.com" y mapear a "-backend".
@@ -97,16 +99,13 @@ const resolveWsBaseUrl = (apiUrl) => {
   const devPorts = new Set(['3000', '3001', '8080', '8081', '5173', '5174']);
   const isDevPort = Boolean(port) && devPorts.has(port);
   
-  // En desarrollo local, usar la URL de la API
+  // En desarrollo local con npm run serve, conectar directamente al backend
+  // para WebSockets (el proxy de webpack tiene problemas con WebSockets)
   if (isLocalLikeHost(hostname) || isDevPort) {
-    const base = apiUrl;
-    if (base.startsWith('https://')) {
-      return ensureTrailingSlash(`wss://${base.slice(8)}`);
-    }
-    if (base.startsWith('http://')) {
-      return ensureTrailingSlash(`ws://${base.slice(7)}`);
-    }
-    return ensureTrailingSlash(base);
+    // Conectar directamente al backend en el puerto 8000
+    // Usar el hostname actual para mantener el dominio del tenant
+    // Esto permite que django-tenants identifique correctamente el tenant
+    return ensureTrailingSlash(`ws://${hostname}:8000`);
   }
   
   // En producción, usar el hostname actual (mantiene el dominio del tenant)

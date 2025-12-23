@@ -95,9 +95,16 @@ class Command(BaseCommand):
                 ))
             
             # URLs de acceso
-            self.stdout.write(self.style.SUCCESS(f'\n🌐 URLs de acceso:'))
+            from django.conf import settings
+            from urllib.parse import urlparse
+            
+            # Obtener el puerto del frontend desde FRONT_URL
+            front_url_parsed = urlparse(settings.FRONT_URL)
+            frontend_port = front_url_parsed.port if front_url_parsed.port else 8080
+            
+            self.stdout.write(self.style.SUCCESS(f'\n URLs de acceso:'))
             self.stdout.write(f'   Admin: http://{domain.domain}:8000/admin/')
-            self.stdout.write(f'   Frontend: http://{domain.domain}:3000/')
+            self.stdout.write(f'   Frontend: http://{domain.domain}:{frontend_port}/')
             
         except Domain.DoesNotExist:
             self.stdout.write(self.style.ERROR(f'\n✗ No se encontró dominio para: {hostname_clean}'))
