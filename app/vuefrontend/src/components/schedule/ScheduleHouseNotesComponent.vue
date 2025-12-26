@@ -98,9 +98,10 @@
         showEditor: null,
         lastSavedHTML: '',
         contracts: [],
+        workAccountId: null,
       };
     },
-    mounted() {
+    async mounted() {
       this.showEditor = this.hasPermission('appschedule.add_eventnote');
       this.checkUserIdentity();
       // Quill
@@ -109,8 +110,16 @@
         placeholder: 'Write notes about the construction...',
       });
 
-      // WebSocket + carga inicial
-      this.wsUrl = this.buildWsUrl(`ws/schedule/event/${this.$props.eventId}/`);
+      // Obtener work_account_id del evento
+      await this.loadWorkAccountId();
+      
+      // WebSocket + carga inicial (usar work_account si está disponible)
+      if (this.workAccountId) {
+        this.wsUrl = this.buildWsUrl(`ws/schedule/work-account/${this.workAccountId}/notes/`);
+      } else {
+        // Fallback a event_id si no hay work_account
+        this.wsUrl = this.buildWsUrl(`ws/schedule/event/${this.$props.eventId}/`);
+      }
       this.connectWebSocket();
       this.getNote();
       this.getContracts();
@@ -125,6 +134,16 @@
     },
 
     methods: {
+      async loadWorkAccountId() {
+        try {
+          const { data } = await axios.get(`/api/event/${this.$props.eventId}/`);
+          if (data && data.work_account) {
+            this.workAccountId = data.work_account;
+          }
+        } catch (e) {
+          console.error('Error fetching event data:', e);
+        }
+      },
       goToContractForm() {
         // Cierra el modal (si existe) y navega luego de un tick para evitar backdrop
         try {
@@ -208,7 +227,6 @@
         const notesContent = this.quill.root.innerHTML.trim();
 
         const ok = await this.postNote({
-          event: this.$props.eventId,
           notes: notesContent,
         });
         if (!ok) {
@@ -247,7 +265,7 @@
         try {
           const { data, status } = await axios.get(`/api/events/${this.$props.eventId}/note/`);
           if (status === 200) {
-            this.quill.root.innerHTML = data.notes;
+            this.quill.root.innerHTML = data.notes || '';
             this.lastSavedHTML = (data.notes || '').trim();
           }
         } catch (e) {
@@ -257,6 +275,7 @@
 
       async postNote(payload) {
         try {
+          // El backend ahora usa work_account internamente, así que solo necesitamos enviar notes
           const resp = await axios.post(`/api/events/${this.$props.eventId}/note/`, payload);
           return [200, 201].includes(resp.status);
         } catch (e) {

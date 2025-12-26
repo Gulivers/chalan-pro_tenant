@@ -1,79 +1,97 @@
 <template>
-  <nav v-if="shouldShowNavbar" class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-body py-1">
-    <div class="container d-flex align-items-center">
-      <!-- Marca -->
-      <a class="navbar-brand py-0" href="/">CHALAN-PRO</a>
-      <!-- Botón de mensajes (fuera del collapsible, se mantiene) -->
-      <ul v-if="shouldShowNavbar" class="navbar-nav me-2">
-        <li class="nav-item d-flex align-items-center">
-          <NavbarMessagesDropdown v-if="shouldShowNavbar" />
-        </li>
-      </ul>
-      <button
-        class="navbar-toggler"
-        type="button"
-        @click="toggleNavbar"
-        aria-controls="navbarNav"
-        aria-expanded="false"
-        aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div :class="['collapse', 'navbar-collapse', { show: isNavbarOpen }]" id="navbarNav">
-        <!-- Menú izquierdo -->
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li v-for="(item, index) in menuItems" :key="index" :class="{ dropdown: item.children }">
-            <template v-if="item.children">
-              <a
-                class="nav-link dropdown-toggle"
-                href="#"
-                role="button"
-                :class="{ 'text-orange': isDropdownActive(item) }"
-                @click.prevent="toggleDropdown(index)">
-                {{ item.text }}
-              </a>
-              <ul class="dropdown-menu" :class="{ show: item.isOpen }">
-                <li v-for="(subItem, subIndex) in item.children" :key="subIndex">
-                  <router-link :to="subItem.route" class="dropdown-item" @click="closeNavbar">
-                    {{ subItem.text }}
-                  </router-link>
-                </li>
-              </ul>
-            </template>
-            <template v-else>
-              <router-link :to="item.route" class="nav-link" @click="closeNavbar">{{ item.text }}</router-link>
-            </template>
-          </li>
-        </ul>
-
-        <!-- Menú derecho -->
-        <ul class="navbar-nav ms-auto d-flex align-items-center">
-          <!-- Dynamic Messages Dropdown Component -->
-          <li class="nav-item" v-if="isLoggedIn">
-            <span class="nav-link">Welcome, {{ userName }}</span>
-          </li>
-          <li class="nav-item" v-if="isLoggedIn">
-            <router-link to="/logout" class="nav-link" @click="logout">Log Out</router-link>
-          </li>
-          <li class="nav-item" v-if="!isLoggedIn">
-            <router-link to="/login" class="nav-link" @click="closeNavbar">Log In</router-link>
-          </li>
-        </ul>
-      </div>
+  <BNavbar
+    v-if="shouldShowNavbar"
+    v-b-color-mode="'dark'"
+    toggleable="xl"
+    variant="primary"
+    class="navbar-modern">
+    <BNavbarBrand to="/">CHALAN-PRO</BNavbarBrand>
+    
+    <!-- Botón de mensajes -->
+    <div v-if="shouldShowNavbar" class="d-flex align-items-center me-2">
+      <NavbarMessagesDropdown v-if="shouldShowNavbar" />
     </div>
-  </nav>
+    
+    <BNavbarToggle target="nav-collapse" />
+    
+    <BCollapse
+      id="nav-collapse"
+      is-nav>
+      <BNavbarNav>
+        <template v-for="(item, index) in menuItems" :key="index">
+          <BNavItemDropdown
+            v-if="item.children"
+            :text="item.text"
+            :class="{ 'text-orange': isDropdownActive(item), 'dropdown-active': isDropdownActive(item) }"
+            :data-active="isDropdownActive(item)">
+            <BDropdownItem
+              v-for="(subItem, subIndex) in item.children"
+              :key="subIndex"
+              :to="subItem.route"
+              :active="$route.path === subItem.route"
+              @click="closeNavbar">
+              {{ subItem.text }}
+            </BDropdownItem>
+          </BNavItemDropdown>
+          <BNavItem
+            v-else
+            :to="item.route"
+            :active="$route.path === item.route"
+            @click="closeNavbar">
+            {{ item.text }}
+          </BNavItem>
+        </template>
+      </BNavbarNav>
+      
+      <!-- Menú derecho -->
+      <BNavbarNav class="ms-auto">
+        <!-- User Dropdown -->
+        <BNavItemDropdown
+          v-if="isLoggedIn"
+          right
+          class="user-dropdown">
+          <template #button-content>
+            <img :src="constructorIcon" alt="User" class="user-icon" />
+          </template>
+          <BDropdownItem disabled class="user-dropdown-header">
+            <div>
+              <strong>Welcome</strong>
+              <div class="user-name">{{ userName }}</div>
+            </div>
+          </BDropdownItem>
+          <BDropdownDivider />
+          <BDropdownItem to="/logout" @click="logout">Logout</BDropdownItem>
+        </BNavItemDropdown>
+        <BNavItem v-if="!isLoggedIn" to="/login" @click="closeNavbar">
+          Log In
+        </BNavItem>
+      </BNavbarNav>
+    </BCollapse>
+  </BNavbar>
 </template>
 
 <script>
+  import { BNavbar, BNavbarBrand, BNavbarToggle, BCollapse, BNavbarNav, BNavItem, BNavItemDropdown, BDropdownItem, BDropdownDivider } from 'bootstrap-vue-next';
   import NavbarMessagesDropdown from './NavbarMessagesDropdown.vue';
+  import constructorIcon from '@/assets/img/user.svg';
 
   export default {
     components: {
+      BNavbar,
+      BNavbarBrand,
+      BNavbarToggle,
+      BCollapse,
+      BNavbarNav,
+      BNavItem,
+      BNavItemDropdown,
+      BDropdownItem,
+      BDropdownDivider,
       NavbarMessagesDropdown,
     },
     data() {
       return {
+        constructorIcon,
         isLoggedIn: false,
-        isNavbarOpen: false,
         menuItems: [
           { text: 'Dashboard', route: '/' },
           {
@@ -140,7 +158,6 @@
     },
     computed: {
       shouldShowNavbar() {
-        // Verificar si la ruta actual tiene hideNavbar en su meta
         return !this.$route.meta.hideNavbar;
       },
       isDropdownActive() {
@@ -159,7 +176,9 @@
         if (this.isLoggedIn) {
           this.getAuthenticatedUser().then(user => {
             if (user) {
-              this.userName = user.username;
+              this.userName = user.first_name && user.last_name 
+                ? `${user.first_name} ${user.last_name}`
+                : user.username || 'User';
             }
           });
         }
@@ -180,11 +199,7 @@
         this.$router.push('/login');
         this.closeNavbar();
       },
-      toggleNavbar() {
-        this.isNavbarOpen = !this.isNavbarOpen;
-      },
       closeNavbar() {
-        this.isNavbarOpen = false;
         this.menuItems.forEach(item => {
           if (item.children) {
             item.isOpen = false;
@@ -202,13 +217,64 @@
 </script>
 
 <style scoped>
-  .text-orange {
-    color: #ff931e !important;
-    font-weight: bold;
+  /* Resaltar dropdown activo con :deep() para penetrar en componentes de BootstrapVueNext */
+  :deep(.nav-item.dropdown.text-orange .dropdown-toggle),
+  :deep(.nav-item.dropdown.text-orange .nav-link),
+  :deep(.nav-item.dropdown.text-orange button),
+  :deep(.nav-item.dropdown.text-orange a),
+  :deep(.nav-item.dropdown.text-orange .btn),
+  :deep(.nav-item.dropdown.text-orange .btn-link),
+  :deep(.nav-item.dropdown.dropdown-active .dropdown-toggle),
+  :deep(.nav-item.dropdown.dropdown-active .nav-link),
+  :deep(.nav-item.dropdown.dropdown-active button),
+  :deep(.nav-item.dropdown.dropdown-active a),
+  :deep(.nav-item.dropdown[data-active="true"] .dropdown-toggle),
+  :deep(.nav-item.dropdown[data-active="true"] .nav-link),
+  :deep(.nav-item.dropdown[data-active="true"] button),
+  :deep(.nav-item.dropdown[data-active="true"] a),
+  :deep(.nav-item.dropdown[data-active="true"] .btn) {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    font-weight: 600 !important;
   }
-  .dropdown-item.router-link-exact-active {
-    color: #ff931e !important;
-    font-weight: bold;
+  
+  /* Selector más específico para el toggle button */
+  :deep(.navbar-nav .nav-item.dropdown.text-orange > .nav-link),
+  :deep(.navbar-nav .nav-item.dropdown.dropdown-active > .nav-link),
+  :deep(.navbar-nav .nav-item.dropdown[data-active="true"] > .nav-link) {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    font-weight: 600 !important;
+  }
+  
+  /* User Dropdown Styles */
+  .user-dropdown .user-icon {
+    width: 28px;
+    height: 28px;
+    filter: brightness(0) invert(1);
+    transition: opacity 0.2s ease;
+  }
+  
+  .user-dropdown:hover .user-icon {
+    opacity: 0.9;
+  }
+  
+  .user-dropdown-header {
+    padding: 0.75rem 1.25rem !important;
+    color: #4b5563 !important;
+    cursor: default;
+  }
+  
+  .user-dropdown-header strong {
+    display: block;
+    color: #1f2937;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  
+  .user-dropdown-header .user-name {
+    font-size: 0.95rem;
+    color: #6b7280;
+    font-weight: 500;
   }
 </style>
-

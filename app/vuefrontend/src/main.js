@@ -16,11 +16,25 @@ window.$ = window.jQuery = $;
 
 // Bootstrap (no es plugin de Vue)
 // Bootstrap CSS primero
-import 'bootstrap/dist/css/bootstrap.min.css';
+//import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-vue-next/dist/bootstrap-vue-next.css'
 import 'vue-select/dist/vue-select.css';
 import 'leaflet/dist/leaflet.css';
 import '@/assets/scss/custom-bootstrap.scss'; // custom scss npm install sass sass-loader --save-dev
+
+// ───────────────────────────────────────────────────────────────
+// SKIN MODERN - Activar/Desactivar comentando/descomentando
+// ───────────────────────────────────────────────────────────────
+// Para ACTIVAR el skin moderno: descomenta la línea de abajo
+// Para DESACTIVAR: coméntala de nuevo
+// 
+// NOTA: Si quieres ver mejor los cambios del skin moderno,
+// también puedes comentar temporalmente esta línea:
+// - import '@/assets/scss/custom-bootstrap.scss' (línea 23)
+// 
+// (base.css se importa en componentes individuales, no aquí)
+// ───────────────────────────────────────────────────────────────
+ import '@/assets/css/skin-modern.css';
 
 // Bootstrap JS (bundle = incluye Popper). Importa SOLO uno
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'; // OAHP

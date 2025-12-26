@@ -175,22 +175,28 @@ class EventDraftSerializer(serializers.ModelSerializer):
 class EventNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventNote
-        fields = ['notes', 'updated_at', 'updated_by', 'event']
+        fields = ['notes', 'updated_at', 'updated_by', 'work_account']
         read_only_fields = ['updated_at', 'updated_by']
 
     def create(self, validated_data):
         print('create validated_data', validated_data)
-        event = validated_data['event']
+        work_account = validated_data.pop('work_account', None)
+        if not work_account:
+            raise serializers.ValidationError('work_account is required')
         validated_data['updated_by'] = self.context['request'].user
         print('create validated_data', validated_data)
         try:
             event_note, created = EventNote.objects.update_or_create(
-                event=event,
+                work_account=work_account,
                 defaults=validated_data
             )
             return event_note
         except Exception as e:
             raise serializers.ValidationError(f"Error creating EventNote: {e}")
+    
+    def update(self, instance, validated_data):
+        validated_data['updated_by'] = self.context['request'].user
+        return super().update(instance, validated_data)
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -203,14 +209,15 @@ class EventChatMessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EventChatMessage
-        fields = ['id', 'event', 'author', 'message', 'timestamp']
+        fields = ['id', 'event', 'work_account', 'author', 'message', 'timestamp']
         read_only_fields = ['id', 'timestamp', 'author']
-        extra_kwargs = {'event': {'write_only': True}}
+        extra_kwargs = {'event': {'write_only': True}, 'work_account': {'write_only': True}}
 
     def create(self, validated_data):
-        event = validated_data.pop('event')
+        event = validated_data.pop('event', None)
+        work_account = validated_data.pop('work_account', None)
         author = self.context['request'].user
-        return EventChatMessage.objects.create(event=event, author=author, **validated_data)
+        return EventChatMessage.objects.create(event=event, work_account=work_account, author=author, **validated_data)
     
 class AbsenceReasonSerializer(serializers.ModelSerializer):
     class Meta:
@@ -223,7 +230,7 @@ class EventImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EventImage
-        fields = ['id', 'event', 'image', 'image_url', 'uploaded_at', 'uploaded_by']
+        fields = ['id', 'event', 'work_account', 'image', 'image_url', 'uploaded_at', 'uploaded_by']
         read_only_fields = ['id', 'uploaded_at', 'uploaded_by', 'image_url']
 
     def get_image_url(self, obj):
