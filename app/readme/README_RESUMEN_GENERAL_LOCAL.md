@@ -295,6 +295,74 @@ backend:
 - Puerto 8000 expuesto para acceso desde el host
 - Comando usa Daphne (no Gunicorn)
 
+### Credenciales de PostgreSQL
+
+Para conectarte a PostgreSQL desde el host local o desde herramientas externas (como DBeaver, pgAdmin, etc.):
+
+**Conexión desde el host (fuera de Docker)**:
+```
+Host: localhost (o 127.0.0.1)
+Puerto: 5432
+Base de datos: chalanpro
+Usuario: chalanpro_user
+Contraseña: 2hSGqPHiNhaktRS_lxY3CprmDBYtHJxsIxWZhe-iqd4
+```
+
+**Conexión desde dentro de Docker (desde el contenedor backend)**:
+```
+Host: postgres (nombre del servicio en docker-compose)
+Puerto: 5432
+Base de datos: chalanpro
+Usuario: chalanpro_user
+Contraseña: 2hSGqPHiNhaktRS_lxY3CprmDBYtHJxsIxWZhe-iqd4
+```
+
+**String de conexión (Connection String)**:
+```
+postgres://chalanpro_user:2hSGqPHiNhaktRS_lxY3CprmDBYtHJxsIxWZhe-iqd4@localhost:5432/chalanpro
+```
+
+**Ejemplos de conexión**:
+
+1. **Desde la línea de comandos (psql)**:
+```bash
+# Desde el host
+psql -h localhost -p 5432 -U chalanpro_user -d chalanpro
+
+# Desde dentro del contenedor de postgres
+docker compose -f docker-compose.dev.yml exec postgres psql -U chalanpro_user -d chalanpro
+```
+
+2. **Desde Python (psycopg2)**:
+```python
+import psycopg2
+
+conn = psycopg2.connect(
+    host="localhost",
+    port=5432,
+    database="chalanpro",
+    user="chalanpro_user",
+    password="2hSGqPHiNhaktRS_lxY3CprmDBYtHJxsIxWZhe-iqd4"
+)
+```
+
+3. **Desde Django (settings.py)**:
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'chalanpro',
+        'USER': 'chalanpro_user',
+        'PASSWORD': '2hSGqPHiNhaktRS_lxY3CprmDBYtHJxsIxWZhe-iqd4',
+        'HOST': 'postgres',  # Desde dentro de Docker
+        # 'HOST': 'localhost',  # Desde el host
+        'PORT': '5432',
+    }
+}
+```
+
+**Nota**: Las credenciales están definidas en `envs/postgres.env` y `envs/backend.dev.env`.
+
 ---
 
 ## 🏢 Configuración Multi-Tenant
@@ -543,6 +611,56 @@ sudo ./scripts/update_hosts.sh
 
 ```bash
 docker compose -f docker-compose.dev.yml ps
+```
+
+### Migraciones de Base de Datos
+
+Para crear y ejecutar migraciones de Django dentro del contenedor de Docker:
+
+#### Crear Migraciones
+
+```bash
+# Crear migraciones para todos los cambios detectados en los modelos
+docker compose -f docker-compose.dev.yml exec backend python manage.py makemigrations
+
+# Crear migraciones para una app específica
+docker compose -f docker-compose.dev.yml exec backend python manage.py makemigrations appschedule
+```
+
+#### Ejecutar Migraciones
+
+```bash
+# Aplicar todas las migraciones pendientes
+docker compose -f docker-compose.dev.yml exec backend python manage.py migrate
+
+# Aplicar migraciones para una app específica
+docker compose -f docker-compose.dev.yml exec backend python manage.py migrate appschedule
+```
+
+#### Ver Estado de las Migraciones
+
+```bash
+# Ver qué migraciones están aplicadas y cuáles faltan
+docker compose -f docker-compose.dev.yml exec backend python manage.py showmigrations
+```
+
+#### Comandos Útiles Adicionales
+
+```bash
+# Crear una migración vacía (para migraciones de datos personalizadas)
+docker compose -f docker-compose.dev.yml exec backend python manage.py makemigrations --empty appschedule
+
+# Verificar si hay migraciones pendientes sin aplicarlas
+docker compose -f docker-compose.dev.yml exec backend python manage.py migrate --plan
+
+# Revertir la última migración (cuidado: puede afectar datos)
+docker compose -f docker-compose.dev.yml exec backend python manage.py migrate appschedule <nombre_app> <numero_migracion_anterior>
+```
+
+**Nota importante**: Asegúrate de que el contenedor `backend` esté ejecutándose antes de ejecutar los comandos de migración. Si el contenedor no está corriendo, puedes iniciarlo primero:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d backend
 ```
 
 ---
