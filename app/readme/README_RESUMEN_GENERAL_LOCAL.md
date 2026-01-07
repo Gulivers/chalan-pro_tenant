@@ -586,6 +586,7 @@ npm run serve
 ```bash
 # Backend
 docker compose -f docker-compose.dev.yml logs -f backend
+docker compose -f docker-compose.dev.yml logs --tail=50 backend
 
 # Todos los servicios
 docker compose -f docker-compose.dev.yml logs -f
