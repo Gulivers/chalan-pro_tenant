@@ -107,12 +107,20 @@ export default {
 
 .card {
     border: 1px solid #dee2e6;
-    border-radius: 0.375rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header-tabs {
+    border-bottom: 2px solid #dee2e6;
+    background-color: #f8f9fa;
+    padding: 0;
 }
 
 .card-body {
-    min-height: 400px;
+    min-height: 500px;
     padding: 1.5rem;
+    background-color: #fff;
 }
 
 .tab-content-item {
@@ -130,21 +138,30 @@ export default {
     }
 }
 
+/* Estilos para BNav tabs de bootstrap-vue-next */
 :deep(.nav-tabs) {
     border-bottom: 2px solid #dee2e6;
+    margin-bottom: 0;
+}
+
+:deep(.nav-item) {
+    margin-bottom: -2px;
 }
 
 :deep(.nav-item .nav-link) {
     color: #495057;
     border: none;
     border-bottom: 3px solid transparent;
-    padding: 0.75rem 1rem;
-    transition: all 0.2s;
+    padding: 0.50rem 1rem;
+    transition: all 0.2s ease;
+    background-color: transparent;
+    cursor: pointer;
 }
 
 :deep(.nav-item .nav-link:hover) {
     border-bottom-color: #0d6efd;
     color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
 }
 
 :deep(.nav-item .nav-link.active) {
@@ -152,5 +169,22 @@ export default {
     background-color: transparent;
     border-bottom-color: #0d6efd;
     font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .work-account-discussion-container {
+        padding: 0.5rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+        min-height: 400px;
+    }
+    
+    :deep(.nav-item .nav-link) {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
 }
 </style>

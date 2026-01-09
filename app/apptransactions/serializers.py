@@ -1,5 +1,6 @@
 
 from decimal import Decimal
+import logging
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.db import transaction
@@ -9,6 +10,8 @@ from apptransactions.models import (
     WorkAccount, TransactionFavorite
 )
 from appinventory.models import Stock, PriceType
+
+logger = logging.getLogger(__name__)
 
 class DocumentTypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -296,21 +299,116 @@ class DocumentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         lines_data = validated_data.pop("lines", None)
         
-        # Para documentos operacionales, obtener builder del work_account si no está presente
-        if validated_data.get('work_account') and not validated_data.get('builder'):
-            work_account = validated_data['work_account']
-            if hasattr(work_account, 'builder') and work_account.builder:
-                validated_data['builder'] = work_account.builder
+        # Normalizar work_account: siempre guardar como ID (int)
+        work_account_id = None
+        if validated_data.get('work_account'):
+            work_account = validated_data.pop('work_account')  # Remover de validated_data para manejarlo por separado
+            # Si work_account es un ID (int), usarlo directamente
+            if isinstance(work_account, int):
+                work_account_id = work_account
+            # Si work_account es un objeto, extraer el ID
+            elif hasattr(work_account, 'id'):
+                work_account_id = work_account.id
+            else:
+                # Si es None o cualquier otro valor, mantenerlo como None
+                work_account_id = None
+            
+        # Obtener el objeto WorkAccount si tenemos el ID (para obtener builder si es necesario)
+        work_account_obj = None
+        if work_account_id is not None:
+            try:
+                work_account_obj = WorkAccount.objects.get(id=work_account_id)
+                logger.info(f"WorkAccount object retrieved: {work_account_obj}")
+                
+                # Obtener builder del work_account si no está presente (para cualquier tipo de documento)
+                # Esto es importante porque algunos documentos pueden requerir builder aunque no sean operacionales
+                # IMPORTANTE: Pasar el objeto Builder completo, no solo el ID
+                if not validated_data.get('builder') and work_account_obj.builder_id:
+                    # Obtener el objeto Builder explícitamente usando el ID para asegurar que es un objeto
+                    from ctrctsapp.models import Builder as BuilderModel
+                    builder_id = work_account_obj.builder_id
+                    try:
+                        builder_obj = BuilderModel.objects.get(id=builder_id)
+                        validated_data['builder'] = builder_obj  # Asignar el objeto Builder completo
+                        logger.info(f"Auto-assigned builder object from work_account: {builder_obj} (id: {builder_obj.id}, type: {type(builder_obj).__name__})")
+                    except BuilderModel.DoesNotExist:
+                        logger.warning(f"Builder with id {builder_id} from work_account does not exist")
+            except WorkAccount.DoesNotExist:
+                logger.error(f"WorkAccount with id {work_account_id} does not exist")
+                raise serializers.ValidationError({'work_account': f'WorkAccount with id {work_account_id} does not exist'})
         
-        doc = Document(**validated_data)
+        # Debug: Log para verificar que work_account esté presente
+        logger.info(f"Creating Document - validated_data keys: {list(validated_data.keys())}")
+        logger.info(f"Creating Document with work_account_id: {work_account_id}")
+        if validated_data.get('builder'):
+            builder_value = validated_data['builder']
+            logger.info(f"Builder in validated_data: {builder_value} (type: {type(builder_value).__name__}, is instance: {hasattr(builder_value, 'id')})")
+        
+        # Crear el documento paso a paso para evitar problemas con ForeignKeys
+        # Primero, extraer los valores que necesitamos
+        document_type = validated_data.pop('document_type')
+        date = validated_data.pop('date', None)
+        builder = validated_data.pop('builder', None)
+        notes = validated_data.pop('notes', '')
+        is_active = validated_data.pop('is_active', True)
+        
+        # Crear el documento con los campos básicos
+        doc = Document(
+            document_type=document_type,
+            date=date,
+            notes=notes,
+            is_active=is_active
+        )
+        
+        # Asignar builder si está presente (debe ser un objeto Builder, no un ID)
+        if builder:
+            if isinstance(builder, int):
+                # Si es un ID, obtener el objeto Builder
+                from ctrctsapp.models import Builder as BuilderModel
+                try:
+                    builder_obj = BuilderModel.objects.get(id=builder)
+                    doc.builder = builder_obj
+                    logger.info(f"Builder ID {builder} converted to Builder object: {builder_obj}")
+                except BuilderModel.DoesNotExist:
+                    logger.error(f"Builder with id {builder} does not exist")
+                    raise serializers.ValidationError({'builder': f'Builder with id {builder} does not exist'})
+            else:
+                # Ya es un objeto Builder
+                doc.builder = builder
+                logger.info(f"Builder object assigned: {builder} (id: {builder.id})")
+        
+        # Asignar work_account_id
+        if work_account_id is not None:
+            doc.work_account_id = work_account_id
+            logger.info(f"Set doc.work_account_id = {work_account_id}")
+        
         # Asignar automáticamente el usuario actual
         doc.created_by = self.context['request'].user
+        
+        logger.info(f"Document object created successfully with work_account_id: {doc.work_account_id}, builder_id: {doc.builder_id if doc.builder else None}")
 
         try:
             doc.full_clean()
+            logger.info(f"Document validation passed")
         except DjangoValidationError as e:
+            logger.error(f"Validation error: {e.message_dict}")
             raise serializers.ValidationError(e.message_dict)
-        doc.save()
+        except Exception as e:
+            logger.error(f"Unexpected error during full_clean: {e}", exc_info=True)
+            raise serializers.ValidationError({'non_field_errors': [f'Validation error: {str(e)}']})
+        
+        try:
+            doc.save()
+            logger.info(f"Document saved successfully")
+        except Exception as e:
+            logger.error(f"Error saving Document: {e}", exc_info=True)
+            raise serializers.ValidationError({'non_field_errors': [f'Error saving document: {str(e)}']})
+        
+        # Verificar que se guardó correctamente
+        doc.refresh_from_db()  # Recargar desde la BD para obtener el valor real
+        logger.info(f"Document {doc.id} created - work_account_id in DB: {doc.work_account_id}")
+        if doc.work_account_id is None:
+            logger.warning(f"⚠️ WARNING: Document {doc.id} was saved but work_account_id is NULL!")
 
         # Crear líneas si vinieron anidadas
         if lines_data:
@@ -386,20 +484,55 @@ class DocumentSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         lines_data = validated_data.pop("lines", None)
 
-        # Para documentos operacionales, obtener builder del work_account si no está presente
-        if validated_data.get('work_account') and not validated_data.get('builder'):
-            work_account = validated_data['work_account']
-            if hasattr(work_account, 'builder') and work_account.builder:
-                validated_data['builder'] = work_account.builder
+        # Normalizar work_account: siempre guardar como ID (int)
+        work_account_id = None
+        if validated_data.get('work_account'):
+            work_account = validated_data.pop('work_account')  # Remover de validated_data para manejarlo por separado
+            # Si work_account es un ID (int), usarlo directamente
+            if isinstance(work_account, int):
+                work_account_id = work_account
+            # Si work_account es un objeto, extraer el ID
+            elif hasattr(work_account, 'id'):
+                work_account_id = work_account.id
+            else:
+                # Si es None o cualquier otro valor, mantenerlo como None
+                work_account_id = None
+            
+            # Para documentos operacionales, obtener builder del work_account si no está presente
+            if work_account_id and not validated_data.get('builder'):
+                try:
+                    work_account_obj = WorkAccount.objects.get(id=work_account_id)
+                    if work_account_obj.builder:
+                        validated_data['builder'] = work_account_obj.builder.id if hasattr(work_account_obj.builder, 'id') else work_account_obj.builder
+                except WorkAccount.DoesNotExist:
+                    logger.warning(f"WorkAccount with id {work_account_id} does not exist")
+                    pass  # Si no existe, continuar sin builder
+
+        # Debug: Log para verificar que work_account esté presente
+        logger.info(f"Updating Document {instance.id} - validated_data keys: {list(validated_data.keys())}")
+        logger.info(f"Updating Document {instance.id} with work_account_id: {work_account_id}")
 
         # Actualizamos campos del documento
         for k, v in validated_data.items():
             setattr(instance, k, v)
+        
+        # Asignar explícitamente work_account_id (usar _id para ForeignKey)
+        if work_account_id is not None:
+            instance.work_account_id = work_account_id
+            logger.info(f"Explicitly set instance.work_account_id = {work_account_id}")
+        
         try:
             instance.full_clean()
         except DjangoValidationError as e:
+            logger.error(f"Validation error: {e.message_dict}")
             raise serializers.ValidationError(e.message_dict)
         instance.save()
+        
+        # Verificar que se guardó correctamente
+        instance.refresh_from_db()  # Recargar desde la BD para obtener el valor real
+        logger.info(f"Document {instance.id} updated - work_account_id in DB: {instance.work_account_id}")
+        if instance.work_account_id is None and 'work_account' in validated_data and validated_data['work_account'] is not None:
+            logger.warning(f"⚠️ WARNING: Document {instance.id} was updated but work_account_id is NULL!")
 
         # Manejo de líneas anidadas (UPSERT + delete implícito si el front lo decide)
         if lines_data is not None:

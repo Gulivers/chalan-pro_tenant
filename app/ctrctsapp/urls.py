@@ -38,7 +38,7 @@ urlpatterns = [
     path('api/monthly_summary/', monthly_summary, name='monthly_summary'),
     path('api/user_detail/', UserDetailView.as_view(), name='user_detail'),
     path('api/geocode/', geocode_view, name='geocode'),
-    path('web/contract-pdf/<int:contract_id>', download_contract_pdf, name='contract-pdf'),
+    path('api/contract-pdf/<int:contract_id>/', download_contract_pdf, name='contract-pdf'),
     path('api/builder/<int:pk>/workprices/', BuilderViewSet.as_view({'get': 'workprices'}), name='builder-workprices'),
     path('api/builder/<int:pk>/assign-workprices/', BuilderViewSet.as_view({'post': 'assign_workprices'}), name='assign-workprices'),
     

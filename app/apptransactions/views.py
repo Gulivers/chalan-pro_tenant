@@ -146,7 +146,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     filter_backends = [SearchFilter, OrderingFilter, DjangoFilterBackend]
     search_fields = ["notes", "builder__name", "job", "lot", "document_type__type_code"]
     ordering_fields = ["id", "date", "total_amount"]
-    filterset_fields = ["document_type", "builder", "is_active"]
+    filterset_fields = ["document_type", "builder", "is_active", "work_account"]
 
     # Filtro por rango de fechas ?date_from=2025-09-01&date_to=2025-09-30
     def get_queryset(self):

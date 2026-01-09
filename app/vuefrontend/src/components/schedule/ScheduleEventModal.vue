@@ -2,7 +2,7 @@
   <div>
     <!-- Main Modal -->
     <div class="modal fade" ref="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-xl">
+      <div class="modal-dialog modal-xl schedule-event-modal-wide">
         <div class="modal-content text-start">
           <div class="modal-header">
             <h5 class="modal-title" id="eventModalLabel">
@@ -501,3 +501,39 @@ export default {
 
 };
 </script>
+
+<style scoped>
+/* Modal más ancho para dar más espacio a las tabs de transactions */
+.schedule-event-modal-wide {
+  max-width: 95vw;
+}
+
+/* En pantallas grandes (desktop), mantener ancho moderado para ver margen del backdrop */
+@media (min-width: 1200px) {
+  .schedule-event-modal-wide {
+    max-width: 1200px;
+  }
+}
+
+/* En pantallas extra grandes, aumentar ligeramente pero mantener margen visible */
+@media (min-width: 1400px) {
+  .schedule-event-modal-wide {
+    max-width: 1350px;
+  }
+}
+
+/* Mantener responsividad en tablets */
+@media (max-width: 991.98px) {
+  .schedule-event-modal-wide {
+    max-width: 95vw;
+  }
+}
+
+/* En móviles, usar casi toda la pantalla */
+@media (max-width: 767.98px) {
+  .schedule-event-modal-wide {
+    max-width: 98vw;
+    margin: 0.5rem auto;
+  }
+}
+</style>

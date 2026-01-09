@@ -90,15 +90,24 @@
               </div>
 
               <div class="col-12">
-                <!-- Mostrar BuilderSelector si NO es operacional -->
+                <!-- Si viene desde schedule, mostrar título del work account (independiente del tipo de documento) -->
+                <div v-if="isFromSchedule && workAccountTitle" class="mb-3">
+                  <label class="form-label">Work Account</label>
+                  <div class="form-control bg-light" style="padding: 0.375rem 0.75rem; border: 1px solid #ced4da; border-radius: 0.375rem; min-height: 38px; display: flex; align-items: center;">
+                    <strong>{{ workAccountTitle }}</strong>
+                  </div>
+                  <small class="form-text text-muted">Work Account seleccionado desde el Schedule</small>
+                </div>
+                
+                <!-- Mostrar BuilderSelector si NO es operacional Y NO viene desde schedule -->
                 <BuilderSelector 
-                  v-if="!isOperationalDocument"
+                  v-else-if="!isOperationalDocument && !isFromSchedule"
                   v-model="form.builder"
                   :error="errors.builder" />
                 
-                <!-- Mostrar WorkAccountSelector si ES operacional -->
+                <!-- Mostrar WorkAccountSelector si ES operacional Y NO viene desde schedule -->
                 <WorkAccountSelector 
-                  v-else
+                  v-else-if="isOperationalDocument && !isFromSchedule"
                   v-model="form.work_account"
                   :error="errors.work_account" />
               </div>
@@ -234,6 +243,9 @@ const route = useRoute()
 const router = useRouter()
 
 const idParam = route.query.id ? Number(route.query.id) : null
+// Leer work_account_id de query params (como en contracts)
+const workAccountParam = route.query.work_account_id ? Number(route.query.work_account_id) : 
+                         (route.query.work_account ? Number(route.query.work_account) : null) // Fallback para compatibilidad
 const isEditMode = !!idParam
 const submitting = ref(false)
 const loading = reactive({ 
@@ -242,12 +254,18 @@ const loading = reactive({
   priceTypes: false, 
   brands: false 
 })
+// Variable para almacenar el título del work account cuando viene desde el schedule
+const workAccountTitle = ref(null)
+// Computed para saber si viene desde el schedule (tiene workAccountParam en query)
+const isFromSchedule = computed(() => !!workAccountParam)
 console.log("🔑 Soy isEditMode",isEditMode)
+console.log("🔑 Work Account ID from query:", workAccountParam)
+console.log("🔑 Viene desde schedule:", isFromSchedule.value)
 // Header form
 const form = reactive({
   document_type: null,
   builder: null,
-  work_account: null,
+  work_account: workAccountParam, // Prellenar desde query params si está disponible
   date: new Date().toISOString().slice(0, 10), // date format (YYYY-MM-DD)
   notes: '',
   created_by: null, // opcional, normalmente lo setea el backend desde request.user
@@ -322,7 +340,12 @@ watch(() => form.document_type, (newDocType, oldDocType) => {
   if (newDocType !== oldDocType) {
     // Limpiar campos relacionados cuando cambie el tipo de documento
     form.builder = null
-    form.work_account = null
+    // NO limpiar work_account si viene desde el schedule (tiene workAccountParam)
+    if (!isFromSchedule.value) {
+      form.work_account = null
+    } else {
+      console.log('🔒 Manteniendo work_account desde schedule:', form.work_account)
+    }
   }
 })
 
@@ -925,9 +948,17 @@ async function loadDocument(id) {
 }
 
 function normalizePayload() {
+  // Si viene desde schedule y form.work_account es null, usar workAccountParam como fallback
+  let workAccountToUse = form.work_account
+  if (isFromSchedule.value && (!workAccountToUse || workAccountToUse === null)) {
+    console.warn('⚠️ form.work_account es null pero viene desde schedule, usando workAccountParam:', workAccountParam)
+    workAccountToUse = workAccountParam
+    form.work_account = workAccountParam // Restaurar el valor
+  }
+  
   // Para documentos operacionales, obtener el builder del work_account
   let builderToSend = form.builder
-  if (isOperationalDocument.value && form.work_account && !form.builder) {
+  if (isOperationalDocument.value && workAccountToUse && !form.builder) {
     // Si es operacional y tenemos work_account pero no builder, 
     // necesitamos obtener el builder del work_account
     // Esto se manejará en el backend automáticamente
@@ -943,10 +974,23 @@ function normalizePayload() {
     return value
   }
   
-  return {
+  const workAccountId = extractId(workAccountToUse);
+  
+  // 🔍 DEBUG: Log para verificar work_account
+  console.log('🔍 Frontend normalizePayload - work_account:', {
+    original: form.work_account,
+    workAccountToUse: workAccountToUse,
+    workAccountParam: workAccountParam,
+    isFromSchedule: isFromSchedule.value,
+    type: typeof workAccountToUse,
+    normalized: workAccountId,
+    normalizedType: typeof workAccountId
+  });
+  
+  const normalizedPayload = {
     document_type: form.document_type,
-    builder: builderToSend,
-    work_account: form.work_account,
+    builder: builderToSend ? extractId(builderToSend) : null,
+    work_account: workAccountId,
     date: form.date,
     notes: form.notes?.trim() || '',
     is_active: form.is_active,
@@ -986,6 +1030,8 @@ function normalizePayload() {
         return normalizedLine
       })
   }
+  
+  return normalizedPayload
 }
 
 function clearErrors() {
@@ -995,10 +1041,14 @@ function clearErrors() {
 
 function applyServerErrors(errData) {
   console.log('🔍 Frontend: applyServerErrors called with:', errData)
+  console.log('🔍 Frontend: errData.non_field_errors:', errData.non_field_errors)
   
   // High-level document errors
   for (const k in errData) {
-    if (k !== 'lines') errors[k] = errData[k]
+    if (k !== 'lines') {
+      errors[k] = errData[k]
+      console.log(`🔍 Frontend: Error for field ${k}:`, errData[k])
+    }
   }
   
   // Per-line errors (DRF returns a list aligned with sent indexes)
@@ -1105,6 +1155,16 @@ async function handleSubmit() {
     let errorMessage = 'Please review highlighted fields.'
     let errorTitle = 'Validation Error'
     const stockErrors = []
+    
+    // Verificar si hay non_field_errors primero
+    if (data?.non_field_errors) {
+      const nonFieldErrors = Array.isArray(data.non_field_errors) 
+        ? data.non_field_errors 
+        : [data.non_field_errors];
+      errorMessage = nonFieldErrors.join('<br>');
+      errorTitle = 'Server Error';
+      console.error('🔍 Frontend: non_field_errors encontrados:', nonFieldErrors);
+    }
     
     // Función para extraer información del producto del mensaje de error
     function extractProductInfo(errorMsg, lineIndex = null) {
@@ -1297,13 +1357,42 @@ async function handleSubmit() {
 }
 
 
+// Función para cargar el título del work account cuando viene desde el schedule
+async function loadWorkAccountTitle(workAccountId) {
+  if (!workAccountId) return
+  try {
+    const { data } = await axios.get(`/api/work-accounts/${workAccountId}/`)
+    if (data && data.title) {
+      workAccountTitle.value = data.title
+      console.log('✅ Work Account title loaded:', workAccountTitle.value)
+    }
+  } catch (error) {
+    console.error('Error loading work account title:', error)
+    workAccountTitle.value = `Work Account #${workAccountId}`
+  }
+}
+
 onMounted(async () => {
   console.log('TransactionForm mounted, loading data...')
   await fetchStaticOptions()
   console.log('Units loaded:', unitsOptions.value.length)
   console.log('Warehouses loaded:', warehousesOptions.value.length)
   
-  if (isEditMode) await loadDocument(idParam)
+  // Si hay work_account en query params (viene desde schedule), prellenarlo y cargar título
+  if (workAccountParam) {
+    console.log('🔑 Prellenando work_account desde query params:', workAccountParam)
+    form.work_account = workAccountParam
+    // Cargar el título del work account
+    await loadWorkAccountTitle(workAccountParam)
+  }
+  
+  if (isEditMode) {
+    await loadDocument(idParam)
+    // Si viene desde schedule y estamos editando, también cargar el título si no se cargó antes
+    if (workAccountParam && !workAccountTitle.value && form.work_account) {
+      await loadWorkAccountTitle(form.work_account)
+    }
+  }
 })
 </script>
 
