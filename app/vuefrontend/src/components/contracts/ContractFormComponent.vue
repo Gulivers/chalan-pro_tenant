@@ -1359,6 +1359,16 @@ export default {
               alert("Please enter at least one contract detail.");
               return;
           }
+          // Log para debugging
+          console.log('Saving contract with data:', {
+              work_account: this.newContract.work_account,
+              work_account_id: this.newContract.work_account_id,
+              schedule_id: this.newContract.schedule_id,
+              builder: this.newContract.builder,
+              job: this.newContract.job,
+              house_model: this.newContract.house_model,
+          });
+          
           this.loading = true;
           this.validateLot()
               .then(() => {
@@ -1372,12 +1382,16 @@ export default {
                       }
                   })
                       .then(response => {
-                          if (!idToUpdate) {
-                              this.resetForm();
-                          }
                           // console.log('Contrato guardado con éxito:', response.data);
                           this.savedContractId = response.data.id;
                           this.savedNeedsReprint = response.data.needs_reprint;
+                          this.loading = false; // Desactivar loading
+                          
+                          if (!idToUpdate) {
+                              // No resetear el formulario inmediatamente, solo después de manejar el PDF
+                              // this.resetForm();
+                          }
+                          
                           if (this.savedNeedsReprint === false) {
                               this.downloadContract(this.savedContractId)
                           } else {
@@ -1395,12 +1409,43 @@ export default {
                       })
                       .catch(error => {
                           this.error = error;
+                          this.loading = false; // Asegurar que el loading se desactive
                           if (error.response) {
                               console.error('Error de servidor:', error.response.data);
+                              let errorMessage = 'Error saving contract. ';
+                              if (error.response.data) {
+                                  if (typeof error.response.data === 'string') {
+                                      errorMessage += error.response.data;
+                                  } else if (error.response.data.detail) {
+                                      errorMessage += error.response.data.detail;
+                                  } else if (error.response.data.message) {
+                                      errorMessage += error.response.data.message;
+                                  } else {
+                                      errorMessage += JSON.stringify(error.response.data);
+                                  }
+                              }
+                              Swal.fire({
+                                  title: 'Error',
+                                  text: errorMessage,
+                                  icon: 'error',
+                                  confirmButtonText: 'OK'
+                              });
                           } else if (error.request) {
                               console.error('Error de solicitud:', error.request);
+                              Swal.fire({
+                                  title: 'Network Error',
+                                  text: 'Could not connect to the server. Please check your connection.',
+                                  icon: 'error',
+                                  confirmButtonText: 'OK'
+                              });
                           } else {
                               console.error('Error:', error.message);
+                              Swal.fire({
+                                  title: 'Error',
+                                  text: error.message,
+                                  icon: 'error',
+                                  confirmButtonText: 'OK'
+                              });
                           }
                       });
               })
@@ -1412,11 +1457,15 @@ export default {
       },
 
       resetForm() {
+          // Preservar work_account y schedule_id si vienen de un evento
+          const preserveWorkAccount = this.$route.query.event_id && this.newContract.work_account;
+          const preserveScheduleId = this.newContract.schedule_id;
+          
           this.newContract = {
               house_model: '',
               builder: '',
               job: '',
-              type: '',
+              type: 'Rough',
               lot: null,
               sqft: null,
               address: '',
@@ -1424,9 +1473,16 @@ export default {
               travel_price: null,
               total_options: null,
               total: null,
-              comment: '',
+              comment: 'Required to finish at 100%',
               created_by: null,
+              work_account: preserveWorkAccount ? this.newContract.work_account : null,
+              schedule_id: preserveScheduleId || null,
           };
+          
+          // Si hay un evento, recargar los datos
+          if (preserveWorkAccount && this.$route.query.event_id) {
+              this.prefillFromEvent();
+          }
       },
 
       onFileChange(event) {
@@ -1447,8 +1503,14 @@ export default {
               travel_price: "Travel Price is required",
               total_options: "Total Options is required",
               total: "Total is required and must be greater than 1",
-
           };
+
+          // Si hay work_account, validar que esté presente
+          if (this.$route.query.event_id || this.newContract.work_account) {
+              if (!this.newContract.work_account) {
+                  this.validationErrors.work_account = "Work Account is required";
+              }
+          }
 
           let isValid = true;
 
@@ -1484,17 +1546,37 @@ export default {
       downloadContract(id) {
           this.loading = true; // Activa el spinner
           this.loading_text = `Downloading contract ${id} as PDF`;
-          axios.get('/web/contract-pdf/' + id)
+          axios.get(`/api/contract-pdf/${id}/`)
               .then((response) => {
                   openPdf(response.data);
                   this.loading = false;
+                  // Resetear formulario solo después de que el PDF se abra correctamente
+                  const idToUpdate = this.$route.params.id;
+                  if (!idToUpdate) {
+                      this.resetForm();
+                  }
                   setTimeout(() => {
                       this.$router.push('/contracts');
                   }, 210); // Asegúrate de que el PDF se abra antes de redirigir
               })
               .catch(error => {
-                  console.error('Error fetching contracts:', error);
+                  console.error('Error fetching contract PDF:', error);
                   this.loading = false; // Asegúrate de que el spinner se desactive si hay un error
+                  
+                  // Mostrar mensaje al usuario pero no bloquear - el contrato ya se guardó
+                  Swal.fire({
+                      title: 'PDF Not Available',
+                      text: `Contract ${id} was saved successfully, but the PDF could not be generated. You can view it from the contracts list.`,
+                      icon: 'warning',
+                      confirmButtonText: 'OK',
+                  }).then(() => {
+                      // Resetear formulario después del error también
+                      const idToUpdate = this.$route.params.id;
+                      if (!idToUpdate) {
+                          this.resetForm();
+                      }
+                      this.$router.push('/contracts');
+                  });
               });
       }
   }

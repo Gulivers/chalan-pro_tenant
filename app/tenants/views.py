@@ -470,9 +470,12 @@ def create_tenant_onboarding(request):
         # En desarrollo local, usar localhost con el subdominio
         # En producción, usar el dominio completo con HTTPS
         if settings.DEBUG:
-            # En desarrollo, redirigir al subdominio en el puerto del frontend (3000)
-            # Nota: Para desarrollo local, necesitarás configurar hosts o usar un proxy
-            redirect_url = f"http://{domain_name}:3000/login/"
+            # En desarrollo, redirigir al subdominio en el puerto del frontend (8080)
+            # Obtener el puerto de FRONT_URL o usar 8080 por defecto
+            from urllib.parse import urlparse
+            front_url_parsed = urlparse(settings.FRONT_URL)
+            frontend_port = front_url_parsed.port if front_url_parsed.port else 8080
+            redirect_url = f"http://{domain_name}:{frontend_port}/login/"
         else:
             # En producción, usar HTTPS
             redirect_url = f"https://{domain_name}/login/"

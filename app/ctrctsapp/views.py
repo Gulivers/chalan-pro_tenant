@@ -684,14 +684,22 @@ def download_contract_pdf(request, contract_id):
         html = render_to_string('contract_pdf.html', context)
 
         pdf_file = HTML(string=html).write_pdf(font_config=font_config)
-        response = {
-            'file': base64.b64encode(pdf_file),
+        
+        # Convert bytes to base64 string (not bytes object)
+        pdf_base64 = base64.b64encode(pdf_file).decode('utf-8')
+        
+        response_data = {
+            'file': pdf_base64,
             'filename': f'contract_{contract.pk}.pdf',
             'file_type': 'application/pdf'
         }
-        return Response(response, status=status.HTTP_200_OK)
-    except HouseModel.DoesNotExist:
-        return JsonResponse({"error": "House Model not found"}, status=404)
+        return Response(response_data, status=status.HTTP_200_OK)
+    except Contract.DoesNotExist:
+        logger.error(f"Contract with id {contract_id} not found")
+        return JsonResponse({"error": "Contract not found"}, status=404)
+    except Exception as e:
+        logger.error(f"Error generating PDF for contract {contract_id}: {str(e)}", exc_info=True)
+        return JsonResponse({"error": f"Error generating PDF: {str(e)}"}, status=500)
 
 
 class BuilderReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):

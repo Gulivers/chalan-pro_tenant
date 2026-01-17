@@ -51,15 +51,26 @@ export default {
       websocket: null,
       wsUrl: null,
       canSendMessage: null,
-      debugMode: false
+      debugMode: false,
+      workAccountId: null,
     };
   },
-  mounted() {
+  async mounted() {
     const authStore = useAuthStore()
     this.user = authStore.user.value
     this.canSendMessage = this.hasPermission('appschedule.add_eventchatmessage')
-    this.wsUrl = this.buildWsUrl(`ws/schedule/event/${this.$props.eventId}/chat/`)
-    console.log(`connect to WS event ${this.wsUrl}`)
+    
+    // Obtener work_account_id del evento
+    await this.loadWorkAccountId();
+    
+    // WebSocket + carga inicial (usar work_account si está disponible)
+    if (this.workAccountId) {
+      this.wsUrl = this.buildWsUrl(`ws/schedule/work-account/${this.workAccountId}/chat/`)
+    } else {
+      // Fallback a event_id si no hay work_account
+      this.wsUrl = this.buildWsUrl(`ws/schedule/event/${this.$props.eventId}/chat/`)
+    }
+    console.log(`connect to WS ${this.wsUrl}`)
     this.connectWebSocket()
     this.getMessages()
     this.$nextTick(() => {
@@ -71,6 +82,16 @@ export default {
     this.disconnectWebSocket();
   },
   methods: {
+    async loadWorkAccountId() {
+      try {
+        const { data } = await axios.get(`/api/event/${this.$props.eventId}/`);
+        if (data && data.work_account) {
+          this.workAccountId = data.work_account;
+        }
+      } catch (e) {
+        console.error('Error fetching event data:', e);
+      }
+    },
     parseDate(date){
       const timestamp = dayjs(date)
       return timestamp.format('MMM DD YYYY, HH:mm')
@@ -80,9 +101,9 @@ export default {
       if (this.newMessage.trim() === '') return;
 
       try {
+        // El backend ahora usa work_account internamente, así que solo necesitamos enviar el mensaje
         const response = await axios.post(`/api/events/${this.$props.eventId}/chat/messages/`, {
           message: this.newMessage.trim(),
-          event: this.$props.eventId,
         });
 
         if ([200, 201].includes(response.status)) {

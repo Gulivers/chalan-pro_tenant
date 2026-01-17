@@ -1,5 +1,5 @@
 <template>
-  <nav v-if="shouldShowNavbar" class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-body py-1">
+        <nav v-if="shouldShowNavbar" class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-body py-1 navbar-modern">
     <div class="container d-flex align-items-center">
       <!-- Marca -->
       <a class="navbar-brand py-0" href="/">CHALAN-PRO</a>
@@ -21,7 +21,7 @@
       <div :class="['collapse', 'navbar-collapse', { show: isNavbarOpen }]" id="navbarNav">
         <!-- Menú izquierdo -->
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li v-for="(item, index) in menuItems" :key="index" :class="{ dropdown: item.children }">
+          <li v-for="(item, index) in menuItems" :key="index" :class="['nav-item', { dropdown: item.children }]">
             <template v-if="item.children">
               <a
                 class="nav-link dropdown-toggle"
@@ -49,10 +49,26 @@
         <ul class="navbar-nav ms-auto d-flex align-items-center">
           <!-- Dynamic Messages Dropdown Component -->
           <li class="nav-item" v-if="isLoggedIn">
-            <span class="nav-link">Welcome, {{ userName }}</span>
-          </li>
-          <li class="nav-item" v-if="isLoggedIn">
-            <router-link to="/logout" class="nav-link" @click="logout">Log Out</router-link>
+            <div class="nav-item dropdown user-dropdown">
+              <a
+                class="nav-link dropdown-toggle user-dropdown-toggle d-flex align-items-center"
+                href="#"
+                role="button"
+                @click.prevent="toggleUserDropdown"
+                aria-expanded="false">
+                <img src="@/assets/img/user.svg" alt="User" class="user-icon me-2" />
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end user-dropdown-menu" :class="{ show: isUserDropdownOpen }">
+                <li class="user-dropdown-header">
+                  <strong>Welcome</strong>
+                  <div class="user-name">{{ userName }}</div>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <router-link to="/logout" class="dropdown-item" @click="logout">Log Out</router-link>
+                </li>
+              </ul>
+            </div>
           </li>
           <li class="nav-item" v-if="!isLoggedIn">
             <router-link to="/login" class="nav-link" @click="closeNavbar">Log In</router-link>
@@ -74,6 +90,7 @@
       return {
         isLoggedIn: false,
         isNavbarOpen: false,
+        isUserDropdownOpen: false,
         menuItems: [
           { text: 'Dashboard', route: '/' },
           {
@@ -172,6 +189,15 @@
             item.isOpen = false;
           }
         });
+        this.isUserDropdownOpen = false;
+      },
+      toggleUserDropdown() {
+        this.isUserDropdownOpen = !this.isUserDropdownOpen;
+        this.menuItems.forEach(item => {
+          if (item.children) {
+            item.isOpen = false;
+          }
+        });
       },
       logout() {
         localStorage.removeItem('authToken');
@@ -185,6 +211,7 @@
       },
       closeNavbar() {
         this.isNavbarOpen = false;
+        this.isUserDropdownOpen = false;
         this.menuItems.forEach(item => {
           if (item.children) {
             item.isOpen = false;
@@ -202,13 +229,5 @@
 </script>
 
 <style scoped>
-  .text-orange {
-    color: #ff931e !important;
-    font-weight: bold;
-  }
-  .dropdown-item.router-link-exact-active {
-    color: #ff931e !important;
-    font-weight: bold;
-  }
+  /* Los estilos del navbar se manejan completamente en skin-modern.css */
 </style>
-

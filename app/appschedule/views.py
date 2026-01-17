@@ -282,25 +282,38 @@ class EventNoteViewSet(viewsets.ViewSet):
     def retrieve(self, request, event_id=None):
         try:
             event = get_object_or_404(Event, pk=event_id)
+            work_account = event.work_account
+            
+            if not work_account:
+                return Response({'error': 'Event does not have a work_account associated.'}, status=status.HTTP_400_BAD_REQUEST)
+            
             try:
-                note = EventNote.objects.get(event=event)
+                # Buscar nota por work_account
+                note = EventNote.objects.get(work_account=work_account)
                 serializer = self.serializer_class(note)
                 return Response(serializer.data)
             except EventNote.DoesNotExist:
-                return Response({'notes': ''}, status=status.HTTP_200_OK)  # Or 404 if you prefer
+                return Response({'notes': ''}, status=status.HTTP_200_OK)
         except Event.DoesNotExist:
             return Response({'error': f'Event with ID {event_id} not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     def create(self, request, event_id=None):
         try:
-            get_object_or_404(Event, pk=event_id)
-            event_note = EventNote.objects.filter(event=event_id).first()
+            event = get_object_or_404(Event, pk=event_id)
+            work_account = event.work_account
+            
+            if not work_account:
+                return Response({'error': 'Event does not have a work_account associated.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Buscar nota existente por work_account
+            event_note = EventNote.objects.filter(work_account=work_account).first()
             if event_note:
                 serializer = self.serializer_class(event_note, data=request.data, context={'request': request})
             else:
+                # Crear nueva nota con work_account
                 serializer = self.serializer_class(data=request.data, context={'request': request})
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            serializer.save(work_account=work_account)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -317,7 +330,13 @@ class EventChatViewSet(viewsets.ViewSet):
             return Response({"error": "Event ID is required."}, status=400)
 
         event = get_object_or_404(Event, pk=event_id)
-        queryset = EventChatMessage.objects.filter(event=event).order_by('timestamp')
+        work_account = event.work_account
+        
+        if not work_account:
+            return Response({"error": "Event does not have a work_account associated."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Filtrar mensajes por work_account
+        queryset = EventChatMessage.objects.filter(work_account=work_account).order_by('timestamp')
         serializer = self.serializer_class(queryset, many=True)
 
         return Response(serializer.data)
@@ -327,9 +346,14 @@ class EventChatViewSet(viewsets.ViewSet):
             return Response({"error": "Event ID is required."}, status=400)
 
         event = get_object_or_404(Event, pk=event_id)
+        work_account = event.work_account
+        
+        if not work_account:
+            return Response({"error": "Event does not have a work_account associated."}, status=status.HTTP_400_BAD_REQUEST)
+        
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        message = serializer.save(event=event)
+        message = serializer.save(work_account=work_account, event=event)
 
         # Notify other users via WebSocket based on latest read message
         channel_layer = get_channel_layer()
@@ -341,7 +365,7 @@ class EventChatViewSet(viewsets.ViewSet):
 
             unread_count = (
                 EventChatMessage.objects
-                .filter(event=event)
+                .filter(work_account=work_account)
                 .exclude(author=user)  # No contar sus propios mensajes como no leídos
             )
 
@@ -888,7 +912,16 @@ class EventImageViewSet(viewsets.ModelViewSet):
         event_id = self.request.query_params.get('event')
         qs = super().get_queryset()
         if event_id:
-            qs = qs.filter(event_id=event_id)
+            # Obtener work_account del evento y filtrar por work_account
+            try:
+                event = Event.objects.get(id=event_id)
+                if event.work_account_id:
+                    qs = qs.filter(work_account=event.work_account)
+                else:
+                    # Fallback a event_id si no hay work_account
+                    qs = qs.filter(event_id=event_id)
+            except Event.DoesNotExist:
+                pass
         return qs
     
     @action(detail=False, methods=['post'], url_path='upload', parser_classes=[MultiPartParser, FormParser])
@@ -902,13 +935,17 @@ class EventImageViewSet(viewsets.ModelViewSet):
         except Event.DoesNotExist:
             return Response({'error': 'Event not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        work_account = event.work_account
+        if not work_account:
+            return Response({'error': 'Event does not have a work_account associated.'}, status=status.HTTP_400_BAD_REQUEST)
+
         images = request.FILES.getlist('images')
         if not images:
             return Response({'error': 'No images uploaded'}, status=status.HTTP_400_BAD_REQUEST)
 
         created_images = []
         for img in images:
-            instance = EventImage.objects.create(event=event, image=img, uploaded_by=request.user)
+            instance = EventImage.objects.create(event=event, work_account=work_account, image=img, uploaded_by=request.user)
             created_images.append(instance)
 
         serializer = EventImageSerializer(created_images, many=True, context={'request': request})

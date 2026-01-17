@@ -25,10 +25,14 @@ class TenantASGIMiddleware:
         self.app = app
     
     async def __call__(self, scope, receive, send):
+        # Log para debugging
+        logger.info(f'🔍 ASGI scope type: {scope.get("type")}, path: {scope.get("path")}, headers: {dict(scope.get("headers", []))}')
+        
         # Solo procesar conexiones WebSocket
         if scope['type'] == 'websocket':
             # Extraer hostname del scope
             hostname = self._get_hostname_from_scope(scope)
+            logger.info(f'🔍 WebSocket connection - hostname: {hostname}, path: {scope.get("path")}')
             
             if hostname:
                 # Normalizar hostname (remover puerto)
@@ -45,6 +49,9 @@ class TenantASGIMiddleware:
                     # Si no se encuentra tenant, usar schema público
                     await self._set_schema_to_public_async()
                     logger.warning(f'⚠️ No se encontró tenant para hostname: {normalized_hostname}, usando schema público')
+        else:
+            # Log para peticiones HTTP que no son WebSocket
+            logger.debug(f'🔍 HTTP request - path: {scope.get("path")}, method: {scope.get("method")}')
         
         # Continuar con el siguiente middleware/aplicación
         return await self.app(scope, receive, send)

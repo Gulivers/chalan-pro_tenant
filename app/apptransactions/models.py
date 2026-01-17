@@ -237,10 +237,22 @@ class Document(models.Model):
 
     def save(self, *args, **kwargs):
         # Si viene work_account y falta builder, auto-sincroniza builder desde work_account.builder
-        if self.work_account and not self.builder_id:
-            wa_builder = getattr(self.work_account, 'builder', None)
-            if wa_builder and wa_builder.id:
-                self.builder_id = wa_builder.id
+        if self.work_account_id and not self.builder_id:
+            try:
+                # Usar work_account_id para evitar acceder al objeto si no está cargado
+                from apptransactions.models import WorkAccount
+                work_account = WorkAccount.objects.get(id=self.work_account_id)
+                wa_builder = getattr(work_account, 'builder', None)
+                if wa_builder:
+                    self.builder_id = wa_builder.id if hasattr(wa_builder, 'id') else wa_builder
+            except WorkAccount.DoesNotExist:
+                # Si el work_account no existe, continuar sin builder
+                pass
+            except Exception as e:
+                # Log el error pero continuar
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Error getting builder from work_account: {e}")
         super().save(*args, **kwargs)
 
 class DocumentLine(models.Model):

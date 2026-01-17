@@ -13,16 +13,26 @@ django_asgi_app = get_asgi_application()
 # Import routing after Django is initialized
 from appschedule import routing
 from project.middleware.tenant_asgi import TenantASGIMiddleware
+from django.conf import settings
 
-# Aplicar middleware de tenant ANTES de AuthMiddlewareStack
-# El orden es importante: TenantASGIMiddleware -> AuthMiddlewareStack -> URLRouter
-websocket_stack = TenantASGIMiddleware(
-    AuthMiddlewareStack(
+# Para desarrollo local, simplificar el stack de WebSocket
+# En producción, usar TenantASGIMiddleware para multi-tenant
+if settings.DEBUG:
+    # Desarrollo local: stack simple sin middleware de tenant (más fácil de debuggear)
+    websocket_stack = AuthMiddlewareStack(
         URLRouter(
             routing.websocket_urlpatterns
         )
     )
-)
+else:
+    # Producción: stack completo con middleware de tenant
+    websocket_stack = TenantASGIMiddleware(
+        AuthMiddlewareStack(
+            URLRouter(
+                routing.websocket_urlpatterns
+            )
+        )
+    )
 
 application = ProtocolTypeRouter({
     "http": django_asgi_app,

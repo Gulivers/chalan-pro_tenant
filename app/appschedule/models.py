@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import User
 from crewsapp.models import Crew
 from ctrctsapp.models import Builder, HouseModel, Job
@@ -220,7 +221,9 @@ class EventDraft(models.Model):
 
 
 class EventNote(models.Model):
-    event = models.OneToOneField(Event, on_delete=models.CASCADE, verbose_name='event_note', related_name='note')
+    event = models.OneToOneField(Event, on_delete=models.CASCADE, verbose_name='event_note', related_name='note', null=True, blank=True)
+    # WorkAccount es el campo principal para identificar las notas globales por obra
+    work_account = models.ForeignKey('apptransactions.WorkAccount', on_delete=models.CASCADE, verbose_name='work_account_note', related_name='event_notes', null=True, blank=True)
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -228,16 +231,37 @@ class EventNote(models.Model):
 
     def __str__(self):
         return self.notes
+    
+    class Meta:
+        # Asegurar que solo haya una nota por work_account
+        constraints = [
+            models.UniqueConstraint(
+                fields=['work_account'],
+                condition=Q(work_account__isnull=False),
+                name='unique_work_account_note'
+            )
+        ]
 
 
 class EventChatMessage(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='chat_messages')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='chat_messages', null=True, blank=True)
+    # WorkAccount es el campo principal para identificar los mensajes de chat globales por obra
+    work_account = models.ForeignKey('apptransactions.WorkAccount', on_delete=models.CASCADE, related_name='work_account_chat_messages', null=True, blank=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     message = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.author.username}: {self.message[:50]}"
+    
+    class Meta:
+        # Asegurar que haya al menos event o work_account
+        constraints = [
+            models.CheckConstraint(
+                check=Q(event__isnull=False) | Q(work_account__isnull=False),
+                name='event_chat_message_requires_event_or_work_account'
+            )
+        ]
 
 
 class EventChatReadStatus(models.Model):
@@ -257,16 +281,44 @@ class EventChatReadStatus(models.Model):
 @deconstructible
 class EventImageUploadTo:
     def __call__(self, instance, filename):
-        # Guarda en: event_images/<event_id o 'unassigned'>/filename
-        event_id = instance.event.id if instance.event_id else 'unassigned'
-        base, ext = os.path.splitext(filename)
-        return f'event_images/{event_id}/{base}{ext}'
+        from django.conf import settings
+        # Guarda en: event_images/<work_account_id o event_id o 'unassigned'>/filename
+        if instance.work_account_id:
+            work_account_id = instance.work_account_id
+            base, ext = os.path.splitext(filename)
+            subdir = f'event_images/work_account_{work_account_id}'
+        elif instance.event_id:
+            event_id = instance.event_id
+            base, ext = os.path.splitext(filename)
+            subdir = f'event_images/event_{event_id}'
+        else:
+            base, ext = os.path.splitext(filename)
+            subdir = f'event_images/unassigned'
+        
+        # Crear el directorio si no existe
+        full_path = os.path.join(settings.MEDIA_ROOT, subdir)
+        os.makedirs(full_path, exist_ok=True)
+        
+        return f'{subdir}/{base}{ext}'
 
 class EventImage(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='images')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='images', null=True, blank=True)
+    # WorkAccount es el campo principal para identificar las imágenes globales por obra
+    work_account = models.ForeignKey('apptransactions.WorkAccount', on_delete=models.CASCADE, related_name='images', null=True, blank=True)
     image = models.ImageField(upload_to=EventImageUploadTo())
     uploaded_at = models.DateTimeField(auto_now_add=True)
     uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
+        if self.work_account_id:
+            return f"Image for WorkAccount {self.work_account_id} ({self.id})"
         return f"Image for Event {self.event_id} ({self.id})"
+    
+    class Meta:
+        # Asegurar que haya al menos event o work_account
+        constraints = [
+            models.CheckConstraint(
+                check=Q(event__isnull=False) | Q(work_account__isnull=False),
+                name='event_image_requires_event_or_work_account'
+            )
+        ]

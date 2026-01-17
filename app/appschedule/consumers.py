@@ -1,7 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer, WebsocketConsumer
 from channels.db import database_sync_to_async
-from .models import Event, EventChatMessage
+from .models import Event, EventChatMessage, EventNote
 from .serializers import EventChatMessageSerializer
 
 
@@ -69,6 +69,28 @@ class EventNoteConsumer(AsyncWebsocketConsumer):
         }))
 
 
+class WorkAccountNoteConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.work_account_id = self.scope['url_route']['kwargs']['work_account_id']
+        self.work_account_group_name = f"work_account_{self.work_account_id}_notes"
+
+        # Join a group specific to the work_account
+        await self.channel_layer.group_add(self.work_account_group_name, self.channel_name)
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        # Leave the work_account-specific group
+        await self.channel_layer.group_discard(self.work_account_group_name, self.channel_name)
+
+    async def note_updated(self, event):
+        event_data = event['event_data']
+        # Enviar la información de la nota actualizada al WebSocket
+        await self.send(text_data=json.dumps({
+            'type': 'note.updated',
+            'event': event_data
+        }))
+
+
 class EventChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.event_id = self.scope['url_route']['kwargs']['event_id']
@@ -90,6 +112,25 @@ class EventChatConsumer(AsyncWebsocketConsumer):
         # await self.channel_layer.group_send(
         #     self.room_group_name, {"type": "chat.message", "message": message}
         # )
+
+    async def chat_updated(self, event):
+        data = event['data']
+        await self.send(text_data=json.dumps({
+            'type': 'chat.updated',
+            'data': data
+        }))
+
+
+class WorkAccountChatConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.work_account_id = self.scope['url_route']['kwargs']['work_account_id']
+        self.room_group_name = f"work_account_{self.work_account_id}_chat"
+
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     async def chat_updated(self, event):
         data = event['data']

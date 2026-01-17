@@ -36,18 +36,91 @@ module.exports = defineConfig({
   },
   devServer: {
     host: '0.0.0.0',
-    port: 3000,
-    allowedHosts: ['72.60.168.62'],
+    port: 8080,
+    // Permitir todos los hosts en desarrollo local (para multi-tenant)
+    allowedHosts: 'all',
+    // Deshabilitar validación estricta del Host header para desarrollo local
+    client: {
+      webSocketURL: 'auto://0.0.0.0:0/ws'
+    },
     proxy: {
       '/api': {
-        target: 'http://72.60.168.62:8000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
+        ws: true, // Habilitar WebSockets
+        onProxyReq: (proxyReq, req, res) => {
+          const host = req.headers.host;
+          if (host) {
+            const hostWithoutPort = host.split(':')[0];
+            proxyReq.setHeader('Host', hostWithoutPort);
+          }
+        },
       },
       '/crews': {
-        target: 'http://72.60.168.62:8000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
+        onProxyReq: (proxyReq, req, res) => {
+          const host = req.headers.host;
+          if (host) {
+            const hostWithoutPort = host.split(':')[0];
+            proxyReq.setHeader('Host', hostWithoutPort);
+          }
+        },
+      },
+      '/admin': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        onProxyReq: (proxyReq, req, res) => {
+          const host = req.headers.host;
+          if (host) {
+            const hostWithoutPort = host.split(':')[0];
+            proxyReq.setHeader('Host', hostWithoutPort);
+          }
+        },
+      },
+      '/ws': {
+        target: 'http://localhost:8000', // Usar http:// porque webpack-proxy maneja el upgrade a WebSocket automáticamente
+        ws: true, // Habilitar WebSockets
+        changeOrigin: true,
+        secure: false,
+        logLevel: 'debug', // Para debugging
+        onProxyReq: (proxyReq, req, res) => {
+          const host = req.headers.host;
+          if (host) {
+            const hostWithoutPort = host.split(':')[0];
+            proxyReq.setHeader('Host', hostWithoutPort);
+          }
+        },
+        onError: (err, req, res) => {
+          console.error('Proxy WebSocket error:', err);
+        },
+      },
+      '/static': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        onProxyReq: (proxyReq, req, res) => {
+          const host = req.headers.host;
+          if (host) {
+            const hostWithoutPort = host.split(':')[0];
+            proxyReq.setHeader('Host', hostWithoutPort);
+          }
+        },
+      },
+      '/media': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        onProxyReq: (proxyReq, req, res) => {
+          const host = req.headers.host;
+          if (host) {
+            const hostWithoutPort = host.split(':')[0];
+            proxyReq.setHeader('Host', hostWithoutPort);
+          }
+        },
       },
     },
   },

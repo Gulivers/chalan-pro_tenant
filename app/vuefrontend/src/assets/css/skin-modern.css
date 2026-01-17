@@ -1,0 +1,575 @@
+/* --------------------------------------------------------
+   SKIN MODERN / Tailwind-Style for Bootstrap + Vue.js
+   Compatible con componentes dentro de ProductForm.vue
+--------------------------------------------------------- */
+
+/* ---------- GLOBAL BACKGROUND ---------- */
+body {
+    background: linear-gradient(#e8ebee, #dfe3e8);
+    min-height: 100vh;
+    padding: 0;
+    padding-top: 0;
+    font-family: "Inter", sans-serif;
+    margin: 0;
+}
+
+/* Padding para el contenido principal, no para el navbar */
+.app-container > main.content {
+    padding: 1rem;
+}
+
+/* ---------- CARD STYLE (Tailwind-like) ---------- */
+.card-modern,
+.card {
+    background: #f1f3f5;
+    border-radius: 1.25rem;
+    padding: 2rem 2.5rem;
+    box-shadow:
+        0 12px 35px rgba(0,0,0,0.12),
+        0 4px 10px rgba(0,0,0,0.05);
+    border: none;
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    padding: 0.75rem 0;
+    margin-bottom: 1rem;
+}
+
+.card-body {
+    padding: 0;
+}
+
+/* ---------- TITULO PRINCIPAL ---------- */
+.main-title {
+    color: #2563eb;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2rem;
+}
+
+/* ---------- TITULO DE SECCIONES ---------- */
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #c08500;
+    margin-bottom: .8rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+/* --------------------------------------------------------
+   INPUTS / SELECTS / TEXTAREA
+   Tailwind-like but Bootstrap-compatible
+--------------------------------------------------------- */
+.form-control,
+.form-select,
+textarea.form-control {
+    border-radius: .65rem;
+    border: 1px solid #cbd0d6;
+    padding: .65rem .9rem;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    transition: all .2s ease;
+    background-color: #ffffff;
+}
+
+.form-control:focus,
+.form-select:focus,
+textarea.form-control:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.25);
+}
+
+/* Inputs deshabilitados */
+.form-control:disabled,
+.form-select:disabled {
+    background: #e5e7eb;
+    opacity: 0.8;
+}
+
+/* Placeholders más claros/casi transparentes */
+.form-control::placeholder,
+.form-select::placeholder,
+textarea.form-control::placeholder {
+    color: rgba(156, 163, 175, 0.5) !important; /* gray-400 con 50% opacidad */
+    opacity: 1;
+}
+
+/* Uppercase option (como tu ProductForm.vue) */
+.uppercase,
+.text-uppercase {
+    text-transform: uppercase;
+}
+
+/* ---------- SWITCHES (iOS/Tailwind Style) ---------- */
+.form-switch {
+    padding-left: 3em;
+}
+
+.form-switch .form-check-input {
+    width: 2.75rem !important;
+    height: 1.5rem !important;
+    margin-left: -3em !important;
+    background-color: #d1d5db !important;
+    background-image: none !important;
+    border-radius: 2rem !important;
+    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: none !important;
+    cursor: pointer;
+    position: relative;
+}
+
+.form-switch .form-check-input:checked {
+    background-color: #3b82f6 !important;
+    background-image: none !important;
+    background-position: right center !important;
+}
+
+/* Knob interno blanco redondo usando ::after para Bootstrap */
+.form-switch .form-check-input::after {
+    content: "" !important;
+    background: #ffffff !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    border-radius: 50% !important;
+    position: absolute !important;
+    top: 0.125rem !important;
+    left: 0.125rem !important;
+    transition: transform .3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: block !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+    background-image: none !important;
+}
+
+.form-switch .form-check-input:checked::after {
+    transform: translateX(1.25rem) !important;
+}
+
+.form-switch .form-check-input:focus {
+    background-image: none !important;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.25) !important;
+}
+
+.form-switch .form-check-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* --------------------------------------------------------
+   BOTONES
+--------------------------------------------------------- */
+.btn-rounded {
+    border-radius: .7rem;
+    padding: .6rem 1.4rem;
+    font-weight: 500;
+}
+
+/* Primary mejorado */
+.btn-primary {
+    background-color: #2563eb;
+    border-color: #1e4fd3;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    border-color: #1c46bb;
+}
+
+/* Secondary moderno */
+.btn-secondary {
+    background-color: #6b7280;
+    border-color: #585f6b;
+}
+
+.btn-secondary:hover {
+    background-color: #4b5563;
+    border-color: #414854;
+}
+
+/* ---------- TABLES ---------- */
+.table-modern {
+    background: #fff;
+    border-radius: .8rem;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+.table-modern thead {
+    background: #f3f4f6;
+    font-weight: 600;
+}
+
+.table-modern tbody tr:hover {
+    background: #f1f5f9;
+}
+
+/* --------------------------------------------------------
+   FORMS LAYOUT HELPERS
+--------------------------------------------------------- */
+.form-label,
+label {
+    font-weight: 600;
+    color: #4b5563 !important; /* gray-600 - Sobrescribe el azul de App.vue */
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.form-section {
+    margin-bottom: 1.8rem;
+}
+
+/* --------------------------------------------------------
+   VUE SPECIFIC HELPERS
+--------------------------------------------------------- */
+
+/* Para inputs válidos e inválidos en VUE FORMS */
+.vue-invalid {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(220,38,38,0.25) !important;
+}
+
+.vue-valid {
+    border-color: #16a34a !important;
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.25) !important;
+}
+
+/* Loading overlay en formularios */
+.loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+}
+
+/* --------------------------------------------------------
+   MEJORAS ADICIONALES PARA COMPONENTES
+--------------------------------------------------------- */
+
+/* Espaciado mejorado entre secciones */
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+}
+
+.form-section:not(:last-child) {
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+/* Mejoras en labels - ya definido arriba */
+
+/* Mejoras en grid spacing */
+.row.g-3 {
+    --bs-gutter-y: 1rem;
+    --bs-gutter-x: 1rem;
+}
+
+/* Iconos en títulos */
+.section-title i {
+    font-size: 1.1rem;
+}
+
+/* Botones con mejor espaciado */
+.btn-rounded {
+    min-width: 120px;
+}
+
+/* ========================================================
+   NAVBAR MODERNO
+   ======================================================== */
+.navbar-modern {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-bottom: none;
+    padding: 0.3rem 0;
+    font-family: "Inter", sans-serif;
+}
+
+.navbar-modern .navbar-brand {
+    color: #ffffff !important;
+    font-weight: 400;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+    transition: opacity 0.2s ease;
+}
+
+.navbar-modern .navbar-brand:hover {
+    opacity: 0.9;
+}
+
+.navbar-modern .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 400;
+    padding: 0.4rem 0.65rem !important;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    margin: 0 0.1rem;
+    font-size: 0.875rem;
+}
+
+.navbar-modern .nav-link:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-modern .nav-link.active,
+.navbar-modern .nav-link.router-link-exact-active {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.15);
+    font-weight: 400;
+}
+
+/* Dropdown toggle */
+.navbar-modern .dropdown-toggle {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.navbar-modern .dropdown-toggle:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Dropdown activo cuando alguna de sus opciones está activa */
+.navbar-modern .nav-item.dropdown .dropdown-toggle.text-orange,
+.navbar-modern .nav-item.dropdown .nav-link.text-orange {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    font-weight: 400 !important;
+}
+
+/* Dropdown menu */
+.navbar-modern .dropdown-menu {
+    background: #ffffff !important;
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+    min-width: 200px;
+}
+
+.navbar-modern .dropdown-menu.show {
+    display: block !important;
+}
+
+/* Dropdown items */
+.navbar-modern .dropdown-item {
+    color: #4b5563 !important;
+    padding: 0.65rem 1.25rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    background-color: transparent !important;
+}
+
+.navbar-modern .dropdown-item:hover,
+.navbar-modern .dropdown-item:focus {
+    background-color: #f3f4f6 !important;
+    color: #1e40af !important;
+}
+
+/* Opción activa en dropdown */
+.navbar-modern .dropdown-item.active,
+.navbar-modern .dropdown-item.router-link-exact-active {
+    color: #c08500 !important;
+    font-weight: 400;
+    background-color: rgba(192, 133, 0, 0.1) !important;
+}
+
+/* Navbar toggler (hamburguesa) */
+.navbar-modern .navbar-toggler {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0.5rem;
+    padding: 0.35rem 0.65rem;
+}
+
+.navbar-modern .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.navbar-modern .navbar-toggler:focus {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+}
+
+/* User Dropdown específico */
+.navbar-modern .user-dropdown {
+    position: relative;
+}
+
+.navbar-modern .user-dropdown .user-icon {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+    transition: opacity 0.2s ease;
+}
+
+.navbar-modern .user-dropdown:hover .user-icon {
+    opacity: 0.9;
+}
+
+.navbar-modern .user-dropdown-toggle {
+    padding: 0.4rem 0.6rem !important;
+    border-radius: 0.5rem;
+    font-weight: 400;
+    font-size: 0.875rem;
+}
+
+.navbar-modern .user-dropdown-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.navbar-modern .user-dropdown-menu {
+    min-width: 220px;
+    margin-top: 0.5rem;
+    right: 0;
+    left: auto;
+    z-index: 1050 !important;
+    position: absolute !important;
+}
+
+.navbar-modern .user-dropdown-menu.show {
+    display: block !important;
+}
+
+.navbar-modern .user-dropdown-header {
+    padding: 0.75rem 1.25rem !important;
+    color: #4b5563 !important;
+    cursor: default;
+    font-size: 0.875rem;
+}
+
+.navbar-modern .user-dropdown-header strong {
+    display: block;
+    color: #1f2937;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.navbar-modern .user-dropdown-header .user-name {
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-weight: 400;
+}
+
+.navbar-modern .user-dropdown-menu .dropdown-divider {
+    margin: 0.5rem 0;
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+.navbar-modern .user-dropdown-menu .dropdown-item {
+    padding: 0.65rem 1.25rem;
+    color: #4b5563 !important;
+    font-weight: 400;
+    transition: all 0.2s ease;
+    background-color: transparent !important;
+    font-size: 0.875rem;
+}
+
+.navbar-modern .user-dropdown-menu .dropdown-item:hover,
+.navbar-modern .user-dropdown-menu .dropdown-item:focus {
+    background-color: #f3f4f6 !important;
+    color: #1e40af !important;
+}
+
+/* Navbar collapse (menú responsive) */
+.navbar-modern .navbar-collapse {
+    transition: all 0.3s ease;
+}
+
+.navbar-modern .navbar-collapse.show {
+    background: rgba(30, 58, 138, 0.98);
+    border-radius: 0.75rem;
+    margin-top: 0.75rem;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Ajustes para pantallas pequeñas/tablets */
+@media (max-width: 991.98px) {
+    .navbar-modern .navbar-collapse.show .navbar-nav {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .navbar-modern .nav-link {
+        margin: 0.25rem 0;
+        padding: 0.5rem 1rem !important;
+    }
+    
+    .navbar-modern .dropdown-menu {
+        background: #ffffff !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+        margin-left: 1rem;
+        margin-top: 0.5rem;
+        border-radius: 0.75rem;
+        position: static !important;
+        width: calc(100% - 2rem);
+        min-width: auto;
+    }
+    
+    .navbar-modern .dropdown-item {
+        color: #4b5563 !important;
+    }
+    
+    .navbar-modern .dropdown-item:hover {
+        background-color: #f3f4f6 !important;
+        color: #1e40af !important;
+    }
+    
+    .navbar-modern .dropdown-item.active,
+    .navbar-modern .dropdown-item.router-link-exact-active {
+        color: #cc930d !important;
+        background-color: rgba(192, 133, 0, 0.1) !important;
+    }
+}
+
+/* Ajustes para pantallas medianas */
+@media (min-width: 992px) and (max-width: 1399.98px) {
+    .navbar-modern .nav-link {
+        padding: 0.4rem 0.6rem !important;
+        font-size: 0.85rem;
+    }
+    
+    .navbar-modern .navbar-brand {
+        font-size: 1.1rem;
+    }
+}
+
+/* Ajustes para pantallas grandes */
+@media (min-width: 1400px) {
+    .navbar-modern .nav-link {
+        padding: 0.5rem 0.85rem !important;
+        font-size: 0.95rem;
+    }
+}
+
+/* ========================================================
+   FIN NAVBAR MODERNO
+   ======================================================== */
+
+@media (max-width: 768px) {
+    .card-modern,
+    .card {
+        padding: 1.5rem 1.25rem;
+        border-radius: 1rem;
+    }
+    
+    .section-title {
+        font-size: 1.1rem;
+    }
+    
+    .main-title {
+        font-size: 1.75rem;
+    }
+    
+    .form-section {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+    }
+}
