@@ -55,15 +55,22 @@
   - [8.1 Gestión de Contenedores](#81-gestión-de-contenedores)
   - [8.2 Django Management](#82-django-management)
   - [8.3 Certificados SSL](#83-certificados-ssl)
-- [9. Troubleshooting](#9-troubleshooting)
+- [9. Inventory Master Data Setup](#9-inventory-master-data-setup)
+  - [9.1 Resumen de la Implementación](#91-resumen-de-la-implementación)
+  - [9.2 Componentes del Sistema](#92-componentes-del-sistema)
+  - [9.3 Flujo de Uso](#93-flujo-de-uso)
+  - [9.4 Comandos de Gestión](#94-comandos-de-gestión)
+  - [9.5 Generar el Fixture JSON de Datos Maestros](#95-generar-el-fixture-json-de-datos-maestros)
+- [10. Troubleshooting](#10-troubleshooting)
   - [9.1 El Frontend No Carga](#91-el-frontend-no-carga)
   - [9.2 El Backend No Responde](#92-el-backend-no-responde)
   - [9.3 Problemas con Multi-Tenant](#93-problemas-con-multi-tenant)
   - [9.4 Certificados SSL No Se Generan](#94-certificados-ssl-no-se-generan)
   - [9.5 Errores 502 Bad Gateway](#95-errores-502-bad-gateway)
   - [9.6 Problemas con WebSocket](#96-problemas-con-websocket)
-- [9.5 Errores 502 Bad Gateway](#95-errores-502-bad-gateway)
-- [10. Contacto y Soporte](#10-contacto-y-soporte)
+- [10.5 Errores 502 Bad Gateway](#105-errores-502-bad-gateway)
+- [10.6 Problemas con WebSocket](#106-problemas-con-websocket)
+- [11. Contacto y Soporte](#11-contacto-y-soporte)
 
 ---
 
@@ -1035,9 +1042,155 @@ sudo certbot certificates
 
 ---
 
-## 9. Troubleshooting
+## 9. Inventory Master Data Setup
 
-### 9.1 El Frontend No Carga
+### 9.1 Resumen de la Implementación
+
+El sistema de **Inventory Master Data Setup** permite a los administradores de tenants importar datos maestros de inventario de forma opcional y controlada. Esta funcionalidad fue implementada para permitir que cada tenant decida cuándo y si desea cargar los datos maestros iniciales de productos, marcas, categorías, unidades, tipos de precio, almacenes y precios de productos.
+
+**Características principales:**
+- ✅ Importación opcional y controlada por el administrador del tenant
+- ✅ Descarga de archivo Excel pre-generado con todos los datos maestros
+- ✅ Bloqueo de doble importación mediante flag `seed_inventory_done`
+- ✅ Operación transaccional (si falla, no se guarda nada parcial)
+- ✅ Reseteo automático de secuencias de base de datos después de la importación
+- ✅ Acceso desde el menú "Configuration" del NavbarComponent
+- ✅ Interfaz en inglés con estilos consistentes del sistema
+
+### 9.2 Componentes del Sistema
+
+#### Backend (Django)
+
+**Modelo Tenant (`tenants/models.py`):**
+- Campo `seed_inventory_done`: BooleanField que indica si los datos maestros han sido importados para el tenant.
+
+**Vistas API (`appinventory/views.py`):**
+- `InventoryMasterDataPreviewAPIView` (GET `/api/master-data/preview/`): Verifica el estado de `seed_inventory_done` y devuelve información sobre si los datos ya fueron importados.
+- `InventoryMasterDataExcelDownloadAPIView` (GET `/api/master-data/excel/`): Sirve el archivo Excel pre-generado desde `appinventory/static/appinventory/masters_inventory.xlsx`.
+- `InventoryMasterDataImportAPIView` (POST `/api/master-data/import/`): Importa los datos maestros desde `appinventory/fixtures/masters_inventory.json` de forma transaccional, resetea secuencias y marca `seed_inventory_done=True`.
+
+**Management Command (`appinventory/management/commands/generate_masters_inventory_excel.py`):**
+- Genera el archivo Excel `masters_inventory.xlsx` desde el fixture JSON `masters_inventory.json`.
+- Crea hojas separadas para cada modelo: Categorías de Unidades, Unidades de Medida, Almacenes, Categorías de Productos, Marcas, Tipos de Precio, Productos, y Precios de Productos.
+- Guarda el archivo en `appinventory/static/appinventory/masters_inventory.xlsx` para su descarga.
+
+**Fixture de Datos (`appinventory/fixtures/masters_inventory.json`):**
+- Archivo JSON con todos los datos maestros de inventario.
+- Incluye: UnitCategory, UnitOfMeasure, Warehouse, ProductCategory, ProductBrand, PriceType, Product, ProductPrice.
+- Incluye relaciones ManyToMany (Product ↔ Brand).
+
+#### Frontend (Vue.js)
+
+**Componente (`vuefrontend/src/components/inventory/InventoryMasterDataSetup.vue`):**
+- Componente regular (no modal) con estilos del sistema.
+- Funcionalidades:
+  - Descarga del archivo Excel pre-generado
+  - Vista previa del estado de importación (`seedDone`)
+  - Confirmación de importación con SweetAlert2
+  - Bloqueo de importación si ya se realizó (`seedDone === true`)
+  - Indicadores de carga y mensajes de estado
+
+**Vista (`vuefrontend/src/views/InventoryMasterDataSetupView.vue`):**
+- Vista dedicada que contiene el componente `InventoryMasterDataSetup`.
+
+**Router (`vuefrontend/src/router/index.js`):**
+- Ruta `/inventory-master-data-setup` que apunta a `InventoryMasterDataSetupView`.
+
+**Navbar (`vuefrontend/src/components/layout/NavbarComponent.vue`):**
+- Opción "Inventory Master Data Setup" en el menú desplegable "Configuration".
+
+### 9.3 Flujo de Uso
+
+1. **Acceso:**
+   - El administrador del tenant accede a "Configuration" → "Inventory Master Data Setup" desde el NavbarComponent.
+
+2. **Estado Inicial:**
+   - El componente carga el estado de `seed_inventory_done` desde `/api/master-data/preview/`.
+   - Si `seedDone === false`, muestra opciones para descargar e importar.
+   - Si `seedDone === true`, muestra "Inventory masters imported" y deshabilita la importación.
+
+3. **Descarga del Excel:**
+   - El administrador hace clic en "Download Excel File".
+   - El sistema descarga `masters_inventory.xlsx` desde `/api/master-data/excel/`.
+   - El archivo contiene todas las hojas con los datos maestros.
+
+4. **Revisión:**
+   - El administrador puede revisar y ajustar precios en el Excel descargado (opcional, offline).
+
+5. **Importación:**
+   - El administrador hace clic en "Import Masters into My Tenant".
+   - Se muestra una confirmación con SweetAlert2.
+   - Al confirmar, se envía POST a `/api/master-data/import/`.
+   - El backend:
+     - Inicia una transacción atómica
+     - Carga los datos desde `masters_inventory.json`
+     - Resetea las secuencias de las tablas
+     - Marca `seed_inventory_done=True` en el tenant
+     - Confirma la transacción
+   - Si hay error, la transacción se revierte y `seed_inventory_done` permanece `False`.
+
+6. **Post-Importación:**
+   - Después de la importación exitosa, el componente muestra "Inventory masters imported".
+   - La opción de importar queda deshabilitada.
+
+### 9.4 Comandos de Gestión
+
+**Generar el archivo Excel:**
+```bash
+# Desde el contenedor backend
+docker compose exec backend python manage.py generate_masters_inventory_excel
+
+# El archivo se guarda en: app/appinventory/static/appinventory/masters_inventory.xlsx
+```
+
+**Verificar el estado de un tenant:**
+```bash
+# Desde el shell de Django
+docker compose exec backend python manage.py shell
+>>> from tenants.models import Tenant
+>>> tenant = Tenant.objects.get(schema_name='nombre-del-tenant')
+>>> print(f"Seed done: {tenant.seed_inventory_done}")
+```
+
+**Forzar re-importación (solo para desarrollo/testing):**
+```bash
+# Desde el shell de Django
+docker compose exec backend python manage.py shell
+>>> from tenants.models import Tenant
+>>> tenant = Tenant.objects.get(schema_name='nombre-del-tenant')
+>>> tenant.seed_inventory_done = False
+>>> tenant.save()
+```
+
+**Nota:** El archivo Excel debe regenerarse si se actualiza el fixture `masters_inventory.json`. Ejecutar el comando `generate_masters_inventory_excel` después de cualquier cambio en los datos maestros.
+
+### 9.5 Generar el Fixture JSON de Datos Maestros
+
+**Importante:** Para generar o actualizar el archivo `masters_inventory.json` desde la base de datos de un tenant, use el comando `dumpdata` de Django:
+
+```bash
+# Generar el fixture JSON desde un tenant específico
+docker compose exec backend python manage.py tenant_command dumpdata \
+  --schema nombre-del-tenant \
+  appinventory.UnitCategory \
+  appinventory.UnitOfMeasure \
+  appinventory.Warehouse \
+  appinventory.ProductCategory \
+  appinventory.ProductBrand \
+  appinventory.PriceType \
+  appinventory.Product \
+  appinventory.ProductPrice \
+  --indent 2 \
+  --output /app/appinventory/fixtures/masters_inventory.json
+```
+
+**Nota:** Este comando exporta los datos maestros de inventario desde el schema del tenant especificado y los guarda en `appinventory/fixtures/masters_inventory.json`. Después de generar o actualizar el JSON, debe ejecutarse el comando `generate_masters_inventory_excel` para regenerar el archivo Excel descargable.
+
+---
+
+## 10. Troubleshooting
+
+### 10.1 El Frontend No Carga
 
 1. Verificar que el build se completó:
    ```bash
@@ -1054,7 +1207,7 @@ sudo certbot certificates
    docker compose up -d --build frontend
    ```
 
-### 9.2 El Backend No Responde
+### 10.2 El Backend No Responde
 
 1. Verificar logs:
    ```bash
@@ -1071,7 +1224,7 @@ sudo certbot certificates
    docker compose exec backend python manage.py migrate_schemas
    ```
 
-### 9.3 Problemas con Multi-Tenant
+### 10.3 Problemas con Multi-Tenant
 
 1. Verificar que el dominio esté en la base de datos:
    ```bash
@@ -1087,7 +1240,7 @@ sudo certbot certificates
    docker compose logs backend | grep -i "allowed_hosts\|csrf"
    ```
 
-### 9.4 Certificados SSL No Se Generan
+### 10.4 Certificados SSL No Se Generan
 
 1. Verificar que los DNS estén configurados:
    ```bash
@@ -1105,7 +1258,7 @@ sudo certbot certificates
    docker compose ps nginx
    ```
 
-### 9.5 Errores 502 Bad Gateway
+### 10.5 Errores 502 Bad Gateway
 
 **Síntomas:**
 - Errores 502 en el navegador al intentar acceder a `/api/` o `/media/`
@@ -1155,7 +1308,7 @@ sudo certbot certificates
 
 **Nota:** Desde Diciembre 2024, la configuración de Nginx incluye resolución DNS dinámica para evitar este problema automáticamente.
 
-### 9.6 Problemas con WebSocket
+### 10.6 Problemas con WebSocket
 
 **Importante:** El servidor usa **Daphne (ASGI)** en lugar de Gunicorn (WSGI) para soportar conexiones WebSocket.
 
@@ -1200,7 +1353,7 @@ sudo certbot certificates
 
 ---
 
-## 10. Contacto y Soporte
+## 11. Contacto y Soporte
 
 Para problemas o preguntas:
 - Revisar logs: `docker compose logs -f`

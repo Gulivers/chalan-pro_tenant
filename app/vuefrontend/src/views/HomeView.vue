@@ -5,6 +5,7 @@
       <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
     </div>
 
+
     <!-- Sales vs Purchases Comparison (Top) -->
     <div class="row mb-3">
       <div class="col-xl-12 col-lg-12">

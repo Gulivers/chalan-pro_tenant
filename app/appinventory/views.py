@@ -1,10 +1,14 @@
 # Django core
 from django.views.generic import TemplateView
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F, Sum, OuterRef, Subquery, Count, Max, Q
 from django.db.models.deletion import ProtectedError
 from django.db import IntegrityError
 from django.http import HttpResponse
+from django.core.management import call_command
+from django_tenants.utils import get_tenant
+import json
+import os
 # Django REST Framework (DRF)
 from rest_framework.exceptions import ValidationError
 from rest_framework import status, viewsets
@@ -2410,3 +2414,215 @@ class TrendsExportAPIView(APIView):
             
         except Exception as e:
             return Response({'error': str(e)}, status=500)
+
+
+class InventoryMasterDataExcelDownloadAPIView(APIView):
+    """
+    Vista para descargar un archivo Excel con los datos maestros de inventario
+    pre-generado desde el fixture JSON, organizado en pestañas por modelo.
+    El archivo Excel debe ser generado previamente usando el management command:
+    python manage.py generate_masters_inventory_excel
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        try:
+            # Verificar que el usuario sea admin
+            if not request.user.is_staff:
+                return Response(
+                    {'error': 'Solo administradores pueden acceder a esta funcionalidad.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Obtener el tenant actual
+            tenant = get_tenant(request)
+            if not tenant:
+                return Response(
+                    {'error': 'No se pudo determinar el tenant actual.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Ruta del archivo Excel pre-generado
+            from django.conf import settings
+            excel_path = os.path.join(
+                settings.BASE_DIR,
+                'appinventory',
+                'static',
+                'appinventory',
+                'masters_inventory.xlsx'
+            )
+            
+            if not os.path.exists(excel_path):
+                return Response(
+                    {'error': 'Archivo Excel no encontrado. Por favor, ejecute el comando: python manage.py generate_masters_inventory_excel'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Leer y servir el archivo
+            from django.http import FileResponse
+            from datetime import datetime
+            
+            response = FileResponse(
+                open(excel_path, 'rb'),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = f'attachment; filename="masters_inventory_{datetime.now().strftime("%Y%m%d")}.xlsx"'
+            
+            return response
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Error al descargar Excel: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class InventoryMasterDataPreviewAPIView(APIView):
+    """
+    Vista para obtener el estado de importación de datos maestros.
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        try:
+            # Verificar que el usuario sea admin
+            if not request.user.is_staff:
+                return Response(
+                    {'error': 'Solo administradores pueden acceder a esta funcionalidad.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Obtener el tenant actual
+            tenant = get_tenant(request)
+            if not tenant:
+                return Response(
+                    {'error': 'No se pudo determinar el tenant actual.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            return Response({
+                'seed_done': tenant.seed_inventory_done if hasattr(tenant, 'seed_inventory_done') else False
+            })
+            
+        except Exception as e:
+            return Response(
+                {'error': f'Error al obtener estado: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class InventoryMasterDataImportAPIView(APIView):
+    """
+    Vista para importar datos maestros de inventario al tenant actual.
+    Es transaccional: si falla, no deja datos parciales.
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        try:
+            # Verificar que el usuario sea admin
+            if not request.user.is_staff:
+                return Response(
+                    {'error': 'Solo administradores pueden importar datos maestros.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Obtener el tenant actual
+            from django_tenants.utils import get_tenant
+            tenant = get_tenant(request)
+            if not tenant:
+                return Response(
+                    {'error': 'No se pudo determinar el tenant actual.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Verificar si ya se importaron los datos
+            if hasattr(tenant, 'seed_inventory_done') and tenant.seed_inventory_done:
+                return Response(
+                    {'error': 'Los datos maestros ya han sido importados para este tenant.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Verificar confirmación
+            confirm = request.data.get('confirm', False)
+            if not confirm:
+                return Response(
+                    {'error': 'Debe confirmar la importación de los datos maestros.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Ruta del archivo de fixtures
+            from django.conf import settings
+            fixture_path = os.path.join(
+                settings.BASE_DIR,
+                'appinventory',
+                'fixtures',
+                'masters_inventory.json'
+            )
+            
+            if not os.path.exists(fixture_path):
+                return Response(
+                    {'error': 'Archivo de datos maestros no encontrado.'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Importar dentro de una transacción
+            with transaction.atomic():
+                try:
+                    # Usar loaddata con el fixture (Django busca en app/fixtures/ automáticamente)
+                    # Necesitamos usar la ruta absoluta o relativa a donde Django busca fixtures
+                    fixture_name = 'appinventory/fixtures/masters_inventory.json'
+                    # Intentar con el nombre del fixture primero (si está en FIXTURE_DIRS)
+                    try:
+                        call_command('loaddata', fixture_name, verbosity=0)
+                    except Exception:
+                        # Si falla, usar la ruta absoluta
+                        call_command('loaddata', fixture_path, verbosity=0)
+                    
+                    # Resetear secuencias de PostgreSQL para este schema
+                    from django.db import connection
+                    with connection.cursor() as cursor:
+                        # Resetear secuencias para todas las tablas de inventario
+                        tables = [
+                            'appinventory_unitcategory',
+                            'appinventory_unitofmeasure',
+                            'appinventory_warehouse',
+                            'appinventory_productcategory',
+                            'appinventory_productbrand',
+                            'appinventory_pricetype',
+                            'appinventory_product',
+                            'appinventory_productprice',
+                            'appinventory_product_brands'  # Tabla ManyToMany
+                        ]
+                        for table in tables:
+                            try:
+                                cursor.execute(
+                                    f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), "
+                                    f"(SELECT COALESCE(MAX(id), 1) FROM {table}));"
+                                )
+                            except Exception:
+                                # Si la tabla no tiene secuencia o no existe, continuar
+                                pass
+                    
+                    # Marcar como importado
+                    tenant.seed_inventory_done = True
+                    tenant.save(update_fields=['seed_inventory_done'])
+                    
+                    return Response({
+                        'success': True,
+                        'message': 'Datos maestros de inventario importados correctamente.'
+                    })
+                    
+                except Exception as e:
+                    # Si hay error, la transacción se revierte automáticamente
+                    # y seed_inventory_done permanece False
+                    return Response(
+                        {'error': f'Error al importar datos maestros: {str(e)}'},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
+                    
+        except Exception as e:
+            return Response(
+                {'error': f'Error en la importación: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

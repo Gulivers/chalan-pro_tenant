@@ -17,7 +17,9 @@ from .views import (
     # Stock Export views
     StockByWarehouseExportAPIView, CompleteStockExportAPIView, LowStockProductsExportAPIView, StockReportExportAPIView,
     # Customers & Suppliers Export views
-    CustomersListExportAPIView, SuppliersListExportAPIView, ComparativeAnalysisExportAPIView, TrendsExportAPIView
+    CustomersListExportAPIView, SuppliersListExportAPIView, ComparativeAnalysisExportAPIView, TrendsExportAPIView,
+    # Inventory Master Data views
+    InventoryMasterDataPreviewAPIView, InventoryMasterDataImportAPIView, InventoryMasterDataExcelDownloadAPIView
 )
 
 from .views_validation import validate_units_of_measure
@@ -40,6 +42,12 @@ router.register(r'pricetypes', PriceTypeViewSet)
 
 urlpatterns = [
     path('dashboard/', DashboardView.as_view(), name='inventory-dashboard'),
+    
+    # Inventory Master Data endpoints (deben estar PRIMERO para evitar conflictos con el router)
+    path('api/master-data/preview/', InventoryMasterDataPreviewAPIView.as_view(), name='inventory-master-data-preview'),
+    path('api/master-data/download-excel/', InventoryMasterDataExcelDownloadAPIView.as_view(), name='inventory-master-data-excel-download'),
+    path('api/master-data/import/', InventoryMasterDataImportAPIView.as_view(), name='inventory-master-data-import'),
+    
     path('api/validate-units-measure/', validate_units_of_measure, name='validate-units-measure'),
     
     # Schema endpoints
@@ -95,6 +103,6 @@ urlpatterns = [
     path('api/export/comparative-analysis/', ComparativeAnalysisExportAPIView.as_view(), name='export-comparative-analysis'),
     path('api/export/trends/', TrendsExportAPIView.as_view(), name='export-trends'),
     
-    # CRUD API routes
+    # CRUD API routes (router debe estar al final para no capturar rutas específicas)
     path('api/', include(router.urls)),
 ]

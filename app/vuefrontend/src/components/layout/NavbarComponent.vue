@@ -148,6 +148,7 @@
             isOpen: false,
             children: [
               { text: 'Transactions Types', route: '/document-types', permission: 'apptransactions.view_documenttype' },
+              { text: 'Inventory Master Data Setup', route: '/inventory-master-data-setup', permission: 'appinventory.view_product' },
             ],
           },
           { text: 'About', route: '/about' },

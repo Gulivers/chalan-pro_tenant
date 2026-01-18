@@ -116,14 +116,11 @@ class Tenant(TenantMixin):
     created_on = models.DateField(auto_now_add=True, verbose_name="Creado el")
     is_active = models.BooleanField(default=True, verbose_name="Activo")
     
-    # Campo temporal para almacenar contraseña del admin inicial (solo en desarrollo)
-    # IMPORTANTE: Este campo solo debe usarse en desarrollo, nunca en producción
-    admin_temp_password = models.CharField(
-        max_length=128,
-        blank=True,
-        null=True,
-        verbose_name="Contraseña Temporal Admin",
-        help_text="Contraseña temporal del admin inicial (solo desarrollo)"
+    # Flag para controlar si se han importado los datos maestros de inventario
+    seed_inventory_done = models.BooleanField(
+        default=False,
+        verbose_name="Datos Maestros de Inventario Importados",
+        help_text="Indica si los datos maestros de inventario han sido importados para este tenant"
     )
     
     # Configuración de django-tenants

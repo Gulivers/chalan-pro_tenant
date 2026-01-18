@@ -16,16 +16,11 @@ class TenantAdmin(TenantAdminMixin, admin.ModelAdmin):
     list_display = ('name', 'logo_thumbnail', 'schema_name', 'tenant_id', 'get_domain', 'email', 'client_type', 'paid_until', 'on_trial', 'is_active', 'created_on')
     list_filter = ('is_active', 'on_trial', 'client_type', 'created_on')
     search_fields = ('name', 'schema_name', 'tenant_id', 'email')
-    readonly_fields = ('schema_name', 'tenant_id', 'created_on', 'admin_temp_password', 'logo_preview')
+    readonly_fields = ('schema_name', 'tenant_id', 'created_on', 'logo_preview')
     
     fieldsets = (
         ('Información del Tenant', {
             'fields': ('name', 'schema_name', 'tenant_id', 'email', 'client_type', 'logo', 'logo_preview', 'is_active')
-        }),
-        ('Credenciales Admin (Solo Desarrollo)', {
-            'fields': ('admin_temp_password',),
-            'classes': ('collapse',),
-            'description': '⚠️ Este campo solo se usa en desarrollo. En producción, las contraseñas se envían por email.'
         }),
         ('Configuración de Pago', {
             'fields': ('paid_until', 'on_trial')

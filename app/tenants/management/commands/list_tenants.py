@@ -57,16 +57,7 @@ class Command(BaseCommand):
                             self.stdout.write(f'      Usuario: {user.username}')
                             self.stdout.write(f'      Email: {user.email or "N/A"}')
                             
-                            # Mostrar contraseña temporal si está disponible (solo para el primer admin)
-                            if tenant.admin_temp_password and user == admin_users.first():
-                                self.stdout.write(self.style.SUCCESS(
-                                    f'      🔑 Contraseña: {tenant.admin_temp_password}'
-                                ))
-                                self.stdout.write(self.style.WARNING(
-                                    '      ⚠️  (Contraseña temporal - cámbiala después del primer login)'
-                                ))
-                            else:
-                                self.stdout.write(self.style.WARNING(
+                            self.stdout.write(self.style.WARNING(
                                     f'      🔑 Contraseña: No disponible'
                                 ))
                                 self.stdout.write(self.style.WARNING(

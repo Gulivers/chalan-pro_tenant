@@ -40,6 +40,7 @@ const UnitCategoryView = () => import('@views/inventory/UnitCategoryView.vue');
 const PriceTypeView = () => import('@views/inventory/PriceTypeView.vue');
 const ProductListView = () => import('@views/inventory/ProductListView.vue');
 const InventoryDashboardView = () => import('@views/inventory/InventoryDashboardView.vue');
+const InventoryMasterDataSetupView = () => import('@views/InventoryMasterDataSetupView.vue');
 
 // Parties (Builder, Job, House Model)
 const BuilderView = () => import('@views/parties/BuilderView.vue');
@@ -583,6 +584,12 @@ const routes = [
   // TRANSACTIONS MODULE                                        
   // ───────────────────────────────────────────────────────────
 
+  {
+    path: '/inventory-master-data-setup',
+    name: 'inventory-master-data-setup',
+    component: InventoryMasterDataSetupView,
+    meta: { requiresAuth: true, requiredPermissions: ['appinventory.view_product'] },
+  },
   {
     path: '/document-types',
     name: 'document-types',

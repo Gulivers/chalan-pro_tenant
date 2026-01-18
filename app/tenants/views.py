@@ -451,11 +451,6 @@ def create_tenant_onboarding(request):
             
             logger.info(f"✓ Superusuario creado para tenant {tenant.schema_name}: {username} ({admin_name or 'Sin nombre'})")
             
-            # Guardar la contraseña temporal en el tenant (solo en desarrollo o si fue generada)
-            if settings.DEBUG or not admin_password:
-                tenant.admin_temp_password = temp_password
-                tenant.save(update_fields=['admin_temp_password'])
-            
             # TODO: En producción, enviar email con credenciales al usuario
             # from django.core.mail import send_mail
             # send_mail(
