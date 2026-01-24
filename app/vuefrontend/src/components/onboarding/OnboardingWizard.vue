@@ -4,22 +4,12 @@
       <!-- Progress Bar -->
       <div class="progress-container mb-4">
         <div class="progress" style="height: 8px;">
-          <div
-            class="progress-bar bg-primary"
-            role="progressbar"
-            :style="{ width: progressPercentage + '%' }"
-            :aria-valuenow="currentStep"
-            aria-valuemin="1"
-            aria-valuemax="4"
-          ></div>
+          <div class="progress-bar bg-primary" role="progressbar" :style="{ width: progressPercentage + '%' }"
+            :aria-valuenow="currentStep" aria-valuemin="1" aria-valuemax="4"></div>
         </div>
         <div class="step-indicators d-flex justify-content-between mt-3">
-          <div
-            v-for="step in steps"
-            :key="step.number"
-            class="step-indicator"
-            :class="{ 'active': step.number === currentStep, 'completed': step.number < currentStep }"
-          >
+          <div v-for="step in steps" :key="step.number" class="step-indicator"
+            :class="{ 'active': step.number === currentStep, 'completed': step.number < currentStep }">
             <div class="step-number">
               <span v-if="step.number < currentStep" class="check-icon">
                 <i class="fas fa-check"></i>
@@ -38,64 +28,36 @@
           <transition name="fade-slide" mode="out-in">
             <div :key="currentStep">
               <!-- Step 1: Company Information -->
-              <StepCompanyInfo
-                v-if="currentStep === 1"
-                v-model="formData.companyInfo"
-                :errors="stepErrors.companyInfo"
-                @validate="validateStep1"
-              />
+              <StepCompanyInfo v-if="currentStep === 1" v-model="formData.companyInfo" :errors="stepErrors.companyInfo"
+                @validate="validateStep1" />
 
               <!-- Step 2: Admin User -->
-              <StepAdminUser
-                v-if="currentStep === 2"
-                v-model="formData.adminUser"
-                :errors="stepErrors.adminUser"
-                @validate="validateStep2"
-              />
+              <StepAdminUser v-if="currentStep === 2" v-model="formData.adminUser" :errors="stepErrors.adminUser"
+                @validate="validateStep2" />
 
               <!-- Step 3: Preferences -->
-              <StepPreferences
-                v-if="currentStep === 3"
-                v-model="formData.preferences"
-                :errors="stepErrors.preferences"
-              />
+              <StepPreferences v-if="currentStep === 3" v-model="formData.preferences"
+                :errors="stepErrors.preferences" />
 
               <!-- Step 4: Review -->
-              <StepReview
-                v-if="currentStep === 4"
-                :company-info="formData.companyInfo"
-                :admin-user="formData.adminUser"
-                :preferences="formData.preferences"
-                :recommended-plan="recommendedPlan"
-                :is-submitting="isSubmitting"
-                :error-message="submitError"
-                @submit="handleFinalSubmit"
-                @go-back="goToPreviousStep"
-              />
+              <StepReview v-if="currentStep === 4" :company-info="formData.companyInfo" :admin-user="formData.adminUser"
+                :preferences="formData.preferences" :recommended-plan="recommendedPlan" :is-submitting="isSubmitting"
+                :error-message="submitError" @submit="handleFinalSubmit" @go-back="goToPreviousStep" />
             </div>
           </transition>
 
           <!-- Navigation Buttons -->
           <div v-if="currentStep < 4" class="wizard-actions mt-5 pt-4 border-top">
             <div class="d-flex justify-content-between">
-              <button
-                v-if="currentStep > 1"
-                type="button"
-                class="btn btn-outline-secondary"
-                @click="goToPreviousStep"
-                :disabled="isSubmitting"
-              >
+              <button v-if="currentStep > 1" type="button" class="btn btn-outline-secondary" @click="goToPreviousStep"
+                :disabled="isSubmitting">
                 <i class="fas fa-arrow-left me-2"></i>
                 Previous
               </button>
               <div v-else></div>
 
-              <button
-                type="button"
-                class="btn btn-primary"
-                @click="goToNextStep"
-                :disabled="isSubmitting || !canProceed"
-              >
+              <button type="button" class="btn btn-primary" @click="goToNextStep"
+                :disabled="isSubmitting || !canProceed">
                 Next
                 <i class="fas fa-arrow-right ms-2"></i>
               </button>
@@ -158,7 +120,7 @@ const stepErrors = reactive({
 // Load from localStorage on mount
 onMounted(() => {
   loadFromLocalStorage()
-  
+
   // Auto-save on changes
   watch(() => formData, (newData) => {
     saveToLocalStorage()
@@ -169,7 +131,7 @@ onMounted(() => {
 const recommendedPlan = computed(() => {
   const crewCount = formData.companyInfo.crew_count
   if (!crewCount || crewCount < 1) return null
-  
+
   if (crewCount <= 3) {
     return 'Starter'
   } else if (crewCount >= 4 && crewCount <= 8) {
@@ -188,53 +150,53 @@ const progressPercentage = computed(() => {
 // Validation for each step
 const validateStep1 = () => {
   const errors = {}
-  
+
   if (!formData.companyInfo.business_name || formData.companyInfo.business_name.trim().length < 3) {
     errors.business_name = 'Business name must be at least 3 characters long'
   }
-  
+
   if (!formData.companyInfo.business_type) {
     errors.business_type = 'Please select a business type'
   }
-  
+
   if (!formData.companyInfo.monthly_operations) {
     errors.monthly_operations = 'Please select monthly operations volume'
   }
-  
+
   if (!formData.companyInfo.crew_count || formData.companyInfo.crew_count < 1) {
     errors.crew_count = 'Please enter a valid number of active crews (minimum 1)'
   } else if (!Number.isInteger(formData.companyInfo.crew_count)) {
     errors.crew_count = 'Number of crews must be a whole number'
   }
-  
+
   if (formData.companyInfo.logo) {
     const maxSize = 5 * 1024 * 1024 // 5MB
     if (formData.companyInfo.logo.size > maxSize) {
       errors.logo = 'Logo must not exceed 5MB'
     }
-    
+
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif']
     if (!allowedTypes.includes(formData.companyInfo.logo.type)) {
       errors.logo = 'Logo must be an image (PNG, JPG, GIF)'
     }
   }
-  
+
   stepErrors.companyInfo = errors
   return Object.keys(errors).length === 0
 }
 
 const validateStep2 = () => {
   const errors = {}
-  
+
   if (!formData.adminUser.name || formData.adminUser.name.trim().length < 2) {
     errors.name = 'Name must be at least 2 characters long'
   }
-  
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!formData.adminUser.email || !emailRegex.test(formData.adminUser.email)) {
     errors.email = 'Please enter a valid email address'
   }
-  
+
   if (!formData.adminUser.password || formData.adminUser.password.length < 8) {
     errors.password = 'Password must be at least 8 characters long'
   } else {
@@ -242,27 +204,27 @@ const validateStep2 = () => {
     const hasUpperCase = /[A-Z]/.test(formData.adminUser.password)
     const hasLowerCase = /[a-z]/.test(formData.adminUser.password)
     const hasNumber = /[0-9]/.test(formData.adminUser.password)
-    
+
     if (!hasUpperCase || !hasLowerCase || !hasNumber) {
       errors.password = 'Password must contain uppercase letters, lowercase letters, and numbers'
     }
   }
-  
+
   if (formData.adminUser.password !== formData.adminUser.password_confirm) {
     errors.password_confirm = 'Passwords do not match'
   }
-  
+
   stepErrors.adminUser = errors
   return Object.keys(errors).length === 0
 }
 
 const validateStep3 = () => {
   const errors = {}
-  
+
   if (!formData.preferences || formData.preferences.length === 0) {
     errors.preferences = 'Please select at least one module'
   }
-  
+
   stepErrors.preferences = errors
   return Object.keys(errors).length === 0
 }
@@ -326,7 +288,7 @@ const loadFromLocalStorage = () => {
     if (saved) {
       const data = JSON.parse(saved)
       currentStep.value = data.currentStep || 1
-      
+
       if (data.formData) {
         if (data.formData.companyInfo) {
           Object.assign(formData.companyInfo, data.formData.companyInfo)
@@ -547,4 +509,3 @@ const handleFinalSubmit = async () => {
   }
 }
 </style>
-

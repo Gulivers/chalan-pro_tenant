@@ -29,14 +29,14 @@ from utils.datatable import handle_datatable_query
 # App Models
 from appinventory.models import (
     Product, Stock, Warehouse, ProductCategory,
-    ProductBrand, UnitOfMeasure, UnitCategory, PriceType, InventoryMovement
+    ProductBrand, UnitOfMeasure, UnitCategory, PriceType, InventoryMovement, ProductImage
     )
 from apptransactions.models import Document, DocumentLine, DocumentType
 # Serializers
 from appinventory.serializers import (
     WarehouseSerializer, ProductCategorySerializer, ProductBrandSerializer,
     ProductSerializer, UnitOfMeasureSerializer, UnitCategorySerializer,
-    PriceTypeSerializer, ProductListSerializer,ProductDetailSerializer
+    PriceTypeSerializer, ProductListSerializer, ProductDetailSerializer, ProductImageSerializer
     )
 
 
@@ -179,6 +179,105 @@ class ProductViewSet(viewsets.ModelViewSet):
         elif self.action == 'retrieve':
             return ProductDetailSerializer  # Para vista detalle o edición
         return ProductSerializer  # Para create, update, partial_update
+
+
+class ProductImageViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para CRUD de imágenes de productos.
+    """
+    queryset = ProductImage.objects.select_related('product', 'assignment__brand', 'uploaded_by').all()
+    serializer_class = ProductImageSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['product', 'assignment__brand', 'is_primary']
+
+    def get_serializer_context(self):
+        """Agregar request al contexto del serializer para generar URLs absolutas"""
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+
+class ProductImagesByBrandAPIView(APIView):
+    """
+    API View para obtener imágenes de un producto agrupadas por marca.
+    Retorna un objeto donde cada clave es el ID de la marca y el valor es un array de imágenes.
+    Útil para el componente Vue con tabs por marca.
+    """
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, product_id):
+        try:
+            product = Product.objects.prefetch_related('brand_assignments__brand', 'images__assignment__brand').get(pk=product_id)
+            
+            # Obtener todas las imágenes del producto
+            images = ProductImage.objects.filter(product=product).select_related('assignment__brand', 'uploaded_by').order_by('-is_primary', '-uploaded_at')
+            
+            # Agrupar por marca usando las asignaciones existentes
+            images_by_brand = {}
+            brands_info = {}
+            
+            # Primero, inicializar con todas las marcas asignadas al producto
+            for assignment in product.brand_assignments.all():
+                brand = assignment.brand
+                images_by_brand[brand.id] = []
+                brands_info[brand.id] = {
+                    'id': brand.id,
+                    'assignment_id': assignment.id,
+                    'name': brand.name,
+                    'is_default': brand.is_default
+                }
+            
+            # Luego, llenar con las imágenes
+            for image in images:
+                if not image.assignment:
+                    continue
+                    
+                brand_id = image.assignment.brand.id
+                
+                # Por si acaso hay imágenes con asignaciones que ya no están en product.brand_assignments
+                if brand_id not in images_by_brand:
+                    brand_name = image.assignment.brand.name
+                    images_by_brand[brand_id] = []
+                    brands_info[brand_id] = {
+                        'id': brand_id,
+                        'assignment_id': image.assignment.id,
+                        'name': brand_name,
+                        'is_default': image.assignment.brand.is_default
+                    }
+                
+                serializer = ProductImageSerializer(image, context={'request': request})
+                images_by_brand[brand_id].append(serializer.data)
+            
+            # Ordenar marcas: primero la default, luego por nombre
+            sorted_brand_ids = sorted(
+                brands_info.keys(),
+                key=lambda bid: (not brands_info[bid]['is_default'], brands_info[bid]['name'])
+            )
+            
+            return Response({
+                'product_id': product.id,
+                'product_name': product.name,
+                'product_sku': product.sku,
+                'brands': [brands_info[bid] for bid in sorted_brand_ids],
+                'images_by_brand': {
+                    str(bid): images_by_brand[bid] for bid in sorted_brand_ids
+                }
+            })
+            
+        except Product.DoesNotExist:
+            return Response(
+                {'error': 'Product not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 @permission_classes([AllowAny])
 class ProductListAPIView(APIView):
@@ -2592,7 +2691,7 @@ class InventoryMasterDataImportAPIView(APIView):
                             'appinventory_pricetype',
                             'appinventory_product',
                             'appinventory_productprice',
-                            'appinventory_product_brands'  # Tabla ManyToMany
+                            'appinventory_productbrandassignment'
                         ]
                         for table in tables:
                             try:

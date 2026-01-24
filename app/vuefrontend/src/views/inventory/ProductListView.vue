@@ -125,7 +125,15 @@
         <!-- Name Column -->
         <template #cell(name)="row">
           <div class="text-start">
-            {{ row.item.name }}
+            <a
+              href="#"
+              @click.prevent="openImageGallery(row.item.id)"
+              class="text-decoration-none text-primary"
+              style="cursor: pointer;"
+              v-tt
+              data-title="View product images">
+              {{ row.item.name }}
+            </a>
           </div>
         </template>
 
@@ -176,14 +184,18 @@
           @update:model-value="onPageChange" />
       </div>
     </div>
+
+    <!-- Product Image Gallery Modal -->
+    <ProductImageGallery ref="productImageGallery" :productId="selectedProductId" />
   </TxCard>
 </template>
 
 <script>
   import TxCard from '@components/layout/TxCard.vue';
+  import ProductImageGallery from '@components/inventory/ProductImageGallery.vue';
   import '@assets/css/base.css';
   import axios from 'axios';
-  import { computed, ref, watch, onMounted, getCurrentInstance } from 'vue';
+  import { computed, ref, watch, onMounted, getCurrentInstance, nextTick } from 'vue';
   import { useRouter } from 'vue-router';
 
   // Bootstrap Vue Next components
@@ -207,6 +219,7 @@
     name: 'ProductListView',
     components: {
       TxCard,
+      ProductImageGallery,
       BTable,
       BFormGroup,
       BFormInput,
@@ -238,6 +251,8 @@
       const perPage = ref(25);
       const filter = ref('');
       const totalRows = ref(0);
+      const selectedProductId = ref(null);
+      const productImageGallery = ref(null);
 
       // Table configuration
       const fields = [
@@ -392,6 +407,28 @@
         });
       };
 
+      const openImageGallery = productId => {
+        console.log('🖼️ openImageGallery llamado con productId:', productId);
+        console.log('📦 Producto completo:', products.value.find(p => p.id === productId) || 'No encontrado en products array');
+        
+        selectedProductId.value = productId;
+        console.log('✅ selectedProductId actualizado a:', selectedProductId.value);
+        console.log('🔗 URL de la galería sería: /api/products/' + productId + '/images/');
+        
+        // Esperar al siguiente tick para asegurar que el componente esté montado
+        nextTick(() => {
+          console.log('⏱️ nextTick ejecutado');
+          console.log('🔍 productImageGallery.value existe?', !!productImageGallery.value);
+          
+          if (productImageGallery.value) {
+            console.log('🚀 Llamando a openModal()');
+            productImageGallery.value.openModal();
+          } else {
+            console.error('❌ productImageGallery.value es null o undefined');
+          }
+        });
+      };
+
       return {
         // Data
         products,
@@ -422,6 +459,9 @@
         viewItem,
         editItem,
         deleteItem,
+        openImageGallery,
+        productImageGallery,
+        selectedProductId,
       };
     },
   };

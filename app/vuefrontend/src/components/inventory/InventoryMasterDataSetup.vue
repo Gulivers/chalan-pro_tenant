@@ -13,7 +13,8 @@
 
       <div class="card-body text-start">
         <div v-if="loading" class="text-center py-5">
-          <div class="spinner-border text-warning mb-3" role="status" style="width: 3rem; height: 3rem; border-width: 0.25em;">
+          <div class="spinner-border text-warning mb-3" role="status"
+            style="width: 3rem; height: 3rem; border-width: 0.25em;">
             <span class="sr-only">Loading...</span>
           </div>
           <p class="text-muted mb-0">Verifying status...</p>
@@ -26,7 +27,8 @@
         <div v-else-if="!seedDone">
           <div class="alert alert-info mb-4">
             <i class="fas fa-info-circle mr-2"></i>
-            <strong>Important:</strong> You can download an Excel file with inventory master data (Products, Brands, Categories, Units, Price Types, Warehouses, Product Prices).
+            <strong>Important:</strong> You can download an Excel file with inventory master data (Products, Brands,
+            Categories, Units, Price Types, Warehouses, Product Prices).
             Review and adjust the data if necessary before importing it to your tenant.
           </div>
 
@@ -35,17 +37,12 @@
               <i class="fas fa-file-excel mr-2 text-success"></i>Step 1: Download Excel File (.xlsx)
             </h6>
             <p class="text-muted small mb-3">
-              Download a real Excel file (.xlsx) containing the inventory master data (Products, Brands, Categories, Units, Price Types, Warehouses, Product Prices) from the <code>masters_inventory.json</code> fixture file. The Excel file is organized in tabs by model for easy review offline.
+              Download a real Excel file (.xlsx) containing the inventory master data (Products, Brands, Categories,
+              Units, Price Types, Warehouses, Product Prices) from the <code>masters_inventory.json</code> fixture file.
+              The Excel file is organized in tabs by model for easy review offline.
             </p>
-            <button
-              class="btn btn-success"
-              @click="downloadExcel"
-              :disabled="downloading"
-            >
-              <span
-                v-if="downloading"
-                class="spinner-border spinner-border-sm me-1"
-                role="status"
+            <button class="btn btn-success" @click="downloadExcel" :disabled="downloading">
+              <span v-if="downloading" class="spinner-border spinner-border-sm me-1" role="status"
                 aria-hidden="true"></span>
               <i v-else class="fas fa-download mr-1"></i>
               <span v-if="downloading">Downloading...</span>
@@ -58,39 +55,29 @@
               <i class="fas fa-upload mr-2 text-primary"></i>Step 2: Import Data
             </h6>
             <p class="text-muted small mb-3">
-              After reviewing the Excel file offline (using Microsoft Excel or similar), you can import the master data to your tenant.
-              <strong>Note:</strong> The import will be performed from the system's JSON fixture file (<code>masters_inventory.json</code>), not from the downloaded Excel file. The Excel file is provided for your review only.
+              After reviewing the Excel file offline (using Microsoft Excel or similar), you can import the master data
+              to your tenant.
+              <strong>Note:</strong> The import will be performed from the system's JSON fixture file
+              (<code>masters_inventory.json</code>), not from the downloaded Excel file. The Excel file is provided for
+              your review only.
             </p>
 
             <div class="form-check form-switch mb-3 d-flex align-items-center gap-2">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                id="confirmImport"
-                v-model="confirmCheck"
-                role="switch"
-              />
+              <input class="form-check-input" type="checkbox" id="confirmImport" v-model="confirmCheck" role="switch" />
               <label class="form-check-label mb-0" for="confirmImport">
                 <strong>I confirm: Import masters into my tenant</strong>
               </label>
             </div>
 
             <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center gap-2">
-              <button
-                class="btn btn-primary"
-                @click="importMasterData"
-                :disabled="!confirmCheck || importing"
-              >
-                <span
-                  v-if="importing"
-                  class="spinner-border spinner-border-sm me-1"
-                  role="status"
+              <button class="btn btn-primary" @click="importMasterData" :disabled="!confirmCheck || importing">
+                <span v-if="importing" class="spinner-border spinner-border-sm me-1" role="status"
                   aria-hidden="true"></span>
                 <i v-else class="fas fa-upload mr-1"></i>
                 <span v-if="importing">Importing...</span>
                 <span v-else>Import Master Data</span>
               </button>
-              
+
               <button type="button" class="btn btn-secondary" @click="goBack" :disabled="importing">Cancel</button>
             </div>
           </div>
@@ -99,7 +86,8 @@
         <div v-else class="alert alert-success mb-0">
           <i class="fas fa-check-circle mr-2"></i>
           <strong>Inventory masters imported.</strong>
-          <p class="mb-0 mt-2">The inventory master data has been successfully imported to this tenant. Import cannot be performed more than once.</p>
+          <p class="mb-0 mt-2">The inventory master data has been successfully imported to this tenant. Import cannot be
+            performed more than once.</p>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from appinventory.models import (
     Warehouse, ProductCategory, ProductBrand, Product, UnitOfMeasure, 
-    UnitCategory, PriceType, ProductPrice
+    UnitCategory, PriceType, ProductPrice, ProductImage
 )
 from django.db import transaction, IntegrityError
 import logging
@@ -246,3 +246,67 @@ class ProductDetailSerializer(ProductSerializer):
             'id': default_brand.id if default_brand else None,
             'name': default_brand.name if default_brand else None
         }
+
+# Serializador para imágenes de productos
+class ProductImageSerializer(serializers.ModelSerializer):
+    brand_name = serializers.CharField(source='assignment.brand.name', read_only=True)
+    brand_id = serializers.IntegerField(source='assignment.brand.id', read_only=True)
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    image_url = serializers.SerializerMethodField()
+    uploaded_by_username = serializers.CharField(source='uploaded_by.username', read_only=True, allow_null=True)
+
+    class Meta:
+        model = ProductImage
+        fields = [
+            'id', 'product', 'product_name', 'assignment', 'brand_id', 'brand_name',
+            'image', 'image_url', 'is_primary', 'uploaded_at',
+            'uploaded_by', 'uploaded_by_username', 'description'
+        ]
+        read_only_fields = ['uploaded_at', 'uploaded_by']
+
+    def get_image_url(self, obj):
+        """Returns the image URL (relative path for frontend proxy compatibility)"""
+        if obj.image:
+            # Use relative URL so it works with frontend proxy in development
+            # and direct access in production
+            return obj.image.url
+        return None
+
+    def validate(self, attrs):
+        """Valida que la asignación pertenezca al producto"""
+        product = attrs.get('product') or (self.instance.product if self.instance else None)
+        assignment = attrs.get('assignment') or (self.instance.assignment if self.instance else None)
+        
+        if product and assignment:
+            if assignment.product != product:
+                raise serializers.ValidationError({
+                    'assignment': f"Assignment '{assignment}' does not belong to product '{product.name}'."
+                })
+        
+        return attrs
+
+    def create(self, validated_data):
+        """Override create para asignar el usuario actual y manejar is_primary"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            validated_data['uploaded_by'] = request.user
+        
+        # Si se marca como principal, desmarcar otras principales de la misma asignación
+        if validated_data.get('is_primary'):
+            ProductImage.objects.filter(
+                assignment=validated_data['assignment'],
+                is_primary=True
+            ).update(is_primary=False)
+        
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        """Override update para manejar is_primary"""
+        # Si se marca como principal, desmarcar otras principales de la misma asignación
+        if validated_data.get('is_primary', False):
+            ProductImage.objects.filter(
+                assignment=instance.assignment,
+                is_primary=True
+            ).exclude(pk=instance.pk).update(is_primary=False)
+        
+        return super().update(instance, validated_data)

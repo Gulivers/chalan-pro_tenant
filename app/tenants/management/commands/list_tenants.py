@@ -60,9 +60,9 @@ class Command(BaseCommand):
                             self.stdout.write(self.style.WARNING(
                                     f'      🔑 Contraseña: No disponible'
                                 ))
-                                self.stdout.write(self.style.WARNING(
-                                    f'      💡 Para resetear: python manage.py create_tenant_superuser --schema {tenant.schema_name} --username {user.username} --email {user.email or "admin@example.com"} --password nueva_password'
-                                ))
+                            self.stdout.write(self.style.WARNING(
+                                f'      💡 Para resetear: python manage.py create_tenant_superuser --schema {tenant.schema_name} --username {user.username} --email {user.email or "admin@example.com"} --password nueva_password'
+                            ))
                     else:
                         self.stdout.write(self.style.WARNING('\n   ⚠️  No hay usuarios admin en este tenant'))
             except Exception as e:

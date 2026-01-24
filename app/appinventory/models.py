@@ -73,11 +73,31 @@ class ProductBrand(models.Model):
         return self.name
 
 
+class ProductBrandAssignment(models.Model):
+    """
+    Modelo intermedio para asociar productos con marcas.
+    Permite agrupar imágenes y otros datos por la relación producto-marca.
+    """
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='brand_assignments')
+    brand = models.ForeignKey(ProductBrand, on_delete=models.CASCADE, related_name='product_assignments')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('product', 'brand')
+        verbose_name = "Product Brand Assignment"
+        verbose_name_plural = "Product Brand Assignments"
+
+    def __str__(self):
+        product_name = self.product.name if self.product else "Unknown"
+        brand_name = self.brand.name if self.brand else "Unknown"
+        return f"{product_name} - {brand_name}"
+
+
 class Product(models.Model):
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=100, unique=True)
     category = models.ForeignKey(ProductCategory,  on_delete=models.PROTECT, null=True)
-    brands = models.ManyToManyField(ProductBrand, related_name='products')
+    brands = models.ManyToManyField(ProductBrand, related_name='products', through=ProductBrandAssignment)
     reorder_level = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     unit_default = models.ForeignKey(UnitOfMeasure, on_delete=models.PROTECT, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -269,3 +289,84 @@ class InventoryMovement(models.Model):
         
         # Eliminar el movimiento
         super().delete(*args, **kwargs)
+
+
+def product_image_upload_to(instance, filename):
+    """
+    Función para determinar la ruta de subida de imágenes de productos.
+    Estructura: products/{product_id}/{brand_id}/{filename}
+    """
+    import os
+    from django.utils import timezone
+    
+    # Obtener extensión del archivo
+    ext = os.path.splitext(filename)[1]
+    # Generar nombre único basado en timestamp
+    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+    base_name = os.path.splitext(filename)[0]
+    # Limpiar nombre base (remover caracteres especiales)
+    base_name = "".join(c for c in base_name if c.isalnum() or c in (' ', '-', '_')).strip()
+    base_name = base_name.replace(' ', '_')
+    
+    # Construir ruta: products/{product_id}/{brand_id}/{timestamp}_{base_name}{ext}
+    product_id = instance.assignment.product.id if instance.assignment and instance.assignment.product else 'unknown'
+    brand_id = instance.assignment.brand.id if instance.assignment and instance.assignment.brand else 'unknown'
+    
+    return f'products/{product_id}/{brand_id}/{timestamp}_{base_name}{ext}'
+
+
+class ProductImage(models.Model):
+    """
+    Modelo para almacenar imágenes de productos asociadas a marcas específicas a través de la relación de marca.
+    """
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images', null=True)
+    assignment = models.ForeignKey(ProductBrandAssignment, on_delete=models.CASCADE, related_name='images', null=True)
+    image = models.ImageField(upload_to=product_image_upload_to)
+    is_primary = models.BooleanField(
+        default=False,
+        help_text="Indica si esta es la imagen principal para esta marca del producto"
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    description = models.CharField(max_length=255, blank=True, help_text="Descripción opcional de la imagen")
+
+    class Meta:
+        ordering = ['-is_primary', '-uploaded_at']
+        indexes = [
+            models.Index(fields=['assignment']),
+            models.Index(fields=['assignment', 'is_primary']),
+        ]
+        verbose_name = "Product Image"
+        verbose_name_plural = "Product Images"
+
+    def clean(self):
+        """Valida que la asignación pertenezca al producto"""
+        super().clean()
+        if hasattr(self, 'assignment') and hasattr(self, 'product'):
+            if self.assignment.product != self.product:
+                raise ValidationError(
+                    f"La asignación de marca '{self.assignment}' no pertenece al producto '{self.product.name}'."
+                )
+
+    def save(self, *args, **kwargs):
+        """Override save para aplicar validaciones"""
+        self.full_clean()
+        super().save(*args, **kwargs)
+        
+        # Si se marca como principal, desmarcar otras principales de la misma asignación
+        if self.is_primary:
+            ProductImage.objects.filter(
+                assignment=self.assignment,
+                is_primary=True
+            ).exclude(pk=self.pk).update(is_primary=False)
+
+    def __str__(self):
+        product_name = self.assignment.product.name if self.assignment and self.assignment.product else "Unknown"
+        brand_name = self.assignment.brand.name if self.assignment and self.assignment.brand else "Unknown"
+        primary_tag = " [PRIMARY]" if self.is_primary else ""
+        return f"{product_name} - {brand_name}{primary_tag}"

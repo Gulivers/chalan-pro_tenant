@@ -7,6 +7,7 @@ from .views import (
     UnitCategoryListAPIView, UnitCategoryViewSet, PriceTypeViewSet,
     ProductDataTableAPIView, ProductListDirectAPIView, ProductListProviderAPIView, ProductDefaultPriceAPIView, DefaultWarehouseAPIView,
     ProductBrandsListAPIView, ProductBrandsUpdateAPIView,
+    ProductImageViewSet, ProductImagesByBrandAPIView,
     # Nuevas vistas para dashboard mejorado
     TestDashboardAPIView, InventoryDashboardMetricsAPIView, TopSellingProductsAPIView, SalesAnalysisAPIView,
     LowStockProductsAPIView, LowestStockProductsAPIView,
@@ -36,6 +37,7 @@ router.register(r'warehouses', WarehouseViewSet, basename='warehouse')
 router.register(r'productcategory', ProductCategoryViewSet)
 router.register(r'productbrand', ProductBrandViewSet)
 router.register(r'products', ProductViewSet, basename='product')
+router.register(r'productimages', ProductImageViewSet, basename='productimage')
 router.register(r'unitsofmeasure', UnitOfMeasureViewSet, basename='unitofmeasure')
 router.register(r'unitcategory', UnitCategoryViewSet)
 router.register(r'pricetypes', PriceTypeViewSet)
@@ -70,6 +72,7 @@ urlpatterns = [
     path('api/products/<int:product_id>/default-price/', ProductDefaultPriceAPIView.as_view(), name='product-default-price'),
     path('api/products/<int:product_id>/brands/', ProductBrandsListAPIView.as_view(), name='product-brands'),
     path('api/products/<int:product_id>/brands/update/', ProductBrandsUpdateAPIView.as_view(), name='product-brands-update'),
+    path('api/products/<int:product_id>/images/', ProductImagesByBrandAPIView.as_view(), name='product-images-by-brand'),
     path('api/default-warehouse/', DefaultWarehouseAPIView.as_view(), name='default-warehouse'),
     
     # Nuevas URLs para dashboard mejorado
