@@ -1,21 +1,18 @@
 <template>
   <TxCard class="shadow-sm mt-0">
-    <!-- Header del card -->
     <template #header>
       <div class="d-flex justify-content-between align-items-center w-100">
-        <h6 class="text-primary mb-0">Party Types</h6>
+        <h6 class="text-primary mb-0">Crew Categories</h6>
         <router-link
-          v-if="hasPermission('apptransactions.add_partytype')"
-          to="/party-types/form"
+          v-if="hasPermission('crewsapp.add_category')"
+          to="/crews/categories/form"
           class="btn btn-success"
-          >+ New Party Type</router-link
+          >+ New Category</router-link
         >
       </div>
     </template>
 
-    <!-- Filtros -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <!-- entries per page (izquierda) -->
       <div class="col-md-3">
         <div class="input-group">
           <select v-model="perPage" class="form-select">
@@ -26,8 +23,6 @@
           <span class="text-primary p-2">entries per page</span>
         </div>
       </div>
-
-      <!-- search (derecha) -->
       <div class="col-md-4">
         <div class="d-flex align-items-center gap-2">
           <span class="text-primary p-2">Search:</span>
@@ -36,7 +31,7 @@
               v-model="search"
               type="text"
               class="form-control"
-              placeholder="Search by name or description..."
+              placeholder="Search by name"
               autocomplete="off"
             />
             <button
@@ -47,14 +42,13 @@
               class="btn-clear-x"
               title="Clear"
             >
-              ×
+              x
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- tabla -->
     <b-table
       :items="filteredItems"
       :fields="fields"
@@ -65,35 +59,24 @@
       responsive
       striped
     >
-      <template #cell(is_active)="data">
-        <td class="text-center">
-          <span v-if="data.item.is_active" class="badge bg-success"
-            >Active</span
-          >
-          <span v-else class="badge bg-secondary">Inactive</span>
-        </td>
-      </template>
-
       <template #cell(actions)="data">
         <td class="text-center">
           <div class="btn-group btn-group-sm" role="group">
             <router-link
-              v-if="hasPermission('apptransactions.view_partytype')"
-              :to="`/party-types/form?id=${data.item.id}&mode=view`"
-              class="btn btn-outline-success"
+              v-if="hasPermission('crewsapp.view_category')"
+              :to="`/crews/categories/view/${data.item.id}`"
+              class="btn btn-outline-success me-1"
+              >View</router-link
             >
-              View
-            </router-link>
             <router-link
-              v-if="hasPermission('apptransactions.change_partytype')"
-              :to="`/party-types/form?id=${data.item.id}&mode=edit`"
-              class="btn btn-outline-primary"
+              v-if="hasPermission('crewsapp.change_category')"
+              :to="`/crews/categories/edit/${data.item.id}`"
+              class="btn btn-outline-primary me-1"
+              >Edit</router-link
             >
-              Edit
-            </router-link>
             <button
-              v-if="hasPermission('apptransactions.delete_partytype')"
-              @click="deletePartyType(data.item.id)"
+              v-if="hasPermission('crewsapp.delete_category')"
+              @click="deleteItem(data.item.id)"
               class="btn btn-outline-danger"
             >
               Delete
@@ -103,7 +86,6 @@
       </template>
     </b-table>
 
-    <!-- paginación a la derecha -->
     <div class="d-flex justify-content-end mt-3">
       <b-pagination
         v-model="currentPage"
@@ -116,42 +98,32 @@
 
 <script setup>
 import TxCard from "@/components/layout/TxCard.vue";
-import "@/assets/css/base.css";
-
 import { ref, computed, onMounted, getCurrentInstance } from "vue";
 import axios from "axios";
+import "@/assets/css/base.css";
 
 const { proxy } = getCurrentInstance();
-
-const partyTypes = ref([]);
+const items = ref([]);
 const search = ref("");
 const perPage = ref(10);
 const currentPage = ref(1);
 
 const fields = [
-  { key: "id", label: "ID", sortable: true, thClass: "text-center", tdClass: "text-center" },
+  {
+    key: "id",
+    label: "ID",
+    sortable: true,
+    thStyle: { width: "4rem" },
+    thClass: "text-center",
+    tdClass: "text-center",
+  },
   {
     key: "name",
     label: "Name",
     sortable: true,
+    thStyle: { minWidth: "200px", width: "60%" },
     thClass: "text-start",
     tdClass: "text-start",
-  },
-  {
-    key: "description",
-    label: "Description",
-    sortable: true,
-    thClass: "text-start",
-    tdClass: "text-start",
-  },
-  {
-    key: "is_active",
-    label: "Status",
-    thClass: "text-center",
-    tdClass: "text-center",
-    sortable: true,
-    thStyle: { width: "12%", whiteSpace: "nowrap" },
-    tdStyle: { whiteSpace: "nowrap" },
   },
   {
     key: "actions",
@@ -163,42 +135,55 @@ const fields = [
   },
 ];
 
-const fetchPartyTypes = async () => {
+const fetchItems = async () => {
   try {
-    const res = await axios.get("/api/party-types/");
-    partyTypes.value = res.data;
+    const res = await axios.get("/api/categories/");
+    items.value = res.data.results ?? res.data;
   } catch (err) {
-    console.error("Error fetching party types", err);
-    proxy?.notifyError?.("Error loading party types.");
+    console.error("Error fetching categories", err);
+    proxy?.notifyError?.("Error loading categories.");
   }
 };
 
-onMounted(fetchPartyTypes);
+onMounted(fetchItems);
 
 const filteredItems = computed(() => {
-  if (!search.value) return partyTypes.value;
-  const q = search.value.toLowerCase();
-  return partyTypes.value.filter((item) =>
-    `${item.name} ${item.description || ""}`.toLowerCase().includes(q),
+  if (!search.value) return items.value;
+  return items.value.filter((item) =>
+    (item.name || "").toLowerCase().includes(search.value.toLowerCase()),
   );
 });
 
-const deletePartyType = (id) => {
-  proxy?.confirmDelete?.(
+const deleteItem = (id) => {
+  proxy.confirmDelete(
     "Are you sure?",
     "This action cannot be undone.",
     async () => {
       try {
-        await axios.delete(`/api/party-types/${id}/`);
-        partyTypes.value = partyTypes.value.filter((p) => p.id !== id);
-        proxy?.notifyToastSuccess?.("The party type has been deleted.");
+        await axios.delete(`/api/categories/${id}/`);
+        items.value = items.value.filter((item) => item.id !== id);
+        proxy?.notifyToastSuccess?.("Category has been deleted.");
       } catch (err) {
-        console.error("Error deleting party type", err);
-        proxy?.notifyError?.("Error deleting the party type.");
+        console.error("Error deleting category", err);
+        proxy?.notifyError?.("Error deleting category.");
       }
     },
   );
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.search-wrapper {
+  position: relative;
+}
+.btn-clear-x {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #666;
+}
+</style>

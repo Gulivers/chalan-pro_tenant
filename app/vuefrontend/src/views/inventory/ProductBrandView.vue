@@ -4,7 +4,13 @@
     <template #header>
       <div class="d-flex justify-content-between align-items-center w-100">
         <h6 class="text-primary mb-0">Product Brands</h6>
-        <button class="btn btn-success" @click="goToCreateForm">+ New Brand</button>
+        <button
+          v-if="hasPermission('appinventory.add_productbrand')"
+          class="btn btn-success"
+          @click="goToCreateForm"
+        >
+          + New Brand
+        </button>
       </div>
     </template>
 
@@ -14,7 +20,9 @@
       <div class="col-md-3">
         <div class="input-group">
           <select v-model="perPage" class="form-select">
-            <option v-for="n in [10, 25, 50, 100]" :key="n" :value="n">{{ n }}</option>
+            <option v-for="n in [10, 25, 50, 100]" :key="n" :value="n">
+              {{ n }}
+            </option>
           </select>
           <span class="text-primary p-2">entries per page</span>
         </div>
@@ -39,7 +47,9 @@
               type="button"
               class="btn-clear-x"
               title="Clear"
-            >×</button>
+            >
+              ×
+            </button>
           </div>
         </div>
       </div>
@@ -67,14 +77,18 @@
     >
       <template #cell(is_active)="data">
         <td class="text-center">
-          <span v-if="data.item.is_active" class="badge bg-success text-center">Active</span>
+          <span v-if="data.item.is_active" class="badge bg-success text-center"
+            >Active</span
+          >
           <span v-else class="badge bg-secondary">Inactive</span>
         </td>
       </template>
 
       <template #cell(is_default)="data">
         <td class="text-center">
-          <span v-if="data.item.is_default" class="badge bg-primary">Default</span>
+          <span v-if="data.item.is_default" class="badge bg-primary"
+            >Default</span
+          >
           <span v-else class="badge bg-light text-dark">—</span>
         </td>
       </template>
@@ -82,13 +96,22 @@
       <template #cell(actions)="data">
         <td class="text-center">
           <div class="btn-group btn-group-sm" role="group">
-            <button class="btn btn-outline-success" @click="viewItem(data.item.id)">
+            <button
+              v-if="hasPermission('appinventory.view_productbrand')"
+              class="btn btn-outline-success"
+              @click="viewItem(data.item.id)"
+            >
               View
             </button>
-            <button class="btn btn-outline-primary" @click="editItem(data.item.id)">
+            <button
+              v-if="hasPermission('appinventory.change_productbrand')"
+              class="btn btn-outline-primary"
+              @click="editItem(data.item.id)"
+            >
               Edit
             </button>
             <button
+              v-if="hasPermission('appinventory.delete_productbrand')"
               class="btn btn-outline-danger"
               @click="confirmDelete(data.item.id)"
               :disabled="deletingId === data.item.id"
@@ -107,13 +130,25 @@
     </b-table>
 
     <!-- Empty state -->
-    <div v-if="!loading && filteredItems.length === 0" class="text-muted text-center py-5">
+    <div
+      v-if="!loading && filteredItems.length === 0"
+      class="text-muted text-center py-5"
+    >
       <h5>No brands found</h5>
-      <p class="mb-0">{{ search ? 'Try a different search term.' : 'Start by creating your first product brand.' }}</p>
+      <p class="mb-0">
+        {{
+          search
+            ? "Try a different search term."
+            : "Start by creating your first product brand."
+        }}
+      </p>
     </div>
 
     <!-- paginación a la derecha -->
-    <div v-if="!loading && filteredItems.length > 0" class="d-flex justify-content-end mt-3">
+    <div
+      v-if="!loading && filteredItems.length > 0"
+      class="d-flex justify-content-end mt-3"
+    >
       <b-pagination
         v-model="currentPage"
         :total-rows="filteredItems.length"
@@ -124,90 +159,112 @@
 </template>
 
 <script setup>
-import TxCard from '@/components/layout/TxCard.vue'
-import '@/assets/css/base.css'
+import TxCard from "@/components/layout/TxCard.vue";
+import "@/assets/css/base.css";
 
-import { ref, computed, onMounted, getCurrentInstance } from 'vue'
-import axios from 'axios'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, getCurrentInstance } from "vue";
+import axios from "axios";
+import { useRouter } from "vue-router";
 
-const { proxy } = getCurrentInstance()
-const router = useRouter()
+const { proxy } = getCurrentInstance();
+const router = useRouter();
 
-const brands = ref([])
-const search = ref('')
-const perPage = ref(25)
-const currentPage = ref(1)
-const loading = ref(false)
-const deletingId = ref(null)
+const brands = ref([]);
+const search = ref("");
+const perPage = ref(25);
+const currentPage = ref(1);
+const loading = ref(false);
+const deletingId = ref(null);
 
 const fields = [
-  { key: 'id', label: 'ID', sortable: true },
-  { key: 'name', label: 'Name', sortable: true, thClass: 'text-start', tdClass: 'text-start'},
-  { key: 'is_active', label: 'Status',thClass: 'text-start' , tdClass: 'text-start' , sortable: true},
-  { key: 'is_default', label: 'Default', thClass: 'text-start', tdClass: 'text-start' , sortable: true},
-  { key: 'actions', label: 'Actions', thClass: 'text-center', tdClass: 'text-center' },
-]
+  { key: "id", label: "ID", sortable: true, thClass: "text-center", tdClass: "text-center" },
+  {
+    key: "name",
+    label: "Name",
+    sortable: true,
+    thClass: "text-start",
+    tdClass: "text-start",
+  },
+  {
+    key: "is_active",
+    label: "Status",
+    thClass: "text-center",
+    tdClass: "text-center",
+    sortable: true,
+  },
+  {
+    key: "is_default",
+    label: "Default",
+    thClass: "text-center",
+    tdClass: "text-center",
+    sortable: true,
+  },
+  {
+    key: "actions",
+    label: "Actions",
+    thClass: "text-center",
+    tdClass: "text-center",
+    thStyle: { width: "12%", whiteSpace: "nowrap" },
+    tdStyle: { whiteSpace: "nowrap" },
+  },
+];
 
 const fetchItems = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const response = await axios.get('/api/productbrand/')
-    brands.value = response.data
+    const response = await axios.get("/api/productbrand/");
+    brands.value = response.data;
   } catch (error) {
-    console.error('Error loading brands:', error)
-    proxy?.notifyError?.('Error loading product brands.')
+    console.error("Error loading brands:", error);
+    proxy?.notifyError?.("Error loading product brands.");
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
-onMounted(fetchItems)
+onMounted(fetchItems);
 
 const filteredItems = computed(() => {
-  if (!search.value) return brands.value
-  const q = search.value.toLowerCase()
-  return brands.value.filter(item =>
-    item.name.toLowerCase().includes(q)
-  )
-})
+  if (!search.value) return brands.value;
+  const q = search.value.toLowerCase();
+  return brands.value.filter((item) => item.name.toLowerCase().includes(q));
+});
 
 const goToCreateForm = () => {
-  router.push({ name: 'product-brand-form' })
-}
+  router.push({ name: "product-brand-form" });
+};
 
 const viewItem = (id) => {
-  router.push({ name: 'product-brand-view', params: { id } })
-}
+  router.push({ name: "product-brand-view", params: { id } });
+};
 
 const editItem = (id) => {
-  router.push({ name: 'product-brand-edit', params: { id } })
-}
+  router.push({ name: "product-brand-edit", params: { id } });
+};
 
 const confirmDelete = (id) => {
   proxy?.confirmDelete?.(
-    'Delete?',
-    'This will delete the product brand. This action cannot be undone.',
+    "Delete?",
+    "This will delete the product brand. This action cannot be undone.",
     async () => {
-      await deleteItem(id)
-    }
-  )
-}
+      await deleteItem(id);
+    },
+  );
+};
 
 const deleteItem = async (id) => {
-  deletingId.value = id
+  deletingId.value = id;
   try {
-    await axios.delete(`/api/productbrand/${id}/`)
-    brands.value = brands.value.filter(b => b.id !== id)
-    proxy?.notifyToastSuccess?.('The product brand has been deleted.')
+    await axios.delete(`/api/productbrand/${id}/`);
+    brands.value = brands.value.filter((b) => b.id !== id);
+    proxy?.notifyToastSuccess?.("The product brand has been deleted.");
   } catch (error) {
-    console.error('Error deleting product brand:', error)
-    proxy?.notifyError?.('Error deleting the product brand.')
+    console.error("Error deleting product brand:", error);
+    proxy?.notifyError?.("Error deleting the product brand.");
   } finally {
-    deletingId.value = null
+    deletingId.value = null;
   }
-}
+};
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -1051,6 +1051,7 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 **Características principales:**
 - ✅ Importación opcional y controlada por el administrador del tenant
 - ✅ Descarga de archivo Excel pre-generado con todos los datos maestros
+- ✅ **Imágenes de productos**: se importan desde `appinventory/fixtures/media/products/{product_id}/{brand_id}/` y se crean registros `ProductImage` tras el loaddata
 - ✅ Bloqueo de doble importación mediante flag `seed_inventory_done`
 - ✅ Operación transaccional (si falla, no se guarda nada parcial)
 - ✅ Reseteo automático de secuencias de base de datos después de la importación
@@ -1067,7 +1068,7 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 **Vistas API (`appinventory/views.py`):**
 - `InventoryMasterDataPreviewAPIView` (GET `/api/master-data/preview/`): Verifica el estado de `seed_inventory_done` y devuelve información sobre si los datos ya fueron importados.
 - `InventoryMasterDataExcelDownloadAPIView` (GET `/api/master-data/excel/`): Sirve el archivo Excel pre-generado desde `appinventory/static/appinventory/masters_inventory.xlsx`.
-- `InventoryMasterDataImportAPIView` (POST `/api/master-data/import/`): Importa los datos maestros desde `appinventory/fixtures/masters_inventory.json` de forma transaccional, resetea secuencias y marca `seed_inventory_done=True`.
+- `InventoryMasterDataImportAPIView` (POST `/api/master-data/import/`): Copia el repo de imágenes a `MEDIA_ROOT/products/`, carga `masters_inventory.json` **sin** entradas ProductImage, luego inyecta `masters_productimage.json` (ProductImage con assignment_id 1,2,3…). Si no existe ese fixture, crea ProductImage desde `MEDIA_ROOT/products/{product_id}/{brand_id}/`. Resetea secuencias (incl. `appinventory_productimage`) y marca `seed_inventory_done=True`.
 
 **Management Command (`appinventory/management/commands/generate_masters_inventory_excel.py`):**
 - Genera el archivo Excel `masters_inventory.xlsx` desde el fixture JSON `masters_inventory.json`.
@@ -1076,8 +1077,17 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 
 **Fixture de Datos (`appinventory/fixtures/masters_inventory.json`):**
 - Archivo JSON con todos los datos maestros de inventario.
-- Incluye: UnitCategory, UnitOfMeasure, Warehouse, ProductCategory, ProductBrand, PriceType, Product, ProductPrice.
-- Incluye relaciones ManyToMany (Product ↔ Brand).
+- Incluye: UnitCategory, UnitOfMeasure, Warehouse, ProductCategory, ProductBrand, PriceType, Product, ProductPrice. **Product debe incluir el campo `brands`** (ej. `"brands": [1]`) para que al cargar se creen las filas en `appinventory_productbrandassignment`; si falta, el backend **inyecta en memoria** `brands` con el primer ProductBrand del fixture para evitar "No brand assigned" y la FK en ProductImage. En la importación se omiten las entradas ProductImage si las hubiera.
+
+**Fixture de imágenes de productos (`appinventory/fixtures/masters_productimage.json`):**
+- Se carga **después** de `masters_inventory.json`. Contiene solo ProductImage con **assignment_id 1, 2, 3…** (orden igual al de las asignaciones creadas al cargar el maestro).
+- Se genera con: `python manage.py generate_masters_productimage_fixture --schema test_dominio_local`.
+
+**Repo de imágenes a importar (`appinventory/fixtures/media/products/` o `media_volume`):**
+- Directorio base con las imágenes de productos. Estructura: `{product_id}/{brand_id}/*.jpg`.
+- Se copia a `MEDIA_ROOT/products/` (en Docker, `media_volume` montado en `/app/media`) **antes** del loaddata; tras loaddata se crean los registros `ProductImage` desde ese directorio por `(product_id, brand_id)`.
+- Se actualiza desde el tenant de desarrollo **test-dominio-local.chalanpro.net** con: `python manage.py export_fixture_product_images --schema test_dominio_local`.
+- Así el repo queda como fuente única; cada tenant que hace Inventory Master Data Setup recibe productos e imágenes desde ese repo.
 
 #### Frontend (Vue.js)
 
@@ -1122,12 +1132,14 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
    - Se muestra una confirmación con SweetAlert2.
    - Al confirmar, se envía POST a `/api/master-data/import/`.
    - El backend:
-     - Inicia una transacción atómica
-     - Carga los datos desde `masters_inventory.json`
-     - Resetea las secuencias de las tablas
+     - Copia el repo de imágenes `appinventory/fixtures/media/products/` a `MEDIA_ROOT/products/` (en Docker: media_volume en `/app/media`)
+     - Carga `masters_inventory.json` sin entradas ProductImage
+     - Carga `masters_productimage.json` (ProductImage con assignment_id 1,2,3…). Si no existe, crea ProductImage desde `MEDIA_ROOT/products/{product_id}/{brand_id}/`
+     - Resetea las secuencias de las tablas (incl. `appinventory_productimage`)
      - Marca `seed_inventory_done=True` en el tenant
      - Confirma la transacción
    - Si hay error, la transacción se revierte y `seed_inventory_done` permanece `False`.
+   - La respuesta puede incluir `images_copied` (archivos copiados desde repo) e `images_synced` (registros ProductImage creados).
 
 6. **Post-Importación:**
    - Después de la importación exitosa, el componente muestra "Inventory masters imported".
@@ -1141,6 +1153,19 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 docker compose exec backend python manage.py generate_masters_inventory_excel
 
 # El archivo se guarda en: app/appinventory/static/appinventory/masters_inventory.xlsx
+```
+
+**Actualizar el repo de imágenes desde el tenant de desarrollo (test-dominio-local):**
+```bash
+docker compose exec backend python manage.py export_fixture_product_images --schema test_dominio_local
+# Estructura: appinventory/fixtures/media/products/<product_id>/<brand_id>/*.jpg
+```
+
+**Generar masters_productimage.json (inyección tras masters_inventory.json):**
+```bash
+# Desde un tenant que tenga ProductImage (ej. test_dominio_local). Asigna assignment_id 1,2,3...
+docker compose exec backend python manage.py generate_masters_productimage_fixture --schema test_dominio_local
+# Salida: appinventory/fixtures/masters_productimage.json
 ```
 
 **Verificar el estado de un tenant:**
@@ -1166,12 +1191,18 @@ docker compose exec backend python manage.py shell
 
 ### 9.5 Generar el Fixture JSON de Datos Maestros
 
-**Importante:** Para generar o actualizar el archivo `masters_inventory.json` desde la base de datos de un tenant, use el comando `dumpdata` de Django:
+**Importante:** Para generar o actualizar el archivo `masters_inventory.json` desde la base de datos de un tenant, use el comando `dumpdata` de Django. Se recomienda usar el **tenant de desarrollo** (test-dominio-local.chalanpro.net / schema `test_dominio_local`) como fuente principal.
 
+**Paso 1 – Actualizar repo de imágenes desde el tenant de desarrollo (opcional):**
 ```bash
-# Generar el fixture JSON desde un tenant específico
+docker compose exec backend python manage.py export_fixture_product_images --schema test_dominio_local
+```
+
+**Paso 2 – Generar o actualizar el fixture JSON:**
+```bash
+# Generar el fixture JSON desde el tenant de desarrollo (ProductImage es opcional; en la importación se omiten)
 docker compose exec backend python manage.py tenant_command dumpdata \
-  --schema nombre-del-tenant \
+  --schema test_dominio_local \
   appinventory.UnitCategory \
   appinventory.UnitOfMeasure \
   appinventory.Warehouse \
@@ -1184,7 +1215,31 @@ docker compose exec backend python manage.py tenant_command dumpdata \
   --output /app/appinventory/fixtures/masters_inventory.json
 ```
 
-**Nota:** Este comando exporta los datos maestros de inventario desde el schema del tenant especificado y los guarda en `appinventory/fixtures/masters_inventory.json`. Después de generar o actualizar el JSON, debe ejecutarse el comando `generate_masters_inventory_excel` para regenerar el archivo Excel descargable.
+**Nota:** El fixture `masters_inventory.json` debe tener en cada Product el campo **`brands`** (ej. `"brands": [60]`) para que al cargar se creen las filas en `appinventory_productbrandassignment` (assignment_id 1, 2, 3…). Si no, al cargar `masters_productimage.json` fallará la FK. Para generar `masters_productimage.json` (inyección tras el maestro): `python manage.py generate_masters_productimage_fixture --schema test_dominio_local`. Después de cambiar el JSON, ejecute `generate_masters_inventory_excel` para regenerar el Excel.
+
+-- Productos sin ninguna imagen (en schema test_dominio_local)
+SELECT p.id AS product_id,
+       p.sku AS codigo,
+       p.name AS nombre
+FROM test_dominio_local.appinventory_product p
+LEFT JOIN test_dominio_local.appinventory_productimage pi ON pi.product_id = p.id
+WHERE pi.id IS NULL
+  AND p.is_active = true
+ORDER BY p.sku;
+
+-- producto–marca sin imagen
+SELECT p.id AS product_id,
+       p.sku AS codigo,
+       p.name AS nombre,
+       a.id AS assignment_id,
+       b.name AS marca
+FROM test_dominio_local.appinventory_product p
+JOIN test_dominio_local.appinventory_productbrandassignment a ON a.product_id = p.id
+JOIN test_dominio_local.appinventory_productbrand b ON b.id = a.brand_id
+LEFT JOIN test_dominio_local.appinventory_productimage pi ON pi.assignment_id = a.id
+WHERE pi.id IS NULL
+  AND p.is_active = true
+ORDER BY p.sku, b.name;
 
 ---
 

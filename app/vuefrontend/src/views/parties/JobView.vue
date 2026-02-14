@@ -4,7 +4,12 @@
     <template #header>
       <div class="d-flex justify-content-between align-items-center w-100">
         <h6 class="text-primary mb-0">Jobs (Communities)</h6>
-        <router-link to="/job/form" class="btn btn-success">+ New Job</router-link>
+        <router-link
+          v-if="hasPermission('ctrctsapp.add_job')"
+          to="/job/form"
+          class="btn btn-success"
+          >+ New Job</router-link
+        >
       </div>
     </template>
 
@@ -64,18 +69,24 @@
         <td class="text-center">
           <div class="btn-group btn-group-sm" role="group">
             <router-link
+              v-if="hasPermission('ctrctsapp.view_job')"
               :to="`/job/view/${data.item.id}`"
               class="btn btn-outline-success me-1"
             >
               View
             </router-link>
             <router-link
+              v-if="hasPermission('ctrctsapp.change_job')"
               :to="`/job/edit/${data.item.id}`"
               class="btn btn-outline-primary me-1"
             >
               Edit
             </router-link>
-            <button @click="deleteJob(data.item.id, data.item.name)" class="btn btn-outline-danger">
+            <button
+              v-if="hasPermission('ctrctsapp.delete_job')"
+              @click="deleteJob(data.item.id, data.item.name)"
+              class="btn btn-outline-danger"
+            >
               Delete
             </button>
           </div>
@@ -111,7 +122,7 @@ const fields = [
   { key: 'address', label: 'Address', sortable: true },
   { key: 'latitude', label: 'Latitude', sortable: true },
   { key: 'longitude', label: 'Longitude', sortable: true },
-  { key: 'actions', label: 'Actions', thClass: 'text-center', tdClass: 'text-center' },
+  { key: 'actions', label: 'Actions', thClass: 'text-center', tdClass: 'text-center', thStyle: { width: '12%', whiteSpace: 'nowrap' }, tdStyle: { whiteSpace: 'nowrap' } },
 ]
 
 // Helpers para DRF con o sin paginación

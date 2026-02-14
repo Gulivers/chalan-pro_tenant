@@ -56,7 +56,7 @@
             </h6>
             <p class="text-muted small mb-3">
               After reviewing the Excel file offline (using Microsoft Excel or similar), you can import the master data
-              to your tenant.
+              to your tenant (including product images when available in the fixture media).
               <strong>Note:</strong> The import will be performed from the system's JSON fixture file
               (<code>masters_inventory.json</code>), not from the downloaded Excel file. The Excel file is provided for
               your review only.
@@ -86,8 +86,7 @@
         <div v-else class="alert alert-success mb-0">
           <i class="fas fa-check-circle mr-2"></i>
           <strong>Inventory masters imported.</strong>
-          <p class="mb-0 mt-2">The inventory master data has been successfully imported to this tenant. Import cannot be
-            performed more than once.</p>
+          <p class="mb-0 mt-2">The inventory master data (products, brands, categories, prices, and product images when available) has been successfully imported to this tenant. Import cannot be performed more than once.</p>
         </div>
       </div>
     </div>

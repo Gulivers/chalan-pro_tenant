@@ -29,8 +29,10 @@ from utils.datatable import handle_datatable_query
 # App Models
 from appinventory.models import (
     Product, Stock, Warehouse, ProductCategory,
-    ProductBrand, UnitOfMeasure, UnitCategory, PriceType, InventoryMovement, ProductImage
+    ProductBrand, UnitOfMeasure, UnitCategory, PriceType, InventoryMovement, ProductImage,
+    ProductBrandAssignment,
     )
+from django.core.files.base import ContentFile
 from apptransactions.models import Document, DocumentLine, DocumentType
 # Serializers
 from appinventory.serializers import (
@@ -2610,6 +2612,110 @@ class InventoryMasterDataPreviewAPIView(APIView):
             )
 
 
+def _copy_fixture_product_images_to_media():
+    """
+    Copia el repo de imágenes (appinventory/fixtures/media/products/ o media_volume) a MEDIA_ROOT/products/.
+    Repo base actualizable desde test-dominio-local (tenant de desarrollo).
+    Se llama ANTES de loaddata en el master data import.
+    """
+    import shutil
+    from django.conf import settings as django_settings
+    base_dir = getattr(django_settings, 'BASE_DIR', None)
+    if not base_dir:
+        return 0
+    media_root = getattr(django_settings, 'MEDIA_ROOT', None) or os.path.join(base_dir, 'media')
+    repo_products = os.path.join(base_dir, 'appinventory', 'fixtures', 'media', 'products')
+    if not os.path.isdir(repo_products):
+        return 0
+    dest_base = os.path.join(media_root, 'products')
+    os.makedirs(dest_base, exist_ok=True)
+    copied = 0
+    for product_id_str in os.listdir(repo_products):
+        product_dir = os.path.join(repo_products, product_id_str)
+        if not os.path.isdir(product_dir):
+            continue
+        dest_product = os.path.join(dest_base, product_id_str)
+        os.makedirs(dest_product, exist_ok=True)
+        for brand_id_str in os.listdir(product_dir):
+            brand_dir = os.path.join(product_dir, brand_id_str)
+            if not os.path.isdir(brand_dir):
+                continue
+            dest_brand = os.path.join(dest_product, brand_id_str)
+            os.makedirs(dest_brand, exist_ok=True)
+            for fname in os.listdir(brand_dir):
+                src = os.path.join(brand_dir, fname)
+                if not os.path.isfile(src):
+                    continue
+                dest = os.path.join(dest_brand, fname)
+                if not os.path.exists(dest) or os.path.getmtime(src) > os.path.getmtime(dest):
+                    shutil.copy2(src, dest)
+                copied += 1
+    return copied
+
+
+def _sync_fixture_product_images():
+    """
+    Crea registros ProductImage desde MEDIA_ROOT/products/{product_id}/{brand_id}/*.jpg
+    tras loaddata. Los assignment_id son 1,2,3... en cada tenant; por eso NO cargamos
+    ProductImage desde el fixture (evita FK assignment_id inexistente).
+    Lee de MEDIA_ROOT/products/ (donde acabamos de copiar el repo).
+    """
+    from django.conf import settings as django_settings
+    media_root = getattr(django_settings, 'MEDIA_ROOT', None)
+    if not media_root:
+        base_dir = getattr(django_settings, 'BASE_DIR', None)
+        media_root = os.path.join(base_dir, 'media') if base_dir else None
+    if not media_root:
+        return 0
+    products_base = os.path.join(media_root, 'products')
+    if not os.path.isdir(products_base):
+        return 0
+    created = 0
+    for product_id_str in os.listdir(products_base):
+        product_dir = os.path.join(products_base, product_id_str)
+        if not os.path.isdir(product_dir) or not product_id_str.isdigit():
+            continue
+        try:
+            product_id = int(product_id_str)
+        except ValueError:
+            continue
+        for brand_id_str in os.listdir(product_dir):
+            brand_dir = os.path.join(product_dir, brand_id_str)
+            if not os.path.isdir(brand_dir) or not brand_id_str.isdigit():
+                continue
+            try:
+                brand_id = int(brand_id_str)
+            except ValueError:
+                continue
+            assignment = ProductBrandAssignment.objects.filter(
+                product_id=product_id, brand_id=brand_id
+            ).first()
+            if not assignment or ProductImage.objects.filter(assignment=assignment).exists():
+                continue
+            jpg_files = [f for f in os.listdir(brand_dir) if f.lower().endswith(('.jpg', '.jpeg'))]
+            if not jpg_files:
+                continue
+            img_path = os.path.join(brand_dir, jpg_files[0])
+            if not os.path.isfile(img_path):
+                continue
+            try:
+                with open(img_path, 'rb') as f:
+                    content = f.read()
+                pi = ProductImage(
+                    product=assignment.product,
+                    assignment=assignment,
+                    is_primary=True,
+                    uploaded_by=None,
+                    description='',
+                )
+                pi.image.save(jpg_files[0], ContentFile(content), save=False)
+                pi.save()
+                created += 1
+            except Exception:
+                pass
+    return created
+
+
 class InventoryMasterDataImportAPIView(APIView):
     """
     Vista para importar datos maestros de inventario al tenant actual.
@@ -2665,18 +2771,50 @@ class InventoryMasterDataImportAPIView(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
             
+            # Copiar repo de imágenes a MEDIA_ROOT (media_volume en Docker) para que las rutas del fixture existan
+            images_copied = _copy_fixture_product_images_to_media()
+            
+            # Cargar masters_inventory.json SIN entradas ProductImage (evita FK assignment_id del tenant origen)
+            with open(fixture_path, 'r', encoding='utf-8') as f:
+                fixture_data = json.load(f)
+            fixture_without_images = [item for item in fixture_data if item.get('model') != 'appinventory.productimage']
+            # Asegurar que cada Product tenga "brands" para que loaddata cree ProductBrandAssignment (evita "No brand assigned" y FK en ProductImage)
+            first_brand_pk = None
+            for item in fixture_data:
+                if item.get('model') == 'appinventory.productbrand':
+                    first_brand_pk = item.get('pk')
+                    break
+            if first_brand_pk is None:
+                first_brand_pk = 1
+            for item in fixture_without_images:
+                if item.get('model') == 'appinventory.product':
+                    fields = item.setdefault('fields', {})
+                    if 'brands' not in fields:
+                        fields['brands'] = [first_brand_pk]
+            import tempfile
+            tmp_fixture_path = None
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp:
+                json.dump(fixture_without_images, tmp, indent=2, ensure_ascii=False)
+                tmp_fixture_path = tmp.name
+            
+            fixture_productimage_path = os.path.join(
+                settings.BASE_DIR,
+                'appinventory',
+                'fixtures',
+                'masters_productimage.json'
+            )
+            
             # Importar dentro de una transacción
             with transaction.atomic():
                 try:
-                    # Usar loaddata con el fixture (Django busca en app/fixtures/ automáticamente)
-                    # Necesitamos usar la ruta absoluta o relativa a donde Django busca fixtures
-                    fixture_name = 'appinventory/fixtures/masters_inventory.json'
-                    # Intentar con el nombre del fixture primero (si está en FIXTURE_DIRS)
-                    try:
-                        call_command('loaddata', fixture_name, verbosity=0)
-                    except Exception:
-                        # Si falla, usar la ruta absoluta
-                        call_command('loaddata', fixture_path, verbosity=0)
+                    call_command('loaddata', tmp_fixture_path, verbosity=0)
+                    # Inyectar ProductImage desde masters_productimage.json (assignment_id 1,2,3...)
+                    if os.path.exists(fixture_productimage_path):
+                        call_command('loaddata', fixture_productimage_path, verbosity=0)
+                        images_synced = ProductImage.objects.count()  # ya cargados por loaddata
+                    else:
+                        # Fallback: crear ProductImage desde MEDIA_ROOT/products/{product_id}/{brand_id}/
+                        images_synced = _sync_fixture_product_images()
                     
                     # Resetear secuencias de PostgreSQL para este schema
                     from django.db import connection
@@ -2691,7 +2829,8 @@ class InventoryMasterDataImportAPIView(APIView):
                             'appinventory_pricetype',
                             'appinventory_product',
                             'appinventory_productprice',
-                            'appinventory_productbrandassignment'
+                            'appinventory_productbrandassignment',
+                            'appinventory_productimage',
                         ]
                         for table in tables:
                             try:
@@ -2707,11 +2846,16 @@ class InventoryMasterDataImportAPIView(APIView):
                     tenant.seed_inventory_done = True
                     tenant.save(update_fields=['seed_inventory_done'])
                     
+                    msg = 'Datos maestros de inventario importados correctamente.'
+                    if images_synced:
+                        msg += f' Imágenes de productos creadas: {images_synced}.'
                     return Response({
                         'success': True,
-                        'message': 'Datos maestros de inventario importados correctamente.'
+                        'message': msg,
+                        'images_copied': images_copied,
+                        'images_synced': images_synced,
                     })
-                    
+                
                 except Exception as e:
                     # Si hay error, la transacción se revierte automáticamente
                     # y seed_inventory_done permanece False
@@ -2719,6 +2863,12 @@ class InventoryMasterDataImportAPIView(APIView):
                         {'error': f'Error al importar datos maestros: {str(e)}'},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR
                     )
+                finally:
+                    if tmp_fixture_path and os.path.exists(tmp_fixture_path):
+                        try:
+                            os.unlink(tmp_fixture_path)
+                        except Exception:
+                            pass
                     
         except Exception as e:
             return Response(
