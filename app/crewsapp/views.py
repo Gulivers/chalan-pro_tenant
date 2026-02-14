@@ -3,10 +3,14 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from django.db import connection
+from django.contrib.auth import get_user_model
 from .models import Crew, Truck, TruckAssignment, Category
 from .serializers import (
-    CrewSerializer, TruckSerializer, TruckAssignmentSerializer
+    CrewSerializer, TruckSerializer, TruckAssignmentSerializer,
+    CategorySerializer
 )
+
+User = get_user_model()
 
 
 # ViewSet para Truck
@@ -16,26 +20,41 @@ class TruckViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 
-# ViewSet para Crew
-# Filtrado para los Resources del schedule.
+# ViewSet para Crew (listado completo para admin CRUD; schedule puede filtrar en frontend)
 class CrewViewSet(viewsets.ModelViewSet):
-    queryset = Crew.objects.filter(category__isnull=False, status=True).order_by('id')
+    queryset = Crew.objects.all().order_by('id')
     serializer_class = CrewSerializer
     permission_classes = [IsAuthenticated]
 
 
 # ViewSet para TruckAssignment
 class TruckAssignmentViewSet(viewsets.ModelViewSet):
-    queryset = TruckAssignment.objects.all()
+    queryset = TruckAssignment.objects.all().order_by('-assigned_at')
     serializer_class = TruckAssignmentSerializer
-    
-    
+    permission_classes = [IsAuthenticated]
+
+
+# ViewSet para Category (CRUD)
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all().order_by('name')
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated]
+
+
 class CategoryListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         categories = Category.objects.values('id', 'name')
         return Response(categories)
+
+
+class UserListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        users = User.objects.filter(is_active=True).order_by('username').values('id', 'username')
+        return Response(list(users))
 
 
 class SupervisorCommunitiesView(APIView):

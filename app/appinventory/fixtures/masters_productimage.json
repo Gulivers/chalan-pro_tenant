@@ -1,0 +1,5774 @@
+[
+  {
+    "model": "appinventory.productimage",
+    "pk": 1,
+    "fields": {
+      "product": 903,
+      "assignment": 726,
+      "image": "products/903/36/20260201_225708_DBCK-WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:08.370984+00:00",
+      "uploaded_by": 1,
+      "description": "DBCK-WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 2,
+    "fields": {
+      "product": 903,
+      "assignment": 725,
+      "image": "products/903/13/20260201_225708_DBCK-WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:08.362757+00:00",
+      "uploaded_by": 1,
+      "description": "DBCK-WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 3,
+    "fields": {
+      "product": 898,
+      "assignment": 716,
+      "image": "products/898/49/20260201_225708_QU12L400SL.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:08.346369+00:00",
+      "uploaded_by": 1,
+      "description": "QU12L400SL"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 4,
+    "fields": {
+      "product": 898,
+      "assignment": 715,
+      "image": "products/898/48/20260201_225708_QU12L400SL.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:08.337888+00:00",
+      "uploaded_by": 1,
+      "description": "QU12L400SL"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 5,
+    "fields": {
+      "product": 898,
+      "assignment": 714,
+      "image": "products/898/12/20260201_225708_QU12L400SL.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:08.313290+00:00",
+      "uploaded_by": 1,
+      "description": "QU12L400SL"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 6,
+    "fields": {
+      "product": 585,
+      "assignment": 538,
+      "image": "products/585/28/20260201_225708_SQR55141WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:08.126561+00:00",
+      "uploaded_by": 1,
+      "description": "SQR55141WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 7,
+    "fields": {
+      "product": 583,
+      "assignment": 536,
+      "image": "products/583/49/20260201_225708_SQR-14-103-WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:08.113543+00:00",
+      "uploaded_by": 1,
+      "description": "SQR-14-103-WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 8,
+    "fields": {
+      "product": 583,
+      "assignment": 535,
+      "image": "products/583/28/20260201_225708_SQR-14-103-WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:08.098043+00:00",
+      "uploaded_by": 1,
+      "description": "SQR-14-103-WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 9,
+    "fields": {
+      "product": 583,
+      "assignment": 534,
+      "image": "products/583/27/20260201_225708_SQR-14-103-WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:08.083376+00:00",
+      "uploaded_by": 1,
+      "description": "SQR-14-103-WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 10,
+    "fields": {
+      "product": 582,
+      "assignment": 533,
+      "image": "products/582/28/20260201_225708_SQWS422001WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:08.068284+00:00",
+      "uploaded_by": 1,
+      "description": "SQWS422001WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 11,
+    "fields": {
+      "product": 579,
+      "assignment": 530,
+      "image": "products/579/28/20260201_225708_TPJ82-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:08.036540+00:00",
+      "uploaded_by": 1,
+      "description": "TPJ82-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 12,
+    "fields": {
+      "product": 578,
+      "assignment": 529,
+      "image": "products/578/28/20260201_225707_3232-TRWRW.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.982902+00:00",
+      "uploaded_by": 1,
+      "description": "3232-TRWRW"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 13,
+    "fields": {
+      "product": 577,
+      "assignment": 528,
+      "image": "products/577/28/20260201_225707_3232-TREXW.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.915035+00:00",
+      "uploaded_by": 1,
+      "description": "3232-TREXW"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 14,
+    "fields": {
+      "product": 576,
+      "assignment": 527,
+      "image": "products/576/28/20260201_225707_SQWS461011WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.880157+00:00",
+      "uploaded_by": 1,
+      "description": "SQWS461011WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 15,
+    "fields": {
+      "product": 575,
+      "assignment": 526,
+      "image": "products/575/28/20260201_225707_885TRBK.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.845065+00:00",
+      "uploaded_by": 1,
+      "description": "885TRBK"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 16,
+    "fields": {
+      "product": 570,
+      "assignment": 521,
+      "image": "products/570/28/20260201_225707_3854.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.774271+00:00",
+      "uploaded_by": 1,
+      "description": "3854"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 17,
+    "fields": {
+      "product": 568,
+      "assignment": 519,
+      "image": "products/568/28/20260201_225707_SQWS141004WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.723098+00:00",
+      "uploaded_by": 1,
+      "description": "SQWS141004WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 18,
+    "fields": {
+      "product": 567,
+      "assignment": 518,
+      "image": "products/567/28/20260201_225707_3864.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.681647+00:00",
+      "uploaded_by": 1,
+      "description": "3864"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 19,
+    "fields": {
+      "product": 565,
+      "assignment": 516,
+      "image": "products/565/28/20260201_225707_SQWS141003WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.644592+00:00",
+      "uploaded_by": 1,
+      "description": "SQWS141003WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 20,
+    "fields": {
+      "product": 551,
+      "assignment": 474,
+      "image": "products/551/49/20260201_225707_PN4264L1225C.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.623895+00:00",
+      "uploaded_by": 1,
+      "description": "PN4264L1225C"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 21,
+    "fields": {
+      "product": 551,
+      "assignment": 473,
+      "image": "products/551/48/20260201_225707_PN4264L1225C.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.600339+00:00",
+      "uploaded_by": 1,
+      "description": "PN4264L1225C"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 22,
+    "fields": {
+      "product": 551,
+      "assignment": 472,
+      "image": "products/551/28/20260201_225707_PN4264L1225C.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.583054+00:00",
+      "uploaded_by": 1,
+      "description": "PN4264L1225C"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 23,
+    "fields": {
+      "product": 551,
+      "assignment": 471,
+      "image": "products/551/1/20260201_225707_PN4264L1225C.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.548213+00:00",
+      "uploaded_by": 1,
+      "description": "PN4264L1225C"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 24,
+    "fields": {
+      "product": 547,
+      "assignment": 458,
+      "image": "products/547/28/20260201_225707_RR205WWR.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.498776+00:00",
+      "uploaded_by": 1,
+      "description": "RR205WWR"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 25,
+    "fields": {
+      "product": 544,
+      "assignment": 455,
+      "image": "products/544/28/20260201_225707_SQWS141002WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.484283+00:00",
+      "uploaded_by": 1,
+      "description": "SQWS141002WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 26,
+    "fields": {
+      "product": 543,
+      "assignment": 454,
+      "image": "products/543/28/20260201_225707_SQWS140002WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.470492+00:00",
+      "uploaded_by": 1,
+      "description": "SQWS140002WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 27,
+    "fields": {
+      "product": 537,
+      "assignment": 441,
+      "image": "products/537/28/20260201_225707_SQWS140001WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:57:07.358134+00:00",
+      "uploaded_by": 1,
+      "description": "SQWS140001WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 28,
+    "fields": {
+      "product": 942,
+      "assignment": 793,
+      "image": "products/942/49/20260201_222746_SQR-87-CT-1-WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:46.203094+00:00",
+      "uploaded_by": 1,
+      "description": "SQR-87-CT-1-WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 29,
+    "fields": {
+      "product": 941,
+      "assignment": 792,
+      "image": "products/941/49/20260201_222746_QOC42UF.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:46.066728+00:00",
+      "uploaded_by": 1,
+      "description": "QOC42UF"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 30,
+    "fields": {
+      "product": 940,
+      "assignment": 791,
+      "image": "products/940/49/20260201_222745_SQR87C01WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:45.679575+00:00",
+      "uploaded_by": 1,
+      "description": "SQR87C01WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 31,
+    "fields": {
+      "product": 939,
+      "assignment": 790,
+      "image": "products/939/49/20260201_222745_PK4GTA.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:45.574815+00:00",
+      "uploaded_by": 1,
+      "description": "PK4GTA"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 32,
+    "fields": {
+      "product": 938,
+      "assignment": 789,
+      "image": "products/938/49/20260201_222745_QOM22225NRB.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:45.494547+00:00",
+      "uploaded_by": 1,
+      "description": "QOM22225NRB"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 33,
+    "fields": {
+      "product": 936,
+      "assignment": 788,
+      "image": "products/936/49/20260201_222745_TPJ13-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:45.425899+00:00",
+      "uploaded_by": 1,
+      "description": "TPJ13-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 34,
+    "fields": {
+      "product": 935,
+      "assignment": 787,
+      "image": "products/935/49/20260201_222745_DISCO-60ANF.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:45.408384+00:00",
+      "uploaded_by": 1,
+      "description": "DISCO-60ANF"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 35,
+    "fields": {
+      "product": 935,
+      "assignment": 786,
+      "image": "products/935/48/20260201_222745_DISCO-60ANF.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:45.354294+00:00",
+      "uploaded_by": 1,
+      "description": "DISCO-60ANF"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 36,
+    "fields": {
+      "product": 931,
+      "assignment": 778,
+      "image": "products/931/49/20260201_222745_QOM2200VH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:45.282718+00:00",
+      "uploaded_by": 1,
+      "description": "QOM2200VH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 37,
+    "fields": {
+      "product": 931,
+      "assignment": 777,
+      "image": "products/931/48/20260201_222745_QOM2200VH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:45.251905+00:00",
+      "uploaded_by": 1,
+      "description": "QOM2200VH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 38,
+    "fields": {
+      "product": 930,
+      "assignment": 776,
+      "image": "products/930/48/20260201_222745_QN2150H.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:45.195723+00:00",
+      "uploaded_by": 1,
+      "description": "QN2150H"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 39,
+    "fields": {
+      "product": 929,
+      "assignment": 775,
+      "image": "products/929/49/20260201_222745_Q2125.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:45.164403+00:00",
+      "uploaded_by": 1,
+      "description": "Q2125"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 40,
+    "fields": {
+      "product": 929,
+      "assignment": 774,
+      "image": "products/929/48/20260201_222745_Q2125.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:45.129138+00:00",
+      "uploaded_by": 1,
+      "description": "Q2125"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 41,
+    "fields": {
+      "product": 928,
+      "assignment": 773,
+      "image": "products/928/48/20260201_222745_SNW1212L1125.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:45.063295+00:00",
+      "uploaded_by": 1,
+      "description": "SNW1212L1125"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 42,
+    "fields": {
+      "product": 924,
+      "assignment": 760,
+      "image": "products/924/48/20260201_222745_QOADV1PAF.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:45.015826+00:00",
+      "uploaded_by": 1,
+      "description": "QOADV1PAF"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 43,
+    "fields": {
+      "product": 922,
+      "assignment": 757,
+      "image": "products/922/45/20260201_222744_GPWRB30.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.991862+00:00",
+      "uploaded_by": 1,
+      "description": "GPWRB30"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 44,
+    "fields": {
+      "product": 917,
+      "assignment": 750,
+      "image": "products/917/39/20260201_222744_PT-4-14.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.957104+00:00",
+      "uploaded_by": 1,
+      "description": "PT-4-14"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 45,
+    "fields": {
+      "product": 916,
+      "assignment": 749,
+      "image": "products/916/37/20260201_222744_S1-18-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.903842+00:00",
+      "uploaded_by": 1,
+      "description": "S1-18-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 46,
+    "fields": {
+      "product": 915,
+      "assignment": 748,
+      "image": "products/915/45/20260201_222744_C5EU2102.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.861184+00:00",
+      "uploaded_by": 1,
+      "description": "C5EU2102"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 47,
+    "fields": {
+      "product": 915,
+      "assignment": 747,
+      "image": "products/915/30/20260201_222744_C5EU2102.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.829584+00:00",
+      "uploaded_by": 1,
+      "description": "C5EU2102"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 48,
+    "fields": {
+      "product": 914,
+      "assignment": 746,
+      "image": "products/914/49/20260201_222744_1597TRWRW.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.793043+00:00",
+      "uploaded_by": 1,
+      "description": "1597TRWRW"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 49,
+    "fields": {
+      "product": 914,
+      "assignment": 745,
+      "image": "products/914/45/20260201_222744_1597TRWRW.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.774607+00:00",
+      "uploaded_by": 1,
+      "description": "1597TRWRW"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 50,
+    "fields": {
+      "product": 914,
+      "assignment": 744,
+      "image": "products/914/27/20260201_222744_1597TRWRW.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.761883+00:00",
+      "uploaded_by": 1,
+      "description": "1597TRWRW"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 51,
+    "fields": {
+      "product": 911,
+      "assignment": 739,
+      "image": "products/911/40/20260201_222744_JUL-5000K-SMLED.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.747846+00:00",
+      "uploaded_by": 1,
+      "description": "JUL-5000K-SMLED"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 52,
+    "fields": {
+      "product": 911,
+      "assignment": 738,
+      "image": "products/911/24/20260201_222744_JUL-5000K-SMLED.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.734961+00:00",
+      "uploaded_by": 1,
+      "description": "JUL-5000K-SMLED"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 53,
+    "fields": {
+      "product": 911,
+      "assignment": 737,
+      "image": "products/911/23/20260201_222744_JUL-5000K-SMLED.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.702542+00:00",
+      "uploaded_by": 1,
+      "description": "JUL-5000K-SMLED"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 54,
+    "fields": {
+      "product": 909,
+      "assignment": 734,
+      "image": "products/909/17/20260201_222744_14540S-15.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.646293+00:00",
+      "uploaded_by": 1,
+      "description": "14540S-15"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 55,
+    "fields": {
+      "product": 908,
+      "assignment": 733,
+      "image": "products/908/17/20260201_222744_82200EN-12.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.610142+00:00",
+      "uploaded_by": 1,
+      "description": "82200EN-12"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 56,
+    "fields": {
+      "product": 907,
+      "assignment": 732,
+      "image": "products/907/17/20260201_222744_88200-12.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.578626+00:00",
+      "uploaded_by": 1,
+      "description": "88200-12"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 57,
+    "fields": {
+      "product": 906,
+      "assignment": 731,
+      "image": "products/906/17/20260201_222744_4421603-112.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.512517+00:00",
+      "uploaded_by": 1,
+      "description": "4421603-112"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 58,
+    "fields": {
+      "product": 902,
+      "assignment": 724,
+      "image": "products/902/49/20260201_222744_RF9601DW.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.472070+00:00",
+      "uploaded_by": 1,
+      "description": "RF9601DW"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 59,
+    "fields": {
+      "product": 902,
+      "assignment": 723,
+      "image": "products/902/12/20260201_222744_RF9601DW.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.436348+00:00",
+      "uploaded_by": 1,
+      "description": "RF9601DW"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 60,
+    "fields": {
+      "product": 900,
+      "assignment": 718,
+      "image": "products/900/41/20260201_222744_4S-DRS.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.385142+00:00",
+      "uploaded_by": 1,
+      "description": "4S-DRS"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 61,
+    "fields": {
+      "product": 900,
+      "assignment": 717,
+      "image": "products/900/12/20260201_222744_4S-DRS.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.353067+00:00",
+      "uploaded_by": 1,
+      "description": "4S-DRS"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 62,
+    "fields": {
+      "product": 886,
+      "assignment": 695,
+      "image": "products/886/61/20260201_222744_FA101.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.312483+00:00",
+      "uploaded_by": 1,
+      "description": "FA101"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 63,
+    "fields": {
+      "product": 886,
+      "assignment": 694,
+      "image": "products/886/37/20260201_222744_FA101.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.294738+00:00",
+      "uploaded_by": 1,
+      "description": "FA101"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 64,
+    "fields": {
+      "product": 886,
+      "assignment": 693,
+      "image": "products/886/9/20260201_222744_FA101.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.275634+00:00",
+      "uploaded_by": 1,
+      "description": "FA101"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 65,
+    "fields": {
+      "product": 886,
+      "assignment": 692,
+      "image": "products/886/3/20260201_222744_FA101.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.245876+00:00",
+      "uploaded_by": 1,
+      "description": "FA101"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 66,
+    "fields": {
+      "product": 883,
+      "assignment": 691,
+      "image": "products/883/60/20260201_222744_WNUT-Y.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.196187+00:00",
+      "uploaded_by": 1,
+      "description": "WNUT-Y"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 67,
+    "fields": {
+      "product": 882,
+      "assignment": 690,
+      "image": "products/882/60/20260201_222744_WLUBE.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.146874+00:00",
+      "uploaded_by": 1,
+      "description": "WLUBE"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 68,
+    "fields": {
+      "product": 877,
+      "assignment": 689,
+      "image": "products/877/60/20260201_222744_HARDHAT.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:44.075143+00:00",
+      "uploaded_by": 1,
+      "description": "HARDHAT"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 69,
+    "fields": {
+      "product": 876,
+      "assignment": 688,
+      "image": "products/876/60/20260201_222743_ET-WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:43.726405+00:00",
+      "uploaded_by": 1,
+      "description": "ET-WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 70,
+    "fields": {
+      "product": 875,
+      "assignment": 687,
+      "image": "products/875/55/20260201_222743_TREMCO-960712323.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:43.622430+00:00",
+      "uploaded_by": 1,
+      "description": "TREMCO-960712323"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 71,
+    "fields": {
+      "product": 868,
+      "assignment": 685,
+      "image": "products/868/60/20260201_222743_TRENCHSHOVEL.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:43.508505+00:00",
+      "uploaded_by": 1,
+      "description": "TRENCHSHOVEL"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 72,
+    "fields": {
+      "product": 867,
+      "assignment": 684,
+      "image": "products/867/53/20260201_222743_RF400.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:43.223142+00:00",
+      "uploaded_by": 1,
+      "description": "RF400"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 73,
+    "fields": {
+      "product": 866,
+      "assignment": 683,
+      "image": "products/866/53/20260201_222742_RF406BR.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:42.980533+00:00",
+      "uploaded_by": 1,
+      "description": "RF406BR"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 74,
+    "fields": {
+      "product": 865,
+      "assignment": 682,
+      "image": "products/865/53/20260201_222742_RF406ALU.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:42.753155+00:00",
+      "uploaded_by": 1,
+      "description": "RF406ALU"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 75,
+    "fields": {
+      "product": 864,
+      "assignment": 681,
+      "image": "products/864/53/20260201_222742_RR205WWR.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:42.606935+00:00",
+      "uploaded_by": 1,
+      "description": "RR205WWR"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 76,
+    "fields": {
+      "product": 850,
+      "assignment": 674,
+      "image": "products/850/60/20260201_222742_TAP-025-125.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:42.515374+00:00",
+      "uploaded_by": 1,
+      "description": "TAP-025-125"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 77,
+    "fields": {
+      "product": 848,
+      "assignment": 672,
+      "image": "products/848/51/20260201_222742_CMS2180WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:42.480533+00:00",
+      "uploaded_by": 1,
+      "description": "CMS2180WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 78,
+    "fields": {
+      "product": 837,
+      "assignment": 668,
+      "image": "products/837/60/20260201_222742_STUD.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:42.434595+00:00",
+      "uploaded_by": 1,
+      "description": "STUD"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 79,
+    "fields": {
+      "product": 834,
+      "assignment": 666,
+      "image": "products/834/60/20260201_222742_P3410-30.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:42.362933+00:00",
+      "uploaded_by": 1,
+      "description": "P3410-30"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 80,
+    "fields": {
+      "product": 826,
+      "assignment": 664,
+      "image": "products/826/49/20260201_222742_SQR16100WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:42.307881+00:00",
+      "uploaded_by": 1,
+      "description": "SQR16100WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 81,
+    "fields": {
+      "product": 823,
+      "assignment": 663,
+      "image": "products/823/49/20260201_222742_SQWS-83-211-XX.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:42.260623+00:00",
+      "uploaded_by": 1,
+      "description": "SQWS-83-211-XX"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 82,
+    "fields": {
+      "product": 819,
+      "assignment": 662,
+      "image": "products/819/49/20260201_222742_CMELK4.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:42.206521+00:00",
+      "uploaded_by": 1,
+      "description": "CMELK4"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 83,
+    "fields": {
+      "product": 817,
+      "assignment": 660,
+      "image": "products/817/49/20260201_222742_SQWS-42-2011-WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:42.164521+00:00",
+      "uploaded_by": 1,
+      "description": "SQWS-42-2011-WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 84,
+    "fields": {
+      "product": 815,
+      "assignment": 659,
+      "image": "products/815/49/20260201_222742_SQWS461011WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:42.092503+00:00",
+      "uploaded_by": 1,
+      "description": "SQWS461011WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 85,
+    "fields": {
+      "product": 810,
+      "assignment": 658,
+      "image": "products/810/49/20260201_222742_QO816L100RB.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:42.011053+00:00",
+      "uploaded_by": 1,
+      "description": "QO816L100RB"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 86,
+    "fields": {
+      "product": 796,
+      "assignment": 656,
+      "image": "products/796/49/20260201_222741_QO142L225PG.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.964691+00:00",
+      "uploaded_by": 1,
+      "description": "QO142L225PG"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 87,
+    "fields": {
+      "product": 781,
+      "assignment": 650,
+      "image": "products/781/60/20260201_222741_K1540L.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.919654+00:00",
+      "uploaded_by": 1,
+      "description": "K1540L"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 88,
+    "fields": {
+      "product": 769,
+      "assignment": 643,
+      "image": "products/769/49/20260201_222741_Q280.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.723641+00:00",
+      "uploaded_by": 1,
+      "description": "Q280"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 89,
+    "fields": {
+      "product": 769,
+      "assignment": 642,
+      "image": "products/769/48/20260201_222741_Q280.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.641898+00:00",
+      "uploaded_by": 1,
+      "description": "Q280"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 90,
+    "fields": {
+      "product": 769,
+      "assignment": 641,
+      "image": "products/769/28/20260201_222741_Q280.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.623662+00:00",
+      "uploaded_by": 1,
+      "description": "Q280"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 91,
+    "fields": {
+      "product": 769,
+      "assignment": 640,
+      "image": "products/769/1/20260201_222741_Q280.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.608378+00:00",
+      "uploaded_by": 1,
+      "description": "Q280"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 92,
+    "fields": {
+      "product": 768,
+      "assignment": 639,
+      "image": "products/768/49/20260201_222741_Q270.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.590722+00:00",
+      "uploaded_by": 1,
+      "description": "Q270"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 93,
+    "fields": {
+      "product": 768,
+      "assignment": 638,
+      "image": "products/768/48/20260201_222741_Q270.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.571682+00:00",
+      "uploaded_by": 1,
+      "description": "Q270"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 94,
+    "fields": {
+      "product": 768,
+      "assignment": 637,
+      "image": "products/768/28/20260201_222741_Q270.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.558245+00:00",
+      "uploaded_by": 1,
+      "description": "Q270"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 95,
+    "fields": {
+      "product": 768,
+      "assignment": 636,
+      "image": "products/768/1/20260201_222741_Q270.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.504967+00:00",
+      "uploaded_by": 1,
+      "description": "Q270"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 96,
+    "fields": {
+      "product": 748,
+      "assignment": 631,
+      "image": "products/748/49/20260201_222741_Q215.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.456730+00:00",
+      "uploaded_by": 1,
+      "description": "Q215"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 97,
+    "fields": {
+      "product": 748,
+      "assignment": 630,
+      "image": "products/748/48/20260201_222741_Q215.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.443234+00:00",
+      "uploaded_by": 1,
+      "description": "Q215"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 98,
+    "fields": {
+      "product": 748,
+      "assignment": 629,
+      "image": "products/748/28/20260201_222741_Q215.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.428833+00:00",
+      "uploaded_by": 1,
+      "description": "Q215"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 99,
+    "fields": {
+      "product": 748,
+      "assignment": 628,
+      "image": "products/748/1/20260201_222741_Q215.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.368582+00:00",
+      "uploaded_by": 1,
+      "description": "Q215"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 100,
+    "fields": {
+      "product": 746,
+      "assignment": 627,
+      "image": "products/746/48/20260201_222741_QN2200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.240742+00:00",
+      "uploaded_by": 1,
+      "description": "QN2200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 101,
+    "fields": {
+      "product": 719,
+      "assignment": 623,
+      "image": "products/719/60/20260201_222741_SER_4-4-4-6-CU.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.203414+00:00",
+      "uploaded_by": 1,
+      "description": "SER 4-4-4-6-CU"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 102,
+    "fields": {
+      "product": 718,
+      "assignment": 622,
+      "image": "products/718/60/20260201_222741_SER-2-2-2-4-AL.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.182453+00:00",
+      "uploaded_by": 1,
+      "description": "SER-2-2-2-4-AL"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 103,
+    "fields": {
+      "product": 714,
+      "assignment": 618,
+      "image": "products/714/60/20260201_222741_SCP-INVISO.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.164362+00:00",
+      "uploaded_by": 1,
+      "description": "SCP-INVISO"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 104,
+    "fields": {
+      "product": 712,
+      "assignment": 617,
+      "image": "products/712/47/20260201_222741_8644.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.148371+00:00",
+      "uploaded_by": 1,
+      "description": "8644"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 105,
+    "fields": {
+      "product": 710,
+      "assignment": 616,
+      "image": "products/710/46/20260201_222741_A3684.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.132671+00:00",
+      "uploaded_by": 1,
+      "description": "A3684"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 106,
+    "fields": {
+      "product": 702,
+      "assignment": 615,
+      "image": "products/702/60/20260201_222741_BB-RND1G-5H-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.104282+00:00",
+      "uploaded_by": 1,
+      "description": "BB-RND1G-5H-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 107,
+    "fields": {
+      "product": 701,
+      "assignment": 614,
+      "image": "products/701/44/20260201_222741_8VR1P6-0EN0.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.046059+00:00",
+      "uploaded_by": 1,
+      "description": "8VR1P6-0EN0"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 108,
+    "fields": {
+      "product": 700,
+      "assignment": 613,
+      "image": "products/700/60/20260201_222741_RG6-TC.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:41.006632+00:00",
+      "uploaded_by": 1,
+      "description": "RG6-TC"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 109,
+    "fields": {
+      "product": 699,
+      "assignment": 612,
+      "image": "products/699/60/20260201_222740_RG6.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.976817+00:00",
+      "uploaded_by": 1,
+      "description": "RG6"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 110,
+    "fields": {
+      "product": 697,
+      "assignment": 610,
+      "image": "products/697/60/20260201_222740_WNUT-R.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.922044+00:00",
+      "uploaded_by": 1,
+      "description": "WNUT-R"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 111,
+    "fields": {
+      "product": 696,
+      "assignment": 609,
+      "image": "products/696/60/20260201_222740_TAPE-STUCCO.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.863397+00:00",
+      "uploaded_by": 1,
+      "description": "TAPE-STUCCO"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 112,
+    "fields": {
+      "product": 695,
+      "assignment": 608,
+      "image": "products/695/60/20260201_222740_ET-RD.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.798600+00:00",
+      "uploaded_by": 1,
+      "description": "ET-RD"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 113,
+    "fields": {
+      "product": 690,
+      "assignment": 607,
+      "image": "products/690/41/20260201_222740_2611.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.731895+00:00",
+      "uploaded_by": 1,
+      "description": "2611"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 114,
+    "fields": {
+      "product": 680,
+      "assignment": 602,
+      "image": "products/680/60/20260201_222740_QO2175SB.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.676561+00:00",
+      "uploaded_by": 1,
+      "description": "QO2175SB"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 115,
+    "fields": {
+      "product": 679,
+      "assignment": 601,
+      "image": "products/679/60/20260201_222740_QOCGK2C.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.628707+00:00",
+      "uploaded_by": 1,
+      "description": "QOCGK2C"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 116,
+    "fields": {
+      "product": 676,
+      "assignment": 598,
+      "image": "products/676/49/20260201_222740_QO290.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.588923+00:00",
+      "uploaded_by": 1,
+      "description": "QO290"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 117,
+    "fields": {
+      "product": 676,
+      "assignment": 597,
+      "image": "products/676/48/20260201_222740_QO290.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.572662+00:00",
+      "uploaded_by": 1,
+      "description": "QO290"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 118,
+    "fields": {
+      "product": 676,
+      "assignment": 596,
+      "image": "products/676/28/20260201_222740_QO290.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.555902+00:00",
+      "uploaded_by": 1,
+      "description": "QO290"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 119,
+    "fields": {
+      "product": 676,
+      "assignment": 595,
+      "image": "products/676/1/20260201_222740_QO290.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.528976+00:00",
+      "uploaded_by": 1,
+      "description": "QO290"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 120,
+    "fields": {
+      "product": 662,
+      "assignment": 590,
+      "image": "products/662/49/20260201_222740_QDL22200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.461464+00:00",
+      "uploaded_by": 1,
+      "description": "QDL22200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 121,
+    "fields": {
+      "product": 660,
+      "assignment": 588,
+      "image": "products/660/60/20260201_222740_QO1PL.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.409093+00:00",
+      "uploaded_by": 1,
+      "description": "QO1PL"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 122,
+    "fields": {
+      "product": 658,
+      "assignment": 587,
+      "image": "products/658/49/20260201_222740_QO120PCAFI.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.340319+00:00",
+      "uploaded_by": 1,
+      "description": "QO120PCAFI"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 123,
+    "fields": {
+      "product": 658,
+      "assignment": 586,
+      "image": "products/658/48/20260201_222740_QO120PCAFI.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.323412+00:00",
+      "uploaded_by": 1,
+      "description": "QO120PCAFI"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 124,
+    "fields": {
+      "product": 658,
+      "assignment": 585,
+      "image": "products/658/28/20260201_222740_QO120PCAFI.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.311291+00:00",
+      "uploaded_by": 1,
+      "description": "QO120PCAFI"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 125,
+    "fields": {
+      "product": 658,
+      "assignment": 584,
+      "image": "products/658/1/20260201_222740_QO120PCAFI.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.257757+00:00",
+      "uploaded_by": 1,
+      "description": "QO120PCAFI"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 126,
+    "fields": {
+      "product": 653,
+      "assignment": 583,
+      "image": "products/653/49/20260201_222740_QO2100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.193210+00:00",
+      "uploaded_by": 1,
+      "description": "QO2100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 127,
+    "fields": {
+      "product": 653,
+      "assignment": 582,
+      "image": "products/653/48/20260201_222740_QO2100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.092181+00:00",
+      "uploaded_by": 1,
+      "description": "QO2100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 128,
+    "fields": {
+      "product": 653,
+      "assignment": 581,
+      "image": "products/653/28/20260201_222740_QO2100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:40.036483+00:00",
+      "uploaded_by": 1,
+      "description": "QO2100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 129,
+    "fields": {
+      "product": 653,
+      "assignment": 580,
+      "image": "products/653/1/20260201_222739_QO2100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.972956+00:00",
+      "uploaded_by": 1,
+      "description": "QO2100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 130,
+    "fields": {
+      "product": 652,
+      "assignment": 579,
+      "image": "products/652/60/20260201_222739_QOADV1PAF.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.873285+00:00",
+      "uploaded_by": 1,
+      "description": "QOADV1PAF"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 131,
+    "fields": {
+      "product": 650,
+      "assignment": 577,
+      "image": "products/650/60/20260201_222739_PVC-GLUE.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.811804+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-GLUE"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 132,
+    "fields": {
+      "product": 649,
+      "assignment": 576,
+      "image": "products/649/60/20260201_222739_BROOM.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.578089+00:00",
+      "uploaded_by": 1,
+      "description": "BROOM"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 133,
+    "fields": {
+      "product": 631,
+      "assignment": 571,
+      "image": "products/631/38/20260201_222739_PJ22BGWHL01.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.536650+00:00",
+      "uploaded_by": 1,
+      "description": "PJ22BGWHL01"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 134,
+    "fields": {
+      "product": 630,
+      "assignment": 570,
+      "image": "products/630/38/20260201_222739_PD5SDVWH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.510269+00:00",
+      "uploaded_by": 1,
+      "description": "PD5SDVWH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 135,
+    "fields": {
+      "product": 622,
+      "assignment": 568,
+      "image": "products/622/37/20260201_222739_S1-22-S50.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.473050+00:00",
+      "uploaded_by": 1,
+      "description": "S1-22-S50"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 136,
+    "fields": {
+      "product": 617,
+      "assignment": 565,
+      "image": "products/617/37/20260201_222739_OS-05N.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.438050+00:00",
+      "uploaded_by": 1,
+      "description": "OS-05N"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 137,
+    "fields": {
+      "product": 617,
+      "assignment": 564,
+      "image": "products/617/9/20260201_222739_OS-05N.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.408393+00:00",
+      "uploaded_by": 1,
+      "description": "OS-05N"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 138,
+    "fields": {
+      "product": 616,
+      "assignment": 563,
+      "image": "products/616/8/20260201_222739_OS-06N.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.355144+00:00",
+      "uploaded_by": 1,
+      "description": "OS-06N"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 139,
+    "fields": {
+      "product": 615,
+      "assignment": 562,
+      "image": "products/615/8/20260201_222739_OS-04DN.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.296590+00:00",
+      "uploaded_by": 1,
+      "description": "OS-04DN"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 140,
+    "fields": {
+      "product": 614,
+      "assignment": 561,
+      "image": "products/614/8/20260201_222739_OS-03DN.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.231050+00:00",
+      "uploaded_by": 1,
+      "description": "OS-03DN"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 141,
+    "fields": {
+      "product": 613,
+      "assignment": 560,
+      "image": "products/613/8/20260201_222739_OS-02R.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.169735+00:00",
+      "uploaded_by": 1,
+      "description": "OS-02R"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 142,
+    "fields": {
+      "product": 612,
+      "assignment": 559,
+      "image": "products/612/8/20260201_222739_OS-B01R.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.120094+00:00",
+      "uploaded_by": 1,
+      "description": "OS-B01R"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 143,
+    "fields": {
+      "product": 611,
+      "assignment": 558,
+      "image": "products/611/8/20260201_222739_BE1X.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.080432+00:00",
+      "uploaded_by": 1,
+      "description": "BE1X"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 144,
+    "fields": {
+      "product": 609,
+      "assignment": 556,
+      "image": "products/609/60/20260201_222739_OL8701ORB.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.064418+00:00",
+      "uploaded_by": 1,
+      "description": "OL8701ORB"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 145,
+    "fields": {
+      "product": 607,
+      "assignment": 555,
+      "image": "products/607/60/20260201_222739_NOOX.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:39.029996+00:00",
+      "uploaded_by": 1,
+      "description": "NOOX"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 146,
+    "fields": {
+      "product": 603,
+      "assignment": 552,
+      "image": "products/603/34/20260201_222738_S8324.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.990003+00:00",
+      "uploaded_by": 1,
+      "description": "S8324"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 147,
+    "fields": {
+      "product": 601,
+      "assignment": 550,
+      "image": "products/601/60/20260201_222738_MFB-050D.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.961402+00:00",
+      "uploaded_by": 1,
+      "description": "MFB-050D"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 148,
+    "fields": {
+      "product": 599,
+      "assignment": 548,
+      "image": "products/599/60/20260201_222738_ANCHORS.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.921958+00:00",
+      "uploaded_by": 1,
+      "description": "ANCHORS"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 149,
+    "fields": {
+      "product": 598,
+      "assignment": 547,
+      "image": "products/598/60/20260201_222738_DISCO-60ANF.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.905454+00:00",
+      "uploaded_by": 1,
+      "description": "DISCO-60ANF"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 150,
+    "fields": {
+      "product": 594,
+      "assignment": 546,
+      "image": "products/594/32/20260201_222738_MAKHR4002.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.871363+00:00",
+      "uploaded_by": 1,
+      "description": "MAKHR4002"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 151,
+    "fields": {
+      "product": 593,
+      "assignment": 545,
+      "image": "products/593/31/20260201_222738_DVCL153PWH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.805832+00:00",
+      "uploaded_by": 1,
+      "description": "DVCL153PWH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 152,
+    "fields": {
+      "product": 592,
+      "assignment": 544,
+      "image": "products/592/31/20260201_222738_PICO-WBX-ADAPT.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.710041+00:00",
+      "uploaded_by": 1,
+      "description": "PICO-WBX-ADAPT"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 153,
+    "fields": {
+      "product": 591,
+      "assignment": 543,
+      "image": "products/591/31/20260201_222738_PPKG1WWH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.678124+00:00",
+      "uploaded_by": 1,
+      "description": "PPKG1WWH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 154,
+    "fields": {
+      "product": 587,
+      "assignment": 540,
+      "image": "products/587/60/20260201_222738_10179.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.644085+00:00",
+      "uploaded_by": 1,
+      "description": "10179"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 155,
+    "fields": {
+      "product": 586,
+      "assignment": 539,
+      "image": "products/586/60/20260201_222738_10174WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.478957+00:00",
+      "uploaded_by": 1,
+      "description": "10174WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 156,
+    "fields": {
+      "product": 580,
+      "assignment": 531,
+      "image": "products/580/28/20260201_222738_DHS05-1LW.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.428246+00:00",
+      "uploaded_by": 1,
+      "description": "DHS05-1LW"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 157,
+    "fields": {
+      "product": 535,
+      "assignment": 440,
+      "image": "products/535/27/20260201_222738_R26USBAC6W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.376745+00:00",
+      "uploaded_by": 1,
+      "description": "R26USBAC6W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 158,
+    "fields": {
+      "product": 534,
+      "assignment": 439,
+      "image": "products/534/27/20260201_222738_1597TRW.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.324668+00:00",
+      "uploaded_by": 1,
+      "description": "1597TRW"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 159,
+    "fields": {
+      "product": 533,
+      "assignment": 438,
+      "image": "products/533/27/20260201_222738_TPTE1-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.135215+00:00",
+      "uploaded_by": 1,
+      "description": "TPTE1-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 160,
+    "fields": {
+      "product": 531,
+      "assignment": 437,
+      "image": "products/531/27/20260201_222738_RCD11W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.102334+00:00",
+      "uploaded_by": 1,
+      "description": "RCD11W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 161,
+    "fields": {
+      "product": 530,
+      "assignment": 436,
+      "image": "products/530/27/20260201_222738_TPJ7-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.066217+00:00",
+      "uploaded_by": 1,
+      "description": "TPJ7-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 162,
+    "fields": {
+      "product": 529,
+      "assignment": 435,
+      "image": "products/529/27/20260201_222738_S3713-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:38.035421+00:00",
+      "uploaded_by": 1,
+      "description": "S3713-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 163,
+    "fields": {
+      "product": 528,
+      "assignment": 434,
+      "image": "products/528/27/20260201_222737_RHCL453PW.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.984802+00:00",
+      "uploaded_by": 1,
+      "description": "RHCL453PW"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 164,
+    "fields": {
+      "product": 527,
+      "assignment": 433,
+      "image": "products/527/27/20260201_222737_WH2010A2.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.923362+00:00",
+      "uploaded_by": 1,
+      "description": "WH2010A2"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 165,
+    "fields": {
+      "product": 526,
+      "assignment": 432,
+      "image": "products/526/27/20260201_222737_WP3450-WH-50.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.879563+00:00",
+      "uploaded_by": 1,
+      "description": "WP3450-WH-50"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 166,
+    "fields": {
+      "product": 525,
+      "assignment": 431,
+      "image": "products/525/27/20260201_222737_WP3479-WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.856950+00:00",
+      "uploaded_by": 1,
+      "description": "WP3479-WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 167,
+    "fields": {
+      "product": 524,
+      "assignment": 430,
+      "image": "products/524/27/20260201_222737_ENP42805-NA.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.810812+00:00",
+      "uploaded_by": 1,
+      "description": "ENP42805-NA"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 168,
+    "fields": {
+      "product": 523,
+      "assignment": 429,
+      "image": "products/523/27/20260201_222737_WP3402-WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.768522+00:00",
+      "uploaded_by": 1,
+      "description": "WP3402-WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 169,
+    "fields": {
+      "product": 522,
+      "assignment": 428,
+      "image": "products/522/27/20260201_222737_WP3401-WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.722760+00:00",
+      "uploaded_by": 1,
+      "description": "WP3401-WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 170,
+    "fields": {
+      "product": 521,
+      "assignment": 427,
+      "image": "products/521/27/20260201_222737_276-WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.684690+00:00",
+      "uploaded_by": 1,
+      "description": "276-WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 171,
+    "fields": {
+      "product": 520,
+      "assignment": 426,
+      "image": "products/520/27/20260201_222737_TPJ8-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.651522+00:00",
+      "uploaded_by": 1,
+      "description": "TPJ8-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 172,
+    "fields": {
+      "product": 519,
+      "assignment": 425,
+      "image": "products/519/27/20260201_222737_3232-TRWRW.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.588480+00:00",
+      "uploaded_by": 1,
+      "description": "3232-TRWRW"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 173,
+    "fields": {
+      "product": 518,
+      "assignment": 424,
+      "image": "products/518/27/20260201_222737_3232-TREXW.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.548928+00:00",
+      "uploaded_by": 1,
+      "description": "3232-TREXW"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 174,
+    "fields": {
+      "product": 517,
+      "assignment": 423,
+      "image": "products/517/27/20260201_222737_S3862-C.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.519417+00:00",
+      "uploaded_by": 1,
+      "description": "S3862-C"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 175,
+    "fields": {
+      "product": 516,
+      "assignment": 422,
+      "image": "products/516/27/20260201_222737_885TRW.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.480748+00:00",
+      "uploaded_by": 1,
+      "description": "885TRW"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 176,
+    "fields": {
+      "product": 515,
+      "assignment": 421,
+      "image": "products/515/27/20260201_222737_TPTELTV-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.439488+00:00",
+      "uploaded_by": 1,
+      "description": "TPTELTV-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 177,
+    "fields": {
+      "product": 514,
+      "assignment": 420,
+      "image": "products/514/27/20260201_222737_TPCATV-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.366732+00:00",
+      "uploaded_by": 1,
+      "description": "TPCATV-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 178,
+    "fields": {
+      "product": 512,
+      "assignment": 418,
+      "image": "products/512/27/20260201_222737_885TRBK.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.334141+00:00",
+      "uploaded_by": 1,
+      "description": "885TRBK"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 179,
+    "fields": {
+      "product": 511,
+      "assignment": 417,
+      "image": "products/511/27/20260201_222737_TP26-BK.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.281332+00:00",
+      "uploaded_by": 1,
+      "description": "TP26-BK"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 180,
+    "fields": {
+      "product": 509,
+      "assignment": 415,
+      "image": "products/509/27/20260201_222737_TP266-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.221849+00:00",
+      "uploaded_by": 1,
+      "description": "TP266-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 181,
+    "fields": {
+      "product": 508,
+      "assignment": 414,
+      "image": "products/508/27/20260201_222737_3854.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:37.110824+00:00",
+      "uploaded_by": 1,
+      "description": "3854"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 182,
+    "fields": {
+      "product": 507,
+      "assignment": 413,
+      "image": "products/507/27/20260201_222736_3894.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.946530+00:00",
+      "uploaded_by": 1,
+      "description": "3894"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 183,
+    "fields": {
+      "product": 506,
+      "assignment": 412,
+      "image": "products/506/27/20260201_222736_WH20GB506TR.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.883151+00:00",
+      "uploaded_by": 1,
+      "description": "WH20GB506TR"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 184,
+    "fields": {
+      "product": 504,
+      "assignment": 410,
+      "image": "products/504/27/20260201_222736_TP265-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.841107+00:00",
+      "uploaded_by": 1,
+      "description": "TP265-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 185,
+    "fields": {
+      "product": 503,
+      "assignment": 409,
+      "image": "products/503/27/20260201_222736_TM874-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.825686+00:00",
+      "uploaded_by": 1,
+      "description": "TM874-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 186,
+    "fields": {
+      "product": 501,
+      "assignment": 407,
+      "image": "products/501/27/20260201_222736_TPJ264-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.805186+00:00",
+      "uploaded_by": 1,
+      "description": "TPJ264-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 187,
+    "fields": {
+      "product": 500,
+      "assignment": 406,
+      "image": "products/500/27/20260201_222736_3864.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.790164+00:00",
+      "uploaded_by": 1,
+      "description": "3864"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 188,
+    "fields": {
+      "product": 499,
+      "assignment": 405,
+      "image": "products/499/27/20260201_222736_TM873-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.774168+00:00",
+      "uploaded_by": 1,
+      "description": "TM873-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 189,
+    "fields": {
+      "product": 497,
+      "assignment": 403,
+      "image": "products/497/27/20260201_222736_TPJ263-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.760394+00:00",
+      "uploaded_by": 1,
+      "description": "TPJ263-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 190,
+    "fields": {
+      "product": 496,
+      "assignment": 402,
+      "image": "products/496/27/20260201_222736_TR5351-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.743582+00:00",
+      "uploaded_by": 1,
+      "description": "TR5351-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 191,
+    "fields": {
+      "product": 495,
+      "assignment": 400,
+      "image": "products/495/27/20260201_222736_CR20-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.724892+00:00",
+      "uploaded_by": 1,
+      "description": "CR20-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 192,
+    "fields": {
+      "product": 493,
+      "assignment": 398,
+      "image": "products/493/27/20260201_222736_TPJ262-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.696123+00:00",
+      "uploaded_by": 1,
+      "description": "TPJ262-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 193,
+    "fields": {
+      "product": 492,
+      "assignment": 397,
+      "image": "products/492/27/20260201_222736_TPJ82-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.656791+00:00",
+      "uploaded_by": 1,
+      "description": "TPJ82-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 194,
+    "fields": {
+      "product": 491,
+      "assignment": 396,
+      "image": "products/491/27/20260201_222736_TP23-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.624999+00:00",
+      "uploaded_by": 1,
+      "description": "TP23-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 195,
+    "fields": {
+      "product": 489,
+      "assignment": 394,
+      "image": "products/489/49/20260201_222736_TPJ26-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.605535+00:00",
+      "uploaded_by": 1,
+      "description": "TPJ26-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 196,
+    "fields": {
+      "product": 489,
+      "assignment": 393,
+      "image": "products/489/28/20260201_222736_TPJ26-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.591467+00:00",
+      "uploaded_by": 1,
+      "description": "TPJ26-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 197,
+    "fields": {
+      "product": 489,
+      "assignment": 392,
+      "image": "products/489/27/20260201_222736_TPJ26-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.570925+00:00",
+      "uploaded_by": 1,
+      "description": "TPJ26-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 198,
+    "fields": {
+      "product": 488,
+      "assignment": 391,
+      "image": "products/488/27/20260201_222736_TPJ13-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.535002+00:00",
+      "uploaded_by": 1,
+      "description": "TPJ13-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 199,
+    "fields": {
+      "product": 485,
+      "assignment": 390,
+      "image": "products/485/25/20260201_222736_KLEIN_56341.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.474358+00:00",
+      "uploaded_by": 1,
+      "description": "KLEIN 56341"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 200,
+    "fields": {
+      "product": 476,
+      "assignment": 385,
+      "image": "products/476/24/20260201_222736_10573WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.409447+00:00",
+      "uploaded_by": 1,
+      "description": "10573WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 201,
+    "fields": {
+      "product": 473,
+      "assignment": 384,
+      "image": "products/473/60/20260201_222736_JL-6500.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.368640+00:00",
+      "uploaded_by": 1,
+      "description": "JL-6500"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 202,
+    "fields": {
+      "product": 471,
+      "assignment": 383,
+      "image": "products/471/22/20260201_222736_K4321C.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.345792+00:00",
+      "uploaded_by": 1,
+      "description": "K4321C"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 203,
+    "fields": {
+      "product": 470,
+      "assignment": 382,
+      "image": "products/470/22/20260201_222736_WP5220C.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.317707+00:00",
+      "uploaded_by": 1,
+      "description": "WP5220C"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 204,
+    "fields": {
+      "product": 466,
+      "assignment": 378,
+      "image": "products/466/60/20260201_222736_HB-COVER05KO.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.261071+00:00",
+      "uploaded_by": 1,
+      "description": "HB-COVER05KO"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 205,
+    "fields": {
+      "product": 464,
+      "assignment": 376,
+      "image": "products/464/19/20260201_222736_HALCO_82170.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.197541+00:00",
+      "uploaded_by": 1,
+      "description": "HALCO 82170"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 206,
+    "fields": {
+      "product": 463,
+      "assignment": 375,
+      "image": "products/463/60/20260201_222736_GB2-6AWG.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.145339+00:00",
+      "uploaded_by": 1,
+      "description": "GB2-6AWG"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 207,
+    "fields": {
+      "product": 462,
+      "assignment": 374,
+      "image": "products/462/60/20260201_222736_GRAC-058.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.124681+00:00",
+      "uploaded_by": 1,
+      "description": "GRAC-058"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 208,
+    "fields": {
+      "product": 461,
+      "assignment": 373,
+      "image": "products/461/60/20260201_222736_PAINT-G.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.089449+00:00",
+      "uploaded_by": 1,
+      "description": "PAINT-G"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 209,
+    "fields": {
+      "product": 460,
+      "assignment": 372,
+      "image": "products/460/60/20260201_222736_ET-GRN.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:36.034678+00:00",
+      "uploaded_by": 1,
+      "description": "ET-GRN"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 210,
+    "fields": {
+      "product": 459,
+      "assignment": 371,
+      "image": "products/459/18/20260201_222735_PL24V-30-W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.967261+00:00",
+      "uploaded_by": 1,
+      "description": "PL24V-30-W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 211,
+    "fields": {
+      "product": 447,
+      "assignment": 370,
+      "image": "products/447/17/20260201_222735_77064-962.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.920030+00:00",
+      "uploaded_by": 1,
+      "description": "77064-962"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 212,
+    "fields": {
+      "product": 446,
+      "assignment": 369,
+      "image": "products/446/17/20260201_222735_4428904-962.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.886352+00:00",
+      "uploaded_by": 1,
+      "description": "4428904-962"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 213,
+    "fields": {
+      "product": 438,
+      "assignment": 368,
+      "image": "products/438/17/20260201_222735_7567EN3-32.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.799886+00:00",
+      "uploaded_by": 1,
+      "description": "7567EN3-32"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 214,
+    "fields": {
+      "product": 430,
+      "assignment": 367,
+      "image": "products/430/57/20260201_222735_GEN-TS-200A.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.778540+00:00",
+      "uploaded_by": 1,
+      "description": "GEN-TS-200A"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 215,
+    "fields": {
+      "product": 426,
+      "assignment": 363,
+      "image": "products/426/60/20260201_222735_FT-4X75.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.755004+00:00",
+      "uploaded_by": 1,
+      "description": "FT-4X75"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 216,
+    "fields": {
+      "product": 424,
+      "assignment": 361,
+      "image": "products/424/60/20260201_222735_FOAM-FIRE.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.712965+00:00",
+      "uploaded_by": 1,
+      "description": "FOAM-FIRE"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 217,
+    "fields": {
+      "product": 423,
+      "assignment": 360,
+      "image": "products/423/66/20260201_222735_FOAM-STANDARD.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.654514+00:00",
+      "uploaded_by": 1,
+      "description": "FOAM-STANDARD"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 218,
+    "fields": {
+      "product": 404,
+      "assignment": 359,
+      "image": "products/404/12/20260201_222735_TP269.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.604958+00:00",
+      "uploaded_by": 1,
+      "description": "TP269"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 219,
+    "fields": {
+      "product": 401,
+      "assignment": 357,
+      "image": "products/401/60/20260201_222735_TAPE-DUCT.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.565176+00:00",
+      "uploaded_by": 1,
+      "description": "TAPE-DUCT"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 220,
+    "fields": {
+      "product": 400,
+      "assignment": 356,
+      "image": "products/400/60/20260201_222735_DPIN.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.502070+00:00",
+      "uploaded_by": 1,
+      "description": "DPIN"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 221,
+    "fields": {
+      "product": 399,
+      "assignment": 355,
+      "image": "products/399/60/20260201_222735_DBCK-WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.409413+00:00",
+      "uploaded_by": 1,
+      "description": "DBCK-WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 222,
+    "fields": {
+      "product": 396,
+      "assignment": 354,
+      "image": "products/396/10/20260201_222735_TB-316X3.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.349999+00:00",
+      "uploaded_by": 1,
+      "description": "TB-316X3"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 223,
+    "fields": {
+      "product": 393,
+      "assignment": 351,
+      "image": "products/393/60/20260201_222735_63991.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.282522+00:00",
+      "uploaded_by": 1,
+      "description": "63991"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 224,
+    "fields": {
+      "product": 392,
+      "assignment": 350,
+      "image": "products/392/60/20260201_222735_CL4-14AWG.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.188405+00:00",
+      "uploaded_by": 1,
+      "description": "CL4-14AWG"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 225,
+    "fields": {
+      "product": 381,
+      "assignment": 348,
+      "image": "products/381/60/20260201_222735_CAT5E.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.156882+00:00",
+      "uploaded_by": 1,
+      "description": "CAT5E"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 226,
+    "fields": {
+      "product": 374,
+      "assignment": 345,
+      "image": "products/374/60/20260201_222735_BULB-CANDLE.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.114018+00:00",
+      "uploaded_by": 1,
+      "description": "BULB-CANDLE"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 227,
+    "fields": {
+      "product": 373,
+      "assignment": 344,
+      "image": "products/373/60/20260201_222735_CSTACKER.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.078335+00:00",
+      "uploaded_by": 1,
+      "description": "CSTACKER"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 228,
+    "fields": {
+      "product": 369,
+      "assignment": 343,
+      "image": "products/369/60/20260201_222735_TAPE-BEDT.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:35.021208+00:00",
+      "uploaded_by": 1,
+      "description": "TAPE-BEDT"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 229,
+    "fields": {
+      "product": 368,
+      "assignment": 342,
+      "image": "products/368/60/20260201_222734_BGC-2STR.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.975353+00:00",
+      "uploaded_by": 1,
+      "description": "BGC-2STR"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 230,
+    "fields": {
+      "product": 367,
+      "assignment": 341,
+      "image": "products/367/60/20260201_222734_P5212-20.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.937787+00:00",
+      "uploaded_by": 1,
+      "description": "P5212-20"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 231,
+    "fields": {
+      "product": 363,
+      "assignment": 339,
+      "image": "products/363/60/20260201_222734_CRAYON.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.876383+00:00",
+      "uploaded_by": 1,
+      "description": "CRAYON"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 232,
+    "fields": {
+      "product": 362,
+      "assignment": 338,
+      "image": "products/362/60/20260201_222734_ET-BLK.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.818227+00:00",
+      "uploaded_by": 1,
+      "description": "ET-BLK"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 233,
+    "fields": {
+      "product": 361,
+      "assignment": 337,
+      "image": "products/361/4/20260201_222734_AMESEA-502CLC24.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.765325+00:00",
+      "uploaded_by": 1,
+      "description": "AMESEA-502CLC24"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 234,
+    "fields": {
+      "product": 360,
+      "assignment": 336,
+      "image": "products/360/4/20260201_222734_AMESEA-55GRAYC24.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.711725+00:00",
+      "uploaded_by": 1,
+      "description": "AMESEA-55GRAYC24"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 235,
+    "fields": {
+      "product": 356,
+      "assignment": 332,
+      "image": "products/356/3/20260201_222734_CED130.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.661581+00:00",
+      "uploaded_by": 1,
+      "description": "CED130"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 236,
+    "fields": {
+      "product": 352,
+      "assignment": 330,
+      "image": "products/352/3/20260201_222734_BE1X.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.627385+00:00",
+      "uploaded_by": 1,
+      "description": "BE1X"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 237,
+    "fields": {
+      "product": 350,
+      "assignment": 329,
+      "image": "products/350/2/20260201_222734_TLCONKIT.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.558645+00:00",
+      "uploaded_by": 1,
+      "description": "TLCONKIT"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 238,
+    "fields": {
+      "product": 349,
+      "assignment": 328,
+      "image": "products/349/2/20260201_222734_RL-LED-CONKIT-16AMP.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.494652+00:00",
+      "uploaded_by": 1,
+      "description": "RL-LED-CONKIT-1.6AMP"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 239,
+    "fields": {
+      "product": 348,
+      "assignment": 327,
+      "image": "products/348/2/20260201_222734_ULRL-LED-WW-150.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.429639+00:00",
+      "uploaded_by": 1,
+      "description": "ULRL-LED-WW-150"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 240,
+    "fields": {
+      "product": 347,
+      "assignment": 326,
+      "image": "products/347/2/20260201_222734_QD6-30WH.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.353272+00:00",
+      "uploaded_by": 1,
+      "description": "QD6-30WH"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 241,
+    "fields": {
+      "product": 346,
+      "assignment": 325,
+      "image": "products/346/56/20260201_222734_SPRL054836L40MV.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.295885+00:00",
+      "uploaded_by": 1,
+      "description": "SPRL054836L40MV"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 242,
+    "fields": {
+      "product": 345,
+      "assignment": 324,
+      "image": "products/345/56/20260201_222734_SPRL052424L40WV.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.230637+00:00",
+      "uploaded_by": 1,
+      "description": "SPRL052424L40WV"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 243,
+    "fields": {
+      "product": 333,
+      "assignment": 323,
+      "image": "products/333/60/20260201_222734_BULB-A19.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.170664+00:00",
+      "uploaded_by": 1,
+      "description": "BULB-A19"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 244,
+    "fields": {
+      "product": 332,
+      "assignment": 322,
+      "image": "products/332/60/20260201_222734_8038-71.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.102975+00:00",
+      "uploaded_by": 1,
+      "description": "8038-71"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 245,
+    "fields": {
+      "product": 327,
+      "assignment": 317,
+      "image": "products/327/60/20260201_222734_LAD-8.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:34.035367+00:00",
+      "uploaded_by": 1,
+      "description": "LAD-8"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 246,
+    "fields": {
+      "product": 326,
+      "assignment": 316,
+      "image": "products/326/60/20260201_222733_FPS-832X2.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.966198+00:00",
+      "uploaded_by": 1,
+      "description": "FPS-832X2"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 247,
+    "fields": {
+      "product": 325,
+      "assignment": 315,
+      "image": "products/325/60/20260201_222733_PMTS-8X056.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.899923+00:00",
+      "uploaded_by": 1,
+      "description": "PMTS-8X056"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 248,
+    "fields": {
+      "product": 324,
+      "assignment": 314,
+      "image": "products/324/60/20260201_222733_PMTS-8X075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.832437+00:00",
+      "uploaded_by": 1,
+      "description": "PMTS-8X075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 249,
+    "fields": {
+      "product": 323,
+      "assignment": 313,
+      "image": "products/323/60/20260201_222733_SMCT-7.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.760016+00:00",
+      "uploaded_by": 1,
+      "description": "SMCT-7"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 250,
+    "fields": {
+      "product": 322,
+      "assignment": 312,
+      "image": "products/322/60/20260201_222733_BANJO-8.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.695378+00:00",
+      "uploaded_by": 1,
+      "description": "BANJO-8"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 251,
+    "fields": {
+      "product": 321,
+      "assignment": 311,
+      "image": "products/321/60/20260201_222733_PVC-JB-664.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.628586+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-JB-664"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 252,
+    "fields": {
+      "product": 319,
+      "assignment": 309,
+      "image": "products/319/60/20260201_222733_LS-60.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.559684+00:00",
+      "uploaded_by": 1,
+      "description": "LS-60"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 253,
+    "fields": {
+      "product": 314,
+      "assignment": 304,
+      "image": "products/314/60/20260201_222733_IC206RAT.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.487410+00:00",
+      "uploaded_by": 1,
+      "description": "IC206RAT"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 254,
+    "fields": {
+      "product": 313,
+      "assignment": 303,
+      "image": "products/313/60/20260201_222733_SW_9736SW8809.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.416161+00:00",
+      "uploaded_by": 1,
+      "description": "SW 9736SW8809"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 255,
+    "fields": {
+      "product": 312,
+      "assignment": 302,
+      "image": "products/312/60/20260201_222733_PT-6FT.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.383294+00:00",
+      "uploaded_by": 1,
+      "description": "PT-6FT"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 256,
+    "fields": {
+      "product": 311,
+      "assignment": 301,
+      "image": "products/311/60/20260201_222733_LAD-6.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.346847+00:00",
+      "uploaded_by": 1,
+      "description": "LAD-6"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 257,
+    "fields": {
+      "product": 310,
+      "assignment": 300,
+      "image": "products/310/60/20260201_222733_FPS-632X3.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.333492+00:00",
+      "uploaded_by": 1,
+      "description": "FPS-632X3"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 258,
+    "fields": {
+      "product": 309,
+      "assignment": 299,
+      "image": "products/309/60/20260201_222733_FPS-632X2.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.311923+00:00",
+      "uploaded_by": 1,
+      "description": "FPS-632X2"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 259,
+    "fields": {
+      "product": 304,
+      "assignment": 295,
+      "image": "products/304/60/20260201_222733_GR-058X8.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.286296+00:00",
+      "uploaded_by": 1,
+      "description": "GR-058X8"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 260,
+    "fields": {
+      "product": 301,
+      "assignment": 292,
+      "image": "products/301/60/20260201_222733_GC-M5G.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.250600+00:00",
+      "uploaded_by": 1,
+      "description": "GC-M5G"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 261,
+    "fields": {
+      "product": 290,
+      "assignment": 285,
+      "image": "products/290/60/20260201_222733_4S-BR150D.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.207593+00:00",
+      "uploaded_by": 1,
+      "description": "4S-BR150D"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 262,
+    "fields": {
+      "product": 289,
+      "assignment": 284,
+      "image": "products/289/60/20260201_222733_4S-S20RS.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.142665+00:00",
+      "uploaded_by": 1,
+      "description": "4S-S20RS"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 263,
+    "fields": {
+      "product": 288,
+      "assignment": 283,
+      "image": "products/288/60/20260201_222733_4S-3050RS.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.124667+00:00",
+      "uploaded_by": 1,
+      "description": "4S-3050RS"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 264,
+    "fields": {
+      "product": 285,
+      "assignment": 282,
+      "image": "products/285/60/20260201_222733_4S-BP.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.105678+00:00",
+      "uploaded_by": 1,
+      "description": "4S-BP"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 265,
+    "fields": {
+      "product": 284,
+      "assignment": 281,
+      "image": "products/284/44/20260201_222733_MR-2G.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.089814+00:00",
+      "uploaded_by": 1,
+      "description": "MR-2G"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 266,
+    "fields": {
+      "product": 283,
+      "assignment": 280,
+      "image": "products/283/60/20260201_222733_4S-218D.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.072452+00:00",
+      "uploaded_by": 1,
+      "description": "4S-218D"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 267,
+    "fields": {
+      "product": 282,
+      "assignment": 279,
+      "image": "products/282/44/20260201_222733_MR-1G.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.060365+00:00",
+      "uploaded_by": 1,
+      "description": "MR-1G"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 268,
+    "fields": {
+      "product": 281,
+      "assignment": 278,
+      "image": "products/281/60/20260201_222733_4S-125S.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:33.024221+00:00",
+      "uploaded_by": 1,
+      "description": "4S-125S"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 269,
+    "fields": {
+      "product": 278,
+      "assignment": 275,
+      "image": "products/278/60/20260201_222732_4M-RCP.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.960644+00:00",
+      "uploaded_by": 1,
+      "description": "4M-RCP"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 270,
+    "fields": {
+      "product": 277,
+      "assignment": 274,
+      "image": "products/277/9/20260201_222732_4P-LFB.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.899164+00:00",
+      "uploaded_by": 1,
+      "description": "4P-LFB"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 271,
+    "fields": {
+      "product": 273,
+      "assignment": 270,
+      "image": "products/273/60/20260201_222732_TL-4FT-FL.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.832168+00:00",
+      "uploaded_by": 1,
+      "description": "TL-4FT-FL"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 272,
+    "fields": {
+      "product": 272,
+      "assignment": 269,
+      "image": "products/272/60/20260201_222732_FDK-LT8G-F1-4-184.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.770289+00:00",
+      "uploaded_by": 1,
+      "description": "FDK-LT8G-F1-4-184"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 273,
+    "fields": {
+      "product": 271,
+      "assignment": 268,
+      "image": "products/271/60/20260201_222732_LAD-4.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.710401+00:00",
+      "uploaded_by": 1,
+      "description": "LAD-4"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 274,
+    "fields": {
+      "product": 266,
+      "assignment": 263,
+      "image": "products/266/60/20260201_222732_UAP5864-X-HSP.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.673225+00:00",
+      "uploaded_by": 1,
+      "description": "UAP5864-X-HSP"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 275,
+    "fields": {
+      "product": 265,
+      "assignment": 262,
+      "image": "products/265/60/20260201_222732_MC-1H-038.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.659347+00:00",
+      "uploaded_by": 1,
+      "description": "MC-1H-038"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 276,
+    "fields": {
+      "product": 264,
+      "assignment": 261,
+      "image": "products/264/60/20260201_222732_MC-SC-038.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.639105+00:00",
+      "uploaded_by": 1,
+      "description": "MC-SC-038"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 277,
+    "fields": {
+      "product": 263,
+      "assignment": 260,
+      "image": "products/263/60/20260201_222732_MC-DS-038.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.622363+00:00",
+      "uploaded_by": 1,
+      "description": "MC-DS-038"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 278,
+    "fields": {
+      "product": 262,
+      "assignment": 259,
+      "image": "products/262/60/20260201_222732_MC-90-038.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.606057+00:00",
+      "uploaded_by": 1,
+      "description": "MC-90-038"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 279,
+    "fields": {
+      "product": 261,
+      "assignment": 258,
+      "image": "products/261/60/20260201_222732_SDSDB-075X23.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.593014+00:00",
+      "uploaded_by": 1,
+      "description": "SDSDB-075X23"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 280,
+    "fields": {
+      "product": 260,
+      "assignment": 257,
+      "image": "products/260/60/20260201_222732_RW-075X050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.570989+00:00",
+      "uploaded_by": 1,
+      "description": "RW-075X050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 281,
+    "fields": {
+      "product": 258,
+      "assignment": 255,
+      "image": "products/258/60/20260201_222732_NMLT-SC-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.543847+00:00",
+      "uploaded_by": 1,
+      "description": "NMLT-SC-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 282,
+    "fields": {
+      "product": 257,
+      "assignment": 254,
+      "image": "products/257/60/20260201_222732_AF-SC-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.504186+00:00",
+      "uploaded_by": 1,
+      "description": "AF-SC-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 283,
+    "fields": {
+      "product": 256,
+      "assignment": 253,
+      "image": "products/256/60/20260201_222732_SCC-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.451901+00:00",
+      "uploaded_by": 1,
+      "description": "SCC-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 284,
+    "fields": {
+      "product": 255,
+      "assignment": 252,
+      "image": "products/255/60/20260201_222732_PVC-T-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.382862+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-T-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 285,
+    "fields": {
+      "product": 254,
+      "assignment": 251,
+      "image": "products/254/60/20260201_222732_PVC-SCH40-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.298147+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-SCH40-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 286,
+    "fields": {
+      "product": 253,
+      "assignment": 250,
+      "image": "products/253/60/20260201_222732_PVC-MA-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.210381+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-MA-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 287,
+    "fields": {
+      "product": 252,
+      "assignment": 249,
+      "image": "products/252/60/20260201_222732_PVC-LB-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.149233+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-LB-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 288,
+    "fields": {
+      "product": 251,
+      "assignment": 248,
+      "image": "products/251/60/20260201_222732_PVC-FA-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.108929+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-FA-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 289,
+    "fields": {
+      "product": 250,
+      "assignment": 247,
+      "image": "products/250/60/20260201_222732_PVC-CP-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.088824+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-CP-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 290,
+    "fields": {
+      "product": 249,
+      "assignment": 246,
+      "image": "products/249/60/20260201_222732_PVC-CC-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.071615+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-CC-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 291,
+    "fields": {
+      "product": 248,
+      "assignment": 245,
+      "image": "products/248/60/20260201_222732_PVC-90-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:32.039009+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-90-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 292,
+    "fields": {
+      "product": 246,
+      "assignment": 243,
+      "image": "products/246/60/20260201_222731_PB-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.970166+00:00",
+      "uploaded_by": 1,
+      "description": "PB-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 293,
+    "fields": {
+      "product": 245,
+      "assignment": 242,
+      "image": "products/245/60/20260201_222731_RS-1H-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.914321+00:00",
+      "uploaded_by": 1,
+      "description": "RS-1H-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 294,
+    "fields": {
+      "product": 244,
+      "assignment": 241,
+      "image": "products/244/60/20260201_222731_LN-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.883224+00:00",
+      "uploaded_by": 1,
+      "description": "LN-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 295,
+    "fields": {
+      "product": 243,
+      "assignment": 240,
+      "image": "products/243/60/20260201_222731_NMLT-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.861962+00:00",
+      "uploaded_by": 1,
+      "description": "NMLT-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 296,
+    "fields": {
+      "product": 242,
+      "assignment": 239,
+      "image": "products/242/60/20260201_222731_KO-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.828076+00:00",
+      "uploaded_by": 1,
+      "description": "KO-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 297,
+    "fields": {
+      "product": 241,
+      "assignment": 238,
+      "image": "products/241/60/20260201_222731_SDSGRD-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.761634+00:00",
+      "uploaded_by": 1,
+      "description": "SDSGRD-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 298,
+    "fields": {
+      "product": 240,
+      "assignment": 237,
+      "image": "products/240/60/20260201_222731_ENT-MA-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.712761+00:00",
+      "uploaded_by": 1,
+      "description": "ENT-MA-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 299,
+    "fields": {
+      "product": 239,
+      "assignment": 236,
+      "image": "products/239/60/20260201_222731_ENT-CP-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.672554+00:00",
+      "uploaded_by": 1,
+      "description": "ENT-CP-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 300,
+    "fields": {
+      "product": 238,
+      "assignment": 235,
+      "image": "products/238/60/20260201_222731_ENT-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.614130+00:00",
+      "uploaded_by": 1,
+      "description": "ENT-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 301,
+    "fields": {
+      "product": 237,
+      "assignment": 234,
+      "image": "products/237/60/20260201_222731_EMT-SSC-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.550069+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-SSC-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 302,
+    "fields": {
+      "product": 236,
+      "assignment": 233,
+      "image": "products/236/60/20260201_222731_EMT-CP-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.507772+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-CP-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 303,
+    "fields": {
+      "product": 235,
+      "assignment": 232,
+      "image": "products/235/60/20260201_222731_EMT-B-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.480690+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-B-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 304,
+    "fields": {
+      "product": 234,
+      "assignment": 231,
+      "image": "products/234/60/20260201_222731_EMT-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.439826+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 305,
+    "fields": {
+      "product": 233,
+      "assignment": 230,
+      "image": "products/233/60/20260201_222731_AF-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.389603+00:00",
+      "uploaded_by": 1,
+      "description": "AF-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 306,
+    "fields": {
+      "product": 232,
+      "assignment": 229,
+      "image": "products/232/60/20260201_222731_NMLT-90-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.352706+00:00",
+      "uploaded_by": 1,
+      "description": "NMLT-90-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 307,
+    "fields": {
+      "product": 231,
+      "assignment": 228,
+      "image": "products/231/60/20260201_222731_AF-90-075.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.302399+00:00",
+      "uploaded_by": 1,
+      "description": "AF-90-075"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 308,
+    "fields": {
+      "product": 229,
+      "assignment": 226,
+      "image": "products/229/60/20260201_222731_RS-2H-300.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.278748+00:00",
+      "uploaded_by": 1,
+      "description": "RS-2H-300"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 309,
+    "fields": {
+      "product": 220,
+      "assignment": 217,
+      "image": "products/220/60/20260201_222731_SW_9733SW8809.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.238802+00:00",
+      "uploaded_by": 1,
+      "description": "SW 9733SW8809"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 310,
+    "fields": {
+      "product": 216,
+      "assignment": 213,
+      "image": "products/216/60/20260201_222731_XHHW-250-STR-BLK-AL.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.201785+00:00",
+      "uploaded_by": 1,
+      "description": "XHHW-250-STR-BLK-AL"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 311,
+    "fields": {
+      "product": 215,
+      "assignment": 212,
+      "image": "products/215/60/20260201_222731_TL-24V.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.175247+00:00",
+      "uploaded_by": 1,
+      "description": "TL-24V"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 312,
+    "fields": {
+      "product": 213,
+      "assignment": 210,
+      "image": "products/213/60/20260201_222731_DD-24V-96W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.131287+00:00",
+      "uploaded_by": 1,
+      "description": "DD-24V-96W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 313,
+    "fields": {
+      "product": 211,
+      "assignment": 208,
+      "image": "products/211/60/20260201_222731_DD-24V-30W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.104264+00:00",
+      "uploaded_by": 1,
+      "description": "DD-24V-30W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 314,
+    "fields": {
+      "product": 206,
+      "assignment": 203,
+      "image": "products/206/60/20260201_222731_U7040-XL-TG-HSP.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:31.060853+00:00",
+      "uploaded_by": 1,
+      "description": "U7040-XL-TG-HSP"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 315,
+    "fields": {
+      "product": 205,
+      "assignment": 202,
+      "image": "products/205/60/20260201_222730_UA2716-ZGF.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.982729+00:00",
+      "uploaded_by": 1,
+      "description": "UA2716-ZGF"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 316,
+    "fields": {
+      "product": 203,
+      "assignment": 200,
+      "image": "products/203/60/20260201_222730_SDSCH-2X12.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.963692+00:00",
+      "uploaded_by": 1,
+      "description": "SDSCH-2X12"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 317,
+    "fields": {
+      "product": 202,
+      "assignment": 199,
+      "image": "products/202/60/20260201_222730_WH-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.947176+00:00",
+      "uploaded_by": 1,
+      "description": "WH-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 318,
+    "fields": {
+      "product": 201,
+      "assignment": 198,
+      "image": "products/201/60/20260201_222730_RS-2H-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.910741+00:00",
+      "uploaded_by": 1,
+      "description": "RS-2H-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 319,
+    "fields": {
+      "product": 199,
+      "assignment": 196,
+      "image": "products/199/68/20260201_222730_SER-CC-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.859582+00:00",
+      "uploaded_by": 1,
+      "description": "SER-CC-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 320,
+    "fields": {
+      "product": 198,
+      "assignment": 195,
+      "image": "products/198/60/20260201_222730_PVC-SCH80-200-10.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.833023+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-SCH80-200-10"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 321,
+    "fields": {
+      "product": 197,
+      "assignment": 194,
+      "image": "products/197/60/20260201_222730_PVC-SCH40-200-20.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.744095+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-SCH40-200-20"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 322,
+    "fields": {
+      "product": 194,
+      "assignment": 191,
+      "image": "products/194/60/20260201_222730_PVC-MA-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.679109+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-MA-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 323,
+    "fields": {
+      "product": 192,
+      "assignment": 189,
+      "image": "products/192/60/20260201_222730_PVC-LLCP-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.590432+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-LLCP-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 324,
+    "fields": {
+      "product": 190,
+      "assignment": 187,
+      "image": "products/190/60/20260201_222730_PVC-CP-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.516701+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-CP-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 325,
+    "fields": {
+      "product": 189,
+      "assignment": 186,
+      "image": "products/189/60/20260201_222730_PVC-90-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.456932+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-90-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 326,
+    "fields": {
+      "product": 188,
+      "assignment": 185,
+      "image": "products/188/60/20260201_222730_PVC-45-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.410775+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-45-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 327,
+    "fields": {
+      "product": 187,
+      "assignment": 184,
+      "image": "products/187/60/20260201_222730_PB-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.397096+00:00",
+      "uploaded_by": 1,
+      "description": "PB-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 328,
+    "fields": {
+      "product": 186,
+      "assignment": 183,
+      "image": "products/186/60/20260201_222730_NRF-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.283169+00:00",
+      "uploaded_by": 1,
+      "description": "NRF-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 329,
+    "fields": {
+      "product": 185,
+      "assignment": 182,
+      "image": "products/185/60/20260201_222730_LN-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.231582+00:00",
+      "uploaded_by": 1,
+      "description": "LN-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 330,
+    "fields": {
+      "product": 184,
+      "assignment": 181,
+      "image": "products/184/60/20260201_222730_KO-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.199452+00:00",
+      "uploaded_by": 1,
+      "description": "KO-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 331,
+    "fields": {
+      "product": 183,
+      "assignment": 180,
+      "image": "products/183/60/20260201_222730_A7517.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.167418+00:00",
+      "uploaded_by": 1,
+      "description": "A7517"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 332,
+    "fields": {
+      "product": 182,
+      "assignment": 179,
+      "image": "products/182/60/20260201_222730_GR-200-10.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.105239+00:00",
+      "uploaded_by": 1,
+      "description": "GR-200-10"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 333,
+    "fields": {
+      "product": 181,
+      "assignment": 178,
+      "image": "products/181/60/20260201_222730_FG-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.060230+00:00",
+      "uploaded_by": 1,
+      "description": "FG-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 334,
+    "fields": {
+      "product": 180,
+      "assignment": 177,
+      "image": "products/180/60/20260201_222730_EMT-SSC-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:30.021989+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-SSC-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 335,
+    "fields": {
+      "product": 179,
+      "assignment": 176,
+      "image": "products/179/60/20260201_222729_EMT-CP-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.980174+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-CP-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 336,
+    "fields": {
+      "product": 178,
+      "assignment": 175,
+      "image": "products/178/60/20260201_222729_EMT-B-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.934860+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-B-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 337,
+    "fields": {
+      "product": 177,
+      "assignment": 174,
+      "image": "products/177/60/20260201_222729_EMT-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.877883+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 338,
+    "fields": {
+      "product": 176,
+      "assignment": 173,
+      "image": "products/176/60/20260201_222729_CHB-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.838786+00:00",
+      "uploaded_by": 1,
+      "description": "CHB-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 339,
+    "fields": {
+      "product": 175,
+      "assignment": 172,
+      "image": "products/175/60/20260201_222729_PVC-24RS-200.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.822344+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-24RS-200"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 340,
+    "fields": {
+      "product": 167,
+      "assignment": 164,
+      "image": "products/167/60/20260201_222729_LUG-6-250-2HT.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.800763+00:00",
+      "uploaded_by": 1,
+      "description": "LUG-6-250-2HT"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 341,
+    "fields": {
+      "product": 166,
+      "assignment": 163,
+      "image": "products/166/60/20260201_222729_WPBP-2G.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.760910+00:00",
+      "uploaded_by": 1,
+      "description": "WPBP-2G"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 342,
+    "fields": {
+      "product": 165,
+      "assignment": 162,
+      "image": "products/165/60/20260201_222729_BB-2G-3H-05.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.707762+00:00",
+      "uploaded_by": 1,
+      "description": "BB-2G-3H-05"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 343,
+    "fields": {
+      "product": 164,
+      "assignment": 161,
+      "image": "products/164/60/20260201_222729_WH-250.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.637651+00:00",
+      "uploaded_by": 1,
+      "description": "WH-250"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 344,
+    "fields": {
+      "product": 163,
+      "assignment": 160,
+      "image": "products/163/60/20260201_222729_RS-2H-250.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.593995+00:00",
+      "uploaded_by": 1,
+      "description": "RS-2H-250"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 345,
+    "fields": {
+      "product": 154,
+      "assignment": 151,
+      "image": "products/154/60/20260201_222729_A7518.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.564733+00:00",
+      "uploaded_by": 1,
+      "description": "A7518"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 346,
+    "fields": {
+      "product": 152,
+      "assignment": 149,
+      "image": "products/152/67/20260201_222729_DGB-250.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.497955+00:00",
+      "uploaded_by": 1,
+      "description": "DGB-250"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 347,
+    "fields": {
+      "product": 148,
+      "assignment": 145,
+      "image": "products/148/60/20260201_222729_CN-16D-350.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.458556+00:00",
+      "uploaded_by": 1,
+      "description": "CN-16D-350"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 348,
+    "fields": {
+      "product": 144,
+      "assignment": 141,
+      "image": "products/144/60/20260201_222729_MCAS.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.435543+00:00",
+      "uploaded_by": 1,
+      "description": "MCAS"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 349,
+    "fields": {
+      "product": 140,
+      "assignment": 139,
+      "image": "products/140/60/20260201_222729_SHS-1316X10.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.399396+00:00",
+      "uploaded_by": 1,
+      "description": "SHS-1316X10"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 350,
+    "fields": {
+      "product": 138,
+      "assignment": 137,
+      "image": "products/138/60/20260201_222729_DD-12V-30W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.341979+00:00",
+      "uploaded_by": 1,
+      "description": "DD-12V-30W"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 351,
+    "fields": {
+      "product": 127,
+      "assignment": 126,
+      "image": "products/127/60/20260201_222729_LAD-12.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.279640+00:00",
+      "uploaded_by": 1,
+      "description": "LAD-12"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 352,
+    "fields": {
+      "product": 126,
+      "assignment": 125,
+      "image": "products/126/60/20260201_222729_GGS-1032X038.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.194662+00:00",
+      "uploaded_by": 1,
+      "description": "GGS-1032X038"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 353,
+    "fields": {
+      "product": 122,
+      "assignment": 121,
+      "image": "products/122/60/20260201_222729_LAD-10.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.136585+00:00",
+      "uploaded_by": 1,
+      "description": "LAD-10"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 354,
+    "fields": {
+      "product": 115,
+      "assignment": 114,
+      "image": "products/115/60/20260201_222729_NMLT-SC-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.081114+00:00",
+      "uploaded_by": 1,
+      "description": "NMLT-SC-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 355,
+    "fields": {
+      "product": 114,
+      "assignment": 113,
+      "image": "products/114/60/20260201_222729_AF-SC-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:29.029710+00:00",
+      "uploaded_by": 1,
+      "description": "AF-SC-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 356,
+    "fields": {
+      "product": 113,
+      "assignment": 112,
+      "image": "products/113/60/20260201_222728_PVC-T-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.999181+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-T-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 357,
+    "fields": {
+      "product": 112,
+      "assignment": 111,
+      "image": "products/112/60/20260201_222728_PVC-SCH40-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.952841+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-SCH40-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 358,
+    "fields": {
+      "product": 111,
+      "assignment": 110,
+      "image": "products/111/60/20260201_222728_PVC-MA-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.887557+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-MA-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 359,
+    "fields": {
+      "product": 110,
+      "assignment": 109,
+      "image": "products/110/60/20260201_222728_PVC-LB-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.843985+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-LB-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 360,
+    "fields": {
+      "product": 109,
+      "assignment": 108,
+      "image": "products/109/60/20260201_222728_PVC-FA-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.798575+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-FA-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 361,
+    "fields": {
+      "product": 108,
+      "assignment": 107,
+      "image": "products/108/60/20260201_222728_PVC-CP-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.770662+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-CP-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 362,
+    "fields": {
+      "product": 107,
+      "assignment": 106,
+      "image": "products/107/60/20260201_222728_PVC-90-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.742558+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-90-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 363,
+    "fields": {
+      "product": 106,
+      "assignment": 105,
+      "image": "products/106/60/20260201_222728_PB-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.681857+00:00",
+      "uploaded_by": 1,
+      "description": "PB-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 364,
+    "fields": {
+      "product": 105,
+      "assignment": 104,
+      "image": "products/105/60/20260201_222728_RS-1H-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.624770+00:00",
+      "uploaded_by": 1,
+      "description": "RS-1H-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 365,
+    "fields": {
+      "product": 104,
+      "assignment": 103,
+      "image": "products/104/60/20260201_222728_OFN-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.589670+00:00",
+      "uploaded_by": 1,
+      "description": "OFN-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 366,
+    "fields": {
+      "product": 103,
+      "assignment": 102,
+      "image": "products/103/60/20260201_222728_NMCS-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.575352+00:00",
+      "uploaded_by": 1,
+      "description": "NMCS-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 367,
+    "fields": {
+      "product": 102,
+      "assignment": 101,
+      "image": "products/102/60/20260201_222728_LN-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.538535+00:00",
+      "uploaded_by": 1,
+      "description": "LN-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 368,
+    "fields": {
+      "product": 101,
+      "assignment": 100,
+      "image": "products/101/60/20260201_222728_NMLT-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.481002+00:00",
+      "uploaded_by": 1,
+      "description": "NMLT-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 369,
+    "fields": {
+      "product": 99,
+      "assignment": 99,
+      "image": "products/99/60/20260201_222728_ENT-MA-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.448922+00:00",
+      "uploaded_by": 1,
+      "description": "ENT-MA-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 370,
+    "fields": {
+      "product": 98,
+      "assignment": 98,
+      "image": "products/98/60/20260201_222728_ENT-CP-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.412583+00:00",
+      "uploaded_by": 1,
+      "description": "ENT-CP-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 371,
+    "fields": {
+      "product": 97,
+      "assignment": 97,
+      "image": "products/97/60/20260201_222728_ENT-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.351600+00:00",
+      "uploaded_by": 1,
+      "description": "ENT-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 372,
+    "fields": {
+      "product": 96,
+      "assignment": 96,
+      "image": "products/96/60/20260201_222728_EMT-SSC-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.315281+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-SSC-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 373,
+    "fields": {
+      "product": 95,
+      "assignment": 95,
+      "image": "products/95/60/20260201_222728_EMT-CP-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.299245+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-CP-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 374,
+    "fields": {
+      "product": 94,
+      "assignment": 94,
+      "image": "products/94/60/20260201_222728_EMT-B-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.275905+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-B-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 375,
+    "fields": {
+      "product": 93,
+      "assignment": 93,
+      "image": "products/93/60/20260201_222728_EMT-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.237846+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 376,
+    "fields": {
+      "product": 92,
+      "assignment": 92,
+      "image": "products/92/60/20260201_222728_AF-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.136752+00:00",
+      "uploaded_by": 1,
+      "description": "AF-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 377,
+    "fields": {
+      "product": 91,
+      "assignment": 91,
+      "image": "products/91/60/20260201_222728_NMLT-90-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.085054+00:00",
+      "uploaded_by": 1,
+      "description": "NMLT-90-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 378,
+    "fields": {
+      "product": 90,
+      "assignment": 90,
+      "image": "products/90/60/20260201_222728_AF-90-050.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:28.049356+00:00",
+      "uploaded_by": 1,
+      "description": "AF-90-050"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 379,
+    "fields": {
+      "product": 87,
+      "assignment": 88,
+      "image": "products/87/60/20260201_222727_SB-100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.989676+00:00",
+      "uploaded_by": 1,
+      "description": "SB-100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 380,
+    "fields": {
+      "product": 85,
+      "assignment": 86,
+      "image": "products/85/60/20260201_222727_SCC-100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.945647+00:00",
+      "uploaded_by": 1,
+      "description": "SCC-100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 381,
+    "fields": {
+      "product": 84,
+      "assignment": 85,
+      "image": "products/84/60/20260201_222727_PVC-SCH40-100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.926323+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-SCH40-100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 382,
+    "fields": {
+      "product": 83,
+      "assignment": 84,
+      "image": "products/83/60/20260201_222727_PVC-MA-100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.891042+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-MA-100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 383,
+    "fields": {
+      "product": 82,
+      "assignment": 83,
+      "image": "products/82/60/20260201_222727_PVC-LB-100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.816191+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-LB-100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 384,
+    "fields": {
+      "product": 81,
+      "assignment": 82,
+      "image": "products/81/60/20260201_222727_PVC-CP-100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.752388+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-CP-100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 385,
+    "fields": {
+      "product": 80,
+      "assignment": 81,
+      "image": "products/80/60/20260201_222727_PVC-90-100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.656699+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-90-100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 386,
+    "fields": {
+      "product": 78,
+      "assignment": 79,
+      "image": "products/78/60/20260201_222727_PB-100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.612451+00:00",
+      "uploaded_by": 1,
+      "description": "PB-100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 387,
+    "fields": {
+      "product": 77,
+      "assignment": 78,
+      "image": "products/77/60/20260201_222727_RS-1H-100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.595198+00:00",
+      "uploaded_by": 1,
+      "description": "RS-1H-100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 388,
+    "fields": {
+      "product": 76,
+      "assignment": 77,
+      "image": "products/76/60/20260201_222727_LN-100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.553374+00:00",
+      "uploaded_by": 1,
+      "description": "LN-100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 389,
+    "fields": {
+      "product": 73,
+      "assignment": 74,
+      "image": "products/73/60/20260201_222727_EMT-SSC-100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.494886+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-SSC-100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 390,
+    "fields": {
+      "product": 72,
+      "assignment": 73,
+      "image": "products/72/60/20260201_222727_EMT-CP-100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.457039+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-CP-100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 391,
+    "fields": {
+      "product": 71,
+      "assignment": 72,
+      "image": "products/71/60/20260201_222727_EMT-B-100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.440976+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-B-100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 392,
+    "fields": {
+      "product": 70,
+      "assignment": 71,
+      "image": "products/70/60/20260201_222727_EMT-100.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.405148+00:00",
+      "uploaded_by": 1,
+      "description": "EMT-100"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 393,
+    "fields": {
+      "product": 69,
+      "assignment": 70,
+      "image": "products/69/60/20260201_222727_DS-158X10.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.353835+00:00",
+      "uploaded_by": 1,
+      "description": "DS-158X10"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 394,
+    "fields": {
+      "product": 66,
+      "assignment": 67,
+      "image": "products/66/60/20260201_222727_LUG-350-1HT.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.318484+00:00",
+      "uploaded_by": 1,
+      "description": "LUG-350-1HT"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 395,
+    "fields": {
+      "product": 65,
+      "assignment": 66,
+      "image": "products/65/60/20260201_222727_WPBP-1G.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.285610+00:00",
+      "uploaded_by": 1,
+      "description": "WPBP-1G"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 396,
+    "fields": {
+      "product": 60,
+      "assignment": 61,
+      "image": "products/60/60/20260201_222727_BB-1G-3H-05.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.230037+00:00",
+      "uploaded_by": 1,
+      "description": "BB-1G-3H-05"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 397,
+    "fields": {
+      "product": 58,
+      "assignment": 59,
+      "image": "products/58/60/20260201_222727_PVC-SCH40-125.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.185596+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-SCH40-125"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 398,
+    "fields": {
+      "product": 57,
+      "assignment": 58,
+      "image": "products/57/60/20260201_222727_PVC-MA-125.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.135351+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-MA-125"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 399,
+    "fields": {
+      "product": 56,
+      "assignment": 57,
+      "image": "products/56/60/20260201_222727_PVC-LB-125.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.077894+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-LB-125"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 400,
+    "fields": {
+      "product": 55,
+      "assignment": 56,
+      "image": "products/55/60/20260201_222727_PVC-CP-125.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:27.028908+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-CP-125"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 401,
+    "fields": {
+      "product": 54,
+      "assignment": 55,
+      "image": "products/54/60/20260201_222726_PVC-90-125.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.998334+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-90-125"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 402,
+    "fields": {
+      "product": 53,
+      "assignment": 54,
+      "image": "products/53/60/20260201_222726_PVC-2HS-125.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.952165+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-2HS-125"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 403,
+    "fields": {
+      "product": 52,
+      "assignment": 53,
+      "image": "products/52/60/20260201_222726_PB-125.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.928355+00:00",
+      "uploaded_by": 1,
+      "description": "PB-125"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 404,
+    "fields": {
+      "product": 51,
+      "assignment": 52,
+      "image": "products/51/60/20260201_222726_RS-1H-125.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.890510+00:00",
+      "uploaded_by": 1,
+      "description": "RS-1H-125"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 405,
+    "fields": {
+      "product": 50,
+      "assignment": 51,
+      "image": "products/50/60/20260201_222726_LN-125.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.855696+00:00",
+      "uploaded_by": 1,
+      "description": "LN-125"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 406,
+    "fields": {
+      "product": 49,
+      "assignment": 50,
+      "image": "products/49/60/20260201_222726_LT-SC-125.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.838983+00:00",
+      "uploaded_by": 1,
+      "description": "LT-SC-125"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 407,
+    "fields": {
+      "product": 46,
+      "assignment": 47,
+      "image": "products/46/60/20260201_222726_PVC-SCH80-150.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.820017+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-SCH80-150"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 408,
+    "fields": {
+      "product": 45,
+      "assignment": 46,
+      "image": "products/45/60/20260201_222726_PVC-SCH40-150.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.803925+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-SCH40-150"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 409,
+    "fields": {
+      "product": 44,
+      "assignment": 45,
+      "image": "products/44/60/20260201_222726_PVC-MA-150.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.785564+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-MA-150"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 410,
+    "fields": {
+      "product": 42,
+      "assignment": 43,
+      "image": "products/42/60/20260201_222726_PVC-CP-150.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.762629+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-CP-150"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 411,
+    "fields": {
+      "product": 41,
+      "assignment": 42,
+      "image": "products/41/60/20260201_222726_PVC-CC-150.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.720925+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-CC-150"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 412,
+    "fields": {
+      "product": 40,
+      "assignment": 41,
+      "image": "products/40/60/20260201_222726_PVC-90-150.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.658054+00:00",
+      "uploaded_by": 1,
+      "description": "PVC-90-150"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 413,
+    "fields": {
+      "product": 39,
+      "assignment": 40,
+      "image": "products/39/60/20260201_222726_PB-150.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.616933+00:00",
+      "uploaded_by": 1,
+      "description": "PB-150"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 414,
+    "fields": {
+      "product": 38,
+      "assignment": 39,
+      "image": "products/38/60/20260201_222726_LN-150.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.555627+00:00",
+      "uploaded_by": 1,
+      "description": "LN-150"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 415,
+    "fields": {
+      "product": 35,
+      "assignment": 36,
+      "image": "products/35/60/20260201_222726_THHN-8-STR-WHT.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.503217+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-8-STR-WHT"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 416,
+    "fields": {
+      "product": 33,
+      "assignment": 34,
+      "image": "products/33/57/20260201_222726_THHN-8-STR-BLK.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.487485+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-8-STR-BLK"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 417,
+    "fields": {
+      "product": 33,
+      "assignment": 33,
+      "image": "products/33/20/20260201_222726_THHN-8-STR-BLK.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.468135+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-8-STR-BLK"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 418,
+    "fields": {
+      "product": 32,
+      "assignment": 32,
+      "image": "products/32/60/20260201_222726_SBC-CU-8.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.457704+00:00",
+      "uploaded_by": 1,
+      "description": "SBC-CU-8"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 419,
+    "fields": {
+      "product": 31,
+      "assignment": 31,
+      "image": "products/31/60/20260201_222726_PHBCDWS-6X114.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.419331+00:00",
+      "uploaded_by": 1,
+      "description": "PHBCDWS-6X114"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 420,
+    "fields": {
+      "product": 30,
+      "assignment": 30,
+      "image": "products/30/60/20260201_222726_THHN-6-STR-WHT.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.377598+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-6-STR-WHT"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 421,
+    "fields": {
+      "product": 29,
+      "assignment": 29,
+      "image": "products/29/60/20260201_222726_THHN-6-STR-GRN.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.356507+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-6-STR-GRN"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 422,
+    "fields": {
+      "product": 28,
+      "assignment": 28,
+      "image": "products/28/60/20260201_222726_THHN-6-STR-BLK.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.307195+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-6-STR-BLK"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 423,
+    "fields": {
+      "product": 24,
+      "assignment": 24,
+      "image": "products/24/60/20260201_222726_THHN-4-STR-BLK.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.171114+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-4-STR-BLK"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 424,
+    "fields": {
+      "product": 23,
+      "assignment": 23,
+      "image": "products/23/60/20260201_222726_SOLBARE-4.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.138692+00:00",
+      "uploaded_by": 1,
+      "description": "SOLBARE-4"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 425,
+    "fields": {
+      "product": 21,
+      "assignment": 21,
+      "image": "products/21/60/20260201_222726_BS-4.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.065447+00:00",
+      "uploaded_by": 1,
+      "description": "BS-4"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 426,
+    "fields": {
+      "product": 17,
+      "assignment": 17,
+      "image": "products/17/60/20260201_222726_THHN-2-STR-BLK.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.020341+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-2-STR-BLK"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 427,
+    "fields": {
+      "product": 16,
+      "assignment": 16,
+      "image": "products/16/60/20260201_222725_THHN-12-STR-WHT.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:26.005131+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-12-STR-WHT"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 428,
+    "fields": {
+      "product": 15,
+      "assignment": 15,
+      "image": "products/15/60/20260201_222725_THHN-12-STR-RED.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:25.983250+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-12-STR-RED"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 429,
+    "fields": {
+      "product": 14,
+      "assignment": 14,
+      "image": "products/14/60/20260201_222725_THHN-12-STR-GRN.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:25.958800+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-12-STR-GRN"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 430,
+    "fields": {
+      "product": 13,
+      "assignment": 13,
+      "image": "products/13/60/20260201_222725_THHN-12-STR-BLU.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:25.945328+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-12-STR-BLU"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 431,
+    "fields": {
+      "product": 12,
+      "assignment": 12,
+      "image": "products/12/60/20260201_222725_THHN-12-STR-BLK.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:25.912418+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-12-STR-BLK"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 432,
+    "fields": {
+      "product": 10,
+      "assignment": 10,
+      "image": "products/10/60/20260201_222725_THHN-10-STR-WHT.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:25.754124+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-10-STR-WHT"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 433,
+    "fields": {
+      "product": 7,
+      "assignment": 7,
+      "image": "products/7/60/20260201_222725_THHN-10-STR-GRN.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:25.733366+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-10-STR-GRN"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 434,
+    "fields": {
+      "product": 3,
+      "assignment": 3,
+      "image": "products/3/60/20260201_222725_THHN-10-STR-BLK.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:25.687028+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-10-STR-BLK"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 435,
+    "fields": {
+      "product": 1,
+      "assignment": 1,
+      "image": "products/1/60/20260201_222725_THHN-1-STR-BLK.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T22:27:25.623084+00:00",
+      "uploaded_by": 1,
+      "description": "THHN-1-STR-BLK"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 436,
+    "fields": {
+      "product": 358,
+      "assignment": 334,
+      "image": "products/358/3/20260201_214930_DBVM1W.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-02-01T21:49:30.187510+00:00",
+      "uploaded_by": 2,
+      "description": ""
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 437,
+    "fields": {
+      "product": 542,
+      "assignment": 452,
+      "image": "products/542/48/20260123_022937_QA120AFCN.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-01-23T02:24:13.185647+00:00",
+      "uploaded_by": 1,
+      "description": "120AF/GFI"
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 438,
+    "fields": {
+      "product": 949,
+      "assignment": 796,
+      "image": "products/949/60/20260202_010315_AF-90-075.jpg",
+      "is_primary": false,
+      "uploaded_at": "2026-02-02T01:03:16.020929+00:00",
+      "uploaded_by": 2,
+      "description": ""
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 439,
+    "fields": {
+      "product": 495,
+      "assignment": 401,
+      "image": "products/495/49/20260202_010239_CR20-W.jpg",
+      "is_primary": false,
+      "uploaded_at": "2026-02-02T01:02:39.714167+00:00",
+      "uploaded_by": 2,
+      "description": ""
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 440,
+    "fields": {
+      "product": 542,
+      "assignment": 453,
+      "image": "products/542/49/20260124_115405_4S-S20RS.jpg",
+      "is_primary": false,
+      "uploaded_at": "2026-01-24T11:54:05.152308+00:00",
+      "uploaded_by": 1,
+      "description": ""
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 441,
+    "fields": {
+      "product": 542,
+      "assignment": 453,
+      "image": "products/542/49/20260124_115034_QO220.jpg",
+      "is_primary": false,
+      "uploaded_at": "2026-01-24T11:50:34.143337+00:00",
+      "uploaded_by": 1,
+      "description": ""
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 442,
+    "fields": {
+      "product": 542,
+      "assignment": 453,
+      "image": "products/542/49/20260124_115009_QO120PAFGF.jpg",
+      "is_primary": false,
+      "uploaded_at": "2026-01-24T11:50:10.001408+00:00",
+      "uploaded_by": 1,
+      "description": ""
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 443,
+    "fields": {
+      "product": 542,
+      "assignment": 452,
+      "image": "products/542/48/20260123_031809_4U30K08WHT.jpg",
+      "is_primary": false,
+      "uploaded_at": "2026-01-23T03:18:09.846878+00:00",
+      "uploaded_by": 1,
+      "description": ""
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 444,
+    "fields": {
+      "product": 542,
+      "assignment": 450,
+      "image": "products/542/1/20260123_023302_QO220GFI.jpg",
+      "is_primary": false,
+      "uploaded_at": "2026-01-23T02:33:02.210303+00:00",
+      "uploaded_by": 1,
+      "description": ""
+    }
+  }
+]

@@ -136,6 +136,16 @@
             ],
           },
           {
+            text: 'Crews and Fleet',
+            isOpen: false,
+            children: [
+              { text: 'Categories', route: '/crews/categories', permission: 'crewsapp.view_category' },
+              { text: 'Crews', route: '/crews', permission: 'crewsapp.view_crew' },
+              { text: 'Truck Assignments', route: '/crews/truck-assignments', permission: 'crewsapp.view_truckassignment' },
+              { text: 'Trucks', route: '/crews/trucks', permission: 'crewsapp.view_truck' },
+            ],
+          },
+          {
             text: 'Communities',
             isOpen: false,
             children: [

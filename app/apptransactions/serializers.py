@@ -284,7 +284,7 @@ class DocumentSerializer(serializers.ModelSerializer):
             # Para documentos no operacionales, builder es requerido para ventas/compras
             if doc_type.is_sales or doc_type.is_purchase:
                 if builder is None:
-                    raise serializers.ValidationError({"builder": "You must select a builder for sales or purchase documents."})
+                    raise serializers.ValidationError({"builder": "You must select a Party for sales or purchase documents."})
                 
                 # Chequeos de cliente/proveedor usando clean() del modelo
                 # (re-ejecutamos después en save(), pero aquí damos 400 temprano)

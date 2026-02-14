@@ -44,10 +44,12 @@ class Crew(models.Model):
 
 class TruckAssignment(models.Model):
     crew = models.ForeignKey(Crew, on_delete=models.CASCADE, verbose_name='Assigned Crew')
-    truck = models.ForeignKey(Truck, on_delete=models.CASCADE, verbose_name='Assigned Truck')
+    trucks = models.ManyToManyField(Truck, related_name='assignments', verbose_name='Assigned Trucks', blank=True)
     assigned_at = models.DateTimeField(auto_now_add=False, verbose_name='Assigned At')
     unassigned_at = models.DateTimeField(auto_now_add=False, null=True, blank=True, verbose_name='Unassigned At')
 
     def __str__(self):
-        return f"{self.truck} assigned to {self.crew}"
-
+        trucks_str = ", ".join(str(t) for t in self.trucks.all()) if self.trucks.exists() else "—"
+        return f"{trucks_str} assigned to {self.crew}"
+    class Meta:
+        ordering = ['crew__name', '-assigned_at']

@@ -57,18 +57,7 @@ module.exports = defineConfig({
           }
         },
       },
-      '/crews': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false,
-        onProxyReq: (proxyReq, req, res) => {
-          const host = req.headers.host;
-          if (host) {
-            const hostWithoutPort = host.split(':')[0];
-            proxyReq.setHeader('Host', hostWithoutPort);
-          }
-        },
-      },
+      // /crews NO se proxea: son rutas del Vue Router (SPA), no del backend.
       '/admin': {
         target: 'http://localhost:8000',
         changeOrigin: true,

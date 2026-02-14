@@ -4,7 +4,12 @@
     <template #header>
       <div class="d-flex justify-content-between align-items-center w-100">
         <h6 class="text-primary mb-0">House Models</h6>
-        <router-link to="/house-model/form" class="btn btn-success">+ New House Model</router-link>
+        <router-link
+          v-if="hasPermission('ctrctsapp.add_housemodel')"
+          to="/house-model/form"
+          class="btn btn-success"
+          >+ New House Model</router-link
+        >
       </div>
     </template>
 
@@ -66,18 +71,24 @@
         <td class="text-center">
           <div class="btn-group btn-group-sm" role="group">
             <router-link
+              v-if="hasPermission('ctrctsapp.view_housemodel')"
               :to="`/house-model/view/${data.item.id}`"
               class="btn btn-outline-success me-1"
             >
               View
             </router-link>
             <router-link
+              v-if="hasPermission('ctrctsapp.change_housemodel')"
               :to="`/house-model/edit/${data.item.id}`"
               class="btn btn-outline-primary me-1"
             >
               Edit
             </router-link>
-            <button @click="deleteHouseModel(data.item.id, data.item.name)" class="btn btn-outline-danger">
+            <button
+              v-if="hasPermission('ctrctsapp.delete_housemodel')"
+              @click="deleteHouseModel(data.item.id, data.item.name)"
+              class="btn btn-outline-danger"
+            >
               Delete
             </button>
           </div>
@@ -110,7 +121,7 @@ const fields = [
   { key: 'id', label: 'ID', sortable: true },
   { key: 'name', label: 'House Model Name', sortable: true },
   { key: 'jobs', label: 'Jobs', sortable: false },
-  { key: 'actions', label: 'Actions', thClass: 'text-center', tdClass: 'text-center' },
+  { key: 'actions', label: 'Actions', thClass: 'text-center', tdClass: 'text-center', thStyle: { width: '12%', whiteSpace: 'nowrap' }, tdStyle: { whiteSpace: 'nowrap' } },
 ]
 
 // Helpers para DRF con o sin paginación

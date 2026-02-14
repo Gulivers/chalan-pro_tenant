@@ -4,7 +4,12 @@
     <template #header>
       <div class="d-flex justify-content-between align-items-center w-100">
         <h6 class="text-primary mb-0">Parties</h6>
-        <router-link to="/builder/form" class="btn btn-success">+ New Party</router-link>
+        <router-link
+          v-if="hasPermission('ctrctsapp.add_builder')"
+          to="/builder/form"
+          class="btn btn-success"
+          >+ New Party</router-link
+        >
       </div>
     </template>
 
@@ -85,18 +90,24 @@
         <td class="text-center">
           <div class="btn-group btn-group-sm" role="group">
             <router-link
+              v-if="hasPermission('ctrctsapp.view_builder')"
               :to="`/builder/view/${data.item.id}`"
               class="btn btn-outline-success me-1"
             >
               View
             </router-link>
             <router-link
+              v-if="hasPermission('ctrctsapp.change_builder')"
               :to="`/builder/edit/${data.item.id}`"
               class="btn btn-outline-primary me-1"
             >
               Edit
             </router-link>
-            <button @click="deleteBuilder(data.item.id, data.item.name)" class="btn btn-outline-danger">
+            <button
+              v-if="hasPermission('ctrctsapp.delete_builder')"
+              @click="deleteBuilder(data.item.id, data.item.name)"
+              class="btn btn-outline-danger"
+            >
               Delete
             </button>
           </div>
@@ -138,7 +149,7 @@ const fields = [
   { key: 'trim_amount', label: 'Trim Price', sortable: true },
   { key: 'rough_amount', label: 'Rough Price', sortable: true },
   { key: 'is_active', label: 'Status', thClass: 'text-center', tdClass: 'text-center', sortable: true },
-  { key: 'actions', label: 'Actions', thClass: 'text-center', tdClass: 'text-center' },
+  { key: 'actions', label: 'Actions', thClass: 'text-center', tdClass: 'text-center', thStyle: { width: '12%', whiteSpace: 'nowrap' }, tdStyle: { whiteSpace: 'nowrap' } },
 ]
 
 // Helpers para DRF con o sin paginación

@@ -64,6 +64,16 @@ const TransactionListView = () => import('@views/transactions/TransactionListVie
 const WorkAccountSelect = () => import('@components/transactions/WorkAccountSelect.vue');
 const WorkAccountListView = () => import('@views/transactions/WorkAccountListView.vue');
 
+// Crews and Fleet
+const CategoryListView = () => import('@views/crews/CategoryListView.vue');
+const CrewListView = () => import('@views/crews/CrewListView.vue');
+const TruckListView = () => import('@views/crews/TruckListView.vue');
+const TruckAssignmentListView = () => import('@views/crews/TruckAssignmentListView.vue');
+const CategoryForm = () => import('@components/crews/CategoryForm.vue');
+const CrewForm = () => import('@components/crews/CrewForm.vue');
+const TruckForm = () => import('@components/crews/TruckForm.vue');
+const TruckAssignmentForm = () => import('@components/crews/TruckAssignmentForm.vue');
+
 
 // ───────────────────────────────────────────────────────────
 // EXPORT ROUTER
@@ -578,6 +588,106 @@ const routes = [
     name: 'house-model-edit',
     component: HouseModelFormView,
     meta: { requiresAuth: true, requiredPermissions: ['ctrctsapp.change_housemodel'] },
+  },
+
+  // ───────────────────────────────────────────────────────────
+  // CREWS AND FLEET MODULE
+  // ───────────────────────────────────────────────────────────
+  {
+    path: '/crews/categories',
+    name: 'crew-categories',
+    component: CategoryListView,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.view_category'] },
+  },
+  {
+    path: '/crews/categories/form',
+    name: 'crew-category-form',
+    component: CategoryForm,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.add_category'] },
+  },
+  {
+    path: '/crews/categories/view/:id',
+    name: 'crew-category-view',
+    component: CategoryForm,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.view_category'] },
+  },
+  {
+    path: '/crews/categories/edit/:id',
+    name: 'crew-category-edit',
+    component: CategoryForm,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.change_category'] },
+  },
+  {
+    path: '/crews',
+    name: 'crew-list',
+    component: CrewListView,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.view_crew'] },
+  },
+  {
+    path: '/crews/form',
+    name: 'crew-form',
+    component: CrewForm,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.add_crew'] },
+  },
+  {
+    path: '/crews/view/:id',
+    name: 'crew-view',
+    component: CrewForm,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.view_crew'] },
+  },
+  {
+    path: '/crews/edit/:id',
+    name: 'crew-edit',
+    component: CrewForm,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.change_crew'] },
+  },
+  {
+    path: '/crews/trucks',
+    name: 'crew-trucks',
+    component: TruckListView,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.view_truck'] },
+  },
+  {
+    path: '/crews/trucks/form',
+    name: 'crew-truck-form',
+    component: TruckForm,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.add_truck'] },
+  },
+  {
+    path: '/crews/trucks/view/:id',
+    name: 'crew-truck-view',
+    component: TruckForm,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.view_truck'] },
+  },
+  {
+    path: '/crews/trucks/edit/:id',
+    name: 'crew-truck-edit',
+    component: TruckForm,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.change_truck'] },
+  },
+  {
+    path: '/crews/truck-assignments',
+    name: 'crew-truck-assignments',
+    component: TruckAssignmentListView,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.view_truckassignment'] },
+  },
+  {
+    path: '/crews/truck-assignments/form',
+    name: 'crew-truck-assignment-form',
+    component: TruckAssignmentForm,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.add_truckassignment'] },
+  },
+  {
+    path: '/crews/truck-assignments/view/:id',
+    name: 'crew-truck-assignment-view',
+    component: TruckAssignmentForm,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.view_truckassignment'] },
+  },
+  {
+    path: '/crews/truck-assignments/edit/:id',
+    name: 'crew-truck-assignment-edit',
+    component: TruckAssignmentForm,
+    meta: { requiresAuth: true, requiredPermissions: ['crewsapp.change_truckassignment'] },
   },
 
   // ───────────────────────────────────────────────────────────

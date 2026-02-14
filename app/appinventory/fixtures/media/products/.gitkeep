@@ -1,0 +1,5 @@
+# Repo base de imágenes de productos para Inventory Master Data Setup.
+# Estructura: <product_id>/<brand_id>/<archivo>.jpg
+# Se copia a MEDIA_ROOT/products/ antes del loaddata; ProductImage viene del fixture (dumpdata).
+# Actualizar desde el tenant de desarrollo:
+#   python manage.py export_fixture_product_images --schema test_dominio_local
