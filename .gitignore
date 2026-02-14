@@ -28,6 +28,7 @@ envs/*.env
 
 # Ignore IDE
 .idea/
+.cursor/
 *.swp
 
 # Ignore VisualStudioCode (excepto configuraciones útiles)
