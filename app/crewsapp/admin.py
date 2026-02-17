@@ -64,9 +64,48 @@ class TruckAssignmentAdminForm(forms.ModelForm):
 
 @admin.register(Truck)
 class TruckAdmin(admin.ModelAdmin):
-    list_display = ['plate_number', 'model', 'year', 'status']
+    list_display = ['plate_number', 'model', 'year', 'status', 'mobile_warehouse_link']
     list_filter = ('model', 'year', 'status')
     search_fields = ['plate_number', 'model', 'year', 'status']
+    actions = ['create_mobile_warehouse']
+
+    @admin.display(description='Mobile Warehouse')
+    def mobile_warehouse_link(self, obj):
+        if not hasattr(obj, 'mobile_warehouse') or not obj.mobile_warehouse_id:
+            return '—'
+        wh = obj.mobile_warehouse
+        from django.urls import reverse
+        from django.utils.html import format_html
+        url = reverse('admin:appinventory_warehouse_change', args=[wh.id])
+        return format_html('<a href="{}">{}</a>', url, wh.name)
+
+    @admin.action(description='Create mobile warehouse for selected trucks')
+    def create_mobile_warehouse(self, request, queryset):
+        from appinventory.models import Warehouse
+        created = 0
+        errors = []
+        for truck in queryset:
+            if not truck.plate_number or not truck.model:
+                errors.append(f"Truck {truck}: missing plate_number or model")
+                continue
+            if hasattr(truck, 'mobile_warehouse') and truck.mobile_warehouse_id:
+                continue
+            name = f"Truck {truck.plate_number} - {truck.model} Stock"
+            location = f"Mobile inventory Truck {truck.plate_number} - {truck.model}"
+            existing = Warehouse.objects.filter(name=name).first()
+            if existing and existing.truck_id != truck.id:
+                errors.append(f"Warehouse '{name}' already exists")
+                continue
+            Warehouse.objects.create(
+                name=name, location=location, truck=truck,
+                is_active=True, is_default=False,
+            )
+            created += 1
+        from django.contrib import messages
+        if created:
+            messages.success(request, f'{created} mobile warehouse(s) created.')
+        if errors:
+            messages.warning(request, '; '.join(errors[:5]))
 
 
 class CrewAdminForm(forms.ModelForm):

@@ -94,13 +94,27 @@
                 placeholder="Search product..."
                 :class="{ 'is-invalid': row._errors?.product }">
                 <template #selected-option="{ label, product }">
-                  <div class="text-truncate" style="max-width: 280px">
-                    {{ row.product_label || product?.name || label || 'No name' }}
+                  <div class="d-flex align-items-center gap-2" style="max-width: 280px">
+                    <span class="text-truncate">{{ row.product_label || product?.name || label || 'No name' }}</span>
+                    <span
+                      v-if="product?.tracking_mode === 'SERIALIZED'"
+                      class="badge bg-info flex-shrink-0"
+                      style="font-size: 0.65rem"
+                    >
+                      SERIALIZED
+                    </span>
                   </div>
                 </template>
                 <template #option="{ label, product }">
-                  <div class="text-truncate" style="max-width: 280px">
-                    {{ product?.name || label || 'No name' }}
+                  <div class="d-flex align-items-center gap-2" style="max-width: 280px">
+                    <span class="text-truncate">{{ product?.name || label || 'No name' }}</span>
+                    <span
+                      v-if="product?.tracking_mode === 'SERIALIZED'"
+                      class="badge bg-info flex-shrink-0"
+                      style="font-size: 0.65rem"
+                    >
+                      SERIALIZED
+                    </span>
                   </div>
                 </template>
                 <template #no-options>

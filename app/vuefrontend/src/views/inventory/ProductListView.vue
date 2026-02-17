@@ -157,6 +157,20 @@
             </div>
           </template>
 
+          <!-- Tracking Mode Column -->
+          <template #cell(tracking_mode)="row">
+            <span
+              v-if="row.item.tracking_mode === 'SERIALIZED'"
+              class="badge bg-info"
+              style="font-size: 0.75rem"
+            >
+              SERIALIZED
+            </span>
+            <span v-else class="badge bg-secondary" style="font-size: 0.75rem">
+              QUANTITY
+            </span>
+          </template>
+
           <!-- Default Brand Column -->
           <template #cell(default_brand)="row">
             <div class="text-start">
@@ -314,6 +328,13 @@ export default {
       { key: "name", label: "Name", sortable: true, thClass: "text-start" },
       { key: "sku", label: "SKU", sortable: true },
       { key: "category_name", label: "Category", sortable: true },
+      {
+        key: "tracking_mode",
+        label: "Tracking",
+        sortable: true,
+        thClass: "text-center",
+        tdClass: "text-center",
+      },
       { key: "default_brand", label: "Default Brand", sortable: false },
       {
         key: "reorder_level",

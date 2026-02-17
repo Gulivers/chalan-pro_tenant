@@ -7,7 +7,7 @@ from .views import (
     UnitCategoryListAPIView, UnitCategoryViewSet, PriceTypeViewSet,
     ProductDataTableAPIView, ProductListDirectAPIView, ProductListProviderAPIView, ProductDefaultPriceAPIView, DefaultWarehouseAPIView,
     ProductBrandsListAPIView, ProductBrandsUpdateAPIView,
-    ProductImageViewSet, ProductImagesByBrandAPIView,
+    ProductImageViewSet, ProductImagesByBrandAPIView, SerializedItemViewSet,
     # Nuevas vistas para dashboard mejorado
     TestDashboardAPIView, InventoryDashboardMetricsAPIView, TopSellingProductsAPIView, SalesAnalysisAPIView,
     LowStockProductsAPIView, LowestStockProductsAPIView,
@@ -38,6 +38,7 @@ router.register(r'productcategory', ProductCategoryViewSet)
 router.register(r'productbrand', ProductBrandViewSet)
 router.register(r'products', ProductViewSet, basename='product')
 router.register(r'productimages', ProductImageViewSet, basename='productimage')
+router.register(r'serialized-items', SerializedItemViewSet, basename='serializeditem')
 router.register(r'unitsofmeasure', UnitOfMeasureViewSet, basename='unitofmeasure')
 router.register(r'unitcategory', UnitCategoryViewSet)
 router.register(r'pricetypes', PriceTypeViewSet)

@@ -168,6 +168,25 @@ Referencia: `CategoryListView.vue`, `CrewListView.vue`, `TruckListView.vue`, `Tr
 
 ---
 
+## Backend (Django)
+
+### Migraciones tras cambios en modelos
+
+- Tras modificar modelos de Django, **crear las migraciones** y **ejecutarlas en todos los tenant schemas**.
+- El proyecto es multi-tenant; usar `migrate_schemas` en lugar de `migrate` para aplicar cambios en cada schema.
+
+```bash
+# 1. Crear migraciones (desde el directorio app/ o con docker)
+docker compose exec backend python manage.py makemigrations <app_name>
+
+# 2. Aplicar en todos los tenant schemas
+docker compose exec backend python manage.py migrate_schemas
+```
+
+- Sin ejecutar `migrate_schemas`, los cambios no se reflejan en las empresas (tenants) y pueden aparecer errores como `column does not exist` o `no such column`.
+
+---
+
 ## Layout
 
 *(Estándares específicos de componentes de layout, ej. TxCard, headers, footers.)*

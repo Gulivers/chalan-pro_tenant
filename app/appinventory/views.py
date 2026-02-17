@@ -30,7 +30,7 @@ from utils.datatable import handle_datatable_query
 from appinventory.models import (
     Product, Stock, Warehouse, ProductCategory,
     ProductBrand, UnitOfMeasure, UnitCategory, PriceType, InventoryMovement, ProductImage,
-    ProductBrandAssignment,
+    ProductBrandAssignment, SerializedItem,
     )
 from django.core.files.base import ContentFile
 from apptransactions.models import Document, DocumentLine, DocumentType
@@ -38,7 +38,8 @@ from apptransactions.models import Document, DocumentLine, DocumentType
 from appinventory.serializers import (
     WarehouseSerializer, ProductCategorySerializer, ProductBrandSerializer,
     ProductSerializer, UnitOfMeasureSerializer, UnitCategorySerializer,
-    PriceTypeSerializer, ProductListSerializer, ProductDetailSerializer, ProductImageSerializer
+    PriceTypeSerializer, ProductListSerializer, ProductDetailSerializer, ProductImageSerializer,
+    SerializedItemSerializer,
     )
 
 
@@ -199,6 +200,54 @@ class ProductImageViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+
+
+class SerializedItemViewSet(viewsets.ModelViewSet):
+    """ViewSet for SerializedItem. Supports list by document_id and bulk-update-tags."""
+    queryset = SerializedItem.objects.select_related('product', 'current_warehouse').all()
+    serializer_class = SerializedItemSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['document', 'document_line', 'product', 'current_warehouse', 'status', 'condition']
+
+    @action(detail=False, methods=['patch'], url_path='bulk-update-tags')
+    def bulk_update_tags(self, request):
+        """
+        Batch update asset_tags for multiple SerializedItems.
+        Payload: { "items": [ {"id": 12, "asset_tag": "LQCH020233"}, ... ] }
+        """
+        items_data = request.data.get('items')
+        if not isinstance(items_data, list):
+            return Response(
+                {'detail': 'Payload must include "items" as an array of {id, asset_tag}.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        errors = []
+        updated = 0
+        with transaction.atomic():
+            for entry in items_data:
+                item_id = entry.get('id')
+                asset_tag = (entry.get('asset_tag') or '').strip()
+                if not item_id:
+                    errors.append({'index': len(errors), 'detail': 'Missing id.'})
+                    continue
+                try:
+                    item = SerializedItem.objects.get(pk=item_id)
+                except SerializedItem.DoesNotExist:
+                    errors.append({'id': item_id, 'detail': 'SerializedItem not found.'})
+                    continue
+                if asset_tag:
+                    existing = SerializedItem.objects.filter(asset_tag=asset_tag).exclude(pk=item_id).first()
+                    if existing:
+                        errors.append({'id': item_id, 'detail': f'Asset tag "{asset_tag}" is already in use.'})
+                        continue
+                item.asset_tag = asset_tag or None
+                item.save()
+                updated += 1
+        if errors:
+            return Response({'detail': 'Some updates failed.', 'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': f'{updated} item(s) updated.'})
 
 
 class ProductImagesByBrandAPIView(APIView):

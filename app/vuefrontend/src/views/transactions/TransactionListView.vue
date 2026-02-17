@@ -70,7 +70,7 @@
       </template>
 
       <template #cell(party_name)="data">
-        {{ partiesMap[data.item.party] || "—" }}
+        {{ data.item.builder_name || partiesMap[data.item.party] || "—" }}
       </template>
 
       <template #cell(work_account_display)="data">
@@ -179,9 +179,27 @@ const fields = [
     thClass: "text-center",
     tdClass: "text-center",
   },
-  { key: "document_type_code", label: "Type", sortable: true, thClass: "text-start", tdClass: "text-start" },
-  { key: "party_name", label: "Party", sortable: true, thClass: "text-start", tdClass: "text-start" },
-  { key: "work_account_display", label: "Work Account", sortable: true, thClass: "text-start", tdClass: "text-start" },
+  {
+    key: "document_type_code",
+    label: "Type",
+    sortable: true,
+    thClass: "text-start",
+    tdClass: "text-start",
+  },
+  {
+    key: "party_name",
+    label: "Party",
+    sortable: true,
+    thClass: "text-start",
+    tdClass: "text-start",
+  },
+  {
+    key: "work_account_display",
+    label: "Work Account",
+    sortable: true,
+    thClass: "text-start",
+    tdClass: "text-start",
+  },
   {
     key: "date",
     label: "Date",
@@ -230,8 +248,25 @@ const fetchTransactions = async () => {
     const res = await axios.get("/api/documents/?ordering=-id");
     transactions.value = normalizeList(res.data);
   } catch (err) {
-    console.error("Error fetching transactions", err);
-    proxy?.notifyError?.("Error loading transactions.");
+    const msg = err?.response?.data;
+    const status = err?.response?.status;
+    console.error(
+      "Error fetching transactions:",
+      { status, data: typeof msg === "string" ? msg?.slice?.(0, 300) : msg },
+      err,
+    );
+    let userMsg = "Error loading transactions.";
+    if (status >= 500 || typeof msg === "string") {
+      userMsg =
+        "Server error loading transactions. Please try again or contact support.";
+    } else if (msg && typeof msg === "object") {
+      const d = msg.detail ?? msg.non_field_errors?.[0];
+      if (d && typeof d === "string") userMsg = d;
+      else if (Array.isArray(d) && d[0]) userMsg = String(d[0]);
+    }
+    proxy?.notifyError?.(
+      typeof userMsg === "string" ? userMsg : "Error loading transactions.",
+    );
   }
 };
 
