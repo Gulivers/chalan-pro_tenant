@@ -252,18 +252,28 @@ class SerializedItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
     current_warehouse_name = serializers.CharField(source='current_warehouse.name', read_only=True)
     document_id = serializers.SerializerMethodField()
+    document_display = serializers.SerializerMethodField()
 
     class Meta:
         model = SerializedItem
         fields = [
             'id', 'product', 'product_name', 'asset_tag', 'status', 'condition',
             'purchase_date', 'current_warehouse', 'current_warehouse_name',
-            'document', 'document_id', 'document_line', 'notes', 'created_at',
+            'document', 'document_id', 'document_display', 'document_line', 'notes', 'created_at',
         ]
         read_only_fields = ['created_at']
 
     def get_document_id(self, obj):
         return obj.document_id if obj.document_id else None
+
+    def get_document_display(self, obj):
+        doc = getattr(obj, 'document', None)
+        if not doc:
+            return None
+        try:
+            return str(doc)
+        except Exception:
+            return f"Document #{doc.id}"
 
 
 # Serializador para imágenes de productos

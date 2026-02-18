@@ -7,7 +7,7 @@ from .views import (
     UnitCategoryListAPIView, UnitCategoryViewSet, PriceTypeViewSet,
     ProductDataTableAPIView, ProductListDirectAPIView, ProductListProviderAPIView, ProductDefaultPriceAPIView, DefaultWarehouseAPIView,
     ProductBrandsListAPIView, ProductBrandsUpdateAPIView,
-    ProductImageViewSet, ProductImagesByBrandAPIView, SerializedItemViewSet,
+    ProductImageViewSet, ProductImagesByBrandAPIView, SerializedItemViewSet, SerializedItemListProviderAPIView,
     # Nuevas vistas para dashboard mejorado
     TestDashboardAPIView, InventoryDashboardMetricsAPIView, TopSellingProductsAPIView, SalesAnalysisAPIView,
     LowStockProductsAPIView, LowestStockProductsAPIView,
@@ -68,6 +68,7 @@ urlpatterns = [
     path('api/datatable-products/', ProductDataTableAPIView.as_view(), name='datatable-products'),
     path('api/products-direct/', ProductListDirectAPIView.as_view(), name='products-direct'),
     path('api/products-provider/', ProductListProviderAPIView.as_view(), name='products-provider'),
+    path('api/serialized-items-provider/', SerializedItemListProviderAPIView.as_view(), name='serialized-items-provider'),
     
     # New endpoints for auto-populating fields
     path('api/products/<int:product_id>/default-price/', ProductDefaultPriceAPIView.as_view(), name='product-default-price'),

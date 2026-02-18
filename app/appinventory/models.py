@@ -199,10 +199,10 @@ class ProductPrice(models.Model):
     
 
 class SerializedItem(models.Model):
-    STATUS_ACTIVE = 'active'
-    STATUS_MAINTENANCE = 'maintenance'
-    STATUS_LOST = 'lost'
-    STATUS_RETIRED = 'retired'
+    STATUS_ACTIVE = 'Active'
+    STATUS_MAINTENANCE = 'Maintenance'
+    STATUS_LOST = 'Lost'
+    STATUS_RETIRED = 'Retired'
     STATUS_CHOICES = [
         (STATUS_ACTIVE, 'Active'),
         (STATUS_MAINTENANCE, 'Maintenance'),

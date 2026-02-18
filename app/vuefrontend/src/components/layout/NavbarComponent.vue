@@ -109,6 +109,7 @@
             children: [
               { text: 'Dashboard', route: '/inventory-dashboard', permission: 'appinventory.view_product' },
               { text: 'Products', route: '/products', permission: 'appinventory.view_product' },
+              { text: 'Serialized Items', route: '/serialized-items', permission: 'appinventory.view_serializeditem' },
               { text: 'Warehouses', route: '/warehouses', permission: 'appinventory.view_warehouse' },
               { text: 'Product Categories', route: '/product-categories', permission: 'appinventory.view_productcategory' },
               { text: 'Product Brands', route: '/product-brands', permission: 'appinventory.view_productbrand' },

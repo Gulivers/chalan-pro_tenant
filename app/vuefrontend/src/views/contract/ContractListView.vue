@@ -119,6 +119,7 @@
           :filter="filter"
           :per-page="perPage"
           :current-page="currentPage"
+          no-provider-sorting
           bordered
           hover
           responsive

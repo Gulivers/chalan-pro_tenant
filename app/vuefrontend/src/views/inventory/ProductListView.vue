@@ -123,6 +123,7 @@
           :filter="filter"
           :per-page="perPage"
           :current-page="currentPage"
+          no-provider-sorting
           bordered
           hover
           responsive
@@ -424,13 +425,28 @@ export default {
     };
 
     // Helper function to convert sortBy to Django ordering
+    // Bootstrap Vue Next passes sortBy as array: [{key: 'id', order: 'desc'}]
     const getOrderingFromSortBy = (sortBy) => {
       if (!sortBy) return "-id";
 
-      // Convert Bootstrap Vue Next sortBy format to Django ordering
-      const field = Object.keys(sortBy)[0];
-      const desc = sortBy[field] === "desc";
-      return desc ? `-${field}` : field;
+      let field;
+      let desc = false;
+
+      if (Array.isArray(sortBy) && sortBy.length > 0) {
+        const first = sortBy[0];
+        field = first.key ?? first.field;
+        const order = first.order ?? (first.sortDesc ? "desc" : "asc");
+        desc = order === "desc";
+      } else if (typeof sortBy === "object" && !Array.isArray(sortBy)) {
+        field = Object.keys(sortBy)[0];
+        desc = sortBy[field] === "desc";
+      }
+
+      if (!field) return "-id";
+      // Map API field names to Django model ordering (category_name -> category__name)
+      const fieldMap = { category_name: "category__name" };
+      const djangoField = fieldMap[field] ?? field;
+      return desc ? `-${djangoField}` : djangoField;
     };
 
     // Table reference

@@ -71,9 +71,10 @@ class TruckAdmin(admin.ModelAdmin):
 
     @admin.display(description='Mobile Warehouse')
     def mobile_warehouse_link(self, obj):
-        if not hasattr(obj, 'mobile_warehouse') or not obj.mobile_warehouse_id:
+        try:
+            wh = obj.mobile_warehouse
+        except Exception:
             return '—'
-        wh = obj.mobile_warehouse
         from django.urls import reverse
         from django.utils.html import format_html
         url = reverse('admin:appinventory_warehouse_change', args=[wh.id])
@@ -88,8 +89,11 @@ class TruckAdmin(admin.ModelAdmin):
             if not truck.plate_number or not truck.model:
                 errors.append(f"Truck {truck}: missing plate_number or model")
                 continue
-            if hasattr(truck, 'mobile_warehouse') and truck.mobile_warehouse_id:
-                continue
+            try:
+                if truck.mobile_warehouse:
+                    continue
+            except Exception:
+                pass
             name = f"Truck {truck.plate_number} - {truck.model} Stock"
             location = f"Mobile inventory Truck {truck.plate_number} - {truck.model}"
             existing = Warehouse.objects.filter(name=name).first()

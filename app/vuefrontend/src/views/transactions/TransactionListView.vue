@@ -74,7 +74,11 @@
       </template>
 
       <template #cell(work_account_display)="data">
-        {{ workAccountsMap[data.item.work_account] || "—" }}
+        {{
+          data.item.work_account_display ||
+          workAccountsMap[data.item.work_account] ||
+          "—"
+        }}
       </template>
 
       <template #cell(date)="data">
