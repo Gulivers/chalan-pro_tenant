@@ -16,6 +16,16 @@
               <i class="bi bi-trash me-1"></i>
               Delete selected
             </button>
+            <button
+              v-if="documentId"
+              class="btn btn-outline-secondary"
+              type="button"
+              @click="$emit('open-asset-tags')"
+              v-tt
+              data-title="Assign asset tags for serialized items of this document">
+              <i class="bi bi-tag me-1"></i>
+              Assign Asset Tags
+            </button>
         </div>
         <div class="small text-muted">Rows: {{ linesLocal?.length || 0 }}</div>
       </div>
@@ -43,6 +53,15 @@
             <i class="bi bi-trash"></i>
             <span class="d-none d-sm-inline ms-1">Delete</span>
             <span class="d-sm-none ms-1">Del</span>
+          </button>
+          <button
+            v-if="documentId"
+            class="btn btn-outline-secondary btn-sm flex-fill"
+            type="button"
+            @click="$emit('open-asset-tags')"
+            title="Assign Asset Tags">
+            <i class="bi bi-tag"></i>
+            <span class="d-none d-sm-inline ms-1">Asset Tags</span>
           </button>
         </div>
       </div>
@@ -304,6 +323,7 @@
   const props = defineProps({
     modelValue: { type: Array, default: () => [] }, // not used (legacy)
     lines: { type: Array, default: () => [] }, // v-model:lines
+    documentId: { type: [Number, null], default: null },
     documentTypeId: { type: [Number, null], default: null },
     workAccountId: { type: [Number, null], default: null },
     unitsOptions: { type: Array, default: () => [] },
@@ -312,7 +332,7 @@
     brandsOptions: { type: Array, default: () => [] },
     mergeDuplicates: { type: Boolean, default: true },
   });
-  const emit = defineEmits(['update:lines', 'recalc']);
+  const emit = defineEmits(['update:lines', 'recalc', 'open-asset-tags']);
 
   const linesLocal = ref([]);
   const selectAll = ref(false);

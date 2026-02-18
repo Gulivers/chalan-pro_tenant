@@ -605,6 +605,7 @@
             brands_data: this.product.brands || [],
             unit_default: this.normalizeId(this.product.unit_default),
             reorder_level: this.product.reorder_level,
+            tracking_mode: this.product.tracking_mode || 'QUANTITY',
             is_active: !!this.product.is_active,
             price_units: cleanedPriceUnits,
             prices: cleanedPrices,
@@ -630,7 +631,7 @@
           if (status === 400 && data && typeof data === 'object') {
             for (const [key, value] of Object.entries(data)) {
               const msg = Array.isArray(value) ? value.join(' ') : String(value);
-              if (['name', 'sku', 'category', 'brands', 'brands_data', 'unit_default'].includes(key)) {
+              if (['name', 'sku', 'category', 'brands', 'brands_data', 'unit_default', 'tracking_mode'].includes(key)) {
                 const fieldKey = key === 'brands_data' ? 'brands' : key;
                 this.pushFieldError(fieldKey, msg);
               }

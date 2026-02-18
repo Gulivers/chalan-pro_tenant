@@ -179,6 +179,7 @@
         <LinesGrid
           :lines="lines"
           @update:lines="lines = $event"
+          :document-id="idParam"
           :documentTypeId="form.document_type"
           :workAccountId="form.work_account"
           :unitsOptions="unitsOptions || []"
@@ -187,6 +188,7 @@
           :brandsOptions="brandsOptions || []"
           :merge-duplicates="true"
           @recalc="syncTotals"
+          @open-asset-tags="openAssetTagModalFromGrid"
         />
 
         <!-- Totals -->
@@ -210,6 +212,15 @@
       </div>
     </div>
 
+    <!-- Modal Asset Tag Assignment (post-save cuando hay SerializedItems) -->
+    <AssetTagAssignmentModal
+      :show="showAssetTagModal"
+      :document-id="documentIdForAssetTagModal"
+      :document-context="documentContextForAssetTagModal"
+      @close="onAssetTagModalClose"
+      @saved="onAssetTagModalSaved"
+    />
+
     <!-- Modal para favoritos -->
     <TransactionFavoriteModal
       :transaction-data="currentTransactionData"
@@ -227,7 +238,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch, getCurrentInstance } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import Swal from 'sweetalert2'
@@ -237,10 +248,12 @@ import DocumentTypeSelector from '@/components/transactions/DocumentTypeSelector
 import BuilderSelector from '@/components/parties/BuilderSelector.vue'
 import WorkAccountSelector from '@/components/transactions/WorkAccountSelector.vue'
 import TransactionFavoriteModal from '@/components/transactions/TransactionFavoriteModal.vue'
+import AssetTagAssignmentModal from '@/components/transactions/AssetTagAssignmentModal.vue'
 import FavoriteTransactionSelector from '@/components/transactions/FavoriteTransactionSelector.vue'
 
 const route = useRoute()
 const router = useRouter()
+const { proxy } = getCurrentInstance()
 
 const idParam = route.query.id ? Number(route.query.id) : null
 // Leer work_account_id de query params (como en contracts)
@@ -256,6 +269,10 @@ const loading = reactive({
 })
 // Variable para almacenar el título del work account cuando viene desde el schedule
 const workAccountTitle = ref(null)
+const showAssetTagModal = ref(false)
+const documentIdForAssetTagModal = ref(null)
+const documentContextForAssetTagModal = ref({})
+const assetTagModalOpenedFromSave = ref(false)
 // Computed para saber si viene desde el schedule (tiene workAccountParam en query)
 const isFromSchedule = computed(() => !!workAccountParam)
 console.log("🔑 Soy isEditMode",isEditMode)
@@ -653,6 +670,37 @@ async function handleSaveAndAddAnother() {
   }
 }
 
+function openAssetTagModalFromGrid() {
+  if (!idParam) return
+  assetTagModalOpenedFromSave.value = false
+  documentIdForAssetTagModal.value = idParam
+  const docType = documentTypesOptions.value.find(d => d.value === form.document_type)
+  const builder = buildersOptions.value.find(b => b.value === form.builder)
+  documentContextForAssetTagModal.value = {
+    id: idParam,
+    document_type_code: docType?.type_code || '',
+    builder_name: builder?.label || '',
+    date: form.date,
+  }
+  showAssetTagModal.value = true
+}
+
+function onAssetTagModalClose() {
+  showAssetTagModal.value = false
+  const docId = documentIdForAssetTagModal.value
+  documentIdForAssetTagModal.value = null
+  documentContextForAssetTagModal.value = {}
+  if (assetTagModalOpenedFromSave.value && docId) {
+    assetTagModalOpenedFromSave.value = false
+    promptPrintAndRedirect(docId)
+  }
+}
+
+function onAssetTagModalSaved() {
+  proxy?.notifyToastSuccess?.('Asset tags saved.')
+  onAssetTagModalClose()
+}
+
 // Prompt PDF and redirect (after save)
 async function promptPrintAndRedirect(documentId) {
   const { value: shouldPrint } = await Swal.fire({
@@ -749,6 +797,7 @@ async function fetchStaticOptions() {
     documentTypesOptions.value = list.map(dt => ({ 
       value: dt.id, 
       label: `${dt.type_code} — ${dt.description}`,
+      type_code: dt.type_code,
       is_operational: dt.is_operational 
     }))
   } catch (error) {
@@ -1132,7 +1181,21 @@ async function handleSubmit() {
     const method = isEditMode ? 'put' : 'post'
     const { data } = await axios[method](url, payload)
     const documentId = data.id || idParam
-    await promptPrintAndRedirect(documentId)
+
+    const hasSerializedItems = data?.serialized_items?.length > 0
+    if (hasSerializedItems) {
+      assetTagModalOpenedFromSave.value = true
+      documentIdForAssetTagModal.value = documentId
+      documentContextForAssetTagModal.value = {
+        id: data.id,
+        document_type_code: data.document_type_code,
+        builder_name: data.builder_name,
+        date: data.date,
+      }
+      showAssetTagModal.value = true
+    } else {
+      await promptPrintAndRedirect(documentId)
+    }
   } catch (err) {
     const data = err?.response?.data
     const status = err?.response?.status

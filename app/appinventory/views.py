@@ -218,13 +218,13 @@ class SerializedItemViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['patch'], url_path='bulk-update-tags')
     def bulk_update_tags(self, request):
         """
-        Batch update asset_tags for multiple SerializedItems.
-        Payload: { "items": [ {"id": 12, "asset_tag": "LQCH020233"}, ... ] }
+        Batch update asset_tags and notes for multiple SerializedItems.
+        Payload: { "items": [ {"id": 12, "asset_tag": "LQCH020233", "notes": "..."}, ... ] }
         """
         items_data = request.data.get('items')
         if not isinstance(items_data, list):
             return Response(
-                {'detail': 'Payload must include "items" as an array of {id, asset_tag}.'},
+                {'detail': 'Payload must include "items" as an array of {id, asset_tag, notes?}.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         errors = []
@@ -233,6 +233,7 @@ class SerializedItemViewSet(viewsets.ModelViewSet):
             for entry in items_data:
                 item_id = entry.get('id')
                 asset_tag = (entry.get('asset_tag') or '').strip()
+                notes = (entry.get('notes') or '').strip() if 'notes' in entry else None
                 if not item_id:
                     errors.append({'index': len(errors), 'detail': 'Missing id.'})
                     continue
@@ -247,6 +248,8 @@ class SerializedItemViewSet(viewsets.ModelViewSet):
                         errors.append({'id': item_id, 'detail': f'Asset tag "{asset_tag}" is already in use.'})
                         continue
                 item.asset_tag = asset_tag or None
+                if notes is not None:
+                    item.notes = notes or ''
                 item.save()
                 updated += 1
         if errors:
