@@ -4,13 +4,21 @@
     <template #header>
       <div class="d-flex justify-content-between align-items-center w-100">
         <h6 class="text-primary mb-0">Serialized Items</h6>
-        <button
-          v-if="!loading"
-          class="btn btn-outline-primary btn-sm"
-          @click="refreshTable"
-        >
-          Refresh List
-        </button>
+        <div class="d-flex gap-2">
+          <router-link
+            v-if="false && hasPermission('appinventory.add_serializeditem')"
+            to="/serialized-items/form"
+            class="btn btn-success"
+            >+ New Serialized Item</router-link
+          >
+          <button
+            v-if="!loading"
+            class="btn btn-outline-primary btn-sm"
+            @click="refreshTable"
+          >
+            Refresh List
+          </button>
+        </div>
       </div>
     </template>
 
@@ -141,20 +149,18 @@
 
           <template #cell(actions)="row">
             <div class="btn-group btn-group-sm" role="group">
-              <button
+              <router-link
                 v-if="hasPermission('appinventory.view_serializeditem')"
+                :to="`/serialized-items/view/${row.item.id}`"
                 class="btn btn-outline-success me-1"
-                @click="viewItem(row.item.id)"
+                >View</router-link
               >
-                View
-              </button>
-              <button
+              <router-link
                 v-if="hasPermission('appinventory.change_serializeditem')"
+                :to="`/serialized-items/edit/${row.item.id}`"
                 class="btn btn-outline-primary me-1"
-                @click="editItem(row.item.id)"
+                >Edit</router-link
               >
-                Edit
-              </button>
               <button
                 v-if="hasPermission('appinventory.delete_serializeditem')"
                 class="btn btn-outline-danger"
@@ -394,19 +400,6 @@ export default {
       });
     };
 
-    const viewItem = (id) => {
-      const base = window.location.origin;
-      window.open(`${base}/admin/appinventory/serializeditem/${id}/`, "_blank");
-    };
-
-    const editItem = (id) => {
-      const base = window.location.origin;
-      window.open(
-        `${base}/admin/appinventory/serializeditem/${id}/change/`,
-        "_blank",
-      );
-    };
-
     const deleteItem = (id) => {
       proxy?.confirmDelete?.(
         "Are you sure?",
@@ -449,8 +442,6 @@ export default {
       conditionLabel,
       formatDate,
       formatDateTime,
-      viewItem,
-      editItem,
       deleteItem,
     };
   },

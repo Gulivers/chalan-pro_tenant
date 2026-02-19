@@ -171,7 +171,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['is_active', 'category', 'brands']
+    filterset_fields = ['is_active', 'category', 'brands', 'tracking_mode']
     search_fields = ['name', 'sku']
     ordering_fields = ['name', 'sku', 'created_at']
     ordering = ['name']
@@ -205,7 +205,8 @@ class ProductImageViewSet(viewsets.ModelViewSet):
 class SerializedItemViewSet(viewsets.ModelViewSet):
     """ViewSet for SerializedItem. Supports list by document_id and bulk-update-tags."""
     queryset = SerializedItem.objects.select_related(
-        'product', 'current_warehouse', 'document', 'document__document_type'
+        'product', 'current_warehouse', 'document', 'document__document_type',
+        'document_line', 'document_line__product',
     ).order_by('-id')
     serializer_class = SerializedItemSerializer
     authentication_classes = [TokenAuthentication]
@@ -273,7 +274,8 @@ class SerializedItemListProviderAPIView(APIView):
             ordering = request.query_params.get('ordering', '-id')
 
             queryset = SerializedItem.objects.select_related(
-                'product', 'current_warehouse', 'document', 'document__document_type'
+                'product', 'current_warehouse', 'document', 'document__document_type',
+                'document_line', 'document_line__product',
             ).order_by('-id')
 
             if search:

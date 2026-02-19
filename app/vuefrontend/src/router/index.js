@@ -40,6 +40,7 @@ const UnitCategoryView = () => import('@views/inventory/UnitCategoryView.vue');
 const PriceTypeView = () => import('@views/inventory/PriceTypeView.vue');
 const ProductListView = () => import('@views/inventory/ProductListView.vue');
 const SerializedItemListView = () => import('@views/inventory/SerializedItemListView.vue');
+const SerializedItemForm = () => import('@components/inventory/SerializedItemForm.vue');
 const InventoryDashboardView = () => import('@views/inventory/InventoryDashboardView.vue');
 const InventoryMasterDataSetupView = () => import('@views/InventoryMasterDataSetupView.vue');
 
@@ -492,6 +493,24 @@ const routes = [
     name: 'serialized-item-list',
     component: SerializedItemListView,
     meta: { requiresAuth: true, requiredPermissions: ['appinventory.view_serializeditem'] },
+  },
+  {
+    path: '/serialized-items/form',
+    name: 'serialized-item-form',
+    component: SerializedItemForm,
+    meta: { requiresAuth: true, requiredPermissions: ['appinventory.add_serializeditem'] },
+  },
+  {
+    path: '/serialized-items/view/:id',
+    name: 'serialized-item-view',
+    component: SerializedItemForm,
+    meta: { requiresAuth: true, requiredPermissions: ['appinventory.view_serializeditem'] },
+  },
+  {
+    path: '/serialized-items/edit/:id',
+    name: 'serialized-item-edit',
+    component: SerializedItemForm,
+    meta: { requiresAuth: true, requiredPermissions: ['appinventory.change_serializeditem'] },
   },
   {
     path: '/products/form',

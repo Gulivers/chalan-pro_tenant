@@ -253,13 +253,15 @@ class SerializedItemSerializer(serializers.ModelSerializer):
     current_warehouse_name = serializers.CharField(source='current_warehouse.name', read_only=True)
     document_id = serializers.SerializerMethodField()
     document_display = serializers.SerializerMethodField()
+    document_line_display = serializers.SerializerMethodField()
 
     class Meta:
         model = SerializedItem
         fields = [
             'id', 'product', 'product_name', 'asset_tag', 'status', 'condition',
             'purchase_date', 'current_warehouse', 'current_warehouse_name',
-            'document', 'document_id', 'document_display', 'document_line', 'notes', 'created_at',
+            'document', 'document_id', 'document_display',
+            'document_line', 'document_line_display', 'notes', 'created_at',
         ]
         read_only_fields = ['created_at']
 
@@ -274,6 +276,17 @@ class SerializedItemSerializer(serializers.ModelSerializer):
             return str(doc)
         except Exception:
             return f"Document #{doc.id}"
+
+    def get_document_line_display(self, obj):
+        line = getattr(obj, 'document_line', None)
+        if not line:
+            return None
+        try:
+            product_name = getattr(line.product, 'name', '') if getattr(line, 'product', None) else ''
+            qty = getattr(line, 'quantity', '')
+            return f"{product_name} (qty: {qty})" if product_name else str(line)
+        except Exception:
+            return f"Line #{line.id}"
 
 
 # Serializador para imágenes de productos
