@@ -30,7 +30,7 @@ from utils.datatable import handle_datatable_query
 from appinventory.models import (
     Product, Stock, Warehouse, ProductCategory,
     ProductBrand, UnitOfMeasure, UnitCategory, PriceType, InventoryMovement, ProductImage,
-    ProductBrandAssignment,
+    ProductBrandAssignment, SerializedItem,
     )
 from django.core.files.base import ContentFile
 from apptransactions.models import Document, DocumentLine, DocumentType
@@ -38,7 +38,8 @@ from apptransactions.models import Document, DocumentLine, DocumentType
 from appinventory.serializers import (
     WarehouseSerializer, ProductCategorySerializer, ProductBrandSerializer,
     ProductSerializer, UnitOfMeasureSerializer, UnitCategorySerializer,
-    PriceTypeSerializer, ProductListSerializer, ProductDetailSerializer, ProductImageSerializer
+    PriceTypeSerializer, ProductListSerializer, ProductDetailSerializer, ProductImageSerializer,
+    SerializedItemSerializer,
     )
 
 
@@ -170,7 +171,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['is_active', 'category', 'brands']
+    filterset_fields = ['is_active', 'category', 'brands', 'tracking_mode']
     search_fields = ['name', 'sku']
     ordering_fields = ['name', 'sku', 'created_at']
     ordering = ['name']
@@ -199,6 +200,114 @@ class ProductImageViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+
+
+class SerializedItemViewSet(viewsets.ModelViewSet):
+    """ViewSet for SerializedItem. Supports list by document_id and bulk-update-tags."""
+    queryset = SerializedItem.objects.select_related(
+        'product', 'current_warehouse', 'document', 'document__document_type',
+        'document_line', 'document_line__product',
+    ).order_by('-id')
+    serializer_class = SerializedItemSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['document', 'document_line', 'product', 'current_warehouse', 'status', 'condition']
+    search_fields = ['asset_tag', 'product__name', 'notes']
+    ordering_fields = ['id', 'asset_tag', 'product__name', 'status', 'condition', 'purchase_date', 'created_at']
+
+    @action(detail=False, methods=['patch'], url_path='bulk-update-tags')
+    def bulk_update_tags(self, request):
+        """
+        Batch update asset_tags and notes for multiple SerializedItems.
+        Payload: { "items": [ {"id": 12, "asset_tag": "LQCH020233", "notes": "..."}, ... ] }
+        """
+        items_data = request.data.get('items')
+        if not isinstance(items_data, list):
+            return Response(
+                {'detail': 'Payload must include "items" as an array of {id, asset_tag, notes?}.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        errors = []
+        updated = 0
+        with transaction.atomic():
+            for entry in items_data:
+                item_id = entry.get('id')
+                asset_tag = (entry.get('asset_tag') or '').strip()
+                notes = (entry.get('notes') or '').strip() if 'notes' in entry else None
+                if not item_id:
+                    errors.append({'index': len(errors), 'detail': 'Missing id.'})
+                    continue
+                try:
+                    item = SerializedItem.objects.get(pk=item_id)
+                except SerializedItem.DoesNotExist:
+                    errors.append({'id': item_id, 'detail': 'SerializedItem not found.'})
+                    continue
+                if asset_tag:
+                    existing = SerializedItem.objects.filter(asset_tag=asset_tag).exclude(pk=item_id).first()
+                    if existing:
+                        errors.append({'id': item_id, 'detail': f'Asset tag "{asset_tag}" is already in use.'})
+                        continue
+                item.asset_tag = asset_tag or None
+                if notes is not None:
+                    item.notes = notes or ''
+                item.save()
+                updated += 1
+        if errors:
+            return Response({'detail': 'Some updates failed.', 'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': f'{updated} item(s) updated.'})
+
+
+class SerializedItemListProviderAPIView(APIView):
+    """
+    Endpoint para provider pattern con server-side pagination, search y ordering.
+    Respuesta: { items: [...], totalRows: N }
+    """
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            page = int(request.query_params.get('page', 1))
+            per_page = int(request.query_params.get('per_page', 25))
+            search = request.query_params.get('search', '').strip()
+            ordering = request.query_params.get('ordering', '-id')
+
+            queryset = SerializedItem.objects.select_related(
+                'product', 'current_warehouse', 'document', 'document__document_type',
+                'document_line', 'document_line__product',
+            ).order_by('-id')
+
+            if search:
+                queryset = queryset.filter(
+                    Q(asset_tag__icontains=search) |
+                    Q(product__name__icontains=search) |
+                    Q(notes__icontains=search)
+                )
+
+            # Validar ordering (un solo campo)
+            allowed = {'id', '-id', 'asset_tag', '-asset_tag', 'product__name', '-product__name',
+                       'status', '-status', 'condition', '-condition', 'purchase_date', '-purchase_date',
+                       'created_at', '-created_at'}
+            if ordering.strip() in allowed:
+                queryset = queryset.order_by(ordering.strip())
+            else:
+                queryset = queryset.order_by('-id')
+
+            total_count = queryset.count()
+            start = (page - 1) * per_page
+            end = start + per_page
+            paginated = queryset[start:end]
+
+            serializer = SerializedItemSerializer(paginated, many=True)
+            return Response({
+                'items': serializer.data,
+                'totalRows': total_count,
+            })
+        except (ValueError, TypeError) as e:
+            return Response({'error': 'Invalid parameters.', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ProductImagesByBrandAPIView(APIView):

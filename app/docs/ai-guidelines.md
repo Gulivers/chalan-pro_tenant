@@ -166,6 +166,70 @@ Referencia: `CategoryListView.vue`, `CrewListView.vue`, `TruckListView.vue`, `Tr
 { key: 'description', label: 'Description', thClass: 'text-start', tdClass: 'text-start' },
 ```
 
+### Lazy load (carga diferida) para listas transaccionales
+
+- Usar **provider pattern** con BTable para listas con muchos registros (productos, contratos, ítems serializados, etc.).
+- Endpoint backend tipo: `GET /api/xxx-provider/?page=1&per_page=25&search=&ordering=-id`. Respuesta: `{ items: [...], totalRows: N }`.
+- En el BTable: `:provider="provider"`, `:filter="filter"`, `:per-page="perPage"`, `:current-page="currentPage"`.
+- La función `provider(context)` recibe `context` con `currentPage`, `perPage`, `filter`, `sortBy` y devuelve la página de datos.
+
+```html
+<BTable
+  ref="tableRef"
+  :provider="provider"
+  :fields="fields"
+  :filter="filter"
+  :per-page="perPage"
+  :current-page="currentPage"
+  no-provider-sorting
+  bordered
+  hover
+  responsive
+  striped
+/>
+```
+
+Referencia: `ProductListView.vue`, `ContractListView.vue`, `SerializedItemListView.vue`.
+
+### Ordenamiento local de los datos cargados
+
+- Usar **`no-provider-sorting`** en el BTable cuando se usa provider. Así, al hacer clic en un encabezado de columna se ordenan **localmente** los registros de la página actual, sin volver a llamar al provider ni al servidor.
+- Evita peticiones extra al API y errores por formatos de `sortBy` incompatibles (ej. array vs objeto).
+- Si el provider se llama tras un refresh (ej. botón "Refresh List"), `getOrderingFromSortBy` debe manejar el formato array de BTable: `[{key: 'id', order: 'desc'}]`.
+
+```javascript
+const getOrderingFromSortBy = (sortBy) => {
+  if (!sortBy) return "-id";
+  if (Array.isArray(sortBy) && sortBy.length > 0) {
+    const first = sortBy[0];
+    const field = first.key ?? first.field;
+    const desc = (first.order ?? "asc") === "desc";
+    return field ? (desc ? `-${field}` : field) : "-id";
+  }
+  const field = Object.keys(sortBy)[0];
+  return sortBy[field] === "desc" ? `-${field}` : field;
+};
+```
+
+---
+
+## Backend (Django)
+
+### Migraciones tras cambios en modelos
+
+- Tras modificar modelos de Django, **crear las migraciones** y **ejecutarlas en todos los tenant schemas**.
+- El proyecto es multi-tenant; usar `migrate_schemas` en lugar de `migrate` para aplicar cambios en cada schema.
+
+```bash
+# 1. Crear migraciones (desde el directorio app/ o con docker)
+docker compose exec backend python manage.py makemigrations <app_name>
+
+# 2. Aplicar en todos los tenant schemas
+docker compose exec backend python manage.py migrate_schemas
+```
+
+- Sin ejecutar `migrate_schemas`, los cambios no se reflejan en las empresas (tenants) y pueden aparecer errores como `column does not exist` o `no such column`.
+
 ---
 
 ## Layout

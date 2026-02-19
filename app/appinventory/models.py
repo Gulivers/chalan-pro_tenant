@@ -50,6 +50,14 @@ class Warehouse(models.Model):
     location = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     is_default = models.BooleanField(default=False, help_text="Warehouse predeterminado para nuevas transacciones")
+    truck = models.OneToOneField(
+        'crewsapp.Truck',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='mobile_warehouse',
+        help_text='Mobile warehouse for this truck (1-to-1).',
+    )
 
     def __str__(self):
         return self.name
@@ -94,6 +102,13 @@ class ProductBrandAssignment(models.Model):
 
 
 class Product(models.Model):
+    TRACKING_QUANTITY = 'QUANTITY'
+    TRACKING_SERIALIZED = 'SERIALIZED'
+    TRACKING_MODE_CHOICES = [
+        (TRACKING_QUANTITY, 'By quantity (stock)'),
+        (TRACKING_SERIALIZED, 'Serialized (equipment/tool)'),
+    ]
+
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=100, unique=True)
     category = models.ForeignKey(ProductCategory,  on_delete=models.PROTECT, null=True)
@@ -102,6 +117,14 @@ class Product(models.Model):
     unit_default = models.ForeignKey(UnitOfMeasure, on_delete=models.PROTECT, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    tracking_mode = models.CharField(
+        max_length=20,
+        choices=TRACKING_MODE_CHOICES,
+        default=TRACKING_QUANTITY,
+        help_text='QUANTITY = stock by quantity; SERIALIZED = track by SerializedItem units',
+    )
+    alert = models.TextField(null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
 
 
     def clean(self):
@@ -175,6 +198,64 @@ class ProductPrice(models.Model):
         return f"{self.product} | {self.price_type} | {self.unit} → ${self.price}"
     
 
+class SerializedItem(models.Model):
+    STATUS_ACTIVE = 'Active'
+    STATUS_MAINTENANCE = 'Maintenance'
+    STATUS_LOST = 'Lost'
+    STATUS_RETIRED = 'Retired'
+    STATUS_CHOICES = [
+        (STATUS_ACTIVE, 'Active'),
+        (STATUS_MAINTENANCE, 'Maintenance'),
+        (STATUS_LOST, 'Lost'),
+        (STATUS_RETIRED, 'Retired'),
+    ]
+    CONDITION_OK = 'ok'
+    CONDITION_DAMAGED = 'damaged'
+    CONDITION_NEEDS_REPAIR = 'needs_repair'
+    CONDITION_CHOICES = [
+        (CONDITION_OK, 'OK'),
+        (CONDITION_DAMAGED, 'Damaged'),
+        (CONDITION_NEEDS_REPAIR, 'Needs repair'),
+    ]
+
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='serialized_items')
+    asset_tag = models.CharField(
+        max_length=100, unique=True, help_text='Unique tag/QR identifier', null=True, blank=True
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
+    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default=CONDITION_OK)
+    purchase_date = models.DateField(null=True, blank=True)
+    current_warehouse = models.ForeignKey(
+        Warehouse, on_delete=models.PROTECT, related_name='serialized_items'
+    )
+    document = models.ForeignKey(
+        'apptransactions.Document',
+        on_delete=models.CASCADE,
+        related_name='serialized_items',
+        null=True,
+        blank=True,
+        help_text='Documento con el que fue adquirido (ej. factura de compra).',
+    )
+    document_line = models.ForeignKey(
+        'apptransactions.DocumentLine',
+        on_delete=models.CASCADE,
+        related_name='serialized_items_created',
+        null=True,
+        blank=True,
+        help_text='Línea del documento que originó este ítem (para compras serializadas).',
+    )
+    notes = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['product', 'asset_tag']
+        verbose_name = 'Serialized Item'
+        verbose_name_plural = 'Serialized Items'
+
+    def __str__(self):
+        return f"{self.asset_tag or '(sin tag)'} ({self.product})"
+
+
 class Stock(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
@@ -202,92 +283,103 @@ class InventoryMovement(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    serialized_item = models.ForeignKey(
+        'SerializedItem', on_delete=models.PROTECT, null=True, blank=True,
+        related_name='movements',
+        help_text='If set, this movement tracks one physical unit; quantity must be 1.',
+    )
+    transfer_group_id = models.CharField(
+        max_length=64, blank=True, null=True,
+        help_text='UUID or string linking OUT+IN movements of the same transfer.',
+    )
 
     class Meta:
         ordering = ['-timestamp']
 
     def __str__(self):
+        if self.serialized_item:
+            return f"{self.get_movement_type_display()} - {self.serialized_item.asset_tag} ({self.product}) en {self.warehouse}"
         return f"{self.get_movement_type_display()} - {self.product} ({self.quantity}) en {self.warehouse}"
 
     def get_converted_quantity(self):
         result = convert_to_reference_unit(self.product, self.unit, self.quantity)
         return result
 
+    def clean(self):
+        super().clean()
+        if self.serialized_item_id:
+            item = self.serialized_item
+            if self.product_id != item.product_id:
+                raise ValidationError(
+                    'Movement product must match serialized item product.'
+                )
+            if self.quantity != Decimal('1'):
+                raise ValidationError(
+                    'Quantity must be 1 when moving a serialized item.'
+                )
+            if not item.current_warehouse_id:
+                raise ValidationError(
+                    'Serialized item must have a current_warehouse.'
+                )
+            if self.movement_type == -1 and item.current_warehouse_id != self.warehouse_id:
+                raise ValidationError(
+                    'Salida: warehouse must match serialized item current_warehouse.'
+                )
+
     def save(self, *args, **kwargs):
         """
-        Guarda el movimiento de inventario y actualiza el stock automáticamente.
-        
-        Mejoras v2.0:
-        - Mantiene quantity como cantidad original (sin convertir)
-        - Usa cantidad convertida solo para actualizar el stock
-        - Evita el problema de doble conversión
+        Saves the movement. If serialized_item is set: validates product/quantity=1,
+        does NOT update Stock, and on Entrada (1) updates serialized_item.current_warehouse.
         """
         if not self.product or not self.warehouse:
             raise ValueError("No se puede guardar InventoryMovement sin producto o almacén.")
-
-        # Verificar que quantity no sea None antes de la conversión
         if self.quantity is None:
             raise ValueError("Quantity no puede ser None")
 
-        # Calcular cantidad convertida para actualizar el stock
-        # ⚠️ NO sobrescribir self.quantity - mantener la cantidad original
+        if self.serialized_item_id:
+            self.full_clean()
+            # Save first
+            super().save(*args, **kwargs)
+            # Update SerializedItem location when it's an arrival (Entrada)
+            if self.movement_type == 1:
+                item = SerializedItem.objects.get(pk=self.serialized_item_id)
+                if item.current_warehouse_id != self.warehouse_id:
+                    item.current_warehouse = self.warehouse
+                    item.save(update_fields=['current_warehouse'])
+            return
+
+        # Non-serialized: convert and update stock
         try:
             converted_qty = self.get_converted_quantity() if self.unit else self.quantity
         except Exception as e:
             print(f"⚠️ Error en conversión, usando cantidad original: {e}")
             converted_qty = self.quantity
-
         if converted_qty is None:
             raise ValueError("Error: cantidad convertida terminó en None")
 
-        print(f"📦 Guardando movimiento: quantity={self.quantity}, converted={converted_qty} (tipo: {type(converted_qty)})")
+        super().save(*args, **kwargs)
 
-        # Guardar el movimiento en la base de datos
-        # Nota: self.quantity se mantiene como cantidad original
-        try:
-            is_new = not self.pk
-            super().save(*args, **kwargs)
-            print(f"✅ InventoryMovement guardado exitosamente con ID: {self.id}")
-        except Exception as e:
-            print(f"❌ ERROR al guardar InventoryMovement: {e}")
-            raise
-
-        # Ajustar el stock usando la cantidad convertida
         stock, _ = Stock.objects.get_or_create(
-            product=self.product, 
+            product=self.product,
             warehouse=self.warehouse,
             defaults={'quantity': Decimal('0.00')}
         )
-        old_qty = stock.quantity
-        
-        # Usar la cantidad convertida para actualizar el stock
         stock.quantity += converted_qty * self.movement_type
         stock.save()
 
-        print(f"📊 Stock actualizado: {old_qty} → {stock.quantity} (producto: {self.product}, almacén: {self.warehouse})")
-
     def delete(self, *args, **kwargs):
-        """
-        Elimina el movimiento de inventario y revierte su efecto en el stock.
-        """
-        from .models import Stock
-        
-        # Calcular cantidad convertida
+        """Reverts stock only for non-serialized movements."""
+        if self.serialized_item_id:
+            super().delete(*args, **kwargs)
+            return
         converted_qty = self.get_converted_quantity()
-        
-        # Revertir el efecto en el stock
         stock, _ = Stock.objects.get_or_create(
-            product=self.product, 
+            product=self.product,
             warehouse=self.warehouse,
             defaults={'quantity': Decimal('0.00')}
         )
-        old_qty = stock.quantity
         stock.quantity -= converted_qty * self.movement_type
         stock.save()
-        
-        print(f"🗑️ Movimiento eliminado - Stock revertido: {old_qty} → {stock.quantity} (producto: {self.product})")
-        
-        # Eliminar el movimiento
         super().delete(*args, **kwargs)
 
 

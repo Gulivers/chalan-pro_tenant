@@ -1,0 +1,28 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<h1>Transfer Serialized Items to Warehouse</h1>
+<p>Select the destination warehouse for the following {{ items|length }} item(s):</p>
+<ul>
+  {% for item in items %}
+  <li><strong>{{ item.asset_tag }}</strong> — {{ item.product }} (currently at {{ item.current_warehouse.name }})</li>
+  {% endfor %}
+</ul>
+<form method="post">
+  {% csrf_token %}
+  <p>
+    <label for="warehouse">Destination warehouse:</label>
+    <select name="warehouse" id="warehouse" required>
+      <option value="">— Select —</option>
+      {% for wh in warehouses %}
+      <option value="{{ wh.pk }}">{{ wh.name }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p>
+    <input type="submit" value="Transfer">
+    <a href="{% url 'admin:appinventory_serializeditem_changelist' %}" class="button cancel-link">Cancel</a>
+  </p>
+</form>
+{% endblock %}
