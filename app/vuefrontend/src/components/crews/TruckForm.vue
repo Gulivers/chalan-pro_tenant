@@ -106,11 +106,36 @@ async function handleSubmit() {
     if (id) {
       await axios.patch(`/api/trucks/${id}/`, payload);
       proxy?.notifyToastSuccess?.('Truck updated.');
+      router.push({ name: 'crew-trucks' });
     } else {
-      await axios.post('/api/trucks/', payload);
+      const { data } = await axios.post('/api/trucks/', payload);
       proxy?.notifyToastSuccess?.('Truck created.');
+
+      const result = await Swal.fire({
+        title: 'Create mobile warehouse for this truck?',
+        text: 'Do you want to create a mobile warehouse to track equipment assets and serial numbers for this truck?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'No',
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#6c757d',
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const res = await axios.post(`/api/trucks/${data.id}/create-mobile-warehouse/`);
+          const msg = res.data?.message || (res.status === 201 ? 'Mobile warehouse created.' : 'Mobile warehouse already exists.');
+          proxy?.notifyToastSuccess?.(msg);
+        } catch (whErr) {
+          console.error('Create mobile warehouse error:', whErr);
+          const detail = whErr.response?.data?.detail;
+          const msg = (typeof detail === 'string' ? detail : Object.values(detail || {}).flat().join(' ') || 'Error creating mobile warehouse.');
+          Swal.fire('Error', msg, 'error');
+        }
+      }
+      router.push({ name: 'crew-trucks' });
     }
-    router.push({ name: 'crew-trucks' });
   } catch (err) {
     console.error('Save error:', err);
     const msg = err.response?.data ? (Object.values(err.response.data).flat().join(' ') || 'Error saving truck.') : 'Error saving truck.';

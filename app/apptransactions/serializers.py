@@ -10,6 +10,7 @@ from apptransactions.models import (
     WorkAccount, TransactionFavorite
 )
 from appinventory.models import Stock, PriceType
+from appinventory.serializers import SerializedItemSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -233,39 +234,74 @@ class DocumentLineSerializer(serializers.ModelSerializer):
 # Document (con soporte opcional de líneas anidadas)
 class DocumentLineInlineSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False, allow_null=True)
-    # Campos de solo lectura para mostrar información adicional
-    unit_code = serializers.CharField(source="unit.code", read_only=True)
-    product_name = serializers.CharField(source="product.name", read_only=True)
+    unit_code = serializers.SerializerMethodField()
+    product_name = serializers.SerializerMethodField()
+    serialized_items_created_count = serializers.SerializerMethodField()
+
+    def get_unit_code(self, obj):
+        unit = getattr(obj, "unit", None)
+        return getattr(unit, "code", None) if unit else ""
+
+    def get_product_name(self, obj):
+        product = getattr(obj, "product", None)
+        return getattr(product, "name", None) if product else ""
 
     class Meta:
         model = DocumentLine
         fields = [
             "id", "product", "product_name", "quantity", "unit", "unit_code",
             "unit_price", "discount_percentage", "final_price", "warehouse",
-            "price_type", "brand"
+            "price_type", "brand", "serialized_items_created_count",
         ]
-        read_only_fields = ["final_price", "unit_code", "product_name"]
+        read_only_fields = ["final_price", "unit_code", "product_name", "serialized_items_created_count"]
+
+    def get_serialized_items_created_count(self, obj):
+        if not obj.pk:
+            return 0
+        return obj.serialized_items_created.count()
 
 
 class DocumentSerializer(serializers.ModelSerializer):
     document_type_code = serializers.CharField(source="document_type.type_code", read_only=True)
-    builder_name = serializers.CharField(source="builder.name", read_only=True)
-    work_account_display = serializers.CharField(source="work_account.__str__", read_only=True)
-
-    # Opcional: manejo anidado (lines) en create/update si se envía `lines`
+    builder_name = serializers.SerializerMethodField()
+    work_account_display = serializers.SerializerMethodField()
+    party = serializers.SerializerMethodField()
     lines = DocumentLineInlineSerializer(many=True, required=False)
+    serialized_items = SerializedItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = Document
         fields = [
             "id", "document_type", "document_type_code",
-            "date", "builder", "builder_name",
+            "date", "builder", "builder_name", "party",
             "work_account", "work_account_display",
             "created_by", "notes",
             "total_discount", "total_amount", "is_active",
-            "lines",
+            "lines", "serialized_items",
         ]
-        read_only_fields = ["date", "total_discount", "total_amount"]
+
+    def get_builder_name(self, obj):
+        builder = getattr(obj, "builder", None)
+        return getattr(builder, "name", None) or ""
+
+    def get_work_account_display(self, obj):
+        wa = getattr(obj, "work_account", None)
+        if not wa:
+            return ""
+        try:
+            return str(wa)
+        except Exception:
+            return getattr(wa, "title", "") or ""
+
+    def get_party(self, obj):
+        builder = getattr(obj, "builder", None)
+        if not builder:
+            return None
+        try:
+            party = getattr(builder, "party", None)
+            return party.id if party else None
+        except Exception:
+            return None
 
     def validate(self, attrs):
         doc_type = attrs.get("document_type") or getattr(self.instance, "document_type", None)

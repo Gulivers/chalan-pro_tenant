@@ -135,7 +135,7 @@ class WorkAccountViewSet(viewsets.ModelViewSet):
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = (
         Document.objects
-        .select_related("document_type", "builder", "created_by")
+        .select_related("document_type", "builder", "created_by", "work_account")
         .prefetch_related(
             Prefetch("lines", queryset=DocumentLine.objects.select_related("product", "unit", "price_type", "brand"))
         )
@@ -144,7 +144,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     serializer_class = DocumentSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [SearchFilter, OrderingFilter, DjangoFilterBackend]
-    search_fields = ["notes", "builder__name", "job", "lot", "document_type__type_code"]
+    search_fields = ["notes", "builder__name", "work_account__job__name", "work_account__lot", "document_type__type_code"]
     ordering_fields = ["id", "date", "total_amount"]
     filterset_fields = ["document_type", "builder", "is_active", "work_account"]
 
@@ -190,7 +190,7 @@ class DocumentLineViewSet(viewsets.ModelViewSet):
     serializer_class = DocumentLineSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [SearchFilter, OrderingFilter, DjangoFilterBackend]
-    search_fields = ["product__name", "document__notes", "document__lot", "document__job", "document__builder__name"]
+    search_fields = ["product__name", "document__notes", "document__work_account__lot", "document__work_account__job__name", "document__builder__name"]
     ordering_fields = ["id", "quantity", "unit_price", "final_price"]
     filterset_fields = ["document", "product", "warehouse", "price_type", "brand"]
 

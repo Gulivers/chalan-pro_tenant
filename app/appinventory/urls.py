@@ -7,7 +7,7 @@ from .views import (
     UnitCategoryListAPIView, UnitCategoryViewSet, PriceTypeViewSet,
     ProductDataTableAPIView, ProductListDirectAPIView, ProductListProviderAPIView, ProductDefaultPriceAPIView, DefaultWarehouseAPIView,
     ProductBrandsListAPIView, ProductBrandsUpdateAPIView,
-    ProductImageViewSet, ProductImagesByBrandAPIView,
+    ProductImageViewSet, ProductImagesByBrandAPIView, SerializedItemViewSet, SerializedItemListProviderAPIView,
     # Nuevas vistas para dashboard mejorado
     TestDashboardAPIView, InventoryDashboardMetricsAPIView, TopSellingProductsAPIView, SalesAnalysisAPIView,
     LowStockProductsAPIView, LowestStockProductsAPIView,
@@ -38,6 +38,7 @@ router.register(r'productcategory', ProductCategoryViewSet)
 router.register(r'productbrand', ProductBrandViewSet)
 router.register(r'products', ProductViewSet, basename='product')
 router.register(r'productimages', ProductImageViewSet, basename='productimage')
+router.register(r'serialized-items', SerializedItemViewSet, basename='serializeditem')
 router.register(r'unitsofmeasure', UnitOfMeasureViewSet, basename='unitofmeasure')
 router.register(r'unitcategory', UnitCategoryViewSet)
 router.register(r'pricetypes', PriceTypeViewSet)
@@ -67,6 +68,7 @@ urlpatterns = [
     path('api/datatable-products/', ProductDataTableAPIView.as_view(), name='datatable-products'),
     path('api/products-direct/', ProductListDirectAPIView.as_view(), name='products-direct'),
     path('api/products-provider/', ProductListProviderAPIView.as_view(), name='products-provider'),
+    path('api/serialized-items-provider/', SerializedItemListProviderAPIView.as_view(), name='serialized-items-provider'),
     
     # New endpoints for auto-populating fields
     path('api/products/<int:product_id>/default-price/', ProductDefaultPriceAPIView.as_view(), name='product-default-price'),

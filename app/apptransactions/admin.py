@@ -55,6 +55,14 @@ class DocumentLineInlineFormSet(BaseInlineFormSet):
                 if quantity is None or product is None:
                     raise ValidationError("Todas las líneas deben tener producto y cantidad.")
 
+@admin.register(DocumentLine)
+class DocumentLineAdmin(admin.ModelAdmin):
+    list_display = ('id', 'document', 'product', 'quantity', 'unit')
+    search_fields = ('document__id', 'product__name', 'product__sku')
+    autocomplete_fields = ('document', 'product', 'unit', 'price_type', 'brand')
+    list_filter = ('document__document_type',)
+
+
 class DocumentLineInline(admin.TabularInline):
     model = DocumentLine
     extra = 1

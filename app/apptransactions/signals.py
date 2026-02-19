@@ -16,35 +16,43 @@ Versión: 2.0 - Con soporte para actualizaciones correctas de stock
 """
 
 from decimal import Decimal
-from django.db.models.signals import post_save, post_delete, pre_save
+from django.db.models.signals import post_save, post_delete, pre_save, pre_delete
 from django.dispatch import receiver
 from django.db import transaction
 from apptransactions.models import DocumentLine, Document
-from appinventory.models import InventoryMovement, Stock
+from appinventory.models import InventoryMovement, Stock, SerializedItem, Warehouse, Product
+
+
+MOBILE_WAREHOUSE_NAME = "Mobile Warehouse"
+
+
+def get_or_create_mobile_warehouse():
+    """Obtiene o crea el almacén 'Mobile Warehouse' para ítems serializados."""
+    wh, created = Warehouse.objects.get_or_create(
+        name=MOBILE_WAREHOUSE_NAME,
+        defaults={'location': '', 'is_active': True, 'is_default': False}
+    )
+    return wh
 
 
 @receiver(post_save, sender=DocumentLine, dispatch_uid="docline_create_inventory_movement")
 def create_inventory_movement(sender, instance, created, **kwargs):
     """
     Crea o actualiza movimientos de inventario cuando se guarda una línea de documento.
-    
-    Mejoras v2.0:
-    - Detecta si es creación o actualización
-    - Revierte cambios anteriores en el stock antes de aplicar nuevos cambios
-    - Verifica el estado is_active del documento padre
+    Para productos SERIALIZED en compras (entrada): crea N SerializedItems y N movimientos
+    (uno por unidad) sin tocar Stock. Para el resto, un movimiento por cantidad.
     """
     print("2 🧼 apptransactions\\signals.py -> create_inventory_movement()")
-    
+
     def handle_movement():
         try:
-            # ✅ Verificar si el documento está activo
             if not instance.document.is_active:
                 print(f"⏭️ Documento {instance.document.id} está anulado - No actualizar stock")
-                # Si el documento está anulado, eliminar movimientos existentes
                 InventoryMovement.objects.filter(line_id=instance.id).delete()
+                SerializedItem.objects.filter(document_line_id=instance.id).delete()
                 return
-            
-            warehouse = instance.warehouse
+
+            warehouse = instance.warehouse or get_or_create_mobile_warehouse()
             doc_type = instance.document.document_type
             movement_type = doc_type.stock_movement
 
@@ -52,62 +60,86 @@ def create_inventory_movement(sender, instance, created, **kwargs):
                 print(f"⏭️ Sin almacén o movimiento neutro para línea {instance.id}")
                 return
 
-            # Buscar si ya existe un movimiento para esta línea
+            # --- Compra de producto SERIALIZED: N SerializedItems + N movimientos (quantity=1 cada uno)
+            if (
+                doc_type.is_purchase
+                and movement_type == 1
+                and instance.product.tracking_mode == Product.TRACKING_SERIALIZED
+            ):
+                InventoryMovement.objects.filter(line_id=instance.id).delete()
+                SerializedItem.objects.filter(document_line_id=instance.id).delete()
+                n = int(instance.quantity)
+                if n < 1:
+                    return
+                purchase_date = instance.document.date
+                for _ in range(n):
+                    item = SerializedItem.objects.create(
+                        product=instance.product,
+                        document=instance.document,
+                        document_line=instance,
+                        current_warehouse=warehouse,
+                        status=SerializedItem.STATUS_ACTIVE,
+                        condition=SerializedItem.CONDITION_OK,
+                        purchase_date=purchase_date,
+                        asset_tag=None,
+                    )
+                    mov = InventoryMovement(
+                        line_id=instance.id,
+                        product=instance.product,
+                        warehouse=warehouse,
+                        quantity=Decimal('1'),
+                        movement_type=1,
+                        serialized_item=item,
+                        unit=instance.unit,
+                        reason=f"{doc_type.description} #{instance.document.id}",
+                        document=str(instance.document.id),
+                        created_by=instance.document.created_by,
+                    )
+                    mov.save()
+                print(f"✅ Creados {n} SerializedItem(s) y movimientos para línea {instance.id}")
+                return
+
+            # --- Movimiento normal por cantidad
             movement = InventoryMovement.objects.filter(line_id=instance.id).first()
 
             if movement:
                 print(f"♻️ Actualizando movimiento existente para línea {instance.id}")
-                
-                # ✅ PASO 1: Revertir el impacto anterior en el stock
-                # Obtener el stock actual
+                from appinventory.helpers import convert_to_reference_unit
                 old_stock, _ = Stock.objects.get_or_create(
                     product=movement.product,
                     warehouse=movement.warehouse,
                     defaults={'quantity': Decimal('0.00')}
                 )
-                
-                # Calcular cantidad convertida del movimiento anterior
-                from appinventory.helpers import convert_to_reference_unit
                 old_converted_qty = convert_to_reference_unit(
-                    movement.product, 
-                    movement.unit, 
-                    movement.quantity
+                    movement.product, movement.unit, movement.quantity
                 )
-                
-                # Revertir el cambio anterior
                 old_stock.quantity -= old_converted_qty * movement.movement_type
                 old_stock.save()
-                print(f"🔄 Stock revertido: -{old_converted_qty * movement.movement_type} para {movement.product.name}")
-                
-                # ✅ PASO 2: Actualizar el movimiento con los nuevos valores
                 movement.product = instance.product
                 movement.warehouse = warehouse
-                movement.quantity = instance.quantity  # Cantidad original sin convertir
+                movement.quantity = instance.quantity
                 movement.movement_type = movement_type
                 movement.unit = instance.unit
                 movement.reason = f"{doc_type.description} #{instance.document.id}"
                 movement.document = str(instance.document.id)
                 movement.created_by = instance.document.created_by
-                
-                # El save() del InventoryMovement aplicará el nuevo cambio al stock
                 movement.save()
-                print(f"✅ Movimiento actualizado y nuevo stock aplicado para línea {instance.id}")
-                
+                print(f"✅ Movimiento actualizado para línea {instance.id}")
             else:
                 print(f"🆕 Creando nuevo movimiento para línea {instance.id}")
                 movement = InventoryMovement(
                     line_id=instance.id,
                     product=instance.product,
                     warehouse=warehouse,
-                    quantity=instance.quantity,  # Cantidad original sin convertir
+                    quantity=instance.quantity,
                     movement_type=movement_type,
                     unit=instance.unit,
                     reason=f"{doc_type.description} #{instance.document.id}",
                     document=str(instance.document.id),
-                    created_by=instance.document.created_by
+                    created_by=instance.document.created_by,
                 )
                 movement.save()
-                print(f"✅ Nuevo movimiento creado y stock aplicado para línea {instance.id}")
+                print(f"✅ Nuevo movimiento creado para línea {instance.id}")
 
         except Exception as e:
             print(f"❌ Error en handle_movement(): {e}")
@@ -117,22 +149,20 @@ def create_inventory_movement(sender, instance, created, **kwargs):
     transaction.on_commit(handle_movement)
 
 
-@receiver(post_delete, sender=DocumentLine, dispatch_uid="docline_delete_inventory_movement")
+@receiver(pre_delete, sender=DocumentLine, dispatch_uid="docline_delete_inventory_movement")
 def delete_inventory_movement(sender, instance, **kwargs):
     """
-    Elimina movimientos de inventario cuando se elimina una línea de documento.
-    El delete() del InventoryMovement automáticamente revertirá el stock.
+    Antes de borrar la línea: elimina movimientos (line_id) y SerializedItems (document_line)
+    para evitar ProtectedError al hacer CASCADE desde DocumentLine.
     """
-    def handle_deletion():
-        try:
-            InventoryMovement.objects.filter(line_id=instance.id).delete()
-            print(f"🗑️ Movimiento eliminado para línea {instance.id}")
-        except Exception as e:
-            print(f"❌ Error al eliminar movimiento para línea {instance.id}: {e}")
-            import traceback
-            traceback.print_exc()
-
-    transaction.on_commit(handle_deletion)
+    try:
+        InventoryMovement.objects.filter(line_id=instance.id).delete()
+        SerializedItem.objects.filter(document_line_id=instance.id).delete()
+        print(f"🗑️ Movimientos e ítems serializados eliminados para línea {instance.id}")
+    except Exception as e:
+        print(f"❌ Error al eliminar para línea {instance.id}: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 # Variable global para rastrear el estado anterior del documento
@@ -182,35 +212,57 @@ def handle_document_active_status(sender, instance, created, **kwargs):
                 return
             
             if not instance.is_active:
-                # 🗑️ DOCUMENTO ANULADO: Eliminar todos los movimientos
+                # 🗑️ DOCUMENTO ANULADO: Eliminar movimientos e ítems serializados por línea
                 print(f"📄 Anulando documento {instance.id} - Revirtiendo stock de todas las líneas")
-                
                 for line in instance.lines.all():
-                    movements = InventoryMovement.objects.filter(line_id=line.id)
-                    count = movements.count()
-                    if count > 0:
-                        # El delete() automáticamente revierte el stock
-                        movements.delete()
-                        print(f"   🗑️ Eliminados {count} movimiento(s) de línea {line.id}")
-                
+                    InventoryMovement.objects.filter(line_id=line.id).delete()
+                    SerializedItem.objects.filter(document_line_id=line.id).delete()
                 print(f"✅ Documento {instance.id} anulado - Stock revertido correctamente")
-                
+
             else:
-                # ✅ DOCUMENTO REACTIVADO: Recrear todos los movimientos
+                # ✅ DOCUMENTO REACTIVADO: Recrear movimientos (y SerializedItems si aplica)
                 print(f"📄 Reactivando documento {instance.id} - Aplicando stock de todas las líneas")
-                
+                doc_type = instance.document_type
+                movement_type = doc_type.stock_movement
                 for line in instance.lines.all():
-                    warehouse = line.warehouse
-                    doc_type = instance.document_type
-                    movement_type = doc_type.stock_movement
-                    
-                    if warehouse and movement_type != 0:
-                        # Verificar si ya existe un movimiento (por seguridad)
-                        existing = InventoryMovement.objects.filter(line_id=line.id).first()
-                        if existing:
-                            print(f"   ⚠️ Ya existe movimiento para línea {line.id}, omitiendo")
-                            continue
-                        
+                    warehouse = line.warehouse or get_or_create_mobile_warehouse()
+                    if not warehouse or movement_type == 0:
+                        continue
+                    if InventoryMovement.objects.filter(line_id=line.id).exists():
+                        continue
+                    if (
+                        doc_type.is_purchase
+                        and movement_type == 1
+                        and line.product.tracking_mode == Product.TRACKING_SERIALIZED
+                    ):
+                        n = int(line.quantity)
+                        if n >= 1:
+                            purchase_date = instance.date
+                            for _ in range(n):
+                                item = SerializedItem.objects.create(
+                                    product=line.product,
+                                    document=instance,
+                                    document_line=line,
+                                    current_warehouse=warehouse,
+                                    status=SerializedItem.STATUS_ACTIVE,
+                                    condition=SerializedItem.CONDITION_OK,
+                                    purchase_date=purchase_date,
+                                    asset_tag=None,
+                                )
+                                mov = InventoryMovement(
+                                    line_id=line.id,
+                                    product=line.product,
+                                    warehouse=warehouse,
+                                    quantity=Decimal('1'),
+                                    movement_type=1,
+                                    serialized_item=item,
+                                    unit=line.unit,
+                                    reason=f"{doc_type.description} #{instance.id} (Reactivado)",
+                                    document=str(instance.id),
+                                    created_by=instance.created_by,
+                                )
+                                mov.save()
+                    else:
                         movement = InventoryMovement(
                             line_id=line.id,
                             product=line.product,
@@ -220,11 +272,9 @@ def handle_document_active_status(sender, instance, created, **kwargs):
                             unit=line.unit,
                             reason=f"{doc_type.description} #{instance.id} (Reactivado)",
                             document=str(instance.id),
-                            created_by=instance.created_by
+                            created_by=instance.created_by,
                         )
-                        movement.save()  # Esto actualiza el stock automáticamente
-                        print(f"   ✅ Movimiento recreado para línea {line.id}")
-                
+                        movement.save()
                 print(f"✅ Documento {instance.id} reactivado - Stock aplicado correctamente")
                 
         except Exception as e:

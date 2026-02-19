@@ -1,0 +1,6 @@
+/* Ampliar columna Document en changelist de SerializedItem */
+#result_list th:nth-child(9),
+#result_list td:nth-child(9) {
+  min-width: 180px;
+  white-space: nowrap;
+}

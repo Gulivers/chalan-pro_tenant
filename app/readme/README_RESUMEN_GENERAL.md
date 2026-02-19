@@ -1089,6 +1089,12 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 - Se actualiza desde el tenant de desarrollo **test-dominio-local.chalanpro.net** con: `python manage.py export_fixture_product_images --schema test_dominio_local`.
 - Así el repo queda como fuente única; cada tenant que hace Inventory Master Data Setup recibe productos e imágenes desde ese repo.
 
+**Dónde se guardan las imágenes de productos (ubicación en runtime):**
+- **Ruta física:** `MEDIA_ROOT/products/{product_id}/{brand_id}/{timestamp}_{nombre}.{ext}` (ej. `products/42/3/20260214_133045_imagen_producto.jpg`).
+- **En Docker:** `/app/media/products/` (volumen `media_volume` montado en el contenedor backend).
+- **En local:** `app/media/products/` (según `MEDIA_ROOT = BASE_DIR / 'media'` en `settings.py`).
+- **URL pública:** `/media/` (configurada en `MEDIA_URL`). Ejemplo: `http://dominio/media/products/42/3/20260214_133045_imagen.jpg`.
+
 #### Frontend (Vue.js)
 
 **Componente (`vuefrontend/src/components/inventory/InventoryMasterDataSetup.vue`):**

@@ -179,6 +179,7 @@
         <LinesGrid
           :lines="lines"
           @update:lines="lines = $event"
+          :document-id="idParam"
           :documentTypeId="form.document_type"
           :workAccountId="form.work_account"
           :unitsOptions="unitsOptions || []"
@@ -187,6 +188,7 @@
           :brandsOptions="brandsOptions || []"
           :merge-duplicates="true"
           @recalc="syncTotals"
+          @open-asset-tags="openAssetTagModalFromGrid"
         />
 
         <!-- Totals -->
@@ -210,6 +212,15 @@
       </div>
     </div>
 
+    <!-- Modal Asset Tag Assignment (post-save cuando hay SerializedItems) -->
+    <AssetTagAssignmentModal
+      :show="showAssetTagModal"
+      :document-id="documentIdForAssetTagModal"
+      :document-context="documentContextForAssetTagModal"
+      @close="onAssetTagModalClose"
+      @saved="onAssetTagModalSaved"
+    />
+
     <!-- Modal para favoritos -->
     <TransactionFavoriteModal
       :transaction-data="currentTransactionData"
@@ -227,7 +238,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch, getCurrentInstance } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import Swal from 'sweetalert2'
@@ -237,10 +248,12 @@ import DocumentTypeSelector from '@/components/transactions/DocumentTypeSelector
 import BuilderSelector from '@/components/parties/BuilderSelector.vue'
 import WorkAccountSelector from '@/components/transactions/WorkAccountSelector.vue'
 import TransactionFavoriteModal from '@/components/transactions/TransactionFavoriteModal.vue'
+import AssetTagAssignmentModal from '@/components/transactions/AssetTagAssignmentModal.vue'
 import FavoriteTransactionSelector from '@/components/transactions/FavoriteTransactionSelector.vue'
 
 const route = useRoute()
 const router = useRouter()
+const { proxy } = getCurrentInstance()
 
 const idParam = route.query.id ? Number(route.query.id) : null
 // Leer work_account_id de query params (como en contracts)
@@ -256,6 +269,10 @@ const loading = reactive({
 })
 // Variable para almacenar el título del work account cuando viene desde el schedule
 const workAccountTitle = ref(null)
+const showAssetTagModal = ref(false)
+const documentIdForAssetTagModal = ref(null)
+const documentContextForAssetTagModal = ref({})
+const assetTagModalOpenedFromSave = ref(false)
 // Computed para saber si viene desde el schedule (tiene workAccountParam en query)
 const isFromSchedule = computed(() => !!workAccountParam)
 console.log("🔑 Soy isEditMode",isEditMode)
@@ -622,8 +639,6 @@ async function handleSaveAndAddAnother() {
     console.log('🚀 Frontend: Guardando y agregando otra transacción...')
     
     const { data } = await axios.post('/api/documents/', payload)
-
-    // Mostrar mensaje de éxito
     await Swal.fire({
       title: 'Transaction Saved Successfully!',
       text: 'The transaction has been saved. You can now create another one.',
@@ -631,8 +646,6 @@ async function handleSaveAndAddAnother() {
       timer: 2000,
       showConfirmButton: false
     })
-    
-    // Resetear formulario para nueva transacción
     resetFormForNewTransaction()
     
     console.log('✅ Transacción guardada, formulario reseteado para nueva transacción')
@@ -655,6 +668,56 @@ async function handleSaveAndAddAnother() {
   } finally { 
     submitting.value = false 
   }
+}
+
+function openAssetTagModalFromGrid() {
+  if (!idParam) return
+  assetTagModalOpenedFromSave.value = false
+  documentIdForAssetTagModal.value = idParam
+  const docType = documentTypesOptions.value.find(d => d.value === form.document_type)
+  const builder = buildersOptions.value.find(b => b.value === form.builder)
+  documentContextForAssetTagModal.value = {
+    id: idParam,
+    document_type_code: docType?.type_code || '',
+    builder_name: builder?.label || '',
+    date: form.date,
+  }
+  showAssetTagModal.value = true
+}
+
+function onAssetTagModalClose() {
+  showAssetTagModal.value = false
+  const docId = documentIdForAssetTagModal.value
+  documentIdForAssetTagModal.value = null
+  documentContextForAssetTagModal.value = {}
+  if (assetTagModalOpenedFromSave.value && docId) {
+    assetTagModalOpenedFromSave.value = false
+    promptPrintAndRedirect(docId)
+  }
+}
+
+function onAssetTagModalSaved() {
+  proxy?.notifyToastSuccess?.('Asset tags saved.')
+  onAssetTagModalClose()
+}
+
+// Prompt PDF and redirect (after save)
+async function promptPrintAndRedirect(documentId) {
+  const { value: shouldPrint } = await Swal.fire({
+    title: 'Transaction Saved Successfully!',
+    text: 'Do you want to print the PDF?',
+    icon: 'success',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Yes, Print',
+    cancelButtonText: 'No, Continue',
+    reverseButtons: true
+  })
+  if (shouldPrint && documentId) {
+    await downloadTransactionPDF(documentId)
+  }
+  router.push({ name: 'transactions' }).catch(() => {})
 }
 
 // Función helper para detectar si es dispositivo móvil
@@ -734,6 +797,7 @@ async function fetchStaticOptions() {
     documentTypesOptions.value = list.map(dt => ({ 
       value: dt.id, 
       label: `${dt.type_code} — ${dt.description}`,
+      type_code: dt.type_code,
       is_operational: dt.is_operational 
     }))
   } catch (error) {
@@ -914,7 +978,7 @@ async function loadDocument(id) {
     })
     
     // If no lines exist, add one empty line
-    if (normalizedLines.length === 0) {
+        if (normalizedLines.length === 0) {
       normalizedLines.push({
         __key: cryptoRandom(),
         selected: false,
@@ -942,7 +1006,7 @@ async function loadDocument(id) {
       text: 'Document not found or has invalid references. Please check the data.',
       confirmButtonText: 'OK'
     })
-    router.push('/transactions').catch(() => {})
+    router.push({ name: 'transactions' }).catch(() => {})
     return
   }
 }
@@ -1040,8 +1104,17 @@ function clearErrors() {
 }
 
 function applyServerErrors(errData) {
+  if (!errData || typeof errData !== 'object' || Array.isArray(errData)) {
+    // Respuesta HTML (500) o no-JSON: no iterar como objeto
+    console.warn('🔍 Frontend: applyServerErrors - errData no es objeto válido (¿respuesta HTML?):', typeof errData)
+    if (typeof errData === 'string' && errData.length > 200) {
+      errors.non_field_errors = ['Server error. Please try again or contact support.']
+    } else if (errData && typeof errData === 'string') {
+      errors.non_field_errors = [errData]
+    }
+    return
+  }
   console.log('🔍 Frontend: applyServerErrors called with:', errData)
-  console.log('🔍 Frontend: errData.non_field_errors:', errData.non_field_errors)
   
   // High-level document errors
   for (const k in errData) {
@@ -1051,19 +1124,25 @@ function applyServerErrors(errData) {
     }
   }
   
-  // Per-line errors (DRF returns a list aligned with sent indexes)
+  // Per-line errors (DRF devuelve lista alineada con índices)
   if (Array.isArray(errData.lines)) {
     console.log('🔍 Frontend: Processing line errors:', errData.lines)
     errData.lines.forEach((item, idx) => {
       if (!item) return
       const target = lines.value[idx]
       if (!target) return
-      
-      console.log(`🔍 Frontend: Applying errors to line ${idx}:`, item)
       target._errors = { ...(item || {}) }
     })
-  } else {
-    console.log('🔍 Frontend: errData.lines is not an array:', errData.lines)
+  } else if (errData.lines && typeof errData.lines === 'object') {
+    // Formato objeto { "0": {...}, "1": {...} }
+    console.log('🔍 Frontend: Processing line errors (object format):', errData.lines)
+    Object.entries(errData.lines).forEach(([key, item]) => {
+      const idx = parseInt(key, 10)
+      if (isNaN(idx) || !item) return
+      const target = lines.value[idx]
+      if (!target) return
+      target._errors = { ...(typeof item === 'object' ? item : { _: String(item) }) }
+    })
   }
 }
 
@@ -1101,57 +1180,53 @@ async function handleSubmit() {
     const url = isEditMode ? `/api/documents/${idParam}/` : '/api/documents/'
     const method = isEditMode ? 'put' : 'post'
     const { data } = await axios[method](url, payload)
+    const documentId = data.id || idParam
 
-    // Preguntar si desea imprimir el documento PDF
-    const { value: shouldPrint } = await Swal.fire({
-      title: 'Transaction Saved Successfully!',
-      text: 'Would you like to generate and download the PDF of this transaction?',
-      icon: 'success',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Yes, Print',
-      cancelButtonText: 'No, Continue',
-      reverseButtons: true
-    })
+    const hasSerializedItems = data?.serialized_items?.length > 0
+    if (hasSerializedItems) {
+      assetTagModalOpenedFromSave.value = true
+      documentIdForAssetTagModal.value = documentId
+      documentContextForAssetTagModal.value = {
+        id: data.id,
+        document_type_code: data.document_type_code,
+        builder_name: data.builder_name,
+        date: data.date,
+      }
+      showAssetTagModal.value = true
+    } else {
+      await promptPrintAndRedirect(documentId)
+    }
+  } catch (err) {
+    const data = err?.response?.data
+    const status = err?.response?.status
     
-    if (shouldPrint) {
-      // Descargar PDF del documento guardado
-      const documentId = data.id || idParam
-      await downloadTransactionPDF(documentId)
+    // Si la respuesta es HTML (500, etc.), no intentar procesar como JSON
+    if (typeof data === 'string') {
+      console.error('❌ Frontend: Error del servidor (respuesta HTML/texto):', status, data?.slice?.(0, 200))
+      applyServerErrors(null) // no procesar
+      await Swal.fire({
+        icon: 'error',
+        title: 'Server Error',
+        text: status >= 500 ? 'An error occurred on the server. Please try again or contact support.' : 'Unexpected response from server.',
+        confirmButtonText: 'OK'
+      })
+      return
     }
     
-    // Redirect to transactions page (using path instead of name)
-    router.push('/transactions').catch(() => {})
-  } catch (err) {
-    // 🔍 DEBUG: Log del error completo
-    // console.error('❌ Frontend: Error al guardar:', err)
-    // console.error('📋 Frontend: Response data:', err?.response?.data)
-    // console.error('📊 Frontend: Response status:', err?.response?.status)
-    // console.error('🔍 Frontend: Response headers:', err?.response?.headers)
-    
-    // 🔍 DEBUG: Expandir el error específico de lines
-    if (err?.response?.data?.lines) {
-      console.error('📝 Frontend: Error específico en lines:', err.response.data.lines)
-      
-      // Manejar tanto arrays como objetos
-      if (Array.isArray(err.response.data.lines)) {
-        err.response.data.lines.forEach((lineError, idx) => {
+    if (data?.lines) {
+      if (Array.isArray(data.lines)) {
+        data.lines.forEach((lineError, idx) => {
           console.error(`📋 Frontend: Error en línea ${idx}:`, lineError)
         })
       } else {
-        // Si es un objeto, mostrar los errores de cada campo
-        console.error('📋 Frontend: Errores de campos en líneas:', err.response.data.lines)
-        Object.keys(err.response.data.lines).forEach(field => {
-          console.error(`📋 Frontend: Error en campo ${field}:`, err.response.data.lines[field])
+        Object.keys(data.lines).forEach(field => {
+          console.error(`📋 Frontend: Error en campo ${field}:`, data.lines[field])
         })
       }
     }
     
-    const data = err?.response?.data
     if (data) applyServerErrors(data)
     
-    // Crear mensaje de error más descriptivo
     let errorMessage = 'Please review highlighted fields.'
     let errorTitle = 'Validation Error'
     const stockErrors = []

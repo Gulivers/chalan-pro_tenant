@@ -202,6 +202,28 @@
                 data-title="Optional. Used for low-stock alerts and inventory management" />
             </div>
 
+            <!-- Tracking Mode -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label d-flex align-items-center gap-2">
+                Tracking Mode
+                <i
+                  v-tt
+                  class="fas fa-info-circle text-muted"
+                  data-title="QUANTITY = stock by quantity; SERIALIZED = track by individual units (equipment/tools)."></i>
+              </label>
+              <v-select
+                v-model="product.tracking_mode"
+                :options="trackingModeOptions"
+                :reduce="o => o.value"
+                label="label"
+                class="flex-grow-1"
+                :disabled="isReadOnly"
+                placeholder="Select tracking mode..." />
+              <div v-if="product.tracking_mode === 'SERIALIZED'" class="alert alert-info small mt-2 mb-0 py-2">
+                Serialized products create one unit (SerializedItem) per quantity on purchase.
+              </div>
+            </div>
+
             <div class="col-md-6 mb-1 d-flex align-items-center gap-2">
               <input
                 v-model="product.is_active"
@@ -289,8 +311,13 @@
           brands: [],
           unit_default: '',
           reorder_level: 0,
+          tracking_mode: 'QUANTITY',
           is_active: true,
         },
+        trackingModeOptions: [
+          { value: 'QUANTITY', label: 'QUANTITY (Inventory item)' },
+          { value: 'SERIALIZED', label: 'SERIALIZED (Equipment/Tool)' },
+        ],
         productPriceUnits: [],
         categories: [],
         brands: [],
@@ -578,6 +605,7 @@
             brands_data: this.product.brands || [],
             unit_default: this.normalizeId(this.product.unit_default),
             reorder_level: this.product.reorder_level,
+            tracking_mode: this.product.tracking_mode || 'QUANTITY',
             is_active: !!this.product.is_active,
             price_units: cleanedPriceUnits,
             prices: cleanedPrices,
@@ -603,7 +631,7 @@
           if (status === 400 && data && typeof data === 'object') {
             for (const [key, value] of Object.entries(data)) {
               const msg = Array.isArray(value) ? value.join(' ') : String(value);
-              if (['name', 'sku', 'category', 'brands', 'brands_data', 'unit_default'].includes(key)) {
+              if (['name', 'sku', 'category', 'brands', 'brands_data', 'unit_default', 'tracking_mode'].includes(key)) {
                 const fieldKey = key === 'brands_data' ? 'brands' : key;
                 this.pushFieldError(fieldKey, msg);
               }
