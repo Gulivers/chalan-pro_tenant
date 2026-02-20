@@ -496,9 +496,13 @@ const routes = [
   },
   {
     path: '/serialized-items/form',
-    name: 'serialized-item-form',
-    component: SerializedItemForm,
-    meta: { requiresAuth: true, requiredPermissions: ['appinventory.add_serializeditem'] },
+    redirect: { name: 'serialized-item-list' },
+    // Deshabilitado: Serialized Items solo se agregan desde el modal en transacciones.
+    // {
+    //   name: 'serialized-item-form',
+    //   component: SerializedItemForm,
+    //   meta: { requiresAuth: true, requiredPermissions: ['appinventory.add_serializeditem'] },
+    // },
   },
   {
     path: '/serialized-items/view/:id',

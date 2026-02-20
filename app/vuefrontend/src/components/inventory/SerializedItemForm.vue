@@ -3,7 +3,7 @@
     <div class="text-center">
       <h3 class="text-warning">Serialized Item</h3>
     </div>
-    <div class="card shadow-sm mx-auto" style="max-width: 960px">
+    <div class="card shadow" style="height: auto">
       <div class="card-header d-flex justify-content-center align-items-center">
         <h6 class="mb-0 w-100 text-center text-primary">{{ formTitle }}</h6>
       </div>
@@ -54,72 +54,16 @@
                 <input
                   v-model.trim="form.asset_tag"
                   type="text"
-                  class="form-control"
+                  class="form-control bg-light"
                   maxlength="100"
                   placeholder="e.g. LQCH020233"
-                  :disabled="isViewMode || submitting"
+                  disabled
                   v-tt
-                  data-title="Unique tag/QR identifier for the equipment" />
+                  data-title="Unique tag/QR identifier for the equipment (cannot be changed)" />
                 <small class="text-muted">Unique tag/QR identifier</small>
               </div>
 
-              <div class="mb-3">
-                <label class="form-label d-flex align-items-center gap-2">
-                  Status <span class="text-danger">*</span>
-                  <i
-                    v-tt
-                    class="fas fa-info-circle text-muted"
-                    data-title="Current status of the equipment"></i>
-                </label>
-                <v-select
-                  :options="statusOptions"
-                  v-model="form.status"
-                  :reduce="(s) => s.value"
-                  label="label"
-                  placeholder="Select status"
-                  :disabled="isViewMode || submitting"
-                  v-tt
-                  data-title="Active, Maintenance, Lost, or Retired" />
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label d-flex align-items-center gap-2">
-                  Condition <span class="text-danger">*</span>
-                  <i
-                    v-tt
-                    class="fas fa-info-circle text-muted"
-                    data-title="Physical condition of the equipment"></i>
-                </label>
-                <v-select
-                  :options="conditionOptions"
-                  v-model="form.condition"
-                  :reduce="(c) => c.value"
-                  label="label"
-                  placeholder="Select condition"
-                  :disabled="isViewMode || submitting"
-                  v-tt
-                  data-title="OK, Damaged, or Needs repair" />
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label d-flex align-items-center gap-2">
-                  Purchase date
-                  <i
-                    v-tt
-                    class="fas fa-info-circle text-muted"
-                    data-title="Date when the equipment was acquired"></i>
-                </label>
-                <BFormInput
-                  v-model="form.purchase_date"
-                  type="date"
-                  :disabled="isViewMode || submitting"
-                  v-tt
-                  data-title="Date when the equipment was purchased" />
-              </div>
-            </div>
-
-            <!-- Columna derecha -->
-            <div class="col-md-6">
+              <!-- Current warehouse: input informativo en edición, selector en alta -->
               <div class="mb-3">
                 <label class="form-label d-flex align-items-center gap-2">
                   Current warehouse <span class="text-danger">*</span>
@@ -128,13 +72,22 @@
                     class="fas fa-info-circle text-muted"
                     data-title="Warehouse where the equipment is located"></i>
                 </label>
+                <input
+                  v-if="id"
+                  type="text"
+                  class="form-control bg-light"
+                  :value="form.current_warehouse_name || '—'"
+                  readonly
+                  v-tt
+                  data-title="Read-only. Warehouse where the equipment is stored" />
                 <v-select
+                  v-else
                   :options="warehouses"
                   v-model="form.current_warehouse"
                   :reduce="(w) => w.id"
                   label="name"
                   placeholder="Select warehouse"
-                  :disabled="isViewMode || submitting"
+                  :disabled="submitting"
                   @open="loadWarehouses"
                   v-tt
                   data-title="Required. Warehouse where the equipment is stored" />
@@ -175,6 +128,78 @@
                   v-tt
                   data-title="Read-only. Document line cannot be changed" />
               </div>
+            </div>
+
+            <!-- Columna derecha: Status, Condition, Purchase date (seguimiento) -->
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label d-flex align-items-center gap-2">
+                  Status <span class="text-danger">*</span>
+                  <i
+                    v-tt
+                    class="fas fa-info-circle text-muted"
+                    data-title="Current status of the equipment"></i>
+                </label>
+                <v-select
+                  :options="statusOptions"
+                  v-model="form.status"
+                  :reduce="(s) => s.value"
+                  label="label"
+                  placeholder="Select status"
+                  :disabled="isViewMode || submitting"
+                  v-tt
+                  data-title="Active, Maintenance, Lost, or Retired">
+                  <template #option="option">
+                    <span class="badge" :class="statusBadgeClass(option.value)">{{ option.label }}</span>
+                  </template>
+                  <template #selected-option="option">
+                    <span v-if="option" class="badge" :class="statusBadgeClass(option.value)">{{ option.label }}</span>
+                  </template>
+                </v-select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label d-flex align-items-center gap-2">
+                  Condition <span class="text-danger">*</span>
+                  <i
+                    v-tt
+                    class="fas fa-info-circle text-muted"
+                    data-title="Physical condition of the equipment"></i>
+                </label>
+                <v-select
+                  :options="conditionOptions"
+                  v-model="form.condition"
+                  :reduce="(c) => c.value"
+                  label="label"
+                  placeholder="Select condition"
+                  :disabled="isViewMode || submitting"
+                  v-tt
+                  data-title="OK, Damaged, or Needs repair">
+                  <template #option="option">
+                    <span class="badge" :class="conditionBadgeClass(option.value)">{{ option.label }}</span>
+                  </template>
+                  <template #selected-option="option">
+                    <span v-if="option" class="badge" :class="conditionBadgeClass(option.value)">{{ option.label }}</span>
+                  </template>
+                </v-select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label d-flex align-items-center gap-2">
+                  Purchase date
+                  <i
+                    v-tt
+                    class="fas fa-info-circle text-muted"
+                    data-title="Date when the equipment was acquired"></i>
+                </label>
+                <BFormInput
+                  v-model="form.purchase_date"
+                  type="date"
+                  class="bg-light"
+                  disabled
+                  v-tt
+                  data-title="Read-only. Use this form for status/condition tracking" />
+              </div>
 
               <div class="mb-3">
                 <label class="form-label d-flex align-items-center gap-2">
@@ -187,8 +212,8 @@
                 <textarea
                   v-model.trim="form.notes"
                   class="form-control"
-                  rows="5"
-                  placeholder="Optional notes..."
+                  rows="7"
+                  placeholder="Notes here..."
                   :disabled="isViewMode || submitting"
                   v-tt
                   data-title="Additional notes about the equipment" />
@@ -256,11 +281,28 @@ const statusOptions = [
   { value: "Retired", label: "Retired" },
 ];
 
+function statusBadgeClass(value) {
+  const v = (value || "").trim();
+  if (v === "Active") return "bg-success";
+  if (v === "Maintenance") return "bg-warning text-dark";
+  if (v === "Lost") return "bg-danger";
+  if (v === "Retired") return "bg-secondary";
+  return "bg-secondary";
+}
+
 const conditionOptions = [
   { value: "ok", label: "OK" },
   { value: "damaged", label: "Damaged" },
   { value: "needs_repair", label: "Needs repair" },
 ];
+
+function conditionBadgeClass(value) {
+  const v = (value || "").toLowerCase();
+  if (v === "ok") return "bg-success";
+  if (v === "damaged") return "bg-warning text-dark";
+  if (v === "needs_repair") return "bg-danger";
+  return "bg-secondary";
+}
 
 const form = ref({
   product: null,
@@ -270,6 +312,7 @@ const form = ref({
   condition: "ok",
   purchase_date: "",
   current_warehouse: null,
+  current_warehouse_name: "",
   document: null,
   document_display: "",
   document_line: null,
@@ -342,6 +385,7 @@ async function loadData() {
       condition: data.condition ?? "ok",
       purchase_date: toDatePart(data.purchase_date),
       current_warehouse: data.current_warehouse ?? null,
+      current_warehouse_name: data.current_warehouse_name ?? "",
       document: data.document ?? null,
       document_display: data.document_display ?? "",
       document_line: data.document_line ?? null,

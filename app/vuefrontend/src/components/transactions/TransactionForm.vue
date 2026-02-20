@@ -4,73 +4,140 @@
     <div class="card shadow mb-2 mx-3">
       <div class="card-header">
         <!-- Desktop Layout -->
-        <div class="d-none d-md-flex align-items-center justify-content-between">
-          <h6 class="mb-0 text-primary">{{ isEditMode ? 'Edit Transaction' : 'New Transaction' }}</h6>
+        <div
+          class="d-none d-md-flex align-items-center justify-content-between">
+          <h6 class="mb-0 text-primary">
+            {{ isEditMode ? "Edit Transaction" : "New Transaction" }}
+          </h6>
           <div class="d-flex align-items-center gap-3">
             <!-- is_active switch -->
-            <div class="form-check form-switch m-0" v-tt="form.is_active ? 'Active transaction' : 'Voided (inactive) – it will be ignored in reports.'">
-              <input class="form-check-input" type="checkbox" role="switch" id="isActiveSwitch" v-model="form.is_active">
-              <label class="form-check-label" :class="{'text-danger': !form.is_active}" for="isActiveSwitch">
-                {{ form.is_active ? 'Active' : 'Voided' }}
+            <div
+              class="form-check form-switch m-0"
+              v-tt="
+                form.is_active
+                  ? 'Active transaction'
+                  : 'Voided (inactive) – it will be ignored in reports.'
+              ">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="isActiveSwitch"
+                v-model="form.is_active" />
+              <label
+                class="form-check-label"
+                :class="{ 'text-danger': !form.is_active }"
+                for="isActiveSwitch">
+                {{ form.is_active ? "Active" : "Voided" }}
               </label>
             </div>
             <div class="d-flex gap-2">
-              <button class="btn btn-outline-secondary" type="button" @click="goBack">
+              <button
+                class="btn btn-outline-secondary"
+                type="button"
+                @click="goBack">
                 Back
               </button>
-              <button 
-                v-if="!isEditMode" 
-                class="btn btn-success" 
-                type="button" 
-                :disabled="submitting" 
+              <button
+                v-if="!isEditMode"
+                class="btn btn-success"
+                type="button"
+                :disabled="submitting"
                 @click="handleSaveAndAddAnother">
                 <span v-if="!submitting">+ </span>
-                <span v-else class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                {{ submitting ? 'Saving...' : 'Save and Add Another' }}
+                <span
+                  v-else
+                  class="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"></span>
+                {{ submitting ? "Saving..." : "Save and Add Another" }}
               </button>
-              <button class="btn btn-primary" type="button" :disabled="submitting" @click="handleSubmit">
+              <button
+                class="btn btn-primary"
+                type="button"
+                :disabled="submitting"
+                @click="handleSubmit">
                 <span v-if="!submitting">💾 </span>
-                <span v-else class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                {{ submitting ? 'Saving...' : 'Save' }}
+                <span
+                  v-else
+                  class="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"></span>
+                {{ submitting ? "Saving..." : "Save" }}
               </button>
             </div>
           </div>
         </div>
-        
+
         <!-- Mobile Layout -->
         <div class="d-md-none">
           <!-- Title Row -->
           <div class="d-flex align-items-center justify-content-between mb-2">
-            <h6 class="mb-0 text-primary">{{ isEditMode ? 'Edit Transaction' : 'New Transaction' }}</h6>
+            <h6 class="mb-0 text-primary">
+              {{ isEditMode ? "Edit Transaction" : "New Transaction" }}
+            </h6>
             <!-- is_active switch -->
-            <div class="form-check form-switch m-0" v-tt="form.is_active ? 'Active transaction' : 'Voided (inactive) – it will be ignored in reports.'">
-              <input class="form-check-input" type="checkbox" role="switch" id="isActiveSwitchMobile" v-model="form.is_active">
-              <label class="form-check-label small" :class="{'text-danger': !form.is_active}" for="isActiveSwitchMobile">
-                {{ form.is_active ? 'Active' : 'Voided' }}
+            <div
+              class="form-check form-switch m-0"
+              v-tt="
+                form.is_active
+                  ? 'Active transaction'
+                  : 'Voided (inactive) – it will be ignored in reports.'
+              ">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="isActiveSwitchMobile"
+                v-model="form.is_active" />
+              <label
+                class="form-check-label small"
+                :class="{ 'text-danger': !form.is_active }"
+                for="isActiveSwitchMobile">
+                {{ form.is_active ? "Active" : "Voided" }}
               </label>
             </div>
           </div>
-          
+
           <!-- Button Row -->
           <div class="d-flex gap-1 flex-wrap">
-            <button class="btn btn-outline-secondary btn-sm flex-fill" type="button" @click="goBack">
+            <button
+              class="btn btn-outline-secondary btn-sm flex-fill"
+              type="button"
+              @click="goBack">
               Back
             </button>
-            <button 
-              v-if="!isEditMode" 
-              class="btn btn-success btn-sm flex-fill" 
-              type="button" 
-              :disabled="submitting" 
+            <button
+              v-if="!isEditMode"
+              class="btn btn-success btn-sm flex-fill"
+              type="button"
+              :disabled="submitting"
               @click="handleSaveAndAddAnother">
               <span v-if="!submitting">+ </span>
-              <span v-else class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-              <span class="d-none d-sm-inline">{{ submitting ? 'Saving...' : 'Save & Add' }}</span>
-              <span class="d-sm-none">{{ submitting ? 'Saving...' : 'Add' }}</span>
+              <span
+                v-else
+                class="spinner-border spinner-border-sm me-1"
+                role="status"
+                aria-hidden="true"></span>
+              <span class="d-none d-sm-inline">{{
+                submitting ? "Saving..." : "Save & Add"
+              }}</span>
+              <span class="d-sm-none">{{
+                submitting ? "Saving..." : "Add"
+              }}</span>
             </button>
-            <button class="btn btn-primary btn-sm flex-fill" type="button" :disabled="submitting" @click="handleSubmit">
+            <button
+              class="btn btn-primary btn-sm flex-fill"
+              type="button"
+              :disabled="submitting"
+              @click="handleSubmit">
               <span v-if="!submitting">💾 </span>
-              <span v-else class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-              {{ submitting ? 'Saving...' : 'Save' }}
+              <span
+                v-else
+                class="spinner-border spinner-border-sm me-1"
+                role="status"
+                aria-hidden="true"></span>
+              {{ submitting ? "Saving..." : "Save" }}
             </button>
           </div>
         </div>
@@ -83,7 +150,7 @@
           <div class="col-12 col-md-6">
             <div class="row g-3">
               <div class="col-12">
-                <DocumentTypeSelector 
+                <DocumentTypeSelector
                   v-model="form.document_type"
                   :error="errors.document_type"
                   :required="true" />
@@ -93,25 +160,35 @@
                 <!-- Si viene desde schedule, mostrar título del work account (independiente del tipo de documento) -->
                 <div v-if="isFromSchedule && workAccountTitle" class="mb-3">
                   <label class="form-label">Work Account</label>
-                  <div class="form-control bg-light" style="padding: 0.375rem 0.75rem; border: 1px solid #ced4da; border-radius: 0.375rem; min-height: 38px; display: flex; align-items: center;">
+                  <div
+                    class="form-control bg-light"
+                    style="
+                      padding: 0.375rem 0.75rem;
+                      border: 1px solid #ced4da;
+                      border-radius: 0.375rem;
+                      min-height: 38px;
+                      display: flex;
+                      align-items: center;
+                    ">
                     <strong>{{ workAccountTitle }}</strong>
                   </div>
-                  <small class="form-text text-muted">Work Account seleccionado desde el Schedule</small>
+                  <small class="form-text text-muted"
+                    >Work Account seleccionado desde el Schedule</small
+                  >
                 </div>
-                
+
                 <!-- Mostrar BuilderSelector si NO es operacional Y NO viene desde schedule -->
-                <BuilderSelector 
+                <BuilderSelector
                   v-else-if="!isOperationalDocument && !isFromSchedule"
                   v-model="form.builder"
                   :error="errors.builder" />
-                
+
                 <!-- Mostrar WorkAccountSelector si ES operacional Y NO viene desde schedule -->
-                <WorkAccountSelector 
+                <WorkAccountSelector
                   v-else-if="isOperationalDocument && !isFromSchedule"
                   v-model="form.work_account"
                   :error="errors.work_account" />
               </div>
-
             </div>
           </div>
 
@@ -129,14 +206,28 @@
                     :disabled="!canSaveAsFavorite"
                     v-tt
                     data-title="Add to favorites. Click this button to add the current transaction to your favorites for quicker access later.">
-                    <img src="@assets/img/star-svgrepo-com.svg" alt="Favorite" width="25" height="25" />
+                    <img
+                      src="@assets/img/star-svgrepo-com.svg"
+                      alt="Favorite"
+                      width="25"
+                      height="25" />
                   </button>
                 </div>
               </div>
               <div class="col-12 col-sm-6">
-                <label class="form-label d-flex align-items-center gap-2" for="dateInput">Date</label>
-                <input type="date" class="form-control" v-model="form.date" id="dateInput" />
-                <div class="text-danger small" v-if="errors.date">{{ errors.date[0] }}</div>
+                <label
+                  class="form-label d-flex align-items-center gap-2"
+                  for="dateInput"
+                  >Date</label
+                >
+                <input
+                  type="date"
+                  class="form-control"
+                  v-model="form.date"
+                  id="dateInput" />
+                <div class="text-danger small" v-if="errors.date">
+                  {{ errors.date[0] }}
+                </div>
               </div>
 
               <div class="col-12">
@@ -145,8 +236,7 @@
                   v-model="selectedFavoriteId"
                   :is-edit-mode="isEditMode"
                   @favorite-selected="onFavoriteSelected"
-                  @edit-favorite="onEditFavorite"
-                />
+                  @edit-favorite="onEditFavorite" />
               </div>
 
               <!-- Botón para actualizar favorito cuando se ha importado uno -->
@@ -165,9 +255,20 @@
               </div>
 
               <div class="col-12">
-                <label class="form-label d-flex align-items-center gap-2" for="notesInput">Notes</label>
-                <textarea rows="2" class="form-control" v-model.trim="form.notes" placeholder="Additional notes..." id="notesInput"></textarea>
-                <div class="text-danger small" v-if="errors.notes">{{ errors.notes[0] }}</div>
+                <label
+                  class="form-label d-flex align-items-center gap-2"
+                  for="notesInput"
+                  >Notes</label
+                >
+                <textarea
+                  rows="2"
+                  class="form-control"
+                  v-model.trim="form.notes"
+                  placeholder="Additional notes..."
+                  id="notesInput"></textarea>
+                <div class="text-danger small" v-if="errors.notes">
+                  {{ errors.notes[0] }}
+                </div>
               </div>
             </div>
           </div>
@@ -188,8 +289,7 @@
           :brandsOptions="brandsOptions || []"
           :merge-duplicates="true"
           @recalc="syncTotals"
-          @open-asset-tags="openAssetTagModalFromGrid"
-        />
+          @open-asset-tags="openAssetTagModalFromGrid" />
 
         <!-- Totals -->
         <div class="row mt-3">
@@ -218,8 +318,7 @@
       :document-id="documentIdForAssetTagModal"
       :document-context="documentContextForAssetTagModal"
       @close="onAssetTagModalClose"
-      @saved="onAssetTagModalSaved"
-    />
+      @saved="onAssetTagModalSaved" />
 
     <!-- Modal para favoritos -->
     <TransactionFavoriteModal
@@ -231,145 +330,179 @@
       :favorite-to-edit="favoriteToEdit"
       @saved="onFavoriteSaved"
       @updated="onFavoriteUpdated"
-      @deleted="onFavoriteDeleted"
-    />
-
+      @deleted="onFavoriteDeleted" />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch, getCurrentInstance } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import axios from 'axios'
-import Swal from 'sweetalert2'
+import {
+  ref,
+  reactive,
+  computed,
+  onMounted,
+  watch,
+  getCurrentInstance,
+} from "vue";
+import { useRoute, useRouter } from "vue-router";
+import axios from "axios";
+import Swal from "sweetalert2";
 
-import LinesGrid from '@/components/transactions/LinesGrid.vue'
-import DocumentTypeSelector from '@/components/transactions/DocumentTypeSelector.vue'
-import BuilderSelector from '@/components/parties/BuilderSelector.vue'
-import WorkAccountSelector from '@/components/transactions/WorkAccountSelector.vue'
-import TransactionFavoriteModal from '@/components/transactions/TransactionFavoriteModal.vue'
-import AssetTagAssignmentModal from '@/components/transactions/AssetTagAssignmentModal.vue'
-import FavoriteTransactionSelector from '@/components/transactions/FavoriteTransactionSelector.vue'
+import LinesGrid from "@/components/transactions/LinesGrid.vue";
+import DocumentTypeSelector from "@/components/transactions/DocumentTypeSelector.vue";
+import BuilderSelector from "@/components/parties/BuilderSelector.vue";
+import WorkAccountSelector from "@/components/transactions/WorkAccountSelector.vue";
+import TransactionFavoriteModal from "@/components/transactions/TransactionFavoriteModal.vue";
+import AssetTagAssignmentModal from "@/components/transactions/AssetTagAssignmentModal.vue";
+import FavoriteTransactionSelector from "@/components/transactions/FavoriteTransactionSelector.vue";
 
-const route = useRoute()
-const router = useRouter()
-const { proxy } = getCurrentInstance()
+const route = useRoute();
+const router = useRouter();
+const { proxy } = getCurrentInstance();
 
-const idParam = route.query.id ? Number(route.query.id) : null
+const idParam = route.query.id ? Number(route.query.id) : null;
 // Leer work_account_id de query params (como en contracts)
-const workAccountParam = route.query.work_account_id ? Number(route.query.work_account_id) : 
-                         (route.query.work_account ? Number(route.query.work_account) : null) // Fallback para compatibilidad
-const isEditMode = !!idParam
-const submitting = ref(false)
-const loading = reactive({ 
-  units: false, 
-  whs: false, 
-  priceTypes: false, 
-  brands: false 
-})
+const workAccountParam = route.query.work_account_id
+  ? Number(route.query.work_account_id)
+  : route.query.work_account
+  ? Number(route.query.work_account)
+  : null; // Fallback para compatibilidad
+const isEditMode = !!idParam;
+const submitting = ref(false);
+const loading = reactive({
+  units: false,
+  whs: false,
+  priceTypes: false,
+  brands: false,
+});
 // Variable para almacenar el título del work account cuando viene desde el schedule
-const workAccountTitle = ref(null)
-const showAssetTagModal = ref(false)
-const documentIdForAssetTagModal = ref(null)
-const documentContextForAssetTagModal = ref({})
-const assetTagModalOpenedFromSave = ref(false)
+const workAccountTitle = ref(null);
+const showAssetTagModal = ref(false);
+const documentIdForAssetTagModal = ref(null);
+const documentContextForAssetTagModal = ref({});
+const assetTagModalOpenedFromSave = ref(false);
 // Computed para saber si viene desde el schedule (tiene workAccountParam en query)
-const isFromSchedule = computed(() => !!workAccountParam)
-console.log("🔑 Soy isEditMode",isEditMode)
-console.log("🔑 Work Account ID from query:", workAccountParam)
-console.log("🔑 Viene desde schedule:", isFromSchedule.value)
+const isFromSchedule = computed(() => !!workAccountParam);
+console.log("🔑 Soy isEditMode", isEditMode);
+console.log("🔑 Work Account ID from query:", workAccountParam);
+console.log("🔑 Viene desde schedule:", isFromSchedule.value);
 // Header form
 const form = reactive({
   document_type: null,
   builder: null,
   work_account: workAccountParam, // Prellenar desde query params si está disponible
   date: new Date().toISOString().slice(0, 10), // date format (YYYY-MM-DD)
-  notes: '',
+  notes: "",
   created_by: null, // opcional, normalmente lo setea el backend desde request.user
   is_active: true,
-})
+});
 
 // Lines (v-model in child) - Initialize with one empty line
-const lines = ref([{
-  __key: 'initial',
-  selected: false,
-  id: null,
-  product: null,
-  product_label: '',
-  quantity: 1,
-  unit: null,
-  unit_price: 0,
-  discount_percentage: 0,
-  final_price: 0,
-  warehouse: null,
-  price_type: null,
-  brand: null,
-  _errors: {},
-}])
+const lines = ref([
+  {
+    __key: "initial",
+    selected: false,
+    id: null,
+    product: null,
+    product_label: "",
+    quantity: 1,
+    unit: null,
+    unit_price: 0,
+    discount_percentage: 0,
+    final_price: 0,
+    warehouse: null,
+    price_type: null,
+    brand: null,
+    _errors: {},
+  },
+]);
 
 // Options for selects
-const unitsOptions = ref([])
-const warehousesOptions = ref([])
-const priceTypesOptions = ref([])
-const brandsOptions = ref([])
+const unitsOptions = ref([]);
+const warehousesOptions = ref([]);
+const priceTypesOptions = ref([]);
+const brandsOptions = ref([]);
 
-const errors = reactive({})
+const errors = reactive({});
 
 function currency(n) {
-  const num = Number(n || 0)
-  return num.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+  const num = Number(n || 0);
+  return num.toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
 
 function cryptoRandom() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36)
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
-
-const total_amount = computed(() => lines.value.reduce((sum, l) => sum + Number(l.final_price || 0), 0))
-const total_discount = computed(() => lines.value.reduce((sum, l) => {
-  const disc = Number(l.unit_price || 0) * Number(l.quantity || 0) * (Number(l.discount_percentage || 0) / 100)
-  return sum + disc
-}, 0))
+const total_amount = computed(() =>
+  lines.value.reduce((sum, l) => sum + Number(l.final_price || 0), 0)
+);
+const total_discount = computed(() =>
+  lines.value.reduce((sum, l) => {
+    const disc =
+      Number(l.unit_price || 0) *
+      Number(l.quantity || 0) *
+      (Number(l.discount_percentage || 0) / 100);
+    return sum + disc;
+  }, 0)
+);
 
 // Computed para determinar si el documento es operacional
 const isOperationalDocument = computed(() => {
-  if (!form.document_type) return false
+  if (!form.document_type) return false;
   // Buscar el document type en las opciones para obtener is_operational
-  const docType = documentTypesOptions.value.find(dt => dt.value === form.document_type)
-  return docType?.is_operational || false
-})
+  const docType = documentTypesOptions.value.find(
+    (dt) => dt.value === form.document_type
+  );
+  return docType?.is_operational || false;
+});
 
 // Opciones de document types para acceder a is_operational
-const documentTypesOptions = ref([])
+const documentTypesOptions = ref([]);
 
 // Variables para favoritos
-const selectedFavoriteId = ref(null)
-const favoriteModalEditMode = ref(false)
-const favoriteToEdit = ref(null)
-const favoriteSelectorRef = ref(null)
+const selectedFavoriteId = ref(null);
+const favoriteModalEditMode = ref(false);
+const favoriteToEdit = ref(null);
+const favoriteSelectorRef = ref(null);
 
 // Opciones adicionales para los componentes
-const buildersOptions = ref([])
-const workAccountsOptions = ref([])
+const buildersOptions = ref([]);
+const workAccountsOptions = ref([]);
 
 // Watcher para limpiar campos cuando cambie el tipo de documento
-watch(() => form.document_type, (newDocType, oldDocType) => {
-  if (newDocType !== oldDocType) {
-    // Limpiar campos relacionados cuando cambie el tipo de documento
-    form.builder = null
-    // NO limpiar work_account si viene desde el schedule (tiene workAccountParam)
-    if (!isFromSchedule.value) {
-      form.work_account = null
-    } else {
-      console.log('🔒 Manteniendo work_account desde schedule:', form.work_account)
+watch(
+  () => form.document_type,
+  (newDocType, oldDocType) => {
+    if (newDocType !== oldDocType) {
+      // Limpiar campos relacionados cuando cambie el tipo de documento
+      form.builder = null;
+      // NO limpiar work_account si viene desde el schedule (tiene workAccountParam)
+      if (!isFromSchedule.value) {
+        form.work_account = null;
+      } else {
+        console.log(
+          "🔒 Manteniendo work_account desde schedule:",
+          form.work_account
+        );
+      }
     }
   }
-})
+);
 
 // Watcher para debug work_account
-watch(() => form.work_account, (newValue, oldValue) => {
-  console.log('🔍 DEBUG TransactionForm: form.work_account changed from', oldValue, 'to', newValue, 'Type:', typeof newValue);
-})
+watch(
+  () => form.work_account,
+  (newValue, oldValue) => {
+    console.log(
+      "🔍 DEBUG TransactionForm: form.work_account changed from",
+      oldValue,
+      "to",
+      newValue,
+      "Type:",
+      typeof newValue
+    );
+  }
+);
 
 function syncTotals() {
   // placeholder in case we want extra side-effects; totals are computed above
@@ -377,13 +510,17 @@ function syncTotals() {
 
 // Computed para determinar si se puede guardar como favorito
 const canSaveAsFavorite = computed(() => {
-  return form.document_type && lines.value.some(line => line.product)
-})
+  return form.document_type && lines.value.some((line) => line.product);
+});
 
 // Computed para determinar si se puede actualizar el favorito seleccionado
 const canUpdateFavorite = computed(() => {
-  return selectedFavoriteId.value && form.document_type && lines.value.some(line => line.product)
-})
+  return (
+    selectedFavoriteId.value &&
+    form.document_type &&
+    lines.value.some((line) => line.product)
+  );
+});
 
 // Computed para obtener datos actuales de la transacción
 const currentTransactionData = computed(() => {
@@ -394,76 +531,76 @@ const currentTransactionData = computed(() => {
     date: form.date,
     notes: form.notes,
     is_active: form.is_active,
-    lines: lines.value.filter(line => line.product) // Solo líneas con producto
-  }
-})
+    lines: lines.value.filter((line) => line.product), // Solo líneas con producto
+  };
+});
 
 // Funciones helper para manejar modales
 function showModal(modalId) {
-  const modalElement = document.getElementById(modalId)
+  const modalElement = document.getElementById(modalId);
   if (modalElement) {
-    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-      const modal = new bootstrap.Modal(modalElement)
-      modal.show()
-    } else if (typeof $ !== 'undefined' && $.fn.modal) {
-      $(modalElement).modal('show')
+    if (typeof bootstrap !== "undefined" && bootstrap.Modal) {
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+    } else if (typeof $ !== "undefined" && $.fn.modal) {
+      $(modalElement).modal("show");
     } else {
       // Fallback: mostrar modal usando clases CSS
-      modalElement.classList.add('show')
-      modalElement.style.display = 'block'
-      modalElement.setAttribute('aria-modal', 'true')
-      modalElement.setAttribute('role', 'dialog')
-      
+      modalElement.classList.add("show");
+      modalElement.style.display = "block";
+      modalElement.setAttribute("aria-modal", "true");
+      modalElement.setAttribute("role", "dialog");
+
       // Agregar backdrop
-      const backdrop = document.createElement('div')
-      backdrop.className = 'modal-backdrop fade show'
-      backdrop.id = 'modal-backdrop'
-      document.body.appendChild(backdrop)
-      
+      const backdrop = document.createElement("div");
+      backdrop.className = "modal-backdrop fade show";
+      backdrop.id = "modal-backdrop";
+      document.body.appendChild(backdrop);
+
       // Agregar clase al body
-      document.body.classList.add('modal-open')
+      document.body.classList.add("modal-open");
     }
   }
 }
 
 // Funciones para manejar favoritos
 function openFavoriteModal() {
-  favoriteModalEditMode.value = false
-  favoriteToEdit.value = null
-  showModal('transactionFavoriteModal')
+  favoriteModalEditMode.value = false;
+  favoriteToEdit.value = null;
+  showModal("transactionFavoriteModal");
 }
 
 function onFavoriteSelected(favoriteData) {
   if (!favoriteData) {
     // Limpiar selección
-    selectedFavoriteId.value = null
-    return
+    selectedFavoriteId.value = null;
+    return;
   }
-  
-  console.log('🔍 Importing favorite:', favoriteData)
-  
+
+  console.log("🔍 Importing favorite:", favoriteData);
+
   // Importar datos del favorito
   if (favoriteData.document_data) {
-    const docData = favoriteData.document_data
-    
+    const docData = favoriteData.document_data;
+
     // Actualizar campos del formulario
-    form.document_type = docData.document_type
-    form.builder = docData.builder
-    form.work_account = docData.work_account
-    form.date = docData.date || new Date().toISOString().slice(0, 10)
-    form.notes = docData.notes || ''
-    form.is_active = docData.is_active !== undefined ? docData.is_active : true
+    form.document_type = docData.document_type;
+    form.builder = docData.builder;
+    form.work_account = docData.work_account;
+    form.date = docData.date || new Date().toISOString().slice(0, 10);
+    form.notes = docData.notes || "";
+    form.is_active = docData.is_active !== undefined ? docData.is_active : true;
   }
-  
+
   // Importar líneas
   if (favoriteData.lines_data && Array.isArray(favoriteData.lines_data)) {
-    console.log('🔍 Original lines_data:', favoriteData.lines_data);
-    const importedLines = favoriteData.lines_data.map(line => ({
+    console.log("🔍 Original lines_data:", favoriteData.lines_data);
+    const importedLines = favoriteData.lines_data.map((line) => ({
       __key: cryptoRandom(),
       selected: false,
       id: null, // Nueva línea, no ID
       product: line.product,
-      product_label: line.product_label || '',
+      product_label: line.product_label || "",
       quantity: line.quantity || 1,
       unit: line.unit,
       unit_price: line.unit_price || 0,
@@ -473,65 +610,71 @@ function onFavoriteSelected(favoriteData) {
       price_type: line.price_type,
       brand: line.brand,
       _errors: {},
-    }))
-    
-    console.log('🔍 Imported lines with product_label:', importedLines.map(l => ({ 
-      product: l.product, 
-      product_label: l.product_label 
-    })));
-    
+    }));
+
+    console.log(
+      "🔍 Imported lines with product_label:",
+      importedLines.map((l) => ({
+        product: l.product,
+        product_label: l.product_label,
+      }))
+    );
+
     // Si hay líneas importadas, reemplazar las actuales
     if (importedLines.length > 0) {
-      lines.value = importedLines
+      lines.value = importedLines;
     }
   }
-  
+
   // Recalcular totales después de importar
-  syncTotals()
-  
-  console.log('✅ Favorite imported successfully')
+  syncTotals();
+
+  console.log("✅ Favorite imported successfully");
 }
 
 function onEditFavorite(favoriteData) {
-  favoriteModalEditMode.value = true
-  favoriteToEdit.value = favoriteData
-  showModal('transactionFavoriteModal')
+  favoriteModalEditMode.value = true;
+  favoriteToEdit.value = favoriteData;
+  showModal("transactionFavoriteModal");
 }
 
 function onFavoriteSaved(favorite) {
-  console.log('✅ Favorite saved:', favorite)
+  console.log("✅ Favorite saved:", favorite);
   // Refrescar el selector de favoritos para mostrar el nuevo favorito
-  refreshFavoriteSelector()
+  refreshFavoriteSelector();
 }
 
 function onFavoriteUpdated(favorite) {
-  console.log('✅ Favorite updated:', favorite)
+  console.log("✅ Favorite updated:", favorite);
   // Opcional: mostrar mensaje de éxito o actualizar UI
 }
 
 function onFavoriteDeleted(favoriteId) {
-  console.log('✅ Favorite deleted:', favoriteId)
+  console.log("✅ Favorite deleted:", favoriteId);
   // Limpiar selección si el favorito eliminado estaba seleccionado
   if (selectedFavoriteId.value === favoriteId) {
-    selectedFavoriteId.value = null
+    selectedFavoriteId.value = null;
   }
-  
+
   // Refrescar el selector de favoritos
-  refreshFavoriteSelector()
+  refreshFavoriteSelector();
 }
 
 // Función para refrescar el selector de favoritos
 function refreshFavoriteSelector() {
-  if (favoriteSelectorRef.value && typeof favoriteSelectorRef.value.loadFavorites === 'function') {
-    favoriteSelectorRef.value.loadFavorites(true) // Forzar recarga
+  if (
+    favoriteSelectorRef.value &&
+    typeof favoriteSelectorRef.value.loadFavorites === "function"
+  ) {
+    favoriteSelectorRef.value.loadFavorites(true); // Forzar recarga
   }
 }
 
 // Función para actualizar favorito con datos de transacción actual
 async function updateFavoriteFromCurrentTransaction() {
   if (!selectedFavoriteId.value) {
-    console.warn('No favorite selected for update')
-    return
+    console.warn("No favorite selected for update");
+    return;
   }
 
   try {
@@ -545,10 +688,10 @@ async function updateFavoriteFromCurrentTransaction() {
         is_active: form.is_active,
       },
       lines_data: lines.value
-        .filter(line => line.product) // Solo líneas con producto
-        .map(line => ({
+        .filter((line) => line.product) // Solo líneas con producto
+        .map((line) => ({
           product: line.product,
-          product_label: line.product_label || '',
+          product_label: line.product_label || "",
           quantity: line.quantity || 1,
           unit: line.unit,
           unit_price: line.unit_price || 0,
@@ -557,173 +700,185 @@ async function updateFavoriteFromCurrentTransaction() {
           warehouse: line.warehouse,
           price_type: line.price_type,
           brand: line.brand,
-        }))
-    }
+        })),
+    };
 
-    console.log('🔄 Updating favorite with current transaction data:', updateData)
+    console.log(
+      "🔄 Updating favorite with current transaction data:",
+      updateData
+    );
 
     const response = await axios.post(
       `/api/transaction-favorites/${selectedFavoriteId.value}/update-from-transaction/`,
       updateData
-    )
+    );
 
     if (response.status === 200) {
       await Swal.fire({
-        icon: 'success',
-        title: 'Favorite Updated',
-        text: 'The favorite has been updated with current transaction data.',
+        icon: "success",
+        title: "Favorite Updated",
+        text: "The favorite has been updated with current transaction data.",
         timer: 2000,
-        showConfirmButton: false
-      })
-      
-      console.log('✅ Favorite updated successfully:', response.data)
+        showConfirmButton: false,
+      });
+
+      console.log("✅ Favorite updated successfully:", response.data);
     }
   } catch (error) {
-    console.error('❌ Error updating favorite:', error)
-    
+    console.error("❌ Error updating favorite:", error);
+
     await Swal.fire({
-      icon: 'error',
-      title: 'Update Failed',
-      text: 'Failed to update the favorite. Please try again.',
-      confirmButtonText: 'OK'
-    })
+      icon: "error",
+      title: "Update Failed",
+      text: "Failed to update the favorite. Please try again.",
+      confirmButtonText: "OK",
+    });
   }
 }
 
 function goBack() {
-  router.push({ name: 'transactions' }).catch(() => {})
+  router.push({ name: "transactions" }).catch(() => {});
 }
 
 // Función para resetear el formulario para una nueva transacción
 function resetFormForNewTransaction() {
   // Resetear campos del formulario
-  form.document_type = null
-  form.builder = null
-  form.work_account = null
-  form.date = new Date().toISOString().slice(0, 10)
-  form.notes = ''
-  form.is_active = true
-  
+  form.document_type = null;
+  form.builder = null;
+  form.work_account = null;
+  form.date = new Date().toISOString().slice(0, 10);
+  form.notes = "";
+  form.is_active = true;
+
   // Resetear líneas con una línea vacía
-  lines.value = [{
-    __key: cryptoRandom(),
-    selected: false,
-    id: null,
-    product: null,
-    product_label: '',
-    quantity: 1,
-    unit: null,
-    unit_price: 0,
-    discount_percentage: 0,
-    final_price: 0,
-    warehouse: null,
-    price_type: null,
-    brand: null,
-    _errors: {},
-  }]
-  
+  lines.value = [
+    {
+      __key: cryptoRandom(),
+      selected: false,
+      id: null,
+      product: null,
+      product_label: "",
+      quantity: 1,
+      unit: null,
+      unit_price: 0,
+      discount_percentage: 0,
+      final_price: 0,
+      warehouse: null,
+      price_type: null,
+      brand: null,
+      _errors: {},
+    },
+  ];
+
   // Limpiar errores
-  clearErrors()
-  
+  clearErrors();
+
   // Limpiar selección de favorito
-  selectedFavoriteId.value = null
+  selectedFavoriteId.value = null;
 }
 
 // Función para guardar y agregar otra transacción
 async function handleSaveAndAddAnother() {
-  submitting.value = true
-  clearErrors()
+  submitting.value = true;
+  clearErrors();
   try {
-    const payload = normalizePayload()
-    
-    console.log('🚀 Frontend: Guardando y agregando otra transacción...')
-    
-    const { data } = await axios.post('/api/documents/', payload)
+    const payload = normalizePayload();
+
+    console.log("🚀 Frontend: Guardando y agregando otra transacción...");
+
+    const { data } = await axios.post("/api/documents/", payload);
     await Swal.fire({
-      title: 'Transaction Saved Successfully!',
-      text: 'The transaction has been saved. You can now create another one.',
-      icon: 'success',
+      title: "Transaction Saved Successfully!",
+      text: "The transaction has been saved. You can now create another one.",
+      icon: "success",
       timer: 2000,
-      showConfirmButton: false
-    })
-    resetFormForNewTransaction()
-    
-    console.log('✅ Transacción guardada, formulario reseteado para nueva transacción')
+      showConfirmButton: false,
+    });
+    resetFormForNewTransaction();
+
+    console.log(
+      "✅ Transacción guardada, formulario reseteado para nueva transacción"
+    );
   } catch (err) {
-    console.error('❌ Error al guardar transacción:', err)
-    
-    const data = err?.response?.data
-    if (data) applyServerErrors(data)
-    
+    console.error("❌ Error al guardar transacción:", err);
+
+    const data = err?.response?.data;
+    if (data) applyServerErrors(data);
+
     // Mostrar error (reutilizar la lógica de handleSubmit)
-    let errorMessage = 'Please review highlighted fields.'
-    let errorTitle = 'Validation Error'
-    
-    await Swal.fire({ 
-      icon: 'error', 
-      title: errorTitle, 
+    let errorMessage = "Please review highlighted fields.";
+    let errorTitle = "Validation Error";
+
+    await Swal.fire({
+      icon: "error",
+      title: errorTitle,
       text: errorMessage,
-      confirmButtonText: 'OK'
-    })
-  } finally { 
-    submitting.value = false 
+      confirmButtonText: "OK",
+    });
+  } finally {
+    submitting.value = false;
   }
 }
 
 function openAssetTagModalFromGrid() {
-  if (!idParam) return
-  assetTagModalOpenedFromSave.value = false
-  documentIdForAssetTagModal.value = idParam
-  const docType = documentTypesOptions.value.find(d => d.value === form.document_type)
-  const builder = buildersOptions.value.find(b => b.value === form.builder)
+  if (!idParam) return;
+  assetTagModalOpenedFromSave.value = false;
+  documentIdForAssetTagModal.value = idParam;
+  const docType = documentTypesOptions.value.find(
+    (d) => d.value === form.document_type
+  );
+  const builder = buildersOptions.value.find((b) => b.value === form.builder);
   documentContextForAssetTagModal.value = {
     id: idParam,
-    document_type_code: docType?.type_code || '',
-    builder_name: builder?.label || '',
+    document_type_code: docType?.type_code || "",
+    builder_name: builder?.label || "",
     date: form.date,
-  }
-  showAssetTagModal.value = true
+  };
+  showAssetTagModal.value = true;
 }
 
 function onAssetTagModalClose() {
-  showAssetTagModal.value = false
-  const docId = documentIdForAssetTagModal.value
-  documentIdForAssetTagModal.value = null
-  documentContextForAssetTagModal.value = {}
+  showAssetTagModal.value = false;
+  const docId = documentIdForAssetTagModal.value;
+  documentIdForAssetTagModal.value = null;
+  documentContextForAssetTagModal.value = {};
   if (assetTagModalOpenedFromSave.value && docId) {
-    assetTagModalOpenedFromSave.value = false
-    promptPrintAndRedirect(docId)
+    assetTagModalOpenedFromSave.value = false;
+    promptPrintAndRedirect(docId);
   }
 }
 
 function onAssetTagModalSaved() {
-  proxy?.notifyToastSuccess?.('Asset tags saved.')
-  onAssetTagModalClose()
+  proxy?.notifyToastSuccess?.("Asset tags saved.");
+  onAssetTagModalClose();
 }
 
 // Prompt PDF and redirect (after save)
 async function promptPrintAndRedirect(documentId) {
   const { value: shouldPrint } = await Swal.fire({
-    title: 'Transaction Saved Successfully!',
-    text: 'Do you want to print the PDF?',
-    icon: 'success',
+    title: "Transaction Saved Successfully!",
+    text: "Do you want to print the PDF?",
+    icon: "success",
     showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#6c757d',
-    confirmButtonText: 'Yes, Print',
-    cancelButtonText: 'No, Continue',
-    reverseButtons: true
-  })
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#6c757d",
+    confirmButtonText: "Yes, Print",
+    cancelButtonText: "No, Continue",
+    reverseButtons: true,
+  });
   if (shouldPrint && documentId) {
-    await downloadTransactionPDF(documentId)
+    await downloadTransactionPDF(documentId);
   }
-  router.push({ name: 'transactions' }).catch(() => {})
+  router.push({ name: "transactions" }).catch(() => {});
 }
 
 // Función helper para detectar si es dispositivo móvil
 function isMobileDevice() {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-         (window.innerWidth <= 768)
+  return (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    ) || window.innerWidth <= 768
+  );
 }
 
 // Función para manejar PDF de transacción (abrir en nueva ventana o descargar)
@@ -731,220 +886,247 @@ async function downloadTransactionPDF(documentId) {
   try {
     const response = await axios.get(`/api/documents/${documentId}/pdf/`, {
       headers: {
-        'Authorization': `Token ${localStorage.getItem('authToken')}`
-      }
-    })
+        Authorization: `Token ${localStorage.getItem("authToken")}`,
+      },
+    });
 
     if (!response.data || !response.data.file) {
-      throw new Error('No se recibió el archivo PDF')
+      throw new Error("No se recibió el archivo PDF");
     }
 
     // Decodificar base64 y crear blob
-    const byteCharacters = atob(response.data.file)
-    const byteNumbers = new Array(byteCharacters.length)
+    const byteCharacters = atob(response.data.file);
+    const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i)
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
-    const byteArray = new Uint8Array(byteNumbers)
-    const blob = new Blob([byteArray], { type: 'application/pdf' })
-    const url = window.URL.createObjectURL(blob)
-    
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+
     if (isMobileDevice()) {
       // En móvil: descargar directamente
-      const link = document.createElement('a')
-      link.href = url
-      link.download = response.data.filename || `transaction_${documentId}.pdf`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = response.data.filename || `transaction_${documentId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } else {
       // En desktop: abrir en nueva ventana
-      const newWindow = window.open(url, '_blank')
+      const newWindow = window.open(url, "_blank");
       if (!newWindow) {
         // Si no se puede abrir nueva ventana (bloqueador de popups), descargar
-        const link = document.createElement('a')
-        link.href = url
-        link.download = response.data.filename || `transaction_${documentId}.pdf`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+        const link = document.createElement("a");
+        link.href = url;
+        link.download =
+          response.data.filename || `transaction_${documentId}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
     }
-    
+
     // Limpiar la URL después de un tiempo
     setTimeout(() => {
-      window.URL.revokeObjectURL(url)
-    }, 1000)
-    
-    return true
+      window.URL.revokeObjectURL(url);
+    }, 1000);
+
+    return true;
   } catch (error) {
-    console.error('Error al descargar PDF:', error)
+    console.error("Error al descargar PDF:", error);
     await Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: 'No se pudo generar el PDF del documento. Por favor, intente nuevamente.',
-      confirmButtonText: 'Aceptar'
-    })
-    return false
+      icon: "error",
+      title: "Error",
+      text: "No se pudo generar el PDF del documento. Por favor, intente nuevamente.",
+      confirmButtonText: "Aceptar",
+    });
+    return false;
   }
 }
 
 async function fetchStaticOptions() {
   // Document Types (necesario para is_operational)
   try {
-    const { data } = await axios.get('/api/document-types/?is_active=true')
-    const list = Array.isArray(data) ? data : data?.results || []
-    documentTypesOptions.value = list.map(dt => ({ 
-      value: dt.id, 
+    const { data } = await axios.get("/api/document-types/?is_active=true");
+    const list = Array.isArray(data) ? data : data?.results || [];
+    documentTypesOptions.value = list.map((dt) => ({
+      value: dt.id,
       label: `${dt.type_code} — ${dt.description}`,
       type_code: dt.type_code,
-      is_operational: dt.is_operational 
-    }))
+      is_operational: dt.is_operational,
+    }));
   } catch (error) {
-    console.error('Error loading document types:', error)
+    console.error("Error loading document types:", error);
   }
 
   // Builders
   try {
-    const { data } = await axios.get('/api/builder/?is_active=true')
-    const list = Array.isArray(data) ? data : data?.results || []
-    buildersOptions.value = list.map(b => ({ 
-      value: b.id, 
-      label: b.name 
-    }))
+    const { data } = await axios.get("/api/builder/?is_active=true");
+    const list = Array.isArray(data) ? data : data?.results || [];
+    buildersOptions.value = list.map((b) => ({
+      value: b.id,
+      label: b.name,
+    }));
   } catch (error) {
-    console.error('Error loading builders:', error)
+    console.error("Error loading builders:", error);
   }
 
   // Work Accounts
   try {
-    const { data } = await axios.get('/api/work-accounts/', {
-      params: { active_only: true }
-    })
-    const list = Array.isArray(data) ? data : data?.results || []
-    workAccountsOptions.value = list.map(wa => ({ 
-      value: wa.id, 
-      label: wa.display || wa.title 
-    }))
+    const { data } = await axios.get("/api/work-accounts/", {
+      params: { active_only: true },
+    });
+    const list = Array.isArray(data) ? data : data?.results || [];
+    workAccountsOptions.value = list.map((wa) => ({
+      value: wa.id,
+      label: wa.display || wa.title,
+    }));
   } catch (error) {
-    console.error('Error loading work accounts:', error)
+    console.error("Error loading work accounts:", error);
   }
 
   // Units
-  loading.units = true
+  loading.units = true;
   try {
-    const { data } = await axios.get('/api/unitsofmeasure/?is_active=true')
-    const list = Array.isArray(data) ? data : data?.results || []
-    unitsOptions.value = list.map(u => ({ value: u.id, label: u.code }))
-  } finally { loading.units = false }
+    const { data } = await axios.get("/api/unitsofmeasure/?is_active=true");
+    const list = Array.isArray(data) ? data : data?.results || [];
+    unitsOptions.value = list.map((u) => ({ value: u.id, label: u.code }));
+  } finally {
+    loading.units = false;
+  }
 
   // Warehouses
-  loading.whs = true
+  loading.whs = true;
   try {
-    const { data } = await axios.get('/api/warehouses/?is_active=true')
-    const list = Array.isArray(data) ? data : data?.results || []
-    warehousesOptions.value = list.map(w => ({ value: w.id, label: w.name }))
-  } finally { loading.whs = false }
+    const { data } = await axios.get("/api/warehouses/?is_active=true");
+    const list = Array.isArray(data) ? data : data?.results || [];
+    warehousesOptions.value = list.map((w) => ({ value: w.id, label: w.name }));
+  } finally {
+    loading.whs = false;
+  }
 
   // Price types
-  loading.priceTypes = true
+  loading.priceTypes = true;
   try {
-    const { data } = await axios.get('/api/pricetypes/?is_active=true')
-    const list = Array.isArray(data) ? data : data?.results || []
-    priceTypesOptions.value = list.map(pt => ({ value: pt.id, label: pt.name }))
-  } finally { loading.priceTypes = false }
+    const { data } = await axios.get("/api/pricetypes/?is_active=true");
+    const list = Array.isArray(data) ? data : data?.results || [];
+    priceTypesOptions.value = list.map((pt) => ({
+      value: pt.id,
+      label: pt.name,
+    }));
+  } finally {
+    loading.priceTypes = false;
+  }
 
   // Brands
-  loading.brands = true
+  loading.brands = true;
   try {
-    const { data } = await axios.get('/api/productbrand/?is_active=true')
-    const list = Array.isArray(data) ? data : data?.results || []
-    brandsOptions.value = list.map(b => ({ value: b.id, label: b.name }))
-  } finally { loading.brands = false }
+    const { data } = await axios.get("/api/productbrand/?is_active=true");
+    const list = Array.isArray(data) ? data : data?.results || [];
+    brandsOptions.value = list.map((b) => ({ value: b.id, label: b.name }));
+  } finally {
+    loading.brands = false;
+  }
 }
 
 async function loadDocument(id) {
   try {
-    const { data } = await axios.get(`/api/documents/${id}/`)
+    const { data } = await axios.get(`/api/documents/${id}/`);
     // console.log("💊Soy loadDocument")
     // console.log('🔍 TransactionForm: Document data received:', data)
     // console.log('🔍 TransactionForm: document_type from API:', data.document_type, typeof data.document_type)
     // console.log('🔍 TransactionForm: builder from API:', data.builder, typeof data.builder)
     // console.log('📍 TransactionForm: work_account from API:', data.work_account, typeof data.work_account)
-    
+
     // Verificar que los datos relacionados existen
     if (!data.document_type) {
-      console.warn('Document type not found, setting to null')
-      form.document_type = null
+      console.warn("Document type not found, setting to null");
+      form.document_type = null;
     } else {
-      form.document_type = data.document_type
-      console.log('🔍 TransactionForm: form.document_type set to:', form.document_type)
+      form.document_type = data.document_type;
+      console.log(
+        "🔍 TransactionForm: form.document_type set to:",
+        form.document_type
+      );
     }
-    
+
     if (!data.builder) {
-      console.warn('Builder not found, setting to null')
-      form.builder = null
+      console.warn("Builder not found, setting to null");
+      form.builder = null;
     } else {
       // Verificar que el builder existe antes de asignarlo
       try {
-        await axios.get(`/api/builder/${data.builder}/`)
-        form.builder = data.builder
-        console.log('🔍 TransactionForm: form.builder set to:', form.builder)
+        await axios.get(`/api/builder/${data.builder}/`);
+        form.builder = data.builder;
+        console.log("🔍 TransactionForm: form.builder set to:", form.builder);
       } catch (error) {
         if (error.response?.status === 404) {
-          console.warn(`Builder ${data.builder} not found, setting to null`)
-          form.builder = null
+          console.warn(`Builder ${data.builder} not found, setting to null`);
+          form.builder = null;
         } else {
-          console.error('Error verifying builder:', error)
-          form.builder = data.builder // Asignar de todos modos si es otro tipo de error
+          console.error("Error verifying builder:", error);
+          form.builder = data.builder; // Asignar de todos modos si es otro tipo de error
         }
       }
     }
-    
+
     if (!data.work_account) {
-      console.log('Work account is null/empty, setting to null')
-      form.work_account = null
+      console.log("Work account is null/empty, setting to null");
+      form.work_account = null;
     } else {
-      console.log('🔍 DEBUG: Work account found:', data.work_account, 'Type:', typeof data.work_account)
-      console.log('🔍 DEBUG: Document ID:', data.id, 'Type:', typeof data.id)
-      
+      console.log(
+        "🔍 DEBUG: Work account found:",
+        data.work_account,
+        "Type:",
+        typeof data.work_account
+      );
+      console.log("🔍 DEBUG: Document ID:", data.id, "Type:", typeof data.id);
+
       // Verificar que el work_account existe antes de asignarlo
       try {
-        await axios.get(`/api/work-accounts/${data.work_account}/`)
-        form.work_account = data.work_account
-        console.log('🔍 TransactionForm: form.work_account set to:', form.work_account)
+        await axios.get(`/api/work-accounts/${data.work_account}/`);
+        form.work_account = data.work_account;
+        console.log(
+          "🔍 TransactionForm: form.work_account set to:",
+          form.work_account
+        );
       } catch (error) {
         if (error.response?.status === 404) {
-          console.warn(`WorkAccount ${data.work_account} not found, setting to null`)
-          form.work_account = null
+          console.warn(
+            `WorkAccount ${data.work_account} not found, setting to null`
+          );
+          form.work_account = null;
         } else {
-          console.error('Error verifying work account:', error)
-          form.work_account = data.work_account // Asignar de todos modos si es otro tipo de error
+          console.error("Error verifying work account:", error);
+          form.work_account = data.work_account; // Asignar de todos modos si es otro tipo de error
         }
       }
     }
-    
-    form.date = data.date ? new Date(data.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10)
-    form.notes = data.notes || ''
-    form.is_active = data.is_active
+
+    form.date = data.date
+      ? new Date(data.date).toISOString().slice(0, 10)
+      : new Date().toISOString().slice(0, 10);
+    form.notes = data.notes || "";
+    form.is_active = data.is_active;
 
     // Normalize incoming lines
-    const normalizedLines = (data.lines || []).map(l => {
+    const normalizedLines = (data.lines || []).map((l) => {
       // Función helper para extraer ID de un valor (puede ser objeto o ID)
       function extractId(value) {
-        if (value === null || value === undefined) return null
-        if (typeof value === 'object' && value !== null) {
-          return value.id || null
+        if (value === null || value === undefined) return null;
+        if (typeof value === "object" && value !== null) {
+          return value.id || null;
         }
-        return value
+        return value;
       }
-      
+
       const normalizedLine = {
         __key: l.id || cryptoRandom(),
         id: l.id,
         selected: false,
         product: extractId(l.product),
-        product_label: l.product_name || '',
+        product_label: l.product_name || "",
         quantity: l.quantity,
         unit: extractId(l.unit),
         unit_price: l.unit_price,
@@ -954,37 +1136,37 @@ async function loadDocument(id) {
         price_type: extractId(l.price_type),
         brand: extractId(l.brand),
         _errors: {},
-      }
-      
+      };
+
       // 🔍 DEBUG: Log de la línea cargada
-      console.log('🔍 Frontend: Línea cargada desde API:', {
+      console.log("🔍 Frontend: Línea cargada desde API:", {
         original: {
           product: l.product,
           unit: l.unit,
           warehouse: l.warehouse,
           price_type: l.price_type,
-          brand: l.brand
+          brand: l.brand,
         },
         normalized: {
           product: normalizedLine.product,
           unit: normalizedLine.unit,
           warehouse: normalizedLine.warehouse,
           price_type: normalizedLine.price_type,
-          brand: normalizedLine.brand
-        }
-      })
-      
-      return normalizedLine
-    })
-    
+          brand: normalizedLine.brand,
+        },
+      });
+
+      return normalizedLine;
+    });
+
     // If no lines exist, add one empty line
-        if (normalizedLines.length === 0) {
+    if (normalizedLines.length === 0) {
       normalizedLines.push({
         __key: cryptoRandom(),
         selected: false,
         id: null,
         product: null,
-        product_label: '',
+        product_label: "",
         quantity: 1,
         unit: null,
         unit_price: 0,
@@ -994,73 +1176,79 @@ async function loadDocument(id) {
         price_type: null,
         brand: null,
         _errors: {},
-      })
+      });
     }
-    
-    lines.value = normalizedLines
+
+    lines.value = normalizedLines;
   } catch (error) {
-    console.error('Error loading document:', error)
+    console.error("Error loading document:", error);
     await Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: 'Document not found or has invalid references. Please check the data.',
-      confirmButtonText: 'OK'
-    })
-    router.push({ name: 'transactions' }).catch(() => {})
-    return
+      icon: "error",
+      title: "Error",
+      text: "Document not found or has invalid references. Please check the data.",
+      confirmButtonText: "OK",
+    });
+    router.push({ name: "transactions" }).catch(() => {});
+    return;
   }
 }
 
 function normalizePayload() {
   // Si viene desde schedule y form.work_account es null, usar workAccountParam como fallback
-  let workAccountToUse = form.work_account
-  if (isFromSchedule.value && (!workAccountToUse || workAccountToUse === null)) {
-    console.warn('⚠️ form.work_account es null pero viene desde schedule, usando workAccountParam:', workAccountParam)
-    workAccountToUse = workAccountParam
-    form.work_account = workAccountParam // Restaurar el valor
+  let workAccountToUse = form.work_account;
+  if (
+    isFromSchedule.value &&
+    (!workAccountToUse || workAccountToUse === null)
+  ) {
+    console.warn(
+      "⚠️ form.work_account es null pero viene desde schedule, usando workAccountParam:",
+      workAccountParam
+    );
+    workAccountToUse = workAccountParam;
+    form.work_account = workAccountParam; // Restaurar el valor
   }
-  
+
   // Para documentos operacionales, obtener el builder del work_account
-  let builderToSend = form.builder
+  let builderToSend = form.builder;
   if (isOperationalDocument.value && workAccountToUse && !form.builder) {
-    // Si es operacional y tenemos work_account pero no builder, 
+    // Si es operacional y tenemos work_account pero no builder,
     // necesitamos obtener el builder del work_account
     // Esto se manejará en el backend automáticamente
-    builderToSend = null // El backend lo resolverá desde work_account
+    builderToSend = null; // El backend lo resolverá desde work_account
   }
-  
+
   // Función helper para extraer ID de un valor (puede ser objeto o ID)
   function extractId(value) {
-    if (value === null || value === undefined) return null
-    if (typeof value === 'object' && value !== null) {
-      return value.id || null
+    if (value === null || value === undefined) return null;
+    if (typeof value === "object" && value !== null) {
+      return value.id || null;
     }
-    return value
+    return value;
   }
-  
+
   const workAccountId = extractId(workAccountToUse);
-  
+
   // 🔍 DEBUG: Log para verificar work_account
-  console.log('🔍 Frontend normalizePayload - work_account:', {
+  console.log("🔍 Frontend normalizePayload - work_account:", {
     original: form.work_account,
     workAccountToUse: workAccountToUse,
     workAccountParam: workAccountParam,
     isFromSchedule: isFromSchedule.value,
     type: typeof workAccountToUse,
     normalized: workAccountId,
-    normalizedType: typeof workAccountId
+    normalizedType: typeof workAccountId,
   });
-  
+
   const normalizedPayload = {
     document_type: form.document_type,
     builder: builderToSend ? extractId(builderToSend) : null,
     work_account: workAccountId,
     date: form.date,
-    notes: form.notes?.trim() || '',
+    notes: form.notes?.trim() || "",
     is_active: form.is_active,
     lines: lines.value
-      .filter(l => l.product) // Solo enviar líneas que tengan producto
-      .map(l => {
+      .filter((l) => l.product) // Solo enviar líneas que tengan producto
+      .map((l) => {
         const normalizedLine = {
           id: l.id,
           product: extractId(l.product),
@@ -1071,90 +1259,103 @@ function normalizePayload() {
           warehouse: extractId(l.warehouse),
           price_type: extractId(l.price_type),
           brand: extractId(l.brand),
-        }
-        
+        };
+
         // 🔍 DEBUG: Log de la línea normalizada
-        console.log('🔍 Frontend: Línea normalizada:', {
+        console.log("🔍 Frontend: Línea normalizada:", {
           original: {
             product: l.product,
             unit: l.unit,
             warehouse: l.warehouse,
             price_type: l.price_type,
-            brand: l.brand
+            brand: l.brand,
           },
           normalized: {
             product: normalizedLine.product,
             unit: normalizedLine.unit,
             warehouse: normalizedLine.warehouse,
             price_type: normalizedLine.price_type,
-            brand: normalizedLine.brand
-          }
-        })
-        
-        return normalizedLine
-      })
-  }
-  
-  return normalizedPayload
+            brand: normalizedLine.brand,
+          },
+        });
+
+        return normalizedLine;
+      }),
+  };
+
+  return normalizedPayload;
 }
 
 function clearErrors() {
-  Object.keys(errors).forEach(k => delete errors[k])
-  lines.value.forEach(l => (l._errors = {}))
+  Object.keys(errors).forEach((k) => delete errors[k]);
+  lines.value.forEach((l) => (l._errors = {}));
 }
 
 function applyServerErrors(errData) {
-  if (!errData || typeof errData !== 'object' || Array.isArray(errData)) {
+  if (!errData || typeof errData !== "object" || Array.isArray(errData)) {
     // Respuesta HTML (500) o no-JSON: no iterar como objeto
-    console.warn('🔍 Frontend: applyServerErrors - errData no es objeto válido (¿respuesta HTML?):', typeof errData)
-    if (typeof errData === 'string' && errData.length > 200) {
-      errors.non_field_errors = ['Server error. Please try again or contact support.']
-    } else if (errData && typeof errData === 'string') {
-      errors.non_field_errors = [errData]
+    console.warn(
+      "🔍 Frontend: applyServerErrors - errData no es objeto válido (¿respuesta HTML?):",
+      typeof errData
+    );
+    if (typeof errData === "string" && errData.length > 200) {
+      errors.non_field_errors = [
+        "Server error. Please try again or contact support.",
+      ];
+    } else if (errData && typeof errData === "string") {
+      errors.non_field_errors = [errData];
     }
-    return
+    return;
   }
-  console.log('🔍 Frontend: applyServerErrors called with:', errData)
-  
+  console.log("🔍 Frontend: applyServerErrors called with:", errData);
+
   // High-level document errors
   for (const k in errData) {
-    if (k !== 'lines') {
-      errors[k] = errData[k]
-      console.log(`🔍 Frontend: Error for field ${k}:`, errData[k])
+    if (k !== "lines") {
+      errors[k] = errData[k];
+      console.log(`🔍 Frontend: Error for field ${k}:`, errData[k]);
     }
   }
-  
+
   // Per-line errors (DRF devuelve lista alineada con índices)
   if (Array.isArray(errData.lines)) {
-    console.log('🔍 Frontend: Processing line errors:', errData.lines)
+    console.log("🔍 Frontend: Processing line errors:", errData.lines);
     errData.lines.forEach((item, idx) => {
-      if (!item) return
-      const target = lines.value[idx]
-      if (!target) return
-      target._errors = { ...(item || {}) }
-    })
-  } else if (errData.lines && typeof errData.lines === 'object') {
+      if (!item) return;
+      const target = lines.value[idx];
+      if (!target) return;
+      target._errors = { ...(item || {}) };
+    });
+  } else if (errData.lines && typeof errData.lines === "object") {
     // Formato objeto { "0": {...}, "1": {...} }
-    console.log('🔍 Frontend: Processing line errors (object format):', errData.lines)
+    console.log(
+      "🔍 Frontend: Processing line errors (object format):",
+      errData.lines
+    );
     Object.entries(errData.lines).forEach(([key, item]) => {
-      const idx = parseInt(key, 10)
-      if (isNaN(idx) || !item) return
-      const target = lines.value[idx]
-      if (!target) return
-      target._errors = { ...(typeof item === 'object' ? item : { _: String(item) }) }
-    })
+      const idx = parseInt(key, 10);
+      if (isNaN(idx) || !item) return;
+      const target = lines.value[idx];
+      if (!target) return;
+      target._errors = {
+        ...(typeof item === "object" ? item : { _: String(item) }),
+      };
+    });
   }
 }
 
 async function handleSubmit() {
-  submitting.value = true
-  clearErrors()
+  submitting.value = true;
+  clearErrors();
   try {
-    const payload = normalizePayload()
-    
+    const payload = normalizePayload();
+
     // 🔍 DEBUG: Log del payload completo
-    console.log('🚀 Frontend: Enviando payload:', JSON.stringify(payload, null, 2))
-    console.log('📊 Frontend: Líneas a enviar:', payload.lines.length)
+    console.log(
+      "🚀 Frontend: Enviando payload:",
+      JSON.stringify(payload, null, 2)
+    );
+    console.log("📊 Frontend: Líneas a enviar:", payload.lines.length);
     payload.lines.forEach((line, idx) => {
       console.log(`📝 Frontend: Línea ${idx}:`, {
         id: line.id,
@@ -1164,202 +1365,282 @@ async function handleSubmit() {
         unit_price: line.unit_price,
         warehouse: line.warehouse,
         price_type: line.price_type,
-        brand: line.brand
-      })
-      
+        brand: line.brand,
+      });
+
       // 🔍 DEBUG: Verificar tipos de datos
       console.log(`🔍 Frontend: Tipos de datos línea ${idx}:`, {
         product_type: typeof line.product,
         unit_type: typeof line.unit,
         warehouse_type: typeof line.warehouse,
         price_type_type: typeof line.price_type,
-        brand_type: typeof line.brand
-      })
-    })
-    
-    const url = isEditMode ? `/api/documents/${idParam}/` : '/api/documents/'
-    const method = isEditMode ? 'put' : 'post'
-    const { data } = await axios[method](url, payload)
-    const documentId = data.id || idParam
+        brand_type: typeof line.brand,
+      });
+    });
 
-    const hasSerializedItems = data?.serialized_items?.length > 0
+    const url = isEditMode ? `/api/documents/${idParam}/` : "/api/documents/";
+    const method = isEditMode ? "put" : "post";
+    const { data } = await axios[method](url, payload);
+    const documentId = data.id || idParam;
+
+    const hasSerializedItems = data?.serialized_items?.length > 0;
     if (hasSerializedItems) {
-      assetTagModalOpenedFromSave.value = true
-      documentIdForAssetTagModal.value = documentId
+      assetTagModalOpenedFromSave.value = true;
+      documentIdForAssetTagModal.value = documentId;
       documentContextForAssetTagModal.value = {
         id: data.id,
         document_type_code: data.document_type_code,
         builder_name: data.builder_name,
         date: data.date,
-      }
-      showAssetTagModal.value = true
+      };
+      showAssetTagModal.value = true;
     } else {
-      await promptPrintAndRedirect(documentId)
+      await promptPrintAndRedirect(documentId);
     }
   } catch (err) {
-    const data = err?.response?.data
-    const status = err?.response?.status
-    
+    const data = err?.response?.data;
+    const status = err?.response?.status;
+
     // Si la respuesta es HTML (500, etc.), no intentar procesar como JSON
-    if (typeof data === 'string') {
-      console.error('❌ Frontend: Error del servidor (respuesta HTML/texto):', status, data?.slice?.(0, 200))
-      applyServerErrors(null) // no procesar
+    if (typeof data === "string") {
+      console.error(
+        "❌ Frontend: Error del servidor (respuesta HTML/texto):",
+        status,
+        data?.slice?.(0, 200)
+      );
+      applyServerErrors(null); // no procesar
       await Swal.fire({
-        icon: 'error',
-        title: 'Server Error',
-        text: status >= 500 ? 'An error occurred on the server. Please try again or contact support.' : 'Unexpected response from server.',
-        confirmButtonText: 'OK'
-      })
-      return
+        icon: "error",
+        title: "Server Error",
+        text:
+          status >= 500
+            ? "An error occurred on the server. Please try again or contact support."
+            : "Unexpected response from server.",
+        confirmButtonText: "OK",
+      });
+      return;
     }
-    
+
     if (data?.lines) {
       if (Array.isArray(data.lines)) {
         data.lines.forEach((lineError, idx) => {
-          console.error(`📋 Frontend: Error en línea ${idx}:`, lineError)
-        })
+          console.error(`📋 Frontend: Error en línea ${idx}:`, lineError);
+        });
       } else {
-        Object.keys(data.lines).forEach(field => {
-          console.error(`📋 Frontend: Error en campo ${field}:`, data.lines[field])
-        })
+        Object.keys(data.lines).forEach((field) => {
+          console.error(
+            `📋 Frontend: Error en campo ${field}:`,
+            data.lines[field]
+          );
+        });
       }
     }
-    
-    if (data) applyServerErrors(data)
-    
-    let errorMessage = 'Please review highlighted fields.'
-    let errorTitle = 'Validation Error'
-    const stockErrors = []
-    
+
+    if (data) applyServerErrors(data);
+
+    let errorMessage = "Please review highlighted fields.";
+    let errorTitle = "Validation Error";
+    const stockErrors = [];
+
+    // Mensaje claro cuando falta Party (builder) o Work Account
+    const builderError =
+      data?.builder &&
+      (Array.isArray(data.builder) ? data.builder[0] : data.builder);
+    const workAccountError =
+      data?.work_account &&
+      (Array.isArray(data.work_account)
+        ? data.work_account[0]
+        : data.work_account);
+    if (status === 400 && (builderError || workAccountError)) {
+      if (builderError) {
+        errorMessage =
+          "Please select a Party (supplier for purchases, customer for sales) before saving. The Asset Tags modal will appear after a successful save when the transaction has serialized items.";
+        errorTitle = "Party required";
+      } else if (workAccountError) {
+        errorMessage = "Please select a Work Account before saving.";
+        errorTitle = "Work Account required";
+      }
+    }
+
     // Verificar si hay non_field_errors primero
     if (data?.non_field_errors) {
-      const nonFieldErrors = Array.isArray(data.non_field_errors) 
-        ? data.non_field_errors 
+      const nonFieldErrors = Array.isArray(data.non_field_errors)
+        ? data.non_field_errors
         : [data.non_field_errors];
-      errorMessage = nonFieldErrors.join('<br>');
-      errorTitle = 'Server Error';
-      console.error('🔍 Frontend: non_field_errors encontrados:', nonFieldErrors);
+      errorMessage = nonFieldErrors.join("<br>");
+      errorTitle = "Server Error";
+      console.error(
+        "🔍 Frontend: non_field_errors encontrados:",
+        nonFieldErrors
+      );
     }
-    
+
     // Función para extraer información del producto del mensaje de error
     function extractProductInfo(errorMsg, lineIndex = null) {
-      console.log('💊 Frontend: errorMsg', errorMsg)
-      
+      console.log("💊 Frontend: errorMsg", errorMsg);
+
       // Extraer directamente del errorMsg
       try {
         if (errorMsg && errorMsg.quantity && errorMsg.quantity.product_name) {
-          const productName = errorMsg.quantity.product_name.string || errorMsg.quantity.product_name
-          return productName
+          const productName =
+            errorMsg.quantity.product_name.string ||
+            errorMsg.quantity.product_name;
+          return productName;
         }
       } catch (e) {
         // Error silencioso
       }
-      
-      return 'Product'
+
+      return "Product";
     }
-    
+
     // Verificar si hay errores de stock insuficiente
     if (data?.lines) {
       if (Array.isArray(data.lines)) {
         data.lines.forEach((lineError, idx) => {
-          const quantityError = lineError?.quantity
-          
+          const quantityError = lineError?.quantity;
+
           // Caso 1: Error estructurado del backend (nuevo formato)
-          if (typeof quantityError === 'object' && quantityError.error_type === 'insufficient_stock') {
+          if (
+            typeof quantityError === "object" &&
+            quantityError.error_type === "insufficient_stock"
+          ) {
             stockErrors.push({
               productName: quantityError.product_name,
               available: quantityError.available,
               requested: quantityError.requested,
               documentType: quantityError.document_type,
-              message: quantityError.message
-            })
+              message: quantityError.message,
+            });
           }
           // Caso 1b: Error estructurado anidado en quantity (formato DRF)
-          else if (typeof quantityError === 'object' && quantityError.error_type && quantityError.error_type.string === 'insufficient_stock') {
+          else if (
+            typeof quantityError === "object" &&
+            quantityError.error_type &&
+            quantityError.error_type.string === "insufficient_stock"
+          ) {
             stockErrors.push({
-              productName: quantityError.product_name.string || quantityError.product_name,
-              available: quantityError.available.string || quantityError.available,
-              requested: quantityError.requested.string || quantityError.requested,
-              documentType: quantityError.document_type.string || quantityError.document_type,
-              message: quantityError.message.string || quantityError.message
-            })
+              productName:
+                quantityError.product_name.string || quantityError.product_name,
+              available:
+                quantityError.available.string || quantityError.available,
+              requested:
+                quantityError.requested.string || quantityError.requested,
+              documentType:
+                quantityError.document_type.string ||
+                quantityError.document_type,
+              message: quantityError.message.string || quantityError.message,
+            });
           }
           // Caso 2: ErrorDetail con string (formato anterior)
-          else if (typeof quantityError === 'object' && quantityError.string && quantityError.string.includes('Stock insuficiente')) {
-            const productName = extractProductInfo(quantityError, idx)
-            stockErrors.push(`• ${productName}: ${quantityError.string}`)
+          else if (
+            typeof quantityError === "object" &&
+            quantityError.string &&
+            quantityError.string.includes("Stock insuficiente")
+          ) {
+            const productName = extractProductInfo(quantityError, idx);
+            stockErrors.push(`• ${productName}: ${quantityError.string}`);
           }
           // Caso 3: String directo (formato anterior)
-          else if (typeof quantityError === 'string' && quantityError.includes('Stock insuficiente')) {
-            const productName = extractProductInfo(quantityError, idx)
-            stockErrors.push(`• ${productName}: ${quantityError}`)
+          else if (
+            typeof quantityError === "string" &&
+            quantityError.includes("Stock insuficiente")
+          ) {
+            const productName = extractProductInfo(quantityError, idx);
+            stockErrors.push(`• ${productName}: ${quantityError}`);
           }
-        })
+        });
       } else {
         // Si es un objeto, buscar errores de cantidad
-        Object.keys(data.lines).forEach(field => {
-          const errorData = data.lines[field]
-          
+        Object.keys(data.lines).forEach((field) => {
+          const errorData = data.lines[field];
+
           // Caso 1: Error estructurado del backend (nuevo formato)
-          if (typeof errorData === 'object' && errorData.error_type === 'insufficient_stock') {
+          if (
+            typeof errorData === "object" &&
+            errorData.error_type === "insufficient_stock"
+          ) {
             stockErrors.push({
               productName: errorData.product_name,
               available: errorData.available,
               requested: errorData.requested,
               documentType: errorData.document_type,
-              message: errorData.message
-            })
+              message: errorData.message,
+            });
           }
           // Caso 1b: Error estructurado anidado (formato DRF)
-          else if (typeof errorData === 'object' && errorData.error_type && errorData.error_type.string === 'insufficient_stock') {
+          else if (
+            typeof errorData === "object" &&
+            errorData.error_type &&
+            errorData.error_type.string === "insufficient_stock"
+          ) {
             stockErrors.push({
-              productName: errorData.product_name.string || errorData.product_name,
+              productName:
+                errorData.product_name.string || errorData.product_name,
               available: errorData.available.string || errorData.available,
               requested: errorData.requested.string || errorData.requested,
-              documentType: errorData.document_type.string || errorData.document_type,
-              message: errorData.message.string || errorData.message
-            })
+              documentType:
+                errorData.document_type.string || errorData.document_type,
+              message: errorData.message.string || errorData.message,
+            });
           }
           // Caso 2: ErrorDetail con string (formato anterior)
-          else if (field === 'quantity' && typeof errorData === 'object' && errorData.string && errorData.string.includes('Stock insuficiente')) {
-            const productName = extractProductInfo(errorData)
-            stockErrors.push(`• ${productName}: ${errorData.string}`)
+          else if (
+            field === "quantity" &&
+            typeof errorData === "object" &&
+            errorData.string &&
+            errorData.string.includes("Stock insuficiente")
+          ) {
+            const productName = extractProductInfo(errorData);
+            stockErrors.push(`• ${productName}: ${errorData.string}`);
           }
           // Caso 3: String directo (formato anterior)
-          else if (field === 'quantity' && typeof errorData === 'string' && errorData.includes('Stock insuficiente')) {
-            const productName = extractProductInfo(errorData)
-            stockErrors.push(`• ${productName}: ${errorData}`)
+          else if (
+            field === "quantity" &&
+            typeof errorData === "string" &&
+            errorData.includes("Stock insuficiente")
+          ) {
+            const productName = extractProductInfo(errorData);
+            stockErrors.push(`• ${productName}: ${errorData}`);
           }
-        })
+        });
       }
     }
-    
+
     // También verificar errores directos en el nivel principal (no en lines)
     if (data && stockErrors.length === 0) {
       // Buscar errores de stock en cualquier campo del nivel principal
-      Object.keys(data).forEach(field => {
-        if (data[field] && typeof data[field] === 'string' && data[field].includes('Stock insuficiente')) {
-          const productName = extractProductInfo(data[field])
-          stockErrors.push(`• ${productName}: ${data[field]}`)
+      Object.keys(data).forEach((field) => {
+        if (
+          data[field] &&
+          typeof data[field] === "string" &&
+          data[field].includes("Stock insuficiente")
+        ) {
+          const productName = extractProductInfo(data[field]);
+          stockErrors.push(`• ${productName}: ${data[field]}`);
         } else if (Array.isArray(data[field])) {
           // Si es un array de errores
-          data[field].forEach(errorMsg => {
-            if (typeof errorMsg === 'string' && errorMsg.includes('Stock insuficiente')) {
-              const productName = extractProductInfo(errorMsg)
-              stockErrors.push(`• ${productName}: ${errorMsg}`)
+          data[field].forEach((errorMsg) => {
+            if (
+              typeof errorMsg === "string" &&
+              errorMsg.includes("Stock insuficiente")
+            ) {
+              const productName = extractProductInfo(errorMsg);
+              stockErrors.push(`• ${productName}: ${errorMsg}`);
             }
-          })
+          });
         }
-      })
+      });
     }
-    
+
     if (stockErrors.length > 0) {
-      errorTitle = 'Insufficient Stock'
+      errorTitle = "Insufficient Stock";
       // Crear HTML para mejor formato con información más específica
-      const stockErrorsHTML = stockErrors.map(error => {
-        // Caso 1: Error estructurado del backend (nuevo formato)
-        if (typeof error === 'object' && error.productName) {
-          return `
+      const stockErrorsHTML = stockErrors
+        .map((error) => {
+          // Caso 1: Error estructurado del backend (nuevo formato)
+          if (typeof error === "object" && error.productName) {
+            return `
             <div class="text-start mb-2 p-2 border-start border-danger border-2">
               <small class="text-danger">${error.productName}</small><br>
               <small class="text-muted">
@@ -1368,16 +1649,18 @@ async function handleSubmit() {
                 Document Type: ${error.documentType} (does not allow negative sales)
               </small>
             </div>
-          `
-        }
-        // Caso 2: Error en formato string (formato anterior)
-        else if (typeof error === 'string') {
-          // Intentar extraer información del mensaje de error
-          const match = error.match(/Stock insuficiente\. Disponible: (\d+(?:\.\d+)?), solicitado\(ref\): (\d+(?:\.\d+)?)\. El tipo de documento '([^']+)' no permite ventas sin stock\./)
-          if (match) {
-            const [, available, requested, docType] = match
-            const productName = error.split(':')[0].replace('• ', '')
-            return `
+          `;
+          }
+          // Caso 2: Error en formato string (formato anterior)
+          else if (typeof error === "string") {
+            // Intentar extraer información del mensaje de error
+            const match = error.match(
+              /Stock insuficiente\. Disponible: (\d+(?:\.\d+)?), solicitado\(ref\): (\d+(?:\.\d+)?)\. El tipo de documento '([^']+)' no permite ventas sin stock\./
+            );
+            if (match) {
+              const [, available, requested, docType] = match;
+              const productName = error.split(":")[0].replace("• ", "");
+              return `
               <div class="text-start mb-2 p-2 border-start border-danger border-2">
                 <small class="text-danger">${productName}</small><br>
                 <small class="text-muted">
@@ -1386,23 +1669,24 @@ async function handleSubmit() {
                   Document Type: ${docType} (does not allow negative sales)
                 </small>
               </div>
-            `
-          }
-          // Si no se puede parsear, mostrar el error tal como está
-          return `
+            `;
+            }
+            // Si no se puede parsear, mostrar el error tal como está
+            return `
             <div class="text-start mb-1">
               <small class="text-danger">${error}</small>
             </div>
-          `
-        }
-        // Caso 3: Fallback
-        return `
+          `;
+          }
+          // Caso 3: Fallback
+          return `
           <div class="text-start mb-1">
             <small class="text-danger">${String(error)}</small>
           </div>
-        `
-      }).join('')
-      
+        `;
+        })
+        .join("");
+
       errorMessage = `
         <div class="text-start">
           <small class="mb-3">⚠️ The following products have insufficient stock:</small>
@@ -1417,67 +1701,81 @@ async function handleSubmit() {
             </small>
           </div>
         </div>
-      `
+      `;
     }
-    
-    await Swal.fire({ 
-      icon: 'error', 
-      title: errorTitle, 
-      html: errorMessage,
-      width: '700px',
-      confirmButtonText: 'OK',
-      confirmButtonColor: '#dc3545'
-    })
-  } finally { submitting.value = false }
-}
 
+    await Swal.fire({
+      icon: "error",
+      title: errorTitle,
+      html: errorMessage,
+      width: "700px",
+      confirmButtonText: "OK",
+      confirmButtonColor: "#dc3545",
+    });
+  } finally {
+    submitting.value = false;
+  }
+}
 
 // Función para cargar el título del work account cuando viene desde el schedule
 async function loadWorkAccountTitle(workAccountId) {
-  if (!workAccountId) return
+  if (!workAccountId) return;
   try {
-    const { data } = await axios.get(`/api/work-accounts/${workAccountId}/`)
+    const { data } = await axios.get(`/api/work-accounts/${workAccountId}/`);
     if (data && data.title) {
-      workAccountTitle.value = data.title
-      console.log('✅ Work Account title loaded:', workAccountTitle.value)
+      workAccountTitle.value = data.title;
+      console.log("✅ Work Account title loaded:", workAccountTitle.value);
     }
   } catch (error) {
-    console.error('Error loading work account title:', error)
-    workAccountTitle.value = `Work Account #${workAccountId}`
+    console.error("Error loading work account title:", error);
+    workAccountTitle.value = `Work Account #${workAccountId}`;
   }
 }
 
 onMounted(async () => {
-  console.log('TransactionForm mounted, loading data...')
-  await fetchStaticOptions()
-  console.log('Units loaded:', unitsOptions.value.length)
-  console.log('Warehouses loaded:', warehousesOptions.value.length)
-  
+  console.log("TransactionForm mounted, loading data...");
+  await fetchStaticOptions();
+  console.log("Units loaded:", unitsOptions.value.length);
+  console.log("Warehouses loaded:", warehousesOptions.value.length);
+
   // Si hay work_account en query params (viene desde schedule), prellenarlo y cargar título
   if (workAccountParam) {
-    console.log('🔑 Prellenando work_account desde query params:', workAccountParam)
-    form.work_account = workAccountParam
+    console.log(
+      "🔑 Prellenando work_account desde query params:",
+      workAccountParam
+    );
+    form.work_account = workAccountParam;
     // Cargar el título del work account
-    await loadWorkAccountTitle(workAccountParam)
+    await loadWorkAccountTitle(workAccountParam);
   }
-  
+
   if (isEditMode) {
-    await loadDocument(idParam)
+    await loadDocument(idParam);
     // Si viene desde schedule y estamos editando, también cargar el título si no se cargó antes
     if (workAccountParam && !workAccountTitle.value && form.work_account) {
-      await loadWorkAccountTitle(form.work_account)
+      await loadWorkAccountTitle(form.work_account);
     }
   }
-})
+});
 </script>
 
 <style scoped>
-.card-header { background-color: #f3f3f3; }
-.v-select { --vs-border-color: #ced4da; }
-.table-sticky thead th { position: sticky; top: 0; z-index: 1; background: #f8f9fa; }
+.card-header {
+  background-color: #f3f3f3;
+}
+.v-select {
+  --vs-border-color: #ced4da;
+}
+.table-sticky thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f8f9fa;
+}
 
 /* Ensure form controls are visible */
-.form-control, .v-select {
+.form-control,
+.v-select {
   min-height: 38px;
 }
 
@@ -1542,52 +1840,52 @@ onMounted(async () => {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
   }
-  
+
   .card {
     margin-left: 0.25rem !important;
     margin-right: 0.25rem !important;
   }
-  
+
   .card-header {
     padding: 0.75rem;
   }
-  
+
   .card-body {
     padding: 1rem;
   }
-  
+
   /* Ensure buttons don't overflow on mobile */
   .btn-sm {
     font-size: 0.8rem;
     padding: 0.375rem 0.5rem;
   }
-  
+
   /* Make form labels more compact */
   .form-label {
     font-size: 0.9rem;
     margin-bottom: 0.25rem;
   }
-  
+
   /* Adjust input sizes for mobile */
   .form-control {
     font-size: 0.9rem;
   }
-  
+
   /* Ensure proper spacing for mobile */
   .row.g-3 {
     --bs-gutter-x: 1rem;
     --bs-gutter-y: 0.75rem;
   }
-  
+
   /* Adjust gaps for mobile */
   .d-flex.gap-1 > * + * {
     margin-left: 0.25rem;
   }
-  
+
   .d-flex.gap-2 > * + * {
     margin-left: 0.5rem;
   }
-  
+
   /* Make textarea more compact */
   textarea.form-control {
     resize: vertical;

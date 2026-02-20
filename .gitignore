@@ -66,4 +66,6 @@ certbot/
 
 # Ignore backups directory
 backups/
+scripts/backup_completo.sh
+scripts/restore_backup.sh
 
