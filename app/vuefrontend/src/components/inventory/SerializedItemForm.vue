@@ -150,10 +150,19 @@
                   v-tt
                   data-title="Active, Maintenance, Lost, or Retired">
                   <template #option="option">
-                    <span class="badge" :class="statusBadgeClass(option.value)">{{ option.label }}</span>
+                    <span
+                      class="badge"
+                      :class="statusBadgeClass(option.value)"
+                      >{{ option.label }}</span
+                    >
                   </template>
                   <template #selected-option="option">
-                    <span v-if="option" class="badge" :class="statusBadgeClass(option.value)">{{ option.label }}</span>
+                    <span
+                      v-if="option"
+                      class="badge"
+                      :class="statusBadgeClass(option.value)"
+                      >{{ option.label }}</span
+                    >
                   </template>
                 </v-select>
               </div>
@@ -176,10 +185,19 @@
                   v-tt
                   data-title="OK, Damaged, or Needs repair">
                   <template #option="option">
-                    <span class="badge" :class="conditionBadgeClass(option.value)">{{ option.label }}</span>
+                    <span
+                      class="badge"
+                      :class="conditionBadgeClass(option.value)"
+                      >{{ option.label }}</span
+                    >
                   </template>
                   <template #selected-option="option">
-                    <span v-if="option" class="badge" :class="conditionBadgeClass(option.value)">{{ option.label }}</span>
+                    <span
+                      v-if="option"
+                      class="badge"
+                      :class="conditionBadgeClass(option.value)"
+                      >{{ option.label }}</span
+                    >
                   </template>
                 </v-select>
               </div>

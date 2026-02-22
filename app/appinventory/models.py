@@ -265,11 +265,56 @@ class Stock(models.Model):
         unique_together = ("product", "warehouse")
 
 
+class InventoryTransfer(models.Model):
+    """
+    Document header para transferencias entre almacenes.
+    Las líneas son InventoryMovement asociados via transfer_id (par OUT/IN por producto).
+    """
+    STATUS_COMPLETED = 'completed'
+    STATUS_REVERTED = 'reverted'
+
+    from_warehouse = models.ForeignKey(
+        Warehouse, on_delete=models.PROTECT, related_name='transfers_from'
+    )
+    to_warehouse = models.ForeignKey(
+        Warehouse, on_delete=models.PROTECT, related_name='transfers_to'
+    )
+    description = models.CharField(
+        max_length=255, blank=True,
+        help_text='Descripción de la transferencia'
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=[(STATUS_COMPLETED, 'Completed'), (STATUS_REVERTED, 'Reverted')],
+        default=STATUS_COMPLETED,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Inventory Transfer'
+        verbose_name_plural = 'Inventory Transfers'
+
+    def __str__(self):
+        return f'{self.from_warehouse} → {self.to_warehouse} ({self.created_at.date()})'
+
+
 class InventoryMovement(models.Model):
+    MOVEMENT_TYPE_ENTRADA = 1
+    MOVEMENT_TYPE_SALIDA = -1
+    MOVEMENT_TYPE_AJUSTE = 0
     MOVEMENT_TYPE_CHOICES = [
         (1, 'Entrada'),
         (-1, 'Salida'),
-        (0, 'Ajuste')
+        (0, 'Ajuste/Transfer (Neutral)'),
     ]
 
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
@@ -288,9 +333,13 @@ class InventoryMovement(models.Model):
         related_name='movements',
         help_text='If set, this movement tracks one physical unit; quantity must be 1.',
     )
-    transfer_group_id = models.CharField(
-        max_length=64, blank=True, null=True,
-        help_text='UUID or string linking OUT+IN movements of the same transfer.',
+    transfer = models.ForeignKey(
+        'InventoryTransfer',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='movements',
+        help_text='Transferencia entre almacenes a la que pertenece este movimiento.',
     )
 
     class Meta:
@@ -307,6 +356,10 @@ class InventoryMovement(models.Model):
 
     def clean(self):
         super().clean()
+        if self.transfer_id and (not self.reason or not str(self.reason).strip()):
+            raise ValidationError(
+                'El campo reason no puede quedar vacío para movimientos de transferencia.'
+            )
         if self.serialized_item_id:
             item = self.serialized_item
             if self.product_id != item.product_id:
@@ -321,10 +374,11 @@ class InventoryMovement(models.Model):
                 raise ValidationError(
                     'Serialized item must have a current_warehouse.'
                 )
-            if self.movement_type == -1 and item.current_warehouse_id != self.warehouse_id:
-                raise ValidationError(
-                    'Salida: warehouse must match serialized item current_warehouse.'
-                )
+            if self.movement_type == self.MOVEMENT_TYPE_SALIDA:
+                if item.current_warehouse_id != self.warehouse_id:
+                    raise ValidationError(
+                        'Salida: warehouse must match serialized item current_warehouse.'
+                    )
 
     def save(self, *args, **kwargs):
         """
@@ -340,8 +394,8 @@ class InventoryMovement(models.Model):
             self.full_clean()
             # Save first
             super().save(*args, **kwargs)
-            # Update SerializedItem location when it's an arrival (Entrada)
-            if self.movement_type == 1:
+            # Update SerializedItem location when it's an arrival (Entrada o Ajuste/Transfer IN)
+            if self.movement_type in (self.MOVEMENT_TYPE_ENTRADA, self.MOVEMENT_TYPE_AJUSTE):
                 item = SerializedItem.objects.get(pk=self.serialized_item_id)
                 if item.current_warehouse_id != self.warehouse_id:
                     item.current_warehouse = self.warehouse
