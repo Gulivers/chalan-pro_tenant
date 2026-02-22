@@ -57,7 +57,7 @@ class DocumentLineInlineFormSet(BaseInlineFormSet):
 
 @admin.register(DocumentLine)
 class DocumentLineAdmin(admin.ModelAdmin):
-    list_display = ('id', 'document', 'product', 'quantity', 'unit')
+    list_display = ('id', 'document_id', 'document', 'product', 'quantity', 'unit')
     search_fields = ('document__id', 'product__name', 'product__sku')
     autocomplete_fields = ('document', 'product', 'unit', 'price_type', 'brand')
     list_filter = ('document__document_type',)
@@ -77,7 +77,7 @@ class DocumentLineInline(admin.TabularInline):
 
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
-    list_display = ('document_type', 'date', 'builder', 'is_active')
+    list_display = ('id', 'document_type', 'date', 'builder', 'is_active')
     search_fields = ('job', 'lot', 'notes')
     list_filter = ('document_type','is_active')
     autocomplete_fields = ('builder', 'document_type', 'created_by')
