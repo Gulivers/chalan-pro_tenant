@@ -6,16 +6,15 @@
         <h6 class="text-primary mb-0">Serialized Items</h6>
         <div class="d-flex gap-2">
           <router-link
-            v-if="false && hasPermission('appinventory.add_serializeditem')"
+            v-if="features.showNewSerializedItemButton && hasPermission('appinventory.add_serializeditem')"
             to="/serialized-items/form"
-            class="btn btn-success"
-            >+ New Serialized Item</router-link
-          >
+            class="btn btn-success">
+            + New Serialized Item
+          </router-link>
           <button
             v-if="!loading"
             class="btn btn-outline-primary btn-sm"
-            @click="refreshTable"
-          >
+            @click="refreshTable">
             Refresh List
           </button>
         </div>
@@ -34,15 +33,13 @@
             label-cols-lg="6"
             label-align-sm="right"
             label-size="sm"
-            class="mb-0 small"
-          >
+            class="mb-0 small">
             <BFormSelect
               id="per-page-select"
               v-model="perPage"
               :options="pageOptions"
               size="sm"
-              class="form-select-xs"
-            />
+              class="form-select-xs" />
           </BFormGroup>
         </div>
         <div class="col-lg-3"></div>
@@ -55,8 +52,7 @@
             label-cols-lg="6"
             label-align-sm="text-start"
             label-size="sm"
-            class="mb-0"
-          >
+            class="mb-0">
             <div class="position-relative">
               <div class="search-wrapper">
                 <BFormInput
@@ -64,8 +60,7 @@
                   v-model="filter"
                   type="search"
                   placeholder="Search by asset tag, product, notes..."
-                  size="sm"
-                />
+                  size="sm" />
               </div>
             </div>
           </BFormGroup>
@@ -94,8 +89,7 @@
           hover
           responsive
           striped
-          class="table-bordered"
-        >
+          class="table-bordered">
           <template #cell(id)="row">
             <strong>{{ row.item.id }}</strong>
           </template>
@@ -112,8 +106,7 @@
             <span
               v-if="row.item.status"
               class="badge bg-secondary"
-              style="font-size: 0.75rem"
-            >
+              style="font-size: 0.75rem">
               {{ row.item.status }}
             </span>
             <span v-else>—</span>
@@ -124,8 +117,7 @@
               v-if="conditionBadgeClass(row.item.condition)"
               class="badge"
               :class="conditionBadgeClass(row.item.condition)"
-              style="font-size: 0.75rem"
-            >
+              style="font-size: 0.75rem">
               {{ conditionLabel(row.item.condition) }}
             </span>
             <span v-else>—</span>
@@ -164,8 +156,7 @@
               <button
                 v-if="hasPermission('appinventory.delete_serializeditem')"
                 class="btn btn-outline-danger"
-                @click="deleteItem(row.item.id)"
-              >
+                @click="deleteItem(row.item.id)">
                 Delete
               </button>
             </div>
@@ -179,8 +170,7 @@
           v-model="currentPage"
           :total-rows="totalRows"
           :per-page="perPage"
-          @update:model-value="onPageChange"
-        />
+          @update:model-value="onPageChange" />
       </div>
     </div>
   </TxCard>
@@ -189,6 +179,7 @@
 <script>
 import TxCard from "@/components/layout/TxCard.vue";
 import "@/assets/css/base.css";
+import { features } from "@/config/features";
 
 import { ref, getCurrentInstance } from "vue";
 import axios from "axios";
@@ -415,18 +406,19 @@ export default {
             const data = error?.response?.data;
             if (status === 403) {
               proxy?.notifyError?.(
-                "You do not have permission for this action.",
+                "You do not have permission for this action."
               );
             } else {
               const detail = data?.detail || "Error deleting the item.";
               proxy?.notifyError?.(detail);
             }
           }
-        },
+        }
       );
     };
 
     return {
+      features,
       loading,
       filter,
       perPage,

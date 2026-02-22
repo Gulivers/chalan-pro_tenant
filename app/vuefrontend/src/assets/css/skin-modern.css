@@ -343,8 +343,11 @@ label {
     font-weight: 400 !important;
 }
 
-/* Dropdown menu */
+/* Dropdown menu - z-index above main content so menu is not covered by cards */
+.navbar-modern .nav-item.dropdown .dropdown-menu,
 .navbar-modern .dropdown-menu {
+    z-index: 1050 !important;
+    position: absolute !important;
     background: #ffffff !important;
     border: none;
     border-radius: 0.75rem;

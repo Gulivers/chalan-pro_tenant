@@ -14,6 +14,7 @@
       "@houses/*": ["components/houses/*"],
       "@layout/*": ["components/layout/*"],
       "@schedule/*": ["components/schedule/*"],
+      "@crews/*": ["components/crews/*"],
       "@views/*": ["views/*"],
       "@helpers/*": ["helpers/*"],
       "@mixins/*": ["mixins/*"],

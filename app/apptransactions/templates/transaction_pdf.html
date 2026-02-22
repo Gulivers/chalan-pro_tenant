@@ -267,11 +267,9 @@
                     {% if line.brand %}
                         <span class="text-muted float-end" style="font-size: 0.8em;">{{ line.brand.name|truncatechars:15 }}</span>
                     {% endif %}
-                    {% comment %}
-                    {% if line.price_type %}
-                        <br/><small class="text-muted">{{ line.price_type.name }}</small>
-                    {% endif %}
-                    {% endcomment %}
+                    {% for item in line.serialized_items_created.all %}
+                        <br/><small class="text-muted">Asset tag: {{ item.asset_tag|default:"—" }}</small>
+                    {% endfor %}
                 </td>
                 <td class="text-center">{{ line.quantity }}</td>
                 <td class="text-center">{{ line.unit.code|default:"-" }}</td>

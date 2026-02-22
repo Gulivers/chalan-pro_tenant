@@ -9,6 +9,8 @@ from django.core.management import call_command
 from django_tenants.utils import get_tenant
 import json
 import os
+import uuid
+from decimal import Decimal
 # Django REST Framework (DRF)
 from rest_framework.exceptions import ValidationError
 from rest_framework import status, viewsets
@@ -30,7 +32,7 @@ from utils.datatable import handle_datatable_query
 from appinventory.models import (
     Product, Stock, Warehouse, ProductCategory,
     ProductBrand, UnitOfMeasure, UnitCategory, PriceType, InventoryMovement, ProductImage,
-    ProductBrandAssignment, SerializedItem,
+    ProductBrandAssignment, SerializedItem, InventoryTransfer,
     )
 from django.core.files.base import ContentFile
 from apptransactions.models import Document, DocumentLine, DocumentType
@@ -39,7 +41,7 @@ from appinventory.serializers import (
     WarehouseSerializer, ProductCategorySerializer, ProductBrandSerializer,
     ProductSerializer, UnitOfMeasureSerializer, UnitCategorySerializer,
     PriceTypeSerializer, ProductListSerializer, ProductDetailSerializer, ProductImageSerializer,
-    SerializedItemSerializer,
+    SerializedItemSerializer, InventoryTransferSerializer,
     )
 
 
@@ -127,6 +129,66 @@ class WarehouseViewSet(viewsets.ModelViewSet):
                 'error': f'Error clearing default warehouses: {str(e)}',
                 'success': False
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class InventoryTransferViewSet(viewsets.ModelViewSet):
+    queryset = InventoryTransfer.objects.select_related(
+        'from_warehouse', 'to_warehouse', 'created_by'
+    ).order_by('-created_at')
+    serializer_class = InventoryTransferSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+    filterset_fields = ['status', 'from_warehouse', 'to_warehouse']
+    search_fields = ['description', 'from_warehouse__name', 'to_warehouse__name']
+
+
+class InventoryTransferListProviderAPIView(APIView):
+    """
+    Endpoint para provider pattern con paginación, search y ordering.
+    Respuesta: { items: [...], totalRows: N }
+    """
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            page = int(request.query_params.get('page', 1))
+            per_page = int(request.query_params.get('per_page', 25))
+            search = request.query_params.get('search', '').strip()
+            ordering = request.query_params.get('ordering', '-created_at')
+
+            queryset = InventoryTransfer.objects.select_related(
+                'from_warehouse', 'to_warehouse', 'created_by'
+            ).order_by('-created_at')
+
+            if search:
+                queryset = queryset.filter(
+                    Q(description__icontains=search) |
+                    Q(from_warehouse__name__icontains=search) |
+                    Q(to_warehouse__name__icontains=search)
+                )
+
+            allowed = {'id', '-id', 'created_at', '-created_at', 'description', '-description',
+                       'from_warehouse__name', '-from_warehouse__name', 'to_warehouse__name', '-to_warehouse__name'}
+            if ordering.strip() in allowed:
+                queryset = queryset.order_by(ordering.strip())
+            else:
+                queryset = queryset.order_by('-created_at')
+
+            total_count = queryset.count()
+            start = (page - 1) * per_page
+            end = start + per_page
+            paginated = queryset[start:end]
+
+            serializer = InventoryTransferSerializer(paginated, many=True)
+            return Response({
+                'items': serializer.data,
+                'totalRows': total_count,
+            })
+        except (ValueError, TypeError) as e:
+            return Response({'error': 'Invalid parameters.', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class ProductCategoryViewSet(viewsets.ModelViewSet):
     queryset = ProductCategory.objects.all()
@@ -284,6 +346,13 @@ class SerializedItemListProviderAPIView(APIView):
                     Q(product__name__icontains=search) |
                     Q(notes__icontains=search)
                 )
+
+            product_id = request.query_params.get('product_id')
+            if product_id:
+                queryset = queryset.filter(product_id=product_id)
+            warehouse_id = request.query_params.get('warehouse_id')
+            if warehouse_id:
+                queryset = queryset.filter(current_warehouse_id=warehouse_id)
 
             # Validar ordering (un solo campo)
             allowed = {'id', '-id', 'asset_tag', '-asset_tag', 'product__name', '-product__name',
@@ -2984,3 +3053,4 @@ class InventoryMasterDataImportAPIView(APIView):
                 {'error': f'Error en la importación: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+

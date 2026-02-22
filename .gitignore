@@ -68,6 +68,8 @@ certbot/
 
 # Ignore backups directory
 backups/
+scripts/backup_completo.sh
+scripts/restore_backup.sh
 
 # Scripts de backup/restore (específicos del VPS, no sincronizar)
 scripts/backup_completo_VPS.sh

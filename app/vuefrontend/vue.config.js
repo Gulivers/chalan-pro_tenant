@@ -21,6 +21,7 @@ module.exports = defineConfig({
         '@contracts': path.resolve(__dirname, 'src/components/contracts'),
         '@schedule': path.resolve(__dirname, 'src/components/schedule'),
         '@houses': path.resolve(__dirname, 'src/components/houses'),
+        '@crews': path.resolve(__dirname, 'src/components/crews'),
         '@views': path.resolve(__dirname, 'src/views'),
         '@assets': path.resolve(__dirname, 'src/assets'),
         '@auth': path.resolve(__dirname, 'src/auth'),

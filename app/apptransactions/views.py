@@ -412,7 +412,7 @@ def download_transaction_pdf(request, document_id):
                         'price_type', 
                         'brand',
                         'warehouse'
-                    )
+                    ).prefetch_related('serialized_items_created')
                 )
             ),
             id=document_id

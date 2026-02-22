@@ -5,7 +5,8 @@ from .models import (
     UnitCategory, UnitOfMeasure, Warehouse,
     ProductCategory, ProductBrand, Product, ProductBrandAssignment,
     PriceType, ProductPrice,
-    SerializedItem, Stock, InventoryMovement, ProductImage
+    SerializedItem, Stock, InventoryMovement, ProductImage,
+    InventoryTransfer,
 )
 
 @admin.register(UnitCategory)
@@ -200,9 +201,8 @@ class SerializedItemAdmin(admin.ModelAdmin):
         from django.shortcuts import render, redirect
         from django.contrib import messages
         from django.db import transaction
-        from .models import InventoryMovement
+        from .models import InventoryMovement, InventoryTransfer
         from decimal import Decimal
-        import uuid
 
         ids = request.GET.get('ids', '')
         if not ids:
@@ -220,30 +220,37 @@ class SerializedItemAdmin(admin.ModelAdmin):
                     'opts': self.model._meta,
                 })
             target = Warehouse.objects.get(pk=warehouse_id)
-            transfer_id = str(uuid.uuid4())
             created = 0
             for item in items:
                 if item.current_warehouse_id == target.id:
                     continue
                 with transaction.atomic():
+                    inv_transfer = InventoryTransfer.objects.create(
+                        from_warehouse=item.current_warehouse,
+                        to_warehouse=target,
+                        description=f'Transfer from SerializedItem list',
+                        created_by=request.user,
+                    )
                     out_mov = InventoryMovement(
                         product=item.product,
                         warehouse=item.current_warehouse,
                         quantity=Decimal('1'),
-                        movement_type=-1,
-                        reason=f'Transfer to {target.name}',
+                        movement_type=0,
+                        reason=f'Inventory Transfer to {target.name}',
                         serialized_item=item,
-                        transfer_group_id=transfer_id,
+                        transfer=inv_transfer,
+                        created_by=request.user,
                     )
                     out_mov.save()
                     in_mov = InventoryMovement(
                         product=item.product,
                         warehouse=target,
                         quantity=Decimal('1'),
-                        movement_type=1,
-                        reason=f'Transfer from {item.current_warehouse.name}',
+                        movement_type=0,
+                        reason=f'Inventory Transfer from {item.current_warehouse.name}',
                         serialized_item=item,
-                        transfer_group_id=transfer_id,
+                        transfer=inv_transfer,
+                        created_by=request.user,
                     )
                     in_mov.save()
                     created += 1
@@ -264,12 +271,135 @@ class StockAdmin(admin.ModelAdmin):
     autocomplete_fields = ['product', 'warehouse']
 
 
+class InventoryMovementInline(admin.TabularInline):
+    model = InventoryMovement
+    extra = 0
+    ordering = ['timestamp']
+    autocomplete_fields = ['product', 'warehouse', 'unit', 'serialized_item']
+    fields = ('product', 'warehouse', 'quantity', 'unit', 'serialized_item', 'reason')
+    verbose_name = 'Movement'
+    verbose_name_plural = 'Movements'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('product', 'warehouse', 'unit', 'serialized_item')
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'warehouse':
+            parent_id = request.resolver_match.kwargs.get('object_id')
+            if parent_id:
+                try:
+                    transfer = InventoryTransfer.objects.get(pk=parent_id)
+                    kwargs['queryset'] = Warehouse.objects.filter(
+                        pk__in=[transfer.from_warehouse_id, transfer.to_warehouse_id]
+                    )
+                except InventoryTransfer.DoesNotExist:
+                    pass
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def has_add_permission(self, request, obj=None):
+        if obj and obj.status == InventoryTransfer.STATUS_REVERTED:
+            return False
+        return super().has_add_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        if obj and obj.status == InventoryTransfer.STATUS_REVERTED:
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.status == InventoryTransfer.STATUS_REVERTED:
+            return False
+        return super().has_delete_permission(request, obj)
+
+
+@admin.register(InventoryTransfer)
+class InventoryTransferAdmin(admin.ModelAdmin):
+    list_display = ('id', 'from_warehouse', 'to_warehouse', 'description', 'status', 'created_at', 'last_updated', 'created_by')
+    list_filter = ('status', 'from_warehouse', 'to_warehouse', 'created_at')
+    search_fields = ('description', 'from_warehouse__name', 'to_warehouse__name')
+    readonly_fields = ('created_at', 'last_updated')
+    autocomplete_fields = ['from_warehouse', 'to_warehouse', 'created_by']
+    inlines = [InventoryMovementInline]
+    date_hierarchy = 'created_at'
+    actions = ['revert_transfer']
+
+    fieldsets = (
+        (None, {
+            'fields': ('from_warehouse', 'to_warehouse', 'description', 'status'),
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'last_updated', 'created_by'),
+            'classes': ('collapse',),
+        }),
+    )
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for instance in instances:
+            if instance.transfer_id and instance.warehouse_id and instance.product_id:
+                transfer = instance.transfer
+                product = instance.product if hasattr(instance, 'product') else Product.objects.get(pk=instance.product_id)
+                is_serialized = bool(instance.serialized_item_id) or product.tracking_mode == Product.TRACKING_SERIALIZED
+                if instance.warehouse_id == transfer.from_warehouse_id:
+                    instance.movement_type = 0 if is_serialized else InventoryMovement.MOVEMENT_TYPE_SALIDA
+                    instance.reason = f"Inventory Transfer to {transfer.to_warehouse.name}"
+                else:
+                    instance.movement_type = 0 if is_serialized else InventoryMovement.MOVEMENT_TYPE_ENTRADA
+                    instance.reason = f"Inventory Transfer from {transfer.from_warehouse.name}"
+                instance.created_by = request.user
+            instance.save()
+        formset.save_m2m()
+
+    @admin.action(description='Revert/Cancel selected transfer(s)')
+    def revert_transfer(self, request, queryset):
+        from django.contrib import messages
+        from django.db import transaction as db_transaction
+
+        reverted = 0
+        errors = []
+        for transfer in queryset.filter(status=InventoryTransfer.STATUS_COMPLETED):
+            try:
+                with db_transaction.atomic():
+                    movements = list(
+                        transfer.movements.select_related('serialized_item', 'product', 'warehouse')
+                        .order_by('-id')  # Delete IN first (higher id), then OUT
+                    )
+                    for mov in movements:
+                        if mov.serialized_item_id and mov.movement_type in (
+                            InventoryMovement.MOVEMENT_TYPE_ENTRADA,
+                            InventoryMovement.MOVEMENT_TYPE_AJUSTE,
+                        ):
+                            item = mov.serialized_item
+                            item.current_warehouse = transfer.from_warehouse
+                            item.save(update_fields=['current_warehouse'])
+                        mov.delete()
+                    transfer.status = InventoryTransfer.STATUS_REVERTED
+                    transfer.save(update_fields=['status'])
+                    reverted += 1
+            except Exception as e:
+                errors.append(f'Transfer #{transfer.id}: {e}')
+        if reverted:
+            messages.success(request, f'{reverted} transfer(s) reverted.')
+        for err in errors:
+            messages.error(request, err)
+
+
 @admin.register(InventoryMovement)
 class InventoryMovementAdmin(admin.ModelAdmin):
-    list_display = ('product', 'warehouse', 'quantity', 'movement_type', 'serialized_item', 'transfer_group_id', 'unit', 'document', 'timestamp')
-    list_filter = ('movement_type', 'timestamp', 'warehouse')
-    search_fields = ('product__name', 'document', 'serialized_item__asset_tag', 'transfer_group_id')
-    autocomplete_fields = ['product', 'warehouse', 'unit', 'created_by', 'serialized_item']
+    list_display = ('product', 'warehouse', 'quantity', 'movement_type', 'serialized_item', 'transfer', 'unit', 'document', 'created_by', 'timestamp')
+    list_filter = ('movement_type', 'timestamp', 'warehouse', 'transfer')
+    search_fields = ('product__name', 'document', 'serialized_item__asset_tag')
+    autocomplete_fields = ['product', 'warehouse', 'unit', 'created_by', 'serialized_item', 'transfer']
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(ProductImage)

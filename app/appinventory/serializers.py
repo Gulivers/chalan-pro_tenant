@@ -2,6 +2,7 @@ from rest_framework import serializers
 from appinventory.models import (
     Warehouse, ProductCategory, ProductBrand, Product, UnitOfMeasure,
     UnitCategory, PriceType, ProductPrice, ProductImage, SerializedItem,
+    InventoryTransfer, InventoryMovement,
 )
 from django.db import transaction, IntegrityError
 import logging
@@ -352,3 +353,143 @@ class ProductImageSerializer(serializers.ModelSerializer):
             ).exclude(pk=instance.pk).update(is_primary=False)
         
         return super().update(instance, validated_data)
+
+
+# Serializador para líneas de transferencia (una línea = 2 movimientos OUT+IN)
+class InventoryTransferLineSerializer(serializers.Serializer):
+    product_id = serializers.IntegerField()
+    quantity = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=0.01)
+    unit_id = serializers.IntegerField(required=False, allow_null=True)
+    serialized_item_id = serializers.IntegerField(required=False, allow_null=True)
+
+
+class InventoryTransferSerializer(serializers.ModelSerializer):
+    from_warehouse_name = serializers.CharField(source='from_warehouse.name', read_only=True)
+    to_warehouse_name = serializers.CharField(source='to_warehouse.name', read_only=True)
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True, allow_null=True)
+    movements_count = serializers.SerializerMethodField()
+    lines = serializers.ListField(
+        child=InventoryTransferLineSerializer(),
+        write_only=True,
+        required=False,
+        allow_empty=False
+    )
+
+    class Meta:
+        model = InventoryTransfer
+        fields = [
+            'id', 'from_warehouse', 'from_warehouse_name',
+            'to_warehouse', 'to_warehouse_name',
+            'description', 'status',
+            'created_at', 'last_updated', 'created_by', 'created_by_username',
+            'movements_count', 'lines',
+        ]
+        read_only_fields = ['created_at', 'last_updated', 'status']
+
+    def get_movements_count(self, obj):
+        return obj.movements.count() if obj.pk else 0
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.pk:
+            movements = list(instance.movements.select_related('product', 'warehouse', 'unit', 'serialized_item').order_by('id'))
+            lines_out = {}
+            for m in movements:
+                key = (m.product_id, m.serialized_item_id)
+                if key not in lines_out:
+                    lines_out[key] = {
+                        'product_id': m.product_id,
+                        'product_name': m.product.name if m.product else None,
+                        'quantity': float(m.quantity),
+                        'unit_id': m.unit_id,
+                        'serialized_item_id': m.serialized_item_id,
+                        'serialized_item_asset_tag': m.serialized_item.asset_tag if m.serialized_item else None,
+                        'from_warehouse_id': instance.from_warehouse_id,
+                        'to_warehouse_id': instance.to_warehouse_id,
+                    }
+            data['lines'] = list(lines_out.values())
+        return data
+
+    def create(self, validated_data):
+        lines = validated_data.pop('lines', [])
+        request = self.context.get('request')
+        with transaction.atomic():
+            transfer = InventoryTransfer.objects.create(
+                **validated_data,
+                created_by=request.user if request and request.user.is_authenticated else None,
+            )
+            _create_movements_from_lines(transfer, lines, request)
+        return transfer
+
+    def update(self, instance, validated_data):
+        lines = validated_data.pop('lines', None)
+        request = self.context.get('request')
+        with transaction.atomic():
+            if instance.status != InventoryTransfer.STATUS_REVERTED:
+                for attr, value in validated_data.items():
+                    setattr(instance, attr, value)
+                instance.save()
+                if lines is not None:
+                    instance.movements.all().delete()
+                    _create_movements_from_lines(instance, lines, request)
+        return instance
+
+
+def _create_movements_from_lines(transfer, lines, request):
+    """Create 2 InventoryMovement (OUT+IN) per line from single-line format."""
+    from appinventory.models import InventoryTransfer, InventoryMovement, Product, SerializedItem
+    from decimal import Decimal
+
+    for line in lines:
+        product_id = line['product_id']
+        quantity = Decimal(str(line['quantity']))
+        unit_id = line.get('unit_id')
+        serialized_item_id = line.get('serialized_item_id')
+
+        product = Product.objects.get(pk=product_id)
+        unit = product.unit_default
+        if unit_id:
+            unit = UnitOfMeasure.objects.filter(pk=unit_id).first() or unit
+        serialized_item = None
+        if serialized_item_id:
+            serialized_item = SerializedItem.objects.get(pk=serialized_item_id)
+
+        is_serialized = bool(serialized_item) or product.tracking_mode == Product.TRACKING_SERIALIZED
+
+        if is_serialized:
+            if not serialized_item:
+                raise serializers.ValidationError(
+                    {'lines': f'Product "{product.name}" is serialized; provide serialized_item_id.'}
+                )
+            quantity = Decimal('1')
+            mt_out = InventoryMovement.MOVEMENT_TYPE_AJUSTE
+            mt_in = InventoryMovement.MOVEMENT_TYPE_AJUSTE
+        else:
+            mt_out = InventoryMovement.MOVEMENT_TYPE_SALIDA
+            mt_in = InventoryMovement.MOVEMENT_TYPE_ENTRADA
+
+        reason_out = f"Inventory Transfer to {transfer.to_warehouse.name}"
+        reason_in = f"Inventory Transfer from {transfer.from_warehouse.name}"
+
+        InventoryMovement.objects.create(
+            product=product,
+            warehouse=transfer.from_warehouse,
+            quantity=quantity,
+            movement_type=mt_out,
+            reason=reason_out,
+            unit=unit,
+            serialized_item=serialized_item,
+            transfer=transfer,
+            created_by=request.user if request and request.user.is_authenticated else None,
+        )
+        InventoryMovement.objects.create(
+            product=product,
+            warehouse=transfer.to_warehouse,
+            quantity=quantity,
+            movement_type=mt_in,
+            reason=reason_in,
+            unit=unit,
+            serialized_item=serialized_item,
+            transfer=transfer,
+            created_by=request.user if request and request.user.is_authenticated else None,
+        )
