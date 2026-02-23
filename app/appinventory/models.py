@@ -220,7 +220,12 @@ class SerializedItem(models.Model):
 
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='serialized_items')
     asset_tag = models.CharField(
-        max_length=100, unique=True, help_text='Unique tag/QR identifier', null=True, blank=True
+        max_length=100,
+        unique=True,
+        verbose_name='Serial Number',
+        help_text='Unique serial number or QR identifier',
+        null=True,
+        blank=True,
     )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
     condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default=CONDITION_OK)

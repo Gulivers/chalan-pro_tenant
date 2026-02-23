@@ -40,49 +40,50 @@
       <div class="card-body">
         <div class="row g-3 mb-3">
           <div class="col-12 col-md-4">
-            <label class="form-label d-flex align-items-center gap-2">
+            <label class="form-label" for="from_warehouse">
               From Warehouse <span class="text-danger">*</span>
-              <i
-                v-tt
-                class="fas fa-info-circle text-muted"
-                data-title="Origin warehouse for the transfer"></i>
             </label>
             <v-select
+              id="from_warehouse"
               v-model="form.from_warehouse"
               :options="warehousesOptions"
               :reduce="o => o.value"
               label="label"
               placeholder="Select warehouse..."
               :disabled="isViewMode || isReverted"
+              v-tt
+              data-title="Origin warehouse for the transfer"
               :class="{ 'is-invalid': errors.from_warehouse }" />
             <div class="text-danger small" v-if="errors.from_warehouse">{{ errors.from_warehouse[0] }}</div>
           </div>
           <div class="col-12 col-md-4">
-            <label class="form-label d-flex align-items-center gap-2">
+            <label class="form-label" for="to_warehouse">
               To Warehouse <span class="text-danger">*</span>
-              <i
-                v-tt
-                class="fas fa-info-circle text-muted"
-                data-title="Destination warehouse for the transfer"></i>
             </label>
             <v-select
+              id="to_warehouse"
               v-model="form.to_warehouse"
               :options="warehousesOptions"
               :reduce="o => o.value"
               label="label"
               placeholder="Select warehouse..."
               :disabled="isViewMode || isReverted"
+              v-tt
+              data-title="Destination warehouse for the transfer"
               :class="{ 'is-invalid': errors.to_warehouse }" />
             <div class="text-danger small" v-if="errors.to_warehouse">{{ errors.to_warehouse[0] }}</div>
           </div>
           <div class="col-12 col-md-4">
-            <label class="form-label">Description</label>
+            <label class="form-label" for="description">Description</label>
             <input
+              id="description"
               v-model.trim="form.description"
               type="text"
               class="form-control"
               :class="{ 'is-invalid': errors.description }"
               placeholder="Description of the transfer"
+              v-tt
+              data-title="Optional description or reference for this transfer"
               :disabled="isViewMode || isReverted" />
             <div class="text-danger small" v-if="errors.description">{{ errors.description[0] }}</div>
           </div>
@@ -100,7 +101,12 @@
         </div>
 
         <div v-if="form.from_warehouse && form.to_warehouse && form.from_warehouse !== form.to_warehouse" class="mb-3">
-          <h6 class="text-primary mb-2">Lines (one line = two movements: OUT + IN)</h6>
+          <h6
+            class="text-primary mb-2"
+            v-tt
+            data-title="Each line creates an OUT movement from origin warehouse and an IN movement to destination warehouse">
+            Lines (one line = two movements: OUT + IN)
+          </h6>
           <TransferLinesGrid
             ref="linesGridRef"
             v-model:lines="form.lines"
@@ -280,7 +286,12 @@ async function loadTransfer() {
         serialized_item: l.serialized_item_id,
         isSerialized: !!l.serialized_item_id,
         serializedOptions: l.serialized_item_asset_tag
-          ? [{ value: l.serialized_item_id, label: l.serialized_item_asset_tag }]
+          ? [{
+              value: l.serialized_item_id,
+              label: l.serialized_item_asset_tag,
+              status: l.serialized_item_status,
+              condition: l.serialized_item_condition,
+            }]
           : [],
       })),
     };

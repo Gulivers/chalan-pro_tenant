@@ -2,7 +2,7 @@
   <BModal
     :model-value="show"
     @update:model-value="emit('close')"
-    title="Assign Asset Tags"
+    title="Assign Serial Numbers"
     size="xl"
     modal-class="asset-tag-modal"
     body-class="p-0 overflow-auto"
@@ -12,7 +12,7 @@
   >
     <template #header>
       <div class="w-100">
-        <h5 class="modal-title mb-1">Assign Asset Tags</h5>
+        <h5 class="modal-title mb-1">Assign Serial Numbers</h5>
         <div v-if="contextLoaded" class="small text-muted">
           <strong>Document:</strong> {{ headerDocument }} — {{ headerDate }}<br>
           <strong>Serialized units:</strong> {{ items.length }} items — <strong>Missing tags:</strong> {{ missingCount }}
@@ -23,7 +23,7 @@
 
     <div class="p-3">
       <p v-if="!loading && items.length > 0" class="text-muted small mb-3">
-        This purchase includes serialized equipment. Assign asset tags now or skip to complete later.
+        This purchase includes serialized equipment. Assign serial numbers now or skip to complete later.
       </p>
 
       <div v-if="loading" class="text-center py-5">
@@ -42,7 +42,7 @@
               <th class="text-center">#</th>
               <th>Line ID</th>
               <th>Product</th>
-              <th>Asset Tag</th>
+              <th>Serial Number</th>
               <th>Status</th>
               <th>Condition</th>
               <th>Warehouse</th>
@@ -297,7 +297,7 @@ async function onSave() {
     return
   }
   const emptyCount = items.value.filter((i) => !(i._asset_tag || '').trim()).length
-  if (emptyCount > 0 && !confirm(`${emptyCount} item(s) have no asset tag. Save anyway?`)) {
+  if (emptyCount > 0 && !confirm(`${emptyCount} item(s) have no serial number. Save anyway?`)) {
     return
   }
 
