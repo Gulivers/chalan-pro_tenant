@@ -3,6 +3,7 @@ from django.views.generic import TemplateView
 from django.db import models, transaction
 from django.db.models import F, Sum, OuterRef, Subquery, Count, Max, Q
 from django.db.models.deletion import ProtectedError
+from django.utils import timezone
 from django.db import IntegrityError
 from django.http import HttpResponse
 from django.core.management import call_command
@@ -132,7 +133,7 @@ class WarehouseViewSet(viewsets.ModelViewSet):
 
 class InventoryTransferViewSet(viewsets.ModelViewSet):
     queryset = InventoryTransfer.objects.select_related(
-        'from_warehouse', 'to_warehouse', 'created_by'
+        'from_warehouse', 'from_warehouse__truck', 'to_warehouse', 'to_warehouse__truck', 'created_by'
     ).order_by('-created_at')
     serializer_class = InventoryTransferSerializer
     authentication_classes = [TokenAuthentication]
@@ -157,15 +158,26 @@ class InventoryTransferListProviderAPIView(APIView):
             ordering = request.query_params.get('ordering', '-created_at')
 
             queryset = InventoryTransfer.objects.select_related(
-                'from_warehouse', 'to_warehouse', 'created_by'
+                'from_warehouse', 'from_warehouse__truck', 'to_warehouse', 'to_warehouse__truck', 'created_by'
             ).order_by('-created_at')
 
             if search:
+                now = timezone.now()
+                q_crew_current = (
+                    Q(from_warehouse__truck__assignments__unassigned_at__isnull=True) |
+                    Q(from_warehouse__truck__assignments__unassigned_at__gt=now)
+                )
+                q_crew_current_to = (
+                    Q(to_warehouse__truck__assignments__unassigned_at__isnull=True) |
+                    Q(to_warehouse__truck__assignments__unassigned_at__gt=now)
+                )
                 queryset = queryset.filter(
                     Q(description__icontains=search) |
                     Q(from_warehouse__name__icontains=search) |
-                    Q(to_warehouse__name__icontains=search)
-                )
+                    Q(to_warehouse__name__icontains=search) |
+                    (Q(from_warehouse__truck__assignments__crew__name__icontains=search) & q_crew_current) |
+                    (Q(to_warehouse__truck__assignments__crew__name__icontains=search) & q_crew_current_to)
+                ).distinct()
 
             allowed = {'id', '-id', 'created_at', '-created_at', 'description', '-description',
                        'from_warehouse__name', '-from_warehouse__name', 'to_warehouse__name', '-to_warehouse__name'}
@@ -336,16 +348,24 @@ class SerializedItemListProviderAPIView(APIView):
             ordering = request.query_params.get('ordering', '-id')
 
             queryset = SerializedItem.objects.select_related(
-                'product', 'current_warehouse', 'document', 'document__document_type',
+                'product', 'current_warehouse', 'current_warehouse__truck',
+                'document', 'document__document_type',
                 'document_line', 'document_line__product',
             ).order_by('-id')
 
             if search:
+                now = timezone.now()
+                q_crew_current = (
+                    Q(current_warehouse__truck__assignments__unassigned_at__isnull=True) |
+                    Q(current_warehouse__truck__assignments__unassigned_at__gt=now)
+                )
                 queryset = queryset.filter(
                     Q(asset_tag__icontains=search) |
                     Q(product__name__icontains=search) |
-                    Q(notes__icontains=search)
-                )
+                    Q(notes__icontains=search) |
+                    Q(current_warehouse__name__icontains=search) |
+                    (Q(current_warehouse__truck__assignments__crew__name__icontains=search) & q_crew_current)
+                ).distinct()
 
             product_id = request.query_params.get('product_id')
             if product_id:
@@ -780,8 +800,8 @@ class ProductDefaultPriceAPIView(APIView):
                 })
             else:
                 return Response({
-                    'unit': None,
-                    'unit_name': None,
+                    'unit': product.unit_default_id if product.unit_default_id else None,
+                    'unit_name': product.unit_default.name if product.unit_default else None,
                     'unit_price': 0,
                     'price_type': None,
                     'price_type_name': None,

@@ -53,9 +53,11 @@ pgadmin_data/
 app/vuefrontend/.env.local
 app/vuefrontend/.env
 
-# Ignore workspace files
+# Ignore workspace files (específicos de máquina/servidor)
 *.code-workspace
-!root.code-workspace
+
+# Ignore reglas Cursor solo para este servidor (VPS)
+.cursor/rules/devops-vps.mdc
 
 # Ignore readme directory except specific files
 readme/*
@@ -68,4 +70,8 @@ certbot/
 backups/
 scripts/backup_completo.sh
 scripts/restore_backup.sh
+
+# Scripts de backup/restore (específicos del VPS, no sincronizar)
+scripts/backup_completo_VPS.sh
+scripts/restore_backup_VPS.sh
 

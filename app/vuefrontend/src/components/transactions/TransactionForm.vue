@@ -312,7 +312,7 @@
       </div>
     </div>
 
-    <!-- Modal Asset Tag Assignment (post-save cuando hay SerializedItems) -->
+    <!-- Modal Serial Number Assignment (post-save cuando hay SerializedItems) -->
     <AssetTagAssignmentModal
       :show="showAssetTagModal"
       :document-id="documentIdForAssetTagModal"
@@ -849,7 +849,7 @@ function onAssetTagModalClose() {
 }
 
 function onAssetTagModalSaved() {
-  proxy?.notifyToastSuccess?.("Asset tags saved.");
+  proxy?.notifyToastSuccess?.("Serial numbers saved.");
   onAssetTagModalClose();
 }
 
@@ -1454,7 +1454,7 @@ async function handleSubmit() {
     if (status === 400 && (builderError || workAccountError)) {
       if (builderError) {
         errorMessage =
-          "Please select a Party (supplier for purchases, customer for sales) before saving. The Asset Tags modal will appear after a successful save when the transaction has serialized items.";
+          "Please select a Party (supplier for purchases, customer for sales) before saving. The Serial Numbers modal will appear after a successful save when the transaction has serialized items.";
         errorTitle = "Party required";
       } else if (workAccountError) {
         errorMessage = "Please select a Work Account before saving.";

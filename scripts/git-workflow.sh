@@ -5,7 +5,7 @@
 set -e
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$REPO_DIR/app"
+cd "$REPO_DIR"
 
 # Colores para output
 RED='\033[0;31m'
