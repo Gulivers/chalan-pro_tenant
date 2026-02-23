@@ -10,29 +10,41 @@ Clasificación por tipo de componente.
 
 - Usar la directiva **`v-tt`** (tooltip) del proyecto para campos que necesiten ayuda contextual.
 - El texto del tooltip va en **`data-title`**, en inglés.
-- En inputs: añadir `v-tt` y `data-title` al elemento.
-- En labels: usar un icono `<i v-tt class="fas fa-info-circle text-muted" data-title="..."></i>` junto al label.
+- **Colocar `v-tt` y `data-title` en el propio control** (input, textarea, v-select o select), no en un icono `<i>`.
+- **El label debe llevar solo texto**; no añadir icono de ayuda junto al label.
 
 ```html
-<!-- En input (como ProductForm) -->
+<!-- Correcto: tooltip en el input -->
+<label class="form-label" for="description">Description</label>
 <input
-  v-model.trim="product.name"
+  id="description"
+  v-model.trim="form.description"
   type="text"
   class="form-control"
   v-tt
-  data-title="Product name for identification and display purposes" />
+  data-title="Optional description or reference for this transfer" />
 
-<!-- En label con icono -->
-<label class="form-label d-flex align-items-center gap-2">
-  Category
-  <i
-    v-tt
-    class="fas fa-info-circle text-muted"
-    data-title="Group products for filtering"></i>
-</label>
+<!-- Correcto: tooltip en el v-select -->
+<label class="form-label" for="from_warehouse">From Warehouse <span class="text-danger">*</span></label>
+<v-select
+  id="from_warehouse"
+  v-model="form.from_warehouse"
+  :options="warehousesOptions"
+  :reduce="o => o.value"
+  label="label"
+  placeholder="Select warehouse..."
+  v-tt
+  data-title="Origin warehouse for the transfer" />
+
+<!-- Para títulos de sección sin control: v-tt en el elemento de texto -->
+<h6 class="text-primary mb-2" v-tt data-title="Each line creates an OUT and an IN movement.">
+  Lines (one line = two movements: OUT + IN)
+</h6>
 ```
 
-Referencia: `src/directives/tooltip.js`
+**No usar:** icono `<i v-tt ...></i>` junto al label para el tooltip del campo; el tooltip debe mostrarse al pasar el ratón o enfocar el input/select.
+
+Referencia: `src/directives/tooltip.js`, `InventoryTransferForm.vue`, `SerializedItemForm.vue` (inputs con v-tt en el control).
 
 ### Selects: usar v-select (vue-select)
 

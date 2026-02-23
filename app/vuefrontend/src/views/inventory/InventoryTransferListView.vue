@@ -8,7 +8,7 @@
             v-if="hasPermission('appinventory.add_inventorytransfer')"
             to="/inventory-transfers/form"
             class="btn btn-success">
-            + New
+            + New Inventory Transfer
           </router-link>
           <button
             v-if="!loading"
@@ -49,7 +49,7 @@
               id="filter-input"
               v-model="filter"
               type="search"
-              placeholder="Search by description, warehouses..."
+              placeholder="Search by description, warehouses, crew..."
               size="sm" />
           </BFormGroup>
         </div>
@@ -86,6 +86,9 @@
           </template>
           <template #cell(description)="row">
             {{ row.item.description || "—" }}
+          </template>
+          <template #cell(truck_crew_name)="row">
+            {{ row.item.truck_crew_name || "—" }}
           </template>
           <template #cell(status)="row">
             <span
@@ -188,14 +191,60 @@ export default {
     ];
 
     const fields = [
-      { key: "id", label: "ID", thClass: "text-center", tdClass: "text-center" },
-      { key: "from_warehouse_name", label: "From Warehouse", thClass: "text-start", tdClass: "text-start" },
-      { key: "to_warehouse_name", label: "To Warehouse", thClass: "text-start", tdClass: "text-start" },
-      { key: "description", label: "Description", thClass: "text-start", tdClass: "text-start" },
-      { key: "status", label: "Status", thClass: "text-center", tdClass: "text-center" },
-      { key: "created_at", label: "Created At", thClass: "text-center", tdClass: "text-center" },
-      { key: "last_updated", label: "Last Updated", thClass: "text-center", tdClass: "text-center" },
-      { key: "created_by_username", label: "Created By", thClass: "text-start", tdClass: "text-start" },
+      {
+        key: "id",
+        label: "ID",
+        thClass: "text-center",
+        tdClass: "text-center",
+      },
+      {
+        key: "from_warehouse_name",
+        label: "From Warehouse",
+        thClass: "text-start",
+        tdClass: "text-start",
+      },
+      {
+        key: "to_warehouse_name",
+        label: "To Warehouse",
+        thClass: "text-start",
+        tdClass: "text-start",
+      },
+      {
+        key: "description",
+        label: "Description",
+        thClass: "text-start",
+        tdClass: "text-start",
+      },
+      {
+        key: "truck_crew_name",
+        label: "Truck Crew",
+        thClass: "text-start",
+        tdClass: "text-start",
+      },
+      {
+        key: "status",
+        label: "Status",
+        thClass: "text-center",
+        tdClass: "text-center",
+      },
+      {
+        key: "created_at",
+        label: "Created At",
+        thClass: "text-center",
+        tdClass: "text-center",
+      },
+      {
+        key: "last_updated",
+        label: "Last Updated",
+        thClass: "text-center",
+        tdClass: "text-center",
+      },
+      {
+        key: "created_by_username",
+        label: "Created By",
+        thClass: "text-start",
+        tdClass: "text-start",
+      },
       {
         key: "actions",
         label: "Actions",
@@ -228,7 +277,9 @@ export default {
           page,
           per_page: perPageValue,
           search: context.filter || "",
-          ordering: context.sortBy ? getOrderingFromSortBy(context.sortBy) : "-created_at",
+          ordering: context.sortBy
+            ? getOrderingFromSortBy(context.sortBy)
+            : "-created_at",
         });
         const response = await axios.get(`${ENDPOINT}?${params}`);
         if (response.data?.items) {
@@ -241,11 +292,15 @@ export default {
         proxy?.notifyToastError?.("Error loading inventory transfers.");
         return [];
       } finally {
-        setTimeout(() => { loading.value = false; }, 300);
+        setTimeout(() => {
+          loading.value = false;
+        }, 300);
       }
     };
 
-    const onPageChange = (page) => { currentPage.value = page; };
+    const onPageChange = (page) => {
+      currentPage.value = page;
+    };
 
     const refreshTable = () => {
       loading.value = true;
@@ -283,7 +338,9 @@ export default {
             refreshTable();
           } catch (error) {
             const data = error?.response?.data;
-            proxy?.notifyToastError?.(data?.detail || "Error deleting transfer.");
+            proxy?.notifyToastError?.(
+              data?.detail || "Error deleting transfer."
+            );
           }
         }
       );

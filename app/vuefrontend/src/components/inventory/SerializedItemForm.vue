@@ -15,7 +15,8 @@
               <!-- Product: solo lectura (informativo) -->
               <div class="mb-3">
                 <label class="form-label d-flex align-items-center gap-2">
-                  Product <span class="text-danger">*</span>
+                  Product
+                  <span class="text-danger">*</span>
                   <i
                     v-tt
                     class="fas fa-info-circle text-muted"
@@ -45,11 +46,11 @@
 
               <div class="mb-3">
                 <label class="form-label d-flex align-items-center gap-2">
-                  Asset tag
+                  Serial Number
                   <i
                     v-tt
                     class="fas fa-info-circle text-muted"
-                    data-title="Unique tag or QR identifier for this unit"></i>
+                    data-title="Unique serial number or QR identifier for this unit"></i>
                 </label>
                 <input
                   v-model.trim="form.asset_tag"
@@ -59,14 +60,15 @@
                   placeholder="e.g. LQCH020233"
                   disabled
                   v-tt
-                  data-title="Unique tag/QR identifier for the equipment (cannot be changed)" />
-                <small class="text-muted">Unique tag/QR identifier</small>
+                  data-title="Unique serial number/QR identifier for the equipment (cannot be changed)" />
+                <small class="text-muted">Unique serial number or QR identifier</small>
               </div>
 
               <!-- Current warehouse: input informativo en edición, selector en alta -->
               <div class="mb-3">
                 <label class="form-label d-flex align-items-center gap-2">
-                  Current warehouse <span class="text-danger">*</span>
+                  Current warehouse
+                  <span class="text-danger">*</span>
                   <i
                     v-tt
                     class="fas fa-info-circle text-muted"
@@ -134,7 +136,8 @@
             <div class="col-md-6">
               <div class="mb-3">
                 <label class="form-label d-flex align-items-center gap-2">
-                  Status <span class="text-danger">*</span>
+                  Status
+                  <span class="text-danger">*</span>
                   <i
                     v-tt
                     class="fas fa-info-circle text-muted"
@@ -150,26 +153,25 @@
                   v-tt
                   data-title="Active, Maintenance, Lost, or Retired">
                   <template #option="option">
-                    <span
-                      class="badge"
-                      :class="statusBadgeClass(option.value)"
-                      >{{ option.label }}</span
-                    >
+                    <span class="badge" :class="statusBadgeClass(option.value)">
+                      {{ option.label }}
+                    </span>
                   </template>
                   <template #selected-option="option">
                     <span
                       v-if="option"
                       class="badge"
-                      :class="statusBadgeClass(option.value)"
-                      >{{ option.label }}</span
-                    >
+                      :class="statusBadgeClass(option.value)">
+                      {{ option.label }}
+                    </span>
                   </template>
                 </v-select>
               </div>
 
               <div class="mb-3">
                 <label class="form-label d-flex align-items-center gap-2">
-                  Condition <span class="text-danger">*</span>
+                  Condition
+                  <span class="text-danger">*</span>
                   <i
                     v-tt
                     class="fas fa-info-circle text-muted"
@@ -187,17 +189,17 @@
                   <template #option="option">
                     <span
                       class="badge"
-                      :class="conditionBadgeClass(option.value)"
-                      >{{ option.label }}</span
-                    >
+                      :class="conditionBadgeClass(option.value)">
+                      {{ option.label }}
+                    </span>
                   </template>
                   <template #selected-option="option">
                     <span
                       v-if="option"
                       class="badge"
-                      :class="conditionBadgeClass(option.value)"
-                      >{{ option.label }}</span
-                    >
+                      :class="conditionBadgeClass(option.value)">
+                      {{ option.label }}
+                    </span>
                   </template>
                 </v-select>
               </div>
@@ -264,7 +266,8 @@
             </button>
           </div>
           <p class="small text-muted mt-3 mb-0">
-            <span class="text-danger">*</span> Indicates required fields.
+            <span class="text-danger">*</span>
+            Indicates required fields.
           </p>
         </form>
       </div>

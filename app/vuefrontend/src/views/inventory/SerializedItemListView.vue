@@ -59,7 +59,7 @@
                   id="filter-input"
                   v-model="filter"
                   type="search"
-                  placeholder="Search by asset tag, product, notes..."
+                  placeholder="Search by serial number, product, warehouse, crew, notes..."
                   size="sm" />
               </div>
             </div>
@@ -105,7 +105,8 @@
           <template #cell(status)="row">
             <span
               v-if="row.item.status"
-              class="badge bg-secondary"
+              class="badge"
+              :class="statusBadgeClass(row.item.status)"
               style="font-size: 0.75rem">
               {{ row.item.status }}
             </span>
@@ -125,6 +126,10 @@
 
           <template #cell(current_warehouse_name)="row">
             {{ row.item.current_warehouse_name || "—" }}
+          </template>
+
+          <template #cell(warehouse_crew_name)="row">
+            {{ row.item.warehouse_crew_name || "—" }}
           </template>
 
           <template #cell(purchase_date)="row">
@@ -235,7 +240,7 @@ export default {
       },
       {
         key: "asset_tag",
-        label: "Asset Tag",
+        label: "Serial Number",
         sortable: true,
         thClass: "text-start",
         tdClass: "text-start",
@@ -264,6 +269,13 @@ export default {
       {
         key: "current_warehouse_name",
         label: "Current Warehouse",
+        sortable: true,
+        thClass: "text-start",
+        tdClass: "text-start",
+      },
+      {
+        key: "warehouse_crew_name",
+        label: "Crew",
         sortable: true,
         thClass: "text-start",
         tdClass: "text-start",
@@ -359,6 +371,15 @@ export default {
       return null;
     };
 
+    const statusBadgeClass = (value) => {
+      const v = (value || "").trim();
+      if (v === "Active") return "bg-success";
+      if (v === "Maintenance") return "bg-warning text-dark";
+      if (v === "Lost") return "bg-danger";
+      if (v === "Retired") return "bg-secondary";
+      return "bg-secondary";
+    };
+
     const conditionLabel = (value) => {
       const labels = {
         ok: "OK",
@@ -430,6 +451,7 @@ export default {
       provider,
       onPageChange,
       refreshTable,
+      statusBadgeClass,
       conditionBadgeClass,
       conditionLabel,
       formatDate,

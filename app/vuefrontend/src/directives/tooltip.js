@@ -164,16 +164,22 @@ function onGlobalKeydown(e) {
 
 const directive = {
   mounted(el, binding) {
-    const text = binding?.value || el.getAttribute('data-title') || el.getAttribute('title')
-    if (!text) return
-    el.setAttribute('data-title', text)
-    el.removeAttribute('title') // evitar nativo
+    const getText = () => binding?.value || el.getAttribute('data-title') || el.getAttribute('title') || ''
+    const syncTitle = () => {
+      const text = getText()
+      if (text) {
+        el.setAttribute('data-title', text)
+        el.removeAttribute('title')
+      }
+    }
+    syncTitle()
+    queueMicrotask(syncTitle) // por si data-title se aplica después del mount (Vue)
 
     const placement = binding?.arg || el.getAttribute('data-placement') || 'top'
 
-    // Abrir SIEMPRE reemplazando el actual
     const open = () => {
-      Tip.showFor(el, el.getAttribute('data-title'), placement)
+      const t = el.getAttribute('data-title')
+      if (t) Tip.showFor(el, t, placement)
     }
     const close = () => Tip.hide(el)
 
@@ -203,7 +209,7 @@ const directive = {
   },
 
   updated(el, binding) {
-    const newText = binding?.value
+    const newText = binding?.value ?? el.getAttribute('data-title')
     if (typeof newText === 'string' && newText.length) {
       el.setAttribute('data-title', newText)
       if (Tip.currentEl === el && Tip.el && Tip.el.style.opacity === '1') {

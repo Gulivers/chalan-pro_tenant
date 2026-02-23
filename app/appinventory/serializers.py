@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from django.utils import timezone
+from django.db.models import Q
 from appinventory.models import (
     Warehouse, ProductCategory, ProductBrand, Product, UnitOfMeasure,
     UnitCategory, PriceType, ProductPrice, ProductImage, SerializedItem,
@@ -252,6 +254,7 @@ class ProductDetailSerializer(ProductSerializer):
 class SerializedItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
     current_warehouse_name = serializers.CharField(source='current_warehouse.name', read_only=True)
+    warehouse_crew_name = serializers.SerializerMethodField()
     document_id = serializers.SerializerMethodField()
     document_display = serializers.SerializerMethodField()
     document_line_display = serializers.SerializerMethodField()
@@ -260,10 +263,14 @@ class SerializedItemSerializer(serializers.ModelSerializer):
         model = SerializedItem
         fields = [
             'id', 'product', 'product_name', 'asset_tag', 'status', 'condition',
-            'purchase_date', 'current_warehouse', 'current_warehouse_name',
+            'purchase_date', 'current_warehouse', 'current_warehouse_name', 'warehouse_crew_name',
             'document', 'document_id', 'document_display',
             'document_line', 'document_line_display', 'notes', 'created_at',
         ]
+
+    def get_warehouse_crew_name(self, obj):
+        wh = getattr(obj, 'current_warehouse', None)
+        return _get_current_crew_name_for_truck(wh.truck if wh else None)
         read_only_fields = ['created_at']
 
     def get_document_id(self, obj):
@@ -355,6 +362,22 @@ class ProductImageSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
+def _get_current_crew_name_for_truck(truck):
+    """Return the name of the crew that currently has this truck assigned, or None."""
+    if not truck:
+        return None
+    from crewsapp.models import TruckAssignment
+    now = timezone.now()
+    assignment = (
+        TruckAssignment.objects.filter(trucks=truck)
+        .filter(Q(unassigned_at__isnull=True) | Q(unassigned_at__gt=now))
+        .order_by('-assigned_at')
+        .select_related('crew')
+        .first()
+    )
+    return assignment.crew.name if assignment and assignment.crew else None
+
+
 # Serializador para líneas de transferencia (una línea = 2 movimientos OUT+IN)
 class InventoryTransferLineSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
@@ -367,6 +390,7 @@ class InventoryTransferSerializer(serializers.ModelSerializer):
     from_warehouse_name = serializers.CharField(source='from_warehouse.name', read_only=True)
     to_warehouse_name = serializers.CharField(source='to_warehouse.name', read_only=True)
     created_by_username = serializers.CharField(source='created_by.username', read_only=True, allow_null=True)
+    truck_crew_name = serializers.SerializerMethodField()
     movements_count = serializers.SerializerMethodField()
     lines = serializers.ListField(
         child=InventoryTransferLineSerializer(),
@@ -381,10 +405,24 @@ class InventoryTransferSerializer(serializers.ModelSerializer):
             'id', 'from_warehouse', 'from_warehouse_name',
             'to_warehouse', 'to_warehouse_name',
             'description', 'status',
+            'truck_crew_name',
             'created_at', 'last_updated', 'created_by', 'created_by_username',
             'movements_count', 'lines',
         ]
         read_only_fields = ['created_at', 'last_updated', 'status']
+
+    def get_truck_crew_name(self, obj):
+        from_wh = getattr(obj, 'from_warehouse', None)
+        to_wh = getattr(obj, 'to_warehouse', None)
+        from_crew = _get_current_crew_name_for_truck(from_wh.truck if from_wh else None)
+        to_crew = _get_current_crew_name_for_truck(to_wh.truck if to_wh else None)
+        if from_crew and to_crew:
+            return f"{from_crew} → {to_crew}" if from_crew != to_crew else from_crew
+        if from_crew:
+            return from_crew
+        if to_crew:
+            return to_crew
+        return None
 
     def get_movements_count(self, obj):
         return obj.movements.count() if obj.pk else 0
@@ -404,6 +442,8 @@ class InventoryTransferSerializer(serializers.ModelSerializer):
                         'unit_id': m.unit_id,
                         'serialized_item_id': m.serialized_item_id,
                         'serialized_item_asset_tag': m.serialized_item.asset_tag if m.serialized_item else None,
+                        'serialized_item_status': m.serialized_item.status if m.serialized_item else None,
+                        'serialized_item_condition': m.serialized_item.condition if m.serialized_item else None,
                         'from_warehouse_id': instance.from_warehouse_id,
                         'to_warehouse_id': instance.to_warehouse_id,
                     }

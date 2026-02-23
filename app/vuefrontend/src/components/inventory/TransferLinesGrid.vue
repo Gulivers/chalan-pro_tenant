@@ -44,6 +44,8 @@
             <th style="min-width: 90px">Quantity</th>
             <th style="min-width: 140px">Unit</th>
             <th style="min-width: 200px">Serialized item</th>
+            <th style="min-width: 100px" class="text-center">Status</th>
+            <th style="min-width: 100px" class="text-center">Condition</th>
             <th style="width: 70px"></th>
           </tr>
         </thead>
@@ -157,7 +159,7 @@
                 :disabled="!row.product || !row.isSerialized || isReadOnly"
                 :loading="loading.serialized[idx]"
                 @search="q => searchSerialized(idx, q)"
-                placeholder="Select asset tag..."
+                placeholder="Select serial number..."
                 clearable>
                 <template #selected-option="{ label }">
                   <div class="text-truncate" style="max-width: 180px">{{ label }}</div>
@@ -172,6 +174,34 @@
                 </template>
               </v-select>
               <div class="text-danger small" v-if="row._errors?.serialized_item">{{ row._errors.serialized_item[0] }}</div>
+            </td>
+
+            <td class="text-center align-middle">
+              <template v-if="row.isSerialized && row.serialized_item">
+                <span
+                  v-if="serializedStatus(row)"
+                  class="badge"
+                  :class="statusBadgeClass(serializedStatus(row))"
+                  style="font-size: 0.75rem">
+                  {{ serializedStatus(row) }}
+                </span>
+                <span v-else class="text-muted">—</span>
+              </template>
+              <span v-else class="text-muted">—</span>
+            </td>
+
+            <td class="text-center align-middle">
+              <template v-if="row.isSerialized && row.serialized_item">
+                <span
+                  v-if="serializedCondition(row)"
+                  class="badge"
+                  :class="conditionBadgeClass(serializedCondition(row))"
+                  style="font-size: 0.75rem">
+                  {{ conditionLabel(serializedCondition(row)) }}
+                </span>
+                <span v-else class="text-muted">—</span>
+              </template>
+              <span v-else class="text-muted">—</span>
             </td>
 
             <td class="text-end">
@@ -332,6 +362,8 @@ async function searchSerialized(idx, query) {
     r.serializedOptions = list.map(s => ({
       value: s.id,
       label: `${s.asset_tag || s.id} (${s.product_name || ''})`,
+      status: s.status,
+      condition: s.condition,
     }));
   } catch (error) {
     r.serializedOptions = [];
@@ -352,12 +384,14 @@ async function onProductSelected(idx, option) {
   } else {
     r.serialized_item = null;
     r.serializedOptions = [];
-    try {
-      const { data } = await axios.get(`/api/products/${option.value}/default-price/`);
-      if (data?.unit) r.unit = data.unit;
-    } catch (_) {
-      if (option?.product?.unit_default) r.unit = option.product.unit_default?.id;
-    }
+  }
+  // Asignar Default Unit como selección en Unit (desde API o unit_default del producto)
+  try {
+    const { data } = await axios.get(`/api/products/${option.value}/default-price/`);
+    if (data?.unit != null) r.unit = data.unit;
+  } catch (_) {
+    const unitId = option?.product?.unit_default_id ?? option?.product?.unit_default?.id;
+    if (unitId != null) r.unit = unitId;
   }
 }
 
@@ -377,6 +411,40 @@ function onProductCleared(idx) {
   r.isSerialized = false;
   r.serialized_item = null;
   r.serializedOptions = [];
+}
+
+// Badge helpers (same as SerializedItemForm.vue)
+function statusBadgeClass(value) {
+  const v = (value || '').trim();
+  if (v === 'Active') return 'bg-success';
+  if (v === 'Maintenance') return 'bg-warning text-dark';
+  if (v === 'Lost') return 'bg-danger';
+  if (v === 'Retired') return 'bg-secondary';
+  return 'bg-secondary';
+}
+
+function conditionBadgeClass(value) {
+  const v = (value || '').toLowerCase();
+  if (v === 'ok') return 'bg-success';
+  if (v === 'damaged') return 'bg-warning text-dark';
+  if (v === 'needs_repair') return 'bg-danger';
+  return 'bg-secondary';
+}
+
+function conditionLabel(value) {
+  const labels = { ok: 'OK', damaged: 'Damaged', needs_repair: 'Needs repair' };
+  const v = (value || '').toLowerCase().replace(/\s/g, '_');
+  return labels[v] || value || '—';
+}
+
+function serializedStatus(row) {
+  const opt = row.serializedOptions?.find(o => o.value === row.serialized_item);
+  return opt?.status ?? null;
+}
+
+function serializedCondition(row) {
+  const opt = row.serializedOptions?.find(o => o.value === row.serialized_item);
+  return opt?.condition ?? null;
 }
 
 function validateLines() {

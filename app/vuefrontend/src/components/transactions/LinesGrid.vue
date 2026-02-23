@@ -4,15 +4,32 @@
       <!-- Desktop Layout -->
       <div class="d-none d-md-flex align-items-center justify-content-between">
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary" type="button" @click="addLine">
+            <button
+              class="btn btn-outline-primary"
+              type="button"
+              @click="addLine"
+              v-tt
+              data-title="Add a new line to the document">
               <i class="bi bi-plus-lg me-1"></i>
               Add Row
             </button>
-            <button class="btn btn-outline-info" type="button" :disabled="!hasSelection" @click="duplicateSelected">
+            <button
+              class="btn btn-outline-info"
+              type="button"
+              :disabled="!hasSelection"
+              @click="duplicateSelected"
+              v-tt
+              data-title="Duplicate the selected lines">
               <i class="bi bi-files me-1"></i>
               Duplicate selected
             </button>
-            <button class="btn btn-outline-danger" type="button" :disabled="!hasSelection" @click="removeSelected">
+            <button
+              class="btn btn-outline-danger"
+              type="button"
+              :disabled="!hasSelection"
+              @click="removeSelected"
+              v-tt
+              data-title="Remove the selected lines">
               <i class="bi bi-trash me-1"></i>
               Delete selected
             </button>
@@ -22,9 +39,9 @@
               type="button"
               @click="$emit('open-asset-tags')"
               v-tt
-              data-title="Assign asset tags for serialized items of this document">
+              data-title="Assign serial numbers for serialized items of this document">
               <i class="bi bi-tag me-1"></i>
-              Assign Asset Tags
+              Assign Serial Numbers
             </button>
         </div>
         <div class="small text-muted">Rows: {{ linesLocal?.length || 0 }}</div>
@@ -39,29 +56,47 @@
         
         <!-- Button Row - Responsive -->
         <div class="d-flex gap-1 flex-wrap">
-          <button class="btn btn-outline-primary btn-sm flex-fill" type="button" @click="addLine">
+          <button
+            class="btn btn-outline-primary btn-sm flex-fill"
+            type="button"
+            @click="addLine"
+            v-tt
+            data-title="Add a new line to the document">
             <i class="bi bi-plus-lg"></i>
             <span class="d-none d-sm-inline ms-1">Add Row</span>
             <span class="d-sm-none ms-1">Add</span>
           </button>
-          <button class="btn btn-outline-info btn-sm flex-fill" type="button" :disabled="!hasSelection" @click="duplicateSelected">
+          <button
+            class="btn btn-outline-info btn-sm flex-fill"
+            type="button"
+            :disabled="!hasSelection"
+            @click="duplicateSelected"
+            v-tt
+            data-title="Duplicate the selected lines">
             <i class="bi bi-files"></i>
             <span class="d-none d-sm-inline ms-1">Duplicate</span>
             <span class="d-sm-none ms-1">Copy</span>
           </button>
-          <button class="btn btn-outline-danger btn-sm flex-fill" type="button" :disabled="!hasSelection" @click="removeSelected">
+          <button
+            class="btn btn-outline-danger btn-sm flex-fill"
+            type="button"
+            :disabled="!hasSelection"
+            @click="removeSelected"
+            v-tt
+            data-title="Remove the selected lines">
             <i class="bi bi-trash"></i>
             <span class="d-none d-sm-inline ms-1">Delete</span>
             <span class="d-sm-none ms-1">Del</span>
           </button>
-          <button
-            v-if="documentId"
-            class="btn btn-outline-secondary btn-sm flex-fill"
-            type="button"
-            @click="$emit('open-asset-tags')"
-            title="Assign Asset Tags">
+<button
+          v-if="documentId"
+          class="btn btn-outline-secondary btn-sm flex-fill"
+          type="button"
+          @click="$emit('open-asset-tags')"
+          v-tt
+          data-title="Assign serial numbers for serialized items of this document">
             <i class="bi bi-tag"></i>
-            <span class="d-none d-sm-inline ms-1">Asset Tags</span>
+            <span class="d-none d-sm-inline ms-1">Serial Numbers</span>
           </button>
         </div>
       </div>
@@ -74,15 +109,15 @@
             <th style="width: 30px" class="text-center">
               <input type="checkbox" class="form-check-input" v-model="selectAll" />
             </th>
-            <th style="min-width: 300px">Product</th>
-            <th style="min-width: 100px" v-tt="'Quantity'">Qty</th>
-            <th style="min-width: 200px">Unit</th>
-            <th style="min-width: 120px">Unit Price</th>
-            <th style="min-width: 100px">Disc %</th>
-            <th style="min-width: 180px">Warehouse</th>
-            <th style="min-width: 150px">Price Type</th>
-            <th style="min-width: 150px">Brand</th>
-            <th style="min-width: 120px" class="text-end">Final</th>
+            <th style="min-width: 300px" v-tt data-title="Product or service for this line">Product</th>
+            <th style="min-width: 100px" v-tt data-title="Quantity">Qty</th>
+            <th style="min-width: 200px" v-tt data-title="Unit of measure">Unit</th>
+            <th style="min-width: 120px" v-tt data-title="Price per unit">Unit Price</th>
+            <th style="min-width: 100px" v-tt data-title="Discount percentage applied to this line">Disc %</th>
+            <th style="min-width: 180px" v-tt data-title="Warehouse for stock movement (required when document type requires it)">Warehouse</th>
+            <th style="min-width: 150px" v-tt data-title="Price type (e.g. Contractor, Retail)">Price Type</th>
+            <th style="min-width: 150px" v-tt data-title="Product brand when applicable">Brand</th>
+            <th style="min-width: 120px" class="text-end" v-tt data-title="Line total after discount">Final</th>
             <th style="width: 80px"></th>
           </tr>
         </thead>
