@@ -7,46 +7,43 @@
         <router-link
           v-if="hasPermission('apptransactions.add_party')"
           to="/parties/form"
-          class="btn btn-success"
-          >+ New Party</router-link
-        >
+          class="btn btn-success">
+          + New Party
+        </router-link>
       </div>
     </template>
 
     <!-- Filtros -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <!-- entries per page (izq) -->
+      <!-- Entries per page (izq) -->
       <div class="col-md-3">
-        <div class="input-group">
-          <select v-model="perPage" class="form-select">
-            <option v-for="n in [5, 10, 25, 50]" :key="n" :value="n">
-              {{ n }}
-            </option>
-          </select>
-          <span class="text-primary p-2">entries per page</span>
-        </div>
+        <label for="party-per-page" class="form-label small mb-1">Entries per page:</label>
+        <select id="party-per-page" v-model="perPage" class="form-select form-select-sm">
+          <option v-for="n in [5, 10, 25, 50]" :key="n" :value="n">
+            {{ n }}
+          </option>
+        </select>
       </div>
 
       <!-- search (der) -->
       <div class="col-md-4">
         <div class="d-flex align-items-center gap-2">
-          <span class="text-primary p-2">Search:</span>
+          <label for="party-search" class="form-label small mb-1">Search:</label>
           <div class="search-wrapper flex-grow-1">
             <input
+              id="party-search"
               v-model="search"
               type="text"
-              class="form-control"
+              class="form-control form-control-sm"
               placeholder="Search by name, email, phone, city, state..."
-              autocomplete="off"
-            />
+              autocomplete="off" />
             <button
               v-show="search && search.length"
               @mousedown.prevent
               @click="search = ''"
               type="button"
               class="btn-clear-x"
-              title="Clear"
-            >
+              title="Clear">
               ×
             </button>
           </div>
@@ -63,8 +60,7 @@
       bordered
       hover
       responsive
-      striped
-    >
+      striped>
       <template #cell(category)="data">
         {{ categoriesMap[data.item.category] || "—" }}
       </template>
@@ -79,9 +75,9 @@
 
       <template #cell(is_active)="data">
         <td class="text-center">
-          <span v-if="data.item.is_active" class="badge bg-success"
-            >Active</span
-          >
+          <span v-if="data.item.is_active" class="badge bg-success">
+            Active
+          </span>
           <span v-else class="badge bg-secondary">Inactive</span>
         </td>
       </template>
@@ -92,22 +88,19 @@
             <router-link
               v-if="hasPermission('apptransactions.view_party')"
               :to="`/parties/form?id=${data.item.id}&mode=view`"
-              class="btn btn-outline-success me-1"
-            >
+              class="btn btn-outline-success me-1">
               View
             </router-link>
             <router-link
               v-if="hasPermission('apptransactions.change_party')"
               :to="`/parties/form?id=${data.item.id}`"
-              class="btn btn-outline-primary me-1"
-            >
+              class="btn btn-outline-primary me-1">
               Edit
             </router-link>
             <button
               v-if="hasPermission('apptransactions.delete_party')"
               @click="deleteParty(data.item.id, data.item.name)"
-              class="btn btn-outline-danger"
-            >
+              class="btn btn-outline-danger">
               Delete
             </button>
           </div>
@@ -120,8 +113,7 @@
       <b-pagination
         v-model="currentPage"
         :total-rows="filteredItems.length"
-        :per-page="perPage"
-      />
+        :per-page="perPage" />
     </div>
   </TxCard>
 </template>
@@ -138,17 +130,58 @@ const { proxy } = getCurrentInstance();
 const parties = ref([]);
 const categoriesMap = ref({}); // id -> name
 const search = ref("");
-const perPage = ref(10);
+const perPage = ref(25);
 const currentPage = ref(1);
 
 const fields = [
-  { key: "id", label: "ID", sortable: true, thClass: "text-center", tdClass: "text-center" },
-  { key: "name", label: "Name", sortable: true, thClass: "text-start", tdClass: "text-start" },
-  { key: "email", label: "Email", sortable: true, thClass: "text-start", tdClass: "text-start" },
-  { key: "phone", label: "Phone", sortable: true, thClass: "text-start", tdClass: "text-start" },
-  { key: "city", label: "City", sortable: true, thClass: "text-start", tdClass: "text-start" },
-  { key: "state", label: "State", sortable: true, thClass: "text-start", tdClass: "text-start" },
-  { key: "category", label: "Category", thClass: "text-start", tdClass: "text-start" },
+  {
+    key: "id",
+    label: "ID",
+    sortable: true,
+    thClass: "text-center",
+    tdClass: "text-center",
+  },
+  {
+    key: "name",
+    label: "Name",
+    sortable: true,
+    thClass: "text-start",
+    tdClass: "text-start",
+  },
+  {
+    key: "email",
+    label: "Email",
+    sortable: true,
+    thClass: "text-start",
+    tdClass: "text-start",
+  },
+  {
+    key: "phone",
+    label: "Phone",
+    sortable: true,
+    thClass: "text-start",
+    tdClass: "text-start",
+  },
+  {
+    key: "city",
+    label: "City",
+    sortable: true,
+    thClass: "text-start",
+    tdClass: "text-start",
+  },
+  {
+    key: "state",
+    label: "State",
+    sortable: true,
+    thClass: "text-start",
+    tdClass: "text-start",
+  },
+  {
+    key: "category",
+    label: "Category",
+    thClass: "text-start",
+    tdClass: "text-start",
+  },
   {
     key: "customer_rank",
     label: "Cust.",
@@ -212,7 +245,7 @@ const filteredItems = computed(() => {
   const q = search.value.toLowerCase();
   return parties.value.filter((item) => {
     const hay = [item.name, item.email, item.phone, item.city, item.state].map(
-      (v) => (v || "").toString().toLowerCase(),
+      (v) => (v || "").toString().toLowerCase()
     );
     return hay.some((t) => t.includes(q));
   });
@@ -234,7 +267,7 @@ const deleteParty = (id, name) => {
           err?.response?.data?.detail || "Error deleting the party.";
         proxy?.notifyError?.(detail);
       }
-    },
+    }
   );
 };
 </script>

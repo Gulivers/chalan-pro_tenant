@@ -552,13 +552,21 @@ class ProductListProviderAPIView(APIView):
                 elif is_active.lower() == 'false':
                     queryset = queryset.filter(is_active=False)
             
-            # Aplicar búsqueda
+            # Aplicar búsqueda por múltiples palabras (cada palabra debe coincidir en al menos un campo)
             if search:
-                queryset = queryset.filter(
-                    Q(name__icontains=search) |
-                    Q(sku__icontains=search) |
-                    Q(category__name__icontains=search)
-                )
+                words = search.split()
+                for w in words:
+                    q = (
+                        Q(name__icontains=w) |
+                        Q(sku__icontains=w) |
+                        Q(category__name__icontains=w) |
+                        Q(tracking_mode__icontains=w) |
+                        Q(unit_default__name__icontains=w) |
+                        Q(brands__name__icontains=w)
+                    )
+                    if w.isdigit():
+                        q = q | Q(id=w)
+                    queryset = queryset.filter(q).distinct()
             
             # Aplicar ordenamiento
             queryset = queryset.order_by(ordering)
@@ -590,6 +598,186 @@ class ProductListProviderAPIView(APIView):
             return Response({'error': str(e)}, status=500)
 
 
+def _provider_response(queryset, serializer_class, page, per_page, count_active=None, count_inactive=None):
+    """Helper: paginate queryset, serialize, return items + totalRows + stats."""
+    total_count = queryset.count()
+    active_count = count_active(queryset) if count_active else total_count
+    inactive_count = count_inactive(queryset) if count_inactive else 0
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated = queryset[start:end]
+    data = serializer_class(paginated, many=True).data
+    return Response({
+        'items': data,
+        'totalRows': total_count,
+        'stats': {'total': total_count, 'active': active_count, 'inactive': inactive_count}
+    })
+
+
+def _safe_ordering(ordering_param, allowed_fields, default='-id'):
+    """Return ordering string if allowed, else default."""
+    if not ordering_param or ordering_param.lstrip('-') not in allowed_fields:
+        return default
+    return ordering_param
+
+
+class WarehouseListProviderAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            page = int(request.query_params.get('page', 1))
+            per_page = int(request.query_params.get('per_page', 25))
+            search = request.query_params.get('search', '').strip()
+            ordering = _safe_ordering(
+                request.query_params.get('ordering', '-id'),
+                {'id', 'name', 'location', 'is_active', 'is_default'}, '-id'
+            )
+            queryset = Warehouse.objects.all().order_by(ordering)
+            if search:
+                words = search.split()
+                for w in words:
+                    q = Q(name__icontains=w) | Q(location__icontains=w)
+                    if w.isdigit():
+                        q = q | Q(id=w)
+                    queryset = queryset.filter(q)
+            return _provider_response(
+                queryset, WarehouseSerializer, page, per_page,
+                count_active=lambda q: q.filter(is_active=True).count(),
+                count_inactive=lambda q: q.filter(is_active=False).count()
+            )
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+
+class ProductCategoryListProviderAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            page = int(request.query_params.get('page', 1))
+            per_page = int(request.query_params.get('per_page', 25))
+            search = request.query_params.get('search', '').strip()
+            ordering = _safe_ordering(
+                request.query_params.get('ordering', '-id'),
+                {'id', 'name', 'description', 'is_active'}, '-id'
+            )
+            queryset = ProductCategory.objects.all().order_by(ordering)
+            if search:
+                words = search.split()
+                for w in words:
+                    q = Q(name__icontains=w) | Q(description__icontains=w)
+                    if w.isdigit():
+                        q = q | Q(id=w)
+                    queryset = queryset.filter(q)
+            return _provider_response(
+                queryset, ProductCategorySerializer, page, per_page,
+                count_active=lambda q: q.filter(is_active=True).count(),
+                count_inactive=lambda q: q.filter(is_active=False).count()
+            )
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+
+class PriceTypeListProviderAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            page = int(request.query_params.get('page', 1))
+            per_page = int(request.query_params.get('per_page', 25))
+            search = request.query_params.get('search', '').strip()
+            ordering = _safe_ordering(
+                request.query_params.get('ordering', '-id'),
+                {'id', 'name', 'description', 'is_active'}, '-id'
+            )
+            queryset = PriceType.objects.all().order_by(ordering)
+            if search:
+                words = search.split()
+                for w in words:
+                    q = Q(name__icontains=w) | Q(description__icontains=w)
+                    if w.isdigit():
+                        q = q | Q(id=w)
+                    queryset = queryset.filter(q)
+            return _provider_response(
+                queryset, PriceTypeSerializer, page, per_page,
+                count_active=lambda q: q.filter(is_active=True).count(),
+                count_inactive=lambda q: q.filter(is_active=False).count()
+            )
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+
+class UnitOfMeasureListProviderAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            page = int(request.query_params.get('page', 1))
+            per_page = int(request.query_params.get('per_page', 25))
+            search = request.query_params.get('search', '').strip()
+            ordering_param = request.query_params.get('ordering', '-id')
+            if ordering_param.lstrip('-') == 'category_name':
+                ordering_param = ordering_param.replace('category_name', 'category__name')
+            ordering = _safe_ordering(
+                ordering_param,
+                {'id', 'name', 'code', 'category__name', 'reference_unit', 'conversion_sign', 'conversion_factor', 'is_active'}, '-id'
+            )
+            queryset = UnitOfMeasure.objects.select_related('category').order_by(ordering)
+            if search:
+                words = search.split()
+                for w in words:
+                    q = (
+                        Q(name__icontains=w) |
+                        Q(code__icontains=w) |
+                        Q(category__name__icontains=w)
+                    )
+                    if w.isdigit():
+                        q = q | Q(id=w)
+                    queryset = queryset.filter(q)
+            return _provider_response(
+                queryset, UnitOfMeasureSerializer, page, per_page,
+                count_active=lambda q: q.filter(is_active=True).count(),
+                count_inactive=lambda q: q.filter(is_active=False).count()
+            )
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+
+class UnitCategoryListProviderAPIView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            page = int(request.query_params.get('page', 1))
+            per_page = int(request.query_params.get('per_page', 25))
+            search = request.query_params.get('search', '').strip()
+            ordering = _safe_ordering(
+                request.query_params.get('ordering', '-id'),
+                {'id', 'name', 'description', 'is_active'}, '-id'
+            )
+            queryset = UnitCategory.objects.all().order_by(ordering)
+            if search:
+                words = search.split()
+                for w in words:
+                    q = Q(name__icontains=w) | Q(description__icontains=w)
+                    if w.isdigit():
+                        q = q | Q(id=w)
+                    queryset = queryset.filter(q)
+            return _provider_response(
+                queryset, UnitCategorySerializer, page, per_page,
+                count_active=lambda q: q.filter(is_active=True).count(),
+                count_inactive=lambda q: q.filter(is_active=False).count()
+            )
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+
 class ProductListDirectAPIView(APIView):
     """
     Endpoint que devuelve productos como array directo (sin paginación)
@@ -616,13 +804,21 @@ class ProductListDirectAPIView(APIView):
                 elif is_active.lower() == 'false':
                     queryset = queryset.filter(is_active=False)
             
-            # Aplicar búsqueda
+            # Aplicar búsqueda por múltiples palabras (cada palabra debe coincidir en al menos un campo)
             if search:
-                queryset = queryset.filter(
-                    Q(name__icontains=search) |
-                    Q(sku__icontains=search) |
-                    Q(category__name__icontains=search)
-                )
+                words = search.split()
+                for w in words:
+                    q = (
+                        Q(name__icontains=w) |
+                        Q(sku__icontains=w) |
+                        Q(category__name__icontains=w) |
+                        Q(tracking_mode__icontains=w) |
+                        Q(unit_default__name__icontains=w) |
+                        Q(brands__name__icontains=w)
+                    )
+                    if w.isdigit():
+                        q = q | Q(id=w)
+                    queryset = queryset.filter(q).distinct()
             
             # Aplicar ordenamiento
             queryset = queryset.order_by(ordering)

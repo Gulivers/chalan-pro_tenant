@@ -1,6 +1,6 @@
 # Proyecto Chalan-Pro - Estructura Frontend Vue.js
 
-Bienvenido al sistema **Chalan-Pro** – un sistema robusto y modular para gestionar contratos, comunidades, cuadrillas, cronogramas y notas de obra. Este archivo te guiará sobre cómo está organizado el **frontend** con Vue.js para que puedas entrar al código con confianza y estilo. 
+Bienvenido al sistema **Chalan-Pro** – un sistema robusto y modular para gestionar contratos, comunidades, cuadrillas, cronogramas y notas de obra. Este archivo te guiará sobre cómo está organizado el **frontend** con Vue.js para que puedas entrar al código con confianza y estilo.
 
 ---
 
@@ -48,19 +48,22 @@ src/
 ## 🚀 Tips para Desarrolladores Nuevos
 
 1. **Alias Everywhere!**
+
    - Usa alias como `@components`, `@views`, `@contracts`, etc.
    - ¡No más `../../../../../components/contracts` en tus imports!
 
    ```js
-   import Navbar from '@components/layout/NavbarComponent.vue';
-   import ContractForm from '@contracts/ContractFormComponent.vue';
+   import Navbar from "@components/layout/NavbarComponent.vue";
+   import ContractForm from "@contracts/ContractFormComponent.vue";
    ```
 
 2. **Separa por feature, no por tipo**
+
    - Cada módulo (como `contracts`, `schedule`) tiene sus propios componentes.
    - Más fácil escalar y mantener.
 
 3. **Mantén tus imports limpios**
+
    - Prefiere PascalCase para componentes `.vue`
    - Usa helpers o mixins para lógica repetida
 
@@ -90,8 +93,8 @@ src/
 Este patrón aplica a **todos los CRUD** del sistema:
 
 - **Forms**: Bootstrap puro (sin `bootstrap-vue-next`).  
-  ➡️ Éxito silencioso + redirección inmediata.  
-- **Listas**: `bootstrap-vue-next` (`b-table`) para search/paginación client-side y acciones (view/edit/delete).  
+  ➡️ Éxito silencioso + redirección inmediata.
+- **Listas**: `bootstrap-vue-next` (`b-table`) para search/paginación client-side y acciones (view/edit/delete).
 - **Auth/axios**: No setear headers manualmente; la Pinia store de auth ya los inyecta.
 
 ---
@@ -99,12 +102,14 @@ Este patrón aplica a **todos los CRUD** del sistema:
 ## 📄 Formularios (Bootstrap only)
 
 ### 🔹 Estructura base (`script setup`)
+
 - `id = route.query.id`
 - `isViewMode = route.query.mode === 'view'`
 - `isEditMode = !!id && !isViewMode`
 - **onMounted**: si hay `id`, `GET /api/<resource>/:id/` y `form.value = data`
 
 ### 🔹 `handleSubmit`
+
 - Trim + validación mínima (requeridos y longitudes).
 - `POST /api/<resource>/` en **create**.
 - `PUT /api/<resource>/:id/` en **edit**.
@@ -112,11 +117,13 @@ Este patrón aplica a **todos los CRUD** del sistema:
 - ✅ `SweetAlert` solo para errores (400/403/etc.).
 
 ### 🔹 UI
+
 - Inputs `form-control` y `form-switch` de Bootstrap.
 - Botones `btn-outline` (primary, secondary).
 - **Modo view**: deshabilita todos los campos y oculta el botón **Save**.
 
 Botón Save obligatorio:
+
 ```vue
 <i v-else class="fas fa-save me-1"></i>
 {{ submitting ? 'Saving...' : 'Save' }}
@@ -261,15 +268,16 @@ Botonera centrada al final:
 
 ### 🎯 Tooltip global `v-tt`
 
-- Uso: `<input v-tt="'Texto del tooltip'">`  
-- Posiciones: `v-tt:right`, `v-tt:left`, `v-tt:bottom`.  
-- Estándar de formularios CRUD de Chalan-Pro.  
+- Uso: `<input v-tt="'Texto del tooltip'">`
+- Posiciones: `v-tt:right`, `v-tt:left`, `v-tt:bottom`.
+- Estándar de formularios CRUD de Chalan-Pro.
 - Cierra automáticamente al cambiar de input, click fuera, `Tab` o `Esc`.
 
 ---
 
 ## 🛠️ En resumen
 > Código limpio, modular
-> ¡Aquí trabajamos con cariño y con buenas prácticas! 
+> ¡Aquí trabajamos con cariño y con buenas prácticas!
 
 ¡Bienvenido a bordo de Chalan-Pro
+```

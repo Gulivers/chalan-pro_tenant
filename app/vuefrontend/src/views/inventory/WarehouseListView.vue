@@ -1,215 +1,430 @@
 <template>
-  <div class="card shadow mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h6 class="text-primary mb-0">Warehouse List</h6>
-      <button class="btn btn-success ml-auto" @click="createWarehouse">
-        <strong>+</strong>
-        New Warehouse
-      </button>
-    </div>
+  <TxCard class="mt-0">
+    <template #header>
+      <div
+        class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-2">
+        <h5 class="text-primary mb-0 fw-semibold listview-title">
+          Warehouse List
+        </h5>
+        <div>
+          <button
+            v-if="hasPermission('appinventory.add_warehouse')"
+            class="btn btn-success btn-sm"
+            @click="goToCreateForm">
+            + New Warehouse
+          </button>
+        </div>
+      </div>
+    </template>
 
     <div class="card-body">
-      <div v-if="loading" class="spinner-container text-center">
-        <p>Loading Warehouses...</p>
-        <div class="spinner-border text-primary" role="status"></div>
+      <!-- Toolbar: stats + refresh -->
+      <div
+        class="listview-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
+        <span class="badge bg-primary stats-badge">
+          {{ stats.total }} Total
+        </span>
+        <span class="badge bg-success stats-badge">
+          {{ stats.active }} Active
+        </span>
+        <span class="badge bg-secondary stats-badge">
+          {{ stats.inactive }} Inactive
+        </span>
+        <span
+          class="listview-toolbar-divider d-none d-sm-inline"
+          aria-hidden="true"></span>
+        <button
+          type="button"
+          class="btn btn-outline-success btn-sm listview-refresh-btn"
+          @click="refreshTable">
+          Refresh List
+        </button>
       </div>
 
-      <div class="table-responsive">
-        <table
-          class="table table-striped table-hover table-bordered"
-          ref="warehouseTable"
-        >
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th scope="col">Name</th>
-              <th scope="col">Location</th>
-              <th scope="col">Status</th>
-              <th scope="col">Default</th>
-              <th class="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody v-show="!loading">
-            <tr v-for="warehouse in warehouses" :key="warehouse.id">
-              <td>{{ warehouse.id }}</td>
-              <td class="text-start">{{ warehouse.name }}</td>
-              <td class="text-start">{{ warehouse.location }}</td>
-              <td>
-                <span class="badge bg-success" v-if="warehouse.is_active"
-                  >Active</span
-                >
-                <span class="badge bg-secondary" v-else>Inactive</span>
-              </td>
-              <td>
-                <span
-                  class="badge bg-warning text-dark"
-                  v-if="warehouse.is_default"
-                >
-                  <i class="fas fa-star me-1"></i>Default
-                </span>
-                <span class="text-muted" v-else>-</span>
-              </td>
-              <td class="text-center">
-                <div class="btn-group btn-group-sm">
-                  <button
-                    class="btn btn-outline-success me-1"
-                    @click="viewWarehouse(warehouse.id)"
-                  >
-                    View
-                  </button>
-                  <button
-                    class="btn btn-outline-primary me-1"
-                    @click="editWarehouse(warehouse.id)"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    class="btn btn-outline-danger"
-                    @click="confirmDelete(warehouse.id)"
-                    :disabled="deletingId === warehouse.id"
-                  >
-                    <span
-                      v-if="deletingId === warehouse.id"
-                      class="spinner-border spinner-border-sm me-1"
-                      role="status"
-                      aria-hidden="true"
-                    ></span>
-                    Delete
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Filters: entries per page + search -->
+      <div class="listview-filters row g-2 g-md-3 mb-3 align-items-end">
+        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+          <BFormGroup
+            label="Entries per page:"
+            label-for="per-page-select"
+            label-size="sm"
+            class="mb-0 listview-filter-group">
+            <BFormSelect
+              id="per-page-select"
+              v-model="perPage"
+              :options="pageOptions"
+              size="sm"
+              class="form-select form-select-sm" />
+          </BFormGroup>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-5 col-xl-4 ms-lg-auto">
+          <BFormGroup
+            label="Search:"
+            label-for="filter-input"
+            label-size="sm"
+            class="mb-0 listview-filter-group">
+            <BFormInput
+              id="filter-input"
+              v-model="filter"
+              type="search"
+              placeholder="Search by name, location... (multiple words)"
+              size="sm"
+              class="form-control form-control-sm" />
+          </BFormGroup>
+        </div>
+      </div>
+
+      <BOverlay :show="isLoading" rounded="sm" opacity="0.85" variant="light">
+        <template #overlay>
+          <div class="text-center">
+            <BSpinner type="border" variant="secondary" class="mb-3" />
+            <div class="h5 text-primary">Loading Warehouses...</div>
+            <div class="text-muted">Please wait while we fetch the data</div>
+          </div>
+        </template>
+
+        <BTable
+          ref="tableRef"
+          :provider="provider"
+          :fields="fields"
+          :filter="filter"
+          :per-page="perPage"
+          :current-page="currentPage"
+          no-provider-sorting
+          bordered
+          hover
+          responsive
+          striped
+          class="table-bordered">
+          <template #cell(id)="row">
+            <strong>{{ row.item.id }}</strong>
+          </template>
+
+          <template #cell(name)="row">
+            <div class="text-start">{{ row.item.name }}</div>
+          </template>
+
+          <template #cell(location)="row">
+            <div class="text-start">{{ row.item.location || "—" }}</div>
+          </template>
+
+          <template #cell(is_active)="row">
+            <span
+              class="badge"
+              :class="row.item.is_active ? 'bg-success' : 'bg-secondary'"
+              style="font-size: 0.75rem">
+              {{ row.item.is_active ? "Active" : "Inactive" }}
+            </span>
+          </template>
+
+          <template #cell(is_default)="row">
+            <span
+              v-if="row.item.is_default"
+              class="badge bg-warning text-dark"
+              style="font-size: 0.75rem">
+              <i class="fas fa-star me-1"></i>
+              Default
+            </span>
+            <span v-else class="text-muted">—</span>
+          </template>
+
+          <template #cell(actions)="row">
+            <div class="btn-group btn-group-sm">
+              <button
+                v-if="hasPermission('appinventory.view_warehouse')"
+                class="btn btn-outline-success me-1"
+                @click="viewItem(row.item.id)">
+                View
+              </button>
+              <button
+                v-if="hasPermission('appinventory.change_warehouse')"
+                class="btn btn-outline-primary me-1"
+                @click="editItem(row.item.id)">
+                Edit
+              </button>
+              <button
+                v-if="hasPermission('appinventory.delete_warehouse')"
+                class="btn btn-outline-danger"
+                @click="deleteItem(row.item.id)">
+                Delete
+              </button>
+            </div>
+          </template>
+        </BTable>
+      </BOverlay>
+
+      <div class="d-flex justify-content-end mt-3">
+        <BPagination
+          v-model="currentPage"
+          :total-rows="totalRows"
+          :per-page="perPage"
+          @update:model-value="onPageChange" />
       </div>
     </div>
-  </div>
+  </TxCard>
 </template>
 
 <script>
+import TxCard from "@components/layout/TxCard.vue";
 import axios from "axios";
-import Swal from "sweetalert2";
+import { ref, getCurrentInstance, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import {
+  BTable,
+  BFormGroup,
+  BFormInput,
+  BFormSelect,
+  BPagination,
+  BOverlay,
+  BSpinner,
+} from "bootstrap-vue-next";
+
+const ENDPOINT = "/api/warehouses-provider/";
 
 export default {
   name: "WarehouseListView",
-  data() {
-    return {
-      loading: false,
-      warehouses: [],
-      dataTable: null,
-      deletingId: null,
+  components: {
+    TxCard,
+    BTable,
+    BFormGroup,
+    BFormInput,
+    BFormSelect,
+    BPagination,
+    BOverlay,
+    BSpinner,
+  },
+
+  setup() {
+    const router = useRouter();
+    const { proxy } = getCurrentInstance();
+
+    const stats = ref({ total: 0, active: 0, inactive: 0 });
+    const isLoading = ref(true);
+    const currentPage = ref(1);
+    const perPage = ref(25);
+    const filter = ref("");
+    const totalRows = ref(0);
+    const tableRef = ref(null);
+
+    const fields = [
+      {
+        key: "id",
+        label: "ID",
+        sortable: true,
+        thClass: "text-center",
+        tdClass: "text-center",
+      },
+      {
+        key: "name",
+        label: "Name",
+        sortable: true,
+        thClass: "text-start",
+        tdClass: "text-start",
+      },
+      {
+        key: "location",
+        label: "Location",
+        sortable: true,
+        thClass: "text-start",
+        tdClass: "text-start",
+      },
+      {
+        key: "is_active",
+        label: "Status",
+        sortable: true,
+        thClass: "text-center",
+        tdClass: "text-center",
+      },
+      {
+        key: "is_default",
+        label: "Default",
+        sortable: true,
+        thClass: "text-center",
+        tdClass: "text-center",
+      },
+      {
+        key: "actions",
+        label: "Actions",
+        sortable: false,
+        thClass: "text-center",
+        tdClass: "text-center",
+        thStyle: { width: "12%", whiteSpace: "nowrap" },
+        tdStyle: { whiteSpace: "nowrap" },
+      },
+    ];
+
+    const pageOptions = [
+      { value: 10, text: "10" },
+      { value: 25, text: "25" },
+      { value: 50, text: "50" },
+      { value: 100, text: "100" },
+    ];
+
+    const getOrderingFromSortBy = (sortBy) => {
+      if (!sortBy) return "-id";
+      let field;
+      let desc = false;
+      if (Array.isArray(sortBy) && sortBy.length > 0) {
+        const first = sortBy[0];
+        field = first.key ?? first.field;
+        const order = first.order ?? (first.sortDesc ? "desc" : "asc");
+        desc = order === "desc";
+      } else if (typeof sortBy === "object" && !Array.isArray(sortBy)) {
+        field = Object.keys(sortBy)[0];
+        desc = sortBy[field] === "desc";
+      }
+      if (!field) return "-id";
+      return desc ? `-${field}` : field;
     };
-  },
-  mounted() {
-    this.fetchWarehouses();
-  },
-  beforeUnmount() {
-    this.destroyDataTable();
-  },
-  methods: {
-    fetchWarehouses() {
-      this.loading = true;
-      axios
-        .get("/api/warehouses/")
-        .then((res) => {
-          this.warehouses = res.data;
-          this.$nextTick(this.initDataTable);
-        })
-        .finally(() => {
-          this.loading = false;
-        });
-    },
-    destroyDataTable() {
-      if (
-        this.dataTable &&
-        $.fn.DataTable &&
-        $.fn.DataTable.isDataTable(this.$refs.warehouseTable)
-      ) {
-        try {
-          this.dataTable.destroy();
-          this.dataTable = null;
-        } catch (error) {
-          console.warn("Error destroying DataTable:", error);
-        }
-      }
-    },
-    initDataTable() {
-      if (this.$refs.warehouseTable && $.fn.DataTable) {
-        if ($.fn.DataTable.isDataTable(this.$refs.warehouseTable)) {
-          $(this.$refs.warehouseTable).DataTable().destroy();
-        }
 
-        this.dataTable = $(this.$refs.warehouseTable).DataTable({
-          destroy: true,
-          responsive: true,
-          pageLength: 50,
-          order: [[0, "desc"]],
-          language: { search: "Search:" },
-        });
-      }
-    },
-    createWarehouse() {
-      this.$router.push({ name: "warehouse-form" });
-    },
-    editWarehouse(id) {
-      this.$router.push({ name: "warehouse-edit", params: { id } });
-    },
-    viewWarehouse(id) {
-      this.$router.push({ name: "warehouse-view", params: { id } });
-    },
-
-    async confirmDelete(id) {
-      const result = await Swal.fire({
-        title: "Delete?",
-        text: "This will delete the warehouse. This action cannot be undone.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete",
-        cancelButtonText: "Cancel",
-      });
-      if (!result.isConfirmed) return;
-      await this.deleteWarehouse(id);
-    },
-
-    async deleteWarehouse(id) {
-      this.deletingId = id;
+    const provider = async (context) => {
       try {
-        await axios.delete(`/api/warehouses/${id}/`);
-        // refrescar tabla
-        this.destroyDataTable();
-        this.warehouses = this.warehouses.filter((w) => w.id !== id);
-        this.$nextTick(() => {
-          if (this.warehouses.length && this.$refs.warehouseTable)
-            this.initDataTable();
+        if (!isLoading.value) isLoading.value = true;
+        const page = context.currentPage || 1;
+        const perPageValue = context.perPage || 25;
+        const params = new URLSearchParams({
+          page,
+          per_page: perPageValue,
+          search: context.filter || "",
+          ordering: context.sortBy
+            ? getOrderingFromSortBy(context.sortBy)
+            : "-id",
         });
-
-        // toast éxito (patrón)
-        if (this.notifyToastSuccess) {
-          this.notifyToastSuccess("The warehouse has been deleted.");
+        const response = await axios.get(`${ENDPOINT}?${params}`);
+        if (response.data?.items) {
+          if (response.data.stats) stats.value = response.data.stats;
+          totalRows.value = response.data.totalRows ?? 0;
+          return response.data.items;
         }
+        throw new Error("Invalid response format");
       } catch (error) {
-        console.error("Error deleting warehouse:", error);
-        const { status } = error?.response || {};
-        // Tu interceptor ya maneja 409 (in_use) con Swal. Dejamos este genérico adicional por ahora.
-        if (status === 403) {
-          await Swal.fire(
-            "Forbidden",
-            "You do not have permission for this action.",
-            "error",
-          );
-        } else {
-          await Swal.fire("Oops!", "Error deleting the warehouse.", "error");
-        }
+        console.error("Provider error:", error);
+        proxy?.notifyError?.("Error loading warehouses.");
+        return [];
       } finally {
-        this.deletingId = null;
+        setTimeout(() => {
+          isLoading.value = false;
+        }, 300);
       }
-    },
+    };
+
+    const onPageChange = (page) => {
+      currentPage.value = page;
+    };
+
+    const refreshTable = () => {
+      isLoading.value = true;
+      if (tableRef.value) tableRef.value.refresh();
+    };
+
+    const goToCreateForm = () => {
+      router.push({ name: "warehouse-form" });
+    };
+
+    const viewItem = (id) => {
+      router.push({ name: "warehouse-view", params: { id } });
+    };
+
+    const editItem = (id) => {
+      router.push({ name: "warehouse-edit", params: { id } });
+    };
+
+    const deleteItem = (id) => {
+      proxy?.confirmDelete?.(
+        "Delete?",
+        "This will delete the warehouse. This action cannot be undone.",
+        async () => {
+          try {
+            await axios.delete(`/api/warehouses/${id}/`);
+            proxy?.notifyToastSuccess?.("The warehouse has been deleted.");
+            refreshTable();
+          } catch (error) {
+            const status = error?.response?.status;
+            const data = error?.response?.data;
+            if (status === 403) {
+              proxy?.notifyError?.(
+                "You do not have permission for this action."
+              );
+            } else if (status === 409) {
+              proxy?.notifyError?.(
+                data?.detail || "Cannot delete: warehouse is in use."
+              );
+            } else {
+              proxy?.notifyError?.(
+                data?.detail || "Error deleting the warehouse."
+              );
+            }
+          }
+        }
+      );
+    };
+
+    onMounted(() => {});
+
+    return {
+      stats,
+      isLoading,
+      currentPage,
+      perPage,
+      filter,
+      totalRows,
+      tableRef,
+      fields,
+      pageOptions,
+      provider,
+      onPageChange,
+      refreshTable,
+      goToCreateForm,
+      viewItem,
+      editItem,
+      deleteItem,
+    };
   },
 };
 </script>
 
 <style scoped>
-.spinner-container {
-  padding: 2rem;
+.listview-title {
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+}
+.listview-toolbar {
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(13, 110, 253, 0.06);
+  border: 1px solid rgba(13, 110, 253, 0.12);
+  border-radius: 0.375rem;
+}
+.listview-toolbar .stats-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  line-height: 1.2;
+}
+.listview-toolbar-divider {
+  width: 1px;
+  height: 1.25rem;
+  background-color: rgba(0, 0, 0, 0.12);
+  margin: 0 0.15rem;
+}
+.listview-refresh-btn {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+}
+.listview-filters .listview-filter-group label {
+  font-size: 0.8rem;
+  color: var(--bs-secondary-color);
+}
+.table td {
+  vertical-align: middle;
+}
+.badge {
+  font-size: 0.75rem;
+}
+.card {
+  border: none;
+}
+.form-select-sm,
+.form-control-sm {
+  font-size: 0.8rem;
 }
 </style>
