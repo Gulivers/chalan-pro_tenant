@@ -2,67 +2,70 @@
   <TxCard class="shadow-sm mt-0">
     <!-- Header del card -->
     <template #header>
-      <div class="d-flex justify-content-between align-items-center w-100">
-        <h6 class="text-primary mb-0">Serialized Items</h6>
+      <div
+        class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-2">
+        <h5 class="text-primary mb-0 fw-semibold listview-title">
+          Serialized Items
+        </h5>
         <div class="d-flex gap-2">
           <router-link
-            v-if="features.showNewSerializedItemButton && hasPermission('appinventory.add_serializeditem')"
+            v-if="
+              features.showNewSerializedItemButton &&
+              hasPermission('appinventory.add_serializeditem')
+            "
             to="/serialized-items/form"
-            class="btn btn-success">
+            class="btn btn-success btn-sm">
             + New Serialized Item
           </router-link>
-          <button
-            v-if="!loading"
-            class="btn btn-outline-primary btn-sm"
-            @click="refreshTable">
-            Refresh List
-          </button>
         </div>
       </div>
     </template>
 
     <div class="card-body">
-      <!-- Controles: entries per page + search -->
-      <div class="row mb-3">
-        <div class="col-lg-3 text-start">
+      <!-- Toolbar: stats + refresh -->
+      <div
+        class="listview-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
+        <span class="badge bg-primary stats-badge">{{ totalRows }} Total</span>
+        <span
+          class="listview-toolbar-divider d-none d-sm-inline"
+          aria-hidden="true"></span>
+        <button
+          type="button"
+          class="btn btn-outline-success btn-sm listview-refresh-btn"
+          @click="refreshTable">
+          Refresh List
+        </button>
+      </div>
+
+      <!-- Filters: entries per page + search -->
+      <div class="listview-filters row g-2 g-md-3 mb-3 align-items-end">
+        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
           <BFormGroup
-            label="entries per page:"
+            label="Entries per page:"
             label-for="per-page-select"
-            label-cols-sm="6"
-            label-cols-md="6"
-            label-cols-lg="6"
-            label-align-sm="right"
             label-size="sm"
-            class="mb-0 small">
+            class="small mb-0 listview-filter-group">
             <BFormSelect
               id="per-page-select"
               v-model="perPage"
               :options="pageOptions"
               size="sm"
-              class="form-select-xs" />
+              class="form-select form-select-sm" />
           </BFormGroup>
         </div>
-        <div class="col-lg-3"></div>
-        <div class="col-lg-6 text-end">
+        <div class="col-12 col-sm-6 col-lg-5 col-xl-4 ms-lg-auto">
           <BFormGroup
             label="Search:"
             label-for="filter-input"
-            label-cols-sm="4"
-            label-cols-md="6"
-            label-cols-lg="6"
-            label-align-sm="text-start"
             label-size="sm"
-            class="mb-0">
-            <div class="position-relative">
-              <div class="search-wrapper">
-                <BFormInput
-                  id="filter-input"
-                  v-model="filter"
-                  type="search"
-                  placeholder="Search by serial number, product, warehouse, crew, notes..."
-                  size="sm" />
-              </div>
-            </div>
+            class="mb-0 listview-filter-group">
+            <BFormInput
+              id="filter-input"
+              v-model="filter"
+              type="search"
+              placeholder="Search by serial number, product, warehouse, crew, notes..."
+              size="sm"
+              class="form-control form-control-sm" />
           </BFormGroup>
         </div>
       </div>
@@ -149,15 +152,15 @@
               <router-link
                 v-if="hasPermission('appinventory.view_serializeditem')"
                 :to="`/serialized-items/view/${row.item.id}`"
-                class="btn btn-outline-success me-1"
-                >View</router-link
-              >
+                class="btn btn-outline-success me-1">
+                View
+              </router-link>
               <router-link
                 v-if="hasPermission('appinventory.change_serializeditem')"
                 :to="`/serialized-items/edit/${row.item.id}`"
-                class="btn btn-outline-primary me-1"
-                >Edit</router-link
-              >
+                class="btn btn-outline-primary me-1">
+                Edit
+              </router-link>
               <button
                 v-if="hasPermission('appinventory.delete_serializeditem')"
                 class="btn btn-outline-danger"
@@ -463,22 +466,40 @@ export default {
 </script>
 
 <style scoped>
-.search-wrapper {
-  position: relative;
+.listview-title {
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
 }
-
+.listview-toolbar {
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(13, 110, 253, 0.06);
+  border: 1px solid rgba(13, 110, 253, 0.12);
+  border-radius: 0.375rem;
+}
+.listview-toolbar .stats-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  line-height: 1.2;
+}
+.listview-toolbar-divider {
+  width: 1px;
+  height: 1.25rem;
+  background-color: rgba(0, 0, 0, 0.12);
+  margin: 0 0.15rem;
+}
+.listview-refresh-btn {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+}
+.listview-filters .listview-filter-group label {
+  font-size: 0.8rem;
+  color: var(--bs-secondary-color);
+}
 .table td {
   vertical-align: middle;
 }
-
 .badge {
   font-size: 0.75rem;
-}
-
-.form-select-xs {
-  font-size: 0.7rem;
-  padding: 0.15rem 0.3rem;
-  height: 1.6rem;
-  min-width: 60px;
 }
 </style>

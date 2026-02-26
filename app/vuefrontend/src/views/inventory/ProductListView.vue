@@ -2,14 +2,14 @@
   <TxCard class="mt-0">
     <!-- Header del card -->
     <template #header>
-      <div class="d-flex justify-content-between align-items-center w-100">
-        <h6 class="text-primary mb-0">Products</h6>
+      <div
+        class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-2">
+        <h5 class="text-primary mb-0 fw-semibold listview-title">Products</h5>
         <div>
           <button
             v-if="hasPermission('appinventory.add_product')"
-            class="btn btn-success"
-            @click="goToCreateForm"
-          >
+            class="btn btn-success btn-sm"
+            @click="goToCreateForm">
             + New Product
           </button>
         </div>
@@ -17,91 +17,58 @@
     </template>
 
     <div class="card-body">
-      <!-- Stats Cards -->
-      <div class="row mb-3 mt-0">
-        <div class="col-md-3">
-          <div class="card bg-primary text-white mb-2">
-            <div class="card-body text-center py-1">
-              <h6 class="mb-0">{{ stats.total }}</h6>
-              <small>Total Products</small>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card bg-success text-white mb-2">
-            <div class="card-body text-center py-1">
-              <h6 class="mb-0">{{ stats.active }}</h6>
-              <small>Active</small>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card bg-secondary text-white mb-2">
-            <div class="card-body text-center py-1">
-              <h6 class="mb-0">{{ stats.inactive }}</h6>
-              <small>Inactive</small>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card mb-2">
-            <div class="card-body text-center py-1">
-              <button
-                class="btn btn-outline-success bt-sm py-2 w-100"
-                @click="refreshTable"
-              >
-                Refresh List
-              </button>
-            </div>
-          </div>
-        </div>
+      <!-- Toolbar: stats + refresh -->
+      <div
+        class="listview-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
+        <span class="badge bg-primary stats-badge">
+          {{ stats.total }} Total
+        </span>
+        <span class="badge bg-success stats-badge">
+          {{ stats.active }} Active
+        </span>
+        <span class="badge bg-secondary stats-badge">
+          {{ stats.inactive }} Inactive
+        </span>
+        <span
+          class="listview-toolbar-divider d-none d-sm-inline"
+          aria-hidden="true"></span>
+        <button
+          type="button"
+          class="btn btn-outline-success btn-sm listview-refresh-btn"
+          @click="refreshTable">
+          Refresh List
+        </button>
       </div>
 
-      <!-- User Interface Controls -->
-      <div class="row mb-3">
-        <div class="col-lg-3 text-start">
+      <!-- Filters: entries per page + search -->
+      <div class="listview-filters row g-2 g-md-3 mb-3 align-items-end">
+        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
           <BFormGroup
-            label="entries per page:"
+            label="Entries per page:"
             label-for="per-page-select"
-            label-cols-sm="6"
-            label-cols-md="6"
-            label-cols-lg="6"
-            label-align-sm="right"
             label-size="sm"
-            class="mb-0 small"
-          >
+            class="mb-0 listview-filter-group">
             <BFormSelect
               id="per-page-select"
               v-model="perPage"
               :options="pageOptions"
               size="sm"
-              class="form-select-xs"
-            />
+              class="form-select form-select-sm" />
           </BFormGroup>
         </div>
-        <div class="col-lg-3"></div>
-        <div class="col-lg-6 text-end">
+        <div class="col-12 col-sm-6 col-lg-5 col-xl-4 ms-lg-auto">
           <BFormGroup
             label="Search:"
             label-for="filter-input"
-            label-cols-sm="4"
-            label-cols-md="6"
-            label-cols-lg="6"
-            label-align-sm="text-start"
             label-size="sm"
-            class="mb-0"
-          >
-            <div class="position-relative">
-              <div class="search-wrapper">
-                <BFormInput
-                  id="filter-input"
-                  v-model="filter"
-                  type="search"
-                  placeholder="Search by name, SKU, or category..."
-                  size="sm"
-                />
-              </div>
-            </div>
+            class="mb-0 listview-filter-group">
+            <BFormInput
+              id="filter-input"
+              v-model="filter"
+              type="search"
+              placeholder="Search by name, SKU, category, unit, brand..."
+              size="sm"
+              class="form-control form-control-sm" />
           </BFormGroup>
         </div>
       </div>
@@ -128,8 +95,7 @@
           hover
           responsive
           striped
-          class="table-bordered"
-        >
+          class="table-bordered">
           <!-- ID Column -->
           <template #cell(id)="row">
             <strong>{{ row.item.id }}</strong>
@@ -144,8 +110,7 @@
                 class="text-decoration-none text-primary"
                 style="cursor: pointer"
                 v-tt
-                data-title="View product images"
-              >
+                data-title="View product images">
                 {{ row.item.name }}
               </a>
             </div>
@@ -163,8 +128,7 @@
             <span
               v-if="row.item.tracking_mode === 'SERIALIZED'"
               class="badge bg-info"
-              style="font-size: 0.75rem"
-            >
+              style="font-size: 0.75rem">
               SERIALIZED
             </span>
             <span v-else class="badge bg-secondary" style="font-size: 0.75rem">
@@ -176,9 +140,9 @@
           <template #cell(default_brand)="row">
             <div class="text-start">
               <span v-if="row.item.default_brand?.name">
-                <span class="badge bg-primary" style="font-size: 0.75rem">{{
-                  row.item.default_brand.name
-                }}</span>
+                <span class="badge bg-primary" style="font-size: 0.75rem">
+                  {{ row.item.default_brand.name }}
+                </span>
                 <small v-if="row.item.brands_count > 1" class="text-muted ms-1">
                   ({{ row.item.brands_count }} brands)
                 </small>
@@ -192,8 +156,7 @@
             <span
               class="badge"
               :class="row.item.is_active ? 'bg-success' : 'bg-secondary'"
-              style="font-size: 0.75rem"
-            >
+              style="font-size: 0.75rem">
               {{ row.item.is_active ? "Active" : "Inactive" }}
             </span>
           </template>
@@ -204,22 +167,19 @@
               <button
                 v-if="hasPermission('appinventory.view_product')"
                 class="btn btn-outline-success me-1"
-                @click="viewItem(row.item.id)"
-              >
+                @click="viewItem(row.item.id)">
                 View
               </button>
               <button
                 v-if="hasPermission('appinventory.change_product')"
                 class="btn btn-outline-primary me-1"
-                @click="editItem(row.item.id)"
-              >
+                @click="editItem(row.item.id)">
                 Edit
               </button>
               <button
                 v-if="hasPermission('appinventory.delete_product')"
                 class="btn btn-outline-danger"
-                @click="deleteItem(row.item.id)"
-              >
+                @click="deleteItem(row.item.id)">
                 Delete
               </button>
             </div>
@@ -233,16 +193,14 @@
           v-model="currentPage"
           :total-rows="totalRows"
           :per-page="perPage"
-          @update:model-value="onPageChange"
-        />
+          @update:model-value="onPageChange" />
       </div>
     </div>
 
     <!-- Product Image Gallery Modal -->
     <ProductImageGallery
       ref="productImageGallery"
-      :productId="selectedProductId"
-    />
+      :productId="selectedProductId" />
   </TxCard>
 </template>
 
@@ -406,7 +364,7 @@ export default {
           console.log(
             "✅ Provider response:",
             response.data.items.length,
-            "items",
+            "items"
           );
           return response.data.items;
         } else {
@@ -513,7 +471,7 @@ export default {
 
             if (status === 403) {
               proxy?.notifyError?.(
-                "You do not have permission for this action.",
+                "You do not have permission for this action."
               );
             } else if (status === 409) {
               const detail =
@@ -525,7 +483,7 @@ export default {
               proxy?.notifyError?.(detail);
             }
           }
-        },
+        }
       );
     };
 
@@ -534,16 +492,16 @@ export default {
       console.log(
         "📦 Producto completo:",
         products.value.find((p) => p.id === productId) ||
-          "No encontrado en products array",
+          "No encontrado en products array"
       );
 
       selectedProductId.value = productId;
       console.log(
         "✅ selectedProductId actualizado a:",
-        selectedProductId.value,
+        selectedProductId.value
       );
       console.log(
-        "🔗 URL de la galería sería: /api/products/" + productId + "/images/",
+        "🔗 URL de la galería sería: /api/products/" + productId + "/images/"
       );
 
       // Esperar al siguiente tick para asegurar que el componente esté montado
@@ -551,7 +509,7 @@ export default {
         console.log("⏱️ nextTick ejecutado");
         console.log(
           "🔍 productImageGallery.value existe?",
-          !!productImageGallery.value,
+          !!productImageGallery.value
         );
 
         if (productImageGallery.value) {
@@ -602,6 +560,37 @@ export default {
 </script>
 
 <style scoped>
+/* Listview header: toolbar + filters */
+.listview-title {
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+}
+.listview-toolbar {
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(13, 110, 253, 0.06);
+  border: 1px solid rgba(13, 110, 253, 0.12);
+  border-radius: 0.375rem;
+}
+.listview-toolbar .stats-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  line-height: 1.2;
+}
+.listview-toolbar-divider {
+  width: 1px;
+  height: 1.25rem;
+  background-color: rgba(0, 0, 0, 0.12);
+  margin: 0 0.15rem;
+}
+.listview-refresh-btn {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+}
+.listview-filters .listview-filter-group label {
+  font-size: 0.8rem;
+  color: var(--bs-secondary-color);
+}
 .table td {
   vertical-align: middle;
 }
@@ -611,25 +600,11 @@ export default {
 .card {
   border: none;
 }
-.form-select-sm {
-  font-size: 0.75rem;
-  padding: 0.2rem 0.4rem;
-  height: auto;
-}
-
-.form-select-xs {
-  font-size: 0.7rem;
-  padding: 0.15rem 0.3rem;
-  height: 1.6rem;
-  min-width: 60px;
-}
-
-.text-muted.small {
+.form-select-sm,
+.form-control-sm {
   font-size: 0.8rem;
 }
-
-/* Search clear button styles - copied from BuilderView */
-.search-wrapper {
-  position: relative;
+.text-muted.small {
+  font-size: 0.8rem;
 }
 </style>

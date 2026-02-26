@@ -1,205 +1,444 @@
 <template>
-  <div class="card shadow mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h6 class="text-primary mb-0">Unit of Measure</h6>
-      <button class="btn btn-success" @click="goToCreateForm">
-        <strong>+</strong>
-        New Unit
-      </button>
-    </div>
+  <TxCard class="mt-0">
+    <template #header>
+      <div
+        class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-2">
+        <h5 class="text-primary mb-0 fw-semibold listview-title">
+          Unit of Measure
+        </h5>
+        <div>
+          <button
+            v-if="hasPermission('appinventory.add_unitofmeasure')"
+            class="btn btn-success btn-sm"
+            @click="goToCreateForm">
+            + New
+          </button>
+        </div>
+      </div>
+    </template>
 
     <div class="card-body">
-      <div v-if="loading" class="text-center py-3">
-        Loading Units...
-        <div class="spinner-border" role="status"></div>
+      <div
+        class="listview-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
+        <span class="badge bg-primary stats-badge">
+          {{ stats.total }} Total
+        </span>
+        <span class="badge bg-success stats-badge">
+          {{ stats.active }} Active
+        </span>
+        <span class="badge bg-secondary stats-badge">
+          {{ stats.inactive }} Inactive
+        </span>
+        <span
+          class="listview-toolbar-divider d-none d-sm-inline"
+          aria-hidden="true"></span>
+        <button
+          type="button"
+          class="btn btn-outline-success btn-sm listview-refresh-btn"
+          @click="refreshTable">
+          Refresh List
+        </button>
+      </div>
+      <div class="listview-filters row g-2 g-md-3 mb-3 align-items-end">
+        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+          <BFormGroup
+            label="Entries per page:"
+            label-for="per-page-select"
+            label-size="sm"
+            class="mb-0 listview-filter-group">
+            <BFormSelect
+              id="per-page-select"
+              v-model="perPage"
+              :options="pageOptions"
+              size="sm"
+              class="form-select form-select-sm" />
+          </BFormGroup>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-5 col-xl-4 ms-lg-auto">
+          <BFormGroup
+            label="Search:"
+            label-for="filter-input"
+            label-size="sm"
+            class="mb-0 listview-filter-group">
+            <BFormInput
+              id="filter-input"
+              v-model="filter"
+              type="search"
+              placeholder="Search by name, code, category... (multiple words)"
+              size="sm"
+              class="form-control form-control-sm" />
+          </BFormGroup>
+        </div>
       </div>
 
-      <div v-else-if="items.length" class="table-responsive">
-        <table class="table table-striped table-hover table-bordered" id="unitTable" ref="unitTable">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Code</th>
-              <th>Category</th>
-              <th class="text-center">Ref. Unit</th>
-              <th class="text-center">Sign</th>
-              <th>Factor</th>
-              <th class="text-center">Active</th>
-              <th class="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in items" :key="item.id">
-              <td>{{ item.id }}</td>
-              <td class="text-start">{{ item.name }}</td>
-              <td class="text-start">{{ item.code }}</td>
-              <td class="text-start">{{ item.category_name || 'N/A' }}</td>
-              <td class="text-center">{{ item.reference_unit ? '✔' : '✖' }}</td>
-              <td class="text-center">{{ item.conversion_sign }}</td>
-              <td>{{ item.conversion_factor }}</td>
-              <td class="text-center">
-                <span class="badge" :class="item.is_active ? 'bg-success' : 'bg-secondary'">
-                  {{ item.is_active ? 'Active' : 'Inactive' }}
-                </span>
-              </td>
-              <td class="text-center">
-                <div class="btn-group btn-group-sm">
-                  <button class="btn btn-outline-success me-1" @click="viewItem(item.id)">View</button>
-                  <button class="btn btn-outline-primary me-1" @click="editItem(item.id)">Edit</button>
-                  <button
-                    class="btn btn-outline-danger"
-                    @click="confirmDelete(item.id)"
-                    :disabled="deletingId === item.id">
-                    <span
-                      v-if="deletingId === item.id"
-                      class="spinner-border spinner-border-sm me-1"
-                      role="status"
-                      aria-hidden="true"></span>
-                    Delete
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <BOverlay :show="isLoading" rounded="sm" opacity="0.85" variant="light">
+        <template #overlay>
+          <div class="text-center">
+            <BSpinner type="border" variant="secondary" class="mb-3" />
+            <div class="h5 text-primary">Loading Units...</div>
+            <div class="text-muted">Please wait while we fetch the data</div>
+          </div>
+        </template>
 
-      <div v-else class="text-muted text-center">No units available.</div>
+        <BTable
+          ref="tableRef"
+          :provider="provider"
+          :fields="fields"
+          :filter="filter"
+          :per-page="perPage"
+          :current-page="currentPage"
+          no-provider-sorting
+          bordered
+          hover
+          responsive
+          striped
+          class="table-bordered">
+          <template #cell(id)="row">
+            <strong>{{ row.item.id }}</strong>
+          </template>
+
+          <template #cell(name)="row">
+            <div class="text-start">{{ row.item.name }}</div>
+          </template>
+
+          <template #cell(code)="row">
+            <div class="text-start">{{ row.item.code }}</div>
+          </template>
+
+          <template #cell(category_name)="row">
+            <div class="text-start">{{ row.item.category_name || "—" }}</div>
+          </template>
+
+          <template #cell(reference_unit)="row">
+            <span class="text-center">
+              {{ row.item.reference_unit ? "✔" : "✖" }}
+            </span>
+          </template>
+
+          <template #cell(conversion_sign)="row">
+            <span class="text-center">{{ row.item.conversion_sign }}</span>
+          </template>
+
+          <template #cell(conversion_factor)="row">
+            <span class="text-center">{{ row.item.conversion_factor }}</span>
+          </template>
+
+          <template #cell(is_active)="row">
+            <span
+              class="badge"
+              :class="row.item.is_active ? 'bg-success' : 'bg-secondary'"
+              style="font-size: 0.75rem">
+              {{ row.item.is_active ? "Active" : "Inactive" }}
+            </span>
+          </template>
+
+          <template #cell(actions)="row">
+            <div class="btn-group btn-group-sm">
+              <button
+                v-if="hasPermission('appinventory.view_unitofmeasure')"
+                class="btn btn-outline-success me-1"
+                @click="viewItem(row.item.id)">
+                View
+              </button>
+              <button
+                v-if="hasPermission('appinventory.change_unitofmeasure')"
+                class="btn btn-outline-primary me-1"
+                @click="editItem(row.item.id)">
+                Edit
+              </button>
+              <button
+                v-if="hasPermission('appinventory.delete_unitofmeasure')"
+                class="btn btn-outline-danger"
+                @click="deleteItem(row.item.id)">
+                Delete
+              </button>
+            </div>
+          </template>
+        </BTable>
+      </BOverlay>
+
+      <div class="d-flex justify-content-end mt-3">
+        <BPagination
+          v-model="currentPage"
+          :total-rows="totalRows"
+          :per-page="perPage"
+          @update:model-value="onPageChange" />
+      </div>
     </div>
-  </div>
+  </TxCard>
 </template>
 
 <script>
-  import axios from 'axios';
-  import Swal from 'sweetalert2';
+import TxCard from "@components/layout/TxCard.vue";
+import axios from "axios";
+import { ref, getCurrentInstance } from "vue";
+import { useRouter } from "vue-router";
+import {
+  BTable,
+  BFormGroup,
+  BFormInput,
+  BFormSelect,
+  BPagination,
+  BOverlay,
+  BSpinner,
+} from "bootstrap-vue-next";
 
-  export default {
-    name: 'UnitOfMeasureView',
-    data() {
-      return {
-        schema: {},
-        items: [],
-        headers: [],
-        loading: false,
-        dataTable: null,
-        deletingId: null,
-      };
-    },
-    mounted() {
-      this.fetchSchema();
-      this.fetchItems();
-    },
-    beforeUnmount() {
-      this.destroyDataTable();
-    },
-    methods: {
-      fetchSchema() {
-        axios
-          .get('/api/schema/unitofmeasure/')
-          .then(res => {
-            this.schema = res.data || {};
-            this.headers = Object.keys(this.schema);
-          })
-          .catch(err => {
-            console.error('Error fetching schema:', err);
-          });
-      },
-      fetchItems() {
-        this.loading = true;
-        axios
-          .get('/api/unitsofmeasure/')
-          .then(res => {
-            this.items = res.data;
-            this.loading = false;
-            setTimeout(() => {
-              if (this.items.length && this.$refs.unitTable) {
-                this.initDataTable();
-              }
-            }, 100);
-          })
-          .catch(err => {
-            this.loading = false;
-            console.error('Error fetching items:', err);
-          });
-      },
-      destroyDataTable() {
-        if (this.dataTable && $.fn.dataTable && $.fn.dataTable.isDataTable(this.$refs.unitTable)) {
-          try {
-            this.dataTable.destroy();
-            this.dataTable = null;
-          } catch (error) {
-            console.warn('Error destroying DataTable:', error);
-          }
-        }
-      },
-      initDataTable() {
-        const table = this.$refs.unitTable;
-        if (!table || !$.fn.dataTable) return;
+const ENDPOINT = "/api/unitsofmeasure-provider/";
 
-        try {
-          this.destroyDataTable();
-          this.dataTable = $(table).DataTable({
-            destroy: true,
-            responsive: true,
-            pageLength: 50,
-            order: [[0, 'desc']],
-            language: { search: 'Search:' },
-          });
-        } catch (error) {
-          console.error('Error initializing DataTable:', error);
-        }
-      },
-      goToCreateForm() {
-        this.$router.push({ name: 'unit-measure-form' });
-      },
-      viewItem(id) {
-        this.$router.push({ name: 'unit-measure-view', params: { id } });
-      },
-      editItem(id) {
-        this.$router.push({ name: 'unit-measure-edit', params: { id } });
-      },
+export default {
+  name: "UnitOfMeasureView",
+  components: {
+    TxCard,
+    BTable,
+    BFormGroup,
+    BFormInput,
+    BFormSelect,
+    BPagination,
+    BOverlay,
+    BSpinner,
+  },
 
-      async confirmDelete(id) {
-        const result = await Swal.fire({
-          title: 'Delete?',
-          text: 'This will delete the unit. This action cannot be undone.',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Yes, delete',
-          cancelButtonText: 'Cancel',
+  setup() {
+    const router = useRouter();
+    const { proxy } = getCurrentInstance();
+
+    const stats = ref({ total: 0, active: 0, inactive: 0 });
+    const isLoading = ref(true);
+    const currentPage = ref(1);
+    const perPage = ref(25);
+    const filter = ref("");
+    const totalRows = ref(0);
+    const tableRef = ref(null);
+
+    const fields = [
+      {
+        key: "id",
+        label: "ID",
+        sortable: true,
+        thClass: "text-center",
+        tdClass: "text-center",
+      },
+      {
+        key: "name",
+        label: "Name",
+        sortable: true,
+        thClass: "text-start",
+        tdClass: "text-start",
+      },
+      {
+        key: "code",
+        label: "Code",
+        sortable: true,
+        thClass: "text-start",
+        tdClass: "text-start",
+      },
+      {
+        key: "category_name",
+        label: "Category",
+        sortable: true,
+        thClass: "text-start",
+        tdClass: "text-start",
+      },
+      {
+        key: "reference_unit",
+        label: "Ref. Unit",
+        sortable: true,
+        thClass: "text-center",
+        tdClass: "text-center",
+      },
+      {
+        key: "conversion_sign",
+        label: "Sign",
+        sortable: true,
+        thClass: "text-center",
+        tdClass: "text-center",
+      },
+      {
+        key: "conversion_factor",
+        label: "Factor",
+        sortable: true,
+        thClass: "text-center",
+        tdClass: "text-center",
+      },
+      {
+        key: "is_active",
+        label: "Status",
+        sortable: true,
+        thClass: "text-center",
+        tdClass: "text-center",
+      },
+      {
+        key: "actions",
+        label: "Actions",
+        sortable: false,
+        thClass: "text-center",
+        tdClass: "text-center",
+        thStyle: { width: "12%", whiteSpace: "nowrap" },
+        tdStyle: { whiteSpace: "nowrap" },
+      },
+    ];
+
+    const pageOptions = [
+      { value: 10, text: "10" },
+      { value: 25, text: "25" },
+      { value: 50, text: "50" },
+      { value: 100, text: "100" },
+    ];
+
+    const getOrderingFromSortBy = (sortBy) => {
+      if (!sortBy) return "-id";
+      let field;
+      let desc = false;
+      if (Array.isArray(sortBy) && sortBy.length > 0) {
+        const first = sortBy[0];
+        field = first.key ?? first.field;
+        const order = first.order ?? (first.sortDesc ? "desc" : "asc");
+        desc = order === "desc";
+      } else if (typeof sortBy === "object" && !Array.isArray(sortBy)) {
+        field = Object.keys(sortBy)[0];
+        desc = sortBy[field] === "desc";
+      }
+      if (!field) return "-id";
+      if (field === "category_name") field = "category__name";
+      return desc ? `-${field}` : field;
+    };
+
+    const provider = async (context) => {
+      try {
+        if (!isLoading.value) isLoading.value = true;
+        const page = context.currentPage || 1;
+        const perPageValue = context.perPage || 25;
+        const params = new URLSearchParams({
+          page,
+          per_page: perPageValue,
+          search: context.filter || "",
+          ordering: context.sortBy
+            ? getOrderingFromSortBy(context.sortBy)
+            : "-id",
         });
-        if (!result.isConfirmed) return;
-        await this.deleteItem(id);
-      },
-
-      async deleteItem(id) {
-        this.deletingId = id;
-        try {
-          await axios.delete(`/api/unitsofmeasure/${id}/`);
-          // refrescar tabla
-          this.destroyDataTable();
-          this.items = this.items.filter(u => u.id !== id);
-          setTimeout(() => {
-            if (this.items.length && this.$refs.unitTable) {
-              this.initDataTable();
-            }
-          }, 50);
-          if (this.notifyToastSuccess) {
-            this.notifyToastSuccess('The unit has been deleted.');
-          }
-        } catch (error) {
-          console.error('Error deleting unit:', error);
-          const { status } = error?.response || {};
-          if (status === 403) {
-            await Swal.fire('Forbidden', 'You do not have permission for this action.', 'error');
-          } else {
-            await Swal.fire('Oops!', 'Error deleting the unit.', 'error');
-          }
-        } finally {
-          this.deletingId = null;
+        const response = await axios.get(`${ENDPOINT}?${params}`);
+        if (response.data?.items) {
+          if (response.data.stats) stats.value = response.data.stats;
+          totalRows.value = response.data.totalRows ?? 0;
+          return response.data.items;
         }
-      },
-    },
-  };
+        throw new Error("Invalid response format");
+      } catch (error) {
+        console.error("Provider error:", error);
+        proxy?.notifyError?.("Error loading units.");
+        return [];
+      } finally {
+        setTimeout(() => {
+          isLoading.value = false;
+        }, 300);
+      }
+    };
+
+    const onPageChange = (page) => {
+      currentPage.value = page;
+    };
+    const refreshTable = () => {
+      isLoading.value = true;
+      if (tableRef.value) tableRef.value.refresh();
+    };
+
+    const goToCreateForm = () => router.push({ name: "unit-measure-form" });
+    const viewItem = (id) =>
+      router.push({ name: "unit-measure-view", params: { id } });
+    const editItem = (id) =>
+      router.push({ name: "unit-measure-edit", params: { id } });
+
+    const deleteItem = (id) => {
+      proxy?.confirmDelete?.(
+        "Delete?",
+        "This will delete the unit. This action cannot be undone.",
+        async () => {
+          try {
+            await axios.delete(`/api/unitsofmeasure/${id}/`);
+            proxy?.notifyToastSuccess?.("The unit has been deleted.");
+            refreshTable();
+          } catch (error) {
+            const status = error?.response?.status;
+            const data = error?.response?.data;
+            if (status === 403)
+              proxy?.notifyError?.(
+                "You do not have permission for this action."
+              );
+            else if (status === 409)
+              proxy?.notifyError?.(
+                data?.detail || "Cannot delete: unit is in use."
+              );
+            else
+              proxy?.notifyError?.(data?.detail || "Error deleting the unit.");
+          }
+        }
+      );
+    };
+
+    return {
+      stats,
+      isLoading,
+      currentPage,
+      perPage,
+      filter,
+      totalRows,
+      tableRef,
+      fields,
+      pageOptions,
+      provider,
+      onPageChange,
+      refreshTable,
+      goToCreateForm,
+      viewItem,
+      editItem,
+      deleteItem,
+    };
+  },
+};
 </script>
+
+<style scoped>
+.listview-title {
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+}
+.listview-toolbar {
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(13, 110, 253, 0.06);
+  border: 1px solid rgba(13, 110, 253, 0.12);
+  border-radius: 0.375rem;
+}
+.listview-toolbar .stats-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  line-height: 1.2;
+}
+.listview-toolbar-divider {
+  width: 1px;
+  height: 1.25rem;
+  background-color: rgba(0, 0, 0, 0.12);
+  margin: 0 0.15rem;
+}
+.listview-refresh-btn {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+}
+.listview-filters .listview-filter-group label {
+  font-size: 0.8rem;
+  color: var(--bs-secondary-color);
+}
+.table td {
+  vertical-align: middle;
+}
+.badge {
+  font-size: 0.75rem;
+}
+.card {
+  border: none;
+}
+.form-select-sm,
+.form-control-sm {
+  font-size: 0.8rem;
+}
+</style>

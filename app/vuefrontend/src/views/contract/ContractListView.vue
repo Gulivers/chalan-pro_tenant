@@ -1,14 +1,14 @@
 <template>
   <TxCard class="mt-0">
     <template #header>
-      <div class="d-flex justify-content-between align-items-center w-100">
-        <h6 class="text-primary mb-0">Contracts</h6>
+      <div
+        class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-2">
+        <h5 class="text-primary mb-0 fw-semibold listview-title">Contracts</h5>
         <div>
           <button
             v-if="hasPermission('ctrctsapp.add_contract')"
-            class="btn btn-success"
-            @click="goToCreateForm"
-          >
+            class="btn btn-success btn-sm"
+            @click="goToCreateForm">
             + New Contract
           </button>
         </div>
@@ -16,89 +16,58 @@
     </template>
 
     <div class="card-body">
-      <div class="row mb-3 mt-0">
-        <div class="col-md-3">
-          <div class="card bg-primary text-white mb-2">
-            <div class="card-body text-center py-1">
-              <h6 class="mb-0">{{ stats.total }}</h6>
-              <small>Total Contracts</small>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card bg-success text-white mb-2">
-            <div class="card-body text-center py-1">
-              <h6 class="mb-0">{{ stats.active }}</h6>
-              <small>Active</small>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card bg-secondary text-white mb-2">
-            <div class="card-body text-center py-1">
-              <h6 class="mb-0">{{ stats.inactive }}</h6>
-              <small>Inactive</small>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="card mb-2">
-            <div class="card-body text-center py-1">
-              <button
-                class="btn btn-outline-success bt-sm py-2 w-100"
-                @click="refreshTable"
-              >
-                Refresh List
-              </button>
-            </div>
-          </div>
-        </div>
+      <!-- Toolbar: stats + refresh -->
+      <div
+        class="listview-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
+        <span class="badge bg-primary stats-badge">
+          {{ stats.total }} Total
+        </span>
+        <span class="badge bg-success stats-badge">
+          {{ stats.active }} Active
+        </span>
+        <span class="badge bg-secondary stats-badge">
+          {{ stats.inactive }} Inactive
+        </span>
+        <span
+          class="listview-toolbar-divider d-none d-sm-inline"
+          aria-hidden="true"></span>
+        <button
+          type="button"
+          class="btn btn-outline-success btn-sm listview-refresh-btn"
+          @click="refreshTable">
+          Refresh List
+        </button>
       </div>
 
-      <div class="row mb-3">
-        <div class="col-lg-3 text-start">
+      <!-- Filters: entries per page + search -->
+      <div class="listview-filters row g-2 g-md-3 mb-3 align-items-end">
+        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
           <BFormGroup
-            label="entries per page:"
+            label="Entries per page:"
             label-for="per-page-select"
-            label-cols-sm="6"
-            label-cols-md="6"
-            label-cols-lg="6"
-            label-align-sm="right"
             label-size="sm"
-            class="mb-0 small"
-          >
+            class="mb-0 listview-filter-group">
             <BFormSelect
               id="per-page-select"
               v-model="perPage"
               :options="pageOptions"
               size="sm"
-              class="form-select-xs"
-            />
+              class="form-select form-select-sm" />
           </BFormGroup>
         </div>
-        <div class="col-lg-3"></div>
-        <div class="col-lg-6 text-end">
+        <div class="col-12 col-sm-6 col-lg-5 col-xl-4 ms-lg-auto">
           <BFormGroup
             label="Search:"
             label-for="filter-input"
-            label-cols-sm="4"
-            label-cols-md="6"
-            label-cols-lg="6"
-            label-align-sm="text-start"
             label-size="sm"
-            class="mb-0"
-          >
-            <div class="position-relative">
-              <div class="search-wrapper">
-                <BFormInput
-                  id="filter-input"
-                  v-model="filter"
-                  type="search"
-                  placeholder="Search..."
-                  size="sm"
-                />
-              </div>
-            </div>
+            class="mb-0 listview-filter-group">
+            <BFormInput
+              id="filter-input"
+              v-model="filter"
+              type="search"
+              placeholder="Search..."
+              size="sm"
+              class="form-control form-control-sm" />
           </BFormGroup>
         </div>
       </div>
@@ -124,8 +93,7 @@
           hover
           responsive
           striped
-          class="table-bordered"
-        >
+          class="table-bordered">
           <template #cell(id)="row">
             <strong>{{ row.item.id }}</strong>
           </template>
@@ -152,8 +120,7 @@
             <span
               class="badge"
               :class="row.item.needs_reprint ? 'bg-danger' : 'bg-success'"
-              style="font-size: 0.75rem"
-            >
+              style="font-size: 0.75rem">
               {{ row.item.needs_reprint ? "Yes" : "No" }}
             </span>
           </template>
@@ -163,29 +130,25 @@
               <button
                 v-if="hasPermission('ctrctsapp.view_contract')"
                 class="btn btn-outline-success me-1"
-                @click="viewItem(row.item.id)"
-              >
+                @click="viewItem(row.item.id)">
                 View
               </button>
               <button
                 v-if="hasPermission('ctrctsapp.change_contract')"
                 class="btn btn-outline-primary me-1"
-                @click="editItem(row.item.id)"
-              >
+                @click="editItem(row.item.id)">
                 Edit
               </button>
               <button
                 v-if="hasPermission('ctrctsapp.view_contract')"
                 class="btn btn-outline-dark me-1"
-                @click="printItem(row.item.id)"
-              >
+                @click="printItem(row.item.id)">
                 Print
               </button>
               <button
                 v-if="hasPermission('ctrctsapp.delete_contract')"
                 class="btn btn-outline-danger"
-                @click="deleteItem(row.item.id)"
-              >
+                @click="deleteItem(row.item.id)">
                 Delete
               </button>
             </div>
@@ -198,8 +161,7 @@
           v-model="currentPage"
           :total-rows="totalRows"
           :per-page="perPage"
-          @update:model-value="onPageChange"
-        />
+          @update:model-value="onPageChange" />
       </div>
     </div>
   </TxCard>
@@ -366,7 +328,7 @@ export default {
             const data = error?.response?.data;
             if (status === 403) {
               proxy?.notifyError?.(
-                "You do not have permission for this action.",
+                "You do not have permission for this action."
               );
             } else if (status === 409) {
               const detail =
@@ -378,7 +340,7 @@ export default {
               proxy?.notifyError?.(detail);
             }
           }
-        },
+        }
       );
     };
 
@@ -407,20 +369,46 @@ export default {
 </script>
 
 <style scoped>
+/* Listview header: toolbar + filters */
+.listview-title {
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+}
+.listview-toolbar {
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(13, 110, 253, 0.06);
+  border: 1px solid rgba(13, 110, 253, 0.12);
+  border-radius: 0.375rem;
+}
+.listview-toolbar .stats-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  line-height: 1.2;
+}
+.listview-toolbar-divider {
+  width: 1px;
+  height: 1.25rem;
+  background-color: rgba(0, 0, 0, 0.12);
+  margin: 0 0.15rem;
+}
+.listview-refresh-btn {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+}
+.listview-filters .listview-filter-group label {
+  font-size: 0.8rem;
+  color: var(--bs-secondary-color);
+}
 .table td {
   vertical-align: middle;
 }
 .badge {
   font-size: 0.75rem;
 }
-.form-select-xs {
-  font-size: 0.7rem;
-  padding: 0.15rem 0.3rem;
-  height: 1.6rem;
-  min-width: 60px;
-}
-.search-wrapper {
-  position: relative;
+.form-select-sm,
+.form-control-sm {
+  font-size: 0.8rem;
 }
 .card {
   border: none;

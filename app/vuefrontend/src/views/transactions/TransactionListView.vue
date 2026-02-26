@@ -2,158 +2,188 @@
   <TxCard class="shadow-sm mt-0">
     <!-- Header del card -->
     <template #header>
-      <div class="d-flex justify-content-between align-items-center w-100">
-        <h6 class="text-primary mb-0">Transactions</h6>
+      <div
+        class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-2">
+        <h5 class="text-primary mb-0 fw-semibold listview-title">
+          Transactions
+        </h5>
         <router-link
           v-if="hasPermission('apptransactions.add_document')"
           to="/transactions/form"
-          class="btn btn-success"
-          >+ New Transaction</router-link
-        >
+          class="btn btn-success btn-sm">
+          + New Transaction
+        </router-link>
       </div>
     </template>
 
-    <!-- Filtros -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <!-- entries per page (izq) -->
-      <div class="col-md-3">
-        <div class="input-group">
-          <select v-model="perPage" class="form-select">
-            <option v-for="n in [5, 10, 25, 50]" :key="n" :value="n">
-              {{ n }}
-            </option>
-          </select>
-          <span class="text-primary p-2">entries per page</span>
-        </div>
-      </div>
+    <!-- Toolbar: stats + refresh -->
+    <div
+      class="listview-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
+      <span class="badge bg-primary stats-badge">{{ stats.total }} Total</span>
+      <span class="badge bg-success stats-badge">
+        {{ stats.active }} Active
+      </span>
+      <span class="badge bg-secondary stats-badge">
+        {{ stats.inactive }} Voided
+      </span>
+      <span
+        class="listview-toolbar-divider d-none d-sm-inline"
+        aria-hidden="true"></span>
+      <button
+        type="button"
+        class="btn btn-outline-success btn-sm listview-refresh-btn"
+        @click.prevent="refreshList">
+        Refresh List
+      </button>
+    </div>
 
-      <!-- search (der) -->
-      <div class="col-md-4">
-        <div class="d-flex align-items-center gap-2">
-          <span class="text-primary p-2">Search:</span>
-          <div class="search-wrapper flex-grow-1">
-            <input
-              v-model="search"
-              type="text"
-              class="form-control"
-              placeholder="Search by document type, party, notes..."
-              autocomplete="off"
-            />
-            <button
-              v-show="search && search.length"
-              @mousedown.prevent
-              @click="search = ''"
-              type="button"
-              class="btn-clear-x"
-              title="Clear"
-            >
-              ×
-            </button>
-          </div>
+    <!-- Filters: entries per page + search -->
+    <div class="listview-filters row g-2 g-md-3 mb-3 align-items-end">
+      <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+        <label for="per-page-select" class="form-label small listview-filter-label mb-1">
+          Entries per page:
+        </label>
+        <select
+          id="per-page-select"
+          v-model="perPage"
+          class="form-select form-select-sm">
+          <option v-for="n in [10, 25, 50, 100]" :key="n" :value="n">
+            {{ n }}
+          </option>
+        </select>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-5 col-xl-4 ms-lg-auto">
+        <label for="search-input" class="form-label small listview-filter-label mb-1">
+          Search:
+        </label>
+        <div class="search-wrapper position-relative">
+          <input
+            id="search-input"
+            v-model="search"
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="Search by document type, party, notes..."
+            autocomplete="off" />
+          <button
+            v-show="search && search.length"
+            @mousedown.prevent
+            @click="search = ''"
+            type="button"
+            class="btn-clear-x"
+            title="Clear">
+            ×
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- tabla -->
-    <b-table
-      :items="filteredItems"
-      :fields="fields"
-      :per-page="perPage"
-      :current-page="currentPage"
-      bordered
-      hover
-      responsive
-      striped
-    >
-      <template #cell(document_type_code)="data">
-        {{ documentTypesMap[data.item.document_type] || "—" }}
+    <!-- Main Table with Overlay -->
+    <BOverlay :show="isLoading" rounded="sm" opacity="0.85" variant="light">
+      <template #overlay>
+        <div class="text-center">
+          <BSpinner type="border" variant="secondary" class="mb-3" />
+          <div class="h5 text-primary">Loading Transactions...</div>
+          <div class="text-muted">Please wait while we fetch the data</div>
+        </div>
       </template>
 
-      <template #cell(party_name)="data">
-        {{ data.item.builder_name || partiesMap[data.item.party] || "—" }}
-      </template>
-
-      <template #cell(work_account_display)="data">
-        {{
-          data.item.work_account_display ||
-          workAccountsMap[data.item.work_account] ||
-          "—"
-        }}
-      </template>
-
-      <template #cell(date)="data">
-        {{ formatDate(data.item.date) }}
-      </template>
-
-      <template #cell(total_amount)="data">
-        <span class="text-end">{{ currency(data.item.total_amount) }}</span>
-      </template>
-
-      <template #cell(total_discount)="data">
-        <span class="text-end">{{ currency(data.item.total_discount) }}</span>
-      </template>
-
-      <template #cell(is_active)="data">
-        <td class="text-center">
-          <span v-if="data.item.is_active" class="badge bg-success"
-            >Active</span
-          >
-          <span v-else class="badge bg-secondary">Voided</span>
-        </td>
-      </template>
-
-      <template #cell(lines_count)="data">
-        <td class="text-center">
-          <span class="badge bg-info">{{ data.item.lines?.length || 0 }}</span>
-        </td>
-      </template>
-
-      <template #cell(actions)="data">
-        <td class="text-center">
-          <div class="btn-group btn-group-sm" role="group">
-            <router-link
-              v-if="hasPermission('apptransactions.view_document')"
-              :to="`/transactions/form?id=${data.item.id}&mode=view`"
-              class="btn btn-outline-success me-1"
-            >
-              View
-            </router-link>
-            <button
-              v-if="hasPermission('apptransactions.view_document')"
-              @click="printTransaction(data.item.id)"
-              class="btn btn-outline-dark me-1"
-            >
-              Print
-            </button>
-            <router-link
-              v-if="hasPermission('apptransactions.change_document')"
-              :to="`/transactions/form?id=${data.item.id}`"
-              class="btn btn-outline-primary me-1"
-            >
-              Edit
-            </router-link>
-            <button
-              v-if="hasPermission('apptransactions.delete_document')"
-              @click="
-                deleteTransaction(data.item.id, data.item.document_type_code)
-              "
-              class="btn btn-outline-danger"
-            >
-              Delete
-            </button>
-          </div>
-        </td>
-      </template>
-    </b-table>
-
-    <!-- paginación a la derecha -->
-    <div class="d-flex justify-content-end mt-3">
-      <b-pagination
-        v-model="currentPage"
-        :total-rows="filteredItems.length"
+      <!-- tabla -->
+      <b-table
+        :items="filteredItems"
+        :fields="fields"
         :per-page="perPage"
-      />
-    </div>
+        :current-page="currentPage"
+        bordered
+        hover
+        responsive
+        striped>
+        <template #cell(document_type_code)="data">
+          {{ documentTypesMap[data.item.document_type] || "—" }}
+        </template>
+
+        <template #cell(party_name)="data">
+          {{ data.item.builder_name || partiesMap[data.item.party] || "—" }}
+        </template>
+
+        <template #cell(work_account_display)="data">
+          {{
+            data.item.work_account_display ||
+            workAccountsMap[data.item.work_account] ||
+            "—"
+          }}
+        </template>
+
+        <template #cell(date)="data">
+          {{ formatDate(data.item.date) }}
+        </template>
+
+        <template #cell(total_amount)="data">
+          <span class="text-end">{{ currency(data.item.total_amount) }}</span>
+        </template>
+
+        <template #cell(total_discount)="data">
+          <span class="text-end">{{ currency(data.item.total_discount) }}</span>
+        </template>
+
+        <template #cell(is_active)="data">
+          <td class="text-center">
+            <span v-if="data.item.is_active" class="badge bg-success">
+              Active
+            </span>
+            <span v-else class="badge bg-secondary">Voided</span>
+          </td>
+        </template>
+
+        <template #cell(lines_count)="data">
+          <td class="text-center">
+            <span class="badge bg-info">
+              {{ data.item.lines?.length || 0 }}
+            </span>
+          </td>
+        </template>
+
+        <template #cell(actions)="data">
+          <td class="text-center">
+            <div class="btn-group btn-group-sm" role="group">
+              <router-link
+                v-if="hasPermission('apptransactions.view_document')"
+                :to="`/transactions/form?id=${data.item.id}&mode=view`"
+                class="btn btn-outline-success me-1">
+                View
+              </router-link>
+              <button
+                v-if="hasPermission('apptransactions.view_document')"
+                @click="printTransaction(data.item.id)"
+                class="btn btn-outline-dark me-1">
+                Print
+              </button>
+              <router-link
+                v-if="hasPermission('apptransactions.change_document')"
+                :to="`/transactions/form?id=${data.item.id}`"
+                class="btn btn-outline-primary me-1">
+                Edit
+              </router-link>
+              <button
+                v-if="hasPermission('apptransactions.delete_document')"
+                @click="
+                  deleteTransaction(data.item.id, data.item.document_type_code)
+                "
+                class="btn btn-outline-danger">
+                Delete
+              </button>
+            </div>
+          </td>
+        </template>
+      </b-table>
+
+      <!-- paginación a la derecha -->
+      <div class="d-flex justify-content-end mt-3">
+        <b-pagination
+          v-model="currentPage"
+          :total-rows="filteredItems.length"
+          :per-page="perPage" />
+      </div>
+    </BOverlay>
   </TxCard>
 </template>
 
@@ -164,15 +194,17 @@ import "@/assets/css/base.css";
 import { ref, computed, onMounted, getCurrentInstance } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { BOverlay, BSpinner } from "bootstrap-vue-next";
 
 const { proxy } = getCurrentInstance();
 
 const transactions = ref([]);
+const isLoading = ref(false);
 const documentTypesMap = ref({}); // id -> type_code
 const partiesMap = ref({}); // id -> name
 const workAccountsMap = ref({}); // id -> display
 const search = ref("");
-const perPage = ref(10);
+const perPage = ref(25);
 const currentPage = ref(1);
 
 const fields = [
@@ -257,7 +289,7 @@ const fetchTransactions = async () => {
     console.error(
       "Error fetching transactions:",
       { status, data: typeof msg === "string" ? msg?.slice?.(0, 300) : msg },
-      err,
+      err
     );
     let userMsg = "Error loading transactions.";
     if (status >= 500 || typeof msg === "string") {
@@ -269,7 +301,7 @@ const fetchTransactions = async () => {
       else if (Array.isArray(d) && d[0]) userMsg = String(d[0]);
     }
     proxy?.notifyError?.(
-      typeof userMsg === "string" ? userMsg : "Error loading transactions.",
+      typeof userMsg === "string" ? userMsg : "Error loading transactions."
     );
   }
 };
@@ -279,7 +311,7 @@ const fetchDocumentTypes = async () => {
     const res = await axios.get("/api/document-types/?ordering=type_code");
     const arr = normalizeList(res.data);
     documentTypesMap.value = Object.fromEntries(
-      arr.map((dt) => [dt.id, dt.type_code]),
+      arr.map((dt) => [dt.id, dt.type_code])
     );
   } catch (err) {
     console.error("Error fetching document types", err);
@@ -303,7 +335,7 @@ const fetchWorkAccounts = async () => {
     const res = await axios.get("/api/work-accounts/?ordering=-id");
     const arr = normalizeList(res.data);
     workAccountsMap.value = Object.fromEntries(
-      arr.map((wa) => [wa.id, wa.title]),
+      arr.map((wa) => [wa.id, wa.title])
     );
   } catch (err) {
     console.error("Error fetching work accounts", err);
@@ -333,6 +365,26 @@ const filteredItems = computed(() => {
     return hay.some((t) => t.includes(q));
   });
 });
+
+const stats = computed(() => {
+  const items = filteredItems.value;
+  return {
+    total: items.length,
+    active: items.filter((i) => i.is_active).length,
+    inactive: items.filter((i) => !i.is_active).length,
+  };
+});
+
+const refreshList = async () => {
+  isLoading.value = true;
+  try {
+    await fetchTransactions();
+  } finally {
+    setTimeout(() => {
+      isLoading.value = false;
+    }, 300);
+  }
+};
 
 const formatDate = (dateString) => {
   if (!dateString) return "—";
@@ -365,7 +417,7 @@ const deleteTransaction = (id, documentTypeCode) => {
           err?.response?.data?.detail || "Error deleting the transaction.";
         proxy?.notifyError?.(detail);
       }
-    },
+    }
   );
 };
 
@@ -373,7 +425,7 @@ const deleteTransaction = (id, documentTypeCode) => {
 const isMobileDevice = () => {
   return (
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent,
+      navigator.userAgent
     ) || window.innerWidth <= 768
   );
 };
@@ -423,7 +475,7 @@ const printTransaction = async (documentId) => {
         link.click();
         document.body.removeChild(link);
         proxy?.notifyToastSuccess?.(
-          "PDF generated and downloaded successfully.",
+          "PDF generated and downloaded successfully."
         );
       } else {
         proxy?.notifyToastSuccess?.("PDF opened in new window.");
@@ -447,7 +499,36 @@ const printTransaction = async (documentId) => {
 </script>
 
 <style scoped>
-/* Reusa estilos de PartyListView: clear de input */
+.listview-title {
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+}
+.listview-toolbar {
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(13, 110, 253, 0.06);
+  border: 1px solid rgba(13, 110, 253, 0.12);
+  border-radius: 0.375rem;
+}
+.listview-toolbar .stats-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  line-height: 1.2;
+}
+.listview-toolbar-divider {
+  width: 1px;
+  height: 1.25rem;
+  background-color: rgba(0, 0, 0, 0.12);
+  margin: 0 0.15rem;
+}
+.listview-refresh-btn {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+}
+.listview-filter-label {
+  font-size: 0.8rem;
+  color: var(--bs-secondary-color);
+}
 .search-wrapper {
   position: relative;
 }

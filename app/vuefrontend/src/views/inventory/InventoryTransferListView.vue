@@ -1,56 +1,64 @@
 <template>
   <TxCard class="shadow-sm mt-0">
     <template #header>
-      <div class="d-flex justify-content-between align-items-center w-100">
-        <h6 class="text-primary mb-0">Inventory Transfers</h6>
+      <div
+        class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-2">
+        <h5 class="text-primary mb-0 fw-semibold listview-title">
+          Inventory Transfers
+        </h5>
         <div class="d-flex gap-2">
           <router-link
             v-if="hasPermission('appinventory.add_inventorytransfer')"
             to="/inventory-transfers/form"
-            class="btn btn-success">
+            class="btn btn-success btn-sm">
             + New Inventory Transfer
           </router-link>
-          <button
-            v-if="!loading"
-            class="btn btn-outline-primary btn-sm"
-            @click="refreshTable">
-            Refresh List
-          </button>
         </div>
       </div>
     </template>
 
     <div class="card-body">
-      <div class="row mb-3">
-        <div class="col-lg-3 text-start">
+      <div
+        class="listview-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
+        <span class="badge bg-primary stats-badge">{{ totalRows }} Total</span>
+        <span
+          class="listview-toolbar-divider d-none d-sm-inline"
+          aria-hidden="true"></span>
+        <button
+          type="button"
+          class="btn btn-outline-success btn-sm listview-refresh-btn"
+          @click="refreshTable">
+          Refresh List
+        </button>
+      </div>
+      <div class="listview-filters row g-2 g-md-3 mb-3 align-items-end">
+        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
           <BFormGroup
-            label="entries per page:"
+            label="Entries per page:"
             label-for="per-page-select"
-            label-cols-sm="6"
             label-size="sm"
-            class="mb-0 small">
+            class="mb-0 listview-filter-group">
             <BFormSelect
               id="per-page-select"
               v-model="perPage"
               :options="pageOptions"
               size="sm"
-              class="form-select-xs" />
+              class="form-select form-select-sm" />
           </BFormGroup>
         </div>
-        <div class="col-lg-3"></div>
-        <div class="col-lg-6 text-end">
+        <div class="col-12 col-sm-6 col-lg-5 col-xl-4 ms-lg-auto">
           <BFormGroup
             label="Search:"
             label-for="filter-input"
-            label-cols-sm="4"
             label-size="sm"
-            class="mb-0">
+            class="mb-0 listview-filter-group">
             <BFormInput
               id="filter-input"
               v-model="filter"
               type="search"
               placeholder="Search by description, warehouses, crew..."
-              size="sm" />
+              size="sm"
+              class="form-control form-control-sm" />
           </BFormGroup>
         </div>
       </div>
@@ -365,3 +373,40 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.listview-title {
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+}
+.listview-toolbar {
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(13, 110, 253, 0.06);
+  border: 1px solid rgba(13, 110, 253, 0.12);
+  border-radius: 0.375rem;
+}
+.listview-toolbar .stats-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  line-height: 1.2;
+}
+.listview-toolbar-divider {
+  width: 1px;
+  height: 1.25rem;
+  background-color: rgba(0, 0, 0, 0.12);
+  margin: 0 0.15rem;
+}
+.listview-refresh-btn {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+}
+.listview-filters .listview-filter-group label {
+  font-size: 0.8rem;
+  color: var(--bs-secondary-color);
+}
+.form-select-sm,
+.form-control-sm {
+  font-size: 0.8rem;
+}
+</style>
