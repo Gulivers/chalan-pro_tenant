@@ -89,7 +89,6 @@ const resolveApiBaseUrl = () => {
 
   // En desarrollo local con npm run serve, usar ruta relativa para que el proxy funcione
   if (isLocalLikeHost(hostname) || isDevPort) {
-    // Retornar '/' para que las peticiones pasen por el proxy de vue.config.js
     return "/";
   }
 
