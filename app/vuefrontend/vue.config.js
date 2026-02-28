@@ -39,6 +39,39 @@ module.exports = defineConfig({
       },
     },
   },
+  pwa: {
+    name: 'ChalanPro',
+    themeColor: '#0d6efd',
+    msTileColor: '#000000',
+    appleMobileWebAppCapable: 'yes',
+    appleMobileWebAppStatusBarStyle: 'default',
+    manifestPath: 'manifest.json',
+    workboxPluginMode: 'GenerateSW',
+    workboxOptions: {
+      skipWaiting: true,
+      clientsClaim: true,
+    },
+    manifestOptions: {
+      name: 'ChalanPro',
+      short_name: 'ChalanPro',
+      theme_color: '#0d6efd',
+      background_color: '#ffffff',
+      display: 'standalone',
+      start_url: '/',
+      icons: [
+        {
+          src: './img/icons/icon-192x192.png',
+          sizes: '192x192',
+          type: 'image/png',
+        },
+        {
+          src: './img/icons/icon-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+        },
+      ],
+    },
+  },
   devServer: {
     host: '0.0.0.0',
     port: 8080,
