@@ -308,6 +308,25 @@ def create_tenant_onboarding(request):
                 'error': f'Error al crear el dominio: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
+        # Forzar actualización de ALLOWED_HOSTS y CSRF_TRUSTED_ORIGINS para que
+        # el nuevo subdominio sea accesible de inmediato (sin esperar el TTL de 5 min).
+        try:
+            from project.middleware.dynamic_hosts_utils import refresh_dynamic_domains
+            refresh_dynamic_domains()
+            logger.info("✓ Dominios dinámicos actualizados (tenant accesible de inmediato)")
+        except Exception as e:
+            logger.warning("No se pudo actualizar dominios dinámicos: %s", e)
+        
+        # Asegurar que el dominio esté confirmado en BD para otros workers (p. ej. Daphne).
+        try:
+            from django.db import connection
+            connection.ensure_connection()
+            if hasattr(connection, "commit"):
+                connection.commit()
+                logger.debug("Commit explícito para dominio visible en todos los workers")
+        except Exception as e:
+            logger.debug("Commit explícito (opcional): %s", e)
+        
         logger.info(f"Tenant creado: {tenant.name} ({tenant.schema_name})")
         logger.info(f"Dominio creado: {domain_name}")
         

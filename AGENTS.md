@@ -7,7 +7,12 @@ Este documento da contexto a los agentes de IA (Cursor, Copilot, etc.) en el pro
 - **Backend:** Django (ASGI con Daphne), multi-tenant por schema.
 - **Frontend:** Vue.js (SPA), puerto 8080 en desarrollo.
 - **Base de datos:** PostgreSQL.
-- **Contenedores:** Docker Compose; en local usar `docker-compose.dev.yml`.
+- **Contenedores:** Docker Compose; el archivo a usar depende del servidor (ver abajo).
+
+## Docker Compose por servidor
+
+- **`docker-compose.yml`**: para el **servidor VPS en Hostinger** (producción). Es el entorno donde se despliega la app (host típico: `srv1186738`). Es el que se usa cuando se trabaja o se ejecutan comandos en ese VPS.
+- **`docker-compose.dev.yml`**: para el **servidor en casa** (ubuntu-house / desarrollo local). Usar en la máquina de desarrollo, no en el VPS.
 
 ## Entorno actual: ubuntu-house
 
