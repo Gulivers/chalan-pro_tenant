@@ -2,8 +2,13 @@
 Comando de gestión para crear nuevos tenants
 Uso: python manage.py create_tenant --name "Phoenix Electric" --schema phoenix --domain phoenix.chalan-pro.net
 """
+import os
 import re
-from django.core.management.base import BaseCommand
+
+from django.conf import settings
+from django.core.management import BaseCommand, call_command
+from django_tenants.utils import schema_context
+
 from tenants.models import Tenant, Domain
 
 
@@ -100,12 +105,36 @@ class Command(BaseCommand):
 
             # Ejecutar migraciones para el nuevo tenant
             self.stdout.write(self.style.WARNING('Ejecutando migraciones para el nuevo tenant...'))
-            from django.core.management import call_command
             call_command('migrate_schemas', schema_name=schema_name)
 
             self.stdout.write(
                 self.style.SUCCESS('✓ Migraciones completadas para el nuevo tenant')
             )
+
+            # Seed inicial de tipos de documento (apptransactions.documenttype)
+            try:
+                fixture_doc_types = os.path.join(
+                    settings.BASE_DIR,
+                    'apptransactions',
+                    'fixtures',
+                    'masters_document_type.json',
+                )
+                if os.path.exists(fixture_doc_types):
+                    self.stdout.write('Cargando tipos de documento iniciales desde masters_document_type.json...')
+                    with schema_context(schema_name):
+                        call_command('loaddata', fixture_doc_types, verbosity=0)
+                    self.stdout.write(self.style.SUCCESS('✓ Tipos de documento iniciales cargados.'))
+                else:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            'Fixture masters_document_type.json no encontrado; se omite seed de tipos de documento.'
+                        )
+                    )
+            except Exception as e:
+                # No abortar la creación del tenant si falla el seed; solo informar.
+                self.stdout.write(
+                    self.style.ERROR(f'Error al cargar masters_document_type.json para el nuevo tenant: {e}')
+                )
 
         except Exception as e:
             self.stdout.write(

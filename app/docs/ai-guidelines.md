@@ -420,6 +420,16 @@ docker compose exec backend python manage.py makemigrations <app_name>
 docker compose exec backend python manage.py migrate_schemas
 ```
 
+- **DocumentType (tipos de documento):** si se agrega, elimina o cambia algún campo en el modelo `apptransactions.DocumentType`, después de aplicar las migraciones hay que **regenerar el fixture maestro** que usan los tenants nuevos:
+
+```bash
+docker compose exec backend python manage.py tenant_command dumpdata \
+  --schema test_dominio_local \
+  apptransactions.DocumentType \
+  --indent 2 \
+  --output /app/apptransactions/fixtures/masters_document_type.json
+```
+
 - Sin ejecutar `migrate_schemas`, los cambios no se reflejan en las empresas (tenants) y pueden aparecer errores como `column does not exist` o `no such column`.
 
 ---
