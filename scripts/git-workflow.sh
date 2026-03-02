@@ -22,6 +22,8 @@ show_help() {
     echo ""
     echo "Comandos disponibles:"
     echo "  status          - Mostrar estado actual de ramas"
+    echo "  sync-all        - Actualizar main, develop y dev_local_inv-img (traer del remoto)"
+    echo "  prepare-deploy  - Subir cambios locales a main remoto (preparar deploy VPS)"
     echo "  sync-main       - Sincronizar main con origin/main"
     echo "  sync-develop    - Sincronizar develop con origin/develop"
     echo "  create-feature  - Crear nueva rama de feature desde develop"
@@ -177,10 +179,26 @@ compare_branches() {
     git diff --name-status main..develop || echo "No hay diferencias"
 }
 
+sync_all() {
+    echo -e "${BLUE}Ejecutando sync_local_branches.sh...${NC}"
+    exec "$REPO_DIR/scripts/sync_local_branches.sh"
+}
+
+prepare_deploy() {
+    echo -e "${BLUE}Ejecutando sync_local_prepare_deploy.sh...${NC}"
+    exec "$REPO_DIR/scripts/sync_local_prepare_deploy.sh" "${@:2}"
+}
+
 # Main
 case "${1:-help}" in
     status)
         show_status
+        ;;
+    sync-all)
+        sync_all
+        ;;
+    prepare-deploy)
+        prepare_deploy "$@"
         ;;
     sync-main)
         sync_main
