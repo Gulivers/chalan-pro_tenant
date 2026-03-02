@@ -1,15 +1,14 @@
 <template>
   <div class="doc-type-selector">
-    <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2">
-      <label class="form-label mb-0 d-flex align-items-center gap-2">
-        Document Type
-        <i
-          v-tt
-          class="fas fa-info-circle text-muted"
-          data-title="Required. Select the type of transaction document"></i>
-      </label>
-      <div class="d-flex align-items-center doc-type-controls">
-        <v-select
+    <label class="form-label mb-1 d-flex align-items-center gap-2">
+      Document Type
+      <i
+        v-tt
+        class="fas fa-info-circle text-muted"
+        data-title="Required. Select the type of transaction document"></i>
+    </label>
+    <div class="d-flex align-items-center doc-type-controls">
+      <v-select
         :options="options"
         :reduce="o => o.value"
         label="label"
@@ -41,7 +40,6 @@
         data-title="Edit the currently selected document type">
         <img src="@assets/img/icon-changelink.svg" alt="Edit" width="15" height="15" />
       </button>
-      </div>
     </div>
     <div v-if="hasError" class="invalid-feedback d-block">{{ errorMessage }}</div>
 
@@ -192,20 +190,20 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* En móvil: columna; en lg: fila con selector a la derecha */
-.doc-type-controls {
-  min-width: 0;
-}
-@media (min-width: 992px) {
-  .doc-type-controls {
-    margin-left: auto;
-    max-width:  min(100%, 22rem);
-  }
+.doc-type-selector {
+  width: 100%;
 }
 
-/* Flex layout for select + buttons */
+.doc-type-controls {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+/* El v-select debe ocupar la mayor parte del ancho disponible */
 .doc-type-controls .v-select {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
 }
 

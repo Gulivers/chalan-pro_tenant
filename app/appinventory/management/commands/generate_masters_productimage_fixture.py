@@ -81,7 +81,10 @@ class Command(BaseCommand):
                         'image': image_path,
                         'is_primary': getattr(pi, 'is_primary', True),
                         'uploaded_at': uploaded_at,
-                        'uploaded_by': pi.uploaded_by_id,
+                        # uploaded_by se deja siempre en null en el fixture maestro para evitar
+                        # errores de FK (auth_user) en tenants donde no existen esos usuarios.
+                        # Es un dato puramente informativo y no afecta al funcionamiento.
+                        'uploaded_by': None,
                         'description': (pi.description or '')[:255],
                     },
                 })
