@@ -3172,6 +3172,10 @@ class InventoryMasterDataImportAPIView(APIView):
             with open(fixture_path, 'r', encoding='utf-8') as f:
                 fixture_data = json.load(f)
             fixture_without_images = [item for item in fixture_data if item.get('model') != 'appinventory.productimage']
+            # Anular truck_id en Warehouse para evitar FK crewsapp_truck (no existe en tenant destino)
+            for item in fixture_without_images:
+                if item.get('model') == 'appinventory.warehouse' and item.get('fields', {}).get('truck'):
+                    item['fields']['truck'] = None
             # Asegurar que cada Product tenga "brands" para que loaddata cree ProductBrandAssignment (evita "No brand assigned" y FK en ProductImage)
             first_brand_pk = None
             for item in fixture_data:

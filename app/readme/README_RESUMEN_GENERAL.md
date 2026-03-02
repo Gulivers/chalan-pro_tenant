@@ -1078,6 +1078,7 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 **Fixture de Datos (`appinventory/fixtures/masters_inventory.json`):**
 - Archivo JSON con todos los datos maestros de inventario.
 - Incluye: UnitCategory, UnitOfMeasure, Warehouse, ProductCategory, ProductBrand, PriceType, Product, ProductPrice. **Product debe incluir el campo `brands`** (ej. `"brands": [1]`) para que al cargar se creen las filas en `appinventory_productbrandassignment`; si falta, el backend **inyecta en memoria** `brands` con el primer ProductBrand del fixture para evitar "No brand assigned" y la FK en ProductImage. En la importación se omiten las entradas ProductImage si las hubiera.
+- **Warehouse con `truck_id`:** En la importación se anula `truck` para evitar la FK `crewsapp_truck` (no existe en el tenant destino). Los warehouses móviles quedan como almacenes normales.
 
 **Fixture de imágenes de productos (`appinventory/fixtures/masters_productimage.json`):**
 - Se carga **después** de `masters_inventory.json`. Contiene solo ProductImage con **assignment_id 1, 2, 3…** (orden igual al de las asignaciones creadas al cargar el maestro).
@@ -1207,6 +1208,7 @@ docker compose exec backend python manage.py export_fixture_product_images --sch
 **Paso 2 – Generar o actualizar el fixture JSON:**
 ```bash
 # Generar el fixture JSON desde el tenant de desarrollo (ProductImage es opcional; en la importación se omiten)
+# Nota: Warehouse con truck_id se anula en la importación (evita FK crewsapp_truck inexistente en tenant destino)
 docker compose exec backend python manage.py tenant_command dumpdata \
   --schema test_dominio_local \
   appinventory.UnitCategory \
