@@ -2,6 +2,8 @@
 Vistas para el sistema de onboarding y gestión de tenants
 """
 import logging
+import os
+
 from django.conf import settings
 from django.core.management import call_command
 from django_tenants.utils import schema_context
@@ -10,6 +12,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+
 from .models import Tenant, Domain
 
 logger = logging.getLogger(__name__)
@@ -409,19 +412,50 @@ def create_tenant_onboarding(request):
                 'error': f'Error inesperado al ejecutar migraciones: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        # Crear superusuario inicial para el tenant
-        # Usar el email como username base, o el nombre proporcionado
-        username_base = email.split('@')[0]
-        if admin_name:
-            # Si hay nombre completo, usar la primera parte del nombre como username base
-            name_parts = admin_name.split()
-            if name_parts:
-                username_base = name_parts[0].lower()
-        
-        username = username_base
-        
-        # Asegurar que el username sea único en el schema del tenant
+        # Crear datos iniciales dentro del schema del tenant
         with schema_context(tenant.schema_name):
+            # 1) Seed de tipos de documento (transactions)
+            try:
+                fixture_doc_types = os.path.join(
+                    settings.BASE_DIR,
+                    'apptransactions',
+                    'fixtures',
+                    'masters_document_type.json',
+                )
+                if os.path.exists(fixture_doc_types):
+                    call_command('loaddata', fixture_doc_types, verbosity=0)
+                    logger.info(
+                        "✓ Tipos de documento iniciales cargados desde masters_document_type.json "
+                        "para tenant %s",
+                        tenant.schema_name,
+                    )
+                else:
+                    logger.warning(
+                        "Fixture masters_document_type.json no encontrado; "
+                        "se omite seed de tipos de documento para tenant %s",
+                        tenant.schema_name,
+                    )
+            except Exception as e:
+                # No bloquear la creación del tenant si falla el seed; solo loguear.
+                logger.error(
+                    "✗ Error al cargar masters_document_type.json para tenant %s: %s",
+                    tenant.schema_name,
+                    e,
+                    exc_info=True,
+                )
+
+            # 2) Crear superusuario inicial para el tenant
+            # Usar el email como username base, o el nombre proporcionado
+            username_base = email.split('@')[0]
+            if admin_name:
+                # Si hay nombre completo, usar la primera parte del nombre como username base
+                name_parts = admin_name.split()
+                if name_parts:
+                    username_base = name_parts[0].lower()
+            
+            username = username_base
+            
+            # Asegurar que el username sea único en el schema del tenant
             counter = 1
             original_username = username
             while User.objects.filter(username=username).exists():

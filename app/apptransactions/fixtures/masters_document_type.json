@@ -1,0 +1,211 @@
+[
+{
+  "model": "apptransactions.documenttype",
+  "pk": 1,
+  "fields": {
+    "type_code": "PK",
+    "description": "Picking Ticket",
+    "affects_physical": false,
+    "affects_logical": true,
+    "affects_accounting": false,
+    "is_taxable": false,
+    "is_purchase": false,
+    "is_sales": true,
+    "warehouse_required": true,
+    "is_operational": false,
+    "allow_negative_sales": false,
+    "stock_movement": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "apptransactions.documenttype",
+  "pk": 2,
+  "fields": {
+    "type_code": "PO",
+    "description": "Purchase Order",
+    "affects_physical": false,
+    "affects_logical": true,
+    "affects_accounting": false,
+    "is_taxable": false,
+    "is_purchase": true,
+    "is_sales": false,
+    "warehouse_required": true,
+    "is_operational": false,
+    "allow_negative_sales": false,
+    "stock_movement": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "apptransactions.documenttype",
+  "pk": 3,
+  "fields": {
+    "type_code": "PINV",
+    "description": "Purchase Invoice",
+    "affects_physical": false,
+    "affects_logical": false,
+    "affects_accounting": true,
+    "is_taxable": true,
+    "is_purchase": true,
+    "is_sales": false,
+    "warehouse_required": false,
+    "is_operational": false,
+    "allow_negative_sales": false,
+    "stock_movement": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "apptransactions.documenttype",
+  "pk": 4,
+  "fields": {
+    "type_code": "SQ",
+    "description": "Sales Quotation",
+    "affects_physical": false,
+    "affects_logical": false,
+    "affects_accounting": false,
+    "is_taxable": false,
+    "is_purchase": false,
+    "is_sales": true,
+    "warehouse_required": false,
+    "is_operational": false,
+    "allow_negative_sales": false,
+    "stock_movement": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "apptransactions.documenttype",
+  "pk": 5,
+  "fields": {
+    "type_code": "SO",
+    "description": "Sales Order",
+    "affects_physical": false,
+    "affects_logical": true,
+    "affects_accounting": false,
+    "is_taxable": false,
+    "is_purchase": false,
+    "is_sales": true,
+    "warehouse_required": true,
+    "is_operational": false,
+    "allow_negative_sales": false,
+    "stock_movement": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "apptransactions.documenttype",
+  "pk": 7,
+  "fields": {
+    "type_code": "DN",
+    "description": "Delivery Note / Shipment",
+    "affects_physical": true,
+    "affects_logical": true,
+    "affects_accounting": false,
+    "is_taxable": false,
+    "is_purchase": false,
+    "is_sales": true,
+    "warehouse_required": true,
+    "is_operational": false,
+    "allow_negative_sales": false,
+    "stock_movement": -1,
+    "is_active": true
+  }
+},
+{
+  "model": "apptransactions.documenttype",
+  "pk": 8,
+  "fields": {
+    "type_code": "INV",
+    "description": "Sales Invoice",
+    "affects_physical": false,
+    "affects_logical": false,
+    "affects_accounting": true,
+    "is_taxable": true,
+    "is_purchase": false,
+    "is_sales": true,
+    "warehouse_required": false,
+    "is_operational": false,
+    "allow_negative_sales": false,
+    "stock_movement": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "apptransactions.documenttype",
+  "pk": 9,
+  "fields": {
+    "type_code": "CRN",
+    "description": "Sales Credit Note / Return",
+    "affects_physical": true,
+    "affects_logical": true,
+    "affects_accounting": true,
+    "is_taxable": true,
+    "is_purchase": false,
+    "is_sales": true,
+    "warehouse_required": true,
+    "is_operational": false,
+    "allow_negative_sales": false,
+    "stock_movement": 1,
+    "is_active": true
+  }
+},
+{
+  "model": "apptransactions.documenttype",
+  "pk": 10,
+  "fields": {
+    "type_code": "PR",
+    "description": "Purchase Requisition",
+    "affects_physical": false,
+    "affects_logical": false,
+    "affects_accounting": false,
+    "is_taxable": false,
+    "is_purchase": true,
+    "is_sales": false,
+    "warehouse_required": false,
+    "is_operational": false,
+    "allow_negative_sales": false,
+    "stock_movement": 0,
+    "is_active": true
+  }
+},
+{
+  "model": "apptransactions.documenttype",
+  "pk": 11,
+  "fields": {
+    "type_code": "GRN",
+    "description": "Goods Receipt Note",
+    "affects_physical": true,
+    "affects_logical": true,
+    "affects_accounting": false,
+    "is_taxable": false,
+    "is_purchase": true,
+    "is_sales": false,
+    "warehouse_required": true,
+    "is_operational": false,
+    "allow_negative_sales": false,
+    "stock_movement": 1,
+    "is_active": true
+  }
+},
+{
+  "model": "apptransactions.documenttype",
+  "pk": 12,
+  "fields": {
+    "type_code": "PRN",
+    "description": "Purchase Return",
+    "affects_physical": true,
+    "affects_logical": true,
+    "affects_accounting": false,
+    "is_taxable": false,
+    "is_purchase": true,
+    "is_sales": false,
+    "warehouse_required": true,
+    "is_operational": false,
+    "allow_negative_sales": false,
+    "stock_movement": -1,
+    "is_active": true
+  }
+}
+]

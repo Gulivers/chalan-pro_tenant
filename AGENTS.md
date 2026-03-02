@@ -30,6 +30,7 @@ Este documento da contexto a los agentes de IA (Cursor, Copilot, etc.) en el pro
 
 - Local / ubuntu-house: `app/readme/README_RESUMEN_GENERAL_LOCAL.md`
 - Resumen general: `app/readme/README_RESUMEN_GENERAL.md`
+- Estándares del frontend del Proyecto: `app/docs/ai-guidelines.md`
 - Workflow Git: `GIT_WORKFLOW.md`, `WORKFLOW_RESUMEN.md`
 - Sincronización Git local: `readme/DEPLOY_GIT_LOCAL.md`
 
