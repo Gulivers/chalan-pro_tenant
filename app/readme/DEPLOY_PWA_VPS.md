@@ -27,20 +27,14 @@ git diff --stat
 ## Flujo Git (merge a main)
 
 ```bash
-# Opción A: Si trabajas en dev_local_inv-img y quieres mergear a main
+# Opción recomendada: usar el script prepare_deploy
+./scripts/prepare_deploy.sh
+# Por defecto mergea dev_local_inv-img → main, push, y sincroniza develop
+
+# O manualmente:
 git checkout main
 git pull origin main
 git merge dev_local_inv-img
-git push origin main
-
-# Opción B: Si prefieres pasar por develop primero
-git checkout develop
-git pull origin develop
-git merge dev_local_inv-img
-git push origin develop
-# Probar en develop, luego:
-git checkout main
-git merge develop
 git push origin main
 ```
 

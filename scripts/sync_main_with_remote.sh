@@ -1,5 +1,6 @@
 #!/bin/bash
 # Script para mantener main local sincronizado con main remoto
+# Usa git pull (merge) para preservar commits locales; no hace reset --hard
 # Uso: ./scripts/sync_main_with_remote.sh
 
 set -e  # Salir si hay algún error
@@ -53,19 +54,21 @@ else
     # Verificar si hay cambios sin commitear
     if ! git diff-index --quiet HEAD --; then
         echo -e "${RED}⚠ Advertencia: Hay cambios sin commitear en main${NC}"
-        echo "¿Deseas descartarlos y sincronizar con remoto? (s/N)"
+        echo "¿Guardar en stash y continuar? (s/N)"
         read -r response
         if [[ "$response" =~ ^[Ss]$ ]]; then
-            git reset --hard origin/main
-            echo -e "${GREEN}✓ main local sincronizado con origin/main (cambios locales descartados)${NC}"
+            git stash push -m "sync_main: cambios guardados antes de pull"
+            git pull origin main
+            git stash pop
+            echo -e "${GREEN}✓ main local sincronizado (cambios restaurados del stash)${NC}"
         else
-            echo "Operación cancelada. Guarda tus cambios antes de sincronizar."
+            echo "Operación cancelada. Haz commit o stash de tus cambios antes de sincronizar."
             git checkout "$CURRENT_BRANCH" 2>/dev/null || true
             exit 1
         fi
     else
-        # Sincronizar con remoto
-        git reset --hard origin/main
+        # Sincronizar con remoto (merge, no descarta commits locales)
+        git pull origin main
         echo -e "${GREEN}✓ main local sincronizado con origin/main${NC}"
     fi
 fi
