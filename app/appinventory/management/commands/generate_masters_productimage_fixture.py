@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 Genera appinventory/fixtures/masters_productimage.json desde un tenant.
-Reasigna assignment_id a 1, 2, 3... según el orden (product_id, brand_id) que
-tendrán las asignaciones al cargar masters_inventory.json, para que loaddata
-no viole la FK en un tenant nuevo.
+
+Usa los assignment_id reales del tenant para que coincidan con
+productbrandassignment.json (que se carga antes en la importación). Incluye
+todas las ProductImage del tenant, no solo las de una marca.
 """
 import json
 import os
@@ -15,8 +16,8 @@ from appinventory.models import ProductImage, ProductBrandAssignment
 
 class Command(BaseCommand):
     help = (
-        'Genera masters_productimage.json desde un tenant con assignment_id 1,2,3... '
-        'para inyectar tras masters_inventory.json en el import de maestros.'
+        'Genera masters_productimage.json desde un tenant. Incluye todas las imágenes; '
+        'los assignment_id coinciden con productbrandassignment.json (cargar ese fixture antes).'
     )
 
     def add_arguments(self, parser):
@@ -38,25 +39,16 @@ class Command(BaseCommand):
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
         default_output = os.path.join(base_dir, 'appinventory', 'fixtures', 'masters_productimage.json')
         output_path = options['output'] or default_output
-        fixture_path = os.path.join(base_dir, 'appinventory', 'fixtures', 'masters_inventory.json')
 
-        # Orden (product_id, brand_id) al cargar masters_inventory.json: desde fixture o tenant
-        ordered_pairs = []
-        if os.path.isfile(fixture_path):
-            with open(fixture_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            products = [x for x in data if x.get('model') == 'appinventory.product']
-            products.sort(key=lambda x: x.get('pk', 0))
-            for p in products:
-                for b in p.get('fields', {}).get('brands', []):
-                    ordered_pairs.append((p['pk'], b))
-        if not ordered_pairs:
-            with schema_context(schema):
-                assignments = ProductBrandAssignment.objects.order_by('product_id', 'brand_id').values_list(
-                    'product_id', 'brand_id'
-                )
-                ordered_pairs = [(int(p), int(b)) for p, b in assignments]
-        pair_to_new_id = {pair: (i + 1) for i, pair in enumerate(ordered_pairs)}
+        # Mapa (product_id, brand_id) -> assignment_id del tenant. Usamos los IDs reales del
+        # tenant para que masters_productimage.json coincida con productbrandassignment.json
+        # (que se carga antes en la importación). Así se incluyen TODAS las imágenes, no solo
+        # las de la "primera marca", ya que dumpdata de Product no serializa "brands" (M2M con through).
+        with schema_context(schema):
+            pair_to_assignment_id = {}
+            for a in ProductBrandAssignment.objects.order_by('id').values_list('id', 'product_id', 'brand_id'):
+                aid, pid, bid = a[0], int(a[1]), int(a[2])
+                pair_to_assignment_id[(pid, bid)] = aid
 
         with schema_context(schema):
             out = []
@@ -65,8 +57,8 @@ class Command(BaseCommand):
                     continue
                 product_id = pi.assignment.product_id
                 brand_id = pi.assignment.brand_id
-                new_assignment_id = pair_to_new_id.get((product_id, brand_id))
-                if new_assignment_id is None:
+                assignment_id = pair_to_assignment_id.get((product_id, brand_id))
+                if assignment_id is None:
                     continue
                 image_path = pi.image.name if pi.image else ''
                 if not image_path:
@@ -77,7 +69,7 @@ class Command(BaseCommand):
                     'pk': len(out) + 1,
                     'fields': {
                         'product': product_id,
-                        'assignment': new_assignment_id,
+                        'assignment': assignment_id,
                         'image': image_path,
                         'is_primary': getattr(pi, 'is_primary', True),
                         'uploaded_at': uploaded_at,

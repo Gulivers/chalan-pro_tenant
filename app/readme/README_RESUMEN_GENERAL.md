@@ -1154,6 +1154,16 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 
 ### 9.4 Comandos de Gestión
 
+**Generar masters_inventory.json, masters_productimage.json y productbrandassignment.json desde un tenant:**
+```bash
+# Genera, en este orden: masters_inventory.json, masters_productimage.json y productbrandassignment.json
+# (todos desde el mismo schema para mantener coherencia de IDs)
+docker compose exec backend python manage.py generate_masters_inventory_fixture --schema test_dominio_local
+
+# Con ruta de salida distinta para el inventario
+docker compose exec backend python manage.py generate_masters_inventory_fixture --schema test_dominio_local --output /app/appinventory/fixtures/masters_inventory.json
+```
+
 **Generar el archivo Excel:**
 ```bash
 # Desde el contenedor backend

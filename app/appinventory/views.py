@@ -3176,19 +3176,32 @@ class InventoryMasterDataImportAPIView(APIView):
             for item in fixture_without_images:
                 if item.get('model') == 'appinventory.warehouse' and item.get('fields', {}).get('truck'):
                     item['fields']['truck'] = None
-            # Asegurar que cada Product tenga "brands" para que loaddata cree ProductBrandAssignment (evita "No brand assigned" y FK en ProductImage)
-            first_brand_pk = None
-            for item in fixture_data:
-                if item.get('model') == 'appinventory.productbrand':
-                    first_brand_pk = item.get('pk')
-                    break
-            if first_brand_pk is None:
-                first_brand_pk = 1
-            for item in fixture_without_images:
-                if item.get('model') == 'appinventory.product':
-                    fields = item.setdefault('fields', {})
-                    if 'brands' not in fields:
-                        fields['brands'] = [first_brand_pk]
+            fixture_assignment_path = os.path.join(
+                settings.BASE_DIR,
+                'appinventory',
+                'fixtures',
+                'productbrandassignment.json',
+            )
+            use_assignment_fixture = os.path.exists(fixture_assignment_path)
+            if use_assignment_fixture:
+                # Si cargamos ProductBrandAssignment desde fixture, no crear asignaciones vía M2M
+                for item in fixture_without_images:
+                    if item.get('model') == 'appinventory.product':
+                        item.setdefault('fields', {}).pop('brands', None)
+            else:
+                # Sin fixture de assignments: inyectar brands para que loaddata cree ProductBrandAssignment
+                first_brand_pk = None
+                for item in fixture_data:
+                    if item.get('model') == 'appinventory.productbrand':
+                        first_brand_pk = item.get('pk')
+                        break
+                if first_brand_pk is None:
+                    first_brand_pk = 1
+                for item in fixture_without_images:
+                    if item.get('model') == 'appinventory.product':
+                        fields = item.setdefault('fields', {})
+                        if 'brands' not in fields:
+                            fields['brands'] = [first_brand_pk]
             import tempfile
             tmp_fixture_path = None
             with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp:
@@ -3206,6 +3219,8 @@ class InventoryMasterDataImportAPIView(APIView):
             with transaction.atomic():
                 try:
                     call_command('loaddata', tmp_fixture_path, verbosity=0)
+                    if use_assignment_fixture:
+                        call_command('loaddata', fixture_assignment_path, verbosity=0)
                     # Inyectar ProductImage desde masters_productimage.json (assignment_id 1,2,3...)
                     if os.path.exists(fixture_productimage_path):
                         call_command('loaddata', fixture_productimage_path, verbosity=0)
