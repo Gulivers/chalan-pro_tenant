@@ -1,0 +1,7220 @@
+[
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 1,
+  "fields": {
+    "product": 1,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.972Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 2,
+  "fields": {
+    "product": 2,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.974Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 3,
+  "fields": {
+    "product": 3,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.975Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 4,
+  "fields": {
+    "product": 4,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.977Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 5,
+  "fields": {
+    "product": 5,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.978Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 6,
+  "fields": {
+    "product": 6,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.980Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 7,
+  "fields": {
+    "product": 7,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.981Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 8,
+  "fields": {
+    "product": 8,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.982Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 9,
+  "fields": {
+    "product": 9,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.984Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 10,
+  "fields": {
+    "product": 10,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.985Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 11,
+  "fields": {
+    "product": 11,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.986Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 12,
+  "fields": {
+    "product": 12,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.987Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 13,
+  "fields": {
+    "product": 13,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.988Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 14,
+  "fields": {
+    "product": 14,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.989Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 15,
+  "fields": {
+    "product": 15,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.991Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 16,
+  "fields": {
+    "product": 16,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.992Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 17,
+  "fields": {
+    "product": 17,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.993Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 18,
+  "fields": {
+    "product": 18,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.994Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 19,
+  "fields": {
+    "product": 19,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.996Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 20,
+  "fields": {
+    "product": 20,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.997Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 21,
+  "fields": {
+    "product": 21,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.998Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 22,
+  "fields": {
+    "product": 22,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:21.999Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 23,
+  "fields": {
+    "product": 23,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.000Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 24,
+  "fields": {
+    "product": 24,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.002Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 25,
+  "fields": {
+    "product": 25,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.003Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 26,
+  "fields": {
+    "product": 26,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.004Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 27,
+  "fields": {
+    "product": 27,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.006Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 28,
+  "fields": {
+    "product": 28,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.007Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 29,
+  "fields": {
+    "product": 29,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.008Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 30,
+  "fields": {
+    "product": 30,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.009Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 31,
+  "fields": {
+    "product": 31,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.010Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 32,
+  "fields": {
+    "product": 32,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.011Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 33,
+  "fields": {
+    "product": 33,
+    "brand": 57,
+    "created_at": "2026-01-24T11:17:22.012Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 34,
+  "fields": {
+    "product": 33,
+    "brand": 20,
+    "created_at": "2026-01-24T11:17:22.014Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 35,
+  "fields": {
+    "product": 34,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.015Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 36,
+  "fields": {
+    "product": 35,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.016Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 37,
+  "fields": {
+    "product": 36,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.017Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 38,
+  "fields": {
+    "product": 37,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.018Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 39,
+  "fields": {
+    "product": 38,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.020Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 40,
+  "fields": {
+    "product": 39,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.021Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 41,
+  "fields": {
+    "product": 40,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.022Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 42,
+  "fields": {
+    "product": 41,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.023Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 43,
+  "fields": {
+    "product": 42,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.024Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 44,
+  "fields": {
+    "product": 43,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.025Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 45,
+  "fields": {
+    "product": 44,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.027Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 46,
+  "fields": {
+    "product": 45,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.028Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 47,
+  "fields": {
+    "product": 46,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.029Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 48,
+  "fields": {
+    "product": 47,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.030Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 49,
+  "fields": {
+    "product": 48,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.031Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 50,
+  "fields": {
+    "product": 49,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.032Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 51,
+  "fields": {
+    "product": 50,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.033Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 52,
+  "fields": {
+    "product": 51,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.034Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 53,
+  "fields": {
+    "product": 52,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.036Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 54,
+  "fields": {
+    "product": 53,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.037Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 55,
+  "fields": {
+    "product": 54,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.038Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 56,
+  "fields": {
+    "product": 55,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.039Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 57,
+  "fields": {
+    "product": 56,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.040Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 58,
+  "fields": {
+    "product": 57,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.041Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 59,
+  "fields": {
+    "product": 58,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.042Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 60,
+  "fields": {
+    "product": 59,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.043Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 61,
+  "fields": {
+    "product": 60,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.044Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 62,
+  "fields": {
+    "product": 61,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.046Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 63,
+  "fields": {
+    "product": 62,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.048Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 64,
+  "fields": {
+    "product": 63,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.049Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 65,
+  "fields": {
+    "product": 64,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.050Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 66,
+  "fields": {
+    "product": 65,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.051Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 67,
+  "fields": {
+    "product": 66,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.052Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 68,
+  "fields": {
+    "product": 67,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.053Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 69,
+  "fields": {
+    "product": 68,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.055Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 70,
+  "fields": {
+    "product": 69,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.056Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 71,
+  "fields": {
+    "product": 70,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.057Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 72,
+  "fields": {
+    "product": 71,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.058Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 73,
+  "fields": {
+    "product": 72,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.059Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 74,
+  "fields": {
+    "product": 73,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.060Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 75,
+  "fields": {
+    "product": 74,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.061Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 76,
+  "fields": {
+    "product": 75,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.062Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 77,
+  "fields": {
+    "product": 76,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.063Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 78,
+  "fields": {
+    "product": 77,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.064Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 79,
+  "fields": {
+    "product": 78,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.066Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 80,
+  "fields": {
+    "product": 79,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.067Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 81,
+  "fields": {
+    "product": 80,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.068Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 82,
+  "fields": {
+    "product": 81,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.069Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 83,
+  "fields": {
+    "product": 82,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.070Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 84,
+  "fields": {
+    "product": 83,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.071Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 85,
+  "fields": {
+    "product": 84,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.072Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 86,
+  "fields": {
+    "product": 85,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.073Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 87,
+  "fields": {
+    "product": 86,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.075Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 88,
+  "fields": {
+    "product": 87,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.076Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 89,
+  "fields": {
+    "product": 88,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.077Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 90,
+  "fields": {
+    "product": 90,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.078Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 91,
+  "fields": {
+    "product": 91,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.079Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 92,
+  "fields": {
+    "product": 92,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.080Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 93,
+  "fields": {
+    "product": 93,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.081Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 94,
+  "fields": {
+    "product": 94,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.083Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 95,
+  "fields": {
+    "product": 95,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.084Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 96,
+  "fields": {
+    "product": 96,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.085Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 97,
+  "fields": {
+    "product": 97,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.086Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 98,
+  "fields": {
+    "product": 98,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.087Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 99,
+  "fields": {
+    "product": 99,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.088Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 100,
+  "fields": {
+    "product": 101,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.089Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 101,
+  "fields": {
+    "product": 102,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.091Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 102,
+  "fields": {
+    "product": 103,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.092Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 103,
+  "fields": {
+    "product": 104,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.093Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 104,
+  "fields": {
+    "product": 105,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.094Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 105,
+  "fields": {
+    "product": 106,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.095Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 106,
+  "fields": {
+    "product": 107,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.096Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 107,
+  "fields": {
+    "product": 108,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.098Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 108,
+  "fields": {
+    "product": 109,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.099Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 109,
+  "fields": {
+    "product": 110,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.100Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 110,
+  "fields": {
+    "product": 111,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.101Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 111,
+  "fields": {
+    "product": 112,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.102Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 112,
+  "fields": {
+    "product": 113,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.103Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 113,
+  "fields": {
+    "product": 114,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.104Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 114,
+  "fields": {
+    "product": 115,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.106Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 115,
+  "fields": {
+    "product": 116,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.107Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 116,
+  "fields": {
+    "product": 117,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.109Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 117,
+  "fields": {
+    "product": 118,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.110Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 118,
+  "fields": {
+    "product": 119,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.111Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 119,
+  "fields": {
+    "product": 120,
+    "brand": 44,
+    "created_at": "2026-01-24T11:17:22.113Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 120,
+  "fields": {
+    "product": 121,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.114Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 121,
+  "fields": {
+    "product": 122,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.116Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 122,
+  "fields": {
+    "product": 123,
+    "brand": 61,
+    "created_at": "2026-01-24T11:17:22.117Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 123,
+  "fields": {
+    "product": 124,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.118Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 124,
+  "fields": {
+    "product": 125,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.120Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 125,
+  "fields": {
+    "product": 126,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.121Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 126,
+  "fields": {
+    "product": 127,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.123Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 127,
+  "fields": {
+    "product": 128,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.124Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 128,
+  "fields": {
+    "product": 129,
+    "brand": 61,
+    "created_at": "2026-01-24T11:17:22.126Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 129,
+  "fields": {
+    "product": 130,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.127Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 130,
+  "fields": {
+    "product": 131,
+    "brand": 61,
+    "created_at": "2026-01-24T11:17:22.128Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 131,
+  "fields": {
+    "product": 132,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.130Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 132,
+  "fields": {
+    "product": 133,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.131Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 133,
+  "fields": {
+    "product": 134,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.133Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 134,
+  "fields": {
+    "product": 135,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.134Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 135,
+  "fields": {
+    "product": 136,
+    "brand": 61,
+    "created_at": "2026-01-24T11:17:22.135Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 136,
+  "fields": {
+    "product": 137,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.137Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 137,
+  "fields": {
+    "product": 138,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.138Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 138,
+  "fields": {
+    "product": 139,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.140Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 139,
+  "fields": {
+    "product": 140,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.141Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 140,
+  "fields": {
+    "product": 143,
+    "brand": 61,
+    "created_at": "2026-01-24T11:17:22.142Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 141,
+  "fields": {
+    "product": 144,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.144Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 142,
+  "fields": {
+    "product": 145,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.145Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 143,
+  "fields": {
+    "product": 146,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.147Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 144,
+  "fields": {
+    "product": 147,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.148Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 145,
+  "fields": {
+    "product": 148,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.150Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 146,
+  "fields": {
+    "product": 149,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.151Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 147,
+  "fields": {
+    "product": 150,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.152Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 148,
+  "fields": {
+    "product": 151,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.154Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 149,
+  "fields": {
+    "product": 152,
+    "brand": 67,
+    "created_at": "2026-01-24T11:17:22.155Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 150,
+  "fields": {
+    "product": 153,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.157Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 151,
+  "fields": {
+    "product": 154,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.158Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 152,
+  "fields": {
+    "product": 155,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.159Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 153,
+  "fields": {
+    "product": 156,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.161Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 154,
+  "fields": {
+    "product": 157,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.162Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 155,
+  "fields": {
+    "product": 158,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.164Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 156,
+  "fields": {
+    "product": 159,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.165Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 157,
+  "fields": {
+    "product": 160,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.167Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 158,
+  "fields": {
+    "product": 161,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.168Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 159,
+  "fields": {
+    "product": 162,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.169Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 160,
+  "fields": {
+    "product": 163,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.171Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 161,
+  "fields": {
+    "product": 164,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.172Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 162,
+  "fields": {
+    "product": 165,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.174Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 163,
+  "fields": {
+    "product": 166,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.175Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 164,
+  "fields": {
+    "product": 167,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.176Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 165,
+  "fields": {
+    "product": 168,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.178Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 166,
+  "fields": {
+    "product": 169,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.179Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 167,
+  "fields": {
+    "product": 170,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.181Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 168,
+  "fields": {
+    "product": 171,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.182Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 169,
+  "fields": {
+    "product": 172,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.184Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 170,
+  "fields": {
+    "product": 173,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.185Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 171,
+  "fields": {
+    "product": 174,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.186Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 172,
+  "fields": {
+    "product": 175,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.188Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 173,
+  "fields": {
+    "product": 176,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.189Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 174,
+  "fields": {
+    "product": 177,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.191Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 175,
+  "fields": {
+    "product": 178,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.192Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 176,
+  "fields": {
+    "product": 179,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.193Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 177,
+  "fields": {
+    "product": 180,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.195Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 178,
+  "fields": {
+    "product": 181,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.196Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 179,
+  "fields": {
+    "product": 182,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.198Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 180,
+  "fields": {
+    "product": 183,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.199Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 181,
+  "fields": {
+    "product": 184,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.201Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 182,
+  "fields": {
+    "product": 185,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.202Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 183,
+  "fields": {
+    "product": 186,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.203Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 184,
+  "fields": {
+    "product": 187,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.205Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 185,
+  "fields": {
+    "product": 188,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.206Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 186,
+  "fields": {
+    "product": 189,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.207Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 187,
+  "fields": {
+    "product": 190,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.208Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 188,
+  "fields": {
+    "product": 191,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.210Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 189,
+  "fields": {
+    "product": 192,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.211Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 190,
+  "fields": {
+    "product": 193,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.212Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 191,
+  "fields": {
+    "product": 194,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.214Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 192,
+  "fields": {
+    "product": 195,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.215Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 193,
+  "fields": {
+    "product": 196,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.216Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 194,
+  "fields": {
+    "product": 197,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.218Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 195,
+  "fields": {
+    "product": 198,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.219Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 196,
+  "fields": {
+    "product": 199,
+    "brand": 68,
+    "created_at": "2026-01-24T11:17:22.220Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 197,
+  "fields": {
+    "product": 200,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.222Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 198,
+  "fields": {
+    "product": 201,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.223Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 199,
+  "fields": {
+    "product": 202,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.224Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 200,
+  "fields": {
+    "product": 203,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.226Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 201,
+  "fields": {
+    "product": 204,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.227Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 202,
+  "fields": {
+    "product": 205,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.229Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 203,
+  "fields": {
+    "product": 206,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.230Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 204,
+  "fields": {
+    "product": 207,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.231Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 205,
+  "fields": {
+    "product": 208,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.232Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 206,
+  "fields": {
+    "product": 209,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.234Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 207,
+  "fields": {
+    "product": 210,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.235Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 208,
+  "fields": {
+    "product": 211,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.236Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 209,
+  "fields": {
+    "product": 212,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.238Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 210,
+  "fields": {
+    "product": 213,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.239Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 211,
+  "fields": {
+    "product": 214,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.240Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 212,
+  "fields": {
+    "product": 215,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.242Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 213,
+  "fields": {
+    "product": 216,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.243Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 214,
+  "fields": {
+    "product": 217,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.244Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 215,
+  "fields": {
+    "product": 218,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.246Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 216,
+  "fields": {
+    "product": 219,
+    "brand": 44,
+    "created_at": "2026-01-24T11:17:22.247Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 217,
+  "fields": {
+    "product": 220,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.248Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 218,
+  "fields": {
+    "product": 221,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.250Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 219,
+  "fields": {
+    "product": 222,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.251Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 220,
+  "fields": {
+    "product": 223,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.252Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 221,
+  "fields": {
+    "product": 224,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.254Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 222,
+  "fields": {
+    "product": 225,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.255Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 223,
+  "fields": {
+    "product": 226,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.256Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 224,
+  "fields": {
+    "product": 227,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.258Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 225,
+  "fields": {
+    "product": 228,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.259Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 226,
+  "fields": {
+    "product": 229,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.260Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 227,
+  "fields": {
+    "product": 230,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.262Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 228,
+  "fields": {
+    "product": 231,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.263Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 229,
+  "fields": {
+    "product": 232,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.264Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 230,
+  "fields": {
+    "product": 233,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.266Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 231,
+  "fields": {
+    "product": 234,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.267Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 232,
+  "fields": {
+    "product": 235,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.268Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 233,
+  "fields": {
+    "product": 236,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.270Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 234,
+  "fields": {
+    "product": 237,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.271Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 235,
+  "fields": {
+    "product": 238,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.273Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 236,
+  "fields": {
+    "product": 239,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.274Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 237,
+  "fields": {
+    "product": 240,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.275Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 238,
+  "fields": {
+    "product": 241,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.277Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 239,
+  "fields": {
+    "product": 242,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.278Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 240,
+  "fields": {
+    "product": 243,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.279Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 241,
+  "fields": {
+    "product": 244,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.281Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 242,
+  "fields": {
+    "product": 245,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.282Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 243,
+  "fields": {
+    "product": 246,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.283Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 244,
+  "fields": {
+    "product": 247,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.285Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 245,
+  "fields": {
+    "product": 248,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.286Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 246,
+  "fields": {
+    "product": 249,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.287Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 247,
+  "fields": {
+    "product": 250,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.289Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 248,
+  "fields": {
+    "product": 251,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.290Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 249,
+  "fields": {
+    "product": 252,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.291Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 250,
+  "fields": {
+    "product": 253,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.293Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 251,
+  "fields": {
+    "product": 254,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.294Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 252,
+  "fields": {
+    "product": 255,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.295Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 253,
+  "fields": {
+    "product": 256,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.296Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 254,
+  "fields": {
+    "product": 257,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.298Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 255,
+  "fields": {
+    "product": 258,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.299Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 256,
+  "fields": {
+    "product": 259,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.301Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 257,
+  "fields": {
+    "product": 260,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.302Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 258,
+  "fields": {
+    "product": 261,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.303Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 259,
+  "fields": {
+    "product": 262,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.305Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 260,
+  "fields": {
+    "product": 263,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.306Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 261,
+  "fields": {
+    "product": 264,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.307Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 262,
+  "fields": {
+    "product": 265,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.309Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 263,
+  "fields": {
+    "product": 266,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.310Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 264,
+  "fields": {
+    "product": 267,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.311Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 265,
+  "fields": {
+    "product": 268,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.313Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 266,
+  "fields": {
+    "product": 269,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.314Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 267,
+  "fields": {
+    "product": 270,
+    "brand": 44,
+    "created_at": "2026-01-24T11:17:22.315Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 268,
+  "fields": {
+    "product": 271,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.317Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 269,
+  "fields": {
+    "product": 272,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.318Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 270,
+  "fields": {
+    "product": 273,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.320Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 271,
+  "fields": {
+    "product": 274,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.321Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 272,
+  "fields": {
+    "product": 275,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.322Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 273,
+  "fields": {
+    "product": 276,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.324Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 274,
+  "fields": {
+    "product": 277,
+    "brand": 9,
+    "created_at": "2026-01-24T11:17:22.325Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 275,
+  "fields": {
+    "product": 278,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.326Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 276,
+  "fields": {
+    "product": 279,
+    "brand": 61,
+    "created_at": "2026-01-24T11:17:22.328Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 277,
+  "fields": {
+    "product": 280,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.329Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 278,
+  "fields": {
+    "product": 281,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.330Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 279,
+  "fields": {
+    "product": 282,
+    "brand": 44,
+    "created_at": "2026-01-24T11:17:22.332Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 280,
+  "fields": {
+    "product": 283,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.333Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 281,
+  "fields": {
+    "product": 284,
+    "brand": 44,
+    "created_at": "2026-01-24T11:17:22.334Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 282,
+  "fields": {
+    "product": 285,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.336Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 283,
+  "fields": {
+    "product": 288,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.337Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 284,
+  "fields": {
+    "product": 289,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.338Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 285,
+  "fields": {
+    "product": 290,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.340Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 286,
+  "fields": {
+    "product": 291,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.342Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 287,
+  "fields": {
+    "product": 292,
+    "brand": 65,
+    "created_at": "2026-01-24T11:17:22.343Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 288,
+  "fields": {
+    "product": 293,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.345Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 289,
+  "fields": {
+    "product": 294,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.346Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 290,
+  "fields": {
+    "product": 299,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.348Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 291,
+  "fields": {
+    "product": 300,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.349Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 292,
+  "fields": {
+    "product": 301,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.351Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 293,
+  "fields": {
+    "product": 302,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.352Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 294,
+  "fields": {
+    "product": 303,
+    "brand": 44,
+    "created_at": "2026-01-24T11:17:22.353Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 295,
+  "fields": {
+    "product": 304,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.355Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 296,
+  "fields": {
+    "product": 305,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.356Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 297,
+  "fields": {
+    "product": 307,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.357Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 298,
+  "fields": {
+    "product": 308,
+    "brand": 44,
+    "created_at": "2026-01-24T11:17:22.359Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 299,
+  "fields": {
+    "product": 309,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.360Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 300,
+  "fields": {
+    "product": 310,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.362Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 302,
+  "fields": {
+    "product": 312,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.364Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 303,
+  "fields": {
+    "product": 313,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.366Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 304,
+  "fields": {
+    "product": 314,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.367Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 305,
+  "fields": {
+    "product": 315,
+    "brand": 61,
+    "created_at": "2026-01-24T11:17:22.368Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 306,
+  "fields": {
+    "product": 316,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.370Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 307,
+  "fields": {
+    "product": 317,
+    "brand": 61,
+    "created_at": "2026-01-24T11:17:22.371Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 308,
+  "fields": {
+    "product": 318,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.372Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 309,
+  "fields": {
+    "product": 319,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.374Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 310,
+  "fields": {
+    "product": 320,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.375Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 311,
+  "fields": {
+    "product": 321,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.377Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 312,
+  "fields": {
+    "product": 322,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.379Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 313,
+  "fields": {
+    "product": 323,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.380Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 314,
+  "fields": {
+    "product": 324,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.381Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 315,
+  "fields": {
+    "product": 325,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.383Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 316,
+  "fields": {
+    "product": 326,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.384Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 317,
+  "fields": {
+    "product": 327,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.386Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 318,
+  "fields": {
+    "product": 328,
+    "brand": 61,
+    "created_at": "2026-01-24T11:17:22.387Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 319,
+  "fields": {
+    "product": 329,
+    "brand": 61,
+    "created_at": "2026-01-24T11:17:22.388Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 320,
+  "fields": {
+    "product": 330,
+    "brand": 61,
+    "created_at": "2026-01-24T11:17:22.389Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 321,
+  "fields": {
+    "product": 331,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.391Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 322,
+  "fields": {
+    "product": 332,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.392Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 323,
+  "fields": {
+    "product": 333,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.393Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 324,
+  "fields": {
+    "product": 345,
+    "brand": 56,
+    "created_at": "2026-01-24T11:17:22.394Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 325,
+  "fields": {
+    "product": 346,
+    "brand": 56,
+    "created_at": "2026-01-24T11:17:22.396Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 326,
+  "fields": {
+    "product": 347,
+    "brand": 2,
+    "created_at": "2026-01-24T11:17:22.397Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 327,
+  "fields": {
+    "product": 348,
+    "brand": 2,
+    "created_at": "2026-01-24T11:17:22.398Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 328,
+  "fields": {
+    "product": 349,
+    "brand": 2,
+    "created_at": "2026-01-24T11:17:22.399Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 329,
+  "fields": {
+    "product": 350,
+    "brand": 2,
+    "created_at": "2026-01-24T11:17:22.401Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 330,
+  "fields": {
+    "product": 352,
+    "brand": 3,
+    "created_at": "2026-01-24T11:17:22.402Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 331,
+  "fields": {
+    "product": 354,
+    "brand": 3,
+    "created_at": "2026-01-24T11:17:22.403Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 332,
+  "fields": {
+    "product": 356,
+    "brand": 3,
+    "created_at": "2026-01-24T11:17:22.405Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 333,
+  "fields": {
+    "product": 357,
+    "brand": 3,
+    "created_at": "2026-01-24T11:17:22.406Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 334,
+  "fields": {
+    "product": 358,
+    "brand": 3,
+    "created_at": "2026-01-24T11:17:22.408Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 335,
+  "fields": {
+    "product": 359,
+    "brand": 3,
+    "created_at": "2026-01-24T11:17:22.409Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 336,
+  "fields": {
+    "product": 360,
+    "brand": 4,
+    "created_at": "2026-01-24T11:17:22.411Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 337,
+  "fields": {
+    "product": 361,
+    "brand": 4,
+    "created_at": "2026-01-24T11:17:22.412Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 338,
+  "fields": {
+    "product": 362,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.414Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 339,
+  "fields": {
+    "product": 363,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.415Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 340,
+  "fields": {
+    "product": 364,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.416Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 341,
+  "fields": {
+    "product": 367,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.418Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 342,
+  "fields": {
+    "product": 368,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.419Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 343,
+  "fields": {
+    "product": 369,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.421Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 344,
+  "fields": {
+    "product": 373,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.422Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 345,
+  "fields": {
+    "product": 374,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.423Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 346,
+  "fields": {
+    "product": 376,
+    "brand": 7,
+    "created_at": "2026-01-24T11:17:22.425Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 347,
+  "fields": {
+    "product": 378,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.426Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 348,
+  "fields": {
+    "product": 381,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.427Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 349,
+  "fields": {
+    "product": 391,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.429Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 350,
+  "fields": {
+    "product": 392,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.430Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 351,
+  "fields": {
+    "product": 393,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.432Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 352,
+  "fields": {
+    "product": 394,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.433Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 353,
+  "fields": {
+    "product": 395,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.434Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 354,
+  "fields": {
+    "product": 396,
+    "brand": 10,
+    "created_at": "2026-01-24T11:17:22.436Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 355,
+  "fields": {
+    "product": 399,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.437Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 356,
+  "fields": {
+    "product": 400,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.438Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 357,
+  "fields": {
+    "product": 401,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.440Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 358,
+  "fields": {
+    "product": 403,
+    "brand": 12,
+    "created_at": "2026-01-24T11:17:22.441Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 359,
+  "fields": {
+    "product": 404,
+    "brand": 12,
+    "created_at": "2026-01-24T11:17:22.442Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 360,
+  "fields": {
+    "product": 423,
+    "brand": 66,
+    "created_at": "2026-01-24T11:17:22.444Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 361,
+  "fields": {
+    "product": 424,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.445Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 362,
+  "fields": {
+    "product": 425,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.447Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 363,
+  "fields": {
+    "product": 426,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.448Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 364,
+  "fields": {
+    "product": 427,
+    "brand": 16,
+    "created_at": "2026-01-24T11:17:22.449Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 365,
+  "fields": {
+    "product": 428,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.451Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 366,
+  "fields": {
+    "product": 429,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.452Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 367,
+  "fields": {
+    "product": 430,
+    "brand": 57,
+    "created_at": "2026-01-24T11:17:22.453Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 368,
+  "fields": {
+    "product": 438,
+    "brand": 17,
+    "created_at": "2026-01-24T11:17:22.455Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 369,
+  "fields": {
+    "product": 446,
+    "brand": 17,
+    "created_at": "2026-01-24T11:17:22.456Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 370,
+  "fields": {
+    "product": 447,
+    "brand": 17,
+    "created_at": "2026-01-24T11:17:22.458Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 371,
+  "fields": {
+    "product": 459,
+    "brand": 18,
+    "created_at": "2026-01-24T11:17:22.459Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 372,
+  "fields": {
+    "product": 460,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.460Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 373,
+  "fields": {
+    "product": 461,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.462Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 374,
+  "fields": {
+    "product": 462,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.463Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 375,
+  "fields": {
+    "product": 463,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.464Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 376,
+  "fields": {
+    "product": 464,
+    "brand": 19,
+    "created_at": "2026-01-24T11:17:22.466Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 377,
+  "fields": {
+    "product": 465,
+    "brand": 19,
+    "created_at": "2026-01-24T11:17:22.467Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 378,
+  "fields": {
+    "product": 466,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.468Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 379,
+  "fields": {
+    "product": 467,
+    "brand": 20,
+    "created_at": "2026-01-24T11:17:22.470Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 380,
+  "fields": {
+    "product": 468,
+    "brand": 21,
+    "created_at": "2026-01-24T11:17:22.471Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 381,
+  "fields": {
+    "product": 469,
+    "brand": 21,
+    "created_at": "2026-01-24T11:17:22.473Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 382,
+  "fields": {
+    "product": 470,
+    "brand": 22,
+    "created_at": "2026-01-24T11:17:22.474Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 383,
+  "fields": {
+    "product": 471,
+    "brand": 22,
+    "created_at": "2026-01-24T11:17:22.475Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 384,
+  "fields": {
+    "product": 473,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.477Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 385,
+  "fields": {
+    "product": 476,
+    "brand": 24,
+    "created_at": "2026-01-24T11:17:22.478Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 386,
+  "fields": {
+    "product": 479,
+    "brand": 24,
+    "created_at": "2026-01-24T11:17:22.479Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 387,
+  "fields": {
+    "product": 480,
+    "brand": 24,
+    "created_at": "2026-01-24T11:17:22.481Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 388,
+  "fields": {
+    "product": 483,
+    "brand": 24,
+    "created_at": "2026-01-24T11:17:22.482Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 389,
+  "fields": {
+    "product": 484,
+    "brand": 24,
+    "created_at": "2026-01-24T11:17:22.483Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 390,
+  "fields": {
+    "product": 485,
+    "brand": 25,
+    "created_at": "2026-01-24T11:17:22.485Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 391,
+  "fields": {
+    "product": 488,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.486Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 392,
+  "fields": {
+    "product": 489,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.487Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 393,
+  "fields": {
+    "product": 489,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.489Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 394,
+  "fields": {
+    "product": 489,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.490Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 395,
+  "fields": {
+    "product": 490,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.491Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 396,
+  "fields": {
+    "product": 491,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.493Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 397,
+  "fields": {
+    "product": 492,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.494Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 398,
+  "fields": {
+    "product": 493,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.496Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 399,
+  "fields": {
+    "product": 494,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.497Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 400,
+  "fields": {
+    "product": 495,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.498Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 401,
+  "fields": {
+    "product": 496,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.500Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 402,
+  "fields": {
+    "product": 497,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.501Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 403,
+  "fields": {
+    "product": 498,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.502Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 404,
+  "fields": {
+    "product": 499,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.504Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 405,
+  "fields": {
+    "product": 500,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.505Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 406,
+  "fields": {
+    "product": 501,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.506Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 407,
+  "fields": {
+    "product": 502,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.508Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 408,
+  "fields": {
+    "product": 503,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.509Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 409,
+  "fields": {
+    "product": 504,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.511Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 410,
+  "fields": {
+    "product": 505,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.512Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 411,
+  "fields": {
+    "product": 506,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.513Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 412,
+  "fields": {
+    "product": 507,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.515Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 413,
+  "fields": {
+    "product": 508,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.516Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 414,
+  "fields": {
+    "product": 509,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.518Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 415,
+  "fields": {
+    "product": 510,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.519Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 416,
+  "fields": {
+    "product": 511,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.520Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 417,
+  "fields": {
+    "product": 512,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.522Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 418,
+  "fields": {
+    "product": 513,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.523Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 419,
+  "fields": {
+    "product": 514,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.525Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 420,
+  "fields": {
+    "product": 515,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.526Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 421,
+  "fields": {
+    "product": 516,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.528Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 422,
+  "fields": {
+    "product": 517,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.529Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 423,
+  "fields": {
+    "product": 518,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.531Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 424,
+  "fields": {
+    "product": 519,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.532Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 425,
+  "fields": {
+    "product": 520,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.533Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 426,
+  "fields": {
+    "product": 521,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.535Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 427,
+  "fields": {
+    "product": 522,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.537Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 428,
+  "fields": {
+    "product": 523,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.538Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 429,
+  "fields": {
+    "product": 524,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.540Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 430,
+  "fields": {
+    "product": 525,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.541Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 431,
+  "fields": {
+    "product": 526,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.543Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 432,
+  "fields": {
+    "product": 527,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.544Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 433,
+  "fields": {
+    "product": 528,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.545Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 434,
+  "fields": {
+    "product": 529,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.547Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 435,
+  "fields": {
+    "product": 530,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.548Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 436,
+  "fields": {
+    "product": 531,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.550Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 437,
+  "fields": {
+    "product": 533,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.551Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 438,
+  "fields": {
+    "product": 534,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.553Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 439,
+  "fields": {
+    "product": 535,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.554Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 440,
+  "fields": {
+    "product": 537,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.556Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 441,
+  "fields": {
+    "product": 539,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.557Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 442,
+  "fields": {
+    "product": 539,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.559Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 443,
+  "fields": {
+    "product": 539,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.560Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 444,
+  "fields": {
+    "product": 539,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.562Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 445,
+  "fields": {
+    "product": 540,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.563Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 446,
+  "fields": {
+    "product": 540,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.565Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 447,
+  "fields": {
+    "product": 540,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.566Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 448,
+  "fields": {
+    "product": 540,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.568Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 449,
+  "fields": {
+    "product": 542,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.569Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 450,
+  "fields": {
+    "product": 542,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.570Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 451,
+  "fields": {
+    "product": 542,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.572Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 452,
+  "fields": {
+    "product": 542,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.573Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 453,
+  "fields": {
+    "product": 543,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.575Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 454,
+  "fields": {
+    "product": 544,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.576Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 455,
+  "fields": {
+    "product": 545,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.578Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 456,
+  "fields": {
+    "product": 546,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.579Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 457,
+  "fields": {
+    "product": 547,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.581Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 458,
+  "fields": {
+    "product": 548,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.582Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 459,
+  "fields": {
+    "product": 548,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.584Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 460,
+  "fields": {
+    "product": 548,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.585Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 461,
+  "fields": {
+    "product": 548,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.587Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 462,
+  "fields": {
+    "product": 549,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.588Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 463,
+  "fields": {
+    "product": 549,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.589Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 464,
+  "fields": {
+    "product": 549,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.591Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 465,
+  "fields": {
+    "product": 549,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.592Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 466,
+  "fields": {
+    "product": 550,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.594Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 467,
+  "fields": {
+    "product": 550,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.595Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 468,
+  "fields": {
+    "product": 550,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.596Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 469,
+  "fields": {
+    "product": 550,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.598Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 470,
+  "fields": {
+    "product": 551,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.599Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 471,
+  "fields": {
+    "product": 551,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.600Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 472,
+  "fields": {
+    "product": 551,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.602Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 473,
+  "fields": {
+    "product": 551,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.603Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 474,
+  "fields": {
+    "product": 552,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.604Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 475,
+  "fields": {
+    "product": 555,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.606Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 476,
+  "fields": {
+    "product": 555,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.607Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 477,
+  "fields": {
+    "product": 555,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.609Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 478,
+  "fields": {
+    "product": 555,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.610Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 479,
+  "fields": {
+    "product": 556,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.611Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 480,
+  "fields": {
+    "product": 556,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.613Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 481,
+  "fields": {
+    "product": 556,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.614Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 482,
+  "fields": {
+    "product": 556,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.616Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 483,
+  "fields": {
+    "product": 557,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.617Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 484,
+  "fields": {
+    "product": 557,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.619Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 485,
+  "fields": {
+    "product": 557,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.620Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 486,
+  "fields": {
+    "product": 557,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.621Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 487,
+  "fields": {
+    "product": 558,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.623Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 488,
+  "fields": {
+    "product": 558,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.624Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 489,
+  "fields": {
+    "product": 558,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.625Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 490,
+  "fields": {
+    "product": 558,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.627Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 491,
+  "fields": {
+    "product": 559,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.628Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 492,
+  "fields": {
+    "product": 559,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.630Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 493,
+  "fields": {
+    "product": 559,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.631Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 494,
+  "fields": {
+    "product": 559,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.632Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 495,
+  "fields": {
+    "product": 560,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.634Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 496,
+  "fields": {
+    "product": 560,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.635Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 497,
+  "fields": {
+    "product": 560,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.636Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 498,
+  "fields": {
+    "product": 560,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.638Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 499,
+  "fields": {
+    "product": 561,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.639Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 500,
+  "fields": {
+    "product": 561,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.641Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 501,
+  "fields": {
+    "product": 561,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.642Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 502,
+  "fields": {
+    "product": 561,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.643Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 503,
+  "fields": {
+    "product": 562,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.645Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 504,
+  "fields": {
+    "product": 562,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.646Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 505,
+  "fields": {
+    "product": 562,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.647Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 506,
+  "fields": {
+    "product": 562,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.649Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 507,
+  "fields": {
+    "product": 563,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.650Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 508,
+  "fields": {
+    "product": 563,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.652Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 509,
+  "fields": {
+    "product": 563,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.653Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 510,
+  "fields": {
+    "product": 563,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.654Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 511,
+  "fields": {
+    "product": 564,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.656Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 512,
+  "fields": {
+    "product": 564,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.657Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 513,
+  "fields": {
+    "product": 564,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.659Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 514,
+  "fields": {
+    "product": 564,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.660Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 515,
+  "fields": {
+    "product": 565,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.661Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 516,
+  "fields": {
+    "product": 566,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.663Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 517,
+  "fields": {
+    "product": 567,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.664Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 518,
+  "fields": {
+    "product": 568,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.665Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 519,
+  "fields": {
+    "product": 569,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.667Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 520,
+  "fields": {
+    "product": 570,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.668Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 521,
+  "fields": {
+    "product": 571,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.670Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 522,
+  "fields": {
+    "product": 572,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.671Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 523,
+  "fields": {
+    "product": 573,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.672Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 524,
+  "fields": {
+    "product": 574,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.674Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 525,
+  "fields": {
+    "product": 575,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.675Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 526,
+  "fields": {
+    "product": 576,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.676Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 527,
+  "fields": {
+    "product": 577,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.678Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 528,
+  "fields": {
+    "product": 578,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.679Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 529,
+  "fields": {
+    "product": 579,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.681Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 530,
+  "fields": {
+    "product": 580,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.682Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 531,
+  "fields": {
+    "product": 581,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.683Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 532,
+  "fields": {
+    "product": 582,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.685Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 533,
+  "fields": {
+    "product": 583,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.686Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 534,
+  "fields": {
+    "product": 583,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.688Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 535,
+  "fields": {
+    "product": 583,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.689Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 536,
+  "fields": {
+    "product": 584,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.690Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 537,
+  "fields": {
+    "product": 585,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.692Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 538,
+  "fields": {
+    "product": 586,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.693Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 539,
+  "fields": {
+    "product": 587,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.694Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 540,
+  "fields": {
+    "product": 588,
+    "brand": 29,
+    "created_at": "2026-01-24T11:17:22.696Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 541,
+  "fields": {
+    "product": 589,
+    "brand": 29,
+    "created_at": "2026-01-24T11:17:22.697Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 542,
+  "fields": {
+    "product": 591,
+    "brand": 31,
+    "created_at": "2026-01-24T11:17:22.699Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 543,
+  "fields": {
+    "product": 592,
+    "brand": 31,
+    "created_at": "2026-01-24T11:17:22.700Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 544,
+  "fields": {
+    "product": 593,
+    "brand": 31,
+    "created_at": "2026-01-24T11:17:22.701Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 545,
+  "fields": {
+    "product": 594,
+    "brand": 32,
+    "created_at": "2026-01-24T11:17:22.703Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 546,
+  "fields": {
+    "product": 598,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.704Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 547,
+  "fields": {
+    "product": 599,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.706Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 548,
+  "fields": {
+    "product": 600,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.707Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 549,
+  "fields": {
+    "product": 601,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.708Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 550,
+  "fields": {
+    "product": 602,
+    "brand": 34,
+    "created_at": "2026-01-24T11:17:22.710Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 551,
+  "fields": {
+    "product": 603,
+    "brand": 34,
+    "created_at": "2026-01-24T11:17:22.711Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 552,
+  "fields": {
+    "product": 604,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.713Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 553,
+  "fields": {
+    "product": 606,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.714Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 554,
+  "fields": {
+    "product": 607,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.715Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 555,
+  "fields": {
+    "product": 609,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.717Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 556,
+  "fields": {
+    "product": 610,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.718Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 557,
+  "fields": {
+    "product": 611,
+    "brand": 8,
+    "created_at": "2026-01-24T11:17:22.720Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 558,
+  "fields": {
+    "product": 612,
+    "brand": 8,
+    "created_at": "2026-01-24T11:17:22.721Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 559,
+  "fields": {
+    "product": 613,
+    "brand": 8,
+    "created_at": "2026-01-24T11:17:22.722Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 560,
+  "fields": {
+    "product": 614,
+    "brand": 8,
+    "created_at": "2026-01-24T11:17:22.724Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 561,
+  "fields": {
+    "product": 615,
+    "brand": 8,
+    "created_at": "2026-01-24T11:17:22.725Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 562,
+  "fields": {
+    "product": 616,
+    "brand": 8,
+    "created_at": "2026-01-24T11:17:22.726Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 563,
+  "fields": {
+    "product": 617,
+    "brand": 9,
+    "created_at": "2026-01-24T11:17:22.728Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 564,
+  "fields": {
+    "product": 617,
+    "brand": 37,
+    "created_at": "2026-01-24T11:17:22.729Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 565,
+  "fields": {
+    "product": 618,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.731Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 566,
+  "fields": {
+    "product": 619,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.732Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 567,
+  "fields": {
+    "product": 622,
+    "brand": 37,
+    "created_at": "2026-01-24T11:17:22.733Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 568,
+  "fields": {
+    "product": 627,
+    "brand": 37,
+    "created_at": "2026-01-24T11:17:22.735Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 569,
+  "fields": {
+    "product": 630,
+    "brand": 38,
+    "created_at": "2026-01-24T11:17:22.736Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 570,
+  "fields": {
+    "product": 631,
+    "brand": 38,
+    "created_at": "2026-01-24T11:17:22.738Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 571,
+  "fields": {
+    "product": 634,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.739Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 572,
+  "fields": {
+    "product": 635,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.740Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 573,
+  "fields": {
+    "product": 647,
+    "brand": 40,
+    "created_at": "2026-01-24T11:17:22.742Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 574,
+  "fields": {
+    "product": 648,
+    "brand": 40,
+    "created_at": "2026-01-24T11:17:22.743Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 575,
+  "fields": {
+    "product": 649,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.745Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 576,
+  "fields": {
+    "product": 650,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.746Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 577,
+  "fields": {
+    "product": 651,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.747Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 578,
+  "fields": {
+    "product": 652,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.749Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 579,
+  "fields": {
+    "product": 653,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.750Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 580,
+  "fields": {
+    "product": 653,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.752Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 581,
+  "fields": {
+    "product": 653,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.753Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 582,
+  "fields": {
+    "product": 653,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.754Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 583,
+  "fields": {
+    "product": 658,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.756Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 584,
+  "fields": {
+    "product": 658,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.757Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 585,
+  "fields": {
+    "product": 658,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.758Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 586,
+  "fields": {
+    "product": 658,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.760Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 587,
+  "fields": {
+    "product": 660,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.761Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 588,
+  "fields": {
+    "product": 661,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.763Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 589,
+  "fields": {
+    "product": 662,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.764Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 590,
+  "fields": {
+    "product": 667,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.765Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 591,
+  "fields": {
+    "product": 667,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.767Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 592,
+  "fields": {
+    "product": 667,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.768Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 593,
+  "fields": {
+    "product": 667,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.770Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 594,
+  "fields": {
+    "product": 676,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.771Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 595,
+  "fields": {
+    "product": 676,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.772Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 596,
+  "fields": {
+    "product": 676,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.774Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 597,
+  "fields": {
+    "product": 676,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.775Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 598,
+  "fields": {
+    "product": 677,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.777Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 599,
+  "fields": {
+    "product": 678,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.778Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 600,
+  "fields": {
+    "product": 679,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.779Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 601,
+  "fields": {
+    "product": 680,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.781Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 602,
+  "fields": {
+    "product": 682,
+    "brand": 41,
+    "created_at": "2026-01-24T11:17:22.782Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 603,
+  "fields": {
+    "product": 686,
+    "brand": 41,
+    "created_at": "2026-01-24T11:17:22.784Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 604,
+  "fields": {
+    "product": 687,
+    "brand": 41,
+    "created_at": "2026-01-24T11:17:22.785Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 605,
+  "fields": {
+    "product": 688,
+    "brand": 41,
+    "created_at": "2026-01-24T11:17:22.786Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 606,
+  "fields": {
+    "product": 690,
+    "brand": 41,
+    "created_at": "2026-01-24T11:17:22.788Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 607,
+  "fields": {
+    "product": 695,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.789Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 608,
+  "fields": {
+    "product": 696,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.791Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 609,
+  "fields": {
+    "product": 697,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.792Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 610,
+  "fields": {
+    "product": 698,
+    "brand": 43,
+    "created_at": "2026-01-24T11:17:22.793Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 611,
+  "fields": {
+    "product": 699,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.795Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 612,
+  "fields": {
+    "product": 700,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.796Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 613,
+  "fields": {
+    "product": 701,
+    "brand": 44,
+    "created_at": "2026-01-24T11:17:22.798Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 614,
+  "fields": {
+    "product": 702,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.799Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 615,
+  "fields": {
+    "product": 710,
+    "brand": 46,
+    "created_at": "2026-01-24T11:17:22.800Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 616,
+  "fields": {
+    "product": 712,
+    "brand": 47,
+    "created_at": "2026-01-24T11:17:22.802Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 617,
+  "fields": {
+    "product": 714,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.803Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 618,
+  "fields": {
+    "product": 715,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.805Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 619,
+  "fields": {
+    "product": 716,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.806Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 620,
+  "fields": {
+    "product": 717,
+    "brand": 59,
+    "created_at": "2026-01-24T11:17:22.807Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 621,
+  "fields": {
+    "product": 718,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.809Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 622,
+  "fields": {
+    "product": 719,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.810Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 623,
+  "fields": {
+    "product": 720,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.812Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 624,
+  "fields": {
+    "product": 721,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.813Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 625,
+  "fields": {
+    "product": 722,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.814Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 626,
+  "fields": {
+    "product": 746,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.816Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 627,
+  "fields": {
+    "product": 748,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.817Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 628,
+  "fields": {
+    "product": 748,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.819Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 629,
+  "fields": {
+    "product": 748,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.820Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 630,
+  "fields": {
+    "product": 748,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.821Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 631,
+  "fields": {
+    "product": 756,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.823Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 632,
+  "fields": {
+    "product": 756,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.824Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 633,
+  "fields": {
+    "product": 756,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.826Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 634,
+  "fields": {
+    "product": 756,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.827Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 635,
+  "fields": {
+    "product": 768,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.828Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 636,
+  "fields": {
+    "product": 768,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.830Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 637,
+  "fields": {
+    "product": 768,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.831Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 638,
+  "fields": {
+    "product": 768,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.833Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 639,
+  "fields": {
+    "product": 769,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.834Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 640,
+  "fields": {
+    "product": 769,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.835Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 641,
+  "fields": {
+    "product": 769,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.837Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 642,
+  "fields": {
+    "product": 769,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.838Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 643,
+  "fields": {
+    "product": 771,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.840Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 644,
+  "fields": {
+    "product": 776,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.841Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 645,
+  "fields": {
+    "product": 777,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.842Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 646,
+  "fields": {
+    "product": 778,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.844Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 647,
+  "fields": {
+    "product": 779,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.845Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 648,
+  "fields": {
+    "product": 780,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.847Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 649,
+  "fields": {
+    "product": 781,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.848Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 650,
+  "fields": {
+    "product": 782,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.850Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 651,
+  "fields": {
+    "product": 792,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.851Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 652,
+  "fields": {
+    "product": 792,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:22.853Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 653,
+  "fields": {
+    "product": 792,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.854Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 654,
+  "fields": {
+    "product": 792,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.856Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 655,
+  "fields": {
+    "product": 796,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.857Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 656,
+  "fields": {
+    "product": 809,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.859Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 657,
+  "fields": {
+    "product": 810,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.860Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 658,
+  "fields": {
+    "product": 815,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.862Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 659,
+  "fields": {
+    "product": 817,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.863Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 660,
+  "fields": {
+    "product": 818,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.865Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 661,
+  "fields": {
+    "product": 819,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.866Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 662,
+  "fields": {
+    "product": 823,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.868Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 663,
+  "fields": {
+    "product": 826,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.869Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 664,
+  "fields": {
+    "product": 833,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:22.871Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 665,
+  "fields": {
+    "product": 834,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.872Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 666,
+  "fields": {
+    "product": 835,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.874Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 667,
+  "fields": {
+    "product": 837,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.875Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 668,
+  "fields": {
+    "product": 838,
+    "brand": 50,
+    "created_at": "2026-01-24T11:17:22.877Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 669,
+  "fields": {
+    "product": 847,
+    "brand": 51,
+    "created_at": "2026-01-24T11:17:22.878Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 670,
+  "fields": {
+    "product": 847,
+    "brand": 14,
+    "created_at": "2026-01-24T11:17:22.880Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 671,
+  "fields": {
+    "product": 848,
+    "brand": 51,
+    "created_at": "2026-01-24T11:17:22.881Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 672,
+  "fields": {
+    "product": 849,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.883Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 673,
+  "fields": {
+    "product": 850,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.884Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 674,
+  "fields": {
+    "product": 851,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.886Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 675,
+  "fields": {
+    "product": 852,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.887Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 676,
+  "fields": {
+    "product": 853,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.889Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 677,
+  "fields": {
+    "product": 854,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.890Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 678,
+  "fields": {
+    "product": 856,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.891Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 679,
+  "fields": {
+    "product": 857,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.893Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 680,
+  "fields": {
+    "product": 864,
+    "brand": 53,
+    "created_at": "2026-01-24T11:17:22.894Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 681,
+  "fields": {
+    "product": 865,
+    "brand": 53,
+    "created_at": "2026-01-24T11:17:22.896Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 682,
+  "fields": {
+    "product": 866,
+    "brand": 53,
+    "created_at": "2026-01-24T11:17:22.897Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 683,
+  "fields": {
+    "product": 867,
+    "brand": 53,
+    "created_at": "2026-01-24T11:17:22.898Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 684,
+  "fields": {
+    "product": 868,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.900Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 685,
+  "fields": {
+    "product": 870,
+    "brand": 58,
+    "created_at": "2026-01-24T11:17:22.901Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 686,
+  "fields": {
+    "product": 875,
+    "brand": 55,
+    "created_at": "2026-01-24T11:17:22.903Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 687,
+  "fields": {
+    "product": 876,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.904Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 688,
+  "fields": {
+    "product": 877,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.905Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 689,
+  "fields": {
+    "product": 882,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.907Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 690,
+  "fields": {
+    "product": 883,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:22.908Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 691,
+  "fields": {
+    "product": 886,
+    "brand": 61,
+    "created_at": "2026-01-24T11:17:22.910Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 692,
+  "fields": {
+    "product": 886,
+    "brand": 9,
+    "created_at": "2026-01-24T11:17:22.911Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 693,
+  "fields": {
+    "product": 886,
+    "brand": 3,
+    "created_at": "2026-01-24T11:17:22.913Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 694,
+  "fields": {
+    "product": 886,
+    "brand": 37,
+    "created_at": "2026-01-24T11:17:22.914Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 695,
+  "fields": {
+    "product": 887,
+    "brand": 3,
+    "created_at": "2026-01-24T11:17:22.915Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 696,
+  "fields": {
+    "product": 888,
+    "brand": 41,
+    "created_at": "2026-01-24T11:17:22.917Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 697,
+  "fields": {
+    "product": 888,
+    "brand": 5,
+    "created_at": "2026-01-24T11:17:22.918Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 698,
+  "fields": {
+    "product": 889,
+    "brand": 41,
+    "created_at": "2026-01-24T11:17:22.920Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 699,
+  "fields": {
+    "product": 889,
+    "brand": 5,
+    "created_at": "2026-01-24T11:17:22.921Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 700,
+  "fields": {
+    "product": 890,
+    "brand": 6,
+    "created_at": "2026-01-24T11:17:22.923Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 701,
+  "fields": {
+    "product": 891,
+    "brand": 37,
+    "created_at": "2026-01-24T11:17:22.924Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 702,
+  "fields": {
+    "product": 891,
+    "brand": 7,
+    "created_at": "2026-01-24T11:17:22.925Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 703,
+  "fields": {
+    "product": 892,
+    "brand": 8,
+    "created_at": "2026-01-24T11:17:22.927Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 704,
+  "fields": {
+    "product": 892,
+    "brand": 47,
+    "created_at": "2026-01-24T11:17:22.928Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 705,
+  "fields": {
+    "product": 893,
+    "brand": 9,
+    "created_at": "2026-01-24T11:17:22.930Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 706,
+  "fields": {
+    "product": 894,
+    "brand": 9,
+    "created_at": "2026-01-24T11:17:22.931Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 707,
+  "fields": {
+    "product": 894,
+    "brand": 47,
+    "created_at": "2026-01-24T11:17:22.932Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 708,
+  "fields": {
+    "product": 895,
+    "brand": 9,
+    "created_at": "2026-01-24T11:17:22.934Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 709,
+  "fields": {
+    "product": 896,
+    "brand": 11,
+    "created_at": "2026-01-24T11:17:22.935Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 710,
+  "fields": {
+    "product": 897,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.937Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 711,
+  "fields": {
+    "product": 897,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.938Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 712,
+  "fields": {
+    "product": 897,
+    "brand": 12,
+    "created_at": "2026-01-24T11:17:22.939Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 713,
+  "fields": {
+    "product": 898,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:22.941Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 714,
+  "fields": {
+    "product": 898,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.942Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 715,
+  "fields": {
+    "product": 898,
+    "brand": 12,
+    "created_at": "2026-01-24T11:17:22.944Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 716,
+  "fields": {
+    "product": 900,
+    "brand": 41,
+    "created_at": "2026-01-24T11:17:22.945Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 717,
+  "fields": {
+    "product": 900,
+    "brand": 12,
+    "created_at": "2026-01-24T11:17:22.947Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 718,
+  "fields": {
+    "product": 901,
+    "brand": 41,
+    "created_at": "2026-01-24T11:17:22.948Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 719,
+  "fields": {
+    "product": 901,
+    "brand": 12,
+    "created_at": "2026-01-24T11:17:22.949Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 720,
+  "fields": {
+    "product": 901,
+    "brand": 22,
+    "created_at": "2026-01-24T11:17:22.951Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 721,
+  "fields": {
+    "product": 901,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.952Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 722,
+  "fields": {
+    "product": 902,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.954Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 723,
+  "fields": {
+    "product": 902,
+    "brand": 12,
+    "created_at": "2026-01-24T11:17:22.955Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 724,
+  "fields": {
+    "product": 903,
+    "brand": 36,
+    "created_at": "2026-01-24T11:17:22.956Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 725,
+  "fields": {
+    "product": 903,
+    "brand": 13,
+    "created_at": "2026-01-24T11:17:22.958Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 726,
+  "fields": {
+    "product": 904,
+    "brand": 51,
+    "created_at": "2026-01-24T11:17:22.959Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 727,
+  "fields": {
+    "product": 904,
+    "brand": 14,
+    "created_at": "2026-01-24T11:17:22.961Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 728,
+  "fields": {
+    "product": 905,
+    "brand": 40,
+    "created_at": "2026-01-24T11:17:22.962Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 729,
+  "fields": {
+    "product": 905,
+    "brand": 17,
+    "created_at": "2026-01-24T11:17:22.963Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 730,
+  "fields": {
+    "product": 906,
+    "brand": 17,
+    "created_at": "2026-01-24T11:17:22.965Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 731,
+  "fields": {
+    "product": 907,
+    "brand": 17,
+    "created_at": "2026-01-24T11:17:22.966Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 732,
+  "fields": {
+    "product": 908,
+    "brand": 17,
+    "created_at": "2026-01-24T11:17:22.968Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 733,
+  "fields": {
+    "product": 909,
+    "brand": 17,
+    "created_at": "2026-01-24T11:17:22.969Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 734,
+  "fields": {
+    "product": 910,
+    "brand": 17,
+    "created_at": "2026-01-24T11:17:22.970Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 735,
+  "fields": {
+    "product": 910,
+    "brand": 35,
+    "created_at": "2026-01-24T11:17:22.972Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 736,
+  "fields": {
+    "product": 911,
+    "brand": 24,
+    "created_at": "2026-01-24T11:17:22.973Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 737,
+  "fields": {
+    "product": 911,
+    "brand": 40,
+    "created_at": "2026-01-24T11:17:22.975Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 738,
+  "fields": {
+    "product": 911,
+    "brand": 23,
+    "created_at": "2026-01-24T11:17:22.976Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 739,
+  "fields": {
+    "product": 912,
+    "brand": 24,
+    "created_at": "2026-01-24T11:17:22.978Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 740,
+  "fields": {
+    "product": 912,
+    "brand": 40,
+    "created_at": "2026-01-24T11:17:22.979Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 741,
+  "fields": {
+    "product": 913,
+    "brand": 26,
+    "created_at": "2026-01-24T11:17:22.980Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 742,
+  "fields": {
+    "product": 913,
+    "brand": 51,
+    "created_at": "2026-01-24T11:17:22.982Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 743,
+  "fields": {
+    "product": 914,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:22.983Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 744,
+  "fields": {
+    "product": 914,
+    "brand": 27,
+    "created_at": "2026-01-24T11:17:22.985Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 745,
+  "fields": {
+    "product": 914,
+    "brand": 45,
+    "created_at": "2026-01-24T11:17:22.986Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 746,
+  "fields": {
+    "product": 915,
+    "brand": 45,
+    "created_at": "2026-01-24T11:17:22.987Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 747,
+  "fields": {
+    "product": 915,
+    "brand": 30,
+    "created_at": "2026-01-24T11:17:22.989Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 748,
+  "fields": {
+    "product": 916,
+    "brand": 37,
+    "created_at": "2026-01-24T11:17:22.990Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 749,
+  "fields": {
+    "product": 917,
+    "brand": 39,
+    "created_at": "2026-01-24T11:17:22.992Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 750,
+  "fields": {
+    "product": 918,
+    "brand": 40,
+    "created_at": "2026-01-24T11:17:22.993Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 751,
+  "fields": {
+    "product": 919,
+    "brand": 40,
+    "created_at": "2026-01-24T11:17:22.995Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 752,
+  "fields": {
+    "product": 920,
+    "brand": 40,
+    "created_at": "2026-01-24T11:17:22.996Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 753,
+  "fields": {
+    "product": 920,
+    "brand": 51,
+    "created_at": "2026-01-24T11:17:22.997Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 754,
+  "fields": {
+    "product": 920,
+    "brand": 54,
+    "created_at": "2026-01-24T11:17:22.999Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 755,
+  "fields": {
+    "product": 921,
+    "brand": 45,
+    "created_at": "2026-01-24T11:17:23.000Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 756,
+  "fields": {
+    "product": 922,
+    "brand": 45,
+    "created_at": "2026-01-24T11:17:23.002Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 757,
+  "fields": {
+    "product": 923,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:23.003Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 758,
+  "fields": {
+    "product": 923,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.004Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 759,
+  "fields": {
+    "product": 924,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:23.006Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 760,
+  "fields": {
+    "product": 925,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:23.007Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 761,
+  "fields": {
+    "product": 925,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:23.009Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 762,
+  "fields": {
+    "product": 925,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:23.010Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 763,
+  "fields": {
+    "product": 925,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.011Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 764,
+  "fields": {
+    "product": 926,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:23.013Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 765,
+  "fields": {
+    "product": 926,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:23.014Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 766,
+  "fields": {
+    "product": 926,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:23.016Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 767,
+  "fields": {
+    "product": 926,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.017Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 768,
+  "fields": {
+    "product": 927,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:23.018Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 769,
+  "fields": {
+    "product": 927,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:23.020Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 770,
+  "fields": {
+    "product": 927,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:23.021Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 771,
+  "fields": {
+    "product": 927,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.023Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 772,
+  "fields": {
+    "product": 928,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:23.024Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 773,
+  "fields": {
+    "product": 929,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:23.026Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 774,
+  "fields": {
+    "product": 929,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.027Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 775,
+  "fields": {
+    "product": 930,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:23.028Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 776,
+  "fields": {
+    "product": 931,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:23.030Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 777,
+  "fields": {
+    "product": 931,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.031Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 778,
+  "fields": {
+    "product": 932,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:23.033Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 779,
+  "fields": {
+    "product": 933,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:23.034Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 780,
+  "fields": {
+    "product": 933,
+    "brand": 1,
+    "created_at": "2026-01-24T11:17:23.036Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 781,
+  "fields": {
+    "product": 933,
+    "brand": 28,
+    "created_at": "2026-01-24T11:17:23.037Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 782,
+  "fields": {
+    "product": 933,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.039Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 783,
+  "fields": {
+    "product": 934,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:23.040Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 784,
+  "fields": {
+    "product": 934,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.041Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 785,
+  "fields": {
+    "product": 935,
+    "brand": 48,
+    "created_at": "2026-01-24T11:17:23.043Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 786,
+  "fields": {
+    "product": 935,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.045Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 787,
+  "fields": {
+    "product": 936,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.046Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 789,
+  "fields": {
+    "product": 938,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.049Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 790,
+  "fields": {
+    "product": 939,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.050Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 791,
+  "fields": {
+    "product": 940,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.052Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 792,
+  "fields": {
+    "product": 941,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.053Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 793,
+  "fields": {
+    "product": 942,
+    "brand": 49,
+    "created_at": "2026-01-24T11:17:23.054Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 794,
+  "fields": {
+    "product": 943,
+    "brand": 51,
+    "created_at": "2026-01-24T11:17:23.056Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 795,
+  "fields": {
+    "product": 944,
+    "brand": 52,
+    "created_at": "2026-01-24T11:17:23.057Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 798,
+  "fields": {
+    "product": 949,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:23.061Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 799,
+  "fields": {
+    "product": 950,
+    "brand": 60,
+    "created_at": "2026-01-24T11:17:23.063Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 800,
+  "fields": {
+    "product": 951,
+    "brand": 51,
+    "created_at": "2026-01-24T11:17:23.064Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 801,
+  "fields": {
+    "product": 952,
+    "brand": 8,
+    "created_at": "2026-01-24T11:17:23.066Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 802,
+  "fields": {
+    "product": 953,
+    "brand": 8,
+    "created_at": "2026-01-24T11:17:23.067Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 803,
+  "fields": {
+    "product": 954,
+    "brand": 8,
+    "created_at": "2026-01-24T11:17:23.069Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 804,
+  "fields": {
+    "product": 495,
+    "brand": 49,
+    "created_at": "2026-02-02T01:00:57.033Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 805,
+  "fields": {
+    "product": 311,
+    "brand": 8,
+    "created_at": "2026-02-18T03:21:59.630Z"
+  }
+},
+{
+  "model": "appinventory.productbrandassignment",
+  "pk": 806,
+  "fields": {
+    "product": 311,
+    "brand": 7,
+    "created_at": "2026-02-18T03:21:59.630Z"
+  }
+}
+]

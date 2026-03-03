@@ -4,7 +4,7 @@
     "pk": 1,
     "fields": {
       "product": 921,
-      "assignment": 757,
+      "assignment": 755,
       "image": "products/921/45/20260216_030139_30A20GeneratorCord.webp",
       "is_primary": true,
       "uploaded_at": "2026-02-16T03:01:39.362423+00:00",
@@ -17,7 +17,7 @@
     "pk": 2,
     "fields": {
       "product": 903,
-      "assignment": 727,
+      "assignment": 724,
       "image": "products/903/36/20260201_225708_DBCK-WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:08.370984+00:00",
@@ -30,7 +30,7 @@
     "pk": 3,
     "fields": {
       "product": 903,
-      "assignment": 726,
+      "assignment": 725,
       "image": "products/903/13/20260201_225708_DBCK-WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:08.362757+00:00",
@@ -43,7 +43,7 @@
     "pk": 4,
     "fields": {
       "product": 898,
-      "assignment": 717,
+      "assignment": 714,
       "image": "products/898/49/20260201_225708_QU12L400SL.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:08.346369+00:00",
@@ -56,7 +56,7 @@
     "pk": 5,
     "fields": {
       "product": 898,
-      "assignment": 716,
+      "assignment": 713,
       "image": "products/898/48/20260201_225708_QU12L400SL.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:08.337888+00:00",
@@ -82,7 +82,7 @@
     "pk": 7,
     "fields": {
       "product": 585,
-      "assignment": 539,
+      "assignment": 537,
       "image": "products/585/28/20260201_225708_SQR55141WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:08.126561+00:00",
@@ -95,7 +95,7 @@
     "pk": 8,
     "fields": {
       "product": 583,
-      "assignment": 537,
+      "assignment": 533,
       "image": "products/583/49/20260201_225708_SQR-14-103-WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:08.113543+00:00",
@@ -108,7 +108,7 @@
     "pk": 9,
     "fields": {
       "product": 583,
-      "assignment": 536,
+      "assignment": 535,
       "image": "products/583/28/20260201_225708_SQR-14-103-WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:08.098043+00:00",
@@ -121,7 +121,7 @@
     "pk": 10,
     "fields": {
       "product": 583,
-      "assignment": 535,
+      "assignment": 534,
       "image": "products/583/27/20260201_225708_SQR-14-103-WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:08.083376+00:00",
@@ -134,7 +134,7 @@
     "pk": 11,
     "fields": {
       "product": 582,
-      "assignment": 534,
+      "assignment": 532,
       "image": "products/582/28/20260201_225708_SQWS422001WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:08.068284+00:00",
@@ -147,7 +147,7 @@
     "pk": 12,
     "fields": {
       "product": 579,
-      "assignment": 531,
+      "assignment": 529,
       "image": "products/579/28/20260201_225708_TPJ82-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:08.036540+00:00",
@@ -160,7 +160,7 @@
     "pk": 13,
     "fields": {
       "product": 578,
-      "assignment": 530,
+      "assignment": 528,
       "image": "products/578/28/20260201_225707_3232-TRWRW.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.982902+00:00",
@@ -173,7 +173,7 @@
     "pk": 14,
     "fields": {
       "product": 577,
-      "assignment": 529,
+      "assignment": 527,
       "image": "products/577/28/20260201_225707_3232-TREXW.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.915035+00:00",
@@ -186,7 +186,7 @@
     "pk": 15,
     "fields": {
       "product": 576,
-      "assignment": 528,
+      "assignment": 526,
       "image": "products/576/28/20260201_225707_SQWS461011WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.880157+00:00",
@@ -199,7 +199,7 @@
     "pk": 16,
     "fields": {
       "product": 575,
-      "assignment": 527,
+      "assignment": 525,
       "image": "products/575/28/20260201_225707_885TRBK.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.845065+00:00",
@@ -212,7 +212,7 @@
     "pk": 17,
     "fields": {
       "product": 570,
-      "assignment": 522,
+      "assignment": 520,
       "image": "products/570/28/20260201_225707_3854.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.774271+00:00",
@@ -225,7 +225,7 @@
     "pk": 18,
     "fields": {
       "product": 568,
-      "assignment": 520,
+      "assignment": 518,
       "image": "products/568/28/20260201_225707_SQWS141004WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.723098+00:00",
@@ -238,7 +238,7 @@
     "pk": 19,
     "fields": {
       "product": 567,
-      "assignment": 519,
+      "assignment": 517,
       "image": "products/567/28/20260201_225707_3864.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.681647+00:00",
@@ -251,7 +251,7 @@
     "pk": 20,
     "fields": {
       "product": 565,
-      "assignment": 517,
+      "assignment": 515,
       "image": "products/565/28/20260201_225707_SQWS141003WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.644592+00:00",
@@ -264,7 +264,7 @@
     "pk": 21,
     "fields": {
       "product": 551,
-      "assignment": 475,
+      "assignment": 473,
       "image": "products/551/49/20260201_225707_PN4264L1225C.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.623895+00:00",
@@ -277,7 +277,7 @@
     "pk": 22,
     "fields": {
       "product": 551,
-      "assignment": 474,
+      "assignment": 470,
       "image": "products/551/48/20260201_225707_PN4264L1225C.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.600339+00:00",
@@ -290,7 +290,7 @@
     "pk": 23,
     "fields": {
       "product": 551,
-      "assignment": 473,
+      "assignment": 472,
       "image": "products/551/28/20260201_225707_PN4264L1225C.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.583054+00:00",
@@ -303,7 +303,7 @@
     "pk": 24,
     "fields": {
       "product": 551,
-      "assignment": 472,
+      "assignment": 471,
       "image": "products/551/1/20260201_225707_PN4264L1225C.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.548213+00:00",
@@ -316,7 +316,7 @@
     "pk": 25,
     "fields": {
       "product": 547,
-      "assignment": 459,
+      "assignment": 457,
       "image": "products/547/28/20260201_225707_RR205WWR.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.498776+00:00",
@@ -329,7 +329,7 @@
     "pk": 26,
     "fields": {
       "product": 544,
-      "assignment": 456,
+      "assignment": 454,
       "image": "products/544/28/20260201_225707_SQWS141002WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.484283+00:00",
@@ -342,7 +342,7 @@
     "pk": 27,
     "fields": {
       "product": 543,
-      "assignment": 455,
+      "assignment": 453,
       "image": "products/543/28/20260201_225707_SQWS140002WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.470492+00:00",
@@ -355,7 +355,7 @@
     "pk": 28,
     "fields": {
       "product": 537,
-      "assignment": 442,
+      "assignment": 440,
       "image": "products/537/28/20260201_225707_SQWS140001WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:57:07.358134+00:00",
@@ -368,7 +368,7 @@
     "pk": 29,
     "fields": {
       "product": 942,
-      "assignment": 794,
+      "assignment": 793,
       "image": "products/942/49/20260201_222746_SQR-87-CT-1-WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:46.203094+00:00",
@@ -381,7 +381,7 @@
     "pk": 30,
     "fields": {
       "product": 941,
-      "assignment": 793,
+      "assignment": 792,
       "image": "products/941/49/20260201_222746_QOC42UF.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:46.066728+00:00",
@@ -394,7 +394,7 @@
     "pk": 31,
     "fields": {
       "product": 940,
-      "assignment": 792,
+      "assignment": 791,
       "image": "products/940/49/20260201_222745_SQR87C01WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:45.679575+00:00",
@@ -407,7 +407,7 @@
     "pk": 32,
     "fields": {
       "product": 939,
-      "assignment": 791,
+      "assignment": 790,
       "image": "products/939/49/20260201_222745_PK4GTA.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:45.574815+00:00",
@@ -420,7 +420,7 @@
     "pk": 33,
     "fields": {
       "product": 938,
-      "assignment": 790,
+      "assignment": 789,
       "image": "products/938/49/20260201_222745_QOM22225NRB.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:45.494547+00:00",
@@ -433,7 +433,7 @@
     "pk": 34,
     "fields": {
       "product": 936,
-      "assignment": 789,
+      "assignment": 787,
       "image": "products/936/49/20260201_222745_TPJ13-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:45.425899+00:00",
@@ -446,7 +446,7 @@
     "pk": 35,
     "fields": {
       "product": 935,
-      "assignment": 788,
+      "assignment": 786,
       "image": "products/935/49/20260201_222745_DISCO-60ANF.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:45.408384+00:00",
@@ -459,7 +459,7 @@
     "pk": 36,
     "fields": {
       "product": 935,
-      "assignment": 787,
+      "assignment": 785,
       "image": "products/935/48/20260201_222745_DISCO-60ANF.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:45.354294+00:00",
@@ -472,7 +472,7 @@
     "pk": 37,
     "fields": {
       "product": 931,
-      "assignment": 779,
+      "assignment": 777,
       "image": "products/931/49/20260201_222745_QOM2200VH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:45.282718+00:00",
@@ -485,7 +485,7 @@
     "pk": 38,
     "fields": {
       "product": 931,
-      "assignment": 778,
+      "assignment": 776,
       "image": "products/931/48/20260201_222745_QOM2200VH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:45.251905+00:00",
@@ -498,7 +498,7 @@
     "pk": 39,
     "fields": {
       "product": 930,
-      "assignment": 777,
+      "assignment": 775,
       "image": "products/930/48/20260201_222745_QN2150H.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:45.195723+00:00",
@@ -511,7 +511,7 @@
     "pk": 40,
     "fields": {
       "product": 929,
-      "assignment": 776,
+      "assignment": 774,
       "image": "products/929/49/20260201_222745_Q2125.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:45.164403+00:00",
@@ -524,7 +524,7 @@
     "pk": 41,
     "fields": {
       "product": 929,
-      "assignment": 775,
+      "assignment": 773,
       "image": "products/929/48/20260201_222745_Q2125.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:45.129138+00:00",
@@ -537,7 +537,7 @@
     "pk": 42,
     "fields": {
       "product": 928,
-      "assignment": 774,
+      "assignment": 772,
       "image": "products/928/48/20260201_222745_SNW1212L1125.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:45.063295+00:00",
@@ -550,7 +550,7 @@
     "pk": 43,
     "fields": {
       "product": 924,
-      "assignment": 761,
+      "assignment": 759,
       "image": "products/924/48/20260201_222745_QOADV1PAF.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:45.015826+00:00",
@@ -563,7 +563,7 @@
     "pk": 44,
     "fields": {
       "product": 922,
-      "assignment": 758,
+      "assignment": 756,
       "image": "products/922/45/20260201_222744_GPWRB30.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.991862+00:00",
@@ -576,7 +576,7 @@
     "pk": 45,
     "fields": {
       "product": 917,
-      "assignment": 751,
+      "assignment": 749,
       "image": "products/917/39/20260201_222744_PT-4-14.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.957104+00:00",
@@ -589,7 +589,7 @@
     "pk": 46,
     "fields": {
       "product": 916,
-      "assignment": 750,
+      "assignment": 748,
       "image": "products/916/37/20260201_222744_S1-18-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.903842+00:00",
@@ -602,7 +602,7 @@
     "pk": 47,
     "fields": {
       "product": 915,
-      "assignment": 749,
+      "assignment": 746,
       "image": "products/915/45/20260201_222744_C5EU2102.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.861184+00:00",
@@ -615,7 +615,7 @@
     "pk": 48,
     "fields": {
       "product": 915,
-      "assignment": 748,
+      "assignment": 747,
       "image": "products/915/30/20260201_222744_C5EU2102.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.829584+00:00",
@@ -628,7 +628,7 @@
     "pk": 49,
     "fields": {
       "product": 914,
-      "assignment": 747,
+      "assignment": 743,
       "image": "products/914/49/20260201_222744_1597TRWRW.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.793043+00:00",
@@ -641,7 +641,7 @@
     "pk": 50,
     "fields": {
       "product": 914,
-      "assignment": 746,
+      "assignment": 745,
       "image": "products/914/45/20260201_222744_1597TRWRW.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.774607+00:00",
@@ -654,7 +654,7 @@
     "pk": 51,
     "fields": {
       "product": 914,
-      "assignment": 745,
+      "assignment": 744,
       "image": "products/914/27/20260201_222744_1597TRWRW.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.761883+00:00",
@@ -667,7 +667,7 @@
     "pk": 52,
     "fields": {
       "product": 911,
-      "assignment": 740,
+      "assignment": 737,
       "image": "products/911/40/20260201_222744_JUL-5000K-SMLED.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.747846+00:00",
@@ -680,7 +680,7 @@
     "pk": 53,
     "fields": {
       "product": 911,
-      "assignment": 739,
+      "assignment": 736,
       "image": "products/911/24/20260201_222744_JUL-5000K-SMLED.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.734961+00:00",
@@ -706,7 +706,7 @@
     "pk": 55,
     "fields": {
       "product": 909,
-      "assignment": 735,
+      "assignment": 733,
       "image": "products/909/17/20260201_222744_14540S-15.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.646293+00:00",
@@ -719,7 +719,7 @@
     "pk": 56,
     "fields": {
       "product": 908,
-      "assignment": 734,
+      "assignment": 732,
       "image": "products/908/17/20260201_222744_82200EN-12.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.610142+00:00",
@@ -732,7 +732,7 @@
     "pk": 57,
     "fields": {
       "product": 907,
-      "assignment": 733,
+      "assignment": 731,
       "image": "products/907/17/20260201_222744_88200-12.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.578626+00:00",
@@ -745,7 +745,7 @@
     "pk": 58,
     "fields": {
       "product": 906,
-      "assignment": 732,
+      "assignment": 730,
       "image": "products/906/17/20260201_222744_4421603-112.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.512517+00:00",
@@ -758,7 +758,7 @@
     "pk": 59,
     "fields": {
       "product": 902,
-      "assignment": 725,
+      "assignment": 722,
       "image": "products/902/49/20260201_222744_RF9601DW.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.472070+00:00",
@@ -771,7 +771,7 @@
     "pk": 60,
     "fields": {
       "product": 902,
-      "assignment": 724,
+      "assignment": 723,
       "image": "products/902/12/20260201_222744_RF9601DW.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.436348+00:00",
@@ -784,7 +784,7 @@
     "pk": 61,
     "fields": {
       "product": 900,
-      "assignment": 719,
+      "assignment": 716,
       "image": "products/900/41/20260201_222744_4S-DRS.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.385142+00:00",
@@ -797,7 +797,7 @@
     "pk": 62,
     "fields": {
       "product": 900,
-      "assignment": 718,
+      "assignment": 717,
       "image": "products/900/12/20260201_222744_4S-DRS.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.353067+00:00",
@@ -810,7 +810,7 @@
     "pk": 63,
     "fields": {
       "product": 886,
-      "assignment": 696,
+      "assignment": 691,
       "image": "products/886/61/20260201_222744_FA101.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.312483+00:00",
@@ -823,7 +823,7 @@
     "pk": 64,
     "fields": {
       "product": 886,
-      "assignment": 695,
+      "assignment": 694,
       "image": "products/886/37/20260201_222744_FA101.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.294738+00:00",
@@ -836,7 +836,7 @@
     "pk": 65,
     "fields": {
       "product": 886,
-      "assignment": 694,
+      "assignment": 692,
       "image": "products/886/9/20260201_222744_FA101.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.275634+00:00",
@@ -862,7 +862,7 @@
     "pk": 67,
     "fields": {
       "product": 883,
-      "assignment": 692,
+      "assignment": 690,
       "image": "products/883/60/20260201_222744_WNUT-Y.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.196187+00:00",
@@ -875,7 +875,7 @@
     "pk": 68,
     "fields": {
       "product": 882,
-      "assignment": 691,
+      "assignment": 689,
       "image": "products/882/60/20260201_222744_WLUBE.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.146874+00:00",
@@ -888,7 +888,7 @@
     "pk": 69,
     "fields": {
       "product": 877,
-      "assignment": 690,
+      "assignment": 688,
       "image": "products/877/60/20260201_222744_HARDHAT.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:44.075143+00:00",
@@ -901,7 +901,7 @@
     "pk": 70,
     "fields": {
       "product": 876,
-      "assignment": 689,
+      "assignment": 687,
       "image": "products/876/60/20260201_222743_ET-WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:43.726405+00:00",
@@ -914,7 +914,7 @@
     "pk": 71,
     "fields": {
       "product": 875,
-      "assignment": 688,
+      "assignment": 686,
       "image": "products/875/55/20260201_222743_TREMCO-960712323.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:43.622430+00:00",
@@ -927,7 +927,7 @@
     "pk": 72,
     "fields": {
       "product": 868,
-      "assignment": 686,
+      "assignment": 684,
       "image": "products/868/60/20260201_222743_TRENCHSHOVEL.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:43.508505+00:00",
@@ -940,7 +940,7 @@
     "pk": 73,
     "fields": {
       "product": 867,
-      "assignment": 685,
+      "assignment": 683,
       "image": "products/867/53/20260201_222743_RF400.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:43.223142+00:00",
@@ -953,7 +953,7 @@
     "pk": 74,
     "fields": {
       "product": 866,
-      "assignment": 684,
+      "assignment": 682,
       "image": "products/866/53/20260201_222742_RF406BR.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:42.980533+00:00",
@@ -966,7 +966,7 @@
     "pk": 75,
     "fields": {
       "product": 865,
-      "assignment": 683,
+      "assignment": 681,
       "image": "products/865/53/20260201_222742_RF406ALU.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:42.753155+00:00",
@@ -979,7 +979,7 @@
     "pk": 76,
     "fields": {
       "product": 864,
-      "assignment": 682,
+      "assignment": 680,
       "image": "products/864/53/20260201_222742_RR205WWR.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:42.606935+00:00",
@@ -992,7 +992,7 @@
     "pk": 77,
     "fields": {
       "product": 850,
-      "assignment": 675,
+      "assignment": 673,
       "image": "products/850/60/20260201_222742_TAP-025-125.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:42.515374+00:00",
@@ -1005,7 +1005,7 @@
     "pk": 78,
     "fields": {
       "product": 848,
-      "assignment": 673,
+      "assignment": 671,
       "image": "products/848/51/20260201_222742_CMS2180WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:42.480533+00:00",
@@ -1018,7 +1018,7 @@
     "pk": 79,
     "fields": {
       "product": 837,
-      "assignment": 669,
+      "assignment": 667,
       "image": "products/837/60/20260201_222742_STUD.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:42.434595+00:00",
@@ -1031,7 +1031,7 @@
     "pk": 80,
     "fields": {
       "product": 834,
-      "assignment": 667,
+      "assignment": 665,
       "image": "products/834/60/20260201_222742_P3410-30.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:42.362933+00:00",
@@ -1044,7 +1044,7 @@
     "pk": 81,
     "fields": {
       "product": 826,
-      "assignment": 665,
+      "assignment": 663,
       "image": "products/826/49/20260201_222742_SQR16100WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:42.307881+00:00",
@@ -1057,7 +1057,7 @@
     "pk": 82,
     "fields": {
       "product": 823,
-      "assignment": 664,
+      "assignment": 662,
       "image": "products/823/49/20260201_222742_SQWS-83-211-XX.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:42.260623+00:00",
@@ -1070,7 +1070,7 @@
     "pk": 83,
     "fields": {
       "product": 819,
-      "assignment": 663,
+      "assignment": 661,
       "image": "products/819/49/20260201_222742_CMELK4.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:42.206521+00:00",
@@ -1083,7 +1083,7 @@
     "pk": 84,
     "fields": {
       "product": 817,
-      "assignment": 661,
+      "assignment": 659,
       "image": "products/817/49/20260201_222742_SQWS-42-2011-WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:42.164521+00:00",
@@ -1096,7 +1096,7 @@
     "pk": 85,
     "fields": {
       "product": 815,
-      "assignment": 660,
+      "assignment": 658,
       "image": "products/815/49/20260201_222742_SQWS461011WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:42.092503+00:00",
@@ -1109,7 +1109,7 @@
     "pk": 86,
     "fields": {
       "product": 810,
-      "assignment": 659,
+      "assignment": 657,
       "image": "products/810/49/20260201_222742_QO816L100RB.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:42.011053+00:00",
@@ -1122,7 +1122,7 @@
     "pk": 87,
     "fields": {
       "product": 796,
-      "assignment": 657,
+      "assignment": 655,
       "image": "products/796/49/20260201_222741_QO142L225PG.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.964691+00:00",
@@ -1135,7 +1135,7 @@
     "pk": 88,
     "fields": {
       "product": 781,
-      "assignment": 651,
+      "assignment": 649,
       "image": "products/781/60/20260201_222741_K1540L.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.919654+00:00",
@@ -1148,7 +1148,7 @@
     "pk": 89,
     "fields": {
       "product": 769,
-      "assignment": 644,
+      "assignment": 642,
       "image": "products/769/49/20260201_222741_Q280.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.723641+00:00",
@@ -1161,7 +1161,7 @@
     "pk": 90,
     "fields": {
       "product": 769,
-      "assignment": 643,
+      "assignment": 639,
       "image": "products/769/48/20260201_222741_Q280.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.641898+00:00",
@@ -1174,7 +1174,7 @@
     "pk": 91,
     "fields": {
       "product": 769,
-      "assignment": 642,
+      "assignment": 641,
       "image": "products/769/28/20260201_222741_Q280.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.623662+00:00",
@@ -1187,7 +1187,7 @@
     "pk": 92,
     "fields": {
       "product": 769,
-      "assignment": 641,
+      "assignment": 640,
       "image": "products/769/1/20260201_222741_Q280.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.608378+00:00",
@@ -1200,7 +1200,7 @@
     "pk": 93,
     "fields": {
       "product": 768,
-      "assignment": 640,
+      "assignment": 638,
       "image": "products/768/49/20260201_222741_Q270.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.590722+00:00",
@@ -1213,7 +1213,7 @@
     "pk": 94,
     "fields": {
       "product": 768,
-      "assignment": 639,
+      "assignment": 635,
       "image": "products/768/48/20260201_222741_Q270.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.571682+00:00",
@@ -1226,7 +1226,7 @@
     "pk": 95,
     "fields": {
       "product": 768,
-      "assignment": 638,
+      "assignment": 637,
       "image": "products/768/28/20260201_222741_Q270.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.558245+00:00",
@@ -1239,7 +1239,7 @@
     "pk": 96,
     "fields": {
       "product": 768,
-      "assignment": 637,
+      "assignment": 636,
       "image": "products/768/1/20260201_222741_Q270.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.504967+00:00",
@@ -1252,7 +1252,7 @@
     "pk": 97,
     "fields": {
       "product": 748,
-      "assignment": 632,
+      "assignment": 630,
       "image": "products/748/49/20260201_222741_Q215.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.456730+00:00",
@@ -1265,7 +1265,7 @@
     "pk": 98,
     "fields": {
       "product": 748,
-      "assignment": 631,
+      "assignment": 627,
       "image": "products/748/48/20260201_222741_Q215.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.443234+00:00",
@@ -1278,7 +1278,7 @@
     "pk": 99,
     "fields": {
       "product": 748,
-      "assignment": 630,
+      "assignment": 629,
       "image": "products/748/28/20260201_222741_Q215.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.428833+00:00",
@@ -1291,7 +1291,7 @@
     "pk": 100,
     "fields": {
       "product": 748,
-      "assignment": 629,
+      "assignment": 628,
       "image": "products/748/1/20260201_222741_Q215.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.368582+00:00",
@@ -1304,7 +1304,7 @@
     "pk": 101,
     "fields": {
       "product": 746,
-      "assignment": 628,
+      "assignment": 626,
       "image": "products/746/48/20260201_222741_QN2200.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.240742+00:00",
@@ -1317,7 +1317,7 @@
     "pk": 102,
     "fields": {
       "product": 719,
-      "assignment": 624,
+      "assignment": 622,
       "image": "products/719/60/20260201_222741_SER_4-4-4-6-CU.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.203414+00:00",
@@ -1330,7 +1330,7 @@
     "pk": 103,
     "fields": {
       "product": 718,
-      "assignment": 623,
+      "assignment": 621,
       "image": "products/718/60/20260201_222741_SER-2-2-2-4-AL.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.182453+00:00",
@@ -1343,7 +1343,7 @@
     "pk": 104,
     "fields": {
       "product": 714,
-      "assignment": 619,
+      "assignment": 617,
       "image": "products/714/60/20260201_222741_SCP-INVISO.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.164362+00:00",
@@ -1356,7 +1356,7 @@
     "pk": 105,
     "fields": {
       "product": 712,
-      "assignment": 618,
+      "assignment": 616,
       "image": "products/712/47/20260201_222741_8644.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.148371+00:00",
@@ -1369,7 +1369,7 @@
     "pk": 106,
     "fields": {
       "product": 710,
-      "assignment": 617,
+      "assignment": 615,
       "image": "products/710/46/20260201_222741_A3684.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.132671+00:00",
@@ -1382,7 +1382,7 @@
     "pk": 107,
     "fields": {
       "product": 702,
-      "assignment": 616,
+      "assignment": 614,
       "image": "products/702/60/20260201_222741_BB-RND1G-5H-050.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.104282+00:00",
@@ -1395,7 +1395,7 @@
     "pk": 108,
     "fields": {
       "product": 701,
-      "assignment": 615,
+      "assignment": 613,
       "image": "products/701/44/20260201_222741_8VR1P6-0EN0.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.046059+00:00",
@@ -1408,7 +1408,7 @@
     "pk": 109,
     "fields": {
       "product": 700,
-      "assignment": 614,
+      "assignment": 612,
       "image": "products/700/60/20260201_222741_RG6-TC.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:41.006632+00:00",
@@ -1421,7 +1421,7 @@
     "pk": 110,
     "fields": {
       "product": 699,
-      "assignment": 613,
+      "assignment": 611,
       "image": "products/699/60/20260201_222740_RG6.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.976817+00:00",
@@ -1434,7 +1434,7 @@
     "pk": 111,
     "fields": {
       "product": 697,
-      "assignment": 611,
+      "assignment": 609,
       "image": "products/697/60/20260201_222740_WNUT-R.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.922044+00:00",
@@ -1447,7 +1447,7 @@
     "pk": 112,
     "fields": {
       "product": 696,
-      "assignment": 610,
+      "assignment": 608,
       "image": "products/696/60/20260201_222740_TAPE-STUCCO.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.863397+00:00",
@@ -1460,7 +1460,7 @@
     "pk": 113,
     "fields": {
       "product": 695,
-      "assignment": 609,
+      "assignment": 607,
       "image": "products/695/60/20260201_222740_ET-RD.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.798600+00:00",
@@ -1473,7 +1473,7 @@
     "pk": 114,
     "fields": {
       "product": 690,
-      "assignment": 608,
+      "assignment": 606,
       "image": "products/690/41/20260201_222740_2611.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.731895+00:00",
@@ -1486,7 +1486,7 @@
     "pk": 115,
     "fields": {
       "product": 680,
-      "assignment": 603,
+      "assignment": 601,
       "image": "products/680/60/20260201_222740_QO2175SB.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.676561+00:00",
@@ -1499,7 +1499,7 @@
     "pk": 116,
     "fields": {
       "product": 679,
-      "assignment": 602,
+      "assignment": 600,
       "image": "products/679/60/20260201_222740_QOCGK2C.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.628707+00:00",
@@ -1512,7 +1512,7 @@
     "pk": 117,
     "fields": {
       "product": 676,
-      "assignment": 599,
+      "assignment": 597,
       "image": "products/676/49/20260201_222740_QO290.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.588923+00:00",
@@ -1525,7 +1525,7 @@
     "pk": 118,
     "fields": {
       "product": 676,
-      "assignment": 598,
+      "assignment": 594,
       "image": "products/676/48/20260201_222740_QO290.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.572662+00:00",
@@ -1538,7 +1538,7 @@
     "pk": 119,
     "fields": {
       "product": 676,
-      "assignment": 597,
+      "assignment": 596,
       "image": "products/676/28/20260201_222740_QO290.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.555902+00:00",
@@ -1551,7 +1551,7 @@
     "pk": 120,
     "fields": {
       "product": 676,
-      "assignment": 596,
+      "assignment": 595,
       "image": "products/676/1/20260201_222740_QO290.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.528976+00:00",
@@ -1564,7 +1564,7 @@
     "pk": 121,
     "fields": {
       "product": 662,
-      "assignment": 591,
+      "assignment": 589,
       "image": "products/662/49/20260201_222740_QDL22200.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.461464+00:00",
@@ -1577,7 +1577,7 @@
     "pk": 122,
     "fields": {
       "product": 660,
-      "assignment": 589,
+      "assignment": 587,
       "image": "products/660/60/20260201_222740_QO1PL.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.409093+00:00",
@@ -1590,7 +1590,7 @@
     "pk": 123,
     "fields": {
       "product": 658,
-      "assignment": 588,
+      "assignment": 586,
       "image": "products/658/49/20260201_222740_QO120PCAFI.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.340319+00:00",
@@ -1603,7 +1603,7 @@
     "pk": 124,
     "fields": {
       "product": 658,
-      "assignment": 587,
+      "assignment": 583,
       "image": "products/658/48/20260201_222740_QO120PCAFI.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.323412+00:00",
@@ -1616,7 +1616,7 @@
     "pk": 125,
     "fields": {
       "product": 658,
-      "assignment": 586,
+      "assignment": 585,
       "image": "products/658/28/20260201_222740_QO120PCAFI.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.311291+00:00",
@@ -1629,7 +1629,7 @@
     "pk": 126,
     "fields": {
       "product": 658,
-      "assignment": 585,
+      "assignment": 584,
       "image": "products/658/1/20260201_222740_QO120PCAFI.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.257757+00:00",
@@ -1642,7 +1642,7 @@
     "pk": 127,
     "fields": {
       "product": 653,
-      "assignment": 584,
+      "assignment": 582,
       "image": "products/653/49/20260201_222740_QO2100.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.193210+00:00",
@@ -1655,7 +1655,7 @@
     "pk": 128,
     "fields": {
       "product": 653,
-      "assignment": 583,
+      "assignment": 579,
       "image": "products/653/48/20260201_222740_QO2100.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.092181+00:00",
@@ -1668,7 +1668,7 @@
     "pk": 129,
     "fields": {
       "product": 653,
-      "assignment": 582,
+      "assignment": 581,
       "image": "products/653/28/20260201_222740_QO2100.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:40.036483+00:00",
@@ -1681,7 +1681,7 @@
     "pk": 130,
     "fields": {
       "product": 653,
-      "assignment": 581,
+      "assignment": 580,
       "image": "products/653/1/20260201_222739_QO2100.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.972956+00:00",
@@ -1694,7 +1694,7 @@
     "pk": 131,
     "fields": {
       "product": 652,
-      "assignment": 580,
+      "assignment": 578,
       "image": "products/652/60/20260201_222739_QOADV1PAF.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.873285+00:00",
@@ -1707,7 +1707,7 @@
     "pk": 132,
     "fields": {
       "product": 650,
-      "assignment": 578,
+      "assignment": 576,
       "image": "products/650/60/20260201_222739_PVC-GLUE.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.811804+00:00",
@@ -1720,7 +1720,7 @@
     "pk": 133,
     "fields": {
       "product": 649,
-      "assignment": 577,
+      "assignment": 575,
       "image": "products/649/60/20260201_222739_BROOM.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.578089+00:00",
@@ -1733,7 +1733,7 @@
     "pk": 134,
     "fields": {
       "product": 631,
-      "assignment": 572,
+      "assignment": 570,
       "image": "products/631/38/20260201_222739_PJ22BGWHL01.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.536650+00:00",
@@ -1746,7 +1746,7 @@
     "pk": 135,
     "fields": {
       "product": 630,
-      "assignment": 571,
+      "assignment": 569,
       "image": "products/630/38/20260201_222739_PD5SDVWH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.510269+00:00",
@@ -1759,7 +1759,7 @@
     "pk": 136,
     "fields": {
       "product": 622,
-      "assignment": 569,
+      "assignment": 567,
       "image": "products/622/37/20260201_222739_S1-22-S50.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.473050+00:00",
@@ -1772,7 +1772,7 @@
     "pk": 137,
     "fields": {
       "product": 617,
-      "assignment": 566,
+      "assignment": 564,
       "image": "products/617/37/20260201_222739_OS-05N.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.438050+00:00",
@@ -1785,7 +1785,7 @@
     "pk": 138,
     "fields": {
       "product": 617,
-      "assignment": 565,
+      "assignment": 563,
       "image": "products/617/9/20260201_222739_OS-05N.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.408393+00:00",
@@ -1798,7 +1798,7 @@
     "pk": 139,
     "fields": {
       "product": 616,
-      "assignment": 564,
+      "assignment": 562,
       "image": "products/616/8/20260201_222739_OS-06N.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.355144+00:00",
@@ -1811,7 +1811,7 @@
     "pk": 140,
     "fields": {
       "product": 615,
-      "assignment": 563,
+      "assignment": 561,
       "image": "products/615/8/20260201_222739_OS-04DN.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.296590+00:00",
@@ -1824,7 +1824,7 @@
     "pk": 141,
     "fields": {
       "product": 614,
-      "assignment": 562,
+      "assignment": 560,
       "image": "products/614/8/20260201_222739_OS-03DN.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.231050+00:00",
@@ -1837,7 +1837,7 @@
     "pk": 142,
     "fields": {
       "product": 613,
-      "assignment": 561,
+      "assignment": 559,
       "image": "products/613/8/20260201_222739_OS-02R.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.169735+00:00",
@@ -1850,7 +1850,7 @@
     "pk": 143,
     "fields": {
       "product": 612,
-      "assignment": 560,
+      "assignment": 558,
       "image": "products/612/8/20260201_222739_OS-B01R.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.120094+00:00",
@@ -1863,7 +1863,7 @@
     "pk": 144,
     "fields": {
       "product": 611,
-      "assignment": 559,
+      "assignment": 557,
       "image": "products/611/8/20260201_222739_BE1X.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.080432+00:00",
@@ -1876,7 +1876,7 @@
     "pk": 145,
     "fields": {
       "product": 609,
-      "assignment": 557,
+      "assignment": 555,
       "image": "products/609/60/20260201_222739_OL8701ORB.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.064418+00:00",
@@ -1889,7 +1889,7 @@
     "pk": 146,
     "fields": {
       "product": 607,
-      "assignment": 556,
+      "assignment": 554,
       "image": "products/607/60/20260201_222739_NOOX.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:39.029996+00:00",
@@ -1902,7 +1902,7 @@
     "pk": 147,
     "fields": {
       "product": 603,
-      "assignment": 553,
+      "assignment": 551,
       "image": "products/603/34/20260201_222738_S8324.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.990003+00:00",
@@ -1915,7 +1915,7 @@
     "pk": 148,
     "fields": {
       "product": 601,
-      "assignment": 551,
+      "assignment": 549,
       "image": "products/601/60/20260201_222738_MFB-050D.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.961402+00:00",
@@ -1928,7 +1928,7 @@
     "pk": 149,
     "fields": {
       "product": 599,
-      "assignment": 549,
+      "assignment": 547,
       "image": "products/599/60/20260201_222738_ANCHORS.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.921958+00:00",
@@ -1941,7 +1941,7 @@
     "pk": 150,
     "fields": {
       "product": 598,
-      "assignment": 548,
+      "assignment": 546,
       "image": "products/598/60/20260201_222738_DISCO-60ANF.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.905454+00:00",
@@ -1954,7 +1954,7 @@
     "pk": 151,
     "fields": {
       "product": 594,
-      "assignment": 547,
+      "assignment": 545,
       "image": "products/594/32/20260201_222738_MAKHR4002.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.871363+00:00",
@@ -1967,7 +1967,7 @@
     "pk": 152,
     "fields": {
       "product": 593,
-      "assignment": 546,
+      "assignment": 544,
       "image": "products/593/31/20260201_222738_DVCL153PWH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.805832+00:00",
@@ -1980,7 +1980,7 @@
     "pk": 153,
     "fields": {
       "product": 592,
-      "assignment": 545,
+      "assignment": 543,
       "image": "products/592/31/20260201_222738_PICO-WBX-ADAPT.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.710041+00:00",
@@ -1993,7 +1993,7 @@
     "pk": 154,
     "fields": {
       "product": 591,
-      "assignment": 544,
+      "assignment": 542,
       "image": "products/591/31/20260201_222738_PPKG1WWH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.678124+00:00",
@@ -2006,7 +2006,7 @@
     "pk": 155,
     "fields": {
       "product": 587,
-      "assignment": 541,
+      "assignment": 539,
       "image": "products/587/60/20260201_222738_10179.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.644085+00:00",
@@ -2019,7 +2019,7 @@
     "pk": 156,
     "fields": {
       "product": 586,
-      "assignment": 540,
+      "assignment": 538,
       "image": "products/586/60/20260201_222738_10174WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.478957+00:00",
@@ -2032,7 +2032,7 @@
     "pk": 157,
     "fields": {
       "product": 580,
-      "assignment": 532,
+      "assignment": 530,
       "image": "products/580/28/20260201_222738_DHS05-1LW.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.428246+00:00",
@@ -2045,7 +2045,7 @@
     "pk": 158,
     "fields": {
       "product": 535,
-      "assignment": 441,
+      "assignment": 439,
       "image": "products/535/27/20260201_222738_R26USBAC6W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.376745+00:00",
@@ -2058,7 +2058,7 @@
     "pk": 159,
     "fields": {
       "product": 534,
-      "assignment": 440,
+      "assignment": 438,
       "image": "products/534/27/20260201_222738_1597TRW.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.324668+00:00",
@@ -2071,7 +2071,7 @@
     "pk": 160,
     "fields": {
       "product": 533,
-      "assignment": 439,
+      "assignment": 437,
       "image": "products/533/27/20260201_222738_TPTE1-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.135215+00:00",
@@ -2084,7 +2084,7 @@
     "pk": 161,
     "fields": {
       "product": 531,
-      "assignment": 438,
+      "assignment": 436,
       "image": "products/531/27/20260201_222738_RCD11W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.102334+00:00",
@@ -2097,7 +2097,7 @@
     "pk": 162,
     "fields": {
       "product": 530,
-      "assignment": 437,
+      "assignment": 435,
       "image": "products/530/27/20260201_222738_TPJ7-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.066217+00:00",
@@ -2110,7 +2110,7 @@
     "pk": 163,
     "fields": {
       "product": 529,
-      "assignment": 436,
+      "assignment": 434,
       "image": "products/529/27/20260201_222738_S3713-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:38.035421+00:00",
@@ -2123,7 +2123,7 @@
     "pk": 164,
     "fields": {
       "product": 528,
-      "assignment": 435,
+      "assignment": 433,
       "image": "products/528/27/20260201_222737_RHCL453PW.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.984802+00:00",
@@ -2136,7 +2136,7 @@
     "pk": 165,
     "fields": {
       "product": 527,
-      "assignment": 434,
+      "assignment": 432,
       "image": "products/527/27/20260201_222737_WH2010A2.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.923362+00:00",
@@ -2149,7 +2149,7 @@
     "pk": 166,
     "fields": {
       "product": 526,
-      "assignment": 433,
+      "assignment": 431,
       "image": "products/526/27/20260201_222737_WP3450-WH-50.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.879563+00:00",
@@ -2162,7 +2162,7 @@
     "pk": 167,
     "fields": {
       "product": 525,
-      "assignment": 432,
+      "assignment": 430,
       "image": "products/525/27/20260201_222737_WP3479-WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.856950+00:00",
@@ -2175,7 +2175,7 @@
     "pk": 168,
     "fields": {
       "product": 524,
-      "assignment": 431,
+      "assignment": 429,
       "image": "products/524/27/20260201_222737_ENP42805-NA.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.810812+00:00",
@@ -2188,7 +2188,7 @@
     "pk": 169,
     "fields": {
       "product": 523,
-      "assignment": 430,
+      "assignment": 428,
       "image": "products/523/27/20260201_222737_WP3402-WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.768522+00:00",
@@ -2201,7 +2201,7 @@
     "pk": 170,
     "fields": {
       "product": 522,
-      "assignment": 429,
+      "assignment": 427,
       "image": "products/522/27/20260201_222737_WP3401-WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.722760+00:00",
@@ -2214,7 +2214,7 @@
     "pk": 171,
     "fields": {
       "product": 521,
-      "assignment": 428,
+      "assignment": 426,
       "image": "products/521/27/20260201_222737_276-WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.684690+00:00",
@@ -2227,7 +2227,7 @@
     "pk": 172,
     "fields": {
       "product": 520,
-      "assignment": 427,
+      "assignment": 425,
       "image": "products/520/27/20260201_222737_TPJ8-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.651522+00:00",
@@ -2240,7 +2240,7 @@
     "pk": 173,
     "fields": {
       "product": 519,
-      "assignment": 426,
+      "assignment": 424,
       "image": "products/519/27/20260201_222737_3232-TRWRW.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.588480+00:00",
@@ -2253,7 +2253,7 @@
     "pk": 174,
     "fields": {
       "product": 518,
-      "assignment": 425,
+      "assignment": 423,
       "image": "products/518/27/20260201_222737_3232-TREXW.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.548928+00:00",
@@ -2266,7 +2266,7 @@
     "pk": 175,
     "fields": {
       "product": 517,
-      "assignment": 424,
+      "assignment": 422,
       "image": "products/517/27/20260201_222737_S3862-C.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.519417+00:00",
@@ -2279,7 +2279,7 @@
     "pk": 176,
     "fields": {
       "product": 516,
-      "assignment": 423,
+      "assignment": 421,
       "image": "products/516/27/20260201_222737_885TRW.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.480748+00:00",
@@ -2292,7 +2292,7 @@
     "pk": 177,
     "fields": {
       "product": 515,
-      "assignment": 422,
+      "assignment": 420,
       "image": "products/515/27/20260201_222737_TPTELTV-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.439488+00:00",
@@ -2305,7 +2305,7 @@
     "pk": 178,
     "fields": {
       "product": 514,
-      "assignment": 421,
+      "assignment": 419,
       "image": "products/514/27/20260201_222737_TPCATV-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.366732+00:00",
@@ -2318,7 +2318,7 @@
     "pk": 179,
     "fields": {
       "product": 512,
-      "assignment": 419,
+      "assignment": 417,
       "image": "products/512/27/20260201_222737_885TRBK.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.334141+00:00",
@@ -2331,7 +2331,7 @@
     "pk": 180,
     "fields": {
       "product": 511,
-      "assignment": 418,
+      "assignment": 416,
       "image": "products/511/27/20260201_222737_TP26-BK.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.281332+00:00",
@@ -2344,7 +2344,7 @@
     "pk": 181,
     "fields": {
       "product": 509,
-      "assignment": 416,
+      "assignment": 414,
       "image": "products/509/27/20260201_222737_TP266-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.221849+00:00",
@@ -2357,7 +2357,7 @@
     "pk": 182,
     "fields": {
       "product": 508,
-      "assignment": 415,
+      "assignment": 413,
       "image": "products/508/27/20260201_222737_3854.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:37.110824+00:00",
@@ -2370,7 +2370,7 @@
     "pk": 183,
     "fields": {
       "product": 507,
-      "assignment": 414,
+      "assignment": 412,
       "image": "products/507/27/20260201_222736_3894.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.946530+00:00",
@@ -2383,7 +2383,7 @@
     "pk": 184,
     "fields": {
       "product": 506,
-      "assignment": 413,
+      "assignment": 411,
       "image": "products/506/27/20260201_222736_WH20GB506TR.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.883151+00:00",
@@ -2396,7 +2396,7 @@
     "pk": 185,
     "fields": {
       "product": 504,
-      "assignment": 411,
+      "assignment": 409,
       "image": "products/504/27/20260201_222736_TP265-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.841107+00:00",
@@ -2409,7 +2409,7 @@
     "pk": 186,
     "fields": {
       "product": 503,
-      "assignment": 410,
+      "assignment": 408,
       "image": "products/503/27/20260201_222736_TM874-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.825686+00:00",
@@ -2422,7 +2422,7 @@
     "pk": 187,
     "fields": {
       "product": 501,
-      "assignment": 408,
+      "assignment": 406,
       "image": "products/501/27/20260201_222736_TPJ264-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.805186+00:00",
@@ -2435,7 +2435,7 @@
     "pk": 188,
     "fields": {
       "product": 500,
-      "assignment": 407,
+      "assignment": 405,
       "image": "products/500/27/20260201_222736_3864.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.790164+00:00",
@@ -2448,7 +2448,7 @@
     "pk": 189,
     "fields": {
       "product": 499,
-      "assignment": 406,
+      "assignment": 404,
       "image": "products/499/27/20260201_222736_TM873-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.774168+00:00",
@@ -2461,7 +2461,7 @@
     "pk": 190,
     "fields": {
       "product": 497,
-      "assignment": 404,
+      "assignment": 402,
       "image": "products/497/27/20260201_222736_TPJ263-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.760394+00:00",
@@ -2474,7 +2474,7 @@
     "pk": 191,
     "fields": {
       "product": 496,
-      "assignment": 403,
+      "assignment": 401,
       "image": "products/496/27/20260201_222736_TR5351-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.743582+00:00",
@@ -2487,7 +2487,7 @@
     "pk": 192,
     "fields": {
       "product": 495,
-      "assignment": 401,
+      "assignment": 400,
       "image": "products/495/27/20260201_222736_CR20-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.724892+00:00",
@@ -2500,7 +2500,7 @@
     "pk": 193,
     "fields": {
       "product": 493,
-      "assignment": 399,
+      "assignment": 398,
       "image": "products/493/27/20260201_222736_TPJ262-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.696123+00:00",
@@ -2513,7 +2513,7 @@
     "pk": 194,
     "fields": {
       "product": 492,
-      "assignment": 398,
+      "assignment": 397,
       "image": "products/492/27/20260201_222736_TPJ82-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.656791+00:00",
@@ -2526,7 +2526,7 @@
     "pk": 195,
     "fields": {
       "product": 491,
-      "assignment": 397,
+      "assignment": 396,
       "image": "products/491/27/20260201_222736_TP23-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.624999+00:00",
@@ -2539,7 +2539,7 @@
     "pk": 196,
     "fields": {
       "product": 489,
-      "assignment": 395,
+      "assignment": 392,
       "image": "products/489/49/20260201_222736_TPJ26-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.605535+00:00",
@@ -2578,7 +2578,7 @@
     "pk": 199,
     "fields": {
       "product": 488,
-      "assignment": 392,
+      "assignment": 391,
       "image": "products/488/27/20260201_222736_TPJ13-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.535002+00:00",
@@ -2591,7 +2591,7 @@
     "pk": 200,
     "fields": {
       "product": 485,
-      "assignment": 391,
+      "assignment": 390,
       "image": "products/485/25/20260201_222736_KLEIN_56341.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.474358+00:00",
@@ -2604,7 +2604,7 @@
     "pk": 201,
     "fields": {
       "product": 476,
-      "assignment": 386,
+      "assignment": 385,
       "image": "products/476/24/20260201_222736_10573WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.409447+00:00",
@@ -2617,7 +2617,7 @@
     "pk": 202,
     "fields": {
       "product": 473,
-      "assignment": 385,
+      "assignment": 384,
       "image": "products/473/60/20260201_222736_JL-6500.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.368640+00:00",
@@ -2630,7 +2630,7 @@
     "pk": 203,
     "fields": {
       "product": 471,
-      "assignment": 384,
+      "assignment": 383,
       "image": "products/471/22/20260201_222736_K4321C.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.345792+00:00",
@@ -2643,7 +2643,7 @@
     "pk": 204,
     "fields": {
       "product": 470,
-      "assignment": 383,
+      "assignment": 382,
       "image": "products/470/22/20260201_222736_WP5220C.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.317707+00:00",
@@ -2656,7 +2656,7 @@
     "pk": 205,
     "fields": {
       "product": 466,
-      "assignment": 379,
+      "assignment": 378,
       "image": "products/466/60/20260201_222736_HB-COVER05KO.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.261071+00:00",
@@ -2669,7 +2669,7 @@
     "pk": 206,
     "fields": {
       "product": 464,
-      "assignment": 377,
+      "assignment": 376,
       "image": "products/464/19/20260201_222736_HALCO_82170.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.197541+00:00",
@@ -2682,7 +2682,7 @@
     "pk": 207,
     "fields": {
       "product": 463,
-      "assignment": 376,
+      "assignment": 375,
       "image": "products/463/60/20260201_222736_GB2-6AWG.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.145339+00:00",
@@ -2695,7 +2695,7 @@
     "pk": 208,
     "fields": {
       "product": 462,
-      "assignment": 375,
+      "assignment": 374,
       "image": "products/462/60/20260201_222736_GRAC-058.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.124681+00:00",
@@ -2708,7 +2708,7 @@
     "pk": 209,
     "fields": {
       "product": 461,
-      "assignment": 374,
+      "assignment": 373,
       "image": "products/461/60/20260201_222736_PAINT-G.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.089449+00:00",
@@ -2721,7 +2721,7 @@
     "pk": 210,
     "fields": {
       "product": 460,
-      "assignment": 373,
+      "assignment": 372,
       "image": "products/460/60/20260201_222736_ET-GRN.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:36.034678+00:00",
@@ -2734,7 +2734,7 @@
     "pk": 211,
     "fields": {
       "product": 459,
-      "assignment": 372,
+      "assignment": 371,
       "image": "products/459/18/20260201_222735_PL24V-30-W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.967261+00:00",
@@ -2747,7 +2747,7 @@
     "pk": 212,
     "fields": {
       "product": 447,
-      "assignment": 371,
+      "assignment": 370,
       "image": "products/447/17/20260201_222735_77064-962.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.920030+00:00",
@@ -2760,7 +2760,7 @@
     "pk": 213,
     "fields": {
       "product": 446,
-      "assignment": 370,
+      "assignment": 369,
       "image": "products/446/17/20260201_222735_4428904-962.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.886352+00:00",
@@ -2773,7 +2773,7 @@
     "pk": 214,
     "fields": {
       "product": 438,
-      "assignment": 369,
+      "assignment": 368,
       "image": "products/438/17/20260201_222735_7567EN3-32.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.799886+00:00",
@@ -2786,7 +2786,7 @@
     "pk": 215,
     "fields": {
       "product": 430,
-      "assignment": 368,
+      "assignment": 367,
       "image": "products/430/57/20260201_222735_GEN-TS-200A.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.778540+00:00",
@@ -2799,7 +2799,7 @@
     "pk": 216,
     "fields": {
       "product": 426,
-      "assignment": 364,
+      "assignment": 363,
       "image": "products/426/60/20260201_222735_FT-4X75.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.755004+00:00",
@@ -2812,7 +2812,7 @@
     "pk": 217,
     "fields": {
       "product": 424,
-      "assignment": 362,
+      "assignment": 361,
       "image": "products/424/60/20260201_222735_FOAM-FIRE.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.712965+00:00",
@@ -2825,7 +2825,7 @@
     "pk": 218,
     "fields": {
       "product": 423,
-      "assignment": 361,
+      "assignment": 360,
       "image": "products/423/66/20260201_222735_FOAM-STANDARD.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.654514+00:00",
@@ -2838,7 +2838,7 @@
     "pk": 219,
     "fields": {
       "product": 404,
-      "assignment": 360,
+      "assignment": 359,
       "image": "products/404/12/20260201_222735_TP269.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.604958+00:00",
@@ -2851,7 +2851,7 @@
     "pk": 220,
     "fields": {
       "product": 401,
-      "assignment": 358,
+      "assignment": 357,
       "image": "products/401/60/20260201_222735_TAPE-DUCT.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.565176+00:00",
@@ -2864,7 +2864,7 @@
     "pk": 221,
     "fields": {
       "product": 400,
-      "assignment": 357,
+      "assignment": 356,
       "image": "products/400/60/20260201_222735_DPIN.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.502070+00:00",
@@ -2877,7 +2877,7 @@
     "pk": 222,
     "fields": {
       "product": 399,
-      "assignment": 356,
+      "assignment": 355,
       "image": "products/399/60/20260201_222735_DBCK-WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.409413+00:00",
@@ -2890,7 +2890,7 @@
     "pk": 223,
     "fields": {
       "product": 396,
-      "assignment": 355,
+      "assignment": 354,
       "image": "products/396/10/20260201_222735_TB-316X3.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.349999+00:00",
@@ -2903,7 +2903,7 @@
     "pk": 224,
     "fields": {
       "product": 393,
-      "assignment": 352,
+      "assignment": 351,
       "image": "products/393/60/20260201_222735_63991.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.282522+00:00",
@@ -2916,7 +2916,7 @@
     "pk": 225,
     "fields": {
       "product": 392,
-      "assignment": 351,
+      "assignment": 350,
       "image": "products/392/60/20260201_222735_CL4-14AWG.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.188405+00:00",
@@ -2929,7 +2929,7 @@
     "pk": 226,
     "fields": {
       "product": 381,
-      "assignment": 349,
+      "assignment": 348,
       "image": "products/381/60/20260201_222735_CAT5E.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.156882+00:00",
@@ -2942,7 +2942,7 @@
     "pk": 227,
     "fields": {
       "product": 374,
-      "assignment": 346,
+      "assignment": 345,
       "image": "products/374/60/20260201_222735_BULB-CANDLE.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.114018+00:00",
@@ -2955,7 +2955,7 @@
     "pk": 228,
     "fields": {
       "product": 373,
-      "assignment": 345,
+      "assignment": 344,
       "image": "products/373/60/20260201_222735_CSTACKER.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.078335+00:00",
@@ -2968,7 +2968,7 @@
     "pk": 229,
     "fields": {
       "product": 369,
-      "assignment": 344,
+      "assignment": 343,
       "image": "products/369/60/20260201_222735_TAPE-BEDT.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:35.021208+00:00",
@@ -2981,7 +2981,7 @@
     "pk": 230,
     "fields": {
       "product": 368,
-      "assignment": 343,
+      "assignment": 342,
       "image": "products/368/60/20260201_222734_BGC-2STR.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.975353+00:00",
@@ -2994,7 +2994,7 @@
     "pk": 231,
     "fields": {
       "product": 367,
-      "assignment": 342,
+      "assignment": 341,
       "image": "products/367/60/20260201_222734_P5212-20.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.937787+00:00",
@@ -3007,7 +3007,7 @@
     "pk": 232,
     "fields": {
       "product": 363,
-      "assignment": 340,
+      "assignment": 339,
       "image": "products/363/60/20260201_222734_CRAYON.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.876383+00:00",
@@ -3020,7 +3020,7 @@
     "pk": 233,
     "fields": {
       "product": 362,
-      "assignment": 339,
+      "assignment": 338,
       "image": "products/362/60/20260201_222734_ET-BLK.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.818227+00:00",
@@ -3033,7 +3033,7 @@
     "pk": 234,
     "fields": {
       "product": 361,
-      "assignment": 338,
+      "assignment": 337,
       "image": "products/361/4/20260201_222734_AMESEA-502CLC24.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.765325+00:00",
@@ -3046,7 +3046,7 @@
     "pk": 235,
     "fields": {
       "product": 360,
-      "assignment": 337,
+      "assignment": 336,
       "image": "products/360/4/20260201_222734_AMESEA-55GRAYC24.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.711725+00:00",
@@ -3059,7 +3059,7 @@
     "pk": 236,
     "fields": {
       "product": 356,
-      "assignment": 333,
+      "assignment": 332,
       "image": "products/356/3/20260201_222734_CED130.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.661581+00:00",
@@ -3072,7 +3072,7 @@
     "pk": 237,
     "fields": {
       "product": 352,
-      "assignment": 331,
+      "assignment": 330,
       "image": "products/352/3/20260201_222734_BE1X.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.627385+00:00",
@@ -3085,7 +3085,7 @@
     "pk": 238,
     "fields": {
       "product": 350,
-      "assignment": 330,
+      "assignment": 329,
       "image": "products/350/2/20260201_222734_TLCONKIT.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.558645+00:00",
@@ -3098,7 +3098,7 @@
     "pk": 239,
     "fields": {
       "product": 349,
-      "assignment": 329,
+      "assignment": 328,
       "image": "products/349/2/20260201_222734_RL-LED-CONKIT-16AMP.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.494652+00:00",
@@ -3111,7 +3111,7 @@
     "pk": 240,
     "fields": {
       "product": 348,
-      "assignment": 328,
+      "assignment": 327,
       "image": "products/348/2/20260201_222734_ULRL-LED-WW-150.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.429639+00:00",
@@ -3124,7 +3124,7 @@
     "pk": 241,
     "fields": {
       "product": 347,
-      "assignment": 327,
+      "assignment": 326,
       "image": "products/347/2/20260201_222734_QD6-30WH.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.353272+00:00",
@@ -3137,7 +3137,7 @@
     "pk": 242,
     "fields": {
       "product": 346,
-      "assignment": 326,
+      "assignment": 325,
       "image": "products/346/56/20260201_222734_SPRL054836L40MV.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.295885+00:00",
@@ -3150,7 +3150,7 @@
     "pk": 243,
     "fields": {
       "product": 345,
-      "assignment": 325,
+      "assignment": 324,
       "image": "products/345/56/20260201_222734_SPRL052424L40WV.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.230637+00:00",
@@ -3163,7 +3163,7 @@
     "pk": 244,
     "fields": {
       "product": 333,
-      "assignment": 324,
+      "assignment": 323,
       "image": "products/333/60/20260201_222734_BULB-A19.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.170664+00:00",
@@ -3176,7 +3176,7 @@
     "pk": 245,
     "fields": {
       "product": 332,
-      "assignment": 323,
+      "assignment": 322,
       "image": "products/332/60/20260201_222734_8038-71.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.102975+00:00",
@@ -3189,7 +3189,7 @@
     "pk": 246,
     "fields": {
       "product": 327,
-      "assignment": 318,
+      "assignment": 317,
       "image": "products/327/60/20260201_222734_LAD-8.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:34.035367+00:00",
@@ -3202,7 +3202,7 @@
     "pk": 247,
     "fields": {
       "product": 326,
-      "assignment": 317,
+      "assignment": 316,
       "image": "products/326/60/20260201_222733_FPS-832X2.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:33.966198+00:00",
@@ -3215,7 +3215,7 @@
     "pk": 248,
     "fields": {
       "product": 325,
-      "assignment": 316,
+      "assignment": 315,
       "image": "products/325/60/20260201_222733_PMTS-8X056.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:33.899923+00:00",
@@ -3228,7 +3228,7 @@
     "pk": 249,
     "fields": {
       "product": 324,
-      "assignment": 315,
+      "assignment": 314,
       "image": "products/324/60/20260201_222733_PMTS-8X075.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:33.832437+00:00",
@@ -3241,7 +3241,7 @@
     "pk": 250,
     "fields": {
       "product": 323,
-      "assignment": 314,
+      "assignment": 313,
       "image": "products/323/60/20260201_222733_SMCT-7.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:33.760016+00:00",
@@ -3254,7 +3254,7 @@
     "pk": 251,
     "fields": {
       "product": 322,
-      "assignment": 313,
+      "assignment": 312,
       "image": "products/322/60/20260201_222733_BANJO-8.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:33.695378+00:00",
@@ -3267,7 +3267,7 @@
     "pk": 252,
     "fields": {
       "product": 321,
-      "assignment": 312,
+      "assignment": 311,
       "image": "products/321/60/20260201_222733_PVC-JB-664.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:33.628586+00:00",
@@ -3280,7 +3280,7 @@
     "pk": 253,
     "fields": {
       "product": 319,
-      "assignment": 310,
+      "assignment": 309,
       "image": "products/319/60/20260201_222733_LS-60.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:33.559684+00:00",
@@ -3293,7 +3293,7 @@
     "pk": 254,
     "fields": {
       "product": 314,
-      "assignment": 305,
+      "assignment": 304,
       "image": "products/314/60/20260201_222733_IC206RAT.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:33.487410+00:00",
@@ -3306,7 +3306,7 @@
     "pk": 255,
     "fields": {
       "product": 313,
-      "assignment": 304,
+      "assignment": 303,
       "image": "products/313/60/20260201_222733_SW_9736SW8809.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:33.416161+00:00",
@@ -3319,7 +3319,7 @@
     "pk": 256,
     "fields": {
       "product": 312,
-      "assignment": 303,
+      "assignment": 302,
       "image": "products/312/60/20260201_222733_PT-6FT.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:33.383294+00:00",
@@ -5399,7 +5399,7 @@
     "pk": 416,
     "fields": {
       "product": 33,
-      "assignment": 34,
+      "assignment": 33,
       "image": "products/33/57/20260201_222726_THHN-8-STR-BLK.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:26.487485+00:00",
@@ -5412,7 +5412,7 @@
     "pk": 417,
     "fields": {
       "product": 33,
-      "assignment": 33,
+      "assignment": 34,
       "image": "products/33/20/20260201_222726_THHN-8-STR-BLK.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T22:27:26.468135+00:00",
@@ -5659,7 +5659,7 @@
     "pk": 436,
     "fields": {
       "product": 358,
-      "assignment": 335,
+      "assignment": 334,
       "image": "products/358/3/20260201_214930_DBVM1W.jpg",
       "is_primary": true,
       "uploaded_at": "2026-02-01T21:49:30.187510+00:00",
@@ -5672,7 +5672,7 @@
     "pk": 437,
     "fields": {
       "product": 542,
-      "assignment": 453,
+      "assignment": 449,
       "image": "products/542/48/20260123_022937_QA120AFCN.jpg",
       "is_primary": true,
       "uploaded_at": "2026-01-23T02:24:13.185647+00:00",
@@ -5685,7 +5685,7 @@
     "pk": 438,
     "fields": {
       "product": 949,
-      "assignment": 797,
+      "assignment": 798,
       "image": "products/949/60/20260202_010315_AF-90-075.jpg",
       "is_primary": false,
       "uploaded_at": "2026-02-02T01:03:16.020929+00:00",
@@ -5698,7 +5698,7 @@
     "pk": 439,
     "fields": {
       "product": 495,
-      "assignment": 402,
+      "assignment": 804,
       "image": "products/495/49/20260202_010239_CR20-W.jpg",
       "is_primary": false,
       "uploaded_at": "2026-02-02T01:02:39.714167+00:00",
@@ -5711,7 +5711,7 @@
     "pk": 440,
     "fields": {
       "product": 542,
-      "assignment": 454,
+      "assignment": 452,
       "image": "products/542/49/20260124_115405_4S-S20RS.jpg",
       "is_primary": false,
       "uploaded_at": "2026-01-24T11:54:05.152308+00:00",
@@ -5724,7 +5724,7 @@
     "pk": 441,
     "fields": {
       "product": 542,
-      "assignment": 454,
+      "assignment": 452,
       "image": "products/542/49/20260124_115034_QO220.jpg",
       "is_primary": false,
       "uploaded_at": "2026-01-24T11:50:34.143337+00:00",
@@ -5737,7 +5737,7 @@
     "pk": 442,
     "fields": {
       "product": 542,
-      "assignment": 454,
+      "assignment": 452,
       "image": "products/542/49/20260124_115009_QO120PAFGF.jpg",
       "is_primary": false,
       "uploaded_at": "2026-01-24T11:50:10.001408+00:00",
@@ -5750,7 +5750,7 @@
     "pk": 443,
     "fields": {
       "product": 542,
-      "assignment": 453,
+      "assignment": 449,
       "image": "products/542/48/20260123_031809_4U30K08WHT.jpg",
       "is_primary": false,
       "uploaded_at": "2026-01-23T03:18:09.846878+00:00",
@@ -5763,7 +5763,7 @@
     "pk": 444,
     "fields": {
       "product": 542,
-      "assignment": 451,
+      "assignment": 450,
       "image": "products/542/1/20260123_023302_QO220GFI.jpg",
       "is_primary": false,
       "uploaded_at": "2026-01-23T02:33:02.210303+00:00",
