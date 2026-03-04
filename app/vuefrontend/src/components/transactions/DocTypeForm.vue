@@ -144,6 +144,21 @@
                   </label>
                 </div>
               </div>
+              <div class="col-12 col-md-6 col-lg-3">
+                <div class="form-check form-switch switch-row">
+                  <input
+                    id="creates_serialized_items"
+                    v-model="form.creates_serialized_items"
+                    class="form-check-input"
+                    type="checkbox"
+                    v-tt
+                    data-title="Document type that creates/registers serialized items; opens the asset tag assignment modal when the document has serialized items (e.g. GRN)"
+                    :disabled="isViewMode || submitting" />
+                  <label class="form-check-label" for="creates_serialized_items">
+                    Creates Serialized Items
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -340,6 +355,7 @@ const form = ref({
   is_purchase: false,
   is_sales: false,
   warehouse_required: true,
+  creates_serialized_items: false,
   is_operational: false,
   allow_negative_sales: false,
   stock_movement: 0,
@@ -379,6 +395,7 @@ const handleSubmit = async () => {
       is_purchase: form.value.is_purchase,
       is_sales: form.value.is_sales,
       warehouse_required: form.value.warehouse_required,
+      creates_serialized_items: form.value.creates_serialized_items,
       is_operational: form.value.is_operational,
       allow_negative_sales: form.value.allow_negative_sales,
       stock_movement: form.value.stock_movement,

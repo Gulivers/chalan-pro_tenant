@@ -263,6 +263,9 @@ class DocumentLineInlineSerializer(serializers.ModelSerializer):
 
 class DocumentSerializer(serializers.ModelSerializer):
     document_type_code = serializers.CharField(source="document_type.type_code", read_only=True)
+    document_type_creates_serialized_items = serializers.BooleanField(
+        source="document_type.creates_serialized_items", read_only=True
+    )
     builder_name = serializers.SerializerMethodField()
     work_account_display = serializers.SerializerMethodField()
     party = serializers.SerializerMethodField()
@@ -272,7 +275,7 @@ class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
         fields = [
-            "id", "document_type", "document_type_code",
+            "id", "document_type", "document_type_code", "document_type_creates_serialized_items",
             "date", "builder", "builder_name", "party",
             "work_account", "work_account_display",
             "created_by", "notes",

@@ -79,6 +79,12 @@ class DocumentType(models.Model):
     warehouse_required = models.BooleanField(default=True)  # ALMACE
     is_operational = models.BooleanField(default=False)   # Requiere Work Account
     allow_negative_sales = models.BooleanField(default=False)  # Permitir ventas sin stock
+    # Si serialized_items es True,  (ej. GRN), se abre (AssetTagAssignmentModal)
+    # cuando el documento tiene serialized_items y su tipo tiene este flag activo.
+    creates_serialized_items = models.BooleanField(
+        default=False,
+        help_text="Document type that creates/registers serialized items; opens asset tag assignment modal when document has serialized items.",
+    )
     stock_movement = models.SmallIntegerField(
         choices=[(1, "+1 Entrada"), (-1, "-1 Salida"), (0, "0 Neutro")],
         default=0
