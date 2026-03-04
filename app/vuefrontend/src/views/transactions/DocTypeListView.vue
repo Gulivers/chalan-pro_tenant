@@ -123,6 +123,20 @@
       hover
       responsive
       striped>
+      <!-- Stock Movement -->
+      <template #cell(stock_movement)="data">
+        <td class="text-center">
+          <span
+            :class="{
+              'badge bg-success': data.item.stock_movement === 1,
+              'badge bg-danger': data.item.stock_movement === -1,
+              'badge bg-secondary': data.item.stock_movement === 0 || data.item.stock_movement == null,
+            }">
+            {{ stockMovementLabel(data.item.stock_movement) }}
+          </span>
+        </td>
+      </template>
+
       <!-- Affects Physical -->
       <template #cell(affects_physical)="data">
         <td class="sorting_1 text-center">
@@ -303,6 +317,13 @@ const fields = [
     tdClass: "text-start",
   },
   {
+    key: "stock_movement",
+    label: "Stock Movement",
+    sortable: true,
+    thClass: "text-center",
+    tdClass: "text-center",
+  },
+  {
     key: "affects_physical",
     label: "INVFIS",
     thClass: "text-center",
@@ -354,6 +375,12 @@ const fields = [
   },
 ];
 
+function stockMovementLabel(value) {
+  if (value === 1) return "+1 Entry";
+  if (value === -1) return "-1 Exit";
+  return "0 Neutral";
+}
+
 const fetchDocTypes = async () => {
   try {
     const res = await axios.get("/api/document-types/");
@@ -369,7 +396,7 @@ onMounted(fetchDocTypes);
 const filteredItems = computed(() => {
   if (!search.value) return docTypes.value;
   return docTypes.value.filter((item) =>
-    `${item.type_code} ${item.description || ""} ${
+    `${item.type_code} ${item.description || ""} ${stockMovementLabel(item.stock_movement)} ${
       item.is_operational ? "operational" : "non-operational"
     } ${item.allow_negative_sales ? "negative sales" : "no negative sales"}`
       .toLowerCase()

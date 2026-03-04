@@ -281,6 +281,7 @@
           :lines="lines"
           @update:lines="lines = $event"
           :document-id="idParam"
+          :document-type-creates-serialized-items="currentDocumentTypeCreatesSerializedItems"
           :documentTypeId="form.document_type"
           :workAccountId="form.work_account"
           :unitsOptions="unitsOptions || []"
@@ -458,6 +459,11 @@ const isOperationalDocument = computed(() => {
 
 // Opciones de document types para acceder a is_operational
 const documentTypesOptions = ref([]);
+
+const currentDocumentTypeCreatesSerializedItems = computed(() => {
+  const dt = documentTypesOptions.value.find((d) => d.value === form.document_type);
+  return !!dt?.creates_serialized_items;
+});
 
 // Variables para favoritos
 const selectedFavoriteId = ref(null);
@@ -955,6 +961,7 @@ async function fetchStaticOptions() {
       label: `${dt.type_code} — ${dt.description}`,
       type_code: dt.type_code,
       is_operational: dt.is_operational,
+      creates_serialized_items: !!dt.creates_serialized_items,
     }));
   } catch (error) {
     console.error("Error loading document types:", error);
@@ -1384,7 +1391,8 @@ async function handleSubmit() {
     const documentId = data.id || idParam;
 
     const hasSerializedItems = data?.serialized_items?.length > 0;
-    if (hasSerializedItems) {
+    const docTypeCreatesSerialized = !!data?.document_type_creates_serialized_items;
+    if (hasSerializedItems && docTypeCreatesSerialized) {
       assetTagModalOpenedFromSave.value = true;
       documentIdForAssetTagModal.value = documentId;
       documentContextForAssetTagModal.value = {

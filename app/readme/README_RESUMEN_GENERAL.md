@@ -137,13 +137,13 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 
 ### 1.2 Descripción de Servicios
 
-| Servicio | Contenedor | Puerto | Descripción |
-|----------|-----------|--------|-------------|
-| **Nginx** | `chalanpro_nginx` | 80, 443 | Reverse proxy, SSL/TLS termination, enrutamiento de requests |
-| **Backend** | `chalanpro_backend` | 8000 (interno) | API Django REST + Admin, Daphne (ASGI) para soporte WebSocket |
-| **Frontend** | `chalanpro_frontend` | - | Build de Vue.js, archivos estáticos servidos por Nginx |
-| **PostgreSQL** | `chalanpro_postgres` | 5432 | Base de datos multi-tenant con schemas aislados |
-| **pgAdmin** | `chalanpro_pgadmin` | 5050 | Interfaz web para administración de PostgreSQL |
+| Servicio       | Contenedor           | Puerto         | Descripción                                                   |
+| -------------- | -------------------- | -------------- | ------------------------------------------------------------- |
+| **Nginx**      | `chalanpro_nginx`    | 80, 443        | Reverse proxy, SSL/TLS termination, enrutamiento de requests  |
+| **Backend**    | `chalanpro_backend`  | 8000 (interno) | API Django REST + Admin, Daphne (ASGI) para soporte WebSocket |
+| **Frontend**   | `chalanpro_frontend` | -              | Build de Vue.js, archivos estáticos servidos por Nginx        |
+| **PostgreSQL** | `chalanpro_postgres` | 5432           | Base de datos multi-tenant con schemas aislados               |
+| **pgAdmin**    | `chalanpro_pgadmin`  | 5050           | Interfaz web para administración de PostgreSQL                |
 
 ### 1.3 Flujo de Peticiones
 
@@ -155,7 +155,7 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
    - Cliente → Nginx (443) → Backend (8000)
    - Rutas: `/api/*`, `/admin/*`
 
-3. **Tenants (*.chalanpro.net):**
+3. **Tenants (\*.chalanpro.net):**
    - Cliente → Nginx (443) → Archivos estáticos Vue.js
    - `/api/*` → Nginx → Backend (8000) → Middleware detecta tenant → Schema específico
 
@@ -253,6 +253,7 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 ```
 
 **Nota importante sobre la estructura del repositorio:**
+
 - El repositorio Git (`.git/`) está ubicado en la raíz `/opt/chalanpro/` (desde Diciembre 2024)
 - Esto permite incluir toda la configuración de infraestructura (Docker, Nginx, scripts) en el repositorio
 - El código de la aplicación está en el subdirectorio `app/`
@@ -461,13 +462,13 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 
 **Panel DNS:** https://hpanel.hostinger.com/domain/chalanpro.net/dns
 
-| Tipo | Name | Points to / Content | TTL | Propósito |
-|------|------|---------------------|-----|-----------|
-| **A** | @ | 72.60.168.62 | 14400 | Frontend principal |
-| **A** | api | 72.60.168.62 | 14400 | API REST y Admin Django |
-| **A** | * | 72.60.168.62 | 14400 | Subdominios dinámicos de tenants (wildcard) |
-| **CNAME** | www | chalanpro.net | 14400 | Frontend (www) |
-| **CAA** | @ | (varios) | 14400 | Certificados SSL |
+| Tipo      | Name | Points to / Content | TTL   | Propósito                                   |
+| --------- | ---- | ------------------- | ----- | ------------------------------------------- |
+| **A**     | @    | 72.60.168.62        | 14400 | Frontend principal                          |
+| **A**     | api  | 72.60.168.62        | 14400 | API REST y Admin Django                     |
+| **A**     | \*   | 72.60.168.62        | 14400 | Subdominios dinámicos de tenants (wildcard) |
+| **CNAME** | www  | chalanpro.net       | 14400 | Frontend (www)                              |
+| **CAA**   | @    | (varios)            | 14400 | Certificados SSL                            |
 
 **Nota:** El registro wildcard `*` permite que cualquier subdominio (ej: `tenant1.chalanpro.net`) resuelva a la IP del servidor.
 
@@ -476,6 +477,7 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 **Certificado Wildcard:** `*.chalanpro.net` (obtenido con `init-certbot-wildcard.sh`)
 
 Este certificado cubre:
+
 - `chalanpro.net`
 - `www.chalanpro.net`
 - `api.chalanpro.net`
@@ -504,12 +506,12 @@ PUBLIC_SCHEMA_URLCONF = 'project.urls_public'  # URLs para schema público
 
 **Schema `public` (tabla `tenants_domain`):**
 
-| id | domain | tenant_id | is_primary |
-|----|--------|-----------|------------|
-| 1 | `chalanpro.net` | 1 (public) | true |
-| 2 | `api.chalanpro.net` | 1 (public) | false |
-| 3 | `chalan-onboarding.chalanpro.net` | 2 | true |
-| 4 | `tenant2.chalanpro.net` | 3 | true |
+| id  | domain                            | tenant_id  | is_primary |
+| --- | --------------------------------- | ---------- | ---------- |
+| 1   | `chalanpro.net`                   | 1 (public) | true       |
+| 2   | `api.chalanpro.net`               | 1 (public) | false      |
+| 3   | `chalan-onboarding.chalanpro.net` | 2          | true       |
+| 4   | `tenant2.chalanpro.net`           | 3          | true       |
 
 **Nota:** Cada tenant tiene al menos un dominio en `tenants_domain`. El dominio primario (`is_primary=True`) es el que se usa para identificar el tenant.
 
@@ -531,15 +533,15 @@ psql -h localhost -p 5432 -U chalanpro_user -d chalanpro
 
 ```sql
 -- Listar todos los schemas (tenants)
-SELECT schema_name FROM information_schema.schemata 
+SELECT schema_name FROM information_schema.schemata
 WHERE schema_name NOT IN ('pg_catalog', 'information_schema', 'pg_toast');
 
 -- Listar tenants activos
 SELECT id, name, schema_name, is_active FROM tenants_tenant;
 
 -- Listar dominios de tenants
-SELECT d.domain, t.name, t.schema_name 
-FROM tenants_domain d 
+SELECT d.domain, t.name, t.schema_name
+FROM tenants_domain d
 JOIN tenants_tenant t ON d.tenant_id = t.id;
 
 -- Cambiar a schema de un tenant específico
@@ -681,6 +683,7 @@ docker compose logs -f
 El repositorio Git se movió de `/opt/chalanpro/app/` a `/opt/chalanpro/` para incluir toda la configuración de infraestructura (Docker, Nginx, scripts) en el repositorio. Esto permite que cualquier desarrollador que clone el repo tenga todo lo necesario para levantar el stack completo.
 
 **Estructura actual:**
+
 - Repositorio Git: `/opt/chalanpro/.git/` (raíz del proyecto)
 - Código de aplicación: `/opt/chalanpro/app/` (subdirectorio)
 - Configuración Docker: `/opt/chalanpro/docker-compose.yml` (en el repo)
@@ -688,6 +691,7 @@ El repositorio Git se movió de `/opt/chalanpro/app/` a `/opt/chalanpro/` para i
 - Scripts de utilidad: `/opt/chalanpro/*.sh` (en el repo)
 
 **Archivos excluidos del repositorio (en `.gitignore`):**
+
 - `envs/*.env` (archivos con secretos, solo templates `.example.env` están en el repo)
 - `postgres_data/` (datos de base de datos)
 - `certbot/` (certificados SSL)
@@ -708,6 +712,7 @@ git branch -a
 ```
 
 **Branches principales:**
+
 - `main`: Branch de producción (estable)
 - `chalan_onboarding_local_12-8-25`: Branch de desarrollo/onboarding
 
@@ -765,6 +770,7 @@ git status --short
 ### 4.1.4 Workflow Recomendado
 
 1. **Antes de desplegar:**
+
    ```bash
    cd /opt/chalanpro
    git fetch origin
@@ -773,12 +779,14 @@ git status --short
    ```
 
 2. **Actualizar main:**
+
    ```bash
    git checkout main
    git pull origin main
    ```
 
 3. **Desplegar cambios:**
+
    ```bash
    cd /opt/chalanpro
    docker compose up -d --build backend frontend
@@ -796,14 +804,14 @@ git status --short
 
 ### 5.1 Información de Conexión
 
-| Parámetro | Valor |
-|-----------|-------|
-| **Host** | `localhost` (desde el servidor) o `72.60.168.62` (externo) |
-| **Puerto** | `5432` |
-| **Base de Datos** | `chalanpro` |
-| **Usuario** | `chalanpro_user` |
-| **Contraseña** | `2hSGqPHiNhaktRS_lxY3CprmDBYtHJxsIxWZhe-iqd4` |
-| **Schema por Defecto** | `public` (para gestión de tenants) |
+| Parámetro              | Valor                                                      |
+| ---------------------- | ---------------------------------------------------------- |
+| **Host**               | `localhost` (desde el servidor) o `72.60.168.62` (externo) |
+| **Puerto**             | `5432`                                                     |
+| **Base de Datos**      | `chalanpro`                                                |
+| **Usuario**            | `chalanpro_user`                                           |
+| **Contraseña**         | `2hSGqPHiNhaktRS_lxY3CprmDBYtHJxsIxWZhe-iqd4`              |
+| **Schema por Defecto** | `public` (para gestión de tenants)                         |
 
 ### 5.2 Conexión desde el Servidor
 
@@ -818,6 +826,7 @@ docker compose exec postgres psql -U chalanpro_user -d chalanpro
 ### 5.3 Conexión Externa (desde otra máquina)
 
 **Requisitos:**
+
 - Puerto 5432 debe estar abierto en el firewall
 - PostgreSQL debe aceptar conexiones externas (verificar `postgresql.conf` y `pg_hba.conf`)
 
@@ -833,10 +842,12 @@ psql -h 72.60.168.62 -p 5432 -U chalanpro_user -d chalanpro
 **URL:** `http://72.60.168.62:5050`
 
 **Credenciales pgAdmin:**
+
 - **Email:** `admin@chalanpro.net`
 - **Password:** `ChalanPro2024!`
 
 **Configuración del servidor en pgAdmin:**
+
 - **Name:** Chalan-Pro Production
 - **Host:** `postgres` (nombre del servicio Docker) o `172.x.x.x` (IP del contenedor)
 - **Port:** `5432`
@@ -850,25 +861,26 @@ psql -h 72.60.168.62 -p 5432 -U chalanpro_user -d chalanpro
 
 ### 6.1 Estado Actual de Seguridad
 
-| Aspecto | Estado | Nivel | Notas |
-|---------|--------|-------|-------|
-| **HTTPS/SSL** | ✅ Activo | Alto | Certificados Let's Encrypt, renovación automática |
-| **Firewall** | ⚠️ Parcial | Medio | Solo puertos 80, 443, 5432, 5050 abiertos |
-| **Autenticación Django** | ✅ Activo | Alto | Token-based authentication, CSRF protection |
-| **ALLOWED_HOSTS** | ✅ Dinámico | Alto | Actualización automática vía middleware |
-| **CSRF Protection** | ✅ Dinámico | Alto | Actualización automática vía middleware |
-| **DEBUG Mode** | ✅ Deshabilitado | Alto | `DEBUG=False` en producción |
-| **Secret Keys** | ✅ Variables de entorno | Alto | No hardcodeadas en código |
-| **PostgreSQL Acceso** | ⚠️ Expuesto | Medio | Puerto 5432 abierto (considerar restringir) |
-| **pgAdmin Acceso** | ⚠️ Expuesto | Bajo | Puerto 5050 abierto sin autenticación adicional |
-| **Headers de Seguridad** | ✅ Configurados | Alto | HSTS, X-Frame-Options, X-Content-Type-Options |
-| **Backups Automáticos** | ❌ No configurado | Bajo | Requiere configuración de cron job |
+| Aspecto                  | Estado                  | Nivel | Notas                                             |
+| ------------------------ | ----------------------- | ----- | ------------------------------------------------- |
+| **HTTPS/SSL**            | ✅ Activo               | Alto  | Certificados Let's Encrypt, renovación automática |
+| **Firewall**             | ⚠️ Parcial              | Medio | Solo puertos 80, 443, 5432, 5050 abiertos         |
+| **Autenticación Django** | ✅ Activo               | Alto  | Token-based authentication, CSRF protection       |
+| **ALLOWED_HOSTS**        | ✅ Dinámico             | Alto  | Actualización automática vía middleware           |
+| **CSRF Protection**      | ✅ Dinámico             | Alto  | Actualización automática vía middleware           |
+| **DEBUG Mode**           | ✅ Deshabilitado        | Alto  | `DEBUG=False` en producción                       |
+| **Secret Keys**          | ✅ Variables de entorno | Alto  | No hardcodeadas en código                         |
+| **PostgreSQL Acceso**    | ⚠️ Expuesto             | Medio | Puerto 5432 abierto (considerar restringir)       |
+| **pgAdmin Acceso**       | ⚠️ Expuesto             | Bajo  | Puerto 5050 abierto sin autenticación adicional   |
+| **Headers de Seguridad** | ✅ Configurados         | Alto  | HSTS, X-Frame-Options, X-Content-Type-Options     |
+| **Backups Automáticos**  | ❌ No configurado       | Bajo  | Requiere configuración de cron job                |
 
 ### 6.2 Mejoras Recomendadas
 
 #### 🔴 Prioridad Alta
 
 1. **Restringir Acceso a PostgreSQL:**
+
    ```bash
    # Cerrar puerto 5432 al público
    # Usar solo conexiones internas de Docker o túnel SSH
@@ -951,24 +963,26 @@ add_header X-XSS-Protection "1; mode=block" always;
 
 ### 7.1 URLs de Producción
 
-| Servicio | URL | Descripción |
-|----------|-----|-------------|
-| **Frontend Principal** | `https://chalanpro.net` | Frontend Vue.js (público) |
-| **Frontend (www)** | `https://www.chalanpro.net` | Frontend Vue.js (www) |
-| **Onboarding** | `https://www.chalanpro.net/onboarding` | Formulario de creación de tenant |
-| **API REST** | `https://api.chalanpro.net/api/` | API REST de Django |
-| **Admin Django** | `https://api.chalanpro.net/admin/` | Panel de administración |
-| **Tenant Login** | `https://{tenant}.chalanpro.net/login/` | Login de tenant específico |
-| **pgAdmin** | `http://72.60.168.62:5050` | Interfaz web de PostgreSQL |
+| Servicio               | URL                                     | Descripción                      |
+| ---------------------- | --------------------------------------- | -------------------------------- |
+| **Frontend Principal** | `https://chalanpro.net`                 | Frontend Vue.js (público)        |
+| **Frontend (www)**     | `https://www.chalanpro.net`             | Frontend Vue.js (www)            |
+| **Onboarding**         | `https://www.chalanpro.net/onboarding`  | Formulario de creación de tenant |
+| **API REST**           | `https://api.chalanpro.net/api/`        | API REST de Django               |
+| **Admin Django**       | `https://api.chalanpro.net/admin/`      | Panel de administración          |
+| **Tenant Login**       | `https://{tenant}.chalanpro.net/login/` | Login de tenant específico       |
+| **pgAdmin**            | `http://72.60.168.62:5050`              | Interfaz web de PostgreSQL       |
 
 ### 7.2 Credenciales de Acceso
 
 **Admin Django:**
+
 - **URL:** `https://api.chalanpro.net/admin/`
 - **Username:** `superchalan`
 - **Password:** `d162025OH$!`
 
 **pgAdmin:**
+
 - **URL:** `http://72.60.168.62:5050`
 - **Email:** `admin@chalanpro.net`
 - **Password:** `ChalanPro2024!`
@@ -1049,6 +1063,7 @@ sudo certbot certificates
 El sistema de **Inventory Master Data Setup** permite a los administradores de tenants importar datos maestros de inventario de forma opcional y controlada. Esta funcionalidad fue implementada para permitir que cada tenant decida cuándo y si desea cargar los datos maestros iniciales de productos, marcas, categorías, unidades, tipos de precio, almacenes y precios de productos.
 
 **Características principales:**
+
 - ✅ Importación opcional y controlada por el administrador del tenant
 - ✅ Descarga de archivo Excel pre-generado con todos los datos maestros
 - ✅ **Imágenes de productos**: se importan desde `appinventory/fixtures/media/products/{product_id}/{brand_id}/` y se crean registros `ProductImage` tras el loaddata
@@ -1063,34 +1078,41 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 #### Backend (Django)
 
 **Modelo Tenant (`tenants/models.py`):**
+
 - Campo `seed_inventory_done`: BooleanField que indica si los datos maestros han sido importados para el tenant.
 
 **Vistas API (`appinventory/views.py`):**
+
 - `InventoryMasterDataPreviewAPIView` (GET `/api/master-data/preview/`): Verifica el estado de `seed_inventory_done` y devuelve información sobre si los datos ya fueron importados.
 - `InventoryMasterDataExcelDownloadAPIView` (GET `/api/master-data/excel/`): Sirve el archivo Excel pre-generado desde `appinventory/static/appinventory/masters_inventory.xlsx`.
 - `InventoryMasterDataImportAPIView` (POST `/api/master-data/import/`): Copia el repo de imágenes a `MEDIA_ROOT/products/`, carga `masters_inventory.json` **sin** entradas ProductImage, luego inyecta `masters_productimage.json` (ProductImage con assignment_id 1,2,3…). Si no existe ese fixture, crea ProductImage desde `MEDIA_ROOT/products/{product_id}/{brand_id}/`. Resetea secuencias (incl. `appinventory_productimage`) y marca `seed_inventory_done=True`.
 
 **Management Command (`appinventory/management/commands/generate_masters_inventory_excel.py`):**
+
 - Genera el archivo Excel `masters_inventory.xlsx` desde el fixture JSON `masters_inventory.json`.
 - Crea hojas separadas para cada modelo: Categorías de Unidades, Unidades de Medida, Almacenes, Categorías de Productos, Marcas, Tipos de Precio, Productos, y Precios de Productos.
 - Guarda el archivo en `appinventory/static/appinventory/masters_inventory.xlsx` para su descarga.
 
 **Fixture de Datos (`appinventory/fixtures/masters_inventory.json`):**
+
 - Archivo JSON con todos los datos maestros de inventario.
 - Incluye: UnitCategory, UnitOfMeasure, Warehouse, ProductCategory, ProductBrand, PriceType, Product, ProductPrice. **Product debe incluir el campo `brands`** (ej. `"brands": [1]`) para que al cargar se creen las filas en `appinventory_productbrandassignment`; si falta, el backend **inyecta en memoria** `brands` con el primer ProductBrand del fixture para evitar "No brand assigned" y la FK en ProductImage. En la importación se omiten las entradas ProductImage si las hubiera.
 - **Warehouse con `truck_id`:** En la importación se anula `truck` para evitar la FK `crewsapp_truck` (no existe en el tenant destino). Los warehouses móviles quedan como almacenes normales.
 
 **Fixture de imágenes de productos (`appinventory/fixtures/masters_productimage.json`):**
+
 - Se carga **después** de `masters_inventory.json`. Contiene solo ProductImage con **assignment_id 1, 2, 3…** (orden igual al de las asignaciones creadas al cargar el maestro).
 - Se genera con: `python manage.py generate_masters_productimage_fixture --schema test_dominio_local`.
 
 **Repo de imágenes a importar (`appinventory/fixtures/media/products/` o `media_volume`):**
+
 - Directorio base con las imágenes de productos. Estructura: `{product_id}/{brand_id}/*.jpg`.
 - Se copia a `MEDIA_ROOT/products/` (en Docker, `media_volume` montado en `/app/media`) **antes** del loaddata; tras loaddata se crean los registros `ProductImage` desde ese directorio por `(product_id, brand_id)`.
 - Se actualiza desde el tenant de desarrollo **test-dominio-local.chalanpro.net** con: `python manage.py export_fixture_product_images --schema test_dominio_local`.
 - Así el repo queda como fuente única; cada tenant que hace Inventory Master Data Setup recibe productos e imágenes desde ese repo.
 
 **Dónde se guardan las imágenes de productos (ubicación en runtime):**
+
 - **Ruta física:** `MEDIA_ROOT/products/{product_id}/{brand_id}/{timestamp}_{nombre}.{ext}` (ej. `products/42/3/20260214_133045_imagen_producto.jpg`).
 - **En Docker:** `/app/media/products/` (volumen `media_volume` montado en el contenedor backend).
 - **En local:** `app/media/products/` (según `MEDIA_ROOT = BASE_DIR / 'media'` en `settings.py`).
@@ -1099,6 +1121,7 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 #### Frontend (Vue.js)
 
 **Componente (`vuefrontend/src/components/inventory/InventoryMasterDataSetup.vue`):**
+
 - Componente regular (no modal) con estilos del sistema.
 - Funcionalidades:
   - Descarga del archivo Excel pre-generado
@@ -1108,12 +1131,15 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
   - Indicadores de carga y mensajes de estado
 
 **Vista (`vuefrontend/src/views/InventoryMasterDataSetupView.vue`):**
+
 - Vista dedicada que contiene el componente `InventoryMasterDataSetup`.
 
 **Router (`vuefrontend/src/router/index.js`):**
+
 - Ruta `/inventory-master-data-setup` que apunta a `InventoryMasterDataSetupView`.
 
 **Navbar (`vuefrontend/src/components/layout/NavbarComponent.vue`):**
+
 - Opción "Inventory Master Data Setup" en el menú desplegable "Configuration".
 
 ### 9.3 Flujo de Uso
@@ -1155,6 +1181,7 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 ### 9.4 Comandos de Gestión
 
 **Generar masters_inventory.json, masters_productimage.json y productbrandassignment.json desde un tenant:**
+
 ```bash
 # Genera, en este orden: masters_inventory.json, masters_productimage.json y productbrandassignment.json
 # (todos desde el mismo schema para mantener coherencia de IDs)
@@ -1165,6 +1192,7 @@ docker compose exec backend python manage.py generate_masters_inventory_fixture 
 ```
 
 **Generar el archivo Excel:**
+
 ```bash
 # Desde el contenedor backend
 docker compose exec backend python manage.py generate_masters_inventory_excel
@@ -1173,12 +1201,14 @@ docker compose exec backend python manage.py generate_masters_inventory_excel
 ```
 
 **Actualizar el repo de imágenes desde el tenant de desarrollo (test-dominio-local):**
+
 ```bash
 docker compose exec backend python manage.py export_fixture_product_images --schema test_dominio_local
 # Estructura: appinventory/fixtures/media/products/<product_id>/<brand_id>/*.jpg
 ```
 
 **Generar masters_productimage.json (inyección tras masters_inventory.json):**
+
 ```bash
 # Desde un tenant que tenga ProductImage (ej. test_dominio_local). Asigna assignment_id 1,2,3...
 docker compose exec backend python manage.py generate_masters_productimage_fixture --schema test_dominio_local
@@ -1186,6 +1216,7 @@ docker compose exec backend python manage.py generate_masters_productimage_fixtu
 ```
 
 **Verificar el estado de un tenant:**
+
 ```bash
 # Desde el shell de Django
 docker compose exec backend python manage.py shell
@@ -1195,6 +1226,7 @@ docker compose exec backend python manage.py shell
 ```
 
 **Forzar re-importación (solo para desarrollo/testing):**
+
 ```bash
 # Desde el shell de Django
 docker compose exec backend python manage.py shell
@@ -1206,16 +1238,50 @@ docker compose exec backend python manage.py shell
 
 **Nota:** El archivo Excel debe regenerarse si se actualiza el fixture `masters_inventory.json`. Ejecutar el comando `generate_masters_inventory_excel` después de cualquier cambio en los datos maestros.
 
+#### 9.4.1 Configuración DocumentType: creates_serialized_items
+
+En el formulario de tipos de documento (**DocTypeForm.vue**, ruta `/document-types`) existe el campo de configuración **"Creates Serialized Items"** (`creates_serialized_items`). Este switch indica que el tipo de documento es el que **crea o registra ítems serializados** (p. ej. **GRN – Goods Receipt Note**). Cuando está activo y Stock Movement es +1 Entry:
+
+- Al guardar un documento de ese tipo que tenga líneas con productos SERIALIZED, se abre el modal **AssetTagAssignmentModal** para asignar números de serie.
+- El botón **"Assign Serial Numbers"** en la grilla de líneas solo se muestra para documentos cuyo tipo tiene este flag activo.
+
+El campo incluye **tooltip** (`v-tt` + `data-title`) según las guías del proyecto: _"Document type that creates/registers serialized items; opens the asset tag assignment modal when the document has serialized items (e.g. GRN)"_.
+
+**Después de cambiar el modelo DocumentType o esta configuración:**
+
+1. **Aplicar la migración en todos los schemas/tenants:**
+
+   ```bash
+   docker compose exec backend python manage.py migrate_schemas
+   ```
+
+2. **Regenerar el fixture maestro de inventario** (si también se actualizan datos maestros de inventario):
+
+   ```bash
+   docker compose exec backend python manage.py generate_masters_inventory_fixture --schema test_dominio_local --output /app/appinventory/fixtures/masters_inventory.json
+   ```
+
+3. **Regenerar el fixture maestro de tipos de documento** (para que los nuevos tenants reciban los tipos actualizados con `creates_serialized_items`):
+   ```bash
+   docker compose exec backend python manage.py tenant_command dumpdata \
+     --schema test_dominio_local \
+     apptransactions.DocumentType \
+     --indent 2 \
+     --output /app/apptransactions/fixtures/masters_document_type.json
+   ```
+
 ### 9.5 Generar el Fixture JSON de Datos Maestros
 
 **Importante:** Para generar o actualizar el archivo `masters_inventory.json` desde la base de datos de un tenant, use el comando `dumpdata` de Django. Se recomienda usar el **tenant de desarrollo** (test-dominio-local.chalanpro.net / schema `test_dominio_local`) como fuente principal.
 
 **Paso 1 – Actualizar repo de imágenes desde el tenant de desarrollo (opcional):**
+
 ```bash
 docker compose exec backend python manage.py export_fixture_product_images --schema test_dominio_local
 ```
 
 **Paso 2 – Generar o actualizar el fixture JSON:**
+
 ```bash
 # Generar el fixture JSON desde el tenant de desarrollo (ProductImage es opcional; en la importación se omiten)
 # Nota: Warehouse con truck_id se anula en la importación (evita FK crewsapp_truck inexistente en tenant destino)
@@ -1237,26 +1303,26 @@ docker compose exec backend python manage.py tenant_command dumpdata \
 
 -- Productos sin ninguna imagen (en schema test_dominio_local)
 SELECT p.id AS product_id,
-       p.sku AS codigo,
-       p.name AS nombre
+p.sku AS codigo,
+p.name AS nombre
 FROM test_dominio_local.appinventory_product p
 LEFT JOIN test_dominio_local.appinventory_productimage pi ON pi.product_id = p.id
 WHERE pi.id IS NULL
-  AND p.is_active = true
+AND p.is_active = true
 ORDER BY p.sku;
 
 -- producto–marca sin imagen
 SELECT p.id AS product_id,
-       p.sku AS codigo,
-       p.name AS nombre,
-       a.id AS assignment_id,
-       b.name AS marca
+p.sku AS codigo,
+p.name AS nombre,
+a.id AS assignment_id,
+b.name AS marca
 FROM test_dominio_local.appinventory_product p
 JOIN test_dominio_local.appinventory_productbrandassignment a ON a.product_id = p.id
 JOIN test_dominio_local.appinventory_productbrand b ON b.id = a.brand_id
 LEFT JOIN test_dominio_local.appinventory_productimage pi ON pi.assignment_id = a.id
 WHERE pi.id IS NULL
-  AND p.is_active = true
+AND p.is_active = true
 ORDER BY p.sku, b.name;
 
 ---
@@ -1266,11 +1332,13 @@ ORDER BY p.sku, b.name;
 ### 10.1 El Frontend No Carga
 
 1. Verificar que el build se completó:
+
    ```bash
    docker compose logs frontend
    ```
 
 2. Verificar archivos en `./app/vuefrontend/dist/`:
+
    ```bash
    ls -la /opt/chalanpro/app/vuefrontend/dist/
    ```
@@ -1283,11 +1351,13 @@ ORDER BY p.sku, b.name;
 ### 10.2 El Backend No Responde
 
 1. Verificar logs:
+
    ```bash
    docker compose logs backend
    ```
 
 2. Verificar conexión a la base de datos:
+
    ```bash
    docker compose exec backend python manage.py check --database default
    ```
@@ -1300,6 +1370,7 @@ ORDER BY p.sku, b.name;
 ### 10.3 Problemas con Multi-Tenant
 
 1. Verificar que el dominio esté en la base de datos:
+
    ```bash
    docker compose exec backend python manage.py shell
    >>> from tenants.models import Domain
@@ -1316,12 +1387,14 @@ ORDER BY p.sku, b.name;
 ### 10.4 Certificados SSL No Se Generan
 
 1. Verificar que los DNS estén configurados:
+
    ```bash
    nslookup chalanpro.net
    nslookup api.chalanpro.net
    ```
 
 2. Verificar que el puerto 80 esté abierto:
+
    ```bash
    sudo ufw status
    ```
@@ -1334,23 +1407,27 @@ ORDER BY p.sku, b.name;
 ### 10.5 Errores 502 Bad Gateway
 
 **Síntomas:**
+
 - Errores 502 en el navegador al intentar acceder a `/api/` o `/media/`
 - Nginx no puede conectar con el backend
 
 **Diagnóstico:**
 
 1. **Revisar logs de Nginx para errores de conexión:**
+
    ```bash
    docker compose logs --since "2025-12-21T00:00:00" nginx 2>&1 | grep -E "error|502|Connection refused" | tail -30
    ```
 
 2. **Verificar estado del backend:**
+
    ```bash
    docker compose ps backend
    docker compose logs --tail=20 backend
    ```
 
 3. **Verificar resolución DNS desde Nginx:**
+
    ```bash
    docker compose exec nginx getent hosts backend
    ```
@@ -1363,6 +1440,7 @@ ORDER BY p.sku, b.name;
 **Soluciones:**
 
 1. **Si el backend está caído:**
+
    ```bash
    docker compose restart backend
    docker compose logs -f backend
@@ -1371,6 +1449,7 @@ ORDER BY p.sku, b.name;
 2. **Si hay problema de resolución DNS (IP cacheada):**
    - La configuración actual de Nginx ya incluye resolución DNS dinámica
    - Reiniciar Nginx para refrescar la caché:
+
    ```bash
    docker compose restart nginx
    ```
@@ -1386,15 +1465,19 @@ ORDER BY p.sku, b.name;
 **Importante:** El servidor usa **Daphne (ASGI)** en lugar de Gunicorn (WSGI) para soportar conexiones WebSocket.
 
 1. **Verificar que Daphne esté corriendo:**
+
    ```bash
    docker compose logs backend | grep -i "daphne\|listening"
    ```
+
    Deberías ver: `Listening on TCP address 0.0.0.0:8000`
 
 2. **Verificar conexiones WebSocket en los logs:**
+
    ```bash
    docker compose logs -f backend | grep -i "websocket\|tenant"
    ```
+
    Deberías ver mensajes como: `✅ Tenant configurado para WebSocket: [schema_name]`
 
 3. **Si WebSocket no conecta:**
@@ -1412,6 +1495,7 @@ ORDER BY p.sku, b.name;
      ```
 
 4. **Reiniciar el backend si es necesario:**
+
    ```bash
    docker compose restart backend
    ```
@@ -1429,6 +1513,7 @@ ORDER BY p.sku, b.name;
 ## 11. Contacto y Soporte
 
 Para problemas o preguntas:
+
 - Revisar logs: `docker compose logs -f`
 - Consultar esta documentación
 - Contactar al equipo de desarrollo
@@ -1437,4 +1522,3 @@ Para problemas o preguntas:
 
 **Última actualización:** Diciembre 2025  
 **Versión del documento:** 1.0
-
