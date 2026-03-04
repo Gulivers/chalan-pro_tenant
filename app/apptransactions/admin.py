@@ -40,7 +40,7 @@ class PartyAdmin(admin.ModelAdmin):
 
 @admin.register(DocumentType)
 class DocumentTypeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type_code', 'description', 'stock_movement', 'is_active')
+    list_display = ('id', 'type_code', 'description', 'creates_serialized_items', 'stock_movement', 'is_active')
     search_fields = ('type_code', 'description')
     list_filter = ('is_active', 'stock_movement')
 

@@ -32,6 +32,7 @@ Clasificación por tipo de componente.
 ### Tooltips en campos (v-tt)
 
 - Usar la directiva **`v-tt`** (tooltip) del proyecto para campos que necesiten ayuda contextual.
+- En formularios de **DocumentType** (si existen en el frontend), el campo `creates_serialized_items` debe llevar **`v-tt`** y **`data-title`** en el control (p. ej. "Document type that creates/registers serialized items; opens the asset tag assignment modal when the document has serialized items (e.g. GRN)").
 - El texto del tooltip va en **`data-title`**, en inglés.
 - **Colocar `v-tt` y `data-title` en el propio control** (input, textarea, v-select o select), no en un icono `<i>`.
 - **El label debe llevar solo texto**; no añadir icono de ayuda junto al label.
@@ -423,11 +424,7 @@ docker compose exec backend python manage.py migrate_schemas
 - **DocumentType (tipos de documento):** si se agrega, elimina o cambia algún campo en el modelo `apptransactions.DocumentType`, después de aplicar las migraciones hay que **regenerar el fixture maestro** que usan los tenants nuevos:
 
 ```bash
-docker compose exec backend python manage.py tenant_command dumpdata \
-  --schema test_dominio_local \
-  apptransactions.DocumentType \
-  --indent 2 \
-  --output /app/apptransactions/fixtures/masters_document_type.json
+docker compose exec backend python manage.py generate_masters_inventory_fixture --schema test_dominio_local --output /app/appinventory/fixtures/masters_inventory.json
 ```
 
 - Sin ejecutar `migrate_schemas`, los cambios no se reflejan en las empresas (tenants) y pueden aparecer errores como `column does not exist` o `no such column`.

@@ -1,3 +1,17 @@
+"""
+Generate masters_inventory.xlsx from appinventory/fixtures/masters_inventory.json.
+
+How to run (from project root, with Docker):
+
+  # Default output: app/appinventory/static/appinventory/masters_inventory.xlsx
+  docker compose exec backend python manage.py generate_masters_inventory_excel
+
+  # Custom output directory
+  docker compose exec backend python manage.py generate_masters_inventory_excel \
+    --output-dir /app/appinventory/static/appinventory
+
+Requires masters_inventory.json to exist (e.g. from generate_masters_inventory_fixture).
+"""
 from django.core.management.base import BaseCommand
 from django.conf import settings
 import json

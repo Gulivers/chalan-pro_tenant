@@ -448,10 +448,10 @@ def create_tenant_onboarding(request):
             # Usar el email como username base, o el nombre proporcionado
             username_base = email.split('@')[0]
             if admin_name:
-                # Si hay nombre completo, usar la primera parte del nombre como username base
+                # Si hay nombre completo, usar la primera parte del nombre como username base (se conserva el caso)
                 name_parts = admin_name.split()
                 if name_parts:
-                    username_base = name_parts[0].lower()
+                    username_base = name_parts[0]
             
             username = username_base
             

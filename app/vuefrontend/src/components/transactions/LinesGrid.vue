@@ -34,12 +34,12 @@
               Delete selected
             </button>
             <button
-              v-if="documentId"
+              v-if="documentId && documentTypeCreatesSerializedItems"
               class="btn btn-outline-secondary"
               type="button"
               @click="$emit('open-asset-tags')"
               v-tt
-              data-title="Assign serial numbers for serialized items of this document">
+              data-title="Assign serial numbers for serialized items of this document (only for document types that create serialized items, e.g. GRN)">
               <i class="bi bi-tag me-1"></i>
               Assign Serial Numbers
             </button>
@@ -89,12 +89,12 @@
             <span class="d-sm-none ms-1">Del</span>
           </button>
 <button
-          v-if="documentId"
+          v-if="documentId && documentTypeCreatesSerializedItems"
           class="btn btn-outline-secondary btn-sm flex-fill"
           type="button"
           @click="$emit('open-asset-tags')"
           v-tt
-          data-title="Assign serial numbers for serialized items of this document">
+          data-title="Assign serial numbers for serialized items of this document (only for document types that create serialized items, e.g. GRN)">
             <i class="bi bi-tag"></i>
             <span class="d-none d-sm-inline ms-1">Serial Numbers</span>
           </button>
@@ -359,6 +359,7 @@
     modelValue: { type: Array, default: () => [] }, // not used (legacy)
     lines: { type: Array, default: () => [] }, // v-model:lines
     documentId: { type: [Number, null], default: null },
+    documentTypeCreatesSerializedItems: { type: Boolean, default: false },
     documentTypeId: { type: [Number, null], default: null },
     workAccountId: { type: [Number, null], default: null },
     unitsOptions: { type: Array, default: () => [] },
