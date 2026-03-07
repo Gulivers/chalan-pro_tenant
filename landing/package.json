@@ -1,0 +1,13 @@
+{
+  "name": "chalanpro-landing",
+  "version": "1.0.0",
+  "description": "Landing page y funnel de marketing para ChalanPro",
+  "scripts": {
+    "build": "mkdir -p dist && tailwindcss -i ./src/input.css -o ./dist/output.css --minify && cp src/*.html src/sitemap.xml src/robots.txt dist/ && (cp -r src/img dist/ 2>/dev/null || mkdir -p dist/img)",
+    "dev": "tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
+    "start": "npx serve dist -p 3000"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}
