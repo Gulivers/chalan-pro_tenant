@@ -1,0 +1,294 @@
+# AI Guidelines – Landing Chalan-Pro (Marketing SaaS)
+
+Estándares para mantener consistencia, conversión y calidad en la web de marketing de Chalan-Pro (chalanpro.com).
+
+## Índice
+
+- [Posicionamiento del producto](#posicionamiento-del-producto)
+- [Stack y tecnologías](#stack-y-tecnologías)
+- [Estructura de archivos](#estructura-de-archivos)
+- [Dirección de diseño](#dirección-de-diseño)
+- [Estrategia de conversión](#estrategia-de-conversión)
+- [HTML y semántica](#html-y-semántica)
+- [Tailwind CSS](#tailwind-css)
+- [Rendimiento](#rendimiento)
+- [SEO](#seo)
+- [Accesibilidad](#accesibilidad)
+- [Enlaces y navegación](#enlaces-y-navegación)
+- [Imágenes](#imágenes)
+- [Formularios](#formularios)
+- [Build y deploy](#build-y-deploy)
+
+---
+
+## Posicionamiento del producto
+
+Chalan-Pro es una **plataforma de operaciones de construcción** para:
+
+- **Contratistas** y empresas de obra
+- **Supervisores** y jefes de obra
+- **Equipos de campo** en crecimiento
+
+La web de marketing debe comunicar: producto moderno, profesional, fiable; inventario, contratos, cronogramas de equipos y facturación en un solo lugar. **No es la app interna**: es el sitio público que explica el producto, capta leads y soporta SEO.
+
+Referencias de espíritu (no copiar): Stripe, Linear, Notion (páginas de marketing), Buildertrend, Procore, ServiceTitan (sector construcción).
+
+---
+
+## Stack y tecnologías
+
+- **HTML5 estático** — Sin frameworks JS en la landing.
+- **Tailwind CSS** v3.x (CLI, no PostCSS).
+- **JavaScript** — Solo vanilla y mínimo; úsalo solo cuando sea necesario (ej. menú móvil, validación ligera).
+- **Fuente:** Inter (Google Fonts) — o la definida en `tailwind.config.js`.
+- **Dominio marketing:** chalanpro.com, www.chalanpro.com.
+- **App principal:** chalanpro.net (Vue.js SPA) — la landing enlaza a login y onboarding.
+
+### No usar en la landing
+
+- Vue, React, Alpine (salvo petición explícita)
+- jQuery
+- Librerías de animación pesadas
+- Component libraries (UI kits) salvo petición explícita
+
+---
+
+## Estructura de archivos
+
+- **Fuente:** `src/` — archivos editables (HTML, CSS, img).
+- **Build:** `dist/` — salida de `npm run build`; no editar manualmente.
+- **CSS:** `src/input.css` — directivas Tailwind; clases en los HTML.
+- **Imágenes:** `src/img/` — se copian a `dist/img/` en el build.
+- **Docs:** `docs/` — este archivo y documentación asociada.
+
+---
+
+## Dirección de diseño
+
+El diseño debe sentirse como un **B2B SaaS moderno**:
+
+- **Limpio, moderno, profesional, confiable**
+- **Espaciado generoso**, sin ruido visual
+- **Jerarquía tipográfica clara**
+- **CTAs evidentes**
+- **Layouts basados en tarjetas** cuando tenga sentido
+- **Uso elegante del espacio en blanco**
+- Sin clutter; no es una web de agencia llamativa, es un producto de software serio
+
+Visual: líneas claras, contenedores acotados (`max-w-screen-2xl`), secciones bien separadas, botones primarios/secundarios diferenciados.
+
+### Hero principal (estilo dark)
+
+- Hero **dark** con fondo `bg-slate-950` y **gradientes suaves** (radiales / lineales) en tonos indigo/cyan.
+- **Texto claro y legible**: títulos en `text-slate-50`, cuerpo en `text-slate-300/400`.
+- Uso de **glassmorphism** para tarjetas y frame de producto: fondos `bg-white/5`, bordes `border-white/10–15`, `backdrop-blur`.
+- **Acentos**: indigo + cyan, con glows suaves (`shadow-cyan-500/40`, gradientes `from-indigo-500 to-cyan-400`).
+- Screenshot real enmarcado en un contenedor glass premium, sin mockups inventados.
+- Tarjetas flotantes con datos (ej. crews, work orders) también en estilo glass, con acentos cyan/indigo.
+
+---
+
+## Estrategia de conversión
+
+Cada página debe apoyar la conversión.
+
+### Objetivos principales
+
+1. **Reservar una demo**
+2. **Contactar ventas**
+3. **Ver precios**
+
+### Objetivos secundarios
+
+- Leer funciones / soluciones
+- Explorar blog o recursos (cuando existan)
+
+### En páginas importantes
+
+- **Value proposition** clara (qué es Chalan-Pro y para quién).
+- **Indicador de confianza o prueba social** (placeholder si no hay datos aún).
+- **CTA fuerte above the fold** (ej. “Reservar demo”, “Ver precios”, “Contactar ventas”).
+- **CTA de nuevo cerca del final** de la página.
+
+Mensajería concisa y orientada a SaaS. Evitar frases genéricas (“revolucionar tu negocio”) salvo que aporten significado concreto.
+
+---
+
+## HTML y semántica
+
+- Etiquetas semánticas: `<nav>`, `<main>`, `<section>`, `<article>`, `<header>`, `<footer>`.
+- Un solo `<h1>` por página; jerarquía correcta (`h1` → `h2` → `h3`).
+- `lang="es"` en `<html>`.
+
+### Plantilla base
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="..." />
+    <link rel="stylesheet" href="output.css" />
+    <title>Chalan-Pro - ...</title>
+  </head>
+  <body class="font-sans antialiased text-gray-900 bg-white">
+    <!-- contenido -->
+  </body>
+</html>
+```
+
+### Rutas de CSS
+
+- En `src/*.html` usar `href="output.css"` (relativo; en `dist/` el CSS está junto al HTML).
+
+---
+
+## Tailwind CSS
+
+### Colores del tema
+
+- **primary:** `#0d6efd` (DEFAULT), `#0a58ca` (dark).
+- **accent:** `#ffc107`.
+- Usar `text-primary`, `bg-primary`, `hover:bg-primary-dark`, etc. (según `tailwind.config.js`) en secciones claras.
+- Para el **hero dark** y zonas asociadas:
+  - Fondos base: `bg-slate-950`, `bg-slate-900`, con gradientes `bg-gradient-to-b`, `bg-gradient-to-tr`.
+  - Texto: `text-slate-50` para títulos, `text-slate-300/400` para cuerpo, evitando grises cálidos.
+  - Acentos: `text-cyan-300`, `border-cyan-400/40`, `border-indigo-400/40`, `bg-gradient-to-r from-indigo-500 via-indigo-400 to-cyan-400`.
+  - Glows suaves: sombras tipo `shadow-cyan-500/40`, `shadow-indigo-500/30`, sin efectos agresivos.
+
+### Tipografía
+
+- `font-sans` → Inter (o la configurada).
+- Títulos: `font-bold`, tamaños `text-4xl`, `text-5xl`, etc. En el hero, escalar hasta `xl:text-7xl` si tiene sentido.
+- Cuerpo: `text-gray-900`, `text-gray-600` en secciones claras; `text-slate-300/400` en secciones dark.
+
+### Layout
+
+- Contenedor: `max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8`.
+- Espaciado: `py-20`, `gap-8`, etc.
+- Responsive: prefijos `sm:`, `md:`, `lg:`.
+- Nav + hero principal deben verse como un solo bloque coherente (mismo fondo dark o transiciones suaves).
+
+### No usar
+
+- Estilos inline (`style="..."`) salvo casos excepcionales.
+- Clases CSS personalizadas fuera de `input.css`; preferir utilidades Tailwind.
+
+---
+
+## Rendimiento
+
+- **JavaScript mínimo** — Solo lo imprescindible.
+- **Preferir CSS frente a JS** (animaciones, estados, menús simples).
+- **Evitar dependencias innecesarias.**
+- **Patrones de layout reutilizables** entre páginas.
+- **Imágenes comprimidas** si se añaden (WebP/optimizadas).
+- **Prioridad:** first paint rápido y legibilidad.
+
+---
+
+## SEO
+
+### Meta obligatorios
+
+- `meta name="description"` — descripción única por página (≈155 caracteres).
+- `meta name="keywords"` — palabras clave relevantes (construcción, contratistas, inventario, etc.).
+- `meta name="robots" content="index, follow"` — salvo páginas que deban estar noindex.
+
+### Open Graph
+
+- `og:title`, `og:description`, `og:type`, `og:url`.
+- `og:image` si hay imagen destacada.
+
+### Canonical
+
+- `link rel="canonical" href="https://chalanpro.com/..."` en cada página.
+
+### sitemap.xml y robots.txt
+
+- Mantener `src/sitemap.xml` y `src/robots.txt` actualizados.
+- Incluir todas las URLs públicas en el sitemap.
+
+---
+
+## Accesibilidad
+
+- Enlaces con texto descriptivo; evitar “clic aquí”.
+- Imágenes con `alt` significativo.
+- Contraste suficiente (texto sobre fondo).
+- Navegación por teclado funcional.
+- Estructura de encabezados lógica para lectores de pantalla.
+
+---
+
+## Enlaces y navegación
+
+### Internos (misma landing)
+
+- Rutas relativas: `pricing.html`, `contact.html`, `index.html`.
+- En `index.html` (raíz): `href="/"` o `href="index.html"` para el logo.
+
+### Externos (app Chalan-Pro)
+
+- **Login:** `https://chalanpro.net`
+- **Onboarding:** `https://chalanpro.net/onboarding`
+- Abrir en nueva pestaña: `target="_blank" rel="noopener noreferrer"` cuando sea apropiado.
+
+### Nav común
+
+- Todas las páginas: misma barra de navegación base (logo Chalan-Pro, enlaces a Features/Funciones, Pricing/Precios, Contact/Contacto, selector de idioma y un **CTA principal**: Reservar demo / Ver precios).
+- En la **landing principal** se prioriza conversión; el enlace de login a la app se puede dejar para footer u otras zonas, no como elemento principal del nav.
+
+---
+
+## Imágenes
+
+- Ubicación: `src/img/`.
+- Formatos: PNG, JPG, WebP, SVG.
+- Nombres descriptivos y en minúsculas: `hero-bg.jpg`, `logo.svg`.
+- Siempre `alt` en `<img>`.
+- Usar versiones comprimidas para producción.
+
+---
+
+## Formularios
+
+- El formulario de contacto es estático; no hay backend en la landing.
+- Usar `action` y `method` apropiados si se conecta a un servicio externo (Formspree, etc.).
+- Campos con `label` asociado (`for`/`id`).
+- Placeholder como complemento, no como sustituto del label.
+- Formularios orientados a conversión: “Solicitar demo”, “Contactar ventas”, etc.
+
+---
+
+## Build y deploy
+
+- **Build:** `npm run build` — genera `dist/` con CSS minificado y archivos copiados.
+- **Desarrollo:** `npm run dev` (watch CSS) + `npm start` (servir `dist/` en puerto 3000).
+- **Deploy:** `dist/` se monta en Nginx para chalanpro.com (ver `../nginx/default.conf`).
+
+### Arquitectura ideal (site map) – Website SaaS Chalan-Pro
+
+Esta es la estructura recomendada de secciones y rutas para escalar la landing y el sitio público de Chalan-Pro. Úsala como referencia para nuevos contenidos, navegación y enlaces:
+
+```
+/                # Home – Página principal (valor y CTA)
+/product         # Producto – ¿Qué es? Qué resuelve. Visión general.
+/features        # Funcionalidades – Listado y detalle de features clave.
+/solutions       # Soluciones por tipo de cliente, industria o caso de uso.
+/pricing         # Precios – Tabla comparativa, FAQs, políticas.
+/demo            # Reservar demo (Formulario o Booking)
+/blog            # Blog – Artículos, noticias, SEO.
+/resources       # Recursos, guías, descargables, ayuda.
+/customers       # Clientes – Casos de éxito, testimonios.
+/about           # Sobre nosotros, empresa, equipo.
+/contact         # Contacto directo, formularios adicionales.
+```
+
+Consideraciones:
+
+- No todas las secciones tienen que estar activas desde el inicio, pero la navegación debe permitir escalar.
+- Puedes agrupar recursos secundarios (blog, ayuda, casos de clientes) según necesidades de contenido y etapa de desarrollo.
+
+Nota: Adapta esta arquitectura a las prioridades de marketing y SEO, asegurando siempre un flujo claro hacia el CTA ("Demo", "Precios", "Contacto").
