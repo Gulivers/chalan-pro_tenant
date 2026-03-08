@@ -4,7 +4,7 @@ Estándares para mantener consistencia, conversión y calidad en la web de marke
 
 ## Índice
 
-- [Posicionamiento del producto](#posicionamiento-del-producto)
+- [Posicionamiento del producto](#posicionamiento-del-producto) (ventaja competitiva, pitch 30 s)
 - [Stack y tecnologías](#stack-y-tecnologías)
 - [Estructura de archivos](#estructura-de-archivos)
 - [Dirección de diseño](#dirección-de-diseño)
@@ -12,7 +12,7 @@ Estándares para mantener consistencia, conversión y calidad en la web de marke
 - [HTML y semántica](#html-y-semántica)
 - [Tailwind CSS](#tailwind-css)
 - [Rendimiento](#rendimiento)
-- [SEO](#seo)
+- [SEO](#seo) (keywords por nicho)
 - [Accesibilidad](#accesibilidad)
 - [Enlaces y navegación](#enlaces-y-navegación)
 - [Imágenes](#imágenes)
@@ -32,6 +32,21 @@ Chalan-Pro es una **plataforma de operaciones de construcción** para:
 La web de marketing debe comunicar: producto moderno, profesional, fiable; inventario, contratos, cronogramas de equipos y facturación en un solo lugar. **No es la app interna**: es el sitio público que explica el producto, capta leads y soporta SEO.
 
 Referencias de espíritu (no copiar): Stripe, Linear, Notion (páginas de marketing), Buildertrend, Procore, ServiceTitan (sector construcción).
+
+### Ventaja competitiva
+
+La ventaja no es competir contra gigantes. La ventaja es **dominar el espacio entre field service y construction management** (residential trade contractors). El copy y la propuesta de valor deben reflejar este posicionamiento de nicho.
+
+### Pitch de 30 segundos (referencia de copy)
+
+Usar como referencia de tono y estructura: directo, pregunta que engancha, problema (caos), solución (una plataforma), cierre (visibilidad en tiempo real). Versión “Jordan Belfort style”:
+
+- **Pregunta:** ¿Cómo llevas hoy el seguimiento de cada cuadrilla, los materiales que necesitan y lo que te cuesta cada obra?
+- **Problema:** Llamadas, mensajes y papeles generan caos.
+- **Solución:** Una sola plataforma para programación, contratos, materiales y comunicación de obra.
+- **Cierre:** En vez de adivinar qué pasa en campo, lo ves en tiempo real.
+
+El copy de hero, CTAs y secciones de problema/solución puede inspirarse en esta estructura.
 
 ---
 
@@ -209,6 +224,18 @@ Mensajería concisa y orientada a SaaS. Evitar frases genéricas (“revoluciona
 
 - Mantener `src/sitemap.xml` y `src/robots.txt` actualizados.
 - Incluir todas las URLs públicas en el sitemap.
+
+### Estrategia de keywords por nicho
+
+No competir por términos genéricos muy disputados (ej. _construction management software_). Enfocarse en **keywords de nicho** para que el SEO sea más alcanzable, por ejemplo:
+
+- software for electrical contractors
+- crew scheduling software for construction
+- material management for trade contractors
+- software for HVAC crews
+- software for residential contractors
+
+Incluir estas variantes en meta keywords, títulos alternativos y contenido cuando sea natural. Priorizar long-tail y nichos alineados con “residential trade contractors”.
 
 ---
 

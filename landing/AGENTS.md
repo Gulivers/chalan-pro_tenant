@@ -13,6 +13,68 @@ Contexto para agentes de IA (Cursor, Copilot, etc.) que trabajan en la **web de 
 
 Chalan-Pro es una **plataforma de operaciones de construcción** para contratistas, supervisores y equipos de campo. La web debe transmitir: moderno, profesional, confiable, con CTAs claros y diseño tipo B2B SaaS (referencias de espíritu: Stripe, Linear, Notion; sector: Buildertrend, Procore, ServiceTitan).
 
+**Inspiración (nicho y segmento):**
+
+> **Construction operations platform for residential trade contractors.**
+
+En SaaS aplica la regla: _The riches are in the niches._ Cuanto más específico sea el problema que resuelves, más fácil es vender.
+
+**Dónde entra el sistema (nicho de negocio):**
+
+El producto está exactamente aquí:
+
+```
+              Enterprise Construction
+                    |
+                    |
+    Builder PM ---- | ---- Field Service
+                    |
+                    |
+           ⭐ CHALAN-PRO ZONE ⭐
+   Residential trade contractors operations
+                    |
+                    |
+                Small contractors
+```
+
+Ese espacio tiene:
+
+- millones de empresas
+- baja digitalización
+- mucho dolor operativo
+
+## Estrategia de marketing
+
+**Ventaja competitiva:** Mi ventaja no es competir contra gigantes. Mi ventaja es dominar el espacio entre field service y construction management.
+
+En vez de competir por keywords genéricas como **construction management software** (dominadas por grandes empresas), enfocarse en nichos:
+
+- software for electrical contractors
+- crew scheduling software for construction
+- material management for trade contractors
+- software for HVAC crews
+
+El SEO se vuelve mucho más alcanzable.
+
+## Pitch de 30 segundos
+
+**Versión “Jordan Belfort style”** (tono directo, pregunta-retorno, cierre claro):
+
+> Let me ask you something.
+>
+> Right now, how do you track what each crew is doing, what materials they need, and what every job is costing you?
+>
+> Most contractors rely on calls, texts, and paper notes. That creates chaos.
+>
+> Our system replaces all of that with one platform that runs scheduling, contracts, materials, and job communication.
+>
+> So instead of guessing what's happening in the field, you see it in real time.
+
+Construction has a rhythm.
+Jobrithm runs it.
+
+---
+
 ## Estructura clave
 
 ```
@@ -42,11 +104,12 @@ landing/
 - `npm run dev` — Watch Tailwind (en paralelo con `npm start` para desarrollo)
 - `npm start` — Servir dist en puerto 3000
 
-## Archivos de referencia
+## Archivos de referencia (contexto)
 
-- **Estándares y guías:** `landing/docs/ai-guidelines.md`
-- **Proyecto principal (app):** `../AGENTS.md` (raíz del repo) — contexto Chalan-Pro completo
-- **Nginx landing:** `nginx/default.conf` — server block chalanpro.com
+- **README landing:** `landing/README.md` — inspiración, nicho, diagrama de posicionamiento, comandos y estructura del proyecto.
+- **Estándares y guías:** `landing/docs/ai-guidelines.md` — diseño, conversión, SEO, accesibilidad; obligatorio para copy y maquetado.
+- **Proyecto principal (app):** `../AGENTS.md` (raíz del repo) — contexto Chalan-Pro completo.
+- **Nginx landing:** `nginx/default.conf` — server block chalanpro.com.
 
 - Construida en **HTML plano + Tailwind CSS** (compilado, no en caliente).
 - **No introducir frameworks** ni dependencias JS: nada de React, Vue, Alpine, jQuery, etc.
