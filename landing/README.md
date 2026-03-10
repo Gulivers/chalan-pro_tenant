@@ -1,6 +1,38 @@
 # Chalan-Pro – Web de marketing (Landing)
 
-Sitio estático, orientado a SEO y conversión, para **chalanpro.com**. Presenta Chalan-Pro como plataforma de operaciones de construcción para contratistas, supervisores y equipos de campo.
+**Inspiración (nicho y segmento):**
+
+> **Construction operations platform for residential trade contractors.**
+
+En SaaS aplica la regla: _The riches are in the niches._ Cuanto más específico sea el problema que resuelves, más fácil es vender.
+
+**Dónde entra el sistema (nicho de negocio):**
+
+El producto está exactamente aquí:
+
+```
+              Enterprise Construction
+                    |
+                    |
+    Builder PM ---- | ---- Field Service
+                    |
+                    |
+           ⭐ CHALAN-PRO ZONE ⭐
+   Residential trade contractors operations
+                    |
+                    |
+                Small contractors
+```
+
+Ese espacio tiene:
+
+- millones de empresas
+- baja digitalización
+- mucho dolor operativo
+
+---
+
+Sitio estático, orientado a SEO y conversión, para **chalanpro.com**. Presenta Chalan-Pro como plataforma de operaciones de construcción para contratistas residenciales, supervisores y equipos de campo.
 
 **No es la app interna.** Es la web pública que explica el producto, capta leads (demo, contacto, precios) y soporta el crecimiento orgánico.
 
@@ -47,12 +79,13 @@ landing/
 
 ## Comandos
 
-| Comando         | Descripción                                        |
-| --------------- | -------------------------------------------------- |
-| `npm install`   | Instalar dependencias (Tailwind)                   |
-| `npm run build` | Generar `dist/` (CSS + copiar HTML, sitemap, etc.) |
-| `npm run dev`   | Watch Tailwind (regenera CSS al guardar)           |
-| `npm start`     | Servir `dist/` en http://localhost:3000            |
+| Comando               | Descripción                                        |
+| --------------------- | -------------------------------------------------- |
+| `npm install`         | Instalar dependencias (Tailwind, chokidar-cli)     |
+| `npm run build`       | Generar `dist/` (CSS + copiar HTML, sitemap, etc.) |
+| `npm run dev`         | Watch Tailwind (regenera solo CSS al guardar)      |
+| `npm run build:watch` | Watch `src/`: ejecuta build completo al guardar    |
+| `npm start`           | Servir `dist/` en http://localhost:3000            |
 
 ## Desarrollo local
 
