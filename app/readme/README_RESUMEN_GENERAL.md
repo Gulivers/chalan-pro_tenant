@@ -61,6 +61,7 @@
   - [9.3 Flujo de Uso](#93-flujo-de-uso)
   - [9.4 Comandos de Gestión](#94-comandos-de-gestión)
   - [9.5 Generar el Fixture JSON de Datos Maestros](#95-generar-el-fixture-json-de-datos-maestros)
+  - [9.6 Workflow: Serialized Items e Inventory Transfers](#96-workflow-serialized-items-e-inventory-transfers)
 - [10. Troubleshooting](#10-troubleshooting)
   - [9.1 El Frontend No Carga](#91-el-frontend-no-carga)
   - [9.2 El Backend No Responde](#92-el-backend-no-responde)
@@ -650,6 +651,8 @@ docker compose logs -f frontend
 ```
 
 **Nota:** El build del frontend puede tardar 1-2 minutos. Los archivos compilados se copian a `./app/vuefrontend/dist/` que es servido por Nginx.
+
+**Favicon (icono del sitio/ERP):** Si no se ve el favicon en el navegador, es porque no existe el archivo `favicon.ico` en la carpeta `app/vuefrontend/public/`. Para que aparezca: (1) colocar tu `favicon.ico` en `app/vuefrontend/public/`, (2) reconstruir el frontend (`docker compose up -d --build frontend`) y (3) reiniciar Nginx. El `index.html` ya referencia `<link rel="icon" href=".../favicon.ico">`; solo falta el archivo en `public/` para que el build lo copie a la raíz del sitio.
 
 ### 4.3 Desplegar Cambios en Ambos (Backend + Frontend)
 
@@ -1324,6 +1327,33 @@ LEFT JOIN test_dominio_local.appinventory_productimage pi ON pi.assignment_id = 
 WHERE pi.id IS NULL
 AND p.is_active = true
 ORDER BY p.sku, b.name;
+
+### 9.6 Workflow: Serialized Items e Inventory Transfers
+
+Reseña de las funcionalidades de **ítems serializados** y **transferencias entre almacenes** y cómo se usan en el flujo operativo.
+
+#### Serialized Items (ítems con número de serie)
+
+- **Objetivo:** Registrar equipos o productos que se rastrean por unidad (número de serie / asset tag), no solo por cantidad.
+- **Configuración previa:**
+  - En **Inventario → Productos**, el producto debe tener **Tracking mode = Serialized**.
+  - En **Transacciones → Tipos de documento** (`/document-types`), el tipo que recibe la mercancía (p. ej. **GRN – Goods Receipt Note**) debe tener activo **"Creates Serialized Items"** y **Stock Movement = +1 Entry**.
+- **Flujo típico (compra/entrada):**
+  1. Se crea un documento del tipo configurado (ej. GRN) con líneas que incluyen productos SERIALIZED y cantidad.
+  2. Al guardar, el sistema crea registros **SerializedItem** por cada unidad y abre el modal **Assign Serial Numbers** para asignar número de serie (y opcionalmente condición, notas).
+  3. El usuario puede completar los seriales en ese momento o cerrar el modal y usar después el botón **"Assign Serial Numbers"** en la grilla de líneas del mismo documento (solo visible si el tipo tiene `creates_serialized_items`).
+- **Dónde se usa:** Lista de ítems serializados, asignación de tags desde el documento de compra/entrada y seguimiento por almacén y documento de origen.
+
+#### Inventory Transfers (transferencias entre almacenes)
+
+- **Objetivo:** Mover stock (y, cuando aplique, ítems serializados) entre dos almacenes, generando movimientos de salida en origen y entrada en destino.
+- **Flujo:**
+  1. Desde el menú de inventario se accede a **Inventory Transfers** (o equivalente según la navegación del tenant).
+  2. Se crea una transferencia indicando **almacén origen**, **almacén destino**, descripción opcional y las líneas (producto, cantidad y, si el producto es SERIALIZED, qué unidades/seriales se mueven).
+  3. Al confirmar, el sistema registra movimientos de inventario (y actualiza `SerializedItem.current_warehouse` cuando corresponde) y el estado de la transferencia queda **Completed** (o **Reverted** si se revierte).
+- **API:** CRUD en `/api/inventory-transfers/`; existe además un endpoint de listado para proveedores de datos (`/api/inventory-transfers-provider/`).
+
+En conjunto, **Serialized Items** cubre el registro y trazabilidad por unidad en entradas (p. ej. GRN), y **Inventory Transfers** permite reubicar stock y ítems serializados entre almacenes de forma controlada.
 
 ---
 
