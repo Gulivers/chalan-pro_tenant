@@ -4,7 +4,7 @@
 
 > **Construction operations platform for residential trade contractors.**
 
-En SaaS aplica la regla: *The riches are in the niches.* Cuanto más específico sea el problema que resuelves, más fácil es vender.
+En SaaS aplica la regla: _The riches are in the niches._ Cuanto más específico sea el problema que resuelves, más fácil es vender.
 
 **Dónde entra el sistema (nicho de negocio):**
 
@@ -25,6 +25,7 @@ El producto está exactamente aquí:
 ```
 
 Ese espacio tiene:
+
 - millones de empresas
 - baja digitalización
 - mucho dolor operativo
@@ -33,15 +34,12 @@ Ese espacio tiene:
 
 Sitio estático, orientado a SEO y conversión, para **chalanpro.com**. Presenta Chalan-Pro como plataforma de operaciones de construcción para contratistas residenciales, supervisores y equipos de campo.
 
-
 **No es la app interna.** Es la web pública que explica el producto, capta leads (demo, contacto, precios) y soporta el crecimiento orgánico.
 
 Arrancar servidor: npm start  
 Construir cambios: npm run build
 
 ## Stack
-
-
 
 - **HTML** estático
 - **Tailwind CSS** compilado con npm (CLI)
@@ -81,22 +79,20 @@ landing/
 
 ## Comandos
 
-| Comando              | Descripción                                        |
-| -------------------- | -------------------------------------------------- |
-| `npm install`        | Instalar dependencias (Tailwind, chokidar-cli)     |
-| `npm run build`      | Generar `dist/` (CSS + copiar HTML, sitemap, etc.) |
-| `npm run dev`        | Watch Tailwind (regenera solo CSS al guardar)      |
-| `npm run build:watch`| Watch `src/`: ejecuta build completo al guardar   |
-| `npm start`          | Servir `dist/` en http://localhost:3000            |
+| Comando               | Descripción                                        |
+| --------------------- | -------------------------------------------------- |
+| `npm install`         | Instalar dependencias (Tailwind, chokidar-cli)     |
+| `npm run build`       | Generar `dist/` (CSS + copiar HTML, sitemap, etc.) |
+| `npm run dev`         | Watch Tailwind (regenera solo CSS al guardar)      |
+| `npm run build:watch` | Watch `src/`: ejecuta build completo al guardar    |
+| `npm start`           | Servir `dist/` en http://localhost:3000            |
 
 ## Desarrollo local
 
-**Opción A — Build completo al guardar (HTML + CSS + assets):**
-
-**Terminal 1** — Watch y rebuild al guardar cualquier archivo en `src/`:
+**Terminal 1** — Watch CSS:
 
 ```bash
-npm run build:watch
+npm run dev
 ```
 
 **Terminal 2** — Servir archivos:
@@ -105,12 +101,7 @@ npm run build:watch
 npm start
 ```
 
-**Opción B — Solo CSS en watch (más rápido si solo tocas estilos):**
-
-**Terminal 1:** `npm run dev`  
-**Terminal 2:** `npm start`
-
-Abrir http://localhost:3000 en el navegador. Tras editar, recargar la página (F5).
+Abrir http://localhost:3000 en el navegador. Tras editar estilos o HTML, recargar la página (F5).
 
 ## Diseño y conversión
 
