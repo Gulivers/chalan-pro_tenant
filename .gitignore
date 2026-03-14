@@ -81,3 +81,9 @@ scripts/sync_local_branches.sh
 scripts/deploy_to_hostinger.sh
 scripts/sync_local_prepare_deploy.sh
 scripts/sync_main_with_remote.sh
+
+# Scripts Certbot wildcard / Hostinger API (específicos del VPS)
+scripts/certbot_hostinger_auth.py
+scripts/certbot_hostinger_cleanup.py
+scripts/renew_wildcard_certbot.sh
+scripts/renew_wildcard_certbot_auto.sh
