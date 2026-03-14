@@ -155,7 +155,10 @@ class Contract(models.Model):
         if self.work_account:
             self.builder = self.work_account.builder
             self.job = self.work_account.job
-            self.house_model = self.work_account.house_model
+            # Solo copiar house_model si el Work Account lo tiene; si está vacío, mantener
+            # el valor elegido en el contrato (el usuario puede elegirlo en el formulario).
+            if self.work_account.house_model_id is not None:
+                self.house_model = self.work_account.house_model
             self.lot = self.work_account.lot or self.lot
             self.address = self.work_account.address or self.address
             # Travel price desde builder por consistencia con UI
