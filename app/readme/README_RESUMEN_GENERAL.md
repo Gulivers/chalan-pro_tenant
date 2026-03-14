@@ -19,6 +19,7 @@
 - [2.2 Configuraciones para Dominio, Tenant y DNS](#22-configuraciones-para-dominio-tenant-y-dns)
   - [2.2.1 Configuración de DNS en Hostinger](#221-configuración-de-dns-en-hostinger)
   - [2.2.2 Configuración de Certificados SSL](#222-configuración-de-certificados-ssl)
+    - [2.2.2.1 Renovación wildcard automática (API DNS Hostinger)](#2221-renovación-wildcard-automática-api-dns-hostinger)
   - [2.2.3 Configuración de Tenant en Django](#223-configuración-de-tenant-en-django)
   - [2.2.4 Estructura de Dominios en Base de Datos](#224-estructura-de-dominios-en-base-de-datos)
 - [3. Comandos Rápidos - PostgreSQL en Docker](#3-comandos-rápidos---postgresql-en-docker)
@@ -485,6 +486,43 @@ Este certificado cubre:
 - `*.chalanpro.net` (cualquier subdominio de tenant)
 
 **Ubicación:** `/etc/letsencrypt/live/chalanpro.net/`
+
+#### 2.2.2.1 Renovación wildcard automática (API DNS Hostinger)
+
+Hostinger expone una **API** para gestionar DNS (documentación: [developers.hostinger.com](https://developers.hostinger.com)). Con un token de API se puede automatizar el desafío DNS y renovar el wildcard sin tocar el panel.
+
+**Requisitos**
+
+1. Token de API en Hostinger: hPanel → Perfil → [API](https://hpanel.hostinger.com/profile/api).
+2. En el VPS (donde corre certbot), instalar el SDK y dejar el token disponible:
+
+   ```bash
+   sudo pip3 install hostinger_api
+   export HOSTINGER_API_TOKEN="tu_token"
+   ```
+
+3. Scripts en el repo (en el VPS, típicamente en `scripts/`):
+   - `certbot_hostinger_auth.py` — manual-auth-hook: añade el TXT `_acme-challenge` vía API.
+   - `certbot_hostinger_cleanup.py` — manual-cleanup-hook: borra ese TXT tras la validación.
+   - `renew_wildcard_certbot_auto.sh` — ejecuta certbot con esos hooks (sin preguntar Enter).
+
+**Uso (renovación manual con API)**
+
+```bash
+export HOSTINGER_API_TOKEN="tu_token"
+sudo -E /opt/chalanpro/scripts/renew_wildcard_certbot_auto.sh
+```
+
+**Cron (renovación automática del wildcard)**
+
+Si el token está en un archivo (p. ej. `/root/.hostinger-api-token`, `chmod 600`):
+
+```bash
+# Renovar wildcard el día 1 de cada mes a las 03:00 (cert válido ~90 días)
+0 3 1 * * HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) sudo -E /opt/chalanpro/scripts/renew_wildcard_certbot_auto.sh
+```
+
+O definir `HOSTINGER_API_TOKEN` en `/etc/environment` o en el cron y usar `sudo -E` en el script (el script ya usa `sudo -E certbot` para pasar el token a certbot y a los hooks).
 
 ### 2.2.3 Configuración de Tenant en Django
 
