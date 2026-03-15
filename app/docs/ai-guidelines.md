@@ -429,6 +429,15 @@ docker compose exec backend python manage.py generate_masters_inventory_fixture 
 
 - Sin ejecutar `migrate_schemas`, los cambios no se reflejan en las empresas (tenants) y pueden aparecer errores como `column does not exist` o `no such column`.
 
+### Deploy en VPS (producción)
+
+- En el servidor de producción (VPS Hostinger) el deploy se hace con `scripts/deploy-vps.sh` (documentado en `DEVOPS.md`).
+- **Si no hay cambios en modelos:** usar `--no-migrate` para no ejecutar `migrate_schemas` y solo desplegar código/frontend:
+  ```bash
+  sudo /opt/chalanpro/scripts/deploy-vps.sh --no-migrate
+  ```
+- Si hay cambios en modelos, ejecutar el script sin `--no-migrate` (por defecto corre `migrate_schemas`).
+
 ---
 
 ## Layout

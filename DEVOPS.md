@@ -50,6 +50,20 @@ Usar el script que centraliza pasos y reduce errores:
 sudo /opt/chalanpro/scripts/deploy-vps.sh
 ```
 
+**Opciones del script:** `[--no-pull] [--no-build] [--no-migrate]`
+
+| Opción         | Efecto |
+|----------------|--------|
+| `--no-pull`    | No hace `git pull` (útil si ya actualizaste el código). |
+| `--no-build`   | No hace `docker compose build` (solo reinicia servicios; útil para cambios solo en `.env`). |
+| `--no-migrate` | No ejecuta `migrate_schemas` (usar cuando **no hay cambios en modelos**; ahorra tiempo y evita tocar schemas). |
+
+Ejemplo sin migraciones (solo código/frontend):
+
+```bash
+sudo /opt/chalanpro/scripts/deploy-vps.sh --no-migrate
+```
+
 O manualmente, siempre desde la raíz del proyecto:
 
 ```bash
@@ -182,7 +196,7 @@ sudo /opt/chalanpro/scripts/restore_backup.sh YYYYMMDD_HHMMSS
 | `docker-compose.dev.yml` | Solo desarrollo local |
 | `nginx/default.conf` | Nginx producción (HTTP/HTTPS, API, WebSocket, estáticos) |
 | `setup.sh` | Primera configuración del proyecto en el servidor |
-| `scripts/deploy-vps.sh` | Deploy idempotente en VPS |
+| `scripts/deploy-vps.sh` | Deploy idempotente en VPS; opciones: `--no-pull`, `--no-build`, `--no-migrate` |
 | `scripts/backup_completo_VPS.sh` | Backup sistema + DB (todos los tenants) → `/opt/backups/` |
 | `scripts/restore_backup.sh` | Restaurar backup para rollback |
 | `init-certbot.sh` / `init-certbot-wildcard.sh` | Obtención/renovación SSL |
