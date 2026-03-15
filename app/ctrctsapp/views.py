@@ -294,6 +294,28 @@ class ContractViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
+    def get_queryset(self):
+        """
+        Permite filtrar contratos por work_account y/o schedule usando query params.
+        Ejemplos:
+          /api/contract/?work_account=123
+          /api/contract/?schedule=45
+        """
+        qs = (
+            Contract.objects.all()
+            .select_related("builder", "job", "house_model", "work_account", "schedule")
+        )
+
+        work_account_id = self.request.query_params.get("work_account")
+        if work_account_id:
+            qs = qs.filter(work_account_id=work_account_id)
+
+        schedule_id = self.request.query_params.get("schedule")
+        if schedule_id:
+            qs = qs.filter(schedule_id=schedule_id)
+
+        return qs
+
     def create(self, request, *args, **kwargs):
         # Log the incoming request data
         # print("Request data:", request.data)
