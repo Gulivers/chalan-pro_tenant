@@ -33,6 +33,7 @@ Este documento da contexto a los agentes de IA (Cursor, Copilot, etc.) en el pro
 - Estándares del frontend del Proyecto: `app/docs/ai-guidelines.md`
 - Workflow Git: `GIT_WORKFLOW.md`, `WORKFLOW_RESUMEN.md`
 - Sincronización Git local: `readme/DEPLOY_GIT_LOCAL.md`
+- Deploy en VPS (cuando aplique): `DEVOPS.md` (sección 3.2; script `scripts/deploy-vps.sh` con opciones `--no-pull`, `--no-build`, `--no-migrate`; usar `--no-migrate` cuando no hay cambios en modelos).
 
 ## Cómo abrir este workspace
 
