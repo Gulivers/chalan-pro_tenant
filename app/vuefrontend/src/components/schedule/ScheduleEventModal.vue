@@ -6,12 +6,11 @@
         <div class="modal-content text-start">
           <div class="modal-header">
             <h5 class="modal-title" id="eventModalLabel">
-              <span class="badge text-bg-secondary me-2 text-uppercase" v-if="is_draft">Draft</span>
-              <span class="badge text-bg-success text-white me-2 text-uppercase" v-else>Event</span>
-              {{ isEditing ?
-                event_data?.id ? `Edit Event: ${event_data?.title}` : 'New Event' :
-                event_data?.id ? `View Event: ${event_data?.title}`:'View Event'
-              }} | Crew: {{crewTitle}}  </h5>
+              <span class="badge text-bg-secondary me-2 text-uppercase" v-if="is_draft">Draft Work Order</span>
+              <span class="badge text-bg-success text-white me-2 text-uppercase" v-else>Work Order</span>
+              <template v-if="workOrderDisplayId">Work Order # {{ workOrderDisplayId }}</template>
+              <template v-if="headerSubtitle"><span v-if="workOrderDisplayId"> — </span>{{ headerSubtitle }}</template>
+            </h5>
             <button type="button" class="btn-close" @click="hideModal"></button>
           </div>
           <div class="modal-body">
@@ -160,6 +159,7 @@ export default {
         absence_reason: '',
       },
       crewTitle: '',
+      crewCategory: '',
       isEditing: false,
       modalInstance: null,
       titleManuallyEdited: false,
@@ -178,6 +178,20 @@ export default {
     };
   },
   computed: {
+    /** ID to show as "Work Order # N" (posted event id or draft id) */
+    workOrderDisplayId() {
+      const id = this.event_data?.id ?? this.localFormData?.id ?? null;
+      return id != null && id !== '' ? id : null;
+    },
+    /** Subtitle in English order: Work Account: X | Category: Y | Crew: Z */
+    headerSubtitle() {
+      const parts = [];
+      const workAccount = this.localFormData?.title ? this.localFormData.title.trim() : null;
+      if (workAccount) parts.push(`Work Account: ${workAccount}`);
+      if (this.crewCategory) parts.push(`Category: ${this.crewCategory}`);
+      if (this.crewTitle) parts.push(`Crew: ${this.crewTitle}`);
+      return parts.length ? parts.join(' | ') : '';
+    },
     isAbsence: {
       get() {
         return this.localFormData.is_absence === true;
@@ -292,7 +306,8 @@ export default {
         _post: false,
       };
 
-      this.crewTitle = eventData?.crewTitle;
+      this.crewTitle = eventData?.crewTitle ?? '';
+      this.crewCategory = eventData?.crewCategory ?? eventData?.extendedProps?.crew_category ?? '';
       this.event_data = null
 
       if(eventData?.extendedProps?.event === undefined){

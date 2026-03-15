@@ -32,12 +32,6 @@
         responsive
         striped
         small>
-        <template #cell(doc_type)="data">
-          <span class="badge" :class="data.item.doc_type === 'Bid' ? 'bg-warning' : 'bg-info'">
-            {{ data.item.doc_type }}
-          </span>
-        </template>
-
         <template #cell(type)="data">
           <span class="badge bg-secondary">{{ data.item.type }}</span>
         </template>
@@ -112,7 +106,6 @@ export default {
       workAccountId: null,
       fields: [
         { key: 'id', label: 'ID', sortable: true, thClass: 'text-center', tdClass: 'text-center', thStyle: { width: '60px' } },
-        { key: 'doc_type', label: 'Doc Type', sortable: true, thClass: 'text-center', tdClass: 'text-center', thStyle: { width: '100px' } },
         { key: 'type', label: 'Type', sortable: true, thClass: 'text-center', tdClass: 'text-center', thStyle: { width: '80px' } },
         { key: 'date_created', label: 'Date', sortable: true, thClass: 'text-center', tdClass: 'text-center', thStyle: { width: '120px' } },
         { key: 'house_model', label: 'Model', sortable: true, thClass: 'text-center', tdClass: 'text-center', thStyle: { width: '100px' } },
@@ -142,32 +135,38 @@ export default {
       try {
         const { data } = await axios.get(`/api/event/${this.eventId}/`);
         if (data && data.work_account) {
-          this.workAccountId = data.work_account;
+          // Manejar tanto ID numérico como objeto con id (mismo patrón que Transactions)
+          if (typeof data.work_account === 'number') {
+            this.workAccountId = data.work_account;
+          } else if (typeof data.work_account === 'object' && data.work_account !== null && data.work_account.id) {
+            this.workAccountId = data.work_account.id;
+          } else {
+            this.workAccountId = data.work_account;
+          }
+        } else {
+          this.workAccountId = null;
         }
       } catch (e) {
         console.error('Error fetching event data for contracts:', e);
+        this.workAccountId = null;
       }
     },
     async getContracts() {
+      if (!this.workAccountId) {
+        console.warn('Cannot fetch contracts: workAccountId is not set');
+        this.contracts = [];
+        this.loading = false;
+        return;
+      }
+
       this.loading = true;
       try {
-        // Primero obtener los IDs de contratos del evento
-        const resp = await axios.get(`/api/event/${this.eventId}/contracts/`);
-        if (resp.status === 200) {
-          const contractIds = resp.data || [];
-          
-          // Si solo tenemos IDs, obtener los detalles completos de cada contrato
-          if (contractIds.length > 0 && typeof contractIds[0] === 'number') {
-            const contractPromises = contractIds.map(id => 
-              axios.get(`/api/contract/${id}/`).then(r => r.data).catch(() => null)
-            );
-            const contractsData = await Promise.all(contractPromises);
-            this.contracts = contractsData.filter(c => c !== null);
-          } else {
-            // Si ya vienen como objetos completos
-            this.contracts = contractIds;
-          }
-        }
+        // Filtrar por work_account directamente en el query param (como ScheduleHouseTransactionsComponent)
+        const url = `/api/contract/?work_account=${this.workAccountId}&ordering=-id`;
+        const response = await axios.get(url);
+        const normalizeList = data => (Array.isArray(data) ? data : data?.results ?? []);
+        const contractsList = normalizeList(response.data);
+        this.contracts = contractsList;
       } catch (error) {
         console.error('Error fetching contracts:', error);
         this.contracts = [];

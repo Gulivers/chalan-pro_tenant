@@ -482,6 +482,7 @@ export default {
             work_account: null,
             crew: parseInt(info.resource.id),
             crewTitle: info.resource.title,
+            crewCategory: info.resource.category ?? "",
             extended_service: false,
             canCreateEvent: this.can_create_event,
             clickedCrewId: this.clickedCrewId,
@@ -505,6 +506,7 @@ export default {
       // console.log("Clicked event data:", info.event.getResources()[0].id);
       const clickedCrewId = parseInt(info.event.getResources()[0].id);
       this.clickedCrewId = clickedCrewId;
+      const resource = info.event.getResources()[0];
       this.$refs.eventModal.open(
         {
           id: parseInt(info.event.extendedProps?.id),
@@ -512,8 +514,9 @@ export default {
           date: info.event.startStr,
           description: info.event.extendedProps?.description,
           work_account: info.event.extendedProps?.work_account || null,
-          crew: info.event.getResources()[0].id,
-          crewTitle: info.event.getResources()[0].title,
+          crew: resource?.id,
+          crewTitle: resource?.title ?? "",
+          crewCategory: resource?.category ?? info.event.extendedProps?.crew_category ?? "",
           extended_service: info.event.extendedProps?.extended_service,
           isAbsence: info.event.extendedProps?.is_absence || false,
           absence_reason: info.event.extendedProps?.absence_reason || null,
