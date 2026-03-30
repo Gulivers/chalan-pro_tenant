@@ -55,9 +55,9 @@
               <router-link
                 :to="item.route"
                 class="nav-link"
-                @click="closeNavbar"
-                >{{ item.text }}</router-link
-              >
+                @click="closeNavbar">
+                {{ item.text }}
+              </router-link>
             </template>
           </li>
         </ul>
@@ -90,17 +90,17 @@
                   <router-link
                     to="/logout"
                     class="dropdown-item"
-                    @click="logout"
-                    >Log Out</router-link
-                  >
+                    @click="logout">
+                    Log Out
+                  </router-link>
                 </li>
               </ul>
             </div>
           </li>
           <li class="nav-item" v-if="!isLoggedIn">
-            <router-link to="/login" class="nav-link" @click="closeNavbar"
-              >Log In</router-link
-            >
+            <router-link to="/login" class="nav-link" @click="closeNavbar">
+              Log In
+            </router-link>
           </li>
         </ul>
       </div>
@@ -127,7 +127,7 @@ export default {
           isOpen: false,
           children: [
             { text: "Schedule", route: "/schedule" },
-            { text: "Job Communications", route: "/chat-general" },
+            { text: "Work Order Viewer", route: "/chat-general" },
             {
               text: "Transactions",
               route: "/transactions",
