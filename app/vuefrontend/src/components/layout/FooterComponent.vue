@@ -4,7 +4,7 @@
       <div class="row">
         <!-- Left: Company Info -->
         <div class="col-md-4 mb-2">
-          <p>© {{ currentYear }} Chalan-Pro. All rights reserved.</p>
+          <p>© {{ currentYear }} Jobrithm. All rights reserved.</p>
           <p>Version: {{ appVersion }}</p>
         </div>
 
@@ -17,7 +17,7 @@
         </div>
         <div class="col-md-4 mb-2" v-if="$route.meta.hideNavbar">
           <span style="font-family: Avenir, Helvetica, Arial, sans-serif; color: #4e73df; font-size: 22px; text-transform: uppercase; letter-spacing: 2px;">
-            <strong>CHALAN-PRO</strong>
+            <strong>JO_BRITHM</strong>
           </span>
         </div>
 

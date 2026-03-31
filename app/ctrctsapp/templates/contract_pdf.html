@@ -13,10 +13,28 @@
             margin: 1.0cm 1.0cm 1.0cm 1.0cm;
         }
 
+        .header {
+            display: table;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        .header-left, .header-right {
+            display: table-cell;
+            vertical-align: middle;
+        }
+        .header-left {
+            width: 200px;
+            text-align: left;
+        }
+        .header-right {
+            text-align: center;
+        }
         .logo {
             width: 170px;
-            margin-bottom: 10px;
-            float: left;
+            max-height: 70px;
+            object-fit: contain;
+            display: block;
+            margin: 0;
         }
 
         body {
@@ -39,14 +57,14 @@
 <body>
 <div class="container">
 
-    {% if logo_url %}
-        <img src="{{ logo_url }}" class="logo" />
-    {% endif %}
-
-    <!-- Title -->
-    <div class="row">
-        <div class="col-12 text-center mb-4">
-            <h2 class="fw-bold">CONTRACT PAY SHEET - {{ contract.type | upper }}</h2>
+    <div class="header">
+        <div class="header-left">
+            {% if logo_url %}
+                <img src="{{ logo_url }}" class="logo" />
+            {% endif %}
+        </div>
+        <div class="header-right">
+            <h2 class="fw-bold mb-0">CONTRACT PAY SHEET - {{ contract.type | upper }}</h2>
         </div>
     </div>
 

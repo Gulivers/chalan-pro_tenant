@@ -306,9 +306,43 @@ export default {
       const url = router.resolve({ name: "contract-edit", params: { id } });
       window.open(url.href, "_blank");
     };
-    const printItem = (id) => {
-      const url = router.resolve({ name: "contract-edit", params: { id } });
-      window.open(url.href + "#print", "_blank");
+    const printItem = async (id) => {
+      try {
+        const response = await axios.get(`/api/contract-pdf/${id}/`, {
+          headers: {
+            Authorization: `Token ${localStorage.getItem("authToken")}`,
+          },
+          responseType: "json",
+        });
+
+        if (!response.data?.file) {
+          throw new Error("No PDF file received");
+        }
+
+        const byteCharacters = atob(response.data.file);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i += 1) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: "application/pdf" });
+        const pdfUrl = window.URL.createObjectURL(blob);
+
+        const win = window.open(pdfUrl, "_blank");
+        if (!win) {
+          const link = document.createElement("a");
+          link.href = pdfUrl;
+          link.download = response.data.filename || `contract_${id}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+
+        setTimeout(() => window.URL.revokeObjectURL(pdfUrl), 10000);
+      } catch (error) {
+        console.error("Error generating contract PDF:", error);
+        proxy?.notifyError?.("Could not generate contract PDF.");
+      }
     };
 
     const deleteItem = (id) => {

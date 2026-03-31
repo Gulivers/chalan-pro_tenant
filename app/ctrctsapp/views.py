@@ -40,6 +40,7 @@ from django.db import connection
 from django_tenants.utils import get_public_schema_name, get_tenant
 from .utils import geocode_address
 from utils.datatable import handle_datatable_query
+from utils.tenant_branding import get_tenant_logo_url
 
 from weasyprint import (
     CSS,
@@ -723,15 +724,7 @@ def download_contract_pdf(request, contract_id):
         left_details = details[:mid_index]
         right_details = details[mid_index:]
         
-        domain = request.get_host()
-        if 'phoenixelectricandair' in domain:
-            tenant_logo = 'media/tenant_logos/Logo-phoenix-w.png'
-        elif '192.168.0.248:8000' in domain or 'division16llc' in domain:
-            tenant_logo = 'media/tenant_logos/Logo-division-w.png'
-        else:
-            tenant_logo = 'media/tenant_logos/default-logo.png'
-
-        logo_url = request.build_absolute_uri('/' + tenant_logo)
+        logo_url = get_tenant_logo_url(request)
 
         # Prepare the data to return
         context = {

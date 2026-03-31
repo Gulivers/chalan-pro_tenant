@@ -19,22 +19,42 @@
     font-weight: bold;
   }
 
+  .header {
+    display: table;
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  .header-logo,
+  .header-title-wrap {
+    display: table-cell;
+    vertical-align: middle;
+  }
+
+  .header-logo {
+    width: 220px;
+    text-align: left;
+  }
+
+  .header-title-wrap {
+    text-align: center;
+  }
+
   .logo {
     width: 200px;
-    margin-bottom: 10px;
-    float: left;
+    max-height: 70px;
+    object-fit: contain;
+    display: block;
+    margin: 0;
   }
 
   .header-title {
     text-align: center;
     font-size: 26px; /* Aumentado */
     font-weight: bold;
-    margin-top: 10px;
-    margin-bottom: 35px;
-    clear: both;
+    margin-top: 0;
+    margin-bottom: 0;
     color: #000;
-    border-bottom: 2px solid #444;
-    padding-bottom: 8px;
   }
 
   .category-block {
@@ -131,11 +151,17 @@
 </head>
 <body> 
 
-  {% if logo_url %}
-    <img src="{{ logo_url }}" class="logo" />
-  {% endif %}
-
-  <div class="header-title">Schedule Report: {{ date_range }}</div>
+  <div class="header">
+    <div class="header-logo">
+      {% if logo_url %}
+        <img src="{{ logo_url }}" class="logo" />
+      {% endif %}
+    </div>
+    <div class="header-title-wrap">
+      <div class="header-title">Schedule Report: {{ date_range }}</div>
+    </div>
+  </div>
+  <div style="border-bottom: 2px solid #444; margin-bottom: 20px;"></div>
 
   {% with 0 as counter %}
     {% for category, crews in categorized_events.items %}
