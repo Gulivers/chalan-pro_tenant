@@ -45,6 +45,8 @@ class Tenant(TenantMixin):
     )
     
     # Logo del cliente
+    # Django guarda el archivo en tenant_logos/; si ya existe otro con el mismo nombre,
+    # añade un sufijo aleatorio (p. ej. logito3_tP9LURy.PNG) — ver FileSystemStorage.get_available_name.
     logo = models.ImageField(
         upload_to='tenant_logos/',
         blank=True,
@@ -254,10 +256,15 @@ class Tenant(TenantMixin):
         return f"{self.name} ({self.schema_name})"
     
     def get_logo_url(self):
-        """Retorna la URL del logo o None"""
-        if self.logo:
-            return self.logo.url
-        return None
+        """Retorna la URL pública del logo o None si no hay archivo o no existe en el storage."""
+        if not self.logo:
+            return None
+        try:
+            if not self.logo.storage.exists(self.logo.name):
+                return None
+        except Exception:
+            return None
+        return self.logo.url
 
 
 class Domain(DomainMixin):

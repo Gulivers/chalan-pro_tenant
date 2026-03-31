@@ -3,8 +3,19 @@
     v-if="shouldShowNavbar"
     class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-body py-1 navbar-modern">
     <div class="container d-flex align-items-center">
-      <!-- Marca -->
-      <a class="navbar-brand py-0" href="/">CHALAN-PRO</a>
+      <!-- Marca (Jobrithm logo — mismo asset que la landing en public/img) -->
+      <router-link
+        class="navbar-brand py-0 d-flex align-items-center"
+        to="/"
+        @click="closeNavbar">
+        <img
+          :src="brandLogoSrc"
+          :alt="brandLogoAlt"
+          class="navbar-brand-logo"
+          width="200"
+          height="50"
+          @error="onTenantLogoError" />
+      </router-link>
       <!-- Botón de mensajes (fuera del collapsible, se mantiene) -->
       <ul v-if="shouldShowNavbar" class="navbar-nav me-2">
         <li class="nav-item d-flex align-items-center">
@@ -282,9 +293,27 @@ export default {
         { text: "About", route: "/about" },
       ],
       userName: "",
+      /** URL absoluta del logo del tenant (desde /api/user_detail/) */
+      tenantLogoUrl: null,
+      tenantName: null,
+      /** Si falla la carga del logo del tenant, usar Jobrithm */
+      tenantLogoFailed: false,
     };
   },
   computed: {
+    jobrithmLogoUrl() {
+      const base = process.env.BASE_URL || "/";
+      return `${base}img/jobrithm-logo.png`;
+    },
+    brandLogoSrc() {
+      if (this.tenantLogoFailed) {
+        return this.jobrithmLogoUrl;
+      }
+      return this.tenantLogoUrl || this.jobrithmLogoUrl;
+    },
+    brandLogoAlt() {
+      return this.tenantName || "Jobrithm";
+    },
     shouldShowNavbar() {
       // Verificar si la ruta actual tiene hideNavbar en su meta
       return !this.$route.meta.hideNavbar;
@@ -305,12 +334,25 @@ export default {
     checkUserIdentity() {
       const token = localStorage.getItem("authToken");
       this.isLoggedIn = !!token;
-      if (this.isLoggedIn) {
-        this.getAuthenticatedUser().then((user) => {
-          if (user) {
-            this.userName = user.username;
-          }
-        });
+      if (!this.isLoggedIn) {
+        this.userName = "";
+        this.tenantLogoUrl = null;
+        this.tenantName = null;
+        this.tenantLogoFailed = false;
+        return;
+      }
+      this.getAuthenticatedUser().then((user) => {
+        if (user) {
+          this.userName = user.username;
+          this.tenantLogoUrl = user.tenant_logo_url || null;
+          this.tenantName = user.tenant_name || null;
+          this.tenantLogoFailed = false;
+        }
+      });
+    },
+    onTenantLogoError() {
+      if (this.tenantLogoUrl) {
+        this.tenantLogoFailed = true;
       }
     },
     toggleDropdown(index) {

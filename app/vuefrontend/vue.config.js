@@ -40,6 +40,16 @@ module.exports = defineConfig({
     },
   },
   pwa: {
+    // Favicon principal: public/index.html usa shortcut icon → img/icons/favicon.ico (el plugin envuelve el primer rel="icon" solo para IE).
+    // No inyectar favicon32/16 aquí para no duplicar ni usar tipos MIME incorrectos con .ico.
+    iconPaths: {
+      faviconSVG: null,
+      favicon32: null,
+      favicon16: null,
+      appleTouchIcon: 'img/icons/apple-touch-icon.png',
+      maskIcon: null,
+      msTileImage: 'img/icons/apple-touch-icon.png',
+    },
     name: 'ChalanPro',
     themeColor: '#0d6efd',
     msTileColor: '#000000',
@@ -60,13 +70,13 @@ module.exports = defineConfig({
       start_url: '/',
       icons: [
         {
-          src: './img/icons/icon-192x192.png',
-          sizes: '192x192',
+          src: './img/icons/apple-touch-icon.png',
+          sizes: '180x180',
           type: 'image/png',
         },
         {
-          src: './img/icons/icon-512x512.png',
-          sizes: '512x512',
+          src: './img/icons/favicon-96x96.png',
+          sizes: '96x96',
           type: 'image/png',
         },
       ],
