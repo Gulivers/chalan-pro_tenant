@@ -2,6 +2,12 @@
 
 Este documento da contexto a los agentes de IA (Cursor, Copilot, etc.) en el proyecto Chalan-Pro cuando se trabaja en el **entorno local ubuntu-house**.
 
+## Nota de marca (importante)
+
+- A nivel comercial y de interfaz de usuario, el nombre del sistema es **Jobrithm**.
+- **Chalan-Pro / chalanpro** se mantiene para nombres técnicos internos (rutas, repositorio, variables, infraestructura) cuando aplique.
+- En adelante, para textos visibles al usuario (web app, admin, landing, PDFs y mensajes), usar **Jobrithm**.
+
 ## Stack
 
 - **Backend:** Django (ASGI con Daphne), multi-tenant por schema.

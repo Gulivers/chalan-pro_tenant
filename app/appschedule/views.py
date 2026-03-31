@@ -47,6 +47,7 @@ from weasyprint import (
 )
 from weasyprint.text.fonts import FontConfiguration
 from channels.layers import get_channel_layer
+from utils.tenant_branding import get_tenant_logo_url
 
 from django.http import HttpResponse
 import openpyxl
@@ -463,15 +464,7 @@ def download_schedule_pdf(request):
         for cat, crews in categorized_events.items()
     }
 
-    domain = request.get_host()
-    if 'phoenixelectricandair' in domain:
-        tenant_logo = 'media/tenant_logos/Logo-phoenix-w.png'
-    elif '192.168.0.248:8000' in domain or 'division16llc' in domain:
-        tenant_logo = 'media/tenant_logos/Logo-division-w.png'
-    else:
-        tenant_logo = 'media/tenant_logos/default-logo.png'
-
-    logo_url = request.build_absolute_uri('/' + tenant_logo)
+    logo_url = get_tenant_logo_url(request)
 
     context = {
         'categorized_events': categorized_events_clean,

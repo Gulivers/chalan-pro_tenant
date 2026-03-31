@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">Name a
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ document.document_type.type_code }} - {{ document.id }}</title>
 
@@ -13,10 +13,31 @@
             margin: 1.0cm 1.0cm 1.0cm 1.0cm;
         }
 
+        .header-bar {
+            display: table;
+            width: 100%;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header-logo,
+        .header-title-wrap {
+            display: table-cell;
+            vertical-align: middle;
+        }
+        .header-logo {
+            width: 160px;
+            text-align: left;
+        }
+        .header-title-wrap {
+            text-align: center;
+        }
         .logo {
             width: 140px;
-            margin-bottom: 10px;
-            float: left;
+            max-height: 70px;
+            object-fit: contain;
+            display: block;
+            margin: 0;
         }
 
         body {
@@ -178,13 +199,16 @@
 <div class="container-fluid">
 
     <!-- Header Section -->
-    <div class="header-section">
-        {% if logo_url %}
-            <img src="{{ logo_url }}" class="logo" />
-        {% endif %}
-        
-        <div class="document-title">
-            {{ document.document_type.description | upper }}
+    <div class="header-bar">
+        <div class="header-logo">
+            {% if logo_url %}
+                <img src="{{ logo_url }}" class="logo" />
+            {% endif %}
+        </div>
+        <div class="header-title-wrap">
+            <div class="document-title mb-0">
+                {{ document.document_type.description | upper }}
+            </div>
         </div>
     </div>
 
@@ -248,10 +272,18 @@
         <thead>
             <tr>
                 <th style="width: 5%;">#</th>
-                <th style="width: {% if document.document_type.type_code == 'SO-PACK' %}65%{% else %}45%{% endif %};">PRODUCT</th>
+                {% if document.document_type.type_code == 'PK' %}
+                <th style="width: 65%;">PRODUCT</th>
+                {% else %}
+                <th style="width: 45%;">PRODUCT</th>
+                {% endif %}
                 <th style="width: 10%;" class="text-center">QTY.</th>
-                <th style="width: {% if document.document_type.type_code == 'SO-PACK' %}20%{% else %}10%{% endif %};" class="text-center">UNIT</th>
-                {% if document.document_type.type_code != 'SO-PACK' %}
+                {% if document.document_type.type_code == 'PK' %}
+                <th style="width: 20%;" class="text-center">UNIT</th>
+                {% else %}
+                <th style="width: 10%;" class="text-center">UNIT</th>
+                {% endif %}
+                {% if document.document_type.type_code != 'PK' %}
                 <th style="width: 12%;" class="text-right">UNIT PRICE</th>
                 <th style="width: 8%;" class="text-center">DISC.%</th>
                 <th style="width: 10%;" class="text-right">SUBTOTAL</th>
@@ -273,7 +305,7 @@
                 </td>
                 <td class="text-center">{{ line.quantity }}</td>
                 <td class="text-center">{{ line.unit.code|default:"-" }}</td>
-                {% if document.document_type.type_code != 'SO-PACK' %}
+                {% if document.document_type.type_code != 'PK' %}
                 <td class="text-right">${{ line.unit_price|floatformat:2 }}</td>
                 <td class="text-center">{{ line.discount_percentage|floatformat:1 }}%</td>
                 <td class="text-right">${{ line.final_price|floatformat:2 }}</td>
@@ -284,7 +316,7 @@
     </table>
 
     <!-- Totals Section -->
-    {% if document.document_type.type_code != 'SO-PACK' %}
+    {% if document.document_type.type_code != 'PK' %}
     <div class="totals-section">
         <table class="totals-table">
             <tr>
@@ -338,8 +370,8 @@
     <!-- Footer Section -->
     <div class="footer-section">
         <div class="text-center">
-            <p class="mb-0">Document generated on {{ "now"|date:"m/d/Y g:i:s A" }} - ChalanPro System</p>
-            {% if document.document_type.type_code != 'SO-PACK' %}
+            <p class="mb-0">Document generated on {{ "now"|date:"m/d/Y g:i:s A" }} - Jobrithm System</p>
+            {% if document.document_type.type_code != 'PK' %}
             <p class="mb-0">This document was generated electronically and does not require handwritten signature</p>
             {% endif %}
         </div>

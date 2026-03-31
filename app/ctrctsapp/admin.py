@@ -3,9 +3,9 @@
 from django.contrib import admin
 from .models import WorkPrice, Builder, Job, HouseModel, Contract, ContractDetails
 
-admin.site.site_header = "Chalan-Pro Administration"
-admin.site.site_title = "Chalan-Pro Admin"
-admin.site.index_title = "Welcome to the Chalan-Pro Admin Panel"
+admin.site.site_header = "Jobrithm Administration"
+admin.site.site_title = "Jobrithm Admin"
+admin.site.index_title = "Welcome to the Jobrithm Admin Panel"
 
 @admin.register(WorkPrice)
 class WorkPriceAdmin(admin.ModelAdmin):

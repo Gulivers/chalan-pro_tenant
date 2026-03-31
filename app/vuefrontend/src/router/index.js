@@ -7,7 +7,7 @@ import axios from "axios";
 
 const LoginView = () => import("@views/LoginView.vue");
 const HomeView = () => import("@views/HomeView.vue");
-const AboutView = () => import("@views/AboutView.vue");
+const AboutView = () => import("@/views/AboutView.vue");
 const OnboardingView = () => import("@views/OnboardingView.vue");
 const JobMap = () => import("@components/houses/JobMap.vue");
 const SupervisorCommunitiesList = () =>

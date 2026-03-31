@@ -14,6 +14,7 @@ from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions, 
 from django.template.loader import render_to_string
 from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
+from utils.tenant_branding import get_tenant_logo_url
 from .models import (
     DocumentType, PartyType, PartyCategory, Party, Document, DocumentLine,
     PriceType, WorkAccount, TransactionFavorite
@@ -418,16 +419,7 @@ def download_transaction_pdf(request, document_id):
             id=document_id
         )
 
-        # Determinar el logo basado en el dominio (similar al contrato)
-        domain = request.get_host()
-        if 'phoenixelectricandair' in domain:
-            tenant_logo = 'media/tenant_logos/Logo-phoenix-w.png'
-        elif '192.168.0.248:8000' in domain or 'division16llc' in domain:
-            tenant_logo = 'media/tenant_logos/Logo-division-w.png'
-        else:
-            tenant_logo = 'media/tenant_logos/default-logo.png'
-
-        logo_url = request.build_absolute_uri('/' + tenant_logo)
+        logo_url = get_tenant_logo_url(request)
 
         # Preparar el contexto para el template
         context = {
