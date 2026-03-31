@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Landing page y funnel de marketing para ChalanPro",
   "scripts": {
-    "build": "mkdir -p dist && tailwindcss -i ./src/input.css -o ./dist/output.css --minify && cp src/*.html src/sitemap.xml src/robots.txt dist/ && (cp -r src/img dist/ 2>/dev/null || mkdir -p dist/img)",
+    "build": "mkdir -p dist && tailwindcss -i ./src/input.css -o ./dist/output.css --minify && cp src/*.html src/sitemap.xml src/robots.txt dist/ && (cp -r src/img dist/ 2>/dev/null || mkdir -p dist/img) && mkdir -p dist/icons && cp -f src/icons/* dist/icons/",
     "dev": "tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "build:watch": "chokidar \"src/**\" -c \"npm run build\"",
     "start": "npx serve dist -p 3000"

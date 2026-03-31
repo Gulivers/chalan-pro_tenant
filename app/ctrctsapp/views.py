@@ -36,6 +36,8 @@ from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.template.loader import render_to_string
+from django.db import connection
+from django_tenants.utils import get_public_schema_name, get_tenant
 from .utils import geocode_address
 from utils.datatable import handle_datatable_query
 
@@ -64,14 +66,52 @@ def geocode_view(request):
         return JsonResponse({"error": "Could not geocode address"}, status=404)
 
 
+def _resolve_request_tenant(request):
+    """
+    Tenant activo para la petición: django-tenants suele fijar connection.tenant;
+    get_tenant(request) puede fallar en algunos contextos DRF. Excluimos el schema público.
+    """
+    public_schema = get_public_schema_name()
+
+    conn_tenant = getattr(connection, 'tenant', None)
+    if conn_tenant is not None and getattr(
+        conn_tenant, 'schema_name', None
+    ) != public_schema:
+        return conn_tenant
+
+    try:
+        t = get_tenant(request)
+    except Exception:
+        t = None
+    if t is not None and getattr(t, 'schema_name', None) != public_schema:
+        return t
+    return None
+
+
 @permission_classes([AllowAny])
 class UserDetailView(APIView):
     def get(self, request):
         user = request.user
-        return Response({
-            'id': user.id,
-            'username': user.username,
-        })
+        data = {
+            'id': user.pk if user.is_authenticated else None,
+            'username': user.get_username() if user.is_authenticated else '',
+        }
+        tenant = _resolve_request_tenant(request)
+        if tenant is not None:
+            data['tenant_name'] = tenant.name
+            logo_url = tenant.get_logo_url()
+            if logo_url:
+                # Preferir URL relativa /media/... para mismo origen que la SPA (proxy /media en dev).
+                if logo_url.startswith(('http://', 'https://')):
+                    data['tenant_logo_url'] = logo_url
+                else:
+                    data['tenant_logo_url'] = logo_url
+            else:
+                data['tenant_logo_url'] = None
+        else:
+            data['tenant_name'] = None
+            data['tenant_logo_url'] = None
+        return Response(data)
 
 
 @api_view(['POST'])

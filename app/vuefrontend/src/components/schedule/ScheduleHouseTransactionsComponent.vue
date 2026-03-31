@@ -5,8 +5,7 @@
       <button
         @click="() => goToTransactionForm()"
         class="btn btn-success btn-sm">
-        <i class="bi bi-plus-circle"></i>
-        New Transaction
+        + New Transaction
       </button>
     </div>
 
@@ -65,7 +64,9 @@
           <span
             class="badge bg-info"
             v-tt
-            :data-title="documentTypeDescriptionsMap[data.item.document_type] || ''">
+            :data-title="
+              documentTypeDescriptionsMap[data.item.document_type] || ''
+            ">
             {{ documentTypeNamesMap[data.item.document_type] || "—" }}
           </span>
         </template>
