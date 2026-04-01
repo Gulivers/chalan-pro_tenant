@@ -246,6 +246,11 @@ Hostinger expone una **API** para gestionar DNS (documentación: [developers.hos
    /opt/chalanpro/.venv-hostinger/bin/pip install hostinger_api
    ```
 
+   **Dependencia operativa requerida (obligatoria):**
+   - El virtualenv `/opt/chalanpro/.venv-hostinger` debe existir y contener `hostinger_api`.
+   - Los hooks `scripts/certbot_hostinger_auth.py` y `scripts/certbot_hostinger_cleanup.py` dependen de ese entorno para ejecutar la renovación DNS-01.
+   - Si este virtualenv no está disponible, la renovación SSL wildcard fallará.
+
 3. Scripts en el repo:
    - `scripts/certbot_hostinger_auth.py` — manual-auth-hook: añade el TXT `_acme-challenge` vía API.
    - `scripts/certbot_hostinger_cleanup.py` — manual-cleanup-hook: borra ese TXT tras la validación.
