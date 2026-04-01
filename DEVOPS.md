@@ -26,7 +26,8 @@ Documento de referencia para operar el servidor con **precisión, repetibilidad 
 - **Path:** `/opt/chalanpro` (raíz del repo y del compose).
 - **Compose:** `docker-compose.yml` (producción). No usar `docker-compose.dev.yml` en VPS.
 - **Secrets:** `.env` en `envs/` (postgres.env, backend.env, pgadmin.env). **Nunca** versionar secretos; solo templates o ejemplos sin valores reales.
-- **DNS:** Hostinger → `chalanpro.net`, `api.chalanpro.net`, `*.chalanpro.net` apuntando a la IP del VPS.
+- **DNS (actual):** Hostinger → `jobrithm.net`, `api.jobrithm.net`, `*.jobrithm.net` apuntando a la IP del VPS.
+- **DNS (compatibilidad temporal):** se mantiene `chalanpro.net` durante transición/rollback controlado.
 - **SSL:** Let's Encrypt (Certbot); certificados en `/etc/letsencrypt`, challenge en `/var/www/certbot`.
 
 
@@ -240,20 +241,21 @@ Hostinger expone una **API** para gestionar DNS (documentación: [developers.hos
 2. En el VPS (donde corre certbot), instalar el SDK y dejar el token disponible:
 
    ```bash
-   sudo pip3 install hostinger_api
-   export HOSTINGER_API_TOKEN="tu_token"
+   sudo apt-get install -y python3.12-venv
+   python3 -m venv /opt/chalanpro/.venv-hostinger
+   /opt/chalanpro/.venv-hostinger/bin/pip install hostinger_api
    ```
 
 3. Scripts en el repo:
    - `scripts/certbot_hostinger_auth.py` — manual-auth-hook: añade el TXT `_acme-challenge` vía API.
    - `scripts/certbot_hostinger_cleanup.py` — manual-cleanup-hook: borra ese TXT tras la validación.
    - `scripts/renew_wildcard_certbot_auto.sh` — ejecuta certbot con esos hooks (sin preguntar Enter).
+   - `scripts/renew_wildcard_certbot_auto_domain.sh` — variante parametrizable por dominio/email (recomendada para multi-dominio).
 
 **Uso (renovación manual con API)**
 
 ```bash
-export HOSTINGER_API_TOKEN="tu_token"
-sudo -E /opt/chalanpro/scripts/renew_wildcard_certbot_auto.sh
+HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrithm.net --email admin@jobrithm.net
 ```
 
 **Cron (renovación automática del wildcard)**
@@ -261,9 +263,20 @@ sudo -E /opt/chalanpro/scripts/renew_wildcard_certbot_auto.sh
 Si el token está en un archivo (p. ej. `/root/.hostinger-api-token`, `chmod 600`):
 
 ```bash
-# Renovar wildcard el día 1 de cada mes a las 03:00 (cert válido ~90 días)
-0 3 1 * * HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto.sh
+# Renovar wildcard de jobrithm.net el día 1 de cada mes a las 03:00 (cert válido ~90 días)
+0 3 1 * * HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrithm.net --email admin@jobrithm.net
 ```
 
 O definir `HOSTINGER_API_TOKEN` en `/etc/environment` o en el cron y usar `sudo -E` en el script (el script ya usa `sudo -E certbot` para pasar el token a certbot y a los hooks).
+
+#### Post-migración y retiro de `chalanpro.net`
+
+**Fecha objetivo de apagado (editable):** `2026-05-01`
+
+Checklist sugerido:
+- [ ] Confirmar 7-14 días sin incidencias en `jobrithm.net` (`frontend`, `api`, `*.jobrithm.net`, WebSocket).
+- [ ] Verificar que onboarding y nuevos tenants se crean en `jobrithm.net`.
+- [ ] Mantener redirecciones 301 desde `chalanpro.net` durante la ventana de transición.
+- [ ] Actualizar runbooks/monitoring/alertas para usar `jobrithm.net` como dominio principal.
+- [ ] En la fecha objetivo, retirar wildcard/hosts/rutas legacy de `chalanpro.net` si no hay dependencias.
 
