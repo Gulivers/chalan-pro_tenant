@@ -81,7 +81,8 @@
 Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con Ubuntu 24.04 LTS. La plataforma permite la creación dinámica de tenants mediante un proceso de onboarding, donde cada tenant obtiene su propio subdominio y schema de base de datos aislado.
 
 **IP del Servidor:** `72.60.168.62`  
-**Dominio Base:** `chalanpro.net`  
+**Dominio Base (actual):** `jobrithm.net`  
+**Dominio anterior (compatibilidad temporal):** `chalanpro.net`  
 **Repositorio Git:** `https://github.com/Gulivers/chalan-pro_tenant.git`
 
 ---
@@ -462,30 +463,32 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 
 ### 2.2.1 Configuración de DNS en Hostinger
 
-**Panel DNS:** https://hpanel.hostinger.com/domain/chalanpro.net/dns
+**Panel DNS:** https://hpanel.hostinger.com/domain/jobrithm.net/dns
 
 | Tipo      | Name | Points to / Content | TTL   | Propósito                                   |
 | --------- | ---- | ------------------- | ----- | ------------------------------------------- |
 | **A**     | @    | 72.60.168.62        | 14400 | Frontend principal                          |
 | **A**     | api  | 72.60.168.62        | 14400 | API REST y Admin Django                     |
 | **A**     | \*   | 72.60.168.62        | 14400 | Subdominios dinámicos de tenants (wildcard) |
-| **CNAME** | www  | chalanpro.net       | 14400 | Frontend (www)                              |
+| **CNAME** | www  | jobrithm.net        | 300   | Frontend (www)                              |
 | **CAA**   | @    | (varios)            | 14400 | Certificados SSL                            |
 
-**Nota:** El registro wildcard `*` permite que cualquier subdominio (ej: `tenant1.chalanpro.net`) resuelva a la IP del servidor.
+**Nota:** El registro wildcard `*` permite que cualquier subdominio (ej: `tenant1.jobrithm.net`) resuelva a la IP del servidor.
 
 ### 2.2.2 Configuración de Certificados SSL
 
-**Certificado Wildcard:** `*.chalanpro.net` (obtenido con `init-certbot-wildcard.sh`)
+**Certificado Wildcard actual:** `*.jobrithm.net`
 
 Este certificado cubre:
 
-- `chalanpro.net`
-- `www.chalanpro.net`
-- `api.chalanpro.net`
-- `*.chalanpro.net` (cualquier subdominio de tenant)
+- `jobrithm.net`
+- `www.jobrithm.net`
+- `api.jobrithm.net`
+- `*.jobrithm.net` (cualquier subdominio de tenant)
 
-**Ubicación:** `/etc/letsencrypt/live/chalanpro.net/`
+**Ubicación:** `/etc/letsencrypt/live/jobrithm.net/`
+
+**Compatibilidad temporal:** se mantiene certificado/dominios de `chalanpro.net` durante transición y rollback controlado.
 
 #### 2.2.2.1 Renovación wildcard automática (API DNS Hostinger)
 
@@ -497,20 +500,21 @@ Hostinger expone una **API** para gestionar DNS (documentación: [developers.hos
 2. En el VPS (donde corre certbot), instalar el SDK y dejar el token disponible:
 
    ```bash
-   sudo pip3 install hostinger_api
-   export HOSTINGER_API_TOKEN="tu_token"
+   sudo apt-get install -y python3.12-venv
+   python3 -m venv /opt/chalanpro/.venv-hostinger
+   /opt/chalanpro/.venv-hostinger/bin/pip install hostinger_api
    ```
 
 3. Scripts en el repo (en el VPS, típicamente en `scripts/`):
    - `certbot_hostinger_auth.py` — manual-auth-hook: añade el TXT `_acme-challenge` vía API.
    - `certbot_hostinger_cleanup.py` — manual-cleanup-hook: borra ese TXT tras la validación.
-   - `renew_wildcard_certbot_auto.sh` — ejecuta certbot con esos hooks (sin preguntar Enter).
+   - `renew_wildcard_certbot_auto.sh` — script histórico para `chalanpro.net`.
+   - `renew_wildcard_certbot_auto_domain.sh` — script parametrizable por dominio/email (recomendado).
 
 **Uso (renovación manual con API)**
 
 ```bash
-export HOSTINGER_API_TOKEN="tu_token"
-sudo -E /opt/chalanpro/scripts/renew_wildcard_certbot_auto.sh
+HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrithm.net --email admin@jobrithm.net
 ```
 
 **Cron (renovación automática del wildcard)**
@@ -518,8 +522,8 @@ sudo -E /opt/chalanpro/scripts/renew_wildcard_certbot_auto.sh
 Si el token está en un archivo (p. ej. `/root/.hostinger-api-token`, `chmod 600`):
 
 ```bash
-# Renovar wildcard el día 1 de cada mes a las 03:00 (cert válido ~90 días)
-0 3 1 * * HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) sudo -E /opt/chalanpro/scripts/renew_wildcard_certbot_auto.sh
+# Renovar wildcard de jobrithm.net el día 1 de cada mes a las 03:00 (cert válido ~90 días)
+0 3 1 * * HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrithm.net --email admin@jobrithm.net
 ```
 
 O definir `HOSTINGER_API_TOKEN` en `/etc/environment` o en el cron y usar `sudo -E` en el script (el script ya usa `sudo -E certbot` para pasar el token a certbot y a los hooks).
@@ -529,15 +533,15 @@ O definir `HOSTINGER_API_TOKEN` en `/etc/environment` o en el cron y usar `sudo 
 **Variables de Entorno (`envs/backend.env`):**
 
 ```bash
-TENANT_BASE_DOMAIN=chalanpro.net
-ALLOWED_HOSTS="chalanpro.net,*.chalanpro.net,www.chalanpro.net,api.chalanpro.net,www.api.chalanpro.net,72.60.168.62,localhost,127.0.0.1"
-CSRF_TRUSTED_ORIGINS=https://chalanpro.net,https://www.chalanpro.net,https://api.chalanpro.net,https://www.api.chalanpro.net,https://*.chalanpro.net
+TENANT_BASE_DOMAIN=jobrithm.net
+ALLOWED_HOSTS="chalanpro.net,*.chalanpro.net,www.chalanpro.net,api.chalanpro.net,www.api.chalanpro.net,jobrithm.net,*.jobrithm.net,www.jobrithm.net,api.jobrithm.net,www.api.jobrithm.net,72.60.168.62,localhost,127.0.0.1"
+CSRF_TRUSTED_ORIGINS=https://chalanpro.net,https://www.chalanpro.net,https://api.chalanpro.net,https://www.api.chalanpro.net,https://*.chalanpro.net,https://jobrithm.net,https://www.jobrithm.net,https://api.jobrithm.net,https://www.api.jobrithm.net,https://*.jobrithm.net
 ```
 
 **Configuración en `project/settings.py`:**
 
 ```python
-TENANT_BASE_DOMAIN = os.environ.get('TENANT_BASE_DOMAIN', 'chalanpro.net')
+TENANT_BASE_DOMAIN = os.environ.get('TENANT_BASE_DOMAIN', 'jobrithm.net')
 PUBLIC_SCHEMA_URLCONF = 'project.urls_public'  # URLs para schema público
 ```
 
@@ -1006,19 +1010,19 @@ add_header X-XSS-Protection "1; mode=block" always;
 
 | Servicio               | URL                                     | Descripción                      |
 | ---------------------- | --------------------------------------- | -------------------------------- |
-| **Frontend Principal** | `https://chalanpro.net`                 | Frontend Vue.js (público)        |
-| **Frontend (www)**     | `https://www.chalanpro.net`             | Frontend Vue.js (www)            |
-| **Onboarding**         | `https://www.chalanpro.net/onboarding`  | Formulario de creación de tenant |
-| **API REST**           | `https://api.chalanpro.net/api/`        | API REST de Django               |
-| **Admin Django**       | `https://api.chalanpro.net/admin/`      | Panel de administración          |
-| **Tenant Login**       | `https://{tenant}.chalanpro.net/login/` | Login de tenant específico       |
+| **Frontend Principal** | `https://jobrithm.net`                 | Frontend Vue.js (público)        |
+| **Frontend (www)**     | `https://www.jobrithm.net`             | Frontend Vue.js (www)            |
+| **Onboarding**         | `https://www.jobrithm.net/onboarding`  | Formulario de creación de tenant |
+| **API REST**           | `https://api.jobrithm.net/api/`        | API REST de Django               |
+| **Admin Django**       | `https://api.jobrithm.net/admin/`      | Panel de administración          |
+| **Tenant Login**       | `https://{tenant}.jobrithm.net/login/` | Login de tenant específico       |
 | **pgAdmin**            | `http://72.60.168.62:5050`              | Interfaz web de PostgreSQL       |
 
 ### 7.2 Credenciales de Acceso
 
 **Admin Django:**
 
-- **URL:** `https://api.chalanpro.net/admin/`
+- **URL:** `https://api.jobrithm.net/admin/`
 - **Username:** `superchalan`
 - **Password:** `d162025OH$!`
 
@@ -1027,6 +1031,17 @@ add_header X-XSS-Protection "1; mode=block" always;
 - **URL:** `http://72.60.168.62:5050`
 - **Email:** `admin@chalanpro.net`
 - **Password:** `ChalanPro2024!`
+
+### 7.3 Post-migración y retiro de `chalanpro.net`
+
+**Fecha objetivo de apagado (editable):** `2026-05-01`
+
+Checklist:
+- [ ] Confirmar operación estable 7-14 días en `jobrithm.net`, `api.jobrithm.net` y `*.jobrithm.net`.
+- [ ] Verificar que los dominios primarios en `tenants_domain` apuntan a `*.jobrithm.net`.
+- [ ] Validar onboarding en `https://www.jobrithm.net/onboarding` y creación de nuevos tenants bajo `jobrithm.net`.
+- [ ] Mantener y probar redirecciones 301 desde `chalanpro.net` durante transición.
+- [ ] Ejecutar retiro gradual del dominio anterior en Nginx/DNS/certificados cuando el tráfico legacy sea nulo.
 
 ---
 
