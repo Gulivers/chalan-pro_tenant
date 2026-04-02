@@ -1,17 +1,17 @@
-# Agentes – Landing Chalan-Pro (Marketing SaaS)
+# Agentes – Landing Jobrithm (Marketing SaaS)
 
-Contexto para agentes de IA (Cursor, Copilot, etc.) que trabajan en la **web de marketing** de Chalan-Pro (chalanpro.com).
+Contexto para agentes de IA (Cursor, Copilot, etc.) que trabajan en la **web de marketing** de Jobrithm (`getjobrithm.com`).
 
 ## Qué es este proyecto
 
-- **Sitio estático de marketing** para chalanpro.com: explicar el producto, captar leads y apoyar SEO.
-- **No es la app interna.** La app (Vue.js SPA, multi-tenant) está en chalanpro.net.
+- **Sitio estático de marketing** para `getjobrithm.com`: explicar el producto, captar leads y apoyar SEO.
+- **No es la app interna.** La app (Vue.js SPA, multi-tenant) está en `jobrithm.net`.
 - **Stack:** HTML5 estático + Tailwind CSS (CLI). JavaScript vanilla solo cuando sea necesario. Sin Vue, React, Alpine ni jQuery en la landing.
-- **Relación:** La landing enlaza a chalanpro.net para login y onboarding; objetivos de conversión: reservar demo, contactar ventas, ver precios.
+- **Relación:** La landing enlaza a `jobrithm.net` para login y onboarding; objetivos de conversión: reservar demo, contactar ventas, ver precios.
 
 ## Posicionamiento
 
-Chalan-Pro es una **plataforma de operaciones de construcción** para contratistas, supervisores y equipos de campo. La web debe transmitir: moderno, profesional, confiable, con CTAs claros y diseño tipo B2B SaaS (referencias de espíritu: Stripe, Linear, Notion; sector: Buildertrend, Procore, ServiceTitan).
+Jobrithm es una **plataforma de operaciones de construcción** para contratistas, supervisores y equipos de campo. La web debe transmitir: moderno, profesional, confiable, con CTAs claros y diseño tipo B2B SaaS (referencias de espíritu: Stripe, Linear, Notion; sector: Buildertrend, Procore, ServiceTitan).
 
 **Inspiración (nicho y segmento):**
 
@@ -30,7 +30,7 @@ El producto está exactamente aquí:
     Builder PM ---- | ---- Field Service
                     |
                     |
-           ⭐ CHALAN-PRO ZONE ⭐
+           ⭐ JOBRITHM ZONE ⭐
    Residential trade contractors operations
                     |
                     |
@@ -92,7 +92,7 @@ landing/
 1. **Editar solo en `src/`** — Los archivos en `dist/` se generan con `npm run build`.
 2. **Seguir `docs/ai-guidelines.md`** — HTML, Tailwind, diseño B2B SaaS, estrategia de conversión, SEO, accesibilidad, rendimiento.
 3. **Colores:** Usar `primary` (#0d6efd), `primary-dark` (#0a58ca), `accent` (#ffc107) según `tailwind.config.js`.
-4. **Enlaces app:** Login → https://chalanpro.net, Onboarding → https://chalanpro.net/onboarding.
+4. **Enlaces app:** Login → https://jobrithm.net, Onboarding → https://jobrithm.net/onboarding.
 5. **Idioma:** Contenido en español; meta y atributos en español.
 6. **Conversión:** Cada página importante debe tener value proposition, indicador de confianza (o placeholder), CTA above the fold y CTA cerca del final. Objetivos: reservar demo, contactar ventas, ver precios.
 7. **Rendimiento:** JavaScript mínimo; preferir CSS sobre JS; evitar dependencias innecesarias; first paint rápido.
@@ -108,8 +108,8 @@ landing/
 
 - **README landing:** `landing/README.md` — inspiración, nicho, diagrama de posicionamiento, comandos y estructura del proyecto.
 - **Estándares y guías:** `landing/docs/ai-guidelines.md` — diseño, conversión, SEO, accesibilidad; obligatorio para copy y maquetado.
-- **Proyecto principal (app):** `../AGENTS.md` (raíz del repo) — contexto Chalan-Pro completo.
-- **Nginx landing:** `nginx/default.conf` — server block chalanpro.com.
+- **Proyecto principal (app):** `../AGENTS.md` (raíz del repo) — contexto técnico completo.
+- **Nginx landing:** `nginx/default.conf` — server block `getjobrithm.com`.
 
 - Construida en **HTML plano + Tailwind CSS** (compilado, no en caliente).
 - **No introducir frameworks** ni dependencias JS: nada de React, Vue, Alpine, jQuery, etc.
@@ -123,5 +123,5 @@ landing/
 
 Links clave (conversiones):
 
-- Iniciar sesión: https://chalanpro.net
-- Onboarding usuarios: https://chalanpro.net/onboarding
+- Iniciar sesión: https://jobrithm.net
+- Onboarding usuarios: https://jobrithm.net/onboarding
