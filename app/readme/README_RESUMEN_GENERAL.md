@@ -31,6 +31,7 @@
   - [4.1 Desplegar Cambios en el Backend](#41-desplegar-cambios-en-el-backend)
   - [4.2 Desplegar Cambios en el Frontend](#42-desplegar-cambios-en-el-frontend)
   - [4.3 Desplegar Cambios en Ambos (Backend + Frontend)](#43-desplegar-cambios-en-ambos-backend--frontend)
+  - [4.4 Desplegar Solo Landing (sin backend)](#44-desplegar-solo-landing-sin-backend)
 - [4.1 Estructura de Branches de Git](#41-estructura-de-branches-de-git)
   - [4.1.1 Branches Actuales](#411-branches-actuales)
   - [4.1.2 Actualizar Branch Main con Últimos Cambios](#412-actualizar-branch-main-con-últimos-cambios)
@@ -723,6 +724,33 @@ docker compose restart nginx
 docker compose ps
 docker compose logs -f
 ```
+
+### 4.4 Desplegar Solo Landing (sin backend)
+
+Para cambios exclusivamente de la landing (HTML/CSS/imagenes en `landing/`), usar el script dedicado:
+
+```bash
+sudo /opt/chalanpro/scripts/deploy-landing-vps.sh
+```
+
+**Flujo del script (`scripts/deploy-landing-vps.sh`):**
+
+1. Actualiza código desde `origin/main` (fetch + checkout + pull `--ff-only`).
+2. Reinicia solo `nginx` (no reconstruye `backend`/`frontend`, no migraciones).
+3. Ejecuta smoke test HTTP(S) a la landing (`https://getjobrithm.com` por defecto).
+
+**Opciones útiles:**
+
+```bash
+# No hacer pull (usar código ya presente localmente)
+sudo /opt/chalanpro/scripts/deploy-landing-vps.sh --no-pull
+
+# Verificar otra URL de landing
+sudo /opt/chalanpro/scripts/deploy-landing-vps.sh --url=https://www.getjobrithm.com
+```
+
+**Cuándo usarlo:** cuando el commit trae solo cambios en `landing/src` y/o `landing/dist`.  
+**Cuándo NO usarlo:** si hay cambios en backend, frontend SPA, modelos o migraciones.
 
 ---
 
