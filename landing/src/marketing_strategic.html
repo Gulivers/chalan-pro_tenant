@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jobrithm | Marketing Vision Board</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;500;700&display=swap"
+      rel="stylesheet" />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: "#f0f7ff",
+                100: "#e0effe",
+                200: "#bae0fd",
+                500: "#3b82f6",
+                600: "#2563eb",
+                700: "#1d4ed8",
+                900: "#1e3a8a",
+              },
+              accent: {
+                gold: "#fbbf24",
+                deep: "#0f172a",
+              },
+            },
+            fontFamily: {
+              display: ["Outfit", "sans-serif"],
+              body: ["Inter", "sans-serif"],
+            },
+            animation: {
+              float: "float 6s ease-in-out infinite",
+              "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+            },
+            keyframes: {
+              float: {
+                "0%, 100%": { transform: "translateY(0)" },
+                "50%": { transform: "translateY(-20px)" },
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .glass-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .glass-card:hover {
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+      .gradient-text {
+        background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      body {
+        background-color: #020617;
+        background-image:
+          radial-gradient(
+            circle at 0% 0%,
+            rgba(37, 99, 235, 0.15) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 100% 100%,
+            rgba(251, 191, 36, 0.1) 0%,
+            transparent 50%
+          );
+        color: #f8fafc;
+        overflow-x: hidden;
+      }
+      .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 1.5rem;
+      }
+      @media (max-width: 768px) {
+        .bento-grid {
+          display: flex;
+          flex-direction: column;
+        }
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body class="font-body antialiased">
+    <!-- Hero Section -->
+    <header class="relative pt-20 pb-12 px-6 overflow-hidden">
+      <div class="max-w-7xl mx-auto text-center relative z-10">
+        <span
+          class="inline-block px-4 py-1.5 mb-6 text-xs font-semibold tracking-widest uppercase bg-brand-600/20 text-brand-500 rounded-full border border-brand-500/30">
+          Strategic Roadmap 2024
+        </span>
+        <h1
+          class="font-display text-5xl md:text-7xl font-extrabold mb-6 gradient-text">
+          Jobrithm Vision Board
+        </h1>
+        <p
+          class="max-w-2xl mx-auto text-slate-400 text-lg md:text-xl leading-relaxed">
+          A comprehensive visual and strategic guide to transforming trade
+          operational chaos into digital rhythm.
+        </p>
+      </div>
+      <div
+        class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none opacity-20">
+        <div
+          class="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-500 rounded-full blur-[120px] animate-pulse-slow"></div>
+        <div
+          class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-gold rounded-full blur-[120px] animate-pulse-slow"></div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 pb-24 space-y-24">
+      <!-- Section 1: Content Marketing -->
+      <section class="space-y-12">
+        <div class="flex items-end gap-4 mb-8">
+          <div class="h-1 w-12 bg-brand-500 mb-3"></div>
+          <h2 class="text-3xl font-display font-bold tracking-tight">
+            01. Content Marketing
+          </h2>
+        </div>
+
+        <div class="bento-grid">
+          <!-- Visual Board -->
+          <div
+            class="col-span-12 lg:col-span-7 glass-card rounded-3xl overflow-hidden group">
+            <div class="p-8 pb-0">
+              <h3 class="text-2xl font-display font-bold mb-2">
+                The "Field-to-Office Friction Audit"
+              </h3>
+              <p class="text-slate-400 mb-6 italic">
+                Visualizing the transition from manual chaos to digital roadmap.
+              </p>
+            </div>
+            <div
+              class="relative aspect-video lg:aspect-auto lg:h-[450px] overflow-hidden">
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+              <img
+                src="https://opal.google/board/blobs/0f718522-5a0d-42b6-b6fc-21adccac75fc"
+                alt="media_1"
+                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+            </div>
+          </div>
+
+          <!-- Strategic Detail -->
+          <div
+            class="col-span-12 lg:col-span-5 glass-card rounded-3xl p-8 flex flex-col justify-between">
+            <div>
+              <div class="flex flex-wrap gap-2 mb-6">
+                <span
+                  class="px-3 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded-lg border border-green-500/20">
+                  High Lead Quality
+                </span>
+                <span
+                  class="px-3 py-1 bg-brand-500/10 text-brand-400 text-xs font-bold rounded-lg border border-brand-500/20">
+                  Authority Building
+                </span>
+              </div>
+              <p class="text-slate-300 leading-relaxed mb-8">
+                This high-value operational playbook allows trade contractor
+                owners to "score" their current processes across five key
+                pillars: Planning, Scheduling, Execution, Control, and Billing.
+                It positions Jobrithm as the bridge between current chaos and
+                operational excellence.
+              </p>
+            </div>
+
+            <div class="space-y-4">
+              <h4
+                class="text-sm font-bold uppercase tracking-wider text-slate-500">
+                Next Steps
+              </h4>
+              <ul class="space-y-3">
+                <li class="flex items-center gap-3 text-sm text-slate-400">
+                  <div
+                    class="w-5 h-5 rounded border border-brand-500/50 flex items-center justify-center shrink-0">
+                    <span class="w-2 h-2 bg-brand-500 rounded-sm"></span>
+                  </div>
+                  Map 20-question diagnostic framework
+                </li>
+                <li class="flex items-center gap-3 text-sm text-slate-400">
+                  <div
+                    class="w-5 h-5 rounded border border-brand-500/50 flex items-center justify-center shrink-0"></div>
+                  Design "Result PDF" template
+                </li>
+                <li class="flex items-center gap-3 text-sm text-slate-400">
+                  <div
+                    class="w-5 h-5 rounded border border-brand-500/50 flex items-center justify-center shrink-0"></div>
+                  Create landing page with lead-capture
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Social Media -->
+      <section class="space-y-12">
+        <div class="flex items-end gap-4 mb-8">
+          <div class="h-1 w-12 bg-accent-gold mb-3"></div>
+          <h2 class="text-3xl font-display font-bold tracking-tight">
+            02. Social Media
+          </h2>
+        </div>
+
+        <div class="bento-grid">
+          <!-- Strategy Card -->
+          <div
+            class="col-span-12 lg:col-span-4 glass-card rounded-3xl p-8 order-2 lg:order-1">
+            <h3 class="text-2xl font-display font-bold mb-4">
+              The "Paperless Foreman" Series
+            </h3>
+            <p class="text-slate-400 mb-8">
+              Short-form video content utilizing a high-contrast "Split Screen"
+              format to trigger emotional relief and showcase real-time
+              visibility.
+            </p>
+
+            <div class="grid grid-cols-2 gap-4 mb-8">
+              <div
+                class="bg-red-500/5 border border-red-500/20 p-4 rounded-2xl">
+                <p class="text-[10px] uppercase font-bold text-red-400 mb-1">
+                  Side A
+                </p>
+                <p class="text-sm font-semibold">The Chaos</p>
+                <p class="text-xs text-slate-500">
+                  Messy trucks, lost notes, shortages.
+                </p>
+              </div>
+              <div
+                class="bg-brand-500/5 border border-brand-500/20 p-4 rounded-2xl">
+                <p class="text-[10px] uppercase font-bold text-brand-400 mb-1">
+                  Side B
+                </p>
+                <p class="text-sm font-semibold">The Rhythm</p>
+                <p class="text-xs text-slate-500">
+                  Tablet interface, live scheduling.
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="bg-slate-900/50 rounded-2xl p-4 border border-slate-800">
+              <h4 class="text-xs font-bold text-slate-500 uppercase mb-3">
+                Target Metrics
+              </h4>
+              <div class="flex justify-between items-end">
+                <div class="w-full bg-slate-800 h-1.5 rounded-full mr-4">
+                  <div
+                    class="bg-accent-gold h-1.5 rounded-full"
+                    style="width: 75%"></div>
+                </div>
+                <span class="text-xs font-mono text-accent-gold">
+                  Relatability
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Media Display -->
+          <div
+            class="col-span-12 lg:col-span-8 glass-card rounded-3xl overflow-hidden group order-1 lg:order-2">
+            <div class="absolute top-6 left-6 z-20">
+              <div class="flex gap-2">
+                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+              </div>
+            </div>
+            <img
+              src="https://opal.google/board/blobs/b34cbe51-9813-4d5b-a8b1-c8c6ec87f7d3"
+              alt="media_2"
+              class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Partnerships -->
+      <section class="space-y-12">
+        <div class="flex items-end gap-4 mb-8">
+          <div class="h-1 w-12 bg-brand-200 mb-3"></div>
+          <h2 class="text-3xl font-display font-bold tracking-tight">
+            03. Partnerships
+          </h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <!-- Mood Board Item -->
+          <div
+            class="col-span-1 md:col-span-2 glass-card rounded-3xl overflow-hidden relative group">
+            <img
+              src="https://opal.google/board/blobs/6b9f2bb2-8ba6-4530-a619-7b16568778c8"
+              alt="media_3"
+              class="w-full h-[400px] object-cover" />
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-accent-deep via-transparent to-transparent opacity-90"></div>
+            <div class="absolute bottom-0 left-0 p-8">
+              <h3 class="text-3xl font-display font-bold mb-2">
+                Regional Material Supplier Program
+              </h3>
+              <p class="text-slate-300 max-w-xl">
+                Strategic alliances with lumber yards and wholesalers to place
+                Jobrithm "Efficiency Kits" in the hands of key contractors.
+              </p>
+            </div>
+          </div>
+
+          <!-- Data & Action Card -->
+          <div
+            class="glass-card rounded-3xl p-8 flex flex-col border-accent-gold/20">
+            <div
+              class="w-12 h-12 bg-accent-gold/20 rounded-2xl flex items-center justify-center mb-6">
+              <svg
+                class="w-6 h-6 text-accent-gold"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+              </svg>
+            </div>
+            <h4 class="text-xl font-display font-bold mb-4">The Logic</h4>
+            <p class="text-slate-400 text-sm mb-6 leading-relaxed">
+              Suppliers have a vested interest in organized customers. Organized
+              customers order accurately, pay on time, and grow faster. Jobrithm
+              enables this cycle.
+            </p>
+            <div class="mt-auto space-y-4">
+              <div
+                class="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+                <span class="text-xs font-medium text-slate-300">
+                  Target Suppliers
+                </span>
+                <span class="text-xs font-bold text-brand-400">
+                  Top 5 Pilot
+                </span>
+              </div>
+              <div
+                class="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+                <span class="text-xs font-medium text-slate-300">
+                  Reward Type
+                </span>
+                <span class="text-xs font-bold text-brand-400">
+                  Co-Marketing
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Summary & Final Action Steps -->
+      <section class="relative">
+        <div
+          class="absolute inset-0 bg-brand-600/10 blur-3xl rounded-full"></div>
+        <div
+          class="relative glass-card rounded-[3rem] p-12 overflow-hidden border-brand-500/30">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 class="text-4xl font-display font-extrabold mb-6">
+                Execution Checklist
+              </h2>
+              <p class="text-slate-400 mb-8">
+                Our immediate roadmap to drive brand awareness and lead
+                generation through operational excellence.
+              </p>
+
+              <div class="space-y-6">
+                <div class="group flex gap-4 items-start cursor-pointer">
+                  <div
+                    class="w-8 h-8 rounded-full border-2 border-brand-500 flex items-center justify-center shrink-0 group-hover:bg-brand-500 transition-colors">
+                    <span class="text-xs font-bold">1</span>
+                  </div>
+                  <div>
+                    <h4 class="text-lg font-bold">Launch the Audit</h4>
+                    <p class="text-sm text-slate-500">
+                      Finalize the "Field-to-Office Friction Audit" as the
+                      primary lead-generation asset.
+                    </p>
+                  </div>
+                </div>
+                <div class="group flex gap-4 items-start cursor-pointer">
+                  <div
+                    class="w-8 h-8 rounded-full border-2 border-accent-gold flex items-center justify-center shrink-0 group-hover:bg-accent-gold transition-colors">
+                    <span class="text-xs font-bold">2</span>
+                  </div>
+                  <div>
+                    <h4 class="text-lg font-bold">Execute Video Content</h4>
+                    <p class="text-sm text-slate-500">
+                      Produce first three "Paperless Foreman" videos for
+                      Facebook and LinkedIn.
+                    </p>
+                  </div>
+                </div>
+                <div class="group flex gap-4 items-start cursor-pointer">
+                  <div
+                    class="w-8 h-8 rounded-full border-2 border-brand-200 flex items-center justify-center shrink-0 group-hover:bg-brand-200 transition-colors">
+                    <span class="text-xs font-bold text-slate-900">3</span>
+                  </div>
+                  <div>
+                    <h4 class="text-lg font-bold">Pilot the Partnership</h4>
+                    <p class="text-sm text-slate-500">
+                      Initiate one regional supplier pilot to validate
+                      material-packing leads.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="hidden lg:block relative">
+              <div
+                class="w-72 h-72 bg-brand-500/20 rounded-full absolute -top-10 -right-10 blur-3xl animate-float"></div>
+              <div
+                class="bg-slate-900 rounded-3xl p-1 border border-brand-500/30 shadow-2xl rotate-2">
+                <div class="bg-[#0f172a] rounded-[1.4rem] p-6">
+                  <div class="flex justify-between items-center mb-8">
+                    <div class="flex gap-1.5">
+                      <div class="w-2.5 h-2.5 rounded-full bg-red-500/50"></div>
+                      <div
+                        class="w-2.5 h-2.5 rounded-full bg-yellow-500/50"></div>
+                      <div
+                        class="w-2.5 h-2.5 rounded-full bg-green-500/50"></div>
+                    </div>
+                    <div class="px-3 py-1 bg-brand-500/10 rounded-full">
+                      <span class="text-[10px] font-bold text-brand-400">
+                        JOBRITHM.IO
+                      </span>
+                    </div>
+                  </div>
+                  <div class="space-y-4">
+                    <div class="h-4 w-3/4 bg-slate-800 rounded"></div>
+                    <div class="h-4 w-1/2 bg-slate-800 rounded"></div>
+                    <div
+                      class="py-8 text-center border-2 border-dashed border-slate-700 rounded-2xl">
+                      <p class="text-xs text-slate-500">
+                        Interactive Audit Tool UI
+                      </p>
+                    </div>
+                    <div class="h-10 w-full bg-brand-600 rounded-xl"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // Subtle scroll animation reveal
+      const observerOptions = {
+        threshold: 0.1,
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("opacity-100");
+            entry.target.classList.remove("translate-y-10");
+            entry.target.classList.remove("opacity-0");
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll("section").forEach((section) => {
+        section.classList.add(
+          "transition-all",
+          "duration-1000",
+          "opacity-0",
+          "translate-y-10",
+        );
+        observer.observe(section);
+      });
+    </script>
+  </body>
+</html>

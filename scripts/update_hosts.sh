@@ -27,8 +27,11 @@ HOST_IP="192.168.0.105"  # IP del servidor de desarrollo local (ubuntu-house)
 HOSTS_FILE="/etc/hosts"
 TEMP_FILE=$(mktemp)
 
-# Dominios base que siempre deben estar
+# Dominios base que siempre deben estar (nuevo dominio + compatibilidad temporal)
 BASE_DOMAINS=(
+    "jobrithm.net"
+    "api.jobrithm.net"
+    "test-dominio-local.jobrithm.net"
     "chalanpro.net"
     "api.chalanpro.net"
 )
@@ -41,14 +44,14 @@ domains = Domain.objects.filter(tenant__is_active=True).values_list('domain', fl
 print(' '.join(sorted(domains)))
 " 2>/dev/null | tail -1)
 
-# Copiar líneas que no son de chalanpro (eliminar todas las líneas relacionadas)
+# Copiar líneas que no son de chalanpro/jobrithm (eliminar todas las líneas relacionadas)
 echo "Preservando líneas existentes..."
-# Eliminar líneas con chalanpro, Chalan-Pro, y formato IP antiguo (subdomain.192.168.0.105)
-grep -v "chalanpro\|Chalan-Pro\|\.192\.168\.0\.105" "$HOSTS_FILE" > "$TEMP_FILE" 2>/dev/null || cat "$HOSTS_FILE" | grep -v "chalanpro\|Chalan-Pro\|\.192\.168\.0\.105" > "$TEMP_FILE"
+# Eliminar líneas con chalanpro/jobrithm (incluye comentarios) y formato IP antiguo.
+grep -v "chalanpro\|[Jj]obrithm\|Chalan-Pro\|\.192\.168\.0\.105\|Dominios base\|Dominios de tenants" "$HOSTS_FILE" > "$TEMP_FILE" 2>/dev/null || cat "$HOSTS_FILE" | grep -v "chalanpro\|[Jj]obrithm\|Chalan-Pro\|\.192\.168\.0\.105\|Dominios base\|Dominios de tenants" > "$TEMP_FILE"
 
 # Agregar dominios base
 echo "" >> "$TEMP_FILE"
-echo "# Chalan-Pro - Dominios base" >> "$TEMP_FILE"
+echo "# Jobrithm - Dominios base" >> "$TEMP_FILE"
 for domain in "${BASE_DOMAINS[@]}"; do
     echo "$HOST_IP $domain" >> "$TEMP_FILE"
 done
@@ -56,9 +59,15 @@ done
 # Agregar dominios de tenants
 if [ -n "$TENANT_DOMAINS" ]; then
     echo "" >> "$TEMP_FILE"
-    echo "# Chalan-Pro - Dominios de tenants" >> "$TEMP_FILE"
+    echo "# Jobrithm - Dominios de tenants" >> "$TEMP_FILE"
     for domain in $TENANT_DOMAINS; do
         echo "$HOST_IP $domain" >> "$TEMP_FILE"
+        # Compatibilidad de migración local: si el tenant viene en chalanpro.net,
+        # agregar también alias equivalente en jobrithm.net para pruebas.
+        if [[ "$domain" == *.chalanpro.net ]]; then
+            alias_domain="${domain%.chalanpro.net}.jobrithm.net"
+            echo "$HOST_IP $alias_domain" >> "$TEMP_FILE"
+        fi
     done
 fi
 
