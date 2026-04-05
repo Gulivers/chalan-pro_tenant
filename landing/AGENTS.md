@@ -1,18 +1,18 @@
 # Agentes – Landing Jobrithm (Marketing SaaS)
 
-Contexto para agentes de IA (Cursor, Copilot, etc.) que trabajan en la **web de marketing** del producto comercial **Jobrithm** (sitio: https://getjobrithm.com/).
+Contexto para agentes de IA (Cursor, Copilot, etc.) que trabajan en la **web de marketing** de Jobrithm (`getjobrithm.com`).
 
 ## Nota de marca (importante)
 
 - A nivel comercial y en **todo copy visible** en la landing (títulos, párrafos, CTAs, meta, navegación, pies de página), el nombre del sistema es **Jobrithm**.
-- **Chalan-Pro / chalanpro** se mantiene para nombres técnicos cuando aplique: dominios (`getjobrithm.com`, `jobrithm.net`), enlaces ya publicados, variables o rutas del repositorio. No reescribir URLs ni dominios salvo que el usuario lo pida explícitamente.
+- **Chalan-Pro / chalanpro** se mantiene para nombres técnicos cuando aplique: dominios ya publicados, variables o rutas del repositorio. No reescribir URLs ni dominios salvo que el usuario lo pida explícitamente.
 
 ## Qué es este proyecto
 
-- **Sitio estático de marketing** para https://getjobrithm.com/: explicar el producto, captar leads y apoyar SEO.
-- **No es la app interna.** La app (Vue.js SPA, multi-tenant) está en chalanpro.net.
+- **Sitio estático de marketing** para `getjobrithm.com`: explicar el producto, captar leads y apoyar SEO.
+- **No es la app interna.** La app (Vue.js SPA, multi-tenant) está en `jobrithm.net`.
 - **Stack:** HTML5 estático + Tailwind CSS (CLI). JavaScript vanilla solo cuando sea necesario. Sin Vue, React, Alpine ni jQuery en la landing.
-- **Relación:** La landing enlaza a getjobrithm.net para login y onboarding; objetivos de conversión: reservar demo, contactar ventas, ver precios.
+- **Relación:** La landing enlaza a `jobrithm.net` para login y onboarding; objetivos de conversión: reservar demo, contactar ventas, ver precios.
 
 ## Idiomas (obligatorio)
 
@@ -44,7 +44,7 @@ El producto está exactamente aquí:
     Builder PM ---- | ---- Field Service
                     |
                     |
-           ⭐ JOBRITHM (residential trade) ⭐
+           ⭐ JOBRITHM ZONE ⭐
    Residential trade contractors operations
                     |
                     |
@@ -106,7 +106,7 @@ landing/
 1. **Editar solo en `src/`** — Los archivos en `dist/` se generan con `npm run build`.
 2. **Seguir `docs/ai-guidelines.md`** — HTML, Tailwind, diseño B2B SaaS, estrategia de conversión, SEO, accesibilidad, rendimiento.
 3. **Colores:** Usar `primary` (#0d6efd), `primary-dark` (#0a58ca), `accent` (#ffc107) según `tailwind.config.js`.
-4. **Enlaces app:** Login → https://chalanpro.net, Onboarding → https://chalanpro.net/onboarding.
+4. **Enlaces app:** Login → https://jobrithm.net, Onboarding → https://jobrithm.net/onboarding.
 5. **Marca en UI y copy:** Usar **Jobrithm** en textos visibles; no usar “Chalan-Pro” como nombre comercial en la landing salvo contexto técnico explícito.
 6. **Bilingüe:** Cualquier cambio sustancial (copy, secciones nuevas, CTAs, meta, navegación) debe replicarse en **ES** e **IN** en los HTML correspondientes (`index.html` / `index-en.html`, etc.).
 7. **Conversión:** Cada página importante debe tener value proposition, indicador de confianza (o placeholder), CTA above the fold y CTA cerca del final. Objetivos: reservar demo, contactar ventas, ver precios.
@@ -124,7 +124,7 @@ landing/
 - **README landing:** `landing/README.md` — inspiración, nicho, diagrama de posicionamiento, comandos y estructura del proyecto.
 - **Estándares y guías:** `landing/docs/ai-guidelines.md` — diseño, conversión, SEO, accesibilidad; obligatorio para copy y maquetado.
 - **Proyecto principal (app):** `../AGENTS.md` (raíz del repo) — contexto global (Jobrithm / Chalan-Pro técnico).
-- **Nginx landing:** `nginx/default.conf` — server block chalanpro.com.
+- **Nginx landing:** `nginx/default.conf` — server block `getjobrithm.com` (y hosts legacy si aplica).
 
 ## Convenciones técnicas (resumen)
 
@@ -140,4 +140,4 @@ landing/
 ## Links clave (conversiones)
 
 - Iniciar sesión: https://jobrithm.net
-- Onboarding usuarios: https://getjobrithm.net/onboarding
+- Onboarding usuarios: https://jobrithm.net/onboarding
