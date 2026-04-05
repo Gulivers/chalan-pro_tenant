@@ -247,50 +247,47 @@
               </p>
             </div>
 
-            <!-- Right column: product mockup + floating cards -->
+            <!-- Right column: product mockup + floating cards (positioned % on mockup) -->
             <div class="relative hidden lg:block">
-              <!-- Product screenshot frame -->
-              <div
-                id="hero-image-trigger"
-                role="button"
-                tabindex="0"
-                title="Click to enlarge"
-                class="group relative -ml-4 xl:-ml-8 cursor-zoom-in">
-                <div
-                  class="relative rounded-3xl bg-white/5 border border-white/15 backdrop-blur-xl shadow-2xl shadow-slate-900/80 overflow-hidden">
+              <div class="relative w-full max-w-[720px] -ml-4 xl:-ml-8">
+                <!-- Product screenshot frame (same frame as operational-chaos) -->
+                <div class="group flex w-full justify-center lg:justify-start select-none">
                   <div
-                    class="pointer-events-none absolute inset-0 bg-gradient-to-tr from-cyan-400/15 via-transparent to-indigo-500/20 opacity-70 group-hover:opacity-90 transition-opacity"></div>
-                  <div class="relative p-2">
+                    class="relative w-full max-w-[100%] overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-2xl shadow-slate-900/70 h-full">
+                    <div
+                      class="pointer-events-none absolute inset-0 bg-gradient-to-tr from-cyan-400/10 via-transparent to-indigo-500/20 opacity-70 group-hover:opacity-90 transition-opacity z-10"></div>
                     <img
-                      src="img/chalanpro-schedule.png"
-                      alt="Jobrithm crew scheduling dashboard"
-                      class="rounded-2xl border border-white/10 w-[720px] h-auto max-w-none" />
+                      src="img/mockup.jpg"
+                      alt="Jobrithm product view on device"
+                      draggable="false"
+                      oncontextmenu="return false"
+                      class="w-full h-auto object-contain transition-transform duration-700 ease-out group-hover:scale-105 select-none" />
                   </div>
                 </div>
-              </div>
 
-              <!-- Floating stat card 1 -->
-              <div
-                class="absolute -left-16 top-1/6 w-52 rounded-2xl border border-cyan-400/40 bg-slate-900/70 bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-900/80 p-3 shadow-xl shadow-cyan-500/30 backdrop-blur">
-                <p
-                  class="text-[0.65rem] font-medium text-slate-300 uppercase tracking-wide">
-                  Work Orders
-                </p>
-                <p class="text-2xl font-semibold text-slate-50 mt-1">24</p>
-                <p class="text-[0.7rem] text-cyan-300 mt-1">+8 this week</p>
-              </div>
+                <!-- Floating stat card 1: top-left (desk/background, away from device screens) -->
+                <div
+                  class="pointer-events-none absolute z-20 left-[2%] top-[5%] w-[min(11rem,calc(100%-1rem))] rounded-2xl border border-cyan-400/40 bg-slate-900/85 bg-gradient-to-br from-slate-900/90 via-slate-900/75 to-slate-900/90 p-2.5 sm:p-3 shadow-xl shadow-cyan-500/25 backdrop-blur-md">
+                  <p
+                    class="text-[0.6rem] sm:text-[0.65rem] font-medium text-slate-300 uppercase tracking-wide">
+                    Work Orders
+                  </p>
+                  <p class="text-xl sm:text-2xl font-semibold text-slate-50 mt-0.5">24</p>
+                  <p class="text-[0.65rem] sm:text-[0.7rem] text-cyan-300 mt-0.5">+8 this week</p>
+                </div>
 
-              <!-- Floating stat card 2 -->
-              <div
-                class="absolute -right-2 bottom-1/4 w-48 rounded-2xl border border-indigo-400/40 bg-slate-900/70 bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-900/80 p-3 shadow-xl shadow-indigo-500/30 backdrop-blur">
-                <p
-                  class="text-[0.65rem] font-medium text-slate-300 uppercase tracking-wide">
-                  Crews this week
-                </p>
-                <p class="text-2xl font-semibold text-cyan-300 mt-1">12</p>
-                <p class="text-[0.7rem] text-slate-400 mt-1">
-                  Across active projects
-                </p>
+                <!-- Floating stat card 2: top-right (symmetric, avoids phone/desktop UI) -->
+                <div
+                  class="pointer-events-none absolute z-20 right-[2%] top-[7%] w-[min(10.5rem,calc(100%-1rem))] rounded-2xl border border-indigo-400/40 bg-slate-900/85 bg-gradient-to-br from-slate-900/90 via-slate-900/75 to-slate-900/90 p-2.5 sm:p-3 shadow-xl shadow-indigo-500/25 backdrop-blur-md">
+                  <p
+                    class="text-[0.6rem] sm:text-[0.65rem] font-medium text-slate-300 uppercase tracking-wide">
+                    Crews this week
+                  </p>
+                  <p class="text-xl sm:text-2xl font-semibold text-cyan-300 mt-0.5">12</p>
+                  <p class="text-[0.65rem] sm:text-[0.7rem] text-slate-400 mt-0.5">
+                    Across active projects
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -321,7 +318,21 @@
               class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-50 mb-8 max-w-5xl mx-auto leading-tight">
               Construction operations break down when information is scattered
             </h2>
-            <div class="max-w-[90rem] mx-auto grid lg:grid-cols-[0.95fr_1.35fr] gap-8 lg:gap-12 items-start text-left">
+            <div class="max-w-[90rem] mx-auto grid lg:grid-cols-2 gap-8 lg:gap-8 items-start text-left">
+              <!-- Left: field reality -->
+              <div class="group flex w-full justify-center lg:justify-start">
+                <div class="relative w-full max-w-[100%] overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-2xl shadow-slate-900/70 h-full">
+                  <div class="pointer-events-none absolute inset-0 bg-gradient-to-tr from-cyan-400/10 via-transparent to-indigo-500/20 opacity-70 group-hover:opacity-90 transition-opacity z-10"></div>
+                  <img
+                    src="img/operational-chaos.png"
+                    alt="Supervisor reviewing paperwork in a truck with scattered documents"
+                    class="w-full h-auto object-contain transition-transform duration-700 ease-out group-hover:scale-105" />
+                  <div class="absolute bottom-4 left-4 z-20 rounded-lg border border-white/20 bg-slate-900/65 backdrop-blur px-3 py-2">
+                    <p class="text-[11px] uppercase tracking-wide text-slate-300">Field reality</p>
+                  </div>
+                </div>
+              </div>
+              <!-- Right: copy only -->
               <div class="space-y-5">
                 <p class="text-base sm:text-lg text-slate-300 leading-relaxed">
                   Residential trade contractors run on tight margins. When crew
@@ -339,18 +350,6 @@
                   field execution. The root cause is rarely the workload—it’s
                   disconnected operations.
                 </p>
-              </div>
-              <div class="group">
-                <div class="relative overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-2xl shadow-slate-900/70 h-full">
-                  <div class="pointer-events-none absolute inset-0 bg-gradient-to-tr from-cyan-400/10 via-transparent to-indigo-500/20 opacity-70 group-hover:opacity-90 transition-opacity z-10"></div>
-                  <img
-                    src="img/operational-chaos.png"
-                    alt="Supervisor reviewing paperwork in a truck with scattered documents"
-                    class="w-full h-auto object-contain transition-transform duration-700 ease-out group-hover:scale-105" />
-                  <div class="absolute bottom-4 left-4 z-20 rounded-lg border border-white/20 bg-slate-900/65 backdrop-blur px-3 py-2">
-                    <p class="text-[11px] uppercase tracking-wide text-slate-300">Field reality</p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -545,26 +544,63 @@
         </div>
 
         <div class="relative max-w-screen-2xl mx-auto">
-          <div class="text-center mb-12 sm:mb-14">
-            <p
-              class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-white/10 text-cyan-300 border border-white/15 backdrop-blur mb-6">
-              <span
-                class="inline-block h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
-              One connected operations platform
-            </p>
-            <h2
-              id="solution-heading"
-              class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-50 mb-8 max-w-3xl mx-auto">
-              The central platform that connects your construction operations
-            </h2>
-            <p
-              class="text-base sm:text-lg text-slate-300 max-w-3xl mx-auto leading-relaxed">
-              Instead of juggling handwritten notes, calls, and separate tools,
-              run crew scheduling, piece work contracts, material packing, and
-              job communication from one system. One place for the office, the
-              warehouse, and the field—so everyone works from the same
-              information.
-            </p>
+          <div class="mb-12 sm:mb-14">
+            <div class="text-center">
+              <p
+                class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-white/10 text-cyan-300 border border-white/15 backdrop-blur mb-6">
+                <span
+                  class="inline-block h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
+                One connected operations platform
+              </p>
+              <h2
+                id="solution-heading"
+                class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-50 mb-4 max-w-4xl mx-auto leading-tight">
+                Recover the money you’re losing to calls, materials, and rework
+              </h2>
+              <p
+                class="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+                Jobrithm connects
+                <strong class="font-medium text-slate-300">scheduling, contracts, materials, and job-level visibility</strong>
+                in one workflow—from planning to
+                <strong class="font-medium text-slate-300">profit per house</strong>
+                —so you stop funding coordination failures with your margin.
+              </p>
+            </div>
+            <div
+              class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start max-w-[90rem] mx-auto">
+              <div class="space-y-5 text-base sm:text-lg text-slate-300 leading-relaxed text-left">
+                <p>
+                  Instead of juggling handwritten notes, phone calls, and disconnected tools, run
+                  <strong class="text-slate-100">crew scheduling</strong>,
+                  <strong class="text-slate-100">piece-work contracts</strong>,
+                  <strong class="text-slate-100">material prep</strong>, and
+                  <strong class="text-slate-100">job communication</strong>
+                  from one system. One place for the office, warehouse, and field:
+                  <strong class="text-slate-100">everyone works from the same information</strong>.
+                </p>
+                <p>
+                  The outcome hits operations and the bottom line: fewer runarounds, fewer materials sent the wrong way, and a clear read on each job. You decide from
+                  <strong class="text-slate-100">data already in the system</strong>, not guesses or what someone “remembers.”
+                </p>
+                <p>
+                  That’s what moves the business: the
+                  <strong class="text-slate-100">schedule → materials → profit</strong>
+                  flow—with margin you can track per house and less money lost to improvisation.
+                </p>
+              </div>
+              <div class="group flex w-full justify-center lg:justify-end">
+                <div class="relative w-full max-w-[100%] overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-2xl shadow-slate-900/70 h-full">
+                  <div class="pointer-events-none absolute inset-0 bg-gradient-to-tr from-cyan-400/10 via-transparent to-indigo-500/20 opacity-70 group-hover:opacity-90 transition-opacity z-10"></div>
+                  <img
+                    src="img/tranformtions.jpg"
+                    alt="Operational transformation: aligned work with Jobrithm"
+                    class="w-full h-auto object-contain transition-transform duration-700 ease-out group-hover:scale-105" />
+                  <div class="absolute bottom-4 left-4 z-20 rounded-lg border border-white/20 bg-slate-900/65 backdrop-blur px-3 py-2">
+                    <p class="text-[11px] uppercase tracking-wide text-slate-300">Transformation you see in the margin</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Feature pillars -->
@@ -692,12 +728,12 @@
                 </svg>
               </div>
               <h3 class="text-base font-semibold text-slate-50 mb-2">
-                Operational visibility
+                Job-level visibility
               </h3>
               <p class="text-slate-300 text-sm leading-relaxed">
-                See what’s happening across jobs, crews, and materials in real
-                time. Fewer surprises, fewer coordination gaps, and decisions
-                based on current data.
+                See crews, materials, and jobs in real time—and bring
+                <strong class="text-slate-200">profit per house</strong>
+                into your weekly rhythm. Fewer surprises and decisions you can explain to the team and the books.
               </p>
             </article>
             <article
@@ -740,7 +776,7 @@
           <div class="text-center">
             <p
               class="text-lg sm:text-xl font-semibold text-slate-100 max-w-2xl mx-auto leading-snug mb-4">
-              One system. One source of truth.
+              One system. One source of truth. Job numbers you can defend.
             </p>
             <p class="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto">
               See how it works in practice—
@@ -755,7 +791,7 @@
                 class="text-cyan-300 hover:text-cyan-200 font-medium underline underline-offset-2">
                 book a demo
               </a>
-              to run through your workflow.
+              and walk your workflow before the next job kicks off.
             </p>
           </div>
         </div>
@@ -1468,38 +1504,6 @@
       </div>
     </footer>
 
-    <!-- Image zoom overlay -->
-    <div
-      id="image-zoom-overlay"
-      class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Enlarged image"
-      tabindex="-1">
-      <button
-        type="button"
-        class="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 focus:ring-2 focus:ring-white"
-        id="image-zoom-close"
-        aria-label="Close">
-        <svg
-          class="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-      <img
-        id="image-zoom-img"
-        src="img/chalanpro-schedule.png"
-        alt="Jobrithm crew scheduling dashboard (enlarged)"
-        class="max-w-full max-h-[90vh] w-auto h-auto object-contain rounded-lg" />
-    </div>
-
     <script>
       (function () {
         var toggle = document.getElementById("nav-toggle");
@@ -1514,39 +1518,6 @@
             openIcon.classList.toggle("hidden", !open);
             closeIcon.classList.toggle("hidden", open);
           }
-        });
-      })();
-
-      (function () {
-        var trigger = document.getElementById("hero-image-trigger");
-        var overlay = document.getElementById("image-zoom-overlay");
-        var closeBtn = document.getElementById("image-zoom-close");
-        if (!trigger || !overlay) return;
-        function openZoom() {
-          overlay.classList.remove("hidden");
-          overlay.classList.add("flex");
-          document.body.style.overflow = "hidden";
-          closeBtn && closeBtn.focus();
-        }
-        function closeZoom() {
-          overlay.classList.add("hidden");
-          overlay.classList.remove("flex");
-          document.body.style.overflow = "";
-        }
-        trigger.addEventListener("click", openZoom);
-        trigger.addEventListener("keydown", function (e) {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            openZoom();
-          }
-        });
-        if (closeBtn) closeBtn.addEventListener("click", closeZoom);
-        overlay.addEventListener("click", function (e) {
-          if (e.target === overlay) closeZoom();
-        });
-        document.addEventListener("keydown", function (e) {
-          if (e.key === "Escape" && !overlay.classList.contains("hidden"))
-            closeZoom();
         });
       })();
     </script>
