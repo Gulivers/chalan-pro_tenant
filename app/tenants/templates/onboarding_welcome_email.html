@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tu espacio Jobrithm está listo</title>
+</head>
+<body style="font-family: Helvetica, Arial, sans-serif; line-height: 1.5; color: #1a1a1a; max-width: 600px; margin: 0 auto; padding: 24px;">
+  <h1 style="font-size: 22px; font-weight: 600;">Tu espacio Jobrithm está listo</h1>
+  <p>Hola{% if admin_display_name %}, {{ admin_display_name }}{% endif %},</p>
+  <p>Se creó el ambiente de trabajo para <strong>{{ company_name }}</strong>.</p>
+  <p><strong>Enlace para iniciar sesión:</strong><br>
+    <a href="{{ login_url }}" style="color: #0d6efd;">{{ login_url }}</a>
+  </p>
+  <p><strong>Usuario:</strong> {{ username }}</p>
+  {% if user_chose_strong_password %}
+  <p>Usa la contraseña que configuraste durante el registro para entrar.</p>
+  {% else %}
+  <p><strong>Contraseña temporal:</strong> {{ temp_password }}</p>
+  <p>Por seguridad, te recomendamos cambiarla después del primer acceso.</p>
+  {% endif %}
+  <p style="margin-top: 32px; font-size: 13px; color: #64748b;">Este mensaje fue enviado por Jobrithm. Si no solicitaste esta cuenta, ignora este correo.</p>
+</body>
+</html>

@@ -3,9 +3,12 @@ Vistas para el sistema de onboarding y gestión de tenants
 """
 import logging
 import os
+from typing import Optional
 
 from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
 from django.core.management import call_command
+from django.template.loader import render_to_string
 from django_tenants.utils import schema_context
 from django.contrib.auth import get_user_model
 from rest_framework import status
@@ -17,6 +20,47 @@ from .models import Tenant, Domain
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+
+
+def _send_onboarding_welcome_email(
+    *,
+    recipient_email: str,
+    company_name: str,
+    login_url: str,
+    username: str,
+    temp_password: str,
+    user_chose_strong_password: bool,
+    admin_name: Optional[str],
+) -> None:
+    """Envía confirmación de onboarding desde DEFAULT_FROM_EMAIL (p. ej. noreply@jobrithm.net)."""
+    admin_display = (admin_name or "").strip() or None
+    context = {
+        "company_name": company_name,
+        "login_url": login_url,
+        "username": username,
+        "temp_password": temp_password,
+        "user_chose_strong_password": user_chose_strong_password,
+        "admin_display_name": admin_display,
+    }
+    text_body = (
+        f"Tu espacio Jobrithm está listo.\n\n"
+        f"Empresa: {company_name}\n"
+        f"Usuario: {username}\n"
+        f"Enlace: {login_url}\n\n"
+    )
+    if user_chose_strong_password:
+        text_body += "Usa la contraseña que configuraste durante el registro.\n"
+    else:
+        text_body += f"Contraseña temporal: {temp_password}\n"
+    html_body = render_to_string("onboarding_welcome_email.html", context)
+    msg = EmailMultiAlternatives(
+        "Tu espacio Jobrithm está listo",
+        text_body,
+        settings.DEFAULT_FROM_EMAIL,
+        [recipient_email],
+    )
+    msg.attach_alternative(html_body, "text/html")
+    msg.send(fail_silently=False)
 
 
 @api_view(['GET'])
@@ -504,34 +548,55 @@ def create_tenant_onboarding(request):
             
             logger.info(f"✓ Superusuario creado para tenant {tenant.schema_name}: {username} ({admin_name or 'Sin nombre'})")
             
-            # TODO: En producción, enviar email con credenciales al usuario
-            # from django.core.mail import send_mail
-            # send_mail(
-            #     subject='Bienvenido a Chalan-Pro',
-            #     message=f'Tu cuenta ha sido creada. Usuario: {username}, Contraseña temporal: {temp_password}',
-            #     from_email=settings.DEFAULT_FROM_EMAIL,
-            #     recipient_list=[email],
-            #     fail_silently=False,
-            # )
-        
-        # Construir la URL de redirección
-        # En desarrollo local, usar localhost con el subdominio
-        # En producción, usar el dominio completo con HTTPS
-        if settings.DEBUG:
-            # En desarrollo, redirigir al subdominio en el puerto del frontend (8080)
-            # Obtener el puerto de FRONT_URL o usar 8080 por defecto
-            from urllib.parse import urlparse
-            front_url_parsed = urlparse(settings.FRONT_URL)
-            frontend_port = front_url_parsed.port if front_url_parsed.port else 8080
-            redirect_url = f"http://{domain_name}:{frontend_port}/login/"
-        else:
-            # En producción, usar HTTPS
-            redirect_url = f"https://{domain_name}/login/"
-        
+            user_chose_strong_password = bool(admin_password and len(admin_password) >= 8)
+
+            # URL de login del tenant (misma lógica que la redirección del frontend)
+            if settings.DEBUG:
+                from urllib.parse import urlparse
+                front_url_parsed = urlparse(settings.FRONT_URL)
+                frontend_port = front_url_parsed.port if front_url_parsed.port else 8080
+                redirect_url = f"http://{domain_name}:{frontend_port}/login/"
+            else:
+                redirect_url = f"https://{domain_name}/login/"
+
+            email_sent = False
+            if getattr(settings, "EMAIL_HOST_PASSWORD", ""):
+                try:
+                    _send_onboarding_welcome_email(
+                        recipient_email=email,
+                        company_name=company_name,
+                        login_url=redirect_url,
+                        username=username,
+                        temp_password=temp_password,
+                        user_chose_strong_password=user_chose_strong_password,
+                        admin_name=admin_name,
+                    )
+                    email_sent = True
+                    logger.info("Correo de onboarding enviado a %s", email)
+                except Exception as exc:
+                    logger.exception("No se pudo enviar el correo de onboarding: %s", exc)
+
+            # Mostrar contraseña en JSON solo en dev o si falló el envío (solo si no eligió una fuerte)
+            expose_generated_password = (
+                not user_chose_strong_password
+                and (settings.DEBUG or not email_sent)
+            )
+
+        cred_message = (
+            "Revisa tu correo para continuar."
+            if email_sent
+            else (
+                "Guarda estas credenciales; no se pudo enviar el correo de confirmación."
+                if not user_chose_strong_password
+                else "Tu contraseña ha sido configurada correctamente."
+            )
+        )
+
         return Response({
             'success': True,
             'message': f'¡Tu cuenta ha sido creada exitosamente! Redirigiendo a tu ambiente...',
             'url': redirect_url,
+            'email_sent': email_sent,
             'tenant': {
                 'name': tenant.name,
                 'schema_name': tenant.schema_name,
@@ -543,15 +608,13 @@ def create_tenant_onboarding(request):
                 'monthly_operations': tenant.monthly_operations,
                 'crew_count': tenant.crew_count,
                 'recommended_plan': tenant.recommended_plan,
-                # En desarrollo, incluir la contraseña temporal en la respuesta
-                # En producción, esto debería enviarse por email
-                'temp_password': temp_password if (settings.DEBUG or not admin_password) else None
+                'temp_password': temp_password if expose_generated_password else None
             },
             'credentials': {
                 'username': username,
-                'password': temp_password if (settings.DEBUG or not admin_password) else None,
+                'password': temp_password if expose_generated_password else None,
                 'password_provided': bool(admin_password),
-                'message': 'Guarda estas credenciales. En producción, se enviarán por email.' if (settings.DEBUG or not admin_password) else 'Tu contraseña ha sido configurada correctamente.'
+                'message': cred_message
             }
         }, status=status.HTTP_201_CREATED)
         

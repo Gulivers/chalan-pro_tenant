@@ -467,15 +467,35 @@ logger = logging.getLogger('django.db.backends')
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler())
 
-# Configuración para el envío de correos electrónicos
-# Configuración para el envío de correos electrónicos con SendGrid
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Configuración para el envío de correos electrónicos (SMTP)
+# Hostinger: smtp.hostinger.com, 465 + SSL o 587 + STARTTLS (ver envs/backend.env)
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    v = os.environ.get(name)
+    if v is None:
+        return default
+    return v.strip().lower() in ('1', 'true', 'yes', 'on')
+
+
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.sendgrid.net')
-EMAIL_PORT = os.environ.get('EMAIL_PORT', 587)  # Usa 465 si prefieres conexión SSL, en cuyo caso ajusta EMAIL_USE_SSL en True y elimina EMAIL_USE_TLS
-EMAIL_USE_TLS = True  # Si usas el puerto 587
+try:
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+except ValueError:
+    EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'apikey')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_DEFAULT_FROM', 'oliver@division16llc.com')
+DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_DEFAULT_FROM', 'noreply@jobrithm.net')
+# Mutuamente excluyente: SSL (p. ej. 465) vs TLS/STARTTLS (p. ej. 587)
+_use_ssl = _env_bool('EMAIL_USE_SSL', False)
+_use_tls = _env_bool('EMAIL_USE_TLS', True)
+if _use_ssl:
+    EMAIL_USE_SSL = True
+    EMAIL_USE_TLS = False
+else:
+    EMAIL_USE_SSL = False
+    EMAIL_USE_TLS = _use_tls
 
 FRONT_URL = os.environ.get('FRONT_URL', 'http://192.168.0.248:8080')
 
