@@ -18,8 +18,9 @@ Contexto para agentes de IA (Cursor, Copilot, etc.) que trabajan en la **web de 
 
 Los cambios de contenido y estructura relevantes deben aplicarse **en español y en inglés**:
 
-- **Español:** `landing/src/index.html`, `pricing.html`, `contact.html`, y el resto de páginas `*.html` en español según existan en `src/`.
-- **Inglés:** `landing/src/index-en.html`, `pricing-en.html`, `contact-en.html`, etc.
+- **Inglés (predeterminado en la raíz del sitio):** `landing/src/index.html`, `pricing-en.html`, `contact-en.html`, etc.
+- **Español:** `landing/src/index-es.html`, `pricing.html`, `contact.html`, etc.
+- **Compatibilidad:** `landing/src/index-en.html` redirige a `index.html` (enlaces antiguos a `/index-en.html`).
 
 Mantener paridad de secciones, enlaces internos entre versiones ES/EN, y ejecutar `npm run build` tras editar para actualizar `dist/`.
 
@@ -108,7 +109,7 @@ landing/
 3. **Colores:** Usar `primary` (#0d6efd), `primary-dark` (#0a58ca), `accent` (#ffc107) según `tailwind.config.js`.
 4. **Enlaces app:** Login → https://jobrithm.net, Onboarding → https://jobrithm.net/onboarding.
 5. **Marca en UI y copy:** Usar **Jobrithm** en textos visibles; no usar “Chalan-Pro” como nombre comercial en la landing salvo contexto técnico explícito.
-6. **Bilingüe:** Cualquier cambio sustancial (copy, secciones nuevas, CTAs, meta, navegación) debe replicarse en **ES** e **IN** en los HTML correspondientes (`index.html` / `index-en.html`, etc.).
+6. **Bilingüe:** Cualquier cambio sustancial (copy, secciones nuevas, CTAs, meta, navegación) debe replicarse en **EN** e **ES** (`index.html` ↔ `index-es.html`, y pares `pricing` / `contact`, etc.).
 7. **Conversión:** Cada página importante debe tener value proposition, indicador de confianza (o placeholder), CTA above the fold y CTA cerca del final. Objetivos: reservar demo, contactar ventas, ver precios.
 8. **Rendimiento:** JavaScript mínimo; preferir CSS sobre JS; evitar dependencias innecesarias; first paint rápido.
 9. **Build:** Tras cambios en `src/`, ejecutar `npm run build` para actualizar `dist/`.

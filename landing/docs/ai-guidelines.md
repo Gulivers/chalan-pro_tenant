@@ -1,6 +1,6 @@
 # AI Guidelines – Landing Chalan-Pro (Marketing SaaS)
 
-Estándares para mantener consistencia, conversión y calidad en la web de marketing de Chalan-Pro (chalanpro.com).
+Estándares para mantener consistencia, conversión y calidad en la web de marketing de Jobrithm (getjobrithm.com).
 
 ## Índice
 
@@ -56,7 +56,7 @@ El copy de hero, CTAs y secciones de problema/solución puede inspirarse en esta
 - **Tailwind CSS** v3.x (CLI, no PostCSS).
 - **JavaScript** — Solo vanilla y mínimo; úsalo solo cuando sea necesario (ej. menú móvil, validación ligera).
 - **Fuente:** Inter (Google Fonts) — o la definida en `tailwind.config.js`.
-- **Dominio marketing:** chalanpro.com, www.chalanpro.com.
+- **Dominio marketing:** getjobrithm.com, www.getjobrithm.com.
 - **App principal:** chalanpro.net (Vue.js SPA) — la landing enlaza a login y onboarding.
 
 ### No usar en la landing
@@ -218,7 +218,7 @@ Mensajería concisa y orientada a SaaS. Evitar frases genéricas (“revoluciona
 
 ### Canonical
 
-- `link rel="canonical" href="https://chalanpro.com/..."` en cada página.
+- `link rel="canonical" href="https://getjobrithm.com/..."` en cada página.
 
 ### sitemap.xml y robots.txt
 
@@ -293,7 +293,7 @@ Incluir estas variantes en meta keywords, títulos alternativos y contenido cuan
 
 - **Build:** `npm run build` — genera `dist/` con CSS minificado y archivos copiados.
 - **Desarrollo:** `npm run dev` (watch CSS) + `npm start` (servir `dist/` en puerto 3000).
-- **Deploy:** `dist/` se monta en Nginx para chalanpro.com (ver `../nginx/default.conf`).
+- **Deploy:** `dist/` se monta en Nginx para getjobrithm.com (ver `../nginx/default.conf`).
 
 ### Arquitectura ideal (site map) – Website SaaS Chalan-Pro
 

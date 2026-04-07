@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://chalanpro.com/sitemap.xml
+Sitemap: https://getjobrithm.com/sitemap.xml
