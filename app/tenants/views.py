@@ -71,32 +71,32 @@ def api_root(request):
     Muestra los endpoints disponibles para onboarding y gestión de tenants.
     """
     return Response({
-        'message': 'Chalan-Pro API - Public Schema',
+        'message': 'Jobrithm API - Public Schema',
         'version': '1.0.0',
         'endpoints': {
             'onboarding': {
                 'create_tenant': {
                     'url': '/api/onboarding/',
                     'method': 'POST',
-                    'description': 'Crear un nuevo tenant y ambiente de trabajo',
+                    'description': 'Create a new tenant and workspace',
                     'required_fields': ['company_name', 'email', 'client_type'],
                     'optional_fields': ['logo', 'address', 'admin[name]', 'admin[password]', 'preferences'],
                     'example': {
                         'company_name': 'Phoenix Electric',
                         'email': 'admin@phoenix.com',
                         'client_type': 'electric',
-                        'logo': '(archivo de imagen opcional)'
+                        'logo': '(optional image file)'
                     }
                 }
             },
             'admin': {
                 'url': '/admin/',
-                'description': 'Panel de administración global para gestionar tenants'
+                'description': 'Global admin panel to manage tenants'
             }
         },
         'documentation': {
-            'onboarding': 'Accede a /onboarding en el frontend para crear tu cuenta',
-            'api_docs': 'Los endpoints de tenant están disponibles después de crear tu cuenta'
+            'onboarding': 'Open /onboarding in the frontend to create your account',
+            'api_docs': 'Tenant endpoints are available after you create your account'
         }
     })
 
@@ -229,13 +229,13 @@ def create_tenant_onboarding(request):
         if not company_name or len(company_name) < 3:
             return Response({
                 'success': False,
-                'error': 'El nombre de la empresa debe tener al menos 3 caracteres.'
+                'error': 'Company name must be at least 3 characters long.'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         if not email:
             return Response({
                 'success': False,
-                'error': 'El email es requerido.'
+                'error': 'Email is required.'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Validar formato de email
@@ -246,21 +246,21 @@ def create_tenant_onboarding(request):
         except DjangoValidationError:
             return Response({
                 'success': False,
-                'error': 'Por favor, ingresa un email válido.'
+                'error': 'Please enter a valid email address.'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Validar que el email no esté en uso
         if Tenant.objects.filter(email=email).exists():
             return Response({
                 'success': False,
-                'error': 'Este email ya está registrado. Por favor, usa otro email.'
+                'error': 'This email is already registered. Please use a different email.'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Validar que el nombre de empresa no esté en uso
         if Tenant.objects.filter(name__iexact=company_name).exists():
             return Response({
                 'success': False,
-                'error': 'Este nombre de empresa ya está registrado. Por favor, usa otro nombre.'
+                'error': 'This company name is already registered. Please choose a different name.'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Validar tipo de cliente
@@ -313,7 +313,7 @@ def create_tenant_onboarding(request):
             error_details = traceback.format_exc() if settings.DEBUG else str(e)
             return Response({
                 'success': False,
-                'error': f'Error al crear el tenant: {str(e)}',
+                'error': f'Could not create tenant: {str(e)}',
                 'details': error_details if settings.DEBUG else None
             }, status=status.HTTP_400_BAD_REQUEST)
         
@@ -352,7 +352,7 @@ def create_tenant_onboarding(request):
                 pass
             return Response({
                 'success': False,
-                'error': f'Error al crear el dominio: {str(e)}'
+                'error': f'Could not create domain: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         # Forzar actualización de ALLOWED_HOSTS y CSRF_TRUSTED_ORIGINS para que
@@ -402,7 +402,7 @@ def create_tenant_onboarding(request):
             logger.error(f"✗ Error al verificar/crear schema: {str(e)}", exc_info=True)
             return Response({
                 'success': False,
-                'error': f'Error al verificar el schema del tenant: {str(e)}'
+                'error': f'Could not verify tenant schema: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         # Ejecutar migraciones para el nuevo tenant
@@ -447,13 +447,13 @@ def create_tenant_onboarding(request):
                             pass
                         return Response({
                             'success': False,
-                            'error': f'Error al ejecutar migraciones para el nuevo tenant. Métodos intentados: migrate_schemas ({str(e1)}), schema_context ({str(e2)}), create_schema ({str(e3)})'
+                            'error': f'Could not run migrations for the new tenant. Attempts: migrate_schemas ({str(e1)}), schema_context ({str(e2)}), create_schema ({str(e3)})'
                         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             logger.error(f"✗ Error inesperado al ejecutar migraciones: {str(e)}", exc_info=True)
             return Response({
                 'success': False,
-                'error': f'Error inesperado al ejecutar migraciones: {str(e)}'
+                'error': f'Unexpected error while running migrations: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         # Crear datos iniciales dentro del schema del tenant
@@ -583,18 +583,18 @@ def create_tenant_onboarding(request):
             )
 
         cred_message = (
-            "Revisa tu correo para continuar."
+            "Check your email to continue."
             if email_sent
             else (
-                "Guarda estas credenciales; no se pudo enviar el correo de confirmación."
+                "Save these credentials; we could not send the confirmation email."
                 if not user_chose_strong_password
-                else "Tu contraseña ha sido configurada correctamente."
+                else "Your password was set successfully."
             )
         )
 
         return Response({
             'success': True,
-            'message': f'¡Tu cuenta ha sido creada exitosamente! Redirigiendo a tu ambiente...',
+            'message': 'Your account was created successfully. Redirecting to your workspace…',
             'url': redirect_url,
             'email_sent': email_sent,
             'tenant': {
@@ -622,5 +622,5 @@ def create_tenant_onboarding(request):
         logger.error(f"Error inesperado en create_tenant_onboarding: {str(e)}", exc_info=True)
         return Response({
             'success': False,
-            'error': f'Error inesperado al crear la cuenta: {str(e)}'
+            'error': f'Unexpected error while creating account: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
