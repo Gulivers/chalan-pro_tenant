@@ -89,6 +89,46 @@ def _resolve_request_tenant(request):
     return None
 
 
+def _frontend_base_url_for_password_reset(request):
+    """
+    Base URL for password-reset links: the same origin the user used (tenant host),
+    not settings.FRONT_URL. If the request hits api.<TENANT_BASE_DOMAIN>, use the
+    tenant's primary domain from tenants_domain.
+    """
+    meta = request.META
+    proto = (meta.get('HTTP_X_FORWARDED_PROTO') or '').split(',')[0].strip().lower()
+    if not proto:
+        proto = 'https' if request.is_secure() else 'http'
+
+    forwarded_host = (meta.get('HTTP_X_FORWARDED_HOST') or '').split(',')[0].strip()
+    try:
+        host = forwarded_host or request.get_host()
+    except Exception:
+        host = forwarded_host
+
+    if not host:
+        return settings.FRONT_URL.rstrip('/')
+
+    tenant_base = (getattr(settings, 'TENANT_BASE_DOMAIN', '') or '').lower()
+    host_lc = host.lower()
+    if ':' in host_lc:
+        host_lc = host_lc.split(':')[0]
+
+    api_hosts = {f'api.{tenant_base}', f'www.api.{tenant_base}'} if tenant_base else set()
+    if tenant_base and host_lc in api_hosts:
+        tenant = getattr(connection, 'tenant', None)
+        if tenant is not None and getattr(tenant, 'schema_name', None) != get_public_schema_name():
+            from tenants.models import Domain
+
+            dom = Domain.objects.filter(tenant=tenant, is_primary=True).first() or Domain.objects.filter(
+                tenant=tenant
+            ).first()
+            if dom:
+                return f"{proto}://{dom.domain}".rstrip('/')
+
+    return f"{proto}://{host}".rstrip('/')
+
+
 @permission_classes([AllowAny])
 class UserDetailView(APIView):
     def get(self, request):
@@ -125,7 +165,8 @@ def request_password_reset(request):
             user = User.objects.get(email=email)
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            reset_url = f"{settings.FRONT_URL}/reset-password-confirm?uid={uid}&token={token}"
+            base = _frontend_base_url_for_password_reset(request)
+            reset_url = f"{base}/reset-password-confirm?uid={uid}&token={token}"
             text = f'Hello {user.username}! \n\n\nSomeone requested a link to change your password. Click the link below to proceed. \n\n\n{reset_url}'
             html_content = render_to_string(
                 "forgot_password_instructions.html",
