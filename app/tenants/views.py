@@ -43,18 +43,18 @@ def _send_onboarding_welcome_email(
         "admin_display_name": admin_display,
     }
     text_body = (
-        f"Tu espacio Jobrithm está listo.\n\n"
-        f"Empresa: {company_name}\n"
-        f"Usuario: {username}\n"
-        f"Enlace: {login_url}\n\n"
+        f"Your Jobrithm workspace is ready.\n\n"
+        f"Company: {company_name}\n"
+        f"Username: {username}\n"
+        f"Sign-in link: {login_url}\n\n"
     )
     if user_chose_strong_password:
-        text_body += "Usa la contraseña que configuraste durante el registro.\n"
+        text_body += "Use the password you set during signup.\n"
     else:
-        text_body += f"Contraseña temporal: {temp_password}\n"
+        text_body += f"Temporary password: {temp_password}\n"
     html_body = render_to_string("onboarding_welcome_email.html", context)
     msg = EmailMultiAlternatives(
-        "Tu espacio Jobrithm está listo",
+        "Your Jobrithm workspace is ready",
         text_body,
         settings.DEFAULT_FROM_EMAIL,
         [recipient_email],
