@@ -1,4 +1,4 @@
-# Chalan-Pro – Web de marketing (Landing)
+# Jobrithm – Web de marketing (Landing)
 
 **Inspiración (nicho y segmento):**
 
@@ -17,7 +17,7 @@ El producto está exactamente aquí:
     Builder PM ---- | ---- Field Service
                     |
                     |
-           ⭐ CHALAN-PRO ZONE ⭐
+           ⭐ JOBRITHM ZONE ⭐
    Residential trade contractors operations
                     |
                     |
@@ -32,7 +32,7 @@ Ese espacio tiene:
 
 ---
 
-Sitio estático, orientado a SEO y conversión, para **chalanpro.com**. Presenta Chalan-Pro como plataforma de operaciones de construcción para contratistas residenciales, supervisores y equipos de campo.
+Sitio estático, orientado a SEO y conversión, para **getjobrithm.com**. Presenta Jobrithm como plataforma de operaciones de construcción para contratistas residenciales, supervisores y equipos de campo.
 
 **No es la app interna.** Es la web pública que explica el producto, capta leads (demo, contacto, precios) y soporta el crecimiento orgánico.
 
@@ -110,10 +110,10 @@ Abrir http://localhost:3000 en el navegador. Tras editar estilos o HTML, recarga
 
 Detalle en **`docs/ai-guidelines.md`**.
 
-## Deploy (chalanpro.com)
+## Deploy (getjobrithm.com)
 
 1. **Build:** `npm run build`
-2. **Nginx:** Configurado en `../nginx/default.conf` para chalanpro.com y www.chalanpro.com
+2. **Nginx:** Configurado en `../nginx/default.conf` para `getjobrithm.com` y `www.getjobrithm.com`
 3. **Docker:** El volumen `./landing/dist` se monta en el contenedor nginx
 4. **SSL:** Obtener certificado Let's Encrypt cuando corresponda
 5. **Reiniciar nginx:** `docker compose restart nginx` (en el entorno de producción)

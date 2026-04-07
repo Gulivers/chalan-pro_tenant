@@ -3,9 +3,12 @@ Vistas para el sistema de onboarding y gestión de tenants
 """
 import logging
 import os
+from typing import Optional
 
 from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
 from django.core.management import call_command
+from django.template.loader import render_to_string
 from django_tenants.utils import schema_context
 from django.contrib.auth import get_user_model
 from rest_framework import status
@@ -19,6 +22,47 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
+def _send_onboarding_welcome_email(
+    *,
+    recipient_email: str,
+    company_name: str,
+    login_url: str,
+    username: str,
+    temp_password: str,
+    user_chose_strong_password: bool,
+    admin_name: Optional[str],
+) -> None:
+    """Envía confirmación de onboarding desde DEFAULT_FROM_EMAIL (p. ej. noreply@jobrithm.net)."""
+    admin_display = (admin_name or "").strip() or None
+    context = {
+        "company_name": company_name,
+        "login_url": login_url,
+        "username": username,
+        "temp_password": temp_password,
+        "user_chose_strong_password": user_chose_strong_password,
+        "admin_display_name": admin_display,
+    }
+    text_body = (
+        f"Your Jobrithm workspace is ready.\n\n"
+        f"Company: {company_name}\n"
+        f"Username: {username}\n"
+        f"Sign-in link: {login_url}\n\n"
+    )
+    if user_chose_strong_password:
+        text_body += "Use the password you set during signup.\n"
+    else:
+        text_body += f"Temporary password: {temp_password}\n"
+    html_body = render_to_string("onboarding_welcome_email.html", context)
+    msg = EmailMultiAlternatives(
+        "Your Jobrithm workspace is ready",
+        text_body,
+        settings.DEFAULT_FROM_EMAIL,
+        [recipient_email],
+    )
+    msg.attach_alternative(html_body, "text/html")
+    msg.send(fail_silently=False)
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def api_root(request):
@@ -27,32 +71,32 @@ def api_root(request):
     Muestra los endpoints disponibles para onboarding y gestión de tenants.
     """
     return Response({
-        'message': 'Chalan-Pro API - Public Schema',
+        'message': 'Jobrithm API - Public Schema',
         'version': '1.0.0',
         'endpoints': {
             'onboarding': {
                 'create_tenant': {
                     'url': '/api/onboarding/',
                     'method': 'POST',
-                    'description': 'Crear un nuevo tenant y ambiente de trabajo',
+                    'description': 'Create a new tenant and workspace',
                     'required_fields': ['company_name', 'email', 'client_type'],
                     'optional_fields': ['logo', 'address', 'admin[name]', 'admin[password]', 'preferences'],
                     'example': {
                         'company_name': 'Phoenix Electric',
                         'email': 'admin@phoenix.com',
                         'client_type': 'electric',
-                        'logo': '(archivo de imagen opcional)'
+                        'logo': '(optional image file)'
                     }
                 }
             },
             'admin': {
                 'url': '/admin/',
-                'description': 'Panel de administración global para gestionar tenants'
+                'description': 'Global admin panel to manage tenants'
             }
         },
         'documentation': {
-            'onboarding': 'Accede a /onboarding en el frontend para crear tu cuenta',
-            'api_docs': 'Los endpoints de tenant están disponibles después de crear tu cuenta'
+            'onboarding': 'Open /onboarding in the frontend to create your account',
+            'api_docs': 'Tenant endpoints are available after you create your account'
         }
     })
 
@@ -185,13 +229,13 @@ def create_tenant_onboarding(request):
         if not company_name or len(company_name) < 3:
             return Response({
                 'success': False,
-                'error': 'El nombre de la empresa debe tener al menos 3 caracteres.'
+                'error': 'Company name must be at least 3 characters long.'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         if not email:
             return Response({
                 'success': False,
-                'error': 'El email es requerido.'
+                'error': 'Email is required.'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Validar formato de email
@@ -202,21 +246,21 @@ def create_tenant_onboarding(request):
         except DjangoValidationError:
             return Response({
                 'success': False,
-                'error': 'Por favor, ingresa un email válido.'
+                'error': 'Please enter a valid email address.'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Validar que el email no esté en uso
         if Tenant.objects.filter(email=email).exists():
             return Response({
                 'success': False,
-                'error': 'Este email ya está registrado. Por favor, usa otro email.'
+                'error': 'This email is already registered. Please use a different email.'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Validar que el nombre de empresa no esté en uso
         if Tenant.objects.filter(name__iexact=company_name).exists():
             return Response({
                 'success': False,
-                'error': 'Este nombre de empresa ya está registrado. Por favor, usa otro nombre.'
+                'error': 'This company name is already registered. Please choose a different name.'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Validar tipo de cliente
@@ -269,7 +313,7 @@ def create_tenant_onboarding(request):
             error_details = traceback.format_exc() if settings.DEBUG else str(e)
             return Response({
                 'success': False,
-                'error': f'Error al crear el tenant: {str(e)}',
+                'error': f'Could not create tenant: {str(e)}',
                 'details': error_details if settings.DEBUG else None
             }, status=status.HTTP_400_BAD_REQUEST)
         
@@ -308,7 +352,7 @@ def create_tenant_onboarding(request):
                 pass
             return Response({
                 'success': False,
-                'error': f'Error al crear el dominio: {str(e)}'
+                'error': f'Could not create domain: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         # Forzar actualización de ALLOWED_HOSTS y CSRF_TRUSTED_ORIGINS para que
@@ -358,7 +402,7 @@ def create_tenant_onboarding(request):
             logger.error(f"✗ Error al verificar/crear schema: {str(e)}", exc_info=True)
             return Response({
                 'success': False,
-                'error': f'Error al verificar el schema del tenant: {str(e)}'
+                'error': f'Could not verify tenant schema: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         # Ejecutar migraciones para el nuevo tenant
@@ -403,13 +447,13 @@ def create_tenant_onboarding(request):
                             pass
                         return Response({
                             'success': False,
-                            'error': f'Error al ejecutar migraciones para el nuevo tenant. Métodos intentados: migrate_schemas ({str(e1)}), schema_context ({str(e2)}), create_schema ({str(e3)})'
+                            'error': f'Could not run migrations for the new tenant. Attempts: migrate_schemas ({str(e1)}), schema_context ({str(e2)}), create_schema ({str(e3)})'
                         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             logger.error(f"✗ Error inesperado al ejecutar migraciones: {str(e)}", exc_info=True)
             return Response({
                 'success': False,
-                'error': f'Error inesperado al ejecutar migraciones: {str(e)}'
+                'error': f'Unexpected error while running migrations: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         # Crear datos iniciales dentro del schema del tenant
@@ -504,34 +548,55 @@ def create_tenant_onboarding(request):
             
             logger.info(f"✓ Superusuario creado para tenant {tenant.schema_name}: {username} ({admin_name or 'Sin nombre'})")
             
-            # TODO: En producción, enviar email con credenciales al usuario
-            # from django.core.mail import send_mail
-            # send_mail(
-            #     subject='Bienvenido a Chalan-Pro',
-            #     message=f'Tu cuenta ha sido creada. Usuario: {username}, Contraseña temporal: {temp_password}',
-            #     from_email=settings.DEFAULT_FROM_EMAIL,
-            #     recipient_list=[email],
-            #     fail_silently=False,
-            # )
-        
-        # Construir la URL de redirección
-        # En desarrollo local, usar localhost con el subdominio
-        # En producción, usar el dominio completo con HTTPS
-        if settings.DEBUG:
-            # En desarrollo, redirigir al subdominio en el puerto del frontend (8080)
-            # Obtener el puerto de FRONT_URL o usar 8080 por defecto
-            from urllib.parse import urlparse
-            front_url_parsed = urlparse(settings.FRONT_URL)
-            frontend_port = front_url_parsed.port if front_url_parsed.port else 8080
-            redirect_url = f"http://{domain_name}:{frontend_port}/login/"
-        else:
-            # En producción, usar HTTPS
-            redirect_url = f"https://{domain_name}/login/"
-        
+            user_chose_strong_password = bool(admin_password and len(admin_password) >= 8)
+
+            # URL de login del tenant (misma lógica que la redirección del frontend)
+            if settings.DEBUG:
+                from urllib.parse import urlparse
+                front_url_parsed = urlparse(settings.FRONT_URL)
+                frontend_port = front_url_parsed.port if front_url_parsed.port else 8080
+                redirect_url = f"http://{domain_name}:{frontend_port}/login/"
+            else:
+                redirect_url = f"https://{domain_name}/login/"
+
+            email_sent = False
+            if getattr(settings, "EMAIL_HOST_PASSWORD", ""):
+                try:
+                    _send_onboarding_welcome_email(
+                        recipient_email=email,
+                        company_name=company_name,
+                        login_url=redirect_url,
+                        username=username,
+                        temp_password=temp_password,
+                        user_chose_strong_password=user_chose_strong_password,
+                        admin_name=admin_name,
+                    )
+                    email_sent = True
+                    logger.info("Correo de onboarding enviado a %s", email)
+                except Exception as exc:
+                    logger.exception("No se pudo enviar el correo de onboarding: %s", exc)
+
+            # Mostrar contraseña en JSON solo en dev o si falló el envío (solo si no eligió una fuerte)
+            expose_generated_password = (
+                not user_chose_strong_password
+                and (settings.DEBUG or not email_sent)
+            )
+
+        cred_message = (
+            "Check your email to continue."
+            if email_sent
+            else (
+                "Save these credentials; we could not send the confirmation email."
+                if not user_chose_strong_password
+                else "Your password was set successfully."
+            )
+        )
+
         return Response({
             'success': True,
-            'message': f'¡Tu cuenta ha sido creada exitosamente! Redirigiendo a tu ambiente...',
+            'message': 'Your account was created successfully. Redirecting to your workspace…',
             'url': redirect_url,
+            'email_sent': email_sent,
             'tenant': {
                 'name': tenant.name,
                 'schema_name': tenant.schema_name,
@@ -543,15 +608,13 @@ def create_tenant_onboarding(request):
                 'monthly_operations': tenant.monthly_operations,
                 'crew_count': tenant.crew_count,
                 'recommended_plan': tenant.recommended_plan,
-                # En desarrollo, incluir la contraseña temporal en la respuesta
-                # En producción, esto debería enviarse por email
-                'temp_password': temp_password if (settings.DEBUG or not admin_password) else None
+                'temp_password': temp_password if expose_generated_password else None
             },
             'credentials': {
                 'username': username,
-                'password': temp_password if (settings.DEBUG or not admin_password) else None,
+                'password': temp_password if expose_generated_password else None,
                 'password_provided': bool(admin_password),
-                'message': 'Guarda estas credenciales. En producción, se enviarán por email.' if (settings.DEBUG or not admin_password) else 'Tu contraseña ha sido configurada correctamente.'
+                'message': cred_message
             }
         }, status=status.HTTP_201_CREATED)
         
@@ -559,5 +622,5 @@ def create_tenant_onboarding(request):
         logger.error(f"Error inesperado en create_tenant_onboarding: {str(e)}", exc_info=True)
         return Response({
             'success': False,
-            'error': f'Error inesperado al crear la cuenta: {str(e)}'
+            'error': f'Unexpected error while creating account: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
