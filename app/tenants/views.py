@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 from django_tenants.utils import schema_context
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
@@ -61,6 +61,86 @@ def _send_onboarding_welcome_email(
     )
     msg.attach_alternative(html_body, "text/html")
     msg.send(fail_silently=False)
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def landing_contact(request):
+    """
+    Public landing contact form (getjobrithm.com). Sends email to LANDING_CONTACT_TO_EMAIL.
+    """
+    from django.core.validators import validate_email
+    from django.core.exceptions import ValidationError as DjangoValidationError
+
+    if not getattr(settings, 'EMAIL_HOST_PASSWORD', None):
+        logger.warning('landing_contact: SMTP not configured (EMAIL_HOST_PASSWORD empty)')
+        return Response(
+            {'success': False, 'error': 'Email delivery is not configured.'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    data = request.data
+    if not isinstance(data, dict):
+        return Response({'success': False, 'error': 'Invalid JSON body.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    name = (data.get('name') or '').strip()
+    email = (data.get('email') or '').strip()
+    subject_key = (data.get('subject') or 'demo').strip()
+    team_size = (data.get('team_size') or '').strip()
+    message = (data.get('message') or '').strip()
+    locale = (data.get('locale') or 'en').strip().lower()
+
+    if not name or len(name) > 200:
+        return Response({'success': False, 'error': 'Please provide a valid name.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not message or len(message) > 8000:
+        return Response({'success': False, 'error': 'Please provide a message.'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        validate_email(email)
+    except DjangoValidationError:
+        return Response({'success': False, 'error': 'Please provide a valid email address.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    allowed_subjects = {'demo', 'sales', 'support'}
+    if subject_key not in allowed_subjects:
+        subject_key = 'demo'
+
+    subject_labels = {
+        'demo': ('Product demo request', 'Solicitud de demo de producto'),
+        'sales': ('Talk to sales', 'Hablar con ventas'),
+        'support': ('Support', 'Soporte'),
+    }
+    subj_en, subj_es = subject_labels[subject_key]
+    topic = subj_es if locale == 'es' else subj_en
+
+    to_email = getattr(settings, 'LANDING_CONTACT_TO_EMAIL', None) or settings.DEFAULT_FROM_EMAIL
+    mail_subject = f"[Jobrithm Contact] {topic} — {name}"
+
+    text_body = (
+        f"New contact form submission (locale={locale})\n\n"
+        f"Topic: {subject_key} ({topic})\n"
+        f"Name: {name}\n"
+        f"Email: {email}\n"
+        f"Team size: {team_size or '—'}\n\n"
+        f"Message:\n{message}\n"
+    )
+
+    msg = EmailMultiAlternatives(
+        mail_subject,
+        text_body,
+        settings.DEFAULT_FROM_EMAIL,
+        [to_email],
+        reply_to=[email],
+    )
+    try:
+        msg.send(fail_silently=False)
+    except Exception as exc:
+        logger.exception('landing_contact: send failed: %s', exc)
+        return Response(
+            {'success': False, 'error': 'Could not send your message. Please try again later.'},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+    return Response({'success': True}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])

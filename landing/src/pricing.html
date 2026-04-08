@@ -44,128 +44,7 @@
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   </head>
   <body class="font-sans antialiased text-gray-900 bg-white">
-    <!-- Nav -->
-    <nav
-      class="fixed top-0 left-0 right-0 z-50 bg-slate-950/90 backdrop-blur-xl border-b border-slate-800/80"
-      aria-label="Navegación principal">
-      <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <a href="index-es.html" class="flex items-start justify-start mt-0">
-            <img
-              src="img/jobrithm-logo.png"
-              alt="Jobrithm"
-              class="h-64 w-auto max-h-64 hover:opacity-85 transition-opacity"
-              style="min-width: 74px; max-height: 52px;" />
-          </a>
-
-          <button
-            type="button"
-            class="md:hidden p-2 rounded-lg text-slate-200 hover:bg-white/10 focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950"
-            id="nav-toggle"
-            aria-expanded="false"
-            aria-controls="nav-menu">
-            <span class="sr-only">Abrir menú</span>
-            <svg
-              class="w-6 h-6 nav-icon-open"
-              aria-hidden="true"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-            <svg
-              class="w-6 h-6 nav-icon-close hidden"
-              aria-hidden="true"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-
-          <div class="hidden md:flex md:items-center md:gap-8" id="nav-menu">
-            <a
-              href="index-es.html#key-features"
-              class="text-slate-300 hover:text-white transition-colors">
-              Funciones
-            </a>
-            <a
-              href="index-es.html#how-jobrithm-runs"
-              class="text-slate-300 hover:text-white transition-colors">
-              Flujo
-            </a>
-            <a
-              href="pricing.html"
-              class="text-slate-300 hover:text-white transition-colors">
-              Precios
-            </a>
-            <a
-              href="contact.html"
-              class="text-slate-300 hover:text-white transition-colors">
-              Contacto
-            </a>
-            <span class="flex items-center gap-1 text-sm" aria-label="Idioma">
-              <span class="text-slate-400 font-medium">ES</span>
-              <span class="text-slate-600">|</span>
-              <a
-                href="pricing-en.html"
-                class="text-slate-300 hover:text-white transition-colors font-medium">
-                EN
-              </a>
-            </span>
-            <a
-              href="contact.html"
-              class="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-50 font-semibold shadow-md shadow-cyan-500/40 hover:shadow-lg hover:shadow-cyan-400/50 transition-all">
-              Reservar demo
-            </a>
-          </div>
-        </div>
-      </div>
-      <div
-        class="md:hidden hidden border-t border-slate-800 bg-slate-950/95"
-        id="nav-dropdown">
-        <div class="max-w-screen-2xl mx-auto px-4 py-4 space-y-1">
-          <a
-            href="index-es.html#key-features"
-            class="block py-2 text-slate-100 hover:text-cyan-300">
-            Funciones
-          </a>
-          <a
-            href="index-es.html#how-jobrithm-runs"
-            class="block py-2 text-slate-100 hover:text-cyan-300">
-            Flujo
-          </a>
-          <a
-            href="pricing.html"
-            class="block py-2 text-slate-100 hover:text-cyan-300">
-            Precios
-          </a>
-          <a
-            href="contact.html"
-            class="block py-2 text-slate-100 hover:text-cyan-300">
-            Contacto
-          </a>
-          <a
-            href="pricing-en.html"
-            class="block py-2 text-slate-100 hover:text-cyan-300">
-            English
-          </a>
-          <a
-            href="contact.html"
-            class="block py-3 mt-2 text-center rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-50 font-semibold shadow-md shadow-cyan-500/40 hover:shadow-lg hover:shadow-cyan-400/50 transition-all">
-            Reservar demo
-          </a>
-        </div>
-      </div>
-    </nav>
+    <!-- landing:inject-nav -->
 
     <main>
       <!-- Pricing hero -->
@@ -201,7 +80,7 @@
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="contact.html"
+              href="contact.html#landing-contact-form"
               class="inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 via-indigo-400 to-cyan-400 text-slate-50 font-semibold shadow-xl shadow-cyan-500/40 hover:shadow-2xl hover:shadow-cyan-400/50 hover:from-indigo-400 hover:to-cyan-300 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950">
               Reservar demo
             </a>
@@ -351,7 +230,7 @@
                 la mayoría de los equipos.
               </p>
               <a
-                href="contact.html"
+                href="contact.html#landing-contact-form"
                 class="mt-auto block w-full text-center py-3.5 rounded-lg bg-gradient-to-r from-indigo-500 via-indigo-400 to-cyan-400 text-slate-50 font-semibold hover:from-indigo-400 hover:to-cyan-300 transition-all shadow-lg shadow-cyan-500/40">
                 Hablar con ventas
               </a>
@@ -403,7 +282,7 @@
                 regiones desde un solo sistema.
               </p>
               <a
-                href="contact.html"
+                href="contact.html#landing-contact-form"
                 class="mt-auto block w-full text-center py-3.5 rounded-lg bg-white/10 text-slate-50 font-semibold hover:bg-white/20 transition-colors border border-white/20">
                 Contactar ventas
               </a>
@@ -430,7 +309,7 @@
               adecuado para tu operación.
             </p>
             <a
-              href="contact.html"
+              href="contact.html#landing-contact-form"
               class="inline-flex items-center justify-center px-8 py-3.5 rounded-lg bg-gradient-to-r from-indigo-500 via-indigo-400 to-cyan-400 text-slate-50 font-semibold hover:from-indigo-400 hover:to-cyan-300 transition-all focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900">
               Reservar demo
             </a>
@@ -451,7 +330,7 @@
               Precios
             </a>
             <a
-              href="contact.html"
+              href="contact.html#landing-contact-form"
               class="hover:text-white transition-colors">
               Contacto
             </a>

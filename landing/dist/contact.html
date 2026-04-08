@@ -30,9 +30,14 @@
     aria-label="Navegación principal">
     <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
-        <a href="index-es.html" class="text-xl font-bold text-slate-50">
-          Jobrithm
+        <a href="index-es.html" class="flex items-start justify-start mt-0">
+          <img
+            src="img/jobrithm-logo.png"
+            alt="Jobrithm"
+            class="h-64 w-auto max-h-64 hover:opacity-85 transition-opacity"
+            style="min-width: 74px; max-height: 52px;" />
         </a>
+
         <button
           type="button"
           class="md:hidden p-2 rounded-lg text-slate-200 hover:bg-white/10 focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950"
@@ -68,17 +73,24 @@
 
         <div class="hidden md:flex md:items-center md:gap-8" id="nav-menu">
           <a
-            href="index-es.html#features"
+            href="index-es.html#key-features"
             class="text-slate-300 hover:text-white transition-colors">
             Funciones
           </a>
+          <a
+            href="index-es.html#how-jobrithm-runs"
+            class="text-slate-300 hover:text-white transition-colors">
+            Flujo
+          </a>
+          <!-- Página de precios oculta hasta definir precios finales
           <a
             href="pricing.html"
             class="text-slate-300 hover:text-white transition-colors">
             Precios
           </a>
+          -->
           <a
-            href="contact.html"
+            href="#landing-contact-form"
             class="text-slate-300 hover:text-white transition-colors">
             Contacto
           </a>
@@ -86,13 +98,13 @@
             <span class="text-slate-400 font-medium">ES</span>
             <span class="text-slate-600">|</span>
             <a
-              href="contact-en.html"
+              href="contact-en.html#landing-contact-form"
               class="text-slate-300 hover:text-white transition-colors font-medium">
               EN
             </a>
           </span>
           <a
-            href="contact.html"
+            href="#landing-contact-form"
             class="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-50 font-semibold shadow-md shadow-cyan-500/40 hover:shadow-lg hover:shadow-cyan-400/50 transition-all">
             Reservar demo
           </a>
@@ -104,27 +116,34 @@
       id="nav-dropdown">
       <div class="max-w-screen-2xl mx-auto px-4 py-4 space-y-1">
         <a
-          href="index-es.html#features"
+          href="index-es.html#key-features"
           class="block py-2 text-slate-100 hover:text-cyan-300">
           Funciones
         </a>
+        <a
+          href="index-es.html#how-jobrithm-runs"
+          class="block py-2 text-slate-100 hover:text-cyan-300">
+          Flujo
+        </a>
+        <!-- Página de precios oculta hasta definir precios finales
         <a
           href="pricing.html"
           class="block py-2 text-slate-100 hover:text-cyan-300">
           Precios
         </a>
+        -->
         <a
-          href="contact.html"
+          href="#landing-contact-form"
           class="block py-2 text-slate-100 hover:text-cyan-300">
           Contacto
         </a>
         <a
-          href="contact-en.html"
+          href="contact-en.html#landing-contact-form"
           class="block py-2 text-slate-100 hover:text-cyan-300">
           English
         </a>
         <a
-          href="contact.html"
+          href="#landing-contact-form"
           class="block py-3 mt-2 text-center rounded-lg bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-50 font-semibold shadow-md shadow-cyan-500/40 hover:shadow-lg hover:shadow-cyan-400/50 transition-all">
           Reservar demo
         </a>
@@ -196,7 +215,15 @@
           </div>
           <div
             class="rounded-2xl border border-white/10 bg-white/[0.05] backdrop-blur p-6 sm:p-7 shadow-xl shadow-slate-900/60">
-            <form class="space-y-6" action="#" method="POST">
+            <form id="landing-contact-form" class="space-y-6" action="#" method="post">
+              <div
+                id="contact-form-success"
+                class="hidden rounded-lg border border-emerald-400/40 bg-emerald-500/15 px-4 py-3 text-sm text-emerald-100 text-center"
+                role="status"></div>
+              <div
+                id="contact-form-error"
+                class="hidden rounded-lg border border-red-400/40 bg-red-500/15 px-4 py-3 text-sm text-red-100 text-center"
+                role="alert"></div>
               <div>
                 <label
                   for="name"
@@ -294,10 +321,12 @@
         class="flex flex-col sm:flex-row justify-between items-center gap-4">
         <p class="text-sm">&copy; 2025 Jobrithm. Todos los derechos reservados.</p>
         <nav class="flex gap-6 text-sm" aria-label="Enlaces del pie">
+          <!-- Página de precios oculta hasta definir precios finales
           <a href="pricing.html" class="hover:text-white transition-colors">
             Precios
           </a>
-          <a href="contact.html" class="hover:text-white transition-colors">
+          -->
+          <a href="#landing-contact-form" class="hover:text-white transition-colors">
             Contacto
           </a>
         </nav>
@@ -319,6 +348,69 @@
           openIcon.classList.toggle("hidden", !open);
           closeIcon.classList.toggle("hidden", open);
         }
+      });
+    })();
+  </script>
+  <script>
+    (function () {
+      var form = document.getElementById("landing-contact-form");
+      if (!form) return;
+      var okEl = document.getElementById("contact-form-success");
+      var errEl = document.getElementById("contact-form-error");
+      var endpoint = "/api/landing/contact/";
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (okEl) {
+          okEl.classList.add("hidden");
+          okEl.textContent = "";
+        }
+        if (errEl) {
+          errEl.classList.add("hidden");
+          errEl.textContent = "";
+        }
+        var fd = new FormData(form);
+        var payload = {
+          name: fd.get("name"),
+          email: fd.get("email"),
+          subject: fd.get("subject"),
+          team_size: fd.get("team_size"),
+          message: fd.get("message"),
+          locale: "es",
+        };
+        fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+          .then(function (r) {
+            return r.json().then(function (d) {
+              return { status: r.status, data: d };
+            });
+          })
+          .then(function (res) {
+            if (res.status >= 200 && res.status < 300 && res.data && res.data.success) {
+              if (okEl) {
+                okEl.textContent =
+                  "Mensaje enviado. Te responderemos pronto.";
+                okEl.classList.remove("hidden");
+              }
+              form.reset();
+            } else {
+              if (errEl) {
+                errEl.textContent =
+                  (res.data && res.data.error) ||
+                  "No se pudo enviar el mensaje. Inténtalo de nuevo más tarde.";
+                errEl.classList.remove("hidden");
+              }
+            }
+          })
+          .catch(function () {
+            if (errEl) {
+              errEl.textContent =
+                "Error de red. Comprueba tu conexión e inténtalo de nuevo.";
+              errEl.classList.remove("hidden");
+            }
+          });
       });
     })();
   </script>
