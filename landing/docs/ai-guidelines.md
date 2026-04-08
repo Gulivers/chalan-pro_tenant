@@ -1,12 +1,13 @@
-# AI Guidelines – Landing Chalan-Pro (Marketing SaaS)
+# AI Guidelines – Landing Jobrithm (marketing SaaS)
 
-Estándares para mantener consistencia, conversión y calidad en la web de marketing de Jobrithm (getjobrithm.com).
+Estándares para mantener consistencia, conversión y calidad en la web de marketing de **Jobrithm** (getjobrithm.com). En copy, meta, navegación y pies de página usar siempre **Jobrithm**; *Chalan-Pro* queda para contexto técnico del repositorio o rutas internas, no como nombre comercial en la landing.
 
 ## Índice
 
 - [Posicionamiento del producto](#posicionamiento-del-producto) (ventaja competitiva, pitch 30 s)
 - [Stack y tecnologías](#stack-y-tecnologías)
 - [Estructura de archivos](#estructura-de-archivos)
+- [Navegación global (build con parciales)](#navegación-global-build-con-parciales)
 - [Dirección de diseño](#dirección-de-diseño)
 - [Estrategia de conversión](#estrategia-de-conversión)
 - [HTML y semántica](#html-y-semántica)
@@ -23,7 +24,7 @@ Estándares para mantener consistencia, conversión y calidad en la web de marke
 
 ## Posicionamiento del producto
 
-Chalan-Pro es una **plataforma de operaciones de construcción** para:
+Jobrithm es una **plataforma de operaciones de construcción** para:
 
 - **Contratistas** y empresas de obra
 - **Supervisores** y jefes de obra
@@ -57,7 +58,7 @@ El copy de hero, CTAs y secciones de problema/solución puede inspirarse en esta
 - **JavaScript** — Solo vanilla y mínimo; úsalo solo cuando sea necesario (ej. menú móvil, validación ligera).
 - **Fuente:** Inter (Google Fonts) — o la definida en `tailwind.config.js`.
 - **Dominio marketing:** getjobrithm.com, www.getjobrithm.com.
-- **App principal:** chalanpro.net (Vue.js SPA) — la landing enlaza a login y onboarding.
+- **App principal:** jobrithm.net (Vue.js SPA) — la landing enlaza a login y onboarding.
 
 ### No usar en la landing
 
@@ -71,10 +72,35 @@ El copy de hero, CTAs y secciones de problema/solución puede inspirarse en esta
 ## Estructura de archivos
 
 - **Fuente:** `src/` — archivos editables (HTML, CSS, img).
+- **Menú global:** `src/partials/nav-en.html` y `src/partials/nav-es.html` — plantillas del `<nav>` (no se copian tal cual a `dist/`; ver [Navegación global](#navegación-global-build-con-parciales)).
+- **Script de build del nav:** `build-nav.mjs` (raíz de `landing/`) — inyecta el menú en las páginas que llevan el marcador.
 - **Build:** `dist/` — salida de `npm run build`; no editar manualmente.
 - **CSS:** `src/input.css` — directivas Tailwind; clases en los HTML.
 - **Imágenes:** `src/img/` — se copian a `dist/img/` en el build.
 - **Docs:** `docs/` — este archivo y documentación asociada.
+- **Documentación de proyecto:** `../README.md` y `../AGENTS.md` en la carpeta `landing/` — comandos, deploy y reglas para agentes (incluyen el flujo del nav).
+
+---
+
+## Navegación global (build con parciales)
+
+La barra superior **no se mantiene copiada** en cada HTML de `src/`. Una sola fuente de verdad evita desalineaciones entre páginas EN/ES.
+
+**Flujo:**
+
+1. **`build-nav.mjs`** se ejecuta **al inicio** de `npm run build` (antes de Tailwind y assets).
+2. Las plantillas **`src/partials/nav-en.html`** (inglés) y **`src/partials/nav-es.html`** (español) contienen el markup del `<nav>`. Sustituyen tokens del tipo `{{NAV_CTA_HREF}}`, `{{LANG_ES_HREF}}` o `{{LANG_EN_HREF}}` según la página, según el mapa **`NAV_BY_FILE`** dentro de `build-nav.mjs`.
+3. En cada página que debe mostrar menú, el HTML de `src/` incluye **solo** la línea de marcador **`<!-- landing:inject-nav -->`** (entre `<body>` y `<main>`), con la indentación acorde al archivo.
+4. El script **reemplaza** ese marcador por `<!-- Nav -->` más el HTML del menú ya resuelto. El resultado escrito en **`dist/`** es HTML **estático y completo**: los buscadores y la accesibilidad ven el mismo `<nav>` que si estuviera embebido a mano (no hay menú montado solo con JavaScript en cliente).
+5. Páginas **sin** marcador (p. ej. redirecciones) se copian a `dist/` sin cambios.
+
+**Qué editar al cambiar el menú:**
+
+- Estructura, clases, textos EN/ES del nav: **partials** correspondientes.
+- Enlaces que dependen de la página actual (selector de idioma, ancla al formulario de contacto, etc.): **`NAV_BY_FILE`** en `build-nav.mjs`.
+- Añadir una página nueva con menú: marcador en el HTML + entrada en **`NAV_BY_FILE`**.
+
+**Desarrollo local:** abrir un `*.html` desde `src/` en el navegador **no** muestra el menú. Previsualizar con **`npm run build`** (o `npm run build:watch`) y **`npm start`**, sirviendo **`dist/`**. Más detalle en **`landing/README.md`** (sección “Navegación”).
 
 ---
 
@@ -120,7 +146,7 @@ Cada página debe apoyar la conversión.
 
 ### En páginas importantes
 
-- **Value proposition** clara (qué es Chalan-Pro y para quién).
+- **Value proposition** clara (qué es Jobrithm y para quién).
 - **Indicador de confianza o prueba social** (placeholder si no hay datos aún).
 - **CTA fuerte above the fold** (ej. “Reservar demo”, “Ver precios”, “Contactar ventas”).
 - **CTA de nuevo cerca del final** de la página.
@@ -132,8 +158,9 @@ Mensajería concisa y orientada a SaaS. Evitar frases genéricas (“revoluciona
 ## HTML y semántica
 
 - Etiquetas semánticas: `<nav>`, `<main>`, `<section>`, `<article>`, `<header>`, `<footer>`.
+- El **`<nav>` principal** en páginas con menú no se escribe entero en cada archivo: se inyecta en el build (ver [Navegación global](#navegación-global-build-con-parciales)); en `src/` va el marcador `<!-- landing:inject-nav -->`.
 - Un solo `<h1>` por página; jerarquía correcta (`h1` → `h2` → `h3`).
-- `lang="es"` en `<html>`.
+- `lang="es"` o `lang="en"` en `<html>` según la página.
 
 ### Plantilla base
 
@@ -145,10 +172,13 @@ Mensajería concisa y orientada a SaaS. Evitar frases genéricas (“revoluciona
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="..." />
     <link rel="stylesheet" href="output.css" />
-    <title>Chalan-Pro - ...</title>
+    <title>Jobrithm – ...</title>
   </head>
   <body class="font-sans antialiased text-gray-900 bg-white">
-    <!-- contenido -->
+    <!-- landing:inject-nav -->
+    <main>
+      <!-- contenido principal -->
+    </main>
   </body>
 </html>
 ```
@@ -253,19 +283,21 @@ Incluir estas variantes en meta keywords, títulos alternativos y contenido cuan
 
 ### Internos (misma landing)
 
-- Rutas relativas: `pricing.html`, `contact.html`, `index.html`.
-- En `index.html` (raíz): `href="/"` o `href="index.html"` para el logo.
+- Rutas relativas entre páginas equivalentes EN/ES: `index.html` ↔ `index-es.html`, `pricing-en.html` ↔ `pricing.html`, `contact-en.html` ↔ `contact.html`.
+- CTAs hacia el formulario de contacto: usar ancla `#landing-contact-form` cuando el objetivo sea el formulario (p. ej. `contact-en.html#landing-contact-form`).
+- En la raíz en inglés: logo y enlaces “home” coherentes con `index.html`.
 
-### Externos (app Chalan-Pro)
+### Externos (app Jobrithm)
 
-- **Login:** `https://chalanpro.net`
-- **Onboarding:** `https://chalanpro.net/onboarding`
+- **Login:** `https://jobrithm.net`
+- **Onboarding:** `https://jobrithm.net/onboarding`
 - Abrir en nueva pestaña: `target="_blank" rel="noopener noreferrer"` cuando sea apropiado.
 
-### Nav común
+### Nav común (marca y contenido)
 
-- Todas las páginas: misma barra de navegación base (logo Chalan-Pro, enlaces a Features/Funciones, Pricing/Precios, Contact/Contacto, selector de idioma y un **CTA principal**: Reservar demo / Ver precios).
-- En la **landing principal** se prioriza conversión; el enlace de login a la app se puede dejar para footer u otras zonas, no como elemento principal del nav.
+- En **copy y UI visible** usar el nombre **Jobrithm** (logo, navegación, pies de página). La barra debe ser **coherente** en todas las páginas: mismos ítems lógicos (Features/Workflow o Funciones/Flujo, Contacto, selector EN/ES, CTA tipo “Book a demo” / “Reservar demo”). La página de precios puede estar oculta en el menú hasta definir pricing.
+- La implementación técnica del `<nav>` (partials + `build-nav.mjs`) está descrita en [Navegación global (build con parciales)](#navegación-global-build-con-parciales) y en **`landing/README.md`**.
+- En la **home** se prioriza conversión; el acceso principal a login suele vivir en el footer u otras zonas, no como elemento dominante del nav.
 
 ---
 
@@ -291,13 +323,13 @@ Incluir estas variantes en meta keywords, títulos alternativos y contenido cuan
 
 ## Build y deploy
 
-- **Build:** `npm run build` — genera `dist/` con CSS minificado y archivos copiados.
-- **Desarrollo:** `npm run dev` (watch CSS) + `npm start` (servir `dist/` en puerto 3000).
-- **Deploy:** `dist/` se monta en Nginx para getjobrithm.com (ver `../nginx/default.conf`).
+- **Build:** `npm run build` — en orden: **`build-nav.mjs`** (inyecta el `<nav>` en los HTML que llevan marcador), **Tailwind** (CSS minificado a `dist/output.css`), copia de **sitemap**, **robots**, **img**, **icons**. Los `*.html` de `dist/` salen del script de nav + copia; no se hace `cp src/*.html` directo.
+- **Desarrollo:** `npm run dev` (watch solo CSS) + `npm run build` o `npm run build:watch` cuando cambien HTML o partials del nav + `npm start` (servir `dist/` en puerto 3000).
+- **Deploy:** `dist/` se monta en Nginx para getjobrithm.com (ver `../../nginx/default.conf` desde esta carpeta `docs/`).
 
-### Arquitectura ideal (site map) – Website SaaS Chalan-Pro
+### Arquitectura ideal (site map) – Website SaaS Jobrithm
 
-Esta es la estructura recomendada de secciones y rutas para escalar la landing y el sitio público de Chalan-Pro. Úsala como referencia para nuevos contenidos, navegación y enlaces:
+Esta es la estructura recomendada de secciones y rutas para escalar la landing y el sitio público de Jobrithm. Úsala como referencia para nuevos contenidos, navegación y enlaces:
 
 ```
 /                # Home – Página principal (valor y CTA)

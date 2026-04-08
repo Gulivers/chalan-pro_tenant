@@ -24,6 +24,8 @@ Los cambios de contenido y estructura relevantes deben aplicarse **en español y
 
 Mantener paridad de secciones, enlaces internos entre versiones ES/EN, y ejecutar `npm run build` tras editar para actualizar `dist/`.
 
+**Navegación (build):** El `<nav>` no vive duplicado en cada HTML de `src/`. Se genera desde `landing/src/partials/nav-en.html` y `nav-es.html`, inyectado por `landing/build-nav.mjs` (marcador `<!-- landing:inject-nav -->`, configuración `NAV_BY_FILE`). El resultado en `dist/` es HTML estático completo (adecuado para SEO). Detalle en **`landing/README.md`** (sección “Navegación”). No abrir `src/*.html` en el navegador esperando ver el menú: usar `npm run build` y servir `dist/` o `npm start`.
+
 ## Posicionamiento
 
 Jobrithm es una **plataforma de operaciones de construcción** para contratistas, supervisores y equipos de campo. La web debe transmitir: moderno, profesional, confiable, con CTAs claros y diseño tipo B2B SaaS (referencias de espíritu: Stripe, Linear, Notion; sector: Buildertrend, Procore, ServiceTitan).
@@ -94,7 +96,9 @@ Jobrithm runs it.
 
 ```
 landing/
-├── src/           # Editar aquí (HTML, input.css, img)
+├── src/           # Editar aquí (HTML, input.css, img, partials del nav)
+├── src/partials/  # nav-en.html / nav-es.html — plantillas del menú (inyectadas en build)
+├── build-nav.mjs  # Inyecta el nav en dist/; ver README sección “Navegación”
 ├── dist/          # Build output — no editar manualmente
 ├── docs/          # Documentación
 │   └── ai-guidelines.md   # Estándares obligatorios (diseño, conversión, SEO)
@@ -104,7 +108,7 @@ landing/
 
 ## Reglas para agentes
 
-1. **Editar solo en `src/`** — Los archivos en `dist/` se generan con `npm run build`.
+1. **Editar solo en `src/`** — Los archivos en `dist/` se generan con `npm run build`. El menú global: editar **`src/partials/nav-*.html`** y, si hace falta enlaces por página, **`build-nav.mjs`** (`NAV_BY_FILE`); no pegar un `<nav>` entero en cada página salvo excepción acordada.
 2. **Seguir `docs/ai-guidelines.md`** — HTML, Tailwind, diseño B2B SaaS, estrategia de conversión, SEO, accesibilidad, rendimiento.
 3. **Colores:** Usar `primary` (#0d6efd), `primary-dark` (#0a58ca), `accent` (#ffc107) según `tailwind.config.js`.
 4. **Enlaces app:** Login → https://jobrithm.net, Onboarding → https://jobrithm.net/onboarding.
@@ -122,7 +126,7 @@ landing/
 
 ## Archivos de referencia (contexto)
 
-- **README landing:** `landing/README.md` — inspiración, nicho, diagrama de posicionamiento, comandos y estructura del proyecto.
+- **README landing:** `landing/README.md` — inspiración, nicho, diagrama de posicionamiento, comandos, estructura del proyecto y **navegación (parciales + `build-nav.mjs`)**.
 - **Estándares y guías:** `landing/docs/ai-guidelines.md` — diseño, conversión, SEO, accesibilidad; obligatorio para copy y maquetado.
 - **Proyecto principal (app):** `../AGENTS.md` (raíz del repo) — contexto global (Jobrithm / Chalan-Pro técnico).
 - **Nginx landing:** `nginx/default.conf` — server block `getjobrithm.com` (y hosts legacy si aplica).
