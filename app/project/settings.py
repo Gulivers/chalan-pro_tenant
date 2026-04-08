@@ -499,6 +499,9 @@ else:
 
 FRONT_URL = os.environ.get('FRONT_URL', 'http://192.168.0.248:8080')
 
+# Landing (getjobrithm.com) contact form — inbox that receives submissions
+LANDING_CONTACT_TO_EMAIL = os.environ.get('LANDING_CONTACT_TO_EMAIL', 'noreply@jobrithm.net')
+
 # Channel Layers - Redis configuration
 REDIS_URL = os.environ.get('REDIS_URL')
 
