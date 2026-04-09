@@ -1029,7 +1029,12 @@ async function fetchStaticOptions() {
   try {
     const { data } = await axios.get("/api/unitsofmeasure/?is_active=true");
     const list = Array.isArray(data) ? data : data?.results || [];
-    unitsOptions.value = list.map((u) => ({ value: u.id, label: u.code }));
+    unitsOptions.value = list.map((u) => ({
+      value: u.id,
+      label: u.code,
+      code: u.code,
+      name: u.name || "",
+    }));
   } finally {
     loading.units = false;
   }

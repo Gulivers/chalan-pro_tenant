@@ -76,7 +76,7 @@ const HEADER_DESC = [
   "Product name (reference only — not imported; for your review)",
   "Product SKU (reference only — should match product_id)",
   "Quantity — edit as needed (default 1)",
-  "Unit code — default unit of measure for this product (edit if needed)",
+  "Unit (code or name) — default from product’s unit of measure (edit if needed)",
   "Unit price — edit as needed (default 0)",
   "Discount % — default 0",
   "Warehouse name (exact name as in Warehouses, e.g. Main Warehouse) — default: first warehouse if set",
@@ -153,12 +153,17 @@ function findOptionIdByLabel(options, name, fieldLabel) {
   return o.value;
 }
 
-function findUnitIdByCode(options, code) {
-  if (code === undefined || code === null || String(code).trim() === "") return null;
-  const c = String(code).trim().toLowerCase();
-  const o = options.find((x) => String(x.label).trim().toLowerCase() === c);
+/** Resuelve unidad por código o por nombre (coincide con el grid: code en label). */
+function findUnitIdByCodeOrName(options, raw) {
+  if (raw === undefined || raw === null || String(raw).trim() === "") return null;
+  const s = String(raw).trim().toLowerCase();
+  const o = options.find((x) => {
+    const code = String(x.code ?? x.label ?? "").trim().toLowerCase();
+    const name = String(x.name ?? "").trim().toLowerCase();
+    return code === s || (name && name === s);
+  });
   if (!o) {
-    throw new Error(`Unknown unit code: "${code}"`);
+    throw new Error(`Unknown unit (code or name): "${raw}"`);
   }
   return o.value;
 }
@@ -260,7 +265,7 @@ async function rowsToLines(col, dataRows, productById) {
 
       let unitId = null;
       if (col.idxUnit >= 0 && unitCode !== undefined && String(unitCode).trim() !== "") {
-        unitId = findUnitIdByCode(props.unitsOptions, unitCode);
+        unitId = findUnitIdByCodeOrName(props.unitsOptions, unitCode);
       }
 
       let warehouseId = null;
@@ -422,13 +427,14 @@ async function downloadTemplate() {
 
     const dataRows = list.map((p) => {
       const brandName = p.default_brand?.name || "";
-      const unitCode = p.unit_default_code || "";
+      // Nombre de unit_default (preferido); si falta, código — alineado con ProductListSerializer
+      const unitCell = (p.unit_name || p.unit_default_code || "").trim();
       return [
         p.id,
         p.name || "",
         p.sku || "",
         1,
-        unitCode,
+        unitCell,
         0,
         0,
         defaultWh,
