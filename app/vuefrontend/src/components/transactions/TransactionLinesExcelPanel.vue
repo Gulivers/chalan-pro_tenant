@@ -10,7 +10,7 @@
             ref="fileInput"
             type="file"
             class="form-control form-control-sm"
-            accept=".xlsx,.xls"
+            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
             :disabled="busy"
             @change="onFile" />
         </div>
@@ -18,16 +18,22 @@
       <div class="vr d-none d-sm-block" />
       <button
         type="button"
-        class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-1"
+        class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-2"
         :disabled="busy"
         @click="downloadTemplate">
-        <i class="bi bi-file-earmark-excel" aria-hidden="true" />
+        <img
+          :src="excelIconUrl"
+          alt=""
+          width="20"
+          height="20"
+          class="excel-template-icon flex-shrink-0" />
         Download example template
       </button>
     </div>
     <p class="small text-muted mb-0 mt-2">
       Use the template: row 1 = field codes, row 2 = descriptions, data from row 3.
-      Match products by <strong>SKU</strong>, units by <strong>unit code</strong>, warehouse / price type /
+      Match each line by <strong>product ID</strong> (Inventory). <strong>Product SKU</strong> is optional and
+      for reference only (should match that product). Units by <strong>unit code</strong>; warehouse / price type /
       brand by <strong>name</strong> (as in the system).
     </p>
   </div>
@@ -38,6 +44,7 @@ import { ref } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
+import excelIconUrl from "@/assets/img/microsoft-excel-icon.svg";
 
 const props = defineProps({
   unitsOptions: { type: Array, default: () => [] },
@@ -52,6 +59,7 @@ const busy = ref(false);
 const fileInput = ref(null);
 
 const HEADER_CODES = [
+  "product_id",
   "product_sku",
   "quantity",
   "unit_code",
@@ -63,7 +71,8 @@ const HEADER_CODES = [
 ];
 
 const HEADER_DESC = [
-  "Product SKU (required; must exist in catalog — see Inventory)",
+  "Product ID (required — numeric id from Inventory / products list)",
+  "Product SKU (optional — reference only; should match the product above)",
   "Quantity (decimal)",
   "Unit code (Unit of Measure code, e.g. EA, CS — must match system)",
   "Unit price (number)",
@@ -99,16 +108,37 @@ function findColIndex(headers, aliases) {
   return -1;
 }
 
-async function fetchProductsSkuMap() {
+/** Map product id → { id, name, sku } for lookup; SKU is only used to validate the reference column. */
+async function fetchProductsByIdMap() {
   const { data } = await axios.get("/api/products/", {
     params: { is_active: true },
   });
   const list = Array.isArray(data) ? data : data?.results || [];
-  const map = new Map();
+  const byId = new Map();
   list.forEach((p) => {
-    if (p.sku) map.set(String(p.sku).trim().toLowerCase(), { id: p.id, name: p.name });
+    byId.set(Number(p.id), {
+      id: p.id,
+      name: p.name || "",
+      sku: (p.sku && String(p.sku)) || "",
+    });
   });
-  return map;
+  return byId;
+}
+
+const EXCEL_MIME_OK = new Set([
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-excel",
+]);
+
+function isExcelFile(file) {
+  if (!file?.name) return false;
+  if (!/\.(xlsx|xls)$/i.test(file.name)) return false;
+  const t = file.type || "";
+  if (!t) return true;
+  if (EXCEL_MIME_OK.has(t)) return true;
+  // Algunos navegadores reportan genérico aunque la extensión sea correcta
+  if (t === "application/octet-stream") return true;
+  return false;
 }
 
 function findOptionIdByLabel(options, name, fieldLabel) {
@@ -133,6 +163,12 @@ function findUnitIdByCode(options, code) {
 
 function buildColumnMap(headerRow) {
   const headers = headerRow.map((c) => normalizeHeader(c));
+  const idxPid = findColIndex(headers, [
+    "product_id",
+    "productid",
+    "id_product",
+    "product_pk",
+  ]);
   const idxSku = findColIndex(headers, ["product_sku", "sku", "product_code"]);
   const idxQty = findColIndex(headers, ["quantity", "qty"]);
   const idxUnit = findColIndex(headers, ["unit_code", "unit", "uom"]);
@@ -142,9 +178,9 @@ function buildColumnMap(headerRow) {
   const idxPt = findColIndex(headers, ["price_type_name", "price_type", "pricetype"]);
   const idxBr = findColIndex(headers, ["brand_name", "brand"]);
 
-  const m = { idxSku, idxQty, idxUnit, idxPrice, idxDisc, idxWh, idxPt, idxBr };
-  if (idxSku < 0) {
-    throw new Error('Missing required column: product_sku (or "sku")');
+  const m = { idxPid, idxSku, idxQty, idxUnit, idxPrice, idxDisc, idxWh, idxPt, idxBr };
+  if (idxPid < 0) {
+    throw new Error('Missing required column: product_id');
   }
   return m;
 }
@@ -158,24 +194,43 @@ function parseSheetRows(rows) {
   return { col, dataRows };
 }
 
-async function rowsToLines(col, dataRows, skuMap) {
+async function rowsToLines(col, dataRows, productById) {
   const lines = [];
   const rowErrors = [];
+  const rowWarnings = [];
 
   for (let i = 0; i < dataRows.length; i += 1) {
     const row = dataRows[i];
     const excelRow = i + 3;
-    const skuRaw = row[col.idxSku];
-    if (skuRaw === undefined || skuRaw === null || String(skuRaw).trim() === "") {
+    const pidRaw = row[col.idxPid];
+    if (pidRaw === undefined || pidRaw === null || String(pidRaw).trim() === "") {
       continue;
     }
 
     try {
-      const skuKey = String(skuRaw).trim().toLowerCase();
-      const prod = skuMap.get(skuKey);
-      if (!prod) {
-        rowErrors.push(`Row ${excelRow}: SKU "${skuRaw}" not found in products`);
+      const pid = parseInt(String(pidRaw).trim(), 10);
+      if (!Number.isFinite(pid)) {
+        rowErrors.push(`Row ${excelRow}: invalid product_id "${pidRaw}"`);
         continue;
+      }
+
+      const prod = productById.get(pid);
+      if (!prod) {
+        rowErrors.push(`Row ${excelRow}: product_id ${pid} not found in catalog`);
+        continue;
+      }
+
+      if (col.idxSku >= 0) {
+        const skuRef = row[col.idxSku];
+        if (skuRef !== undefined && skuRef !== null && String(skuRef).trim() !== "") {
+          const ref = String(skuRef).trim().toLowerCase();
+          const expected = String(prod.sku || "").trim().toLowerCase();
+          if (expected && ref !== expected) {
+            rowWarnings.push(
+              `Row ${excelRow}: product_sku "${skuRef}" does not match product_id ${pid} (catalog SKU: "${prod.sku || "—"}") — line imported by ID`
+            );
+          }
+        }
       }
 
       const qty =
@@ -231,12 +286,22 @@ async function rowsToLines(col, dataRows, skuMap) {
     }
   }
 
-  return { lines, rowErrors };
+  return { lines, rowErrors, rowWarnings };
 }
 
 async function onFile(ev) {
   const file = ev.target.files?.[0];
   if (!file) return;
+  if (!isExcelFile(file)) {
+    await Swal.fire({
+      icon: "error",
+      title: "Invalid file",
+      text: "Please choose an Excel file (.xlsx or .xls) only.",
+      confirmButtonText: "OK",
+    });
+    if (fileInput.value) fileInput.value.value = "";
+    return;
+  }
   busy.value = true;
   try {
     const buf = await file.arrayBuffer();
@@ -245,8 +310,12 @@ async function onFile(ev) {
     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
     const { col, dataRows } = parseSheetRows(rows);
 
-    const skuMap = await fetchProductsSkuMap();
-    const { lines: newLines, rowErrors } = await rowsToLines(col, dataRows, skuMap);
+    const productById = await fetchProductsByIdMap();
+    const { lines: newLines, rowErrors, rowWarnings } = await rowsToLines(
+      col,
+      dataRows,
+      productById
+    );
 
     if (newLines.length === 0) {
       await Swal.fire({
@@ -255,7 +324,7 @@ async function onFile(ev) {
         html:
           rowErrors.length > 0
             ? `<ul class="text-start small">${rowErrors.map((e) => `<li>${e}</li>`).join("")}</ul>`
-            : "No data rows with a valid SKU were found.",
+            : "No data rows with a valid product_id were found.",
         confirmButtonText: "OK",
       });
       return;
@@ -281,11 +350,18 @@ async function onFile(ev) {
 
     emit("import-lines", newLines);
 
-    if (rowErrors.length) {
+    if (rowWarnings.length || rowErrors.length) {
+      let html = `<p>${newLines.length} row(s) loaded.</p>`;
+      if (rowErrors.length) {
+        html += `<p class="text-start small mt-2 mb-1">Skipped rows:</p><ul class="text-start small">${rowErrors.map((e) => `<li>${e}</li>`).join("")}</ul>`;
+      }
+      if (rowWarnings.length) {
+        html += `<p class="text-start small text-muted mt-2 mb-1">SKU reference (optional):</p><ul class="text-start small">${rowWarnings.map((w) => `<li>${w}</li>`).join("")}</ul>`;
+      }
       await Swal.fire({
         icon: "info",
-        title: "Import finished with notes",
-        html: `<ul class="text-start small">${rowErrors.map((e) => `<li>${e}</li>`).join("")}</ul>`,
+        title: "Import finished",
+        html,
         confirmButtonText: "OK",
       });
     } else {
@@ -310,7 +386,7 @@ async function onFile(ev) {
   }
 }
 
-function downloadTemplate() {
+async function downloadTemplate() {
   try {
     const exampleWh =
       props.warehousesOptions[0]?.label ||
@@ -321,16 +397,32 @@ function downloadTemplate() {
       props.brandsOptions[0]?.label || "(optional brand name)";
     const exampleUnit = props.unitsOptions[0]?.label || "EA";
 
-    const sampleSku = "REPLACE-WITH-VALID-SKU";
+    let sampleId = "(your product id)";
+    let sampleSku = "(SKU for reference)";
+    try {
+      const { data } = await axios.get("/api/products/", {
+        params: { is_active: true },
+      });
+      const list = Array.isArray(data) ? data : data?.results || [];
+      if (list.length > 0) {
+        const p = list[0];
+        sampleId = p.id;
+        sampleSku = p.sku || "";
+      }
+    } catch {
+      /* keep placeholders */
+    }
+
     const rows = [
       HEADER_CODES,
       HEADER_DESC,
-      [sampleSku, 1, exampleUnit, 0, 0, exampleWh, examplePt, exampleBrand],
+      [sampleId, sampleSku, 1, exampleUnit, 0, 0, exampleWh, examplePt, exampleBrand],
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
     ws["!cols"] = [
-      { wch: 14 },
+      { wch: 12 },
+      { wch: 22 },
       { wch: 10 },
       { wch: 12 },
       { wch: 12 },
