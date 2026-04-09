@@ -27,14 +27,14 @@
           width="20"
           height="20"
           class="excel-template-icon flex-shrink-0" />
-        Download example template
+        Download Excel template (all products)
       </button>
     </div>
     <p class="small text-muted mb-0 mt-2">
-      Use the template: row 1 = field codes, row 2 = descriptions, data from row 3.
-      Match each line by <strong>product ID</strong> (Inventory). <strong>Product SKU</strong> is optional and
-      for reference only (should match that product). Units by <strong>unit code</strong>; warehouse / price type /
-      brand by <strong>name</strong> (as in the system).
+      The Excel file lists <strong>every active product</strong> (ID, name, SKU) with default unit, brand, discount 0,
+      and sample warehouse / price type when available. Usually you only adjust <strong>quantity</strong> and
+      <strong>unit_price</strong> per row. Import matches lines by <strong>product_id</strong>; product name is
+      reference only.
     </p>
   </div>
 </template>
@@ -60,6 +60,7 @@ const fileInput = ref(null);
 
 const HEADER_CODES = [
   "product_id",
+  "product_name",
   "product_sku",
   "quantity",
   "unit_code",
@@ -71,15 +72,16 @@ const HEADER_CODES = [
 ];
 
 const HEADER_DESC = [
-  "Product ID (required — numeric id from Inventory / products list)",
-  "Product SKU (optional — reference only; should match the product above)",
-  "Quantity (decimal)",
-  "Unit code (Unit of Measure code, e.g. EA, CS — must match system)",
-  "Unit price (number)",
-  "Discount % (0–100)",
-  "Warehouse name (exact name as in Warehouses, e.g. Main Warehouse)",
-  "Price type name (exact name as in Price Types, e.g. Retail)",
-  "Brand name (exact name as in Brands; optional)",
+  "Product ID (required for import — from Inventory)",
+  "Product name (reference only — not imported; for your review)",
+  "Product SKU (reference only — should match product_id)",
+  "Quantity — edit as needed (default 1)",
+  "Unit code — default unit of measure for this product (edit if needed)",
+  "Unit price — edit as needed (default 0)",
+  "Discount % — default 0",
+  "Warehouse name (exact name as in Warehouses, e.g. Main Warehouse) — default: first warehouse if set",
+  "Price type name (exact name as in Price Types, e.g. Retail) — default: first price type if set",
+  "Brand name (exact name as in Brands) — default: product default brand when set",
 ];
 
 function cryptoRandom() {
@@ -169,6 +171,7 @@ function buildColumnMap(headerRow) {
     "id_product",
     "product_pk",
   ]);
+  const idxName = findColIndex(headers, ["product_name", "name"]);
   const idxSku = findColIndex(headers, ["product_sku", "sku", "product_code"]);
   const idxQty = findColIndex(headers, ["quantity", "qty"]);
   const idxUnit = findColIndex(headers, ["unit_code", "unit", "uom"]);
@@ -178,7 +181,18 @@ function buildColumnMap(headerRow) {
   const idxPt = findColIndex(headers, ["price_type_name", "price_type", "pricetype"]);
   const idxBr = findColIndex(headers, ["brand_name", "brand"]);
 
-  const m = { idxPid, idxSku, idxQty, idxUnit, idxPrice, idxDisc, idxWh, idxPt, idxBr };
+  const m = {
+    idxPid,
+    idxName,
+    idxSku,
+    idxQty,
+    idxUnit,
+    idxPrice,
+    idxDisc,
+    idxWh,
+    idxPt,
+    idxBr,
+  };
   if (idxPid < 0) {
     throw new Error('Missing required column: product_id');
   }
@@ -387,62 +401,79 @@ async function onFile(ev) {
 }
 
 async function downloadTemplate() {
+  busy.value = true;
   try {
-    const exampleWh =
-      props.warehousesOptions[0]?.label ||
-      "(replace with your warehouse name)";
-    const examplePt =
-      props.priceTypesOptions[0]?.label || "(replace with your price type)";
-    const exampleBrand =
-      props.brandsOptions[0]?.label || "(optional brand name)";
-    const exampleUnit = props.unitsOptions[0]?.label || "EA";
-
-    let sampleId = "(your product id)";
-    let sampleSku = "(SKU for reference)";
-    try {
-      const { data } = await axios.get("/api/products/", {
-        params: { is_active: true },
+    const { data } = await axios.get("/api/products/", {
+      params: { is_active: true, ordering: "name" },
+    });
+    const list = Array.isArray(data) ? data : data?.results || [];
+    if (list.length === 0) {
+      await Swal.fire({
+        icon: "info",
+        title: "No products",
+        text: "There are no active products in inventory. Add products before downloading the template.",
+        confirmButtonText: "OK",
       });
-      const list = Array.isArray(data) ? data : data?.results || [];
-      if (list.length > 0) {
-        const p = list[0];
-        sampleId = p.id;
-        sampleSku = p.sku || "";
-      }
-    } catch {
-      /* keep placeholders */
+      return;
     }
 
-    const rows = [
-      HEADER_CODES,
-      HEADER_DESC,
-      [sampleId, sampleSku, 1, exampleUnit, 0, 0, exampleWh, examplePt, exampleBrand],
-    ];
+    const defaultWh = props.warehousesOptions[0]?.label || "";
+    const defaultPt = props.priceTypesOptions[0]?.label || "";
+
+    const dataRows = list.map((p) => {
+      const brandName = p.default_brand?.name || "";
+      const unitCode = p.unit_default_code || "";
+      return [
+        p.id,
+        p.name || "",
+        p.sku || "",
+        1,
+        unitCode,
+        0,
+        0,
+        defaultWh,
+        defaultPt,
+        brandName,
+      ];
+    });
+
+    const rows = [HEADER_CODES, HEADER_DESC, ...dataRows];
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
     ws["!cols"] = [
-      { wch: 12 },
-      { wch: 22 },
+      { wch: 10 },
+      { wch: 36 },
+      { wch: 18 },
       { wch: 10 },
       { wch: 12 },
       { wch: 12 },
       { wch: 14 },
       { wch: 28 },
-      { wch: 22 },
+      { wch: 24 },
       { wch: 22 },
     ];
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Lines");
 
-    XLSX.writeFile(wb, "jobrithm_transaction_lines_template.xlsx");
+    const safeDate = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `jobrithm_transaction_lines_all_products_${safeDate}.xlsx`);
+
+    await Swal.fire({
+      icon: "success",
+      title: "Template ready",
+      text: `${list.length} product row(s). Edit quantity and unit_price as needed, then import.`,
+      confirmButtonText: "OK",
+    });
   } catch (e) {
     console.error(e);
-    Swal.fire({
+    await Swal.fire({
       icon: "error",
       title: "Could not build template",
       text: e?.message || String(e),
     });
+  } finally {
+    busy.value = false;
   }
 }
 </script>

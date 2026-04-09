@@ -210,12 +210,13 @@ class ProductListSerializer(serializers.ModelSerializer):
     default_brand = serializers.SerializerMethodField()
     brands_count = serializers.SerializerMethodField()
     unit_name = serializers.CharField(source='unit_default.name', default='', read_only=True)
+    unit_default_code = serializers.CharField(source='unit_default.code', default='', read_only=True)
 
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'sku', 'category_name', 'default_brand', 'brands_count',
-            'reorder_level', 'unit_name', 'tracking_mode', 'is_active'
+            'reorder_level', 'unit_name', 'unit_default_code', 'tracking_mode', 'is_active'
         ]
     
     def get_default_brand(self, obj):
