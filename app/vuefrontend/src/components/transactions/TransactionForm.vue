@@ -189,6 +189,15 @@
                   v-model="form.work_account"
                   :error="errors.work_account" />
               </div>
+
+              <div v-if="hasInventoryProducts" class="col-12 mt-1">
+                <TransactionLinesExcelPanel
+                  :units-options="unitsOptions"
+                  :warehouses-options="warehousesOptions"
+                  :price-types-options="priceTypesOptions"
+                  :brands-options="brandsOptions"
+                  @import-lines="onTransactionLinesImported" />
+              </div>
             </div>
           </div>
 
@@ -355,6 +364,7 @@ import WorkAccountSelector from "@/components/transactions/WorkAccountSelector.v
 import TransactionFavoriteModal from "@/components/transactions/TransactionFavoriteModal.vue";
 import AssetTagAssignmentModal from "@/components/transactions/AssetTagAssignmentModal.vue";
 import FavoriteTransactionSelector from "@/components/transactions/FavoriteTransactionSelector.vue";
+import TransactionLinesExcelPanel from "@/components/transactions/TransactionLinesExcelPanel.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -422,6 +432,8 @@ const unitsOptions = ref([]);
 const warehousesOptions = ref([]);
 const priceTypesOptions = ref([]);
 const brandsOptions = ref([]);
+/** Solo mostrar importación Excel si existe al menos un producto en inventario */
+const hasInventoryProducts = ref(false);
 
 const errors = reactive({});
 
@@ -512,6 +524,25 @@ watch(
 
 function syncTotals() {
   // placeholder in case we want extra side-effects; totals are computed above
+}
+
+async function loadHasInventoryProducts() {
+  try {
+    const { data } = await axios.get("/api/products/", {
+      params: { is_active: true },
+    });
+    const list = Array.isArray(data) ? data : data?.results || [];
+    const count =
+      typeof data?.count === "number" ? data.count : list.length;
+    hasInventoryProducts.value = count > 0;
+  } catch {
+    hasInventoryProducts.value = false;
+  }
+}
+
+function onTransactionLinesImported(newLines) {
+  lines.value = newLines;
+  syncTotals();
 }
 
 // Computed para determinar si se puede guardar como favorito
@@ -1743,6 +1774,7 @@ async function loadWorkAccountTitle(workAccountId) {
 onMounted(async () => {
   console.log("TransactionForm mounted, loading data...");
   await fetchStaticOptions();
+  await loadHasInventoryProducts();
   console.log("Units loaded:", unitsOptions.value.length);
   console.log("Warehouses loaded:", warehousesOptions.value.length);
 
