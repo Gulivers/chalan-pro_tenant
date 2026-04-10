@@ -44,7 +44,7 @@
                 type="button"
                 :disabled="submitting"
                 @click="handleSaveAndAddAnother">
-                <span v-if="!submitting">+ </span>
+                <span v-if="!submitting">+</span>
                 <span
                   v-else
                   class="spinner-border spinner-border-sm me-2"
@@ -57,7 +57,7 @@
                 type="button"
                 :disabled="submitting"
                 @click="handleSubmit">
-                <span v-if="!submitting">💾 </span>
+                <span v-if="!submitting">💾</span>
                 <span
                   v-else
                   class="spinner-border spinner-border-sm me-2"
@@ -113,25 +113,25 @@
               type="button"
               :disabled="submitting"
               @click="handleSaveAndAddAnother">
-              <span v-if="!submitting">+ </span>
+              <span v-if="!submitting">+</span>
               <span
                 v-else
                 class="spinner-border spinner-border-sm me-1"
                 role="status"
                 aria-hidden="true"></span>
-              <span class="d-none d-sm-inline">{{
-                submitting ? "Saving..." : "Save & Add"
-              }}</span>
-              <span class="d-sm-none">{{
-                submitting ? "Saving..." : "Add"
-              }}</span>
+              <span class="d-none d-sm-inline">
+                {{ submitting ? "Saving..." : "Save & Add" }}
+              </span>
+              <span class="d-sm-none">
+                {{ submitting ? "Saving..." : "Add" }}
+              </span>
             </button>
             <button
               class="btn btn-primary btn-sm flex-fill"
               type="button"
               :disabled="submitting"
               @click="handleSubmit">
-              <span v-if="!submitting">💾 </span>
+              <span v-if="!submitting">💾</span>
               <span
                 v-else
                 class="spinner-border spinner-border-sm me-1"
@@ -172,9 +172,9 @@
                     ">
                     <strong>{{ workAccountTitle }}</strong>
                   </div>
-                  <small class="form-text text-muted"
-                    >Work Account seleccionado desde el Schedule</small
-                  >
+                  <small class="form-text text-muted">
+                    Work Account seleccionado desde el Schedule
+                  </small>
                 </div>
 
                 <!-- Mostrar BuilderSelector si NO es operacional Y NO viene desde schedule -->
@@ -190,23 +190,31 @@
                   :error="errors.work_account" />
               </div>
 
-              <div v-if="hasInventoryProducts" class="col-12 mt-1">
+              <div class="col-12 mt-1">
                 <div
-                  class="form-check form-switch mb-2"
+                  class="form-check form-switch mb-2 my-1 ms-2 d-flex align-items-center flex-wrap gap-2"
                   v-tt
-                  data-title="Show tools to download the template and import lines from Excel">
+                  :data-title="excelImportSwitchTooltip">
                   <input
                     class="form-check-input"
                     type="checkbox"
                     role="switch"
                     id="excelImportSwitch"
+                    :disabled="
+                      inventoryProductsLoading || !hasInventoryProducts
+                    "
                     v-model="showExcelImportPanel" />
-                  <label class="form-check-label" for="excelImportSwitch">
+                  <label class="form-check-label mb-0" for="excelImportSwitch">
                     Import from Excel
                   </label>
+                  <span
+                    v-if="inventoryProductsLoading"
+                    class="spinner-border spinner-border-sm text-secondary"
+                    role="status"
+                    aria-label="Loading"></span>
                 </div>
                 <TransactionLinesExcelPanel
-                  v-if="showExcelImportPanel"
+                  v-if="hasInventoryProducts && showExcelImportPanel"
                   :units-options="unitsOptions"
                   :warehouses-options="warehousesOptions"
                   :price-types-options="priceTypesOptions"
@@ -241,9 +249,9 @@
               <div class="col-12 col-sm-6">
                 <label
                   class="form-label d-flex align-items-center gap-2"
-                  for="dateInput"
-                  >Date</label
-                >
+                  for="dateInput">
+                  Date
+                </label>
                 <input
                   type="date"
                   class="form-control"
@@ -281,9 +289,9 @@
               <div class="col-12">
                 <label
                   class="form-label d-flex align-items-center gap-2"
-                  for="notesInput"
-                  >Notes</label
-                >
+                  for="notesInput">
+                  Notes
+                </label>
                 <textarea
                   rows="2"
                   class="form-control"
@@ -305,7 +313,9 @@
           :lines="lines"
           @update:lines="lines = $event"
           :document-id="idParam"
-          :document-type-creates-serialized-items="currentDocumentTypeCreatesSerializedItems"
+          :document-type-creates-serialized-items="
+            currentDocumentTypeCreatesSerializedItems
+          "
           :documentTypeId="form.document_type"
           :workAccountId="form.work_account"
           :unitsOptions="unitsOptions || []"
@@ -328,9 +338,12 @@
                 </div>
                 <div class="d-flex justify-content-between mt-1">
                   <span class="fw-semibold">Total discount</span>
-                  <span class="text-danger">-{{ currency(total_discount) }}</span>
+                  <span class="text-danger">
+                    -{{ currency(total_discount) }}
+                  </span>
                 </div>
-                <div class="d-flex justify-content-between fs-5 mt-2 pt-2 border-top">
+                <div
+                  class="d-flex justify-content-between fs-5 mt-2 pt-2 border-top">
                   <span class="fw-bold">Grand total</span>
                   <span class="fw-bold">{{ currency(grand_total) }}</span>
                 </div>
@@ -485,8 +498,10 @@ const unitsOptions = ref([]);
 const warehousesOptions = ref([]);
 const priceTypesOptions = ref([]);
 const brandsOptions = ref([]);
-/** Solo mostrar importación Excel si existe al menos un producto en inventario */
+/** Catálogo con al menos un producto activo (para habilitar import Excel) */
 const hasInventoryProducts = ref(false);
+/** true hasta que termine GET /api/products/ — el switch se pinta de inmediato, deshabilitado mientras carga */
+const inventoryProductsLoading = ref(true);
 
 const errors = reactive({});
 
@@ -502,9 +517,7 @@ function cryptoRandom() {
 /** Σ (qty × unit_price) antes de descuentos por línea */
 const subtotal_gross = computed(() =>
   lines.value.reduce(
-    (sum, l) =>
-      sum +
-      Number(l.quantity || 0) * Number(l.unit_price || 0),
+    (sum, l) => sum + Number(l.quantity || 0) * Number(l.unit_price || 0),
     0
   )
 );
@@ -539,8 +552,20 @@ const isOperationalDocument = computed(() => {
 const documentTypesOptions = ref([]);
 
 const currentDocumentTypeCreatesSerializedItems = computed(() => {
-  const dt = documentTypesOptions.value.find((d) => d.value === form.document_type);
+  const dt = documentTypesOptions.value.find(
+    (d) => d.value === form.document_type
+  );
   return !!dt?.creates_serialized_items;
+});
+
+const excelImportSwitchTooltip = computed(() => {
+  if (inventoryProductsLoading.value) {
+    return "Checking product catalog…";
+  }
+  if (!hasInventoryProducts.value) {
+    return "Import requires at least one active product in inventory.";
+  }
+  return "Show tools to download the template and import lines from Excel";
 });
 
 // Variables para favoritos
@@ -593,16 +618,18 @@ function syncTotals() {
 }
 
 async function loadHasInventoryProducts() {
+  inventoryProductsLoading.value = true;
   try {
     const { data } = await axios.get("/api/products/", {
-      params: { is_active: true },
+      params: { is_active: true, page_size: 1 },
     });
     const list = Array.isArray(data) ? data : data?.results || [];
-    const count =
-      typeof data?.count === "number" ? data.count : list.length;
+    const count = typeof data?.count === "number" ? data.count : list.length;
     hasInventoryProducts.value = count > 0;
   } catch {
     hasInventoryProducts.value = false;
+  } finally {
+    inventoryProductsLoading.value = false;
   }
 }
 
@@ -1493,7 +1520,8 @@ async function handleSubmit() {
     const documentId = data.id || idParam;
 
     const hasSerializedItems = data?.serialized_items?.length > 0;
-    const docTypeCreatesSerialized = !!data?.document_type_creates_serialized_items;
+    const docTypeCreatesSerialized =
+      !!data?.document_type_creates_serialized_items;
     if (hasSerializedItems && docTypeCreatesSerialized) {
       assetTagModalOpenedFromSave.value = true;
       documentIdForAssetTagModal.value = documentId;
@@ -1844,8 +1872,7 @@ async function loadWorkAccountTitle(workAccountId) {
 
 onMounted(async () => {
   console.log("TransactionForm mounted, loading data...");
-  await fetchStaticOptions();
-  await loadHasInventoryProducts();
+  await Promise.all([fetchStaticOptions(), loadHasInventoryProducts()]);
   console.log("Units loaded:", unitsOptions.value.length);
   console.log("Warehouses loaded:", warehousesOptions.value.length);
 
