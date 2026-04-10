@@ -1,24 +1,25 @@
 <template>
-  <div
-    class="transaction-lines-excel-panel border rounded-3 p-3 bg-light bg-opacity-50">
+  <div class="transaction-lines-excel-panel border rounded-3 p-2">
     <div class="d-flex flex-wrap align-items-center gap-3">
-      <div class="d-flex align-items-center gap-2">
-        <i class="bi bi-file-earmark-arrow-up text-success fs-5" aria-hidden="true" />
+      <div class="d-flex align-items-center gap-2 mx-2">
+        <i
+          class="bi bi-file-earmark-arrow-up text-success fs-5 mt-4"
+          aria-hidden="true" />
         <div>
           <label class="form-label small fw-semibold mb-0">Import items</label>
           <input
             ref="fileInput"
             type="file"
-            class="form-control form-control-sm"
+            class="form-control form-control-sm mx-2"
             accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
             :disabled="busy"
             @change="onFile" />
         </div>
       </div>
-      <div class="vr d-none d-sm-block" />
+      <div class="vr d-none d-sm-block my-2 mx-auto opacity-50" />
       <button
         type="button"
-        class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-2"
+        class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-2 mt-3 mx-auto"
         :disabled="busy"
         @click="downloadTemplate">
         <img
@@ -27,14 +28,15 @@
           width="20"
           height="20"
           class="excel-template-icon flex-shrink-0" />
-        Download Excel template (all products)
+        Download Excel template
       </button>
     </div>
     <p class="small text-muted mb-0 mt-2">
-      The Excel file lists <strong>every active product</strong> (ID, name, SKU) with default unit, brand, discount 0,
-      and sample warehouse / price type when available. Usually you only adjust <strong>quantity</strong> and
-      <strong>unit_price</strong> per row. Import matches lines by <strong>product_id</strong>; product name is
-      reference only.
+      Template includes all active products; edit
+      <strong>quantity</strong>
+      and
+      <strong>unit_price</strong>
+      as needed.
     </p>
   </div>
 </template>
@@ -43,8 +45,20 @@
 import { ref } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
-import * as XLSX from "xlsx";
 import excelIconUrl from "@/assets/img/microsoft-excel-icon.svg";
+
+/** SheetJS es pesado: se carga en un chunk aparte solo al importar Excel o descargar plantilla */
+let xlsxModulePromise = null;
+async function getXlsx() {
+  if (!xlsxModulePromise) {
+    xlsxModulePromise = import("xlsx").then((m) => {
+      const mod =
+        m?.default && typeof m.default.read === "function" ? m.default : m;
+      return mod;
+    });
+  }
+  return xlsxModulePromise;
+}
 
 const props = defineProps({
   unitsOptions: { type: Array, default: () => [] },
@@ -144,7 +158,8 @@ function isExcelFile(file) {
 }
 
 function findOptionIdByLabel(options, name, fieldLabel) {
-  if (name === undefined || name === null || String(name).trim() === "") return null;
+  if (name === undefined || name === null || String(name).trim() === "")
+    return null;
   const n = String(name).trim().toLowerCase();
   const o = options.find((x) => String(x.label).trim().toLowerCase() === n);
   if (!o) {
@@ -155,11 +170,16 @@ function findOptionIdByLabel(options, name, fieldLabel) {
 
 /** Resuelve unidad por código o por nombre (coincide con el grid: code en label). */
 function findUnitIdByCodeOrName(options, raw) {
-  if (raw === undefined || raw === null || String(raw).trim() === "") return null;
+  if (raw === undefined || raw === null || String(raw).trim() === "")
+    return null;
   const s = String(raw).trim().toLowerCase();
   const o = options.find((x) => {
-    const code = String(x.code ?? x.label ?? "").trim().toLowerCase();
-    const name = String(x.name ?? "").trim().toLowerCase();
+    const code = String(x.code ?? x.label ?? "")
+      .trim()
+      .toLowerCase();
+    const name = String(x.name ?? "")
+      .trim()
+      .toLowerCase();
     return code === s || (name && name === s);
   });
   if (!o) {
@@ -181,9 +201,18 @@ function buildColumnMap(headerRow) {
   const idxQty = findColIndex(headers, ["quantity", "qty"]);
   const idxUnit = findColIndex(headers, ["unit_code", "unit", "uom"]);
   const idxPrice = findColIndex(headers, ["unit_price", "price"]);
-  const idxDisc = findColIndex(headers, ["discount_percent", "disc_percent", "disc", "discount"]);
+  const idxDisc = findColIndex(headers, [
+    "discount_percent",
+    "disc_percent",
+    "disc",
+    "discount",
+  ]);
   const idxWh = findColIndex(headers, ["warehouse_name", "warehouse"]);
-  const idxPt = findColIndex(headers, ["price_type_name", "price_type", "pricetype"]);
+  const idxPt = findColIndex(headers, [
+    "price_type_name",
+    "price_type",
+    "pricetype",
+  ]);
   const idxBr = findColIndex(headers, ["brand_name", "brand"]);
 
   const m = {
@@ -199,14 +228,16 @@ function buildColumnMap(headerRow) {
     idxBr,
   };
   if (idxPid < 0) {
-    throw new Error('Missing required column: product_id');
+    throw new Error("Missing required column: product_id");
   }
   return m;
 }
 
 function parseSheetRows(rows) {
   if (!rows || rows.length < 3) {
-    throw new Error("File must have header row, description row, and at least one data row (from row 3).");
+    throw new Error(
+      "File must have header row, description row, and at least one data row (from row 3)."
+    );
   }
   const col = buildColumnMap(rows[0]);
   const dataRows = rows.slice(2);
@@ -222,7 +253,11 @@ async function rowsToLines(col, dataRows, productById) {
     const row = dataRows[i];
     const excelRow = i + 3;
     const pidRaw = row[col.idxPid];
-    if (pidRaw === undefined || pidRaw === null || String(pidRaw).trim() === "") {
+    if (
+      pidRaw === undefined ||
+      pidRaw === null ||
+      String(pidRaw).trim() === ""
+    ) {
       continue;
     }
 
@@ -235,51 +270,82 @@ async function rowsToLines(col, dataRows, productById) {
 
       const prod = productById.get(pid);
       if (!prod) {
-        rowErrors.push(`Row ${excelRow}: product_id ${pid} not found in catalog`);
+        rowErrors.push(
+          `Row ${excelRow}: product_id ${pid} not found in catalog`
+        );
         continue;
       }
 
       if (col.idxSku >= 0) {
         const skuRef = row[col.idxSku];
-        if (skuRef !== undefined && skuRef !== null && String(skuRef).trim() !== "") {
+        if (
+          skuRef !== undefined &&
+          skuRef !== null &&
+          String(skuRef).trim() !== ""
+        ) {
           const ref = String(skuRef).trim().toLowerCase();
-          const expected = String(prod.sku || "").trim().toLowerCase();
+          const expected = String(prod.sku || "")
+            .trim()
+            .toLowerCase();
           if (expected && ref !== expected) {
             rowWarnings.push(
-              `Row ${excelRow}: product_sku "${skuRef}" does not match product_id ${pid} (catalog SKU: "${prod.sku || "—"}") — line imported by ID`
+              `Row ${excelRow}: product_sku "${skuRef}" does not match product_id ${pid} (catalog SKU: "${
+                prod.sku || "—"
+              }") — line imported by ID`
             );
           }
         }
       }
 
-      const qty =
-        col.idxQty >= 0 ? Number(row[col.idxQty] ?? 1) : 1;
-      const unitPrice =
-        col.idxPrice >= 0 ? Number(row[col.idxPrice] ?? 0) : 0;
-      const disc =
-        col.idxDisc >= 0 ? Number(row[col.idxDisc] ?? 0) : 0;
+      const qty = col.idxQty >= 0 ? Number(row[col.idxQty] ?? 1) : 1;
+      const unitPrice = col.idxPrice >= 0 ? Number(row[col.idxPrice] ?? 0) : 0;
+      const disc = col.idxDisc >= 0 ? Number(row[col.idxDisc] ?? 0) : 0;
       const unitCode = col.idxUnit >= 0 ? row[col.idxUnit] : "";
       const whName = col.idxWh >= 0 ? row[col.idxWh] : "";
       const ptName = col.idxPt >= 0 ? row[col.idxPt] : "";
       const brName = col.idxBr >= 0 ? row[col.idxBr] : "";
 
       let unitId = null;
-      if (col.idxUnit >= 0 && unitCode !== undefined && String(unitCode).trim() !== "") {
+      if (
+        col.idxUnit >= 0 &&
+        unitCode !== undefined &&
+        String(unitCode).trim() !== ""
+      ) {
         unitId = findUnitIdByCodeOrName(props.unitsOptions, unitCode);
       }
 
       let warehouseId = null;
-      if (col.idxWh >= 0 && whName !== undefined && String(whName).trim() !== "") {
-        warehouseId = findOptionIdByLabel(props.warehousesOptions, whName, "warehouse");
+      if (
+        col.idxWh >= 0 &&
+        whName !== undefined &&
+        String(whName).trim() !== ""
+      ) {
+        warehouseId = findOptionIdByLabel(
+          props.warehousesOptions,
+          whName,
+          "warehouse"
+        );
       }
 
       let priceTypeId = null;
-      if (col.idxPt >= 0 && ptName !== undefined && String(ptName).trim() !== "") {
-        priceTypeId = findOptionIdByLabel(props.priceTypesOptions, ptName, "price type");
+      if (
+        col.idxPt >= 0 &&
+        ptName !== undefined &&
+        String(ptName).trim() !== ""
+      ) {
+        priceTypeId = findOptionIdByLabel(
+          props.priceTypesOptions,
+          ptName,
+          "price type"
+        );
       }
 
       let brandId = null;
-      if (col.idxBr >= 0 && brName !== undefined && String(brName).trim() !== "") {
+      if (
+        col.idxBr >= 0 &&
+        brName !== undefined &&
+        String(brName).trim() !== ""
+      ) {
         brandId = findOptionIdByLabel(props.brandsOptions, brName, "brand");
       }
 
@@ -323,6 +389,7 @@ async function onFile(ev) {
   }
   busy.value = true;
   try {
+    const XLSX = await getXlsx();
     const buf = await file.arrayBuffer();
     const wb = XLSX.read(buf, { type: "array" });
     const sheet = wb.Sheets[wb.SheetNames[0]];
@@ -330,11 +397,11 @@ async function onFile(ev) {
     const { col, dataRows } = parseSheetRows(rows);
 
     const productById = await fetchProductsByIdMap();
-    const { lines: newLines, rowErrors, rowWarnings } = await rowsToLines(
-      col,
-      dataRows,
-      productById
-    );
+    const {
+      lines: newLines,
+      rowErrors,
+      rowWarnings,
+    } = await rowsToLines(col, dataRows, productById);
 
     if (newLines.length === 0) {
       await Swal.fire({
@@ -342,7 +409,9 @@ async function onFile(ev) {
         title: "No lines imported",
         html:
           rowErrors.length > 0
-            ? `<ul class="text-start small">${rowErrors.map((e) => `<li>${e}</li>`).join("")}</ul>`
+            ? `<ul class="text-start small">${rowErrors
+                .map((e) => `<li>${e}</li>`)
+                .join("")}</ul>`
             : "No data rows with a valid product_id were found.",
         confirmButtonText: "OK",
       });
@@ -352,7 +421,9 @@ async function onFile(ev) {
     const confirm = await Swal.fire({
       icon: "question",
       title: "Replace line items?",
-      html: `Import <strong>${newLines.length}</strong> line(s). Current rows in the grid will be replaced.${
+      html: `Import <strong>${
+        newLines.length
+      }</strong> line(s). Current rows in the grid will be replaced.${
         rowErrors.length
           ? `<p class="text-warning small mt-2">Some rows were skipped:</p><ul class="text-start small">${rowErrors
               .slice(0, 15)
@@ -372,10 +443,14 @@ async function onFile(ev) {
     if (rowWarnings.length || rowErrors.length) {
       let html = `<p>${newLines.length} row(s) loaded.</p>`;
       if (rowErrors.length) {
-        html += `<p class="text-start small mt-2 mb-1">Skipped rows:</p><ul class="text-start small">${rowErrors.map((e) => `<li>${e}</li>`).join("")}</ul>`;
+        html += `<p class="text-start small mt-2 mb-1">Skipped rows:</p><ul class="text-start small">${rowErrors
+          .map((e) => `<li>${e}</li>`)
+          .join("")}</ul>`;
       }
       if (rowWarnings.length) {
-        html += `<p class="text-start small text-muted mt-2 mb-1">SKU reference (optional):</p><ul class="text-start small">${rowWarnings.map((w) => `<li>${w}</li>`).join("")}</ul>`;
+        html += `<p class="text-start small text-muted mt-2 mb-1">SKU reference (optional):</p><ul class="text-start small">${rowWarnings
+          .map((w) => `<li>${w}</li>`)
+          .join("")}</ul>`;
       }
       await Swal.fire({
         icon: "info",
@@ -408,6 +483,7 @@ async function onFile(ev) {
 async function downloadTemplate() {
   busy.value = true;
   try {
+    const XLSX = await getXlsx();
     const { data } = await axios.get("/api/products/", {
       params: { is_active: true, ordering: "name" },
     });
@@ -463,7 +539,10 @@ async function downloadTemplate() {
     XLSX.utils.book_append_sheet(wb, ws, "Lines");
 
     const safeDate = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, `jobrithm_transaction_lines_all_products_${safeDate}.xlsx`);
+    XLSX.writeFile(
+      wb,
+      `jobrithm_transaction_lines_all_products_${safeDate}.xlsx`
+    );
 
     await Swal.fire({
       icon: "success",
