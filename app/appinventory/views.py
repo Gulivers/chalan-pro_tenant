@@ -241,7 +241,7 @@ class PriceTypeViewSet(viewsets.ModelViewSet):
     filterset_fields = ['is_active']
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.select_related('unit_default', 'category').all()
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]

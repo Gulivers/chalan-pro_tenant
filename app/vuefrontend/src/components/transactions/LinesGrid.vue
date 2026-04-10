@@ -117,7 +117,13 @@
             <th style="min-width: 180px" v-tt data-title="Warehouse for stock movement (required when document type requires it)">Warehouse</th>
             <th style="min-width: 150px" v-tt data-title="Price type (e.g. Contractor, Retail)">Price Type</th>
             <th style="min-width: 150px" v-tt data-title="Product brand when applicable">Brand</th>
-            <th style="min-width: 120px" class="text-end" v-tt data-title="Line total after discount">Final</th>
+            <th
+              style="min-width: 120px"
+              class="text-end"
+              v-tt
+              data-title="Net amount for this line after Disc. % (qty × unit price × (1 − disc/100)). Footer Subtotal is the sum of qty × unit price before discounts.">
+              Line total
+            </th>
             <th style="width: 80px"></th>
           </tr>
         </thead>
@@ -322,9 +328,9 @@
                </v-select>
             </td>
 
-            <!-- Final -->
+            <!-- Line total (siempre neto: qty × unit_price × (1 − disc%); ver lineTotalAfterDiscount) -->
             <td class="text-end">
-              {{ currency(row.final_price) }}
+              {{ currency(lineTotalAfterDiscount(row)) }}
             </td>
 
             <td class="text-end">
@@ -407,6 +413,9 @@
         if (linesLocal.value.length === 0) {
           addLine();
         }
+        nextTick(() => {
+          recalcAllRows();
+        });
       }
 
       nextTick(() => {
@@ -482,16 +491,26 @@
     return num.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
   }
 
+  /** Importe de línea con descuento aplicado (única fuente de verdad para mostrar y para final_price) */
+  function lineTotalAfterDiscount(row) {
+    if (!row) return 0;
+    const qty = Number(row.quantity || 0);
+    const price = Number(row.unit_price || 0);
+    const disc = Math.min(100, Math.max(0, Number(row.discount_percentage || 0)));
+    return +(qty * price * (1 - disc / 100)).toFixed(2);
+  }
+
   function recalcRow(idx) {
     const r = linesLocal.value[idx];
     if (!r) {
       console.warn(`recalcRow: Line at index ${idx} not found`);
       return;
     }
-    const qty = Number(r.quantity || 0);
-    const price = Number(r.unit_price || 0);
-    const disc = Number(r.discount_percentage || 0);
-    r.final_price = +(qty * price * (1 - disc / 100)).toFixed(2);
+    r.final_price = lineTotalAfterDiscount(r);
+  }
+
+  function recalcAllRows() {
+    linesLocal.value.forEach((_, idx) => recalcRow(idx));
   }
 
   // Función para cargar el warehouse predeterminado
@@ -545,7 +564,9 @@
       final_price: 0, // Reset final price
       _errors: {},
     };
-    linesLocal.value.splice(idx + 1, 0, duplicatedLine);
+    const newIdx = idx + 1;
+    linesLocal.value.splice(newIdx, 0, duplicatedLine);
+    recalcRow(newIdx);
   }
 
   const hasSelection = computed(() => linesLocal.value.some(r => r.selected));
@@ -556,6 +577,7 @@
 
   function duplicateSelected() {
     const selectedLines = linesLocal.value.filter(r => r.selected);
+    const start = linesLocal.value.length;
     selectedLines.forEach(line => {
       const duplicatedLine = {
         ...line,
@@ -563,11 +585,14 @@
         selected: false,
         id: null, // Reset ID for new line
         quantity: 1, // Reset quantity to 1
-        final_price: 0, // Reset final price
+        final_price: 0, // se recalcula abajo
         _errors: {},
       };
       linesLocal.value.push(duplicatedLine);
     });
+    for (let i = start; i < linesLocal.value.length; i++) {
+      recalcRow(i);
+    }
     selectAll.value = false;
   }
 

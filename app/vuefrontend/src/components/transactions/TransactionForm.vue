@@ -189,6 +189,30 @@
                   v-model="form.work_account"
                   :error="errors.work_account" />
               </div>
+
+              <div v-if="hasInventoryProducts" class="col-12 mt-1">
+                <div
+                  class="form-check form-switch mb-2"
+                  v-tt
+                  data-title="Show tools to download the template and import lines from Excel">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    id="excelImportSwitch"
+                    v-model="showExcelImportPanel" />
+                  <label class="form-check-label" for="excelImportSwitch">
+                    Import from Excel
+                  </label>
+                </div>
+                <TransactionLinesExcelPanel
+                  v-if="showExcelImportPanel"
+                  :units-options="unitsOptions"
+                  :warehouses-options="warehousesOptions"
+                  :price-types-options="priceTypesOptions"
+                  :brands-options="brandsOptions"
+                  @import-lines="onTransactionLinesImported" />
+              </div>
             </div>
           </div>
 
@@ -299,12 +323,16 @@
             <div class="card bg-light">
               <div class="card-body p-3">
                 <div class="d-flex justify-content-between">
-                  <span class="fw-semibold">Discount Total</span>
-                  <span>{{ currency(total_discount) }}</span>
+                  <span class="fw-semibold">Subtotal</span>
+                  <span>{{ currency(subtotal_gross) }}</span>
                 </div>
-                <div class="d-flex justify-content-between fs-5 mt-2">
-                  <span class="fw-bold">Grand Total</span>
-                  <span class="fw-bold">{{ currency(total_amount) }}</span>
+                <div class="d-flex justify-content-between mt-1">
+                  <span class="fw-semibold">Total discount</span>
+                  <span class="text-danger">-{{ currency(total_discount) }}</span>
+                </div>
+                <div class="d-flex justify-content-between fs-5 mt-2 pt-2 border-top">
+                  <span class="fw-bold">Grand total</span>
+                  <span class="fw-bold">{{ currency(grand_total) }}</span>
                 </div>
               </div>
             </div>
@@ -343,6 +371,9 @@ import {
   onMounted,
   watch,
   getCurrentInstance,
+  defineAsyncComponent,
+  defineComponent,
+  h,
 } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
@@ -355,6 +386,36 @@ import WorkAccountSelector from "@/components/transactions/WorkAccountSelector.v
 import TransactionFavoriteModal from "@/components/transactions/TransactionFavoriteModal.vue";
 import AssetTagAssignmentModal from "@/components/transactions/AssetTagAssignmentModal.vue";
 import FavoriteTransactionSelector from "@/components/transactions/FavoriteTransactionSelector.vue";
+
+const ExcelPanelLoading = defineComponent({
+  name: "ExcelPanelLoading",
+  setup() {
+    return () =>
+      h(
+        "div",
+        {
+          class:
+            "d-flex align-items-center gap-2 py-2 text-muted small border rounded-3 px-3 bg-light",
+        },
+        [
+          h("span", {
+            class: "spinner-border spinner-border-sm",
+            role: "status",
+            "aria-hidden": "true",
+          }),
+          h("span", "Loading Excel import…"),
+        ]
+      );
+  },
+});
+
+const TransactionLinesExcelPanel = defineAsyncComponent({
+  loader: () =>
+    import("@/components/transactions/TransactionLinesExcelPanel.vue"),
+  loadingComponent: ExcelPanelLoading,
+  delay: 0,
+  timeout: 60000,
+});
 
 const route = useRoute();
 const router = useRouter();
@@ -369,6 +430,8 @@ const workAccountParam = route.query.work_account_id
   : null; // Fallback para compatibilidad
 const isEditMode = !!idParam;
 const submitting = ref(false);
+/** Muestra el panel de importación Excel solo si el usuario lo activa (carga diferida del chunk) */
+const showExcelImportPanel = ref(false);
 const loading = reactive({
   units: false,
   whs: false,
@@ -422,6 +485,8 @@ const unitsOptions = ref([]);
 const warehousesOptions = ref([]);
 const priceTypesOptions = ref([]);
 const brandsOptions = ref([]);
+/** Solo mostrar importación Excel si existe al menos un producto en inventario */
+const hasInventoryProducts = ref(false);
 
 const errors = reactive({});
 
@@ -434,9 +499,17 @@ function cryptoRandom() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
-const total_amount = computed(() =>
-  lines.value.reduce((sum, l) => sum + Number(l.final_price || 0), 0)
+/** Σ (qty × unit_price) antes de descuentos por línea */
+const subtotal_gross = computed(() =>
+  lines.value.reduce(
+    (sum, l) =>
+      sum +
+      Number(l.quantity || 0) * Number(l.unit_price || 0),
+    0
+  )
 );
+
+/** Σ importe descontado por línea (coincide con backend Document.calculate_totals) */
 const total_discount = computed(() =>
   lines.value.reduce((sum, l) => {
     const disc =
@@ -445,6 +518,11 @@ const total_discount = computed(() =>
       (Number(l.discount_percentage || 0) / 100);
     return sum + disc;
   }, 0)
+);
+
+/** Total del documento: Σ final_price por línea (= subtotal_gross − total_discount salvo redondeo por línea) */
+const grand_total = computed(() =>
+  lines.value.reduce((sum, l) => sum + Number(l.final_price || 0), 0)
 );
 
 // Computed para determinar si el documento es operacional
@@ -512,6 +590,25 @@ watch(
 
 function syncTotals() {
   // placeholder in case we want extra side-effects; totals are computed above
+}
+
+async function loadHasInventoryProducts() {
+  try {
+    const { data } = await axios.get("/api/products/", {
+      params: { is_active: true },
+    });
+    const list = Array.isArray(data) ? data : data?.results || [];
+    const count =
+      typeof data?.count === "number" ? data.count : list.length;
+    hasInventoryProducts.value = count > 0;
+  } catch {
+    hasInventoryProducts.value = false;
+  }
+}
+
+function onTransactionLinesImported(newLines) {
+  lines.value = newLines;
+  syncTotals();
 }
 
 // Computed para determinar si se puede guardar como favorito
@@ -998,7 +1095,12 @@ async function fetchStaticOptions() {
   try {
     const { data } = await axios.get("/api/unitsofmeasure/?is_active=true");
     const list = Array.isArray(data) ? data : data?.results || [];
-    unitsOptions.value = list.map((u) => ({ value: u.id, label: u.code }));
+    unitsOptions.value = list.map((u) => ({
+      value: u.id,
+      label: u.code,
+      code: u.code,
+      name: u.name || "",
+    }));
   } finally {
     loading.units = false;
   }
@@ -1743,6 +1845,7 @@ async function loadWorkAccountTitle(workAccountId) {
 onMounted(async () => {
   console.log("TransactionForm mounted, loading data...");
   await fetchStaticOptions();
+  await loadHasInventoryProducts();
   console.log("Units loaded:", unitsOptions.value.length);
   console.log("Warehouses loaded:", warehousesOptions.value.length);
 
