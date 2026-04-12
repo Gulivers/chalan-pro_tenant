@@ -1,16 +1,14 @@
 <template>
   <div class="calendar-container">
     <div
-      class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-md-end gap-2 py-2"
-    >
+      class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-md-end gap-2 py-2">
       <div v-if="categoryTotals.length">
         <div class="text-center me-5">
           <strong>Weekly Totals:</strong>
           <span
             v-for="(item, index) in categoryTotals"
             :key="index"
-            class="badge bg-secondary mx-1"
-          >
+            class="badge bg-secondary mx-1">
             {{ removeEmojis(item.crew__category__name) }}: {{ item.total }}
           </span>
         </div>
@@ -18,20 +16,17 @@
       <div class="me-2" v-if="hasPermission('appschedule.view_event')">
         <button
           class="btn btn-outline-success me-2 btn-sm"
-          @click="downloadScheduleExcel"
-        >
+          @click="downloadScheduleExcel">
           <img
             src="@/assets/img/microsoft-excel-icon.svg"
             alt="Excel"
             width="25"
-            class="me-1"
-          />
+            class="me-1" />
           Excel Schedule
         </button>
         <button
           class="btn btn-outline-dark btn-sm"
-          @click="generateSchedulePDF"
-        >
+          @click="generateSchedulePDF">
           📄 Print Schedule PDF
         </button>
       </div>
@@ -47,25 +42,22 @@
               ? 'Publish all drafts in view'
               : 'No drafts to publish'
           "
-          @click="publishAllDrafts"
-        >
+          @click="publishAllDrafts">
           <span
             v-if="publishing"
             class="spinner-border spinner-border-sm me-2"
-            role="status"
-          ></span>
+            role="status"></span>
           {{ publishing ? "Publishing..." : "📢 Publish All Drafts" }}
         </button>
       </div>
 
       <div class="input-group input-group-sm me-2" style="max-width: 280px">
-        <span class="input-group-text">Search: </span>
+        <span class="input-group-text">Search:</span>
         <input
           type="text"
           class="form-control form-control-sm"
           placeholder="Search here 🔍"
-          v-model="search"
-        />
+          v-model="search" />
         <!--<button class="btn btn-outline-primary btn-sm" type="button">
           <img src="@assets/img/search.svg" alt="Search" width="20" height="20" />
         </button>-->
@@ -74,13 +66,11 @@
     <FullCalendar
       ref="calendarRef"
       :options="calendarOptions"
-      v-if="showFullCalendar"
-    />
+      v-if="showFullCalendar" />
     <EventModal
       ref="eventModal"
       :formData="formData"
-      @save-event="handleSaveEvent"
-    />
+      @save-event="handleSaveEvent" />
   </div>
 </template>
 
@@ -112,7 +102,7 @@ export default {
       calendar_start: null,
       calendar_end: null,
       resizeObserver: null,
-      resources: [],
+      allResources: [],
       events: [],
       showModal: false,
       showFullCalendar: false,
@@ -127,12 +117,16 @@ export default {
       userId: null, // _OAHP
       publishing: false, // OAHO400
       categoryTotals: [],
+      /** Ancho columna crew: 25% móvil/tablet pequeña, 15% desktop / tablet grande (≥992px, ej. iPad Pro) */
+      resourceAreaWidthCurrent: "25%",
       // filteredEvents: [],
       websocket: null,
       wsUrl: null,
       // categoryOrder: ['Rough', 'Roug-hWaitList', 'Trim', 'TrimWaitList', 'Others', 'Hourly'],
       initialCalendarOptions: {
         plugins: [interactionPlugin, resourceTimelinePlugin],
+        /** Open-source use of @fullcalendar/resource-timeline (see fullcalendar.io/docs/schedulerLicenseKey) */
+        schedulerLicenseKey: "GPL-My-Project-Is-Open-Source",
         initialView: "resourceTimelineWeek",
         firstDay: 1, // Lunes como primer día de la semana
         headerToolbar: {
@@ -144,7 +138,6 @@ export default {
         eventResizableFromStart: false,
         droppable: false,
         resourceAreaHeaderContent: "Crew",
-        resourceAreaWidth: "15%",
         eventMinHeight: 90, // Altura mínima para asegurar visibilidad
         // slotHeight: null,
         height: "auto", // Establece la altura como auto
@@ -196,7 +189,7 @@ export default {
                      }
                      <div class="hstack">
                          <small class="text-black-50 " style="font-size: 0.7rem">${event_date.format(
-                           "lll",
+                           "lll"
                          )}</small>
                      </div>
                    </div>`,
@@ -206,6 +199,19 @@ export default {
     };
   },
   computed: {
+    /**
+     * Crews inactivos no aparecen salvo que tengan eventos (borrador o publicado) en el rango cargado.
+     */
+    resources() {
+      const idsWithEvents = new Set(
+        (this.events || []).map((e) => Number(e.resourceId))
+      );
+      return this.allResources.filter((r) => {
+        const active = r.crewActive !== false;
+        if (active) return true;
+        return idsWithEvents.has(Number(r.id));
+      });
+    },
     filteredEvents() {
       const searchTerm = this.search.toLowerCase();
       if (searchTerm.trim().length > 0) {
@@ -231,6 +237,7 @@ export default {
     calendarOptions() {
       return {
         ...this.initialCalendarOptions,
+        resourceAreaWidth: this.resourceAreaWidthCurrent,
         resources: this.resources,
         events: this.filteredEvents,
       };
@@ -241,17 +248,26 @@ export default {
     const authStore = useAuthStore();
     authStore.setUser(data);
     this.userId = data.id;
+    this.updateResourceAreaWidth();
+    window.addEventListener("resize", this.updateResourceAreaWidth);
     this.getCrews();
     this.wsUrl = this.buildWsUrl("ws/calendar-updates/");
     this.connectWebSocket();
     this.updateCalendarPermissions();
   },
   beforeUnmount() {
+    window.removeEventListener("resize", this.updateResourceAreaWidth);
     this.disconnectWebSocket();
     this.disconnectResizeObserver();
   },
 
   methods: {
+    /** Alineado con breakpoint Bootstrap lg (992px): ancho útil para iPad Pro y desktop. */
+    updateResourceAreaWidth() {
+      if (typeof window === "undefined") return;
+      const wide = window.matchMedia("(min-width: 992px)").matches;
+      this.resourceAreaWidthCurrent = wide ? "15%" : "25%";
+    },
     reSizeCalendar() {
       const resourceRows = document.querySelectorAll(".fc-resource-cell");
       const eventRows = document.querySelectorAll(".fc-datagrid-cell");
@@ -329,7 +345,7 @@ export default {
           console.log("📦 Total crews recibidos:", crews.length);
           console.log(
             "📦 Estructura del primer crew (si existe):",
-            crews.length > 0 ? crews[0] : "No hay crews",
+            crews.length > 0 ? crews[0] : "No hay crews"
           );
 
           // Filtrar crews que tengan category_name válido
@@ -343,27 +359,32 @@ export default {
 
           console.log("✅ Crews con categoría:", crewsWithCategory.length);
 
-          this.resources = crewsWithCategory.map((item) => ({
+          this.allResources = crewsWithCategory.map((item) => ({
             id: item.id,
             title: item.name.toUpperCase(),
             category: item.category_name.toUpperCase(),
+            crewActive: item.status !== false,
           }));
 
           // No necesitamos asignar a initialCalendarOptions.resources porque
           // el computed calendarOptions ya incluye this.resources reactivamente
-          console.log("✅ Recursos cargados:", this.resources.length, "crews");
+          console.log(
+            "✅ Recursos cargados:",
+            this.allResources.length,
+            "crews"
+          );
           console.log("📋 Categorías encontradas:", [
-            ...new Set(this.resources.map((r) => r.category)),
+            ...new Set(this.allResources.map((r) => r.category)),
           ]);
-          console.log("📋 Recursos finales:", this.resources);
+          console.log("📋 Recursos finales:", this.allResources);
 
-          if (this.resources.length === 0) {
+          if (this.allResources.length === 0) {
             console.warn(
-              "⚠️ No crews found with category_name. Calendar will be empty.",
+              "⚠️ No crews found with category_name. Calendar will be empty."
             );
             console.warn(
               "⚠️ Datos recibidos de la API:",
-              JSON.stringify(crews, null, 2),
+              JSON.stringify(crews, null, 2)
             );
           }
         }
@@ -377,7 +398,7 @@ export default {
             this.$refs.calendarRef.getApi().refetchResources();
           } catch (e) {
             console.log(
-              "ℹ️ Calendar API not ready yet, resources will load on next render",
+              "ℹ️ Calendar API not ready yet, resources will load on next render"
             );
           }
         }
@@ -455,7 +476,7 @@ export default {
           Swal.fire(
             "Permission Denied",
             "You do not have permission to create events.",
-            "error",
+            "error"
           );
           return;
         }
@@ -468,7 +489,7 @@ export default {
             `You can only create events for your category (${
               crewCategoryName?.toUpperCase() || "UNKNOWN"
             }) with your assigned crew (${crewName || "No Crew"}).`,
-            "warning",
+            "warning"
           );
           return;
         }
@@ -489,14 +510,14 @@ export default {
             crewId: this.crewId,
             isCoordinator: this.is_coordinator,
           },
-          true,
+          true
         );
       } catch (error) {
         console.error("💥 Error inesperado en handleDateClick:", error);
         Swal.fire(
           "Oops!",
           "Something went wrong while trying to open the event modal.",
-          "error",
+          "error"
         );
       }
     },
@@ -516,7 +537,8 @@ export default {
           work_account: info.event.extendedProps?.work_account || null,
           crew: resource?.id,
           crewTitle: resource?.title ?? "",
-          crewCategory: resource?.category ?? info.event.extendedProps?.crew_category ?? "",
+          crewCategory:
+            resource?.category ?? info.event.extendedProps?.crew_category ?? "",
           extended_service: info.event.extendedProps?.extended_service,
           isAbsence: info.event.extendedProps?.is_absence || false,
           absence_reason: info.event.extendedProps?.absence_reason || null,
@@ -526,7 +548,7 @@ export default {
           crewId: this.crewId,
           isCoordinator: this.is_coordinator,
         },
-        false,
+        false
       );
     },
 
@@ -550,7 +572,7 @@ export default {
           `You can only move events of your assigned crew (${
             crewName || "Unknown Crew"
           }).`,
-          "warning",
+          "warning"
         );
         info.revert(); // Devuelve el evento a su posición original
         return;
@@ -578,7 +600,7 @@ export default {
           // console.log('📍 PATCH Draft Payload:', payload)
           await this.updateEvent(
             `/api/schedule/${info.event.extendedProps?.id}/`,
-            payload,
+            payload
           );
         } else {
           const payload = { ...info.event.extendedProps };
@@ -602,7 +624,7 @@ export default {
               Swal.fire(
                 "Duplicate Event Detected",
                 "An event with the same title (Lot, Community, or Address) already exists in this Crew Category.",
-                "error",
+                "error"
               );
               return;
             }
@@ -614,7 +636,7 @@ export default {
           Swal.fire(
             "Action not allowed",
             "You do not have permission to publish events",
-            "error",
+            "error"
           );
           return;
         }
@@ -678,7 +700,7 @@ export default {
           this.publishing = false;
           if (typeof this.notifyToastError === "function") {
             this.notifyToastError(
-              "Publish timed out after 30s. Please try again.",
+              "Publish timed out after 30s. Please try again."
             );
           }
         }
@@ -691,7 +713,7 @@ export default {
             start_date: this.calendar_start,
             end_date: this.calendar_end,
           },
-          { timeout: 30000 }, // ✅ NEW: timeout duro en axios
+          { timeout: 30000 } // ✅ NEW: timeout duro en axios
         );
 
         if (typeof this.getEvents === "function") {
@@ -762,7 +784,7 @@ export default {
       return text
         .replace(
           /([\u2700-\u27BF]|[\uE000-\uF8FF]|[\uD83C-\uDBFF\uDC00-\uDFFF]+|[\uFE00-\uFE0F]|\u200D)/g,
-          "",
+          ""
         )
         .trim();
     },

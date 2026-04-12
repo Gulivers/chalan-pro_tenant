@@ -79,7 +79,7 @@ export function setupAxiosInterceptors() {
             try {
               const currentRoute = router.currentRoute?.value;
               routeName = currentRoute?.name || 'unknown';
-              const publicRoutes = ['onboarding', 'login', 'reset_password', 'reset-password-confirm'];
+              const publicRoutes = ['onboarding', 'login', 'reset_password', 'reset_password_confirm'];
               isPublicRoute = currentRoute && publicRoutes.includes(currentRoute.name);
             } catch (e) {
               console.warn('[Axios Interceptor] Error accessing router:', e);
