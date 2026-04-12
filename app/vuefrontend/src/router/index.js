@@ -151,10 +151,13 @@ const routes = [
     path: "/reset_password",
     name: "reset_password",
     component: PasswordReset,
+    meta: { hideNavbar: true, requiresAuth: false },
   },
   {
     path: "/reset-password-confirm",
+    name: "reset_password_confirm",
     component: PasswordResetConfirm,
+    meta: { hideNavbar: true, requiresAuth: false },
   },
   {
     path: "/",
@@ -1160,7 +1163,7 @@ router.beforeEach(async (to, from, next) => {
       "onboarding",
       "login",
       "reset_password",
-      "reset-password-confirm",
+      "reset_password_confirm",
     ];
     if (!publicRoutes.includes(to.name)) {
       localStorage.removeItem("authToken");
