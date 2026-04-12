@@ -1,8 +1,15 @@
 <template>
   <nav
     v-if="shouldShowNavbar"
-    class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-body py-1 navbar-modern">
-    <div class="container d-flex align-items-center">
+    class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom border-body py-1 navbar-modern"
+    :class="{ 'navbar-modern--menu-open': isNavbarOpen }">
+    <!-- Móvil/tablet: atenúa el contenido detrás; no empuja el layout (ver skin-modern.css) -->
+    <div
+      v-show="isNavbarOpen"
+      class="navbar-modern-backdrop"
+      aria-hidden="true"
+      @click="closeNavbar" />
+    <div class="container-fluid navbar-modern-inner d-flex align-items-center ps-2 pe-3">
       <!-- Marca (Jobrithm logo — mismo asset que la landing en public/img) -->
       <router-link
         class="navbar-brand py-0 d-flex align-items-center"
@@ -27,7 +34,7 @@
         type="button"
         @click="toggleNavbar"
         aria-controls="navbarNav"
-        aria-expanded="false"
+        :aria-expanded="isNavbarOpen"
         aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -95,6 +102,36 @@
                 <li class="user-dropdown-header">
                   <strong>Welcome</strong>
                   <div class="user-name">{{ userName }}</div>
+                </li>
+                <li>
+                  <router-link
+                    to="/about"
+                    class="dropdown-item"
+                    @click="closeNavbar">
+                    About
+                  </router-link>
+                </li>
+                <li>
+                  <h6
+                    class="dropdown-header text-muted mb-0 mt-1 px-3 py-1 small">
+                    Configuration
+                  </h6>
+                </li>
+                <li class="mx-1">
+                  <router-link
+                    to="/document-types"
+                    class="dropdown-item"
+                    @click="closeNavbar">
+                    Transactions Types
+                  </router-link>
+                </li>
+                <li class="mx-1">
+                  <router-link
+                    to="/inventory-master-data-setup"
+                    class="dropdown-item"
+                    @click="closeNavbar">
+                    Inventory Master Data Setup
+                  </router-link>
                 </li>
                 <li><hr class="dropdown-divider" /></li>
                 <li>
@@ -274,23 +311,7 @@ export default {
             },
           ],
         },
-        {
-          text: "Configuration",
-          isOpen: false,
-          children: [
-            {
-              text: "Transactions Types",
-              route: "/document-types",
-              permission: "apptransactions.view_documenttype",
-            },
-            {
-              text: "Inventory Master Data Setup",
-              route: "/inventory-master-data-setup",
-              permission: "appinventory.view_product",
-            },
-          ],
-        },
-        { text: "About", route: "/about" },
+        /* About y Configuration solo en el menú de usuario (evita desborde en pantallas medianas) */
       ],
       userName: "",
       /** URL absoluta del logo del tenant (desde /api/user_detail/) */
@@ -329,6 +350,20 @@ export default {
   },
   mounted() {
     this.checkUserIdentity();
+    this._onResizeNavbar = () => {
+      if (window.innerWidth >= 1200) {
+        this.closeNavbar();
+      } else {
+        this.syncMobileMenuBodyScroll();
+      }
+    };
+    window.addEventListener("resize", this._onResizeNavbar, { passive: true });
+  },
+  beforeUnmount() {
+    if (this._onResizeNavbar) {
+      window.removeEventListener("resize", this._onResizeNavbar);
+    }
+    document.body.style.overflow = "";
   },
   methods: {
     checkUserIdentity() {
@@ -380,8 +415,25 @@ export default {
       this.$router.push("/login");
       this.closeNavbar();
     },
+    syncMobileMenuBodyScroll() {
+      if (typeof document === "undefined") return;
+      const mobile = window.innerWidth < 1200;
+      if (mobile && this.isNavbarOpen) {
+        document.body.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = "";
+      }
+    },
     toggleNavbar() {
       this.isNavbarOpen = !this.isNavbarOpen;
+      // Al abrir o cerrar el menú móvil, ningún submenú desplegado (solo se abren con un toque)
+      this.isUserDropdownOpen = false;
+      this.menuItems.forEach((item) => {
+        if (item.children) {
+          item.isOpen = false;
+        }
+      });
+      this.syncMobileMenuBodyScroll();
     },
     closeNavbar() {
       this.isNavbarOpen = false;
@@ -391,6 +443,7 @@ export default {
           item.isOpen = false;
         }
       });
+      this.syncMobileMenuBodyScroll();
     },
   },
   watch: {
