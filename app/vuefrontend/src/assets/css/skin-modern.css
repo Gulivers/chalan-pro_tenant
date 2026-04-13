@@ -579,8 +579,11 @@ label {
     z-index: 1025 !important;
     padding: 0.75rem 1rem max(1rem, env(safe-area-inset-bottom)) !important;
     border-radius: 0 !important;
-    background: rgba(30, 58, 138, 0.98) !important;
+    /* Mismo azul marca con transparencia para ver el contenido detrás */
+    background: rgba(30, 59, 138, 0.336) !important;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
 
   .navbar-modern--menu-open .navbar-toggler {
