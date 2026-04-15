@@ -16,10 +16,10 @@
             @change="onFile" />
         </div>
       </div>
-      <div class="vr d-none d-sm-block my-2 mx-auto opacity-50" />
+
       <button
         type="button"
-        class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-2 mt-3 mx-auto"
+        class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-2 mt-4 mx-auto"
         :disabled="busy"
         @click="downloadTemplate">
         <img
@@ -36,7 +36,10 @@
       <strong>quantity</strong>
       and
       <strong>unit_price</strong>
-      as needed.
+      as needed for document lines. To update master prices for many products,
+      use
+      <strong>Products</strong>
+      → bulk update (Excel) in the inventory list.
     </p>
   </div>
 </template>

@@ -88,3 +88,6 @@ scripts/certbot_hostinger_auth.py
 scripts/certbot_hostinger_cleanup.py
 scripts/renew_wildcard_certbot.sh
 scripts/renew_wildcard_certbot_auto.sh
+
+# Comando local opcional (carga de imágenes desde disco); no versionar
+app/appinventory/management/commands/load_product_images.py
