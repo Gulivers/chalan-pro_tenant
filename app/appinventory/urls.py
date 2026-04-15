@@ -27,6 +27,7 @@ from .views import (
 )
 
 from .views_validation import validate_units_of_measure
+from .views_product_prices_bulk_import import ProductPricesBulkImportAPIView
 
 from .views_schema import (
     ProductCategorySchemaView, ProductBrandSchemaView,
@@ -54,6 +55,12 @@ urlpatterns = [
     path('api/master-data/preview/', InventoryMasterDataPreviewAPIView.as_view(), name='inventory-master-data-preview'),
     path('api/master-data/download-excel/', InventoryMasterDataExcelDownloadAPIView.as_view(), name='inventory-master-data-excel-download'),
     path('api/master-data/import/', InventoryMasterDataImportAPIView.as_view(), name='inventory-master-data-import'),
+    # Mismo prefijo api/master-data/ que import/preview (evita colisión con api/products/<pk>/)
+    path(
+        'api/master-data/bulk-product-prices-import/',
+        ProductPricesBulkImportAPIView.as_view(),
+        name='product-bulk-prices-import',
+    ),
     
     path('api/validate-units-measure/', validate_units_of_measure, name='validate-units-measure'),
     

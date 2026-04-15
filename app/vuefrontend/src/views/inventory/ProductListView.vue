@@ -40,9 +40,9 @@
         </button>
       </div>
 
-      <!-- Filters: entries per page + search -->
-      <div class="listview-filters row g-2 g-md-3 mb-3 align-items-end">
-        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+      <!-- Filters: entries per page + bulk switch (optional) + search -->
+      <div class="listview-filters row g-2 g-md-3 mb-2 align-items-end">
+        <div class="col-12 col-sm-6 col-lg-3 col-xl-2">
           <BFormGroup
             label="Entries per page:"
             label-for="per-page-select"
@@ -56,7 +56,33 @@
               class="form-select form-select-sm" />
           </BFormGroup>
         </div>
-        <div class="col-12 col-sm-6 col-lg-5 col-xl-4 ms-lg-auto">
+        <div
+          v-if="hasPermission('appinventory.add_productprice')"
+          class="col-12 col-sm-6 col-lg-4 col-xl-4">
+          <BFormGroup
+            label="Bulk update prices &amp; units from Excel:"
+            label-for="product-list-bulk-prices-switch"
+            label-size="sm"
+            class="mb-0 listview-filter-group">
+            <div
+              class="form-check form-switch m-2 d-flex align-items-center bulk-prices-switch-wrap">
+              <input
+                id="product-list-bulk-prices-switch"
+                v-model="showBulkPricesPanel"
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                :aria-label="
+                  showBulkPricesPanel
+                    ? 'Disable bulk update panel'
+                    : 'Enable bulk update panel'
+                "
+                aria-controls="product-bulk-prices-panel" />
+            </div>
+          </BFormGroup>
+        </div>
+        <div
+          class="col-12 col-sm-12 col-lg ms-lg-auto listview-filter-search-col">
           <BFormGroup
             label="Search:"
             label-for="filter-input"
@@ -71,6 +97,16 @@
               class="form-control form-control-sm" />
           </BFormGroup>
         </div>
+      </div>
+
+      <div
+        v-if="
+          showBulkPricesPanel && hasPermission('appinventory.add_productprice')
+        "
+        class="mb-3">
+        <ProductPricesBulkExcelPanel
+          id="product-bulk-prices-panel"
+          @updated="refreshTable" />
       </div>
 
       <!-- Main Table with Overlay -->
@@ -207,6 +243,7 @@
 <script>
 import TxCard from "@components/layout/TxCard.vue";
 import ProductImageGallery from "@components/inventory/ProductImageGallery.vue";
+import ProductPricesBulkExcelPanel from "@components/inventory/ProductPricesBulkExcelPanel.vue";
 import "@assets/css/base.css";
 import axios from "axios";
 import {
@@ -241,6 +278,7 @@ export default {
   components: {
     TxCard,
     ProductImageGallery,
+    ProductPricesBulkExcelPanel,
     BTable,
     BFormGroup,
     BFormInput,
@@ -274,6 +312,7 @@ export default {
     const totalRows = ref(0);
     const selectedProductId = ref(null);
     const productImageGallery = ref(null);
+    const showBulkPricesPanel = ref(false);
 
     // Table configuration
     const fields = [
@@ -554,6 +593,7 @@ export default {
       openImageGallery,
       productImageGallery,
       selectedProductId,
+      showBulkPricesPanel,
     };
   },
 };
@@ -603,6 +643,15 @@ export default {
 .form-select-sm,
 .form-control-sm {
   font-size: 0.8rem;
+}
+/* Search ocupa el resto de la fila de filtros; ancho mínimo legible */
+.listview-filter-search-col {
+  min-width: min(100%, 240px);
+}
+/* Alinea la altura del switch con form-select-sm / form-control-sm (~31px) */
+.bulk-prices-switch-wrap {
+  min-height: 31px;
+  justify-content: center;
 }
 .text-muted.small {
   font-size: 0.8rem;

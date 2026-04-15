@@ -9,7 +9,8 @@
       class="navbar-modern-backdrop"
       aria-hidden="true"
       @click="closeNavbar" />
-    <div class="container-fluid navbar-modern-inner d-flex align-items-center ps-2 pe-3">
+    <div
+      class="container-fluid navbar-modern-inner d-flex align-items-center ps-2 pe-3">
       <!-- Marca (Jobrithm logo — mismo asset que la landing en public/img) -->
       <router-link
         class="navbar-brand py-0 d-flex align-items-center"
