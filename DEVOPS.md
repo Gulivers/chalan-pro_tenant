@@ -168,7 +168,7 @@ sudo /opt/chalanpro/scripts/backup_completo_VPS.sh --retention 7
 - **Restaurar (rollback):**
 
 ```bash
-sudo /opt/chalanpro/scripts/restore_backup.sh YYYYMMDD_HHMMSS
+sudo /opt/chalanpro/scripts/restore_backup_VPS.sh YYYYMMDD_HHMMSS
 # Solo sistema: --sistema-only
 # Solo DB: --db-only
 ```
@@ -199,7 +199,7 @@ sudo /opt/chalanpro/scripts/restore_backup.sh YYYYMMDD_HHMMSS
 | `setup.sh` | Primera configuración del proyecto en el servidor |
 | `scripts/deploy-vps.sh` | Deploy idempotente en VPS; opciones: `--no-pull`, `--no-build`, `--no-migrate` |
 | `scripts/backup_completo_VPS.sh` | Backup sistema + DB (todos los tenants) → `/opt/backups/` |
-| `scripts/restore_backup.sh` | Restaurar backup para rollback |
+| `scripts/restore_backup_VPS.sh` | Restaurar backup para rollback |
 | `init-certbot.sh` / `init-certbot-wildcard.sh` | Obtención/renovación SSL |
 | `enable-https.sh` | Cambio de config Nginx a HTTPS |
 | `GIT_WORKFLOW.md` | Ramas, merge a `main`, deploy en VPS |

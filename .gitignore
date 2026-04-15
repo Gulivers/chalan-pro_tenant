@@ -73,10 +73,6 @@ scripts/backup_completo.sh
 scripts/backup_local.sh
 scripts/restore_backup.sh
 
-# Scripts de backup/restore (específicos del VPS, no sincronizar)
-scripts/backup_completo_VPS.sh
-scripts/restore_backup_VPS.sh
-
 # Scripts locales de sincronización/deploy en ubuntu_house (no subir a remoto)
 scripts/sync_local_branches.sh
 scripts/deploy_to_hostinger.sh
