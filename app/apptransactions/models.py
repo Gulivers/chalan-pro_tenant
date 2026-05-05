@@ -262,6 +262,15 @@ class Document(models.Model):
         super().save(*args, **kwargs)
 
 class DocumentLine(models.Model):
+    PRICING_MARKUP = "MARKUP"
+    PRICING_MARGIN = "MARGIN"
+    PRICING_MANUAL = "MANUAL"
+    LINE_PRICING_RULE_CHOICES = [
+        (PRICING_MARKUP, "Markup %"),
+        (PRICING_MARGIN, "Margin %"),
+        (PRICING_MANUAL, "Manual unit price"),
+    ]
+
     document = models.ForeignKey(Document, related_name="lines", on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
@@ -272,6 +281,20 @@ class DocumentLine(models.Model):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, null=True, blank=True)
     price_type = models.ForeignKey(PriceType, on_delete=models.PROTECT, null=True, blank=True)
     brand = models.ForeignKey(ProductBrand, on_delete=models.PROTECT, null=True, blank=True)  # Marca específica usada en esta línea, útil para trazabilidad
+    # Snapshot at save time (historical pricing rule; Price Type may change later)
+    pricing_rule = models.CharField(
+        max_length=10,
+        choices=LINE_PRICING_RULE_CHOICES,
+        null=True,
+        blank=True,
+    )
+    margin_percent = models.DecimalField(
+        max_digits=7,
+        decimal_places=4,
+        null=True,
+        blank=True,
+        help_text="Snapshot: markup or margin % used when the line was saved.",
+    )
 
     def clean(self):
         errors = {}
@@ -288,8 +311,6 @@ class DocumentLine(models.Model):
             raise ValidationError(errors)
         
     def save(self, *args, **kwargs):
-        print(" 1 🧼 apptransactions\models.py -> DocumentLine: def save(self, *args, **kwargs).")
-        
         discount = self.discount_percentage / 100
         adjusted_price = self.unit_price
 

@@ -202,7 +202,7 @@ class UnitOfMeasureSerializer(serializers.ModelSerializer):
 class PriceTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PriceType
-        fields = ['id', 'name', 'description', 'is_active']
+        fields = ['id', 'name', 'description', 'is_active', 'pricing_method', 'margin_percent']
 
 # Serializador compacto para listados
 class ProductListSerializer(serializers.ModelSerializer):

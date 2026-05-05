@@ -5,7 +5,7 @@ from .views import (
     ProductBrandViewSet, ProductViewSet,
     UnitOfMeasureViewSet, ProductListAPIView, UnitOfMeasureListAPIView,
     UnitCategoryListAPIView, UnitCategoryViewSet, PriceTypeViewSet,
-    ProductDataTableAPIView, ProductListDirectAPIView, ProductListProviderAPIView, ProductDefaultPriceAPIView, DefaultWarehouseAPIView,
+    ProductDataTableAPIView, ProductListDirectAPIView, ProductListProviderAPIView, ProductDefaultPriceAPIView, ProductPurchaseCostAPIView, DefaultWarehouseAPIView,
     WarehouseListProviderAPIView, ProductCategoryListProviderAPIView, PriceTypeListProviderAPIView,
     UnitOfMeasureListProviderAPIView, UnitCategoryListProviderAPIView,
     ProductBrandsListAPIView, ProductBrandsUpdateAPIView,
@@ -89,6 +89,7 @@ urlpatterns = [
     
     # New endpoints for auto-populating fields
     path('api/products/<int:product_id>/default-price/', ProductDefaultPriceAPIView.as_view(), name='product-default-price'),
+    path('api/products/<int:product_id>/purchase-cost/', ProductPurchaseCostAPIView.as_view(), name='product-purchase-cost'),
     path('api/products/<int:product_id>/brands/', ProductBrandsListAPIView.as_view(), name='product-brands'),
     path('api/products/<int:product_id>/brands/update/', ProductBrandsUpdateAPIView.as_view(), name='product-brands-update'),
     path('api/products/<int:product_id>/images/', ProductImagesByBrandAPIView.as_view(), name='product-images-by-brand'),

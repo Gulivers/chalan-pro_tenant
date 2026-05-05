@@ -157,9 +157,47 @@ class Product(models.Model):
         return f"{self.name}{brand_str}"
 
 class PriceType(models.Model):
+    PRICING_NONE = "NONE"
+    PRICING_MARKUP = "MARKUP"
+    PRICING_MARGIN = "MARGIN"
+    PRICING_METHOD_CHOICES = [
+        (PRICING_NONE, "No auto pricing from cost"),
+        (PRICING_MARKUP, "Markup % on cost"),
+        (PRICING_MARGIN, "Margin % on cost"),
+    ]
+
     name = models.CharField(max_length=15, unique=True)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
+    pricing_method = models.CharField(
+        max_length=10,
+        choices=PRICING_METHOD_CHOICES,
+        default=PRICING_NONE,
+        help_text="How sale price is derived from purchase cost on transaction lines.",
+    )
+    margin_percent = models.DecimalField(
+        max_digits=7,
+        decimal_places=4,
+        null=True,
+        blank=True,
+        help_text="Markup or margin % (0–100) when pricing_method is MARKUP or MARGIN.",
+    )
+
+    def clean(self):
+        super().clean()
+        if self.pricing_method in (self.PRICING_MARKUP, self.PRICING_MARGIN):
+            if self.margin_percent is None:
+                raise ValidationError(
+                    {"margin_percent": "Set a percentage when using markup or margin pricing."}
+                )
+            if self.margin_percent < 0:
+                raise ValidationError({"margin_percent": "Percentage cannot be negative."})
+            if self.pricing_method == self.PRICING_MARGIN and self.margin_percent >= 100:
+                raise ValidationError(
+                    {"margin_percent": "Margin % must be less than 100."}
+                )
+        elif self.margin_percent is not None and self.pricing_method == self.PRICING_NONE:
+            pass  # allow legacy data; optional clear in admin
 
     def __str__(self):
         return self.name

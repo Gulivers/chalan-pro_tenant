@@ -147,7 +147,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(PriceType)
 class PriceTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'is_active')
+    list_display = ('name', 'pricing_method', 'margin_percent', 'description', 'is_active')
     search_fields = ('name',)
 
 

@@ -253,6 +253,14 @@ export default {
               : v
         }
       }
+      if (this.internalSchema.margin_percent && 'margin_percent' in cleaned) {
+        const v = cleaned.margin_percent
+        if (v === '' || v === undefined || v === null) cleaned.margin_percent = null
+        else {
+          const n = Number(String(v).replace(',', '.'))
+          cleaned.margin_percent = Number.isFinite(n) ? n : null
+        }
+      }
       return cleaned
     },
 

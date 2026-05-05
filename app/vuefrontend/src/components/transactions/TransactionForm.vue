@@ -317,6 +317,7 @@
             currentDocumentTypeCreatesSerializedItems
           "
           :documentTypeId="form.document_type"
+          :document-type-is-sales="currentDocumentTypeIsSales"
           :workAccountId="form.work_account"
           :unitsOptions="unitsOptions || []"
           :warehousesOptions="warehousesOptions || []"
@@ -556,6 +557,13 @@ const currentDocumentTypeCreatesSerializedItems = computed(() => {
     (d) => d.value === form.document_type
   );
   return !!dt?.creates_serialized_items;
+});
+
+const currentDocumentTypeIsSales = computed(() => {
+  const dt = documentTypesOptions.value.find(
+    (d) => d.value === form.document_type
+  );
+  return !!dt?.is_sales;
 });
 
 const excelImportSwitchTooltip = computed(() => {
@@ -1086,6 +1094,8 @@ async function fetchStaticOptions() {
       type_code: dt.type_code,
       is_operational: dt.is_operational,
       creates_serialized_items: !!dt.creates_serialized_items,
+      is_sales: !!dt.is_sales,
+      is_purchase: !!dt.is_purchase,
     }));
   } catch (error) {
     console.error("Error loading document types:", error);
@@ -1150,6 +1160,8 @@ async function fetchStaticOptions() {
     priceTypesOptions.value = list.map((pt) => ({
       value: pt.id,
       label: pt.name,
+      pricing_method: pt.pricing_method || "NONE",
+      margin_percent: pt.margin_percent,
     }));
   } finally {
     loading.priceTypes = false;
@@ -1271,6 +1283,14 @@ async function loadDocument(id) {
         warehouse: extractId(l.warehouse),
         price_type: extractId(l.price_type),
         brand: extractId(l.brand),
+        pricing_rule: l.pricing_rule ?? null,
+        margin_percent:
+          l.margin_percent != null && l.margin_percent !== ""
+            ? Number(l.margin_percent)
+            : null,
+        price_manually_edited: l.pricing_rule === "MANUAL",
+        _purchase_unit_cost: null,
+        _suppressPriceEvent: false,
         _errors: {},
       };
 
@@ -1311,6 +1331,11 @@ async function loadDocument(id) {
         warehouse: null,
         price_type: null,
         brand: null,
+        pricing_rule: null,
+        margin_percent: null,
+        price_manually_edited: false,
+        _purchase_unit_cost: null,
+        _suppressPriceEvent: false,
         _errors: {},
       });
     }
@@ -1395,6 +1420,11 @@ function normalizePayload() {
           warehouse: extractId(l.warehouse),
           price_type: extractId(l.price_type),
           brand: extractId(l.brand),
+          pricing_rule: l.pricing_rule ?? null,
+          margin_percent:
+            l.margin_percent != null && l.margin_percent !== ""
+              ? Number(l.margin_percent)
+              : null,
         };
 
         // 🔍 DEBUG: Log de la línea normalizada

@@ -129,6 +129,22 @@ class PriceTypeSchemaView(APIView):
                 "type": "boolean",
                 "label": "Active",
                 "required": False
-            }
+            },
+            "pricing_method": {
+                "type": "select",
+                "label": "Pricing from purchase cost",
+                "required": False,
+                "default": "NONE",
+                "options": [
+                    {"value": "NONE", "label": "None (list price only)"},
+                    {"value": "MARKUP", "label": "Markup % on cost"},
+                    {"value": "MARGIN", "label": "Margin % on cost"},
+                ],
+            },
+            "margin_percent": {
+                "type": "string",
+                "label": "Markup / margin % (0–100)",
+                "required": False,
+            },
         }
         return Response(schema)

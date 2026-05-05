@@ -186,7 +186,8 @@ class DocumentLineSerializer(serializers.ModelSerializer):
             "id", "document", "product", "product_name",
             "quantity", "unit", "unit_code",
             "unit_price", "discount_percentage", "final_price",
-            "warehouse", "warehouse_name", "price_type", "brand"
+            "warehouse", "warehouse_name", "price_type", "brand",
+            "pricing_rule", "margin_percent",
         ]
         read_only_fields = ["final_price"]
 
@@ -252,6 +253,7 @@ class DocumentLineInlineSerializer(serializers.ModelSerializer):
             "id", "product", "product_name", "quantity", "unit", "unit_code",
             "unit_price", "discount_percentage", "final_price", "warehouse",
             "price_type", "brand", "serialized_items_created_count",
+            "pricing_rule", "margin_percent",
         ]
         read_only_fields = ["final_price", "unit_code", "product_name", "serialized_items_created_count"]
 
@@ -465,6 +467,8 @@ class DocumentSerializer(serializers.ModelSerializer):
                     'warehouse': ld.get('warehouse').id if hasattr(ld.get('warehouse'), 'id') else ld.get('warehouse'),
                     'price_type': ld.get('price_type').id if hasattr(ld.get('price_type'), 'id') else ld.get('price_type'),
                     'brand': ld.get('brand').id if hasattr(ld.get('brand'), 'id') else ld.get('brand'),
+                    'pricing_rule': ld.get('pricing_rule'),
+                    'margin_percent': ld.get('margin_percent'),
                     'document': doc.id,  # Usar el ID del documento, no el objeto
                 }
                 line_ser = DocumentLineSerializer(data=line_data)
@@ -509,6 +513,8 @@ class DocumentSerializer(serializers.ModelSerializer):
                     'warehouse': ld.get('warehouse').id if hasattr(ld.get('warehouse'), 'id') else ld.get('warehouse'),
                     'price_type': ld.get('price_type').id if hasattr(ld.get('price_type'), 'id') else ld.get('price_type'),
                     'brand': ld.get('brand').id if hasattr(ld.get('brand'), 'id') else ld.get('brand'),
+                    'pricing_rule': ld.get('pricing_rule'),
+                    'margin_percent': ld.get('margin_percent'),
                     'document': doc.id,
                 }
                 line_ser = DocumentLineSerializer(data=line_data)
@@ -595,6 +601,8 @@ class DocumentSerializer(serializers.ModelSerializer):
                     'warehouse': ld.get('warehouse').id if hasattr(ld.get('warehouse'), 'id') else ld.get('warehouse'),
                     'price_type': ld.get('price_type').id if hasattr(ld.get('price_type'), 'id') else ld.get('price_type'),
                     'brand': ld.get('brand').id if hasattr(ld.get('brand'), 'id') else ld.get('brand'),
+                    'pricing_rule': ld.get('pricing_rule'),
+                    'margin_percent': ld.get('margin_percent'),
                     'document': instance.id,  # Usar el ID del documento, no el objeto
                 }
                 
@@ -633,6 +641,8 @@ class DocumentSerializer(serializers.ModelSerializer):
                     'warehouse': ld.get('warehouse').id if hasattr(ld.get('warehouse'), 'id') else ld.get('warehouse'),
                     'price_type': ld.get('price_type').id if hasattr(ld.get('price_type'), 'id') else ld.get('price_type'),
                     'brand': ld.get('brand').id if hasattr(ld.get('brand'), 'id') else ld.get('brand'),
+                    'pricing_rule': ld.get('pricing_rule'),
+                    'margin_percent': ld.get('margin_percent'),
                     'document': instance.id,  # Usar el ID del documento, no el objeto
                 }
                 

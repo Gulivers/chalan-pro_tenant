@@ -115,7 +115,8 @@
             <th style="min-width: 120px" v-tt data-title="Price per unit">Unit Price</th>
             <th style="min-width: 100px" v-tt data-title="Discount percentage applied to this line">Disc %</th>
             <th style="min-width: 180px" v-tt data-title="Warehouse for stock movement (required when document type requires it)">Warehouse</th>
-            <th style="min-width: 150px" v-tt data-title="Price type (e.g. Contractor, Retail)">Price Type</th>
+            <th style="min-width: 190px" v-tt data-title="Price type (e.g. Contractor, Retail) and margin/markup rule used for the line">Price Type</th>
+            <th style="min-width: 130px" v-tt data-title="Margin / Markup percent snapshot used on this line">Margin %</th>
             <th style="min-width: 150px" v-tt data-title="Product brand when applicable">Brand</th>
             <th
               style="min-width: 120px"
@@ -195,7 +196,7 @@
                 class="form-control form-control-sm"
                 :class="{ 'is-invalid': row._errors?.quantity }"
                 v-model.number="row.quantity"
-                @input="recalcRow(idx)"
+                @input="onQuantityInput(idx)"
                 @keydown.enter="focusNextField(idx, 'unit')"
                 @focus="$event.target.select()"
                 placeholder="0.00" />
@@ -210,7 +211,7 @@
                  :reduce="o => o.value"
                  label="label"
                  v-model="row.unit"
-                 @update:modelValue="recalcRow(idx)"
+                 @update:modelValue="onUnitUpdated(idx)"
                  @keydown.enter="focusNextField(idx, 'unit_price')"
                  :class="{ 'is-invalid': row._errors?.unit }"
                  placeholder="Select unit...">
@@ -235,7 +236,7 @@
                 class="form-control form-control-sm"
                 :class="{ 'is-invalid': row._errors?.unit_price }"
                 v-model.number="row.unit_price"
-                @input="recalcRow(idx)"
+                @input="onUnitPriceInput(idx)"
                 @keydown.enter="focusNextField(idx, 'discount_percentage')"
                 @focus="$event.target.select()"
                 placeholder="0.00" />
@@ -292,7 +293,8 @@
                  :reduce="o => o.value"
                  label="label"
                  v-model="row.price_type"
-                 @keydown.enter="focusNextField(idx, 'brand')"
+                 @update:modelValue="onPriceTypeUpdated(idx)"
+                 @keydown.enter="focusNextField(idx, 'margin_percent')"
                  placeholder="Price type...">
                  <template #selected-option="{ label }">
                    <div class="text-truncate" style="max-width: 130px">{{ label }}</div>
@@ -301,6 +303,30 @@
                    <div class="text-truncate" style="max-width: 130px">{{ label }}</div>
                  </template>
                </v-select>
+               <div v-if="pricingHint(row)" class="small text-muted mt-1 text-truncate" style="max-width: 180px" v-tt :data-title="pricingHint(row)">
+                 {{ pricingHint(row) }}
+               </div>
+            </td>
+
+            <!-- Margin % -->
+            <td>
+              <input
+                :id="`margin_percent-${idx}`"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                class="form-control form-control-sm"
+                :class="{ 'is-invalid': row._errors?.margin_percent }"
+                v-model.number="row.margin_percent"
+                :disabled="!canEditLineMargin"
+                @input="onMarginPercentInput(idx)"
+                @keydown.enter="focusNextField(idx, 'brand')"
+                @focus="$event.target.select()"
+                placeholder="0.00" />
+              <div class="text-danger small" v-if="row._errors?.margin_percent">
+                {{ row._errors.margin_percent[0] }}
+              </div>
             </td>
 
             <!-- Brand -->
@@ -373,6 +399,8 @@
     priceTypesOptions: { type: Array, default: () => [] },
     brandsOptions: { type: Array, default: () => [] },
     mergeDuplicates: { type: Boolean, default: true },
+    /** Solo documentos de venta: precio automático desde costo de compra + tipo de precio */
+    documentTypeIsSales: { type: Boolean, default: false },
   });
   const emit = defineEmits(['update:lines', 'recalc', 'open-asset-tags']);
 
@@ -383,16 +411,34 @@
   const isUpdatingFromProps = ref(false);
   const defaultWarehouse = ref(null);
 
+  function hasPermission(permission) {
+    try {
+      const userPermissions = JSON.parse(localStorage.getItem('userPermissions') || '{}');
+      const permissions = Array.isArray(userPermissions?.permissions) ? userPermissions.permissions : [];
+      return permissions.includes(permission);
+    } catch {
+      return false;
+    }
+  }
+
+  const canEditLineMargin = computed(() =>
+    hasPermission('appinventory.add_pricetype') ||
+    hasPermission('appinventory.change_pricetype')
+  );
+
   watch(
     () => props.lines,
     async val => {
       console.log('LinesGrid: lines prop changed:', val);
       isUpdatingFromProps.value = true;
 
-      const newLines = (val || []).map(x => ({ 
-        ...x, 
-        __key: x.id || cryptoRandom(),
-        brands: x.brands || [], // Asegurar que brands siempre esté definido
+      const newLines = (val || []).map(x => ({
+        ...x,
+        __key: x.__key || x.id || cryptoRandom(),
+        brands: x.brands || [],
+        price_manually_edited: x.price_manually_edited ?? x.pricing_rule === 'MANUAL',
+        _purchase_unit_cost: x._purchase_unit_cost ?? null,
+        _suppressPriceEvent: false,
       }));
       console.log('🔍 New lines with product_label:', newLines.map(l => ({ 
         product: l.product, 
@@ -500,6 +546,135 @@
     return +(qty * price * (1 - disc / 100)).toFixed(2);
   }
 
+  function salePriceFromCost(cost, pricingMethod, pct) {
+    const c = Number(cost);
+    const p = Number(pct);
+    if (!Number.isFinite(c) || c <= 0 || !Number.isFinite(p)) return null;
+    const f = p / 100;
+    if (pricingMethod === 'MARKUP') return +(c * (1 + f)).toFixed(2);
+    if (pricingMethod === 'MARGIN') {
+      if (f >= 1) return null;
+      return +(c / (1 - f)).toFixed(2);
+    }
+    return null;
+  }
+
+  function pricingHint(row) {
+    if (row.pricing_rule === 'MANUAL') {
+      if (row.margin_percent != null && row.margin_percent !== '')
+        return `Manual · ref. ${Number(row.margin_percent).toFixed(2)}%`;
+      return 'Manual';
+    }
+    if (row.pricing_rule === 'MARKUP' && row.margin_percent != null && row.margin_percent !== '')
+      return `Mkup ${Number(row.margin_percent).toFixed(2)}%`;
+    if (row.pricing_rule === 'MARGIN' && row.margin_percent != null && row.margin_percent !== '')
+      return `Margen ${Number(row.margin_percent).toFixed(2)}%`;
+    return '';
+  }
+
+  async function refreshPurchaseCost(idx) {
+    const r = linesLocal.value[idx];
+    if (!r?.product) {
+      r._purchase_unit_cost = null;
+      return;
+    }
+    try {
+      const params = {};
+      if (r.unit) params.unit = r.unit;
+      const { data } = await axios.get(`/api/products/${r.product}/purchase-cost/`, { params });
+      r._purchase_unit_cost = data.unit_cost != null ? Number(data.unit_cost) : null;
+    } catch {
+      r._purchase_unit_cost = null;
+    }
+  }
+
+  function tryApplyAutoPricing(idx) {
+    if (!props.documentTypeIsSales) return;
+    const r = linesLocal.value[idx];
+    if (!r || r.price_manually_edited) return;
+    if (!r.product || !r.price_type || !r.unit) return;
+    const meta = props.priceTypesOptions.find(o => o.value === r.price_type);
+    if (!meta || !meta.pricing_method || meta.pricing_method === 'NONE') return;
+    const cost = r._purchase_unit_cost;
+    if (cost == null || cost <= 0) return;
+    const pct = r.margin_percent ?? meta.margin_percent;
+    if (pct == null || pct === '') return;
+    const price = salePriceFromCost(cost, meta.pricing_method, Number(pct));
+    if (price == null) return;
+    r._suppressPriceEvent = true;
+    r.unit_price = price;
+    r.pricing_rule = meta.pricing_method === 'MARKUP' ? 'MARKUP' : 'MARGIN';
+    r.margin_percent = Number(pct);
+    nextTick(() => {
+      r._suppressPriceEvent = false;
+    });
+  }
+
+  function onMarginPercentInput(idx) {
+    const r = linesLocal.value[idx];
+    if (!r) return;
+
+    if (!canEditLineMargin.value) {
+      recalcRow(idx);
+      return;
+    }
+
+    if (r.margin_percent === '' || r.margin_percent === null || r.margin_percent === undefined) {
+      r.margin_percent = null;
+      recalcRow(idx);
+      return;
+    }
+
+    const parsed = Number(r.margin_percent);
+    if (!Number.isFinite(parsed)) {
+      r.margin_percent = null;
+      recalcRow(idx);
+      return;
+    }
+
+    r.margin_percent = Math.min(100, Math.max(0, parsed));
+
+    if (r.pricing_rule !== 'MANUAL') {
+      r.price_manually_edited = false;
+      tryApplyAutoPricing(idx);
+    }
+
+    recalcRow(idx);
+  }
+
+  async function onUnitUpdated(idx) {
+    const r = linesLocal.value[idx];
+    r.price_manually_edited = false;
+    await refreshPurchaseCost(idx);
+    tryApplyAutoPricing(idx);
+    recalcRow(idx);
+  }
+
+  function onQuantityInput(idx) {
+    tryApplyAutoPricing(idx);
+    recalcRow(idx);
+  }
+
+  function onUnitPriceInput(idx) {
+    const r = linesLocal.value[idx];
+    if (r._suppressPriceEvent) {
+      recalcRow(idx);
+      return;
+    }
+    r.price_manually_edited = true;
+    r.pricing_rule = 'MANUAL';
+    recalcRow(idx);
+  }
+
+  function onPriceTypeUpdated(idx) {
+    const r = linesLocal.value[idx];
+    r.price_manually_edited = false;
+    nextTick(() => {
+      tryApplyAutoPricing(idx);
+      recalcRow(idx);
+    });
+  }
+
   function recalcRow(idx) {
     const r = linesLocal.value[idx];
     if (!r) {
@@ -540,6 +715,11 @@
       final_price: 0,
       warehouse: defaultWarehouse.value, // Auto-fill con warehouse predeterminado
       price_type: null,
+      pricing_rule: null,
+      margin_percent: null,
+      price_manually_edited: false,
+      _purchase_unit_cost: null,
+      _suppressPriceEvent: false,
       brands: [], // Cambiar a array para múltiples marcas
       brand: null, // Mantener para compatibilidad y marca seleccionada
       _errors: {},
@@ -690,6 +870,7 @@
     const r = linesLocal.value[idx];
     r.product_label = option?.product?.name || option?.label || '';
     console.log('🔍 Set product_label to:', r.product_label);
+    r.price_manually_edited = false;
 
     // Auto-fill fields from ProductPrice predeterminado
     if (option?.value) {
@@ -737,6 +918,10 @@
           brands: r.brands,
           document_type_used: props.documentTypeId
         });
+
+        if (data.purchase_unit_cost != null) {
+          r._purchase_unit_cost = Number(data.purchase_unit_cost);
+        }
         
       } catch (error) {
         console.warn('Could not fetch product default price:', error);
@@ -748,6 +933,7 @@
         
         // Fallback: obtener marcas disponibles del producto usando la función dedicada
         await updateBrandsForProduct(idx, option.value);
+        await refreshPurchaseCost(idx);
       }
     }
 
@@ -778,6 +964,10 @@
 
     // Recalculate row after product selection (solo si no fue mergeada)
     if (!wasMerged) {
+      if (r._purchase_unit_cost == null && r.product) {
+        await refreshPurchaseCost(idx);
+      }
+      tryApplyAutoPricing(idx);
       recalcRow(idx);
     }
   }
@@ -789,7 +979,11 @@
     r.unit = null;
     r.price_type = null;
     r.brand = null;
-    r.brands = []; // Limpiar marcas también
+    r.brands = [];
+    r.pricing_rule = null;
+    r.margin_percent = null;
+    r.price_manually_edited = false;
+    r._purchase_unit_cost = null;
     recalcRow(idx);
   }
 
@@ -840,6 +1034,14 @@
         isValid = false;
       }
 
+      if (line.margin_percent !== null && line.margin_percent !== undefined && line.margin_percent !== '') {
+        const mp = Number(line.margin_percent);
+        if (!Number.isFinite(mp) || mp < 0 || mp > 100) {
+          line._errors.margin_percent = ['Margin % must be between 0 and 100'];
+          isValid = false;
+        }
+      }
+
       // Warehouse validation based on document type
       if (props.documentTypeId) {
         // This validation should be done on the backend based on document type requirements
@@ -860,6 +1062,7 @@
         'unit': 'unit',
         'warehouse': 'warehouse',
         'price_type': 'price_type',
+        'margin_percent': 'margin_percent',
         'brand': 'brand'
       };
 

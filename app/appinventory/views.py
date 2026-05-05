@@ -910,6 +910,48 @@ class ProductBrandsUpdateAPIView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 
+
+def _purchase_unit_cost_for_product(product, unit_id=None):
+    """
+    Costo de compra para pricing (ProductPrice is_purchase) preferiendo la unidad indicada.
+    Retorna (Decimal|None, unit_id usado|None).
+    """
+    qs = product.prices.filter(is_purchase=True, is_active=True)
+    if unit_id:
+        row = qs.filter(unit_id=unit_id).first()
+        if row:
+            return row.price, row.unit_id
+    row = qs.order_by('id').first()
+    if row:
+        return row.price, row.unit_id
+    return None, None
+
+
+class ProductPurchaseCostAPIView(APIView):
+    """
+    Costo de compra por producto/unidad (para margen/markup en líneas de venta).
+    GET /api/products/<id>/purchase-cost/?unit=<unit_id>
+    """
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, product_id):
+        try:
+            uid = request.query_params.get('unit')
+            unit_id = int(uid) if uid not in (None, '') else None
+        except (TypeError, ValueError):
+            unit_id = None
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response({'error': 'Product not found'}, status=404)
+        cost, used_unit = _purchase_unit_cost_for_product(product, unit_id)
+        return Response({
+            'unit_cost': float(cost) if cost is not None else None,
+            'unit_id': used_unit,
+        })
+
+
 class ProductDefaultPriceAPIView(APIView):
     """
     Endpoint para obtener el precio predeterminado de un producto
@@ -981,12 +1023,14 @@ class ProductDefaultPriceAPIView(APIView):
                 default_price = product.prices.filter(is_active=True).first()
             
             if default_price:
+                pu_cost, _pu_uid = _purchase_unit_cost_for_product(product, default_price.unit_id)
                 return Response({
                     'unit': default_price.unit.id,
                     'unit_name': default_price.unit.name,
                     'unit_price': default_price.price,
                     'price_type': default_price.price_type.id,
                     'price_type_name': default_price.price_type.name,
+                    'purchase_unit_cost': float(pu_cost) if pu_cost is not None else None,
                     'brand': brand_to_use.id if brand_to_use else None,
                     'brand_name': brand_to_use.name if brand_to_use else None,
                     'default_brand': {
@@ -995,12 +1039,16 @@ class ProductDefaultPriceAPIView(APIView):
                     }
                 })
             else:
+                pu_cost, _pu_uid = _purchase_unit_cost_for_product(
+                    product, product.unit_default_id if product.unit_default_id else None
+                )
                 return Response({
                     'unit': product.unit_default_id if product.unit_default_id else None,
                     'unit_name': product.unit_default.name if product.unit_default else None,
                     'unit_price': 0,
                     'price_type': None,
                     'price_type_name': None,
+                    'purchase_unit_cost': float(pu_cost) if pu_cost is not None else None,
                     'brand': brand_to_use.id if brand_to_use else None,
                     'brand_name': brand_to_use.name if brand_to_use else None,
                     'default_brand': {

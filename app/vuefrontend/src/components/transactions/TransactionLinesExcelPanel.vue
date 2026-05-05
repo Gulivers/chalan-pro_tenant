@@ -127,21 +127,27 @@ function findColIndex(headers, aliases) {
   return -1;
 }
 
-/** Map product id → { id, name, sku } for lookup; SKU is only used to validate the reference column. */
-async function fetchProductsByIdMap() {
+/** Map product id/sku -> product for lookup during import. */
+async function fetchProductsMaps() {
   const { data } = await axios.get("/api/products/", {
     params: { is_active: true },
   });
   const list = Array.isArray(data) ? data : data?.results || [];
   const byId = new Map();
+  const bySku = new Map();
   list.forEach((p) => {
-    byId.set(Number(p.id), {
+    const item = {
       id: p.id,
       name: p.name || "",
       sku: (p.sku && String(p.sku)) || "",
-    });
+    };
+    byId.set(Number(p.id), item);
+    const skuKey = String(item.sku || "")
+      .trim()
+      .toLowerCase();
+    if (skuKey) bySku.set(skuKey, item);
   });
-  return byId;
+  return { byId, bySku };
 }
 
 const EXCEL_MIME_OK = new Set([
@@ -191,7 +197,7 @@ function findUnitIdByCodeOrName(options, raw) {
   return o.value;
 }
 
-function buildColumnMap(headerRow) {
+function buildColumnMap(headerRow, importMode) {
   const headers = headerRow.map((c) => normalizeHeader(c));
   const idxPid = findColIndex(headers, [
     "product_id",
@@ -230,24 +236,27 @@ function buildColumnMap(headerRow) {
     idxPt,
     idxBr,
   };
-  if (idxPid < 0) {
-    throw new Error("Missing required column: product_id");
+  if (importMode === "id" && idxPid < 0) {
+    throw new Error("Missing required column for ID mode: product_id");
+  }
+  if (importMode === "sku" && idxSku < 0) {
+    throw new Error("Missing required column for SKU mode: product_sku (or sku)");
   }
   return m;
 }
 
-function parseSheetRows(rows) {
+function parseSheetRows(rows, importMode) {
   if (!rows || rows.length < 3) {
     throw new Error(
       "File must have header row, description row, and at least one data row (from row 3)."
     );
   }
-  const col = buildColumnMap(rows[0]);
+  const col = buildColumnMap(rows[0], importMode);
   const dataRows = rows.slice(2);
   return { col, dataRows };
 }
 
-async function rowsToLines(col, dataRows, productById) {
+async function rowsToLines(col, dataRows, productById, productBySku, importMode) {
   const lines = [];
   const rowErrors = [];
   const rowWarnings = [];
@@ -255,46 +264,77 @@ async function rowsToLines(col, dataRows, productById) {
   for (let i = 0; i < dataRows.length; i += 1) {
     const row = dataRows[i];
     const excelRow = i + 3;
-    const pidRaw = row[col.idxPid];
-    if (
-      pidRaw === undefined ||
-      pidRaw === null ||
-      String(pidRaw).trim() === ""
-    ) {
-      continue;
-    }
+    const pidRaw = col.idxPid >= 0 ? row[col.idxPid] : "";
+    const skuRaw = col.idxSku >= 0 ? row[col.idxSku] : "";
 
     try {
-      const pid = parseInt(String(pidRaw).trim(), 10);
-      if (!Number.isFinite(pid)) {
-        rowErrors.push(`Row ${excelRow}: invalid product_id "${pidRaw}"`);
-        continue;
-      }
+      let prod = null;
+      let resolvedBy = importMode;
 
-      const prod = productById.get(pid);
-      if (!prod) {
-        rowErrors.push(
-          `Row ${excelRow}: product_id ${pid} not found in catalog`
-        );
-        continue;
-      }
-
-      if (col.idxSku >= 0) {
-        const skuRef = row[col.idxSku];
+      if (importMode === "id") {
         if (
-          skuRef !== undefined &&
-          skuRef !== null &&
-          String(skuRef).trim() !== ""
+          pidRaw === undefined ||
+          pidRaw === null ||
+          String(pidRaw).trim() === ""
         ) {
-          const ref = String(skuRef).trim().toLowerCase();
+          continue;
+        }
+        const pid = parseInt(String(pidRaw).trim(), 10);
+        if (!Number.isFinite(pid)) {
+          rowErrors.push(`Row ${excelRow}: invalid product_id "${pidRaw}"`);
+          continue;
+        }
+        prod = productById.get(pid);
+        if (!prod) {
+          rowErrors.push(
+            `Row ${excelRow}: product_id ${pid} not found in catalog`
+          );
+          continue;
+        }
+        if (
+          col.idxSku >= 0 &&
+          skuRaw !== undefined &&
+          skuRaw !== null &&
+          String(skuRaw).trim() !== ""
+        ) {
+          const ref = String(skuRaw).trim().toLowerCase();
           const expected = String(prod.sku || "")
             .trim()
             .toLowerCase();
           if (expected && ref !== expected) {
             rowWarnings.push(
-              `Row ${excelRow}: product_sku "${skuRef}" does not match product_id ${pid} (catalog SKU: "${
+              `Row ${excelRow}: product_sku "${skuRaw}" does not match product_id ${pid} (catalog SKU: "${
                 prod.sku || "—"
-              }") — line imported by ID`
+              }") — line imported by product_id`
+            );
+          }
+        }
+      } else {
+        if (
+          skuRaw === undefined ||
+          skuRaw === null ||
+          String(skuRaw).trim() === ""
+        ) {
+          continue;
+        }
+        const skuKey = String(skuRaw).trim().toLowerCase();
+        prod = productBySku.get(skuKey);
+        if (!prod) {
+          rowErrors.push(
+            `Row ${excelRow}: product_sku "${skuRaw}" not found in catalog`
+          );
+          continue;
+        }
+        if (
+          col.idxPid >= 0 &&
+          pidRaw !== undefined &&
+          pidRaw !== null &&
+          String(pidRaw).trim() !== ""
+        ) {
+          const pid = parseInt(String(pidRaw).trim(), 10);
+          if (Number.isFinite(pid) && pid !== Number(prod.id)) {
+            rowWarnings.push(
+              `Row ${excelRow}: product_id "${pidRaw}" does not match SKU "${skuRaw}" (catalog ID: ${prod.id}) — line imported by SKU`
             );
           }
         }
@@ -368,6 +408,7 @@ async function rowsToLines(col, dataRows, productById) {
         brand: brandId,
         brands: [],
         _errors: {},
+        _import_resolved_by: resolvedBy,
       });
     } catch (e) {
       rowErrors.push(`Row ${excelRow}: ${e.message || e}`);
@@ -375,6 +416,28 @@ async function rowsToLines(col, dataRows, productById) {
   }
 
   return { lines, rowErrors, rowWarnings };
+}
+
+async function askImportMode() {
+  const res = await Swal.fire({
+    title: "Import reference",
+    text: "How should products be matched from Excel?",
+    input: "radio",
+    inputOptions: {
+      id: "Use product_id column",
+      sku: "Use product_sku (SKU) column",
+    },
+    inputValue: "id",
+    showCancelButton: true,
+    confirmButtonText: "Continue",
+    cancelButtonText: "Cancel",
+    inputValidator: (value) => {
+      if (!value) return "Please choose a reference mode.";
+      return null;
+    },
+  });
+  if (!res.isConfirmed) return null;
+  return res.value;
 }
 
 async function onFile(ev) {
@@ -392,19 +455,22 @@ async function onFile(ev) {
   }
   busy.value = true;
   try {
+    const importMode = await askImportMode();
+    if (!importMode) return;
+
     const XLSX = await getXlsx();
     const buf = await file.arrayBuffer();
     const wb = XLSX.read(buf, { type: "array" });
     const sheet = wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
-    const { col, dataRows } = parseSheetRows(rows);
+    const { col, dataRows } = parseSheetRows(rows, importMode);
 
-    const productById = await fetchProductsByIdMap();
+    const { byId: productById, bySku: productBySku } = await fetchProductsMaps();
     const {
       lines: newLines,
       rowErrors,
       rowWarnings,
-    } = await rowsToLines(col, dataRows, productById);
+    } = await rowsToLines(col, dataRows, productById, productBySku, importMode);
 
     if (newLines.length === 0) {
       await Swal.fire({
@@ -415,7 +481,7 @@ async function onFile(ev) {
             ? `<ul class="text-start small">${rowErrors
                 .map((e) => `<li>${e}</li>`)
                 .join("")}</ul>`
-            : "No data rows with a valid product_id were found.",
+            : `No data rows with a valid ${importMode === "id" ? "product_id" : "product_sku"} were found.`,
         confirmButtonText: "OK",
       });
       return;
