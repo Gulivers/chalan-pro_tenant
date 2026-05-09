@@ -110,6 +110,9 @@
     () => props.modelValue,
     newValue => {
       selectedFavorite.value = newValue;
+      if (newValue == null || newValue === '') {
+        selectedFavoriteName.value = '';
+      }
     }
   );
 

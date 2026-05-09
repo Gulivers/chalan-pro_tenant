@@ -515,6 +515,48 @@ function cryptoRandom() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+/** Igual que LinesGrid.maybeMergeDuplicate: mismo product + unit + brand → sumar cantidades (ids normalizados). */
+function lineMergeScalar(v) {
+  if (v == null || v === "") return null;
+  if (typeof v === "object" && v !== null && "id" in v) return v.id;
+  return v;
+}
+
+function lineMergeKeyPart(v) {
+  const x = lineMergeScalar(v);
+  if (x == null || x === "") return null;
+  return String(x);
+}
+
+function transactionLinesDuplicateMatch(a, b) {
+  return (
+    !!a?.product &&
+    !!b?.product &&
+    lineMergeKeyPart(a.product) === lineMergeKeyPart(b.product) &&
+    lineMergeKeyPart(a.unit) === lineMergeKeyPart(b.unit) &&
+    lineMergeKeyPart(a.brand) === lineMergeKeyPart(b.brand)
+  );
+}
+
+/** Unifica líneas como al elegir producto en el grid con mergeDuplicates (primera fila gana orden). */
+function mergeDuplicateTransactionLines(rows) {
+  const out = [];
+  for (const row of rows) {
+    if (!row?.product) {
+      out.push(row);
+      continue;
+    }
+    const existing = out.find((o) => transactionLinesDuplicateMatch(o, row));
+    if (existing) {
+      existing.quantity =
+        Number(existing.quantity || 0) + Number(row.quantity || 0);
+    } else {
+      out.push(row);
+    }
+  }
+  return out;
+}
+
 /** Σ (qty × unit_price) antes de descuentos por línea */
 const subtotal_gross = computed(() =>
   lines.value.reduce(
@@ -708,7 +750,7 @@ function openFavoriteModal() {
   showModal("transactionFavoriteModal");
 }
 
-function onFavoriteSelected(favoriteData) {
+async function onFavoriteSelected(favoriteData) {
   if (!favoriteData) {
     // Limpiar selección
     selectedFavoriteId.value = null;
@@ -717,11 +759,64 @@ function onFavoriteSelected(favoriteData) {
 
   console.log("🔍 Importing favorite:", favoriteData);
 
-  // Importar datos del favorito
-  if (favoriteData.document_data) {
+  const incomingRaw =
+    favoriteData.lines_data && Array.isArray(favoriteData.lines_data)
+      ? favoriteData.lines_data
+      : [];
+
+  const importedLines = incomingRaw.map((line) => ({
+    __key: cryptoRandom(),
+    selected: false,
+    id: null, // Nueva línea, no ID
+    product: line.product,
+    product_label: line.product_label || "",
+    quantity: line.quantity || 1,
+    unit: line.unit,
+    unit_price: line.unit_price || 0,
+    discount_percentage: line.discount_percentage || 0,
+    final_price: line.final_price || 0,
+    warehouse: line.warehouse,
+    price_type: line.price_type,
+    brand: line.brand,
+    _errors: {},
+  }));
+
+  const hasExistingLineProducts = lines.value.some((line) => line.product);
+  const hasIncomingLines = importedLines.length > 0;
+
+  /** Si true: solo se concatenan líneas; cabecera del documento no se sobrescribe */
+  let appendLinesOnly = false;
+
+  if (hasExistingLineProducts && hasIncomingLines) {
+    const result = await Swal.fire({
+      title: "Lines already loaded",
+      html:
+        "This transaction already has line items.<br><br>" +
+        "<strong>Add to existing lines</strong> appends this favorite’s lines (e.g. combine kits on one pick ticket). " +
+        "Header fields stay as they are.<br><br>" +
+        "<strong>Replace all lines</strong> loads this favorite’s header and replaces every line.",
+      icon: "question",
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: "Add to existing lines",
+      denyButtonText: "Replace all lines",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#198754",
+      denyButtonColor: "#6c757d",
+      cancelButtonColor: "#adb5bd",
+      reverseButtons: true,
+    });
+
+    if (result.isDismissed) {
+      selectedFavoriteId.value = null;
+      return;
+    }
+    appendLinesOnly = Boolean(result.isConfirmed);
+  }
+
+  if (!appendLinesOnly && favoriteData.document_data) {
     const docData = favoriteData.document_data;
 
-    // Actualizar campos del formulario
     form.document_type = docData.document_type;
     form.builder = docData.builder;
     form.work_account = docData.work_account;
@@ -730,26 +825,8 @@ function onFavoriteSelected(favoriteData) {
     form.is_active = docData.is_active !== undefined ? docData.is_active : true;
   }
 
-  // Importar líneas
-  if (favoriteData.lines_data && Array.isArray(favoriteData.lines_data)) {
-    console.log("🔍 Original lines_data:", favoriteData.lines_data);
-    const importedLines = favoriteData.lines_data.map((line) => ({
-      __key: cryptoRandom(),
-      selected: false,
-      id: null, // Nueva línea, no ID
-      product: line.product,
-      product_label: line.product_label || "",
-      quantity: line.quantity || 1,
-      unit: line.unit,
-      unit_price: line.unit_price || 0,
-      discount_percentage: line.discount_percentage || 0,
-      final_price: line.final_price || 0,
-      warehouse: line.warehouse,
-      price_type: line.price_type,
-      brand: line.brand,
-      _errors: {},
-    }));
-
+  if (hasIncomingLines) {
+    console.log("🔍 Original lines_data:", incomingRaw);
     console.log(
       "🔍 Imported lines with product_label:",
       importedLines.map((l) => ({
@@ -758,13 +835,14 @@ function onFavoriteSelected(favoriteData) {
       }))
     );
 
-    // Si hay líneas importadas, reemplazar las actuales
-    if (importedLines.length > 0) {
+    if (appendLinesOnly) {
+      const combined = [...lines.value, ...importedLines];
+      lines.value = mergeDuplicateTransactionLines(combined);
+    } else {
       lines.value = importedLines;
     }
   }
 
-  // Recalcular totales después de importar
   syncTotals();
 
   console.log("✅ Favorite imported successfully");

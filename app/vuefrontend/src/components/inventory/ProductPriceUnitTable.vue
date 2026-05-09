@@ -1,7 +1,7 @@
 <template>
   <div class="price-unit-settings-section">
     <h5 class="mb-3">Price and Unit Settings</h5>
-    <div class="table-responsive" style="min-height: 350px">
+    <div class="table-responsive price-unit-table-scroll">
       <div class="d-flex justify-content-start">
         <button
       type="button"
@@ -34,6 +34,7 @@
             <td>
               <div class="d-flex align-items-center w-100" style="min-width: 240px">
                 <v-select
+                  append-to-body
                   :options="priceTypes"
                   v-model="row.price_type"
                   :reduce="type => type.id"
@@ -70,6 +71,7 @@
             <td>
               <div class="d-flex align-items-center w-100" style="min-width: 240px">
                 <v-select
+                  append-to-body
                   :options="units"
                   v-model="row.unit"
                   :reduce="unit => unit.id"
@@ -279,7 +281,7 @@
 <style scoped>
   .price-unit-settings-section {
     padding: 20px 0;
-    min-height: 500px;
+    min-height: 520px;
   }
 
   .table-responsive {
@@ -287,6 +289,15 @@
     border-radius: 0.375rem;
     padding: 15px;
     background-color: #f8f9fa;
+  }
+
+  /* Área de scroll más alta: más filas visibles y menos menús cortados por overflow */
+  .price-unit-table-scroll {
+    min-height: 480px;
+    max-height: min(68vh, 780px);
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .table {

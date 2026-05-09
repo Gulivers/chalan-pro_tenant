@@ -92,7 +92,7 @@
               id="filter-input"
               v-model="filter"
               type="search"
-              placeholder="Search by name, SKU, category, unit, brand..."
+              placeholder="Search by name, SKU, model #, category, unit, brand..."
               size="sm"
               class="form-control form-control-sm" />
           </BFormGroup>
@@ -149,6 +149,16 @@
                 data-title="View product images">
                 {{ row.item.name }}
               </a>
+            </div>
+          </template>
+
+          <template #cell(model_number)="row">
+            <div class="text-start text-break small">
+              {{
+                (row.item.model_number || "").trim()
+                  ? row.item.model_number
+                  : "—"
+              }}
             </div>
           </template>
 
@@ -325,6 +335,13 @@ export default {
       },
       { key: "name", label: "Name", sortable: true, thClass: "text-start" },
       { key: "sku", label: "SKU", sortable: true },
+      {
+        key: "model_number",
+        label: "Model #",
+        sortable: true,
+        thClass: "text-start",
+        tdClass: "text-start",
+      },
       { key: "category_name", label: "Category", sortable: true },
       {
         key: "tracking_mode",

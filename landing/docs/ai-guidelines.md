@@ -290,7 +290,7 @@ Incluir estas variantes en meta keywords, títulos alternativos y contenido cuan
 ### Externos (app Jobrithm)
 
 - **Login:** `https://jobrithm.net`
-- **Onboarding:** `https://jobrithm.net/onboarding`
+- **Onboarding:** `https://www.jobrithm.net/onboarding`
 - Abrir en nueva pestaña: `target="_blank" rel="noopener noreferrer"` cuando sea apropiado.
 
 ### Nav común (marca y contenido)

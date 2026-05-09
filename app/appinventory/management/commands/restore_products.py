@@ -55,6 +55,7 @@ class Command(BaseCommand):
                     defaults={
                         'name': product_data['name'],
                         'sku': product_data['sku'],
+                        'model_number': product_data.get('model_number', '') or '',
                         'reorder_level': product_data['reorder_level'],
                         'is_active': product_data['is_active']
                     }
@@ -64,6 +65,7 @@ class Command(BaseCommand):
                     # Actualizar producto existente
                     product.name = product_data['name']
                     product.sku = product_data['sku']
+                    product.model_number = product_data.get('model_number', '') or ''
                     product.reorder_level = product_data['reorder_level']
                     product.is_active = product_data['is_active']
                     product.save()

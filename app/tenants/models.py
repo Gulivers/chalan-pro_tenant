@@ -109,6 +109,15 @@ class Tenant(TenantMixin):
         verbose_name="Recommended Plan",
         help_text="Recommended plan based on crew count"
     )
+
+    landing_selected_plan = models.CharField(
+        max_length=20,
+        choices=RECOMMENDED_PLAN_CHOICES,
+        blank=True,
+        null=True,
+        verbose_name="Plan selected from marketing",
+        help_text="Plan chosen on the landing page (e.g. URL query) when provided",
+    )
     
     # Configuraciones del tenant
     paid_until = models.DateField(null=True, blank=True, verbose_name="Pagado hasta")

@@ -27,9 +27,10 @@
           type="button"
           class="btn btn-sm btn-danger remove-btn"
           @click="removeLogo"
-          aria-label="Remove logo"
+          aria-label="Delete logo"
         >
-          <i class="fas fa-times"></i>
+          <i class="fas fa-times me-1"></i>
+          Delete
         </button>
         <button
           type="button"
@@ -43,9 +44,9 @@
       </div>
     </div>
     
-    <div v-if="error" class="text-danger small mt-2">
+    <div v-if="localRejectMessage || error" class="text-danger small mt-2">
       <i class="fas fa-exclamation-circle me-1"></i>
-      {{ error }}
+      {{ localRejectMessage || error }}
     </div>
   </div>
 </template>
@@ -68,29 +69,32 @@ const emit = defineEmits(['update:modelValue'])
 
 const fileInput = ref(null)
 const preview = ref(null)
+const localRejectMessage = ref('')
 
 const triggerFileInput = () => {
+  localRejectMessage.value = ''
   fileInput.value?.click()
 }
 
 const handleFileChange = (event) => {
   const file = event.target.files[0]
-  
+  localRejectMessage.value = ''
+
   if (!file) {
     return
   }
-  
-  // Validate file size (5MB max)
+
   const maxSize = 5 * 1024 * 1024
   if (file.size > maxSize) {
+    localRejectMessage.value = 'That file is too large. Please use an image under 5MB.'
     emit('update:modelValue', null)
     preview.value = null
     return
   }
-  
-  // Validate file type
+
   const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif']
   if (!allowedTypes.includes(file.type)) {
+    localRejectMessage.value = 'Please choose a PNG, JPG, or GIF image.'
     emit('update:modelValue', null)
     preview.value = null
     return
@@ -107,6 +111,7 @@ const handleFileChange = (event) => {
 }
 
 const removeLogo = () => {
+  localRejectMessage.value = ''
   emit('update:modelValue', null)
   preview.value = null
   if (fileInput.value) {
@@ -114,10 +119,12 @@ const removeLogo = () => {
   }
 }
 
-// Watch for external changes
 watch(() => props.modelValue, (newValue) => {
   if (!newValue && preview.value) {
     preview.value = null
+  }
+  if (newValue) {
+    localRejectMessage.value = ''
   }
 })
 </script>
@@ -184,13 +191,15 @@ watch(() => props.modelValue, (newValue) => {
   position: absolute;
   top: 0;
   right: 0;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  display: flex;
+  border-radius: 0.375rem;
+  padding: 0.35rem 0.6rem;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 </style>
 

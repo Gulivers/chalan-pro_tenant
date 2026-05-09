@@ -321,7 +321,7 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ 1. USUARIO ACCEDE A ONBOARDING                                  │
-│    URL: https://www.chalanpro.net/onboarding                    │
+│    URL: https://www.jobrithm.net/onboarding                     │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
                             ▼
@@ -673,6 +673,10 @@ docker compose logs -f nginx backend
 # 7. Log de WebSocket
 docker compose logs -f backend | grep -i "websocket\|tenant"
 ```
+
+**Migraciones multi-tenant (`migrate_schemas`):** Conviene ejecutar **`migrate_schemas`** en el servidor tras desplegar **cualquier cambio en modelos**, incluyendo migraciones sobre la app compartida **`tenants`** en el schema **public** (por ejemplo nuevas columnas en el modelo **Tenant**, como **`landing_selected_plan`**). Para migrar sólo **public** o un schema de empresa concreto: ver **§8.2 Gestión Django** (`migrate_schemas --schema public`, etc.), según la práctica habitual del equipo.
+
+**URL de onboarding en producción (landing / CTAs):** `https://www.jobrithm.net/onboarding`. Parámetro opcional desde pricing: `?plan=starter`, `professional` o `enterprise` (debe coincidir con el onboarding / `planFromQuery.js`).
 
 **Nota:** Si solo cambias código Python (sin cambios en modelos), no necesitas ejecutar migraciones. Solo reconstruye y reinicia.
 

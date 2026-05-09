@@ -2,13 +2,29 @@
   <div class="container-fluid position-relative my-2">
     <h3 class="text-center text-warning mb-2">Product Form</h3>
     <div class="card shadow mb-2 mx-3">
-      <div class="card-header d-flex justify-content-center align-items-center">
-        <h6 class="mb-0 ms-5 w-100 text-center text-primary">
-          {{ pageTitle }}
-        </h6>
-        <button class="btn btn-outline-secondary btn-sm" @click="cancelForm">
-          Back
-        </button>
+      <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="flex-grow-1 text-center px-2">
+          <h6 class="mb-0 text-primary">{{ pageTitle }}</h6>
+        </div>
+        <div class="d-flex align-items-center gap-2 ms-auto">
+          <button
+            v-if="
+              isReadOnly &&
+              currentProductId &&
+              hasPermission('appinventory.change_product')
+            "
+            type="button"
+            class="btn btn-primary btn-sm"
+            @click="goToEdit"
+            v-tt
+            data-title="Switch to edit mode for this product">
+            <i class="fas fa-pen me-1" aria-hidden="true"></i>
+            Edit product
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" @click="cancelForm">
+            Back
+          </button>
+        </div>
       </div>
 
       <div class="card-body">
@@ -56,6 +72,29 @@
                 data-title="Unique identifier for warehouse and purchasing operations" />
               <div v-if="fieldErrors.sku" class="invalid-feedback">
                 {{ fieldErrors.sku }}
+              </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label d-flex align-items-center gap-2">
+                Model #
+                <i
+                  v-tt
+                  class="fas fa-info-circle text-muted"
+                  data-title="Optional. Manufacturer or catalog model (e.g. 14A19060W6CCT02-02)."></i>
+              </label>
+              <input
+                v-model.trim="product.model_number"
+                type="text"
+                class="form-control"
+                maxlength="128"
+                :class="{ 'is-invalid': fieldErrors.model_number }"
+                :disabled="isReadOnly"
+                autocomplete="off"
+                v-tt
+                data-title="Manufacturer or catalog model reference" />
+              <div v-if="fieldErrors.model_number" class="invalid-feedback">
+                {{ fieldErrors.model_number }}
               </div>
             </div>
 
@@ -375,7 +414,7 @@ import BrandModal from "@/components/inventory/BrandModal.vue";
 import UnitModal from "@/components/inventory/UnitModal.vue";
 import PriceTypeModal from "@/components/inventory/PriceTypeModal.vue";
 
-const LIST_ROUTE = "/products"; // redirect target per Chalan-Pro CRUD pattern
+const LIST_ROUTE_NAME = "product-list"; // ProductListView (/products)
 
 export default {
   name: "ProductForm",
@@ -398,6 +437,7 @@ export default {
       product: {
         name: "",
         sku: "",
+        model_number: "",
         category: "",
         brands: [],
         unit_default: "",
@@ -426,6 +466,13 @@ export default {
       const id =
         this.objectId || this.$route?.params?.id || this.$route?.query?.id;
       return id ? "Edit Product" : "Create Product";
+    },
+    /** Id del producto cargado (query, params o prop), para navegar a edición desde vista */
+    currentProductId() {
+      const raw =
+        this.objectId ?? this.$route?.params?.id ?? this.$route?.query?.id;
+      if (raw === undefined || raw === null || raw === "") return null;
+      return String(raw);
     },
   },
   created() {
@@ -473,6 +520,7 @@ export default {
         if (!id) return;
         const res = await axios.get(`/api/products/${id}/`);
         this.product = res.data;
+        if (this.product.model_number == null) this.product.model_number = "";
 
         // Convert brands response to array of IDs
         if (res.data.brands && Array.isArray(res.data.brands)) {
@@ -582,6 +630,7 @@ export default {
       // Trim and minimal client validations per Chalan‑Pro Standard Form Pattern
       this.product.name = (this.product.name || "").trim();
       this.product.sku = (this.product.sku || "").trim();
+      this.product.model_number = (this.product.model_number || "").trim();
 
       if (!this.product.name) this.pushFieldError("name", "Name is required.");
       if (!this.product.sku) this.pushFieldError("sku", "SKU is required.");
@@ -593,6 +642,8 @@ export default {
         this.pushFieldError("name", "Max length is 255.");
       if (this.product.sku && this.product.sku.length > 100)
         this.pushFieldError("sku", "Max length is 100.");
+      if (this.product.model_number && this.product.model_number.length > 128)
+        this.pushFieldError("model_number", "Max length is 128.");
 
       // Required selects
       if (!this.normalizeId(this.product.category))
@@ -742,6 +793,7 @@ export default {
         const payload = {
           name: this.product.name,
           sku: this.product.sku,
+          model_number: this.product.model_number || "",
           category: this.normalizeId(this.product.category),
           brands_data: this.product.brands || [],
           unit_default: this.normalizeId(this.product.unit_default),
@@ -758,11 +810,21 @@ export default {
         const url = id ? `/api/products/${id}/` : "/api/products/";
         const method = id ? "put" : "post";
 
-        await axios({ method, url, data: payload });
+        const res = await axios({ method, url, data: payload });
+        const savedId =
+          id || (res?.data?.id != null ? String(res.data.id) : null);
 
         // Success per Chalan‑Pro CRUD Pattern: silent success + redirect
         this.notifyToastSuccess?.(id ? "Product updated" : "Product created");
-        this.$router.push(LIST_ROUTE);
+
+        if (savedId) {
+          await this.$router.push({
+            path: "/products/form",
+            query: { mode: "view", id: String(savedId) },
+          });
+        } else {
+          this.$router.push({ name: LIST_ROUTE_NAME }).catch(() => {});
+        }
       } catch (err) {
         console.error("Failed to save product:", err);
 
@@ -777,6 +839,7 @@ export default {
               [
                 "name",
                 "sku",
+                "model_number",
                 "category",
                 "brands",
                 "brands_data",
@@ -819,9 +882,16 @@ export default {
     },
 
     cancelForm() {
-      // Per pattern: always allow back/escape to list
-      if (window.history.length > 1) this.$router.back();
-      else this.$router.push(LIST_ROUTE);
+      this.$router.push({ name: LIST_ROUTE_NAME }).catch(() => {});
+    },
+
+    goToEdit() {
+      const id = this.currentProductId;
+      if (!id) return;
+      this.$router.push({
+        path: "/products/form",
+        query: { mode: "edit", id },
+      });
     },
 
     // --- Modal open helpers ---

@@ -215,7 +215,7 @@ class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'sku', 'category_name', 'default_brand', 'brands_count',
+            'id', 'name', 'sku', 'model_number', 'category_name', 'default_brand', 'brands_count',
             'reorder_level', 'unit_name', 'unit_default_code', 'tracking_mode', 'is_active'
         ]
     

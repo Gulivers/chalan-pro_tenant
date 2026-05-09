@@ -1,41 +1,74 @@
 <template>
   <div class="step-review">
     <div class="step-header mb-4">
-      <h3 class="fw-bold mb-2">Review & Create</h3>
-      <p class="text-muted mb-0">Review the information before creating your workspace</p>
+      <h3 class="fw-bold mb-2">Review & launch</h3>
+      <p class="text-muted mb-0">
+        Confirm your details—then we will create your workspace and send you to sign in on your company subdomain.
+      </p>
     </div>
 
     <div class="step-content">
+      <div class="review-card card shadow-sm mb-4 border-success">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-rocket me-2"></i>
+            Your 30-day free trial
+          </h5>
+        </div>
+        <div class="card-body">
+          <p class="mb-2">
+            You are starting a <strong>30-day free trial</strong> with <strong>full access</strong> to the modules you enabled.
+            Connect scheduling, materials, contracts, and field updates so you see job progress with less back-and-forth.
+          </p>
+          <p class="small text-muted mb-0">
+            You can change company details and modules later in Settings. Stripe billing will be available when you choose a paid plan.
+          </p>
+        </div>
+      </div>
+
+      <div v-if="landingSelectedPlan" class="review-card card shadow-sm mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-tag me-2"></i>
+            Selected plan
+          </h5>
+        </div>
+        <div class="card-body">
+          <p class="mb-0 fw-semibold fs-5">{{ landingSelectedPlan }}</p>
+          <small class="text-muted">Carried over from your pricing selection. You can confirm or change plans when you upgrade.</small>
+        </div>
+      </div>
+
       <div class="review-card card shadow-sm mb-4">
         <div class="card-header bg-primary text-white">
           <h5 class="mb-0">
             <i class="fas fa-building me-2"></i>
-            Company Information
+            Company
           </h5>
         </div>
         <div class="card-body">
           <div class="row mb-2">
-            <div class="col-sm-4 fw-semibold text-muted review-label">Business Name:</div>
+            <div class="col-sm-4 fw-semibold text-muted review-label">Company name</div>
             <div class="col-sm-8 review-value">{{ companyInfo.business_name }}</div>
           </div>
           <div class="row mb-2">
-            <div class="col-sm-4 fw-semibold text-muted review-label">Business Type:</div>
+            <div class="col-sm-4 fw-semibold text-muted review-label">Trade / type</div>
             <div class="col-sm-8 review-value">{{ getBusinessTypeLabel(companyInfo.business_type) }}</div>
           </div>
           <div v-if="companyInfo.address" class="row mb-2">
-            <div class="col-sm-4 fw-semibold text-muted review-label">Address:</div>
+            <div class="col-sm-4 fw-semibold text-muted review-label">Address</div>
             <div class="col-sm-8 review-value">{{ companyInfo.address }}</div>
           </div>
           <div class="row mb-2">
-            <div class="col-sm-4 fw-semibold text-muted review-label">Monthly Operations:</div>
+            <div class="col-sm-4 fw-semibold text-muted review-label">Monthly job volume</div>
             <div class="col-sm-8 review-value">{{ getMonthlyOperationsLabel(companyInfo.monthly_operations) }}</div>
           </div>
           <div class="row mb-2">
-            <div class="col-sm-4 fw-semibold text-muted review-label">Active Crews:</div>
-            <div class="col-sm-8 review-value">{{ companyInfo.crew_count || 'Not specified' }}</div>
+            <div class="col-sm-4 fw-semibold text-muted review-label">Active crews</div>
+            <div class="col-sm-8 review-value">{{ companyInfo.crew_count ?? '—' }}</div>
           </div>
           <div v-if="companyInfo.logo" class="row">
-            <div class="col-sm-4 fw-semibold text-muted review-label">Logo:</div>
+            <div class="col-sm-4 fw-semibold text-muted review-label">Logo</div>
             <div class="col-sm-8 review-value">
               <img
                 :src="logoPreview"
@@ -47,21 +80,21 @@
         </div>
       </div>
 
-      <!-- Recommended Plan Card -->
+      <!-- Recommended plan (from crew count) -->
       <div v-if="recommendedPlan" class="review-card card shadow-sm mb-4 border-warning">
         <div class="card-header bg-warning text-dark">
           <h5 class="mb-0">
             <i class="fas fa-star me-2"></i>
-            Recommended Plan
+            Recommended plan (team size)
           </h5>
         </div>
         <div class="card-body">
           <div class="d-flex align-items-center">
             <div class="flex-grow-1">
               <p class="mb-0 fw-semibold">
-                Recommended plan for your company: <span class="text-primary fs-5">{{ recommendedPlan }}</span>
+                Based on active crews, a good fit is often <span class="text-primary fs-5">{{ recommendedPlan }}</span>
               </p>
-              <small class="text-muted">Based on your number of active crews</small>
+              <small class="text-muted">For reference when you subscribe—not a lock-in during trial.</small>
             </div>
             <div class="ms-3">
               <i class="fas fa-check-circle fa-2x text-success"></i>
@@ -74,23 +107,23 @@
         <div class="card-header bg-success text-white">
           <h5 class="mb-0">
             <i class="fas fa-user-shield me-2"></i>
-            Administrator User
+            Administrator
           </h5>
         </div>
         <div class="card-body">
           <div class="row mb-2">
-            <div class="col-sm-4 fw-semibold text-muted review-label">Name:</div>
+            <div class="col-sm-4 fw-semibold text-muted review-label">Name</div>
             <div class="col-sm-8 review-value">{{ adminUser.name }}</div>
           </div>
           <div class="row mb-2">
-            <div class="col-sm-4 fw-semibold text-muted review-label">Email:</div>
-            <div class="col-sm-8 review-value">{{ adminUser.email }}</div>
+            <div class="col-sm-4 fw-semibold text-muted review-label">Email</div>
+            <div class="col-sm-8 review-value">{{ (adminUser.email || '').trim() }}</div>
           </div>
           <div class="row">
-            <div class="col-sm-4 fw-semibold text-muted review-label">Password:</div>
+            <div class="col-sm-4 fw-semibold text-muted review-label">Password</div>
             <div class="col-sm-8 review-value">
               <span class="text-muted">••••••••</span>
-              <small class="ms-2 text-muted">(Hidden for security)</small>
+              <small class="ms-2 text-muted">(saved securely)</small>
             </div>
           </div>
         </div>
@@ -100,7 +133,7 @@
         <div class="card-header bg-info text-white">
           <h5 class="mb-0">
             <i class="fas fa-cogs me-2"></i>
-            Selected Modules
+            Modules included in this trial
           </h5>
         </div>
         <div class="card-body">
@@ -128,28 +161,32 @@
         {{ errorMessage }}
       </div>
 
-      <div class="wizard-actions mt-5 pt-4 border-top">
-        <div class="d-flex justify-content-between">
+      <p class="text-center text-muted small mb-3 mb-md-4">
+        Your workspace will be ready in a few seconds. You can update these settings later.
+      </p>
+
+      <div class="wizard-actions mt-4 pt-4 border-top">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3">
           <button
             type="button"
-            class="btn btn-outline-secondary"
+            class="btn btn-outline-secondary order-2 order-sm-1"
             @click="handleGoBack"
             :disabled="isSubmitting"
           >
             <i class="fas fa-arrow-left me-2"></i>
-            Previous
+            Back
           </button>
 
           <button
             type="button"
-            class="btn btn-primary btn-lg px-5"
+            class="btn btn-primary btn-lg px-4 px-sm-5 order-1 order-sm-2"
             :disabled="isSubmitting"
             @click="handleSubmit"
           >
             <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
             <i v-else class="fas fa-rocket me-2"></i>
-            <span v-if="isSubmitting">Creating Workspace...</span>
-            <span v-else>Create Tenant Workspace</span>
+            <span v-if="isSubmitting">Creating your workspace…</span>
+            <span v-else>Start My 30-Day Trial</span>
           </button>
         </div>
       </div>
@@ -174,6 +211,10 @@ const props = defineProps({
     default: () => []
   },
   recommendedPlan: {
+    type: String,
+    default: null
+  },
+  landingSelectedPlan: {
     type: String,
     default: null
   },
@@ -226,19 +267,29 @@ const getMonthlyOperationsLabel = (value) => {
 }
 
 const moduleLabels = {
+  operations: 'Operations',
   inventory: 'Inventory',
+  contracts_pricing: 'Contracts & Pricing (piece work)',
+  entities: 'Entities',
+  crews_fleet: 'Crews and Fleet',
+  communities: 'Communities',
   contracts: 'Contracts',
   schedule: 'Schedule',
   crews: 'Crews',
-  notes: 'Notes'
+  notes: 'Notes',
 }
 
 const moduleIcons = {
+  operations: 'fas fa-gears',
   inventory: 'fas fa-boxes',
+  contracts_pricing: 'fas fa-file-signature',
+  entities: 'fas fa-building',
+  crews_fleet: 'fas fa-truck',
+  communities: 'fas fa-map-marked-alt',
   contracts: 'fas fa-file-contract',
   schedule: 'fas fa-calendar-alt',
   crews: 'fas fa-users',
-  notes: 'fas fa-sticky-note'
+  notes: 'fas fa-sticky-note',
 }
 
 const getModuleLabel = (id) => {

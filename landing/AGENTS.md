@@ -111,7 +111,7 @@ landing/
 1. **Editar solo en `src/`** — Los archivos en `dist/` se generan con `npm run build`. El menú global: editar **`src/partials/nav-*.html`** y, si hace falta enlaces por página, **`build-nav.mjs`** (`NAV_BY_FILE`); no pegar un `<nav>` entero en cada página salvo excepción acordada.
 2. **Seguir `docs/ai-guidelines.md`** — HTML, Tailwind, diseño B2B SaaS, estrategia de conversión, SEO, accesibilidad, rendimiento.
 3. **Colores:** Usar `primary` (#0d6efd), `primary-dark` (#0a58ca), `accent` (#ffc107) según `tailwind.config.js`.
-4. **Enlaces app:** Login → https://jobrithm.net, Onboarding → https://jobrithm.net/onboarding.
+4. **Enlaces app:** Login → https://jobrithm.net, Onboarding → https://www.jobrithm.net/onboarding.
 5. **Marca en UI y copy:** Usar **Jobrithm** en textos visibles; no usar “Chalan-Pro” como nombre comercial en la landing salvo contexto técnico explícito.
 6. **Bilingüe:** Cualquier cambio sustancial (copy, secciones nuevas, CTAs, meta, navegación) debe replicarse en **EN** e **ES** (`index.html` ↔ `index-es.html`, y pares `pricing` / `contact`, etc.).
 7. **Conversión:** Cada página importante debe tener value proposition, indicador de confianza (o placeholder), CTA above the fold y CTA cerca del final. Objetivos: reservar demo, contactar ventas, ver precios.
@@ -145,4 +145,4 @@ landing/
 ## Links clave (conversiones)
 
 - Iniciar sesión: https://jobrithm.net
-- Onboarding usuarios: https://jobrithm.net/onboarding
+- Onboarding usuarios: https://www.jobrithm.net/onboarding

@@ -140,6 +140,7 @@
             <!-- Product (remote search) -->
             <td>
               <v-select
+                append-to-body
                 :id="`product-${idx}`"
                 :options="productOptions"
                 label="label"
@@ -206,6 +207,7 @@
             <!-- Unit -->
             <td>
                <v-select
+                 append-to-body
                  :id="`unit-${idx}`"
                  :options="unitsOptions"
                  :reduce="o => o.value"
@@ -267,6 +269,7 @@
             <!-- Warehouse (required per line when doc type requires it) -->
             <td>
                <v-select
+                 append-to-body
                  :id="`warehouse-${idx}`"
                  :options="warehousesOptions"
                  :reduce="o => o.value"
@@ -288,6 +291,7 @@
             <!-- Price Type -->
             <td>
                <v-select
+                 append-to-body
                  :id="`price_type-${idx}`"
                  :options="priceTypesOptions"
                  :reduce="o => o.value"
@@ -332,6 +336,7 @@
             <!-- Brand -->
             <td>
                <v-select
+                 append-to-body
                  :id="`brand-${idx}`"
                  :options="(row.brands && row.brands.length > 0) ? row.brands : brandsOptions"
                  :reduce="o => o.value"
@@ -530,6 +535,20 @@
 
   function cryptoRandom() {
     return Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+
+  /** Id estable por fila para sincronizar con props cuando todas las líneas nuevas tienen id null (favoritos, Excel, etc.) */
+  function lineStructureKey(l) {
+    const p = l?.product;
+    const prod =
+      p != null && typeof p === 'object' && !Array.isArray(p) && 'id' in p
+        ? p.id
+        : p;
+    return `${l?.id ?? ''}|${l?.__key ?? ''}|${prod ?? ''}`;
+  }
+
+  function linesStructureSignature(rows) {
+    return (rows || []).map(lineStructureKey).join('\n');
   }
 
   function currency(n) {

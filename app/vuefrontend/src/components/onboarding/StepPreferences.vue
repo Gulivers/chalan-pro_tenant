@@ -1,31 +1,28 @@
 <template>
   <div class="step-preferences">
     <div class="step-header mb-4">
-      <h3 class="fw-bold mb-2">System Preferences</h3>
-      <p class="text-muted mb-0">Select the modules you want to activate in your workspace</p>
+      <h3 class="fw-bold mb-2">Modules for your trial</h3>
+      <p class="text-muted mb-0">
+        These operational areas mirror the Jobrithm app menu—you get them during
+        your trial while module toggles are simplified.
+      </p>
     </div>
 
     <div class="step-content">
+      <div class="alert alert-info border-0 mb-4" role="status">
+        <i class="fas fa-layer-group me-2"></i>
+        <strong class="d-inline">Included in trial.</strong>
+        All sections below ship with full access during your trial. You can tune
+        access later where your plan allows it.
+      </div>
+
       <div class="row g-3">
-        <div
-          v-for="module in modules"
-          :key="module.id"
-          class="col-md-6"
-        >
-          <div
-            class="module-card card h-100"
-            :class="{ 'selected': isSelected(module.id), 'border-primary': isSelected(module.id) }"
-            @click="toggleModule(module.id)"
-            role="button"
-            tabindex="0"
-            @keyup.enter="toggleModule(module.id)"
-            :aria-pressed="isSelected(module.id)"
-            :aria-label="`${module.name} - ${isSelected(module.id) ? 'Selected' : 'Not selected'}`"
-          >
+        <div v-for="module in modules" :key="module.id" class="col-md-6">
+          <div class="module-card module-card-static card h-100">
             <div class="card-body d-flex flex-column">
-              <div class="d-flex align-items-start mb-3">
+              <div class="d-flex align-items-start">
                 <div class="module-icon me-3">
-                  <i :class="module.icon" class="fa-2x" :style="{ color: isSelected(module.id) ? 'var(--bs-primary)' : 'var(--bs-secondary)' }"></i>
+                  <i :class="module.icon" class="fa-2x text-primary"></i>
                 </div>
                 <div class="flex-grow-1">
                   <h5 class="card-title mb-2 fw-semibold">
@@ -36,7 +33,9 @@
                   </p>
                 </div>
               </div>
-              <div class="mt-auto">
+
+              <!-- Switches temporarily hidden (trial = all modules on; aligns with Navbar menu)
+              <div class="mt-auto pt-3">
                 <div class="form-check form-switch" @click.stop>
                   <input
                     class="form-check-input"
@@ -49,25 +48,29 @@
                     tabindex="0"
                   />
                   <label class="form-check-label" :for="`module-${module.id}`" @click.stop>
-                    <span v-if="isSelected(module.id)" class="text-success fw-semibold">Enabled</span>
-                    <span v-else class="text-muted">Disabled</span>
+                    <span v-if="isSelected(module.id)" class="text-success fw-semibold">On</span>
+                    <span v-else class="text-muted">Off</span>
                   </label>
                 </div>
               </div>
+              -->
             </div>
           </div>
         </div>
       </div>
 
-      <div v-if="errors.preferences" class="alert alert-danger mt-3 mb-0" role="alert">
+      <div
+        v-if="errors.preferences"
+        class="alert alert-danger mt-3 mb-0"
+        role="alert">
         <i class="fas fa-exclamation-circle me-2"></i>
         {{ errors.preferences }}
       </div>
 
-      <div v-if="selectedCount > 0" class="mt-4 text-center">
+      <div class="mt-4 text-center">
         <small class="text-muted">
           <i class="fas fa-info-circle me-1"></i>
-          {{ selectedCount }} module{{ selectedCount !== 1 ? 's' : '' }} selected
+          {{ modules.length }} Jobrithm areas included with your workspace
         </small>
       </div>
     </div>
@@ -75,72 +78,66 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed } from "vue";
+import { ONBOARDING_MODULE_IDS } from "./onboardingModuleDefaults.js";
 
-const props = defineProps({
-  modelValue: {
-    type: Array,
-    default: () => []
+/** Display copy aligned with `NavbarComponent.vue` top-level menu (Dashboard excluded — home route). */
+const MODULE_DEFS = {
+  operations: {
+    name: "Operations",
+    icon: "fas fa-gears",
+    description:
+      "Schedule, Work Order Viewer, Transactions, Work Accounts—the day-to-day field and office rhythm.",
   },
+  inventory: {
+    name: "Inventory",
+    icon: "fas fa-boxes",
+    description:
+      "Products, warehouses, transfers, dashboards, serialization, pricing units—everything under Inventory in the menu.",
+  },
+  contracts_pricing: {
+    name: "Contracts & Pricing",
+    icon: "fas fa-file-signature",
+    description:
+      "Piece work contracts and unit pricing for crews—not the prime agreement between you and the builder.",
+  },
+  entities: {
+    name: "Entities",
+    icon: "fas fa-building",
+    description:
+      "Builders & Parties, Party Types, Party Categories—master data that ties builders and parties together.",
+  },
+  crews_fleet: {
+    name: "Crews and Fleet",
+    icon: "fas fa-truck",
+    description:
+      "Categories, crews, trucks, truck assignments—the people and fleet you send to jobs.",
+  },
+  communities: {
+    name: "Communities",
+    icon: "fas fa-map-marked-alt",
+    description:
+      "Communities Map and Supervisor Communities—where jobs and subdivisions live on the map.",
+  },
+};
+
+defineProps({
   errors: {
     type: Object,
-    default: () => ({})
-  }
-})
-
-const emit = defineEmits(['update:modelValue'])
-
-const modules = [
-  {
-    id: 'inventory',
-    name: 'Inventory',
-    icon: 'fas fa-boxes',
-    description: 'Manage products, warehouses, categories, and real-time stock control.'
+    default: () => ({}),
   },
-  {
-    id: 'contracts',
-    name: 'Contracts',
-    icon: 'fas fa-file-contract',
-    description: 'Create contracts with work prices and pay sheets for crews to complete assigned jobs.'
-  },
-  {
-    id: 'schedule',
-    name: 'Schedule',
-    icon: 'fas fa-calendar-alt',
-    description: 'Organize events, appointments, and work calendar for your team.'
-  },
-  {
-    id: 'crews',
-    name: 'Crews',
-    icon: 'fas fa-users',
-    description: 'Manage work crews, assignments, and human resources.'
-  },
-  {
-    id: 'notes',
-    name: 'Notes',
-    icon: 'fas fa-sticky-note',
-    description: 'Take notes, comments, and document important information.'
-  }
-]
+});
 
-const isSelected = (moduleId) => {
-  return props.modelValue.includes(moduleId)
-}
-
-const toggleModule = (moduleId) => {
-  const current = [...props.modelValue]
-  const index = current.indexOf(moduleId)
-  
-  if (index > -1) {
-    current.splice(index, 1)
-  } else {
-    current.push(moduleId)
-  }
-  
-  emit('update:modelValue', current)
-}
-
-const selectedCount = computed(() => props.modelValue.length)
+const modules = computed(() =>
+  ONBOARDING_MODULE_IDS.map((id) => ({
+    id,
+    ...(MODULE_DEFS[id] || {
+      name: id,
+      icon: "fas fa-folder",
+      description: "",
+    }),
+  }))
+);
 </script>
 
 <style scoped>
@@ -158,46 +155,20 @@ const selectedCount = computed(() => props.modelValue.length)
   margin: 0 auto;
 }
 
-.module-card {
-  cursor: pointer;
-  transition: all 0.3s ease;
+.module-card-static {
+  cursor: default;
   border: 2px solid var(--bs-border-color);
   background-color: white;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.module-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.module-card-static:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border-color: var(--bs-primary);
-}
-
-.module-card.selected {
-  border-color: var(--bs-primary);
-  background-color: rgba(var(--bs-primary-rgb), 0.05);
-  box-shadow: 0 2px 8px rgba(var(--bs-primary-rgb), 0.2);
-}
-
-.module-card:focus {
-  outline: 2px solid var(--bs-primary);
-  outline-offset: 2px;
 }
 
 .module-icon {
-  transition: transform 0.2s ease;
-}
-
-.module-card:hover .module-icon {
-  transform: scale(1.1);
-}
-
-.form-check-input {
-  cursor: pointer;
-  margin-top: 0.25rem;
-}
-
-.form-check-label {
-  cursor: pointer;
-  user-select: none;
+  flex-shrink: 0;
 }
 </style>
-

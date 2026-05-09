@@ -32,7 +32,8 @@ const getApiUrl = () => {
  * @param {string} data.admin.email - Admin email
  * @param {string} data.admin.password - Admin password
  * @param {string} data.address - Business address (optional)
- * @param {Array<string>} data.preferences - Selected module preferences
+ * @param {Array<string>} data.preferences - Module slugs (navbar-aligned: operations, inventory, contracts_pricing, entities, crews_fleet, communities; legacy slugs still accepted server-side)
+ * @param {string} [data.landing_selected_plan] - Plan from marketing (`Starter`|`Professional`|`Enterprise`) when passed from the landing URL
  * @returns {Promise} API response
  */
 export const createTenantWorkspace = async (data) => {
@@ -68,6 +69,10 @@ export const createTenantWorkspace = async (data) => {
   
   if (data.recommended_plan) {
     formData.append('recommended_plan', data.recommended_plan)
+  }
+
+  if (data.landing_selected_plan) {
+    formData.append('landing_selected_plan', data.landing_selected_plan)
   }
   
   // Append admin name and password if provided

@@ -246,8 +246,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['is_active', 'category', 'brands', 'tracking_mode']
-    search_fields = ['name', 'sku']
-    ordering_fields = ['name', 'sku', 'created_at']
+    search_fields = ['name', 'sku', 'model_number']
+    ordering_fields = ['name', 'sku', 'model_number', 'created_at']
     ordering = ['name']
 
     def get_serializer_class(self):
@@ -521,7 +521,7 @@ class ProductDataTableAPIView(APIView):
             request,
             queryset,
             ProductListSerializer,
-            search_fields=['name', 'sku']
+            search_fields=['name', 'sku', 'model_number']
         )
 
 class ProductListProviderAPIView(APIView):
@@ -559,6 +559,7 @@ class ProductListProviderAPIView(APIView):
                     q = (
                         Q(name__icontains=w) |
                         Q(sku__icontains=w) |
+                        Q(model_number__icontains=w) |
                         Q(category__name__icontains=w) |
                         Q(tracking_mode__icontains=w) |
                         Q(unit_default__name__icontains=w) |
@@ -811,6 +812,7 @@ class ProductListDirectAPIView(APIView):
                     q = (
                         Q(name__icontains=w) |
                         Q(sku__icontains=w) |
+                        Q(model_number__icontains=w) |
                         Q(category__name__icontains=w) |
                         Q(tracking_mode__icontains=w) |
                         Q(unit_default__name__icontains=w) |

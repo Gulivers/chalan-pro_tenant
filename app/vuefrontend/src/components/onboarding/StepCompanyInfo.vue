@@ -235,4 +235,3 @@ const validateField = (fieldName) => {
   box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
 }
 </style>
-

@@ -196,6 +196,7 @@ def create_tenant_onboarding(request):
     - admin[name]: Nombre completo del administrador (opcional, si no se proporciona usa email)
     - admin[password]: Contraseña del administrador (opcional, si no se proporciona genera una temporal)
     - preferences: Array de módulos activados (opcional, ej: ["inventory", "contracts"])
+    - landing_selected_plan: Starter | Professional | Enterprise (opcional, p. ej. desde ?plan= en la landing)
     
     Retorna:
     - success: Boolean
@@ -215,6 +216,7 @@ def create_tenant_onboarding(request):
         monthly_operations = request.data.get('monthly_operations', '').strip() or None
         crew_count = request.data.get('crew_count', None)
         recommended_plan = request.data.get('recommended_plan', '').strip() or None
+        landing_selected_plan = request.data.get('landing_selected_plan', '').strip() or None
         
         # Validar y convertir crew_count a entero
         if crew_count:
@@ -230,10 +232,12 @@ def create_tenant_onboarding(request):
         if monthly_operations and monthly_operations not in valid_monthly_ops:
             monthly_operations = None
         
-        # Validar recommended_plan
+        # Validar recommended_plan y landing_selected_plan
         valid_plans = ['Starter', 'Professional', 'Enterprise']
         if recommended_plan and recommended_plan not in valid_plans:
             recommended_plan = None
+        if landing_selected_plan and landing_selected_plan not in valid_plans:
+            landing_selected_plan = None
         
         # Obtener datos del administrador
         # Soporta tanto formato plano como anidado
@@ -300,7 +304,20 @@ def create_tenant_onboarding(request):
                 preferences = prefs_list
         
         # Validar que preferences sea una lista válida
-        valid_preferences = ['inventory', 'contracts', 'schedule', 'crews', 'notes']
+        # Aligned with Jobrithm SPA navbar (exclude Dashboard + backend-only apps)
+        valid_preferences = [
+            'operations',
+            'inventory',
+            'contracts_pricing',
+            'entities',
+            'crews_fleet',
+            'communities',
+            # Legacy slugs still accepted when present in older payloads
+            'contracts',
+            'schedule',
+            'crews',
+            'notes',
+        ]
         preferences = [p for p in preferences if p in valid_preferences]
         
         logger.info(f"Preferencias recibidas: {preferences}")
@@ -372,6 +389,7 @@ def create_tenant_onboarding(request):
             monthly_operations=monthly_operations,
             crew_count=crew_count,
             recommended_plan=recommended_plan,
+            landing_selected_plan=landing_selected_plan,
             schema_name=schema_name,
             tenant_id=tenant_id,
             on_trial=True,
@@ -688,6 +706,7 @@ def create_tenant_onboarding(request):
                 'monthly_operations': tenant.monthly_operations,
                 'crew_count': tenant.crew_count,
                 'recommended_plan': tenant.recommended_plan,
+                'landing_selected_plan': tenant.landing_selected_plan,
                 'temp_password': temp_password if expose_generated_password else None
             },
             'credentials': {

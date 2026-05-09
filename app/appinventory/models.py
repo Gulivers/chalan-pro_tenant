@@ -111,6 +111,13 @@ class Product(models.Model):
 
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=100, unique=True)
+    model_number = models.CharField(
+        'Model #',
+        max_length=128,
+        blank=True,
+        default='',
+        help_text='Manufacturer/catalog model reference (e.g. 14A19060W6CCT02-02).',
+    )
     category = models.ForeignKey(ProductCategory,  on_delete=models.PROTECT, null=True)
     brands = models.ManyToManyField(ProductBrand, related_name='products', through=ProductBrandAssignment)
     reorder_level = models.DecimalField(max_digits=10, decimal_places=2, default=0)

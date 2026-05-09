@@ -39,6 +39,7 @@ class Command(BaseCommand):
                 'id': product.id,
                 'name': product.name,
                 'sku': product.sku,
+                'model_number': getattr(product, 'model_number', '') or '',
                 'category_id': product.category.id if product.category else None,
                 'category_name': product.category.name if product.category else None,
                 'brands': [

@@ -110,13 +110,13 @@ class ProductPriceInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'sku', 'category', 'tracking_mode', 'default_brand_display', 'unit_default', 'is_active')
+    list_display = ('name', 'sku', 'model_number', 'category', 'tracking_mode', 'default_brand_display', 'unit_default', 'is_active')
     list_filter = ('category', 'tracking_mode', 'brand_assignments__brand', 'is_active')
-    search_fields = ('name', 'sku')
+    search_fields = ('name', 'sku', 'model_number')
     autocomplete_fields = ['category', 'unit_default']
     fieldsets = (
         (None, {
-            'fields': ('name', 'sku', 'category', 'tracking_mode', 'reorder_level', 'unit_default', 'is_active')
+            'fields': ('name', 'sku', 'model_number', 'category', 'tracking_mode', 'reorder_level', 'unit_default', 'is_active')
         }),
         ('Extra', {
             'fields': ('alert', 'notes'),
