@@ -92,7 +92,7 @@
           hover
           responsive
           striped
-          class="table-bordered">
+          class="table-bordered price-type-fixed-table">
           <template #cell(id)="row">
             <strong>{{ row.item.id }}</strong>
           </template>
@@ -103,6 +103,23 @@
 
           <template #cell(description)="row">
             <div class="text-start">{{ row.item.description || "—" }}</div>
+          </template>
+
+          <template #cell(pricing_method)="row">
+            <div class="text-start small">
+              {{ pricingMethodLabel(row.item.pricing_method) }}
+            </div>
+          </template>
+
+          <template #cell(margin_percent)="row">
+            <div class="text-end small">
+              {{
+                formatMarginPercent(
+                  row.item.margin_percent,
+                  row.item.pricing_method
+                )
+              }}
+            </div>
           </template>
 
           <template #cell(is_active)="row">
@@ -167,6 +184,12 @@ import {
 
 const ENDPOINT = "/api/pricetypes-provider/";
 
+const PRICING_METHOD_LABELS = {
+  NONE: "None (list price only)",
+  MARKUP: "Markup % on cost",
+  MARGIN: "Margin % on cost",
+};
+
 export default {
   name: "PriceTypeView",
   components: {
@@ -211,8 +234,50 @@ export default {
         key: "description",
         label: "Description",
         sortable: true,
-        thClass: "text-start",
-        tdClass: "text-start",
+        thClass: "text-start price-type-field-desc",
+        tdClass: "text-start price-type-field-desc",
+        thStyle: { width: "35%" },
+        tdStyle: { wordBreak: "break-word" },
+      },
+      {
+        key: "pricing_method",
+        label: "Pricing from purchase cost",
+        sortable: true,
+        thClass: "text-start price-type-field-pricing",
+        tdClass: "text-start price-type-field-pricing",
+        thStyle: {
+          width: "19%",
+          maxWidth: "8.25rem",
+          whiteSpace: "normal",
+          lineHeight: 1.25,
+          fontSize: "0.90rem",
+        },
+        tdStyle: {
+          maxWidth: "8.25rem",
+          fontSize: "0.8rem",
+          wordBreak: "break-word",
+        },
+      },
+      {
+        key: "margin_percent",
+        label: "Markup / margin % (0–100)",
+        sortable: true,
+        thClass: "text-end price-type-field-margin",
+        tdClass: "text-end price-type-field-margin",
+        thStyle: {
+          width: "19%",
+          maxWidth: "8.25rem",
+          whiteSpace: "normal",
+          lineHeight: 1.25,
+          fontSize: "0.90rem",
+        },
+        tdStyle: {
+          width: "5.25rem",
+          maxWidth: "5.5rem",
+          fontVariantNumeric: "tabular-nums",
+          fontSize: "0.8rem",
+          whiteSpace: "nowrap",
+        },
       },
       {
         key: "is_active",
@@ -301,6 +366,22 @@ export default {
     const editItem = (id) =>
       router.push({ name: "price-type-edit", params: { id } });
 
+    const pricingMethodLabel = (value) =>
+      PRICING_METHOD_LABELS[value] ?? value ?? "—";
+
+    const formatMarginPercent = (marginPercent, pricingMethod) => {
+      if (marginPercent == null || marginPercent === "") return "—";
+      if (pricingMethod === "NONE" || !pricingMethod) {
+        return "—";
+      }
+      const n = Number(marginPercent);
+      if (!Number.isFinite(n)) return "—";
+      return n.toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 4,
+      });
+    };
+
     const deleteItem = (id) => {
       proxy?.confirmDelete?.(
         "Delete?",
@@ -347,6 +428,8 @@ export default {
       viewItem,
       editItem,
       deleteItem,
+      pricingMethodLabel,
+      formatMarginPercent,
     };
   },
 };
@@ -395,5 +478,10 @@ export default {
 .form-select-sm,
 .form-control-sm {
   font-size: 0.8rem;
+}
+
+/* Compact pricing columns; Description keeps a larger share (table-layout fixed) */
+:deep(.price-type-fixed-table.table) {
+  table-layout: fixed;
 }
 </style>

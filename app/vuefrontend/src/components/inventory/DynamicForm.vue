@@ -10,13 +10,14 @@
       </div>
 
       <div class="card-body">
-        <form @submit.prevent="handleSubmit" v-if="Object.keys(internalSchema).length">
+        <form
+          @submit.prevent="handleSubmit"
+          v-if="Object.keys(internalSchema).length">
           <div class="row px-2 text-start">
             <div
               class="col-md-6 col-lg-6 mb-3"
               v-for="(config, key) in internalSchema"
-              :key="key"
-            >
+              :key="key">
               <!-- Evita duplicar label en booleanos -->
               <label v-if="config.type !== 'boolean'" class="form-label">
                 {{ config.label }}
@@ -30,16 +31,18 @@
                 class="form-control"
                 :placeholder="`Enter ${config.label}...`"
                 :disabled="isDisabled"
-              />
+                v-tt="controlTooltipText(key)" />
 
               <!-- Textarea -->
               <textarea
-                v-else-if="config.type === 'textarea' || config.widget === 'textarea'"
+                v-else-if="
+                  config.type === 'textarea' || config.widget === 'textarea'
+                "
                 v-model.trim="form[key]"
                 class="form-control"
                 :placeholder="`Enter ${config.label}...`"
                 :disabled="isDisabled"
-              />
+                v-tt="controlTooltipText(key)" />
 
               <!-- Select -->
               <select
@@ -47,15 +50,14 @@
                 v-model="form[key]"
                 class="form-select"
                 :disabled="isDisabled"
-              >
+                v-tt="controlTooltipText(key)">
                 <option value="" disabled selected hidden class="text-muted">
                   Select {{ config.label }}...
                 </option>
                 <option
                   v-for="opt in optionsMap[key] || []"
                   :key="opt.value"
-                  :value="opt.value"
-                >
+                  :value="opt.value">
                   {{ opt.label }}
                 </option>
               </select>
@@ -63,16 +65,14 @@
               <!-- Boolean -->
               <div
                 v-else-if="config.type === 'boolean'"
-                class="form-check form-switch d-flex align-items-center mt-4"
-              >
+                class="form-check form-switch d-flex align-items-center mt-4">
                 <input
                   v-model="form[key]"
                   class="form-check-input"
                   type="checkbox"
                   role="switch"
                   :id="key"
-                  :disabled="isDisabled"
-                />
+                  :disabled="isDisabled" />
                 <label class="form-check-label ms-2" :for="key">
                   {{ config.label }}
                 </label>
@@ -80,29 +80,28 @@
             </div>
           </div>
 
+          <PriceTypePricingGuide v-if="showPriceTypePricingGuide" />
+
           <!-- Botones -->
           <div class="mt-4" v-if="!isViewMode">
             <button
               type="submit"
               class="btn btn-primary"
-              :disabled="isDisabled"
-            >
+              :disabled="isDisabled">
               <span
                 v-if="submitting"
                 class="spinner-border spinner-border-sm me-1"
                 role="status"
-                aria-hidden="true"
-              ></span>
+                aria-hidden="true"></span>
               <i v-else class="fas fa-save me-1"></i>
-              {{ submitting ? 'Saving...' : 'Save' }}
+              {{ submitting ? "Saving..." : "Save" }}
             </button>
 
             <button
               type="button"
               class="btn btn-secondary ms-2"
               @click="cancelForm"
-              :disabled="submitting"
-            >
+              :disabled="submitting">
               Cancel
             </button>
           </div>
@@ -112,8 +111,7 @@
               type="button"
               class="btn btn-secondary mt-3"
               @click="cancelForm"
-              :disabled="submitting"
-            >
+              :disabled="submitting">
               Back
             </button>
           </div>
@@ -129,196 +127,227 @@
 </template>
 
 <script>
-import axios from 'axios'
-import Swal from 'sweetalert2'
-import selectMixin from '@/helpers/useSelectOptions' // debe exportar default { ... } (mixin)
+import axios from "axios";
+import Swal from "sweetalert2";
+import selectMixin from "@/helpers/useSelectOptions"; // debe exportar default { ... } (mixin)
+import PriceTypePricingGuide from "./PriceTypePricingGuide.vue";
+import {
+  PRICING_METHOD_FIELD_TOOLTIP,
+  MARGIN_PERCENT_FIELD_TOOLTIP,
+} from "./priceTypePricingHelp";
 
 export default {
-  name: 'DynamicForm',
+  name: "DynamicForm",
+  components: { PriceTypePricingGuide },
   mixins: [selectMixin], // sin appMixin
   props: {
     schema: Object,
     schemaEndpoint: String,
-    apiEndpoint: { type: String, required: true },   // e.g. '/api/product-categories/'
+    apiEndpoint: { type: String, required: true }, // e.g. '/api/product-categories/'
     objectId: { type: [String, Number], default: null },
-    formTitle: { type: String, default: 'Form' },
-    readOnly: { type: Boolean, default: false },     // fuerza modo view
+    formTitle: { type: String, default: "Form" },
+    readOnly: { type: Boolean, default: false }, // fuerza modo view
     redirectAfterSave: { type: String, default: null }, // ruta (path) o nombre de ruta
-    isModal: { type: Boolean, default: false }
+    isModal: { type: Boolean, default: false },
   },
-  data () {
+  data() {
     return {
       internalSchema: {},
       form: {},
       fields: [],
-      submitting: false
-    }
+      submitting: false,
+    };
   },
   computed: {
-    isViewMode () {
+    isViewMode() {
       // soporta prop readOnly o query ?mode=view
-      return this.readOnly || (this.$route?.query?.mode === 'view')
+      return this.readOnly || this.$route?.query?.mode === "view";
     },
-    isEditMode () {
-      return !!this.objectId && !this.isViewMode
+    isEditMode() {
+      return !!this.objectId && !this.isViewMode;
     },
-    isDisabled () {
-      return this.isViewMode || this.submitting
+    isDisabled() {
+      return this.isViewMode || this.submitting;
     },
-    cleanFormTitle () {
+    cleanFormTitle() {
       return this.formTitle
-        .replace(/^Create\s+/i, '')
-        .replace(/^Edit\s+/i, '')
-        .replace(/^View\s+/i, '')
-        .trim()
-    }
+        .replace(/^Create\s+/i, "")
+        .replace(/^Edit\s+/i, "")
+        .replace(/^View\s+/i, "")
+        .trim();
+    },
+    /** Solo el esquema de Price Type define `pricing_method` (ver `/api/schema/pricetype/`). */
+    showPriceTypePricingGuide() {
+      return !!(this.internalSchema && this.internalSchema.pricing_method);
+    },
   },
   watch: {
     objectId: {
       immediate: true,
-      async handler () {
+      async handler() {
         if (this.internalSchema && Object.keys(this.internalSchema).length) {
-          await this.loadRecord()
+          await this.loadRecord();
         }
-      }
-    }
+      },
+    },
   },
-  async created () {
+  async created() {
     try {
       // 1) Cargar esquema
       if (this.schema && Object.keys(this.schema).length) {
-        this.internalSchema = this.schema
+        this.internalSchema = this.schema;
       } else if (this.schemaEndpoint) {
-        const response = await axios.get(this.schemaEndpoint)
-        this.internalSchema = response.data || {}
+        const response = await axios.get(this.schemaEndpoint);
+        this.internalSchema = response.data || {};
       }
 
-      this.fields = Object.keys(this.internalSchema)
+      this.fields = Object.keys(this.internalSchema);
 
       // 2) Cargar opciones de selects (mixin)
-      await this.loadOptionsForSchema(this.internalSchema)
+      await this.loadOptionsForSchema(this.internalSchema);
 
       // 3) Cargar registro (si objectId)
-      await this.loadRecord()
+      await this.loadRecord();
     } catch (err) {
-      console.error('❌ Error initializing schema:', err)
-      await Swal.fire('Oops!', 'Error initializing the form schema.', 'error')
+      console.error("❌ Error initializing schema:", err);
+      await Swal.fire("Oops!", "Error initializing the form schema.", "error");
     }
   },
   methods: {
-    async loadRecord () {
-      if (!this.internalSchema || !Object.keys(this.internalSchema).length) return
+    /**
+     * Texto para v-tt en el propio control (como ProductForm con data-title).
+     * Cadena vacía: la directiva no muestra tooltip al pasar el mouse.
+     */
+    controlTooltipText(key) {
+      if (key === "pricing_method") return PRICING_METHOD_FIELD_TOOLTIP;
+      if (key === "margin_percent") return MARGIN_PERCENT_FIELD_TOOLTIP;
+      return "";
+    },
+
+    async loadRecord() {
+      if (!this.internalSchema || !Object.keys(this.internalSchema).length)
+        return;
       try {
         if (this.objectId) {
-          const res = await axios.get(`${this.apiEndpoint}${this.objectId}/`)
-          this.form = res.data
+          const res = await axios.get(`${this.apiEndpoint}${this.objectId}/`);
+          this.form = res.data;
         } else {
           // inicializa valores (boolean -> false, otros -> '')
           this.form = Object.fromEntries(
-            this.fields.map(f => {
-              const type = this.internalSchema[f]?.type
-              const def = this.internalSchema[f]?.default
-              if (def !== undefined) return [f, def]
-              return [f, type === 'boolean' ? false : '']
+            this.fields.map((f) => {
+              const type = this.internalSchema[f]?.type;
+              const def = this.internalSchema[f]?.default;
+              if (def !== undefined) return [f, def];
+              return [f, type === "boolean" ? false : ""];
             })
-          )
+          );
         }
       } catch (err) {
-        console.error('❌ Error loading record:', err)
-        await Swal.fire('Oops!', 'Error loading the record.', 'error')
+        console.error("❌ Error loading record:", err);
+        await Swal.fire("Oops!", "Error loading the record.", "error");
       }
     },
 
-    _buildCleanPayload () {
-      const cleaned = { ...this.form }
+    _buildCleanPayload() {
+      const cleaned = { ...this.form };
 
       for (const key of this.fields) {
-        const cfg = this.internalSchema[key] || {}
+        const cfg = this.internalSchema[key] || {};
 
         // Trimming para strings/textarea
         if (
-          ['string', 'text'].includes(cfg.type) ||
-          cfg.type === 'textarea' ||
-          cfg.widget === 'textarea'
+          ["string", "text"].includes(cfg.type) ||
+          cfg.type === "textarea" ||
+          cfg.widget === "textarea"
         ) {
-          cleaned[key] = (cleaned[key] ?? '').toString().trim()
+          cleaned[key] = (cleaned[key] ?? "").toString().trim();
         }
 
         // Selects con optionsEndpoint: si viene objeto, extrae id/value
-        if (cfg.type === 'select' && cfg.optionsEndpoint) {
-          const v = cleaned[key]
-          cleaned[key] =
-            v && typeof v === 'object'
-              ? (v.id ?? v.value ?? '')
-              : v
+        if (cfg.type === "select" && cfg.optionsEndpoint) {
+          const v = cleaned[key];
+          cleaned[key] = v && typeof v === "object" ? v.id ?? v.value ?? "" : v;
         }
       }
-      if (this.internalSchema.margin_percent && 'margin_percent' in cleaned) {
-        const v = cleaned.margin_percent
-        if (v === '' || v === undefined || v === null) cleaned.margin_percent = null
+      if (this.internalSchema.margin_percent && "margin_percent" in cleaned) {
+        const v = cleaned.margin_percent;
+        if (v === "" || v === undefined || v === null)
+          cleaned.margin_percent = null;
         else {
-          const n = Number(String(v).replace(',', '.'))
-          cleaned.margin_percent = Number.isFinite(n) ? n : null
+          const n = Number(String(v).replace(",", "."));
+          cleaned.margin_percent = Number.isFinite(n) ? n : null;
         }
       }
-      return cleaned
+      return cleaned;
     },
 
-    async handleSubmit () {
-      if (this.isViewMode) return
-      this.submitting = true
+    async handleSubmit() {
+      if (this.isViewMode) return;
+      this.submitting = true;
 
-      const payload = this._buildCleanPayload()
-      const url = this.objectId ? `${this.apiEndpoint}${this.objectId}/` : this.apiEndpoint
-      const method = this.objectId ? 'put' : 'post'
+      const payload = this._buildCleanPayload();
+      const url = this.objectId
+        ? `${this.apiEndpoint}${this.objectId}/`
+        : this.apiEndpoint;
+      const method = this.objectId ? "put" : "post";
 
       try {
-        await axios[method](url, payload)
+        await axios[method](url, payload);
 
         // Éxito silencioso + redirección
         if (this.redirectAfterSave) {
-          if (this.redirectAfterSave.startsWith('/')) {
-            this.$router.push(this.redirectAfterSave)
+          if (this.redirectAfterSave.startsWith("/")) {
+            this.$router.push(this.redirectAfterSave);
           } else {
-            this.$router.push({ name: this.redirectAfterSave })
+            this.$router.push({ name: this.redirectAfterSave });
           }
         } else {
-          this.$emit('saved')
+          this.$emit("saved");
         }
       } catch (error) {
-        console.error('❌ Save error:', error)
-        const { status, data } = error?.response || {}
+        console.error("❌ Save error:", error);
+        const { status, data } = error?.response || {};
         if (status === 400 && data) {
           const messages = Object.entries(data)
             .map(([field, msgs]) => {
-              const label = this.internalSchema[field]?.label || field
-              return `${label}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`
+              const label = this.internalSchema[field]?.label || field;
+              return `${label}: ${
+                Array.isArray(msgs) ? msgs.join(", ") : msgs
+              }`;
             })
-            .join('\n')
-          await Swal.fire('Oops!', messages || 'There were validation errors.', 'error')
+            .join("\n");
+          await Swal.fire(
+            "Oops!",
+            messages || "There were validation errors.",
+            "error"
+          );
         } else if (status === 403) {
-          await Swal.fire('Forbidden', 'You do not have permission for this action.', 'error')
+          await Swal.fire(
+            "Forbidden",
+            "You do not have permission for this action.",
+            "error"
+          );
         } else {
-          await Swal.fire('Oops!', 'Error saving the record.', 'error')
+          await Swal.fire("Oops!", "Error saving the record.", "error");
         }
       } finally {
-        this.submitting = false
+        this.submitting = false;
       }
     },
 
-    cancelForm () {
+    cancelForm() {
       if (this.isModal) {
-        this.$emit('cancel')
+        this.$emit("cancel");
       } else {
         if (this.$router && this.$route.name) {
-          this.$router.back()
+          this.$router.back();
         } else {
-          this.$emit('cancel')
+          this.$emit("cancel");
         }
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>

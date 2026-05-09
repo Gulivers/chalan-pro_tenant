@@ -9,6 +9,14 @@ import json
 User = get_user_model()
 
 
+def two_line_favorite_lines():
+    """Mínimo válido para serializers/API de favoritos (no requiere Product en BD)."""
+    return [
+        {'product': 101, 'quantity': 1},
+        {'product': 102, 'quantity': 1},
+    ]
+
+
 class TransactionFavoriteModelTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
@@ -211,7 +219,7 @@ class TransactionFavoriteSerializerTests(TestCase):
             'name': 'Test Favorite',
             'description': 'Test description',
             'document_data': {'document_type': self.doc_type.id},
-            'lines_data': []
+            'lines_data': two_line_favorite_lines(),
         }
         
         serializer = TransactionFavoriteSerializer(
@@ -237,7 +245,7 @@ class TransactionFavoriteSerializerTests(TestCase):
         duplicate_data = {
             'name': 'Existing Name',
             'document_data': {'document_type': self.doc_type.id},
-            'lines_data': []
+            'lines_data': two_line_favorite_lines(),
         }
         
         serializer = TransactionFavoriteSerializer(
@@ -256,7 +264,7 @@ class TransactionFavoriteSerializerTests(TestCase):
         invalid_data = {
             'name': 'Test Favorite',
             'document_data': 'not a dict',
-            'lines_data': []
+            'lines_data': two_line_favorite_lines(),
         }
         
         serializer = TransactionFavoriteSerializer(
@@ -283,6 +291,22 @@ class TransactionFavoriteSerializerTests(TestCase):
             context={'request': type('MockRequest', (), {'user': self.user})()}
         )
         
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('lines_data', serializer.errors)
+
+    def test_serializer_rejects_less_than_two_lines_with_product(self):
+        """Favoritos requieren ≥2 líneas con producto."""
+        from apptransactions.serializers import TransactionFavoriteSerializer
+
+        invalid_data = {
+            'name': 'One line only',
+            'document_data': {'document_type': self.doc_type.id},
+            'lines_data': [{'product': 1, 'quantity': 1}],
+        }
+        serializer = TransactionFavoriteSerializer(
+            data=invalid_data,
+            context={'request': type('MockRequest', (), {'user': self.user})()}
+        )
         self.assertFalse(serializer.is_valid())
         self.assertIn('lines_data', serializer.errors)
 
@@ -362,7 +386,7 @@ class TransactionFavoriteViewSetTests(TestCase):
             'name': 'New Favorite',
             'description': 'New description',
             'document_data': {'document_type': self.doc_type.id},
-            'lines_data': []
+            'lines_data': two_line_favorite_lines(),
         }
         
         response = client.post('/api/transaction-favorites/create-from-transaction/', data)
@@ -405,7 +429,7 @@ class TransactionFavoriteViewSetTests(TestCase):
         # New transaction data
         new_data = {
             'document_data': {'document_type': self.doc_type.id, 'notes': 'Updated notes'},
-            'lines_data': []
+            'lines_data': two_line_favorite_lines(),
         }
         
         response = client.post(f'/api/transaction-favorites/{self.favorite.id}/update-from-transaction/', new_data)

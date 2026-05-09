@@ -1,15 +1,17 @@
 <template>
-  <div class="modal fade" tabindex="-1" ref="modal">
-    <div class="modal-dialog modal-dialog-centered">
+  <div class="modal fade" tabindex="-1" ref="modal" aria-labelledby="priceTypeModalTitle">
+    <div
+      class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl price-type-modal-dialog w-100 mx-auto"
+      role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">
+          <h5 class="modal-title" id="priceTypeModalTitle">
             {{ objectId ? `Edit Price Type #${objectId}` : 'Add Price Type' }}
           </h5>
-          <button type="button" class="btn-close" @click="closeModal"></button>
+          <button type="button" class="btn-close" @click="closeModal" aria-label="Close"></button>
         </div>
 
-        <div class="modal-body">
+        <div class="modal-body px-3 px-sm-4 py-3">
           <DynamicForm
             ref="dynamicForm"
             :schemaEndpoint="'/api/schema/pricetype/'"
@@ -66,3 +68,17 @@
     },
   };
 </script>
+
+<style scoped>
+/* Ancho generoso en tablet/desktop; en móvil Bootstrap usa casi 100% del viewport */
+.price-type-modal-dialog {
+  max-width: min(960px, calc(100vw - 1.25rem));
+}
+
+@media (max-width: 575.98px) {
+  .price-type-modal-dialog {
+    max-width: 100%;
+    margin: 0.5rem;
+  }
+}
+</style>

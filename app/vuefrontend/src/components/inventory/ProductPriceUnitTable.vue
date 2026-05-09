@@ -241,6 +241,28 @@
     },
 
     methods: {
+      /**
+       * Rows must use real booleans for API/DB (not null/undefined/other).
+       * @returns {string[]} English messages; empty when valid.
+       */
+      validateStrictPurchaseSaleFlags() {
+        const errors = [];
+        this.priceUnitRows.forEach((row, idx) => {
+          const ip = row.is_purchase;
+          const is = row.is_sale;
+          const purchaseOk = ip === true || ip === false;
+          const saleOk = is === true || is === false;
+          if (!purchaseOk || !saleOk) {
+            errors.push(
+              `Row ${
+                idx + 1
+              }: Purchase and Sale must each be explicitly on or off (true or false). Clear or reload the row if values are missing or invalid.`
+            );
+          }
+        });
+        return errors;
+      },
+
       addRow(prefill = null) {
         const row = Object.assign(
           {

@@ -316,8 +316,27 @@
     return true;
   }
 
+  function countTransactionLinesWithProduct() {
+    const lines = props.transactionData?.lines;
+    if (!Array.isArray(lines)) return 0;
+    return lines.filter(
+      line => line?.product != null && line.product !== ''
+    ).length;
+  }
+
+  async function enforceMinimumFavoriteLines(actionLabel = 'save') {
+    if (countTransactionLinesWithProduct() >= 2) return true;
+    await Swal.fire({
+      icon: 'warning',
+      title: 'Not enough lines',
+      text: `You need at least 2 lines with a product to ${actionLabel} a favorite (single-item lines are easy to duplicate manually).`,
+    });
+    return false;
+  }
+
   async function handleSubmit() {
     if (!validateForm()) return;
+    if (!(await enforceMinimumFavoriteLines('save'))) return;
 
     submitting.value = true;
 
@@ -392,6 +411,8 @@
     });
 
     if (!result.isConfirmed) return;
+
+    if (!(await enforceMinimumFavoriteLines('update'))) return;
 
     submitting.value = true;
 

@@ -693,7 +693,15 @@ class PriceTypeListProviderAPIView(APIView):
             search = request.query_params.get('search', '').strip()
             ordering = _safe_ordering(
                 request.query_params.get('ordering', '-id'),
-                {'id', 'name', 'description', 'is_active'}, '-id'
+                {
+                    'id',
+                    'name',
+                    'description',
+                    'is_active',
+                    'pricing_method',
+                    'margin_percent',
+                },
+                '-id',
             )
             queryset = PriceType.objects.all().order_by(ordering)
             if search:

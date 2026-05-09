@@ -237,7 +237,7 @@
                     @click="openFavoriteModal"
                     :disabled="!canSaveAsFavorite"
                     v-tt
-                    data-title="Add to favorites. Click this button to add the current transaction to your favorites for quicker access later.">
+                    data-title="Add to favorites (requires at least 2 lines with a product — single-line kits are not saved as favorites).">
                     <img
                       src="@assets/img/star-svgrepo-com.svg"
                       alt="Favorite"
@@ -688,17 +688,23 @@ function onTransactionLinesImported(newLines) {
   syncTotals();
 }
 
-// Computed para determinar si se puede guardar como favorito
+function countLinesWithProduct(rows) {
+  return (rows || []).filter((line) => line?.product != null && line.product !== "").length;
+}
+
+// Favoritos: mínimo 2 líneas con producto (evita inconsistencias en el grid y refleja “kits”).
 const canSaveAsFavorite = computed(() => {
-  return form.document_type && lines.value.some((line) => line.product);
+  return (
+    form.document_type &&
+    countLinesWithProduct(lines.value) >= 2
+  );
 });
 
-// Computed para determinar si se puede actualizar el favorito seleccionado
 const canUpdateFavorite = computed(() => {
   return (
     selectedFavoriteId.value &&
     form.document_type &&
-    lines.value.some((line) => line.product)
+    countLinesWithProduct(lines.value) >= 2
   );
 });
 

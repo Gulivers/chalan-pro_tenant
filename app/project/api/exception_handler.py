@@ -1,5 +1,6 @@
 # project/api/exception_handler.py
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import ProtectedError
 from django.db import IntegrityError
 from rest_framework.views import exception_handler as drf_exception_handler
@@ -41,14 +42,51 @@ def _payload_unique_from_message(msg_lower: str):
     # 3) Fallback genérico si no se pudo inferir campo
     return {"detail": "Unique constraint violated."}
 
+
+def _django_validation_error_payload(exc: DjangoValidationError) -> dict:
+    """
+    Django ValidationError (p. ej. Model.clean()) → dict JSON tipo DRF 400.
+    Preferimos message_dict (campos → lista de mensajes).
+    """
+    try:
+        md = exc.message_dict
+        if md:
+            out = {}
+            for field, msgs in md.items():
+                out[field] = [str(m) for m in msgs]
+            return out
+    except AttributeError:
+        pass
+    except Exception as ex:
+        logger.warning("Could not flatten Django ValidationError(message_dict): %s", ex)
+
+    try:
+        if getattr(exc, "error_list", None):
+            return {"detail": [str(e) for e in exc.error_list]}
+    except Exception:
+        pass
+
+    try:
+        return {"detail": [str(m) for m in exc.messages]}
+    except Exception:
+        return {"detail": [str(exc)]}
+
+
 def custom_exception_handler(exc, context):
     """
     Handler global:
+      - Django ValidationError → 400 JSON (errores por campo o detail)
       - ProtectedError → 409 (in use) con ejemplos
       - IntegrityError (FK/constraint) → 409 (in use)
       - IntegrityError (UNIQUE) → 400 con errores por campo (para formularios)
       - Delega el resto al handler por defecto de DRF
     """
+    # --- django.core.exceptions.ValidationError (p. ej. Model.clean fuera del serializer)
+    if isinstance(exc, DjangoValidationError):
+        payload = _django_validation_error_payload(exc)
+        logger.info("Django ValidationError → 400: %s", payload)
+        return Response(payload, status=status.HTTP_400_BAD_REQUEST)
+
     # --- ProtectedError: típico en DELETE con on_delete=PROTECT ---
     if isinstance(exc, ProtectedError):
         protected = getattr(exc, "protected_objects", None)

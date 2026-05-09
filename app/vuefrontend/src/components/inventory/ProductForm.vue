@@ -347,6 +347,7 @@
 
           <!-- Combined ProductUnit + ProductPrice table -->
           <ProductPriceUnitTable
+            ref="productPriceUnitTable"
             v-model="productPriceUnits"
             :priceTypes="priceTypes"
             :units="units"
@@ -662,7 +663,10 @@ export default {
     validatePriceMatrix() {
       // Enforce uniqueness of (unit, price_type) rows and numeric price
       const comboSet = new Set();
-      const errors = [];
+      const strictFlagErrors =
+        this.$refs.productPriceUnitTable?.validateStrictPurchaseSaleFlags?.() ||
+        [];
+      const errors = [...strictFlagErrors];
 
       this.productPriceUnits.forEach((pu, idx) => {
         const unitId = this.normalizeId(pu.unit);
@@ -831,9 +835,26 @@ export default {
         const status = err?.response?.status;
         const data = err?.response?.data;
 
-        // Map DRF 400 field errors to inputs
-        if (status === 400 && data && typeof data === "object") {
+        if (this.responseLooksLikeHtmlPayload(err)) {
+          this.showProductSaveError(err);
+          return;
+        }
+
+        // Map DRF / Django-validation 400 JSON to inputs & Swal
+        if (
+          status === 400 &&
+          data &&
+          typeof data === "object" &&
+          !Array.isArray(data)
+        ) {
+          const skipFieldMapKeys = new Set([
+            "non_field_errors",
+            "detail",
+            "__all__",
+          ]);
+
           for (const [key, value] of Object.entries(data)) {
+            if (skipFieldMapKeys.has(key)) continue;
             const msg = Array.isArray(value) ? value.join(" ") : String(value);
             if (
               [
@@ -852,18 +873,35 @@ export default {
             }
           }
 
-          const nonField = data.non_field_errors || data.detail;
-          if (nonField) {
-            const msg = Array.isArray(nonField)
-              ? nonField.join(" ")
-              : String(nonField);
-            Swal.fire({ icon: "error", title: "Validation Error", text: msg });
+          const nonFieldCombined = this.combineNonFieldApiMessages(data);
+          if (nonFieldCombined) {
+            Swal.fire({
+              icon: "error",
+              title: "Validation Error",
+              text: nonFieldCombined,
+            });
           }
+
+          const hasUnhandledKeys = Object.entries(data).some(
+            ([k, v]) =>
+              !skipFieldMapKeys.has(k) &&
+              v != null &&
+              ![
+                "name",
+                "sku",
+                "model_number",
+                "category",
+                "brands",
+                "brands_data",
+                "unit_default",
+                "tracking_mode",
+              ].includes(k)
+          );
 
           if (
             !Object.keys(this.fieldErrors).length &&
-            !data.non_field_errors &&
-            !data.detail
+            !nonFieldCombined &&
+            hasUnhandledKeys
           ) {
             Swal.fire({
               icon: "error",
@@ -874,7 +912,7 @@ export default {
             });
           }
         } else {
-          Swal.fire("Error", "Failed to save product", "error");
+          this.showProductSaveError(err);
         }
       } finally {
         this.submitting = false;
@@ -957,6 +995,168 @@ export default {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+    },
+
+    /** True when Axios got an HTML debug page (e.g. Django DEBUG ValidationError trace). */
+    responseLooksLikeHtmlPayload(err) {
+      const ctype = String(
+        err?.response?.headers?.["content-type"] ??
+          err?.response?.headers?.["Content-Type"] ??
+          ""
+      ).toLowerCase();
+      if (ctype.includes("text/html")) return true;
+      const d = err?.response?.data;
+      if (typeof d !== "string" || !d.length) return false;
+      const head = d.trim().slice(0, 500).toLowerCase();
+      return head.startsWith("<!doctype html") || head.includes("<html");
+    },
+
+    /** Django/DRF non-field payloads → single line for alerts (detail, __all__, non_field_errors). */
+    combineNonFieldApiMessages(data) {
+      if (!data || typeof data !== "object") return "";
+      const parts = [];
+      for (const key of ["detail", "__all__", "non_field_errors"]) {
+        const raw = data[key];
+        if (raw == null || raw === "") continue;
+        if (Array.isArray(raw)) parts.push(raw.map(String).join(" "));
+        else parts.push(String(raw));
+      }
+      return parts.filter(Boolean).join(" ").trim();
+    },
+
+    /** Safe body text from JSON error payloads (never embeds HTML). */
+    summarizeApiErrorData(data) {
+      if (data == null) return "";
+      if (typeof data === "string") {
+        const s = data.trim();
+        if (
+          s.toLowerCase().startsWith("<!doctype html") ||
+          s.toLowerCase().includes("<html")
+        ) {
+          return "";
+        }
+        return s;
+      }
+      if (typeof data !== "object" || Array.isArray(data))
+        return String(data);
+
+      const nonFieldOnly = this.combineNonFieldApiMessages(data);
+      const fieldKeys = Object.keys(data).filter(
+        (k) =>
+          !["detail", "__all__", "non_field_errors"].includes(k) &&
+          data[k] != null
+      );
+      if (!fieldKeys.length && nonFieldOnly) return nonFieldOnly;
+
+      if (data.detail != null) {
+        const d = data.detail;
+        const dStr = Array.isArray(d)
+          ? d.map(String).join(" ")
+          : String(d);
+        if (dStr.trim()) return dStr;
+      }
+      if (data.__all__ != null) {
+        const a = data.__all__;
+        return Array.isArray(a) ? a.map(String).join(" ") : String(a);
+      }
+
+      const lines = [];
+      for (const [key, value] of Object.entries(data)) {
+        if (value == null) continue;
+        if (["detail", "__all__", "non_field_errors"].includes(key)) continue;
+        let msg;
+        if (Array.isArray(value)) msg = value.map(String).join(" ");
+        else if (typeof value === "object") msg = JSON.stringify(value);
+        else msg = String(value);
+        lines.push(`${key}: ${msg}`);
+      }
+      if (nonFieldOnly) lines.unshift(nonFieldOnly);
+      return lines.join("\n").trim();
+    },
+
+    /** Non‑400‑JSON failures: avoids dumping HTML debug pages into Swal. */
+    showProductSaveError(err) {
+      if (this.responseLooksLikeHtmlPayload(err)) {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to save product",
+          html: `<div style="text-align:left" class="small">${this.escapeHtml(
+            "The server returned an HTML error page instead of JSON. Typical causes: Django DEBUG=true with an unhandled exception, or a middleware/proxy returning HTML."
+          )}</div><div class="small text-muted mt-2">${this.escapeHtml(
+            "Turn off DEBUG or fix the failing validation on the API so responses use JSON."
+          )}</div>`,
+        });
+        return;
+      }
+
+      const res = err?.response;
+      const status = res?.status;
+      const summary = this.summarizeApiErrorData(res?.data);
+
+      if (!res) {
+        Swal.fire({
+          icon: "error",
+          title: "Could not reach the server",
+          text:
+            err?.message ||
+            "Check your connection and try again.",
+        });
+        return;
+      }
+
+      if (status === 401) {
+        Swal.fire({
+          icon: "error",
+          title: "Sign-in required",
+          text: summary || "Your session may have expired.",
+        });
+        return;
+      }
+      if (status === 403) {
+        Swal.fire({
+          icon: "error",
+          title: "Permission denied",
+          text: summary || "You cannot save this product with your current user.",
+        });
+        return;
+      }
+      if (status === 404) {
+        Swal.fire({
+          icon: "error",
+          title: "Product not found",
+          text: summary || "Open the product again from the list.",
+        });
+        return;
+      }
+      if (status === 409) {
+        Swal.fire({
+          icon: "error",
+          title: "Conflict",
+          text:
+            summary ||
+            "Conflict with existing data (for example SKU or FK in use).",
+        });
+        return;
+      }
+      if (status >= 500) {
+        Swal.fire({
+          icon: "error",
+          title: "Server error",
+          text:
+            summary ||
+            "Something went wrong while saving; try again later.",
+        });
+        return;
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Failed to save product",
+        text:
+          summary ||
+          err?.message ||
+          `Request failed (HTTP ${status}).`,
+      });
     },
   },
 };

@@ -733,7 +733,17 @@ class TransactionFavoriteSerializer(serializers.ModelSerializer):
             for field in required_line_fields:
                 if field not in line:
                     raise serializers.ValidationError(f"Línea {idx} debe contener el campo '{field}'.")
-        
+
+        with_product = sum(
+            1
+            for line in value
+            if isinstance(line, dict) and line.get('product') not in (None, '')
+        )
+        if with_product < 2:
+            raise serializers.ValidationError(
+                'Un favorito requiere al menos 2 líneas con producto.'
+            )
+
         return value
     
     def create(self, validated_data):

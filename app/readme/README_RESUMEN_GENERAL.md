@@ -64,6 +64,7 @@
   - [9.4 Comandos de Gestión](#94-comandos-de-gestión)
   - [9.5 Generar el Fixture JSON de Datos Maestros](#95-generar-el-fixture-json-de-datos-maestros)
   - [9.6 Workflow: Serialized Items e Inventory Transfers](#96-workflow-serialized-items-e-inventory-transfers)
+  - [9.7 Cálculo dinámico de precios en líneas de documento](#97-precios-lineas-documento)
 - [10. Troubleshooting](#10-troubleshooting)
   - [9.1 El Frontend No Carga](#91-el-frontend-no-carga)
   - [9.2 El Backend No Responde](#92-el-backend-no-responde)
@@ -1444,6 +1445,82 @@ Reseña de las funcionalidades de **ítems serializados** y **transferencias ent
 - **API:** CRUD en `/api/inventory-transfers/`; existe además un endpoint de listado para proveedores de datos (`/api/inventory-transfers-provider/`).
 
 En conjunto, **Serialized Items** cubre el registro y trazabilidad por unidad en entradas (p. ej. GRN), y **Inventory Transfers** permite reubicar stock y ítems serializados entre almacenes de forma controlada.
+
+<a id="97-precios-lineas-documento"></a>
+
+### 9.7 Cálculo dinámico de precios en líneas de documento
+
+Esta sección resume **cómo se obtiene y recalcula el precio unitario** en el formulario de transacciones, las **condiciones** de cada camino y **qué endpoints** intervienen. La lógica interactiva vive sobre todo en **`vuefrontend/src/components/transactions/LinesGrid.vue`**, dentro de **`TransactionForm.vue`**; el tipo de documento aporta `is_sales` (venta) y el id del tipo (`document_type_id`).
+
+#### 9.7.1 Modelo de datos relevante (`PriceType` y líneas)
+
+- **`PriceType`** (`appinventory.models`): campo **`pricing_method`** — valores típicos `NONE` (sin precio automático desde costo), **`MARKUP`** o **`MARGIN`**; y **`margin_percent`** (porcentaje 0–100 cuando el método es markup o margen). En validación del modelo, markup/margin requieren porcentaje; margen no puede ser ≥ 100 %.
+- En la línea del documento, el frontend lleva **`unit_price`**, **`price_type`**, **`margin_percent`**, **`pricing_rule`** (p. ej. reflejo del método o manualidad), **`price_manually_edited`** y **`_purchase_unit_cost`** (costo por unidad de compra resuelto vía API, no necesariamente persistido igual en backend al guardar).
+
+#### 9.7.2 API: costo de compra (`purchase-cost`)
+
+- **Vista:** `ProductPurchaseCostAPIView` en `appinventory/views.py`.
+- **`GET /api/products/<product_id>/purchase-cost/?unit=<unit_id>`** (el parámetro `unit` es opcional).
+- Usa **`_purchase_unit_cost_for_product`**: toma registros **`ProductPrice`** con **`is_purchase=True`** y **`is_active=True`**; si se indica **`unit_id`**, prioriza la fila con esa unidad; si no hay coincidencia, devuelve el **primer** precio de compra por `id`.
+- **Respuesta:** `unit_cost` (float o `null`) y `unit_id` (unidad con la que se resolvió el costo).
+
+Sirve para alimentar **`_purchase_unit_cost`** en la grilla al cambiar **unidad**, **producto** o **tipo de precio**, antes de aplicar markup/margen sobre el costo.
+
+#### 9.7.3 API: precio predeterminado de catálogo (`default-price`)
+
+- **Vista:** `ProductDefaultPriceAPIView` en `appinventory/views.py`.
+- **`GET /api/products/<product_id>/default-price/`** con query params opcionales como **`brand_id`**, **`document_type_id`**.
+- Con **`document_type_id`**:
+  - Si el tipo es **compra** (`is_purchase`): primer **`ProductPrice`** de compra activo.
+  - Si el tipo es **venta** (`is_sales`): precio de venta con **`is_default=True`**; si no existe, primer precio de venta activo.
+- **Fallback:** precio con `is_default=True`, luego cualquier precio activo.
+- La respuesta incluye **`unit`**, **`unit_price`**, **`price_type`**, datos de marca y **`purchase_unit_cost`** (derivado del costo de compra para la unidad del precio elegido vía `_purchase_unit_cost_for_product`).
+- **`unit` como query parameter:** La vista **`ProductDefaultPriceAPIView`** (en la versión descrita aquí) **no utiliza `unit`** en la cadena de consulta para elegir el registro `ProductPrice`. El SPA (`LinesGrid.vue`) puede añadir `unit` igualmente en la URL; ese valor es **transparente para el servidor** hasta que exista soporte explícito. La unidad del JSON de respuesta es la del **`ProductPrice` seleccionado** por tipo de documento y fallbacks del apartado anterior.
+
+#### 9.7.4 Documentos de venta (`is_sales`) vs otros
+
+| Aspecto | Documento de venta (`is_sales`) | No venta |
+|--------|----------------------------------|----------|
+| Columna **Margin %** en grilla | Visible y editable según permisos | Oculta; no participa en la UX de margen/markup automático desde costo como en ventas |
+| Auto-precio desde **costo + PriceType** (`MARKUP` / `MARGIN`) | Activo cuando se cumplen las condiciones del apartado siguiente | No aplica ese flujo desde costo en el mismo modo “venta” |
+| Sugerencias / hints de pricing | Pueden mostrarse (margen/markup/manual) | No orientadas al margen de venta desde costo |
+
+#### 9.7.5 Cuándo el precio unitario sale del **costo de compra** (ventas)
+
+En el frontend, una función de **auto-pricing desde costo** solo recalcula **`unit_price`** si **todas** estas condiciones se cumplen (resumen conceptual):
+
+1. El documento es de **venta** (`documentTypeIsSales`).
+2. Hay **producto**, **unidad** y **tipo de precio** en la línea.
+3. El **`PriceType`** elegido tiene **`pricing_method`** **`MARKUP`** o **`MARGIN`** (no `NONE`).
+4. Existe **`_purchase_unit_cost`** **> 0** (tras `purchase-cost`, o información traída por `default-price` cuando aplique).
+5. Hay porcentaje usable: **`margin_percent`** en la línea o el **`margin_percent`** del tipo de precio.
+6. El usuario **no** dejó la línea en modo **precio editado manualmente** (`price_manually_edited`); la regla de negocio en UI evita sobrescribir un precio que el usuario fijó a mano.
+
+**Fórmulas (mismo criterio que en la UI):** sobre costo **`c`** y porcentaje **`p`**: **markup:** precio ≈ **`c × (1 + p/100)`**; **margen:** precio ≈ **`c / (1 − p/100)`** (con `p < 100`).
+
+Al **cambiar tipo de precio**, el cliente puede **sincronizar** `margin_percent` y `pricing_rule` desde la opción del desplegable (`priceTypesOptions`: `pricing_method`, `margin_percent`).
+
+#### 9.7.6 Cuándo se usa **precio de catálogo** (`default-price`)
+
+Si **no** se cumple la cadena del apartado 9.7.5 (por ejemplo método `NONE`, costo ausente o cero, o sin MARKUP/MARGIN), el SPA hace **`GET default-price`** típicamente con **`document_type_id`** (y parámetros que el backend sí interpreta, p. ej. **`brand_id`**) para rellenar **`unit_price`** y, si viene en la respuesta, **`purchase_unit_cost`**. Tras cambiar la **unidad** en pantalla puede seguir llamando a este endpoint incluyendo `unit` en la query por coherencia con otras llamadas, pero **el precio devuelto no se filtra aún por esa unidad en el servidor** (ver 9.7.3). Esto cubre: selección inicial de producto, cambio de **unidad** o **tipo de precio** cuando el precio **no** sale del bloque «costo + margen/markup».
+
+#### 9.7.7 Coherencia de **cantidad**, **descuento** y totales de línea
+
+- **Cantidad (`Qty`):** no debe cambiar el **precio unitario** por sí sola; solo el **importe de línea** y los totales del documento (**subtotal**, **descuento**, **total**), que el formulario agrega en base a **`final_price`** (o equivalente) por línea.
+- **Porcentaje de descuento (`Disc %`):** recalcula el importe de línea manteniendo el precio unitario (salvo decisiones posteriores del usuario sobre el campo precio).
+- **Importe de línea después de descuento (referencia frontend):** en esencia **`cantidad × unit_price × (1 − Disc%/100)`** (con el descuento acotado a 0–100 % donde la UI lo aplica).
+
+#### 9.7.8 **Margin %** y modo manual
+
+- Si **`pricing_rule`** (o la lógica asociada) indica precio **manual**, al editar solo **Margen %** no se debe sobreescribir el **precio unitario** automáticamente; igualmente se actualizan **totales de línea** donde corresponda.
+- Si **no** es manual y el método del tipo de precio es markup/margen, al cambiar **Margen %** se puede volver a derivar **`unit_price`** desde **`_purchase_unit_cost`** y luego recalcular la línea.
+
+#### 9.7.9 Aclaración: `ProductPrice` (`is_purchase` / `is_sale`) y método del tipo de precio
+
+- **Si el `PriceType` usa `MARKUP` o `MARGIN`:** en documentos de venta, el **costo unitario de compra** que alimenta la fórmula proviene de filas **`appinventory_productprice`** con **`is_purchase=True`** (activas; el API `purchase-cost` prioriza la unidad de la línea cuando aplica). Sobre ese costo se aplica markup o margen para obtener el **precio de venta** de la línea.
+- **Si el método es `NONE` (“list price only”):** no significa que el sistema “no use” precios de venta en `ProductPrice`. Significa que **no** se calcula el precio de venta con la fórmula desde el costo de compra. El precio de lista / catálogo sigue apoyándose en filas de **venta**, típicamente **`is_sale=True`** (p. ej. elección en `default-price`: predeterminado de venta y fallbacks), distinto del camino “costo `is_purchase` + fórmula”.
+
+La guía en pantalla para administradores del tipo de precio está en **`vuefrontend/src/components/inventory/PriceTypePricingGuide.vue`**.
 
 ---
 
