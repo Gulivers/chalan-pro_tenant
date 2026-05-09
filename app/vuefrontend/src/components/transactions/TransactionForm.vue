@@ -308,8 +308,14 @@
 
         <hr class="my-4" />
 
+        <p v-if="linesGridDisabled" class="text-muted small mb-2">
+          Select a document type or import a favorite to edit lines.
+        </p>
+
         <!-- Lines Grid -->
         <LinesGrid
+          ref="linesGridRef"
+          :disabled="linesGridDisabled"
           :lines="lines"
           @update:lines="lines = $event"
           :document-id="idParam"
@@ -348,6 +354,23 @@
                   <span class="fw-bold">Grand total</span>
                   <span class="fw-bold">{{ currency(grand_total) }}</span>
                 </div>
+                <div
+                  v-if="currentDocumentTypeIsSales"
+                  class="d-flex justify-content-between mt-2 pt-2 border-top">
+                  <div>
+                    <span class="fw-semibold text-success">Beneficio estimado</span>
+                    <div class="small text-muted">
+                      Según costo de compra por línea (informativo)
+                    </div>
+                  </div>
+                  <span
+                    class="fw-semibold align-self-start"
+                    :class="
+                      estimated_sale_profit >= 0 ? 'text-success' : 'text-danger'
+                    ">
+                    {{ currency(estimated_sale_profit) }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -384,6 +407,7 @@ import {
   computed,
   onMounted,
   watch,
+  nextTick,
   getCurrentInstance,
   defineAsyncComponent,
   defineComponent,
@@ -550,6 +574,9 @@ function mergeDuplicateTransactionLines(rows) {
     if (existing) {
       existing.quantity =
         Number(existing.quantity || 0) + Number(row.quantity || 0);
+      if (row.__favoriteImportReprice) {
+        existing.__favoriteImportReprice = true;
+      }
     } else {
       out.push(row);
     }
@@ -579,6 +606,21 @@ const total_discount = computed(() =>
 /** Total del documento: Σ final_price por línea (= subtotal_gross − total_discount salvo redondeo por línea) */
 const grand_total = computed(() =>
   lines.value.reduce((sum, l) => sum + Number(l.final_price || 0), 0)
+);
+
+/** Costo estimado: Σ qty × _purchase_unit_cost donde el costo unitario es conocido */
+const estimated_total_purchase_cost = computed(() =>
+  lines.value.reduce((sum, l) => {
+    if (!l.product) return sum;
+    const c = Number(l._purchase_unit_cost);
+    if (!Number.isFinite(c) || c < 0) return sum;
+    return sum + Number(l.quantity || 0) * c;
+  }, 0)
+);
+
+/** Beneficio aprox. (frontend): grand_total − costo estimado; la fila del total la muestra solo si es venta */
+const estimated_sale_profit = computed(
+  () => grand_total.value - estimated_total_purchase_cost.value
 );
 
 // Computed para determinar si el documento es operacional
@@ -623,6 +665,14 @@ const selectedFavoriteId = ref(null);
 const favoriteModalEditMode = ref(false);
 const favoriteToEdit = ref(null);
 const favoriteSelectorRef = ref(null);
+const linesGridRef = ref(null);
+/** Permite usar la rejilla sin tipo de documento tras importar líneas desde un favorito */
+const linesGridUnlockedByFavoriteImport = ref(false);
+
+const linesGridDisabled = computed(
+  () =>
+    !form.document_type && !linesGridUnlockedByFavoriteImport.value
+);
 
 // Opciones adicionales para los componentes
 const buildersOptions = ref([]);
@@ -778,12 +828,20 @@ async function onFavoriteSelected(favoriteData) {
     product_label: line.product_label || "",
     quantity: line.quantity || 1,
     unit: line.unit,
-    unit_price: line.unit_price || 0,
-    discount_percentage: line.discount_percentage || 0,
-    final_price: line.final_price || 0,
+    // Precios desde JSON pueden estar desfasados — se reprecian con reglas vigentes antes de usar
+    unit_price: line.unit_price ?? 0,
+    discount_percentage: line.discount_percentage ?? 0,
+    final_price: line.final_price ?? 0,
     warehouse: line.warehouse,
     price_type: line.price_type,
-    brand: line.brand,
+    brand: line.brand ?? null,
+    brands: Array.isArray(line.brands) ? line.brands : [],
+    pricing_rule: line.pricing_rule ?? null,
+    margin_percent: line.margin_percent ?? null,
+    price_manually_edited: false,
+    _purchase_unit_cost: line._purchase_unit_cost ?? null,
+    _suppressPriceEvent: false,
+    __favoriteImportReprice: true,
     _errors: {},
   }));
 
@@ -849,7 +907,25 @@ async function onFavoriteSelected(favoriteData) {
     }
   }
 
+  if (hasIncomingLines) {
+    await nextTick();
+    try {
+      if (
+        linesGridRef.value?.rehydratePricingAfterFavoriteImport &&
+        typeof linesGridRef.value.rehydratePricingAfterFavoriteImport ===
+          "function"
+      ) {
+        await linesGridRef.value.rehydratePricingAfterFavoriteImport();
+      }
+    } catch (e) {
+      console.error("❌ Rehydrate pricing after favorite import:", e);
+    }
+  }
+
   syncTotals();
+
+  linesGridUnlockedByFavoriteImport.value =
+    !!form.document_type || hasIncomingLines;
 
   console.log("✅ Favorite imported successfully");
 }
@@ -997,6 +1073,7 @@ function resetFormForNewTransaction() {
 
   // Limpiar selección de favorito
   selectedFavoriteId.value = null;
+  linesGridUnlockedByFavoriteImport.value = false;
 }
 
 // Función para guardar y agregar otra transacción

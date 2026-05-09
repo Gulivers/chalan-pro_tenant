@@ -500,12 +500,10 @@ export default {
     };
 
     const editItem = (id) => {
-      // Open in new tab
-      const url = router.resolve({
+      router.push({
         name: "product-form",
         query: { mode: "edit", id: id },
       });
-      window.open(url.href, "_blank");
     };
 
     const deleteItem = (id) => {

@@ -7,11 +7,12 @@
             <button
               class="btn btn-outline-primary"
               type="button"
+              :disabled="disabled"
               @click="addLine"
               v-tt
               data-title="Add a new line to the document">
               <i class="bi bi-plus-lg me-1"></i>
-              Add Row
+              Agregar fila
             </button>
             <button
               class="btn btn-outline-info"
@@ -59,12 +60,13 @@
           <button
             class="btn btn-outline-primary btn-sm flex-fill"
             type="button"
+            :disabled="disabled"
             @click="addLine"
             v-tt
             data-title="Add a new line to the document">
             <i class="bi bi-plus-lg"></i>
-            <span class="d-none d-sm-inline ms-1">Add Row</span>
-            <span class="d-sm-none ms-1">Add</span>
+            <span class="d-none d-sm-inline ms-1">Agregar fila</span>
+            <span class="d-sm-none ms-1">Fila</span>
           </button>
           <button
             class="btn btn-outline-info btn-sm flex-fill"
@@ -153,6 +155,7 @@
                 :reduce="o => o.value"
                 :filterable="true"
                 :loading="loading.products[idx]"
+                :disabled="disabled"
                 v-model="row.product"
                 @search="q => searchProducts(idx, q)"
                 @option:selected="opt => onProductSelected(idx, opt)"
@@ -202,9 +205,11 @@
                 step="0.01"
                 class="form-control form-control-sm"
                 :class="{ 'is-invalid': row._errors?.quantity }"
+                :disabled="disabled"
                 v-model.number="row.quantity"
                 @input="onQuantityInput(idx)"
-                @keydown.enter="focusNextField(idx, 'unit')"
+                @blur="onQuantityBlurMerge(idx)"
+                @keydown.enter="onQuantityEnterMerge(idx, $event)"
                 @focus="$event.target.select()"
                 placeholder="0.00" />
               <div class="text-danger small" v-if="row._errors?.quantity">{{ row._errors.quantity[0] }}</div>
@@ -218,6 +223,7 @@
                  :options="unitsOptions"
                  :reduce="o => o.value"
                  label="label"
+                 :disabled="disabled"
                  v-model="row.unit"
                  @update:modelValue="onUnitUpdated(idx)"
                  @keydown.enter="focusNextField(idx, 'unit_price')"
@@ -243,6 +249,7 @@
                 step="0.01"
                 class="form-control form-control-sm"
                 :class="{ 'is-invalid': row._errors?.unit_price }"
+                :disabled="disabled"
                 v-model.number="row.unit_price"
                 @input="onUnitPriceInput(idx)"
                 @keydown.enter="focusNextField(idx, 'discount_percentage')"
@@ -262,6 +269,7 @@
                 step="0.01"
                 class="form-control form-control-sm"
                 :class="{ 'is-invalid': row._errors?.discount_percentage }"
+                :disabled="disabled"
                 v-model.number="row.discount_percentage"
                 @input="onDiscountPercentageInput(idx)"
                 @keydown.enter="focusNextField(idx, 'warehouse')"
@@ -280,6 +288,7 @@
                  :options="warehousesOptions"
                  :reduce="o => o.value"
                  label="label"
+                 :disabled="disabled"
                  v-model="row.warehouse"
                  @keydown.enter="focusNextField(idx, 'price_type')"
                  :class="{ 'is-invalid': row._errors?.warehouse }"
@@ -302,6 +311,7 @@
                  :options="priceTypesOptions"
                  :reduce="o => o.value"
                  label="label"
+                 :disabled="disabled"
                  v-model="row.price_type"
                  @update:modelValue="onPriceTypeUpdated(idx)"
                  @keydown.enter="focusNextField(idx, documentTypeIsSales ? 'margin_percent' : 'brand')"
@@ -334,7 +344,7 @@
                 class="form-control form-control-sm"
                 :class="{ 'is-invalid': row._errors?.margin_percent }"
                 v-model.number="row.margin_percent"
-                :disabled="!canEditLineMargin"
+                :disabled="disabled || !canEditLineMargin"
                 @input="onMarginPercentInput(idx)"
                 @keydown.enter="focusNextField(idx, 'brand')"
                 @focus="$event.target.select()"
@@ -355,7 +365,7 @@
                  v-model="row.brand"
                  @keydown.enter="focusNextRow(idx)"
                  :placeholder="(row.brands && row.brands.length > 0) ? 'Brand...' : 'Load brands from product...'"
-                 :disabled="!row.product">
+                 :disabled="disabled || !row.product">
                  <template #selected-option="{ label }">
                    <div class="text-truncate" style="max-width: 130px">{{ label }}</div>
                  </template>
@@ -417,6 +427,8 @@
     mergeDuplicates: { type: Boolean, default: true },
     /** Solo documentos de venta: precio automático desde costo de compra + tipo de precio */
     documentTypeIsSales: { type: Boolean, default: false },
+    /** Solo bloquea «Agregar fila» y los inputs de línea (sin overlay sobre la tabla) */
+    disabled: { type: Boolean, default: false },
   });
   const emit = defineEmits(['update:lines', 'recalc', 'open-asset-tags']);
 
@@ -652,6 +664,11 @@
           r._suppressPriceEvent = false;
         });
       }
+      // Mismo ProductPrice que fija el precio: reflejar su tipo de precio en el select
+      if (data.price_type != null && data.price_type !== undefined) {
+        r.price_type = data.price_type;
+        syncPriceTypeMetadataToRow(idx);
+      }
       if (data.purchase_unit_cost != null) {
         r._purchase_unit_cost = Number(data.purchase_unit_cost);
       }
@@ -758,6 +775,37 @@
   /** La cantidad no cambia el precio unitario; sí el importe de línea y totales. */
   function onQuantityInput(idx) {
     recalcRow(idx);
+  }
+
+  /**
+   * Tras escribir cantidad: unificar duplicados al salir del campo (blur).
+   * Comprueba __key para no fusionar con índice equivocado si Enter ya fusionó antes del blur.
+   */
+  function onQuantityBlurMerge(idx) {
+    const row = linesLocal.value[idx];
+    if (!row?.__key) return;
+    const keySnapshot = row.__key;
+    queueMicrotask(() => {
+      if (!props.mergeDuplicates) return;
+      const still = linesLocal.value[idx];
+      if (!still || still.__key !== keySnapshot) return;
+      maybeMergeDuplicate(idx);
+    });
+  }
+
+  /**
+   * Enter en cantidad: intenta unificar y enfoca unidad en la fila que queda (o la actual si no hubo merge).
+   */
+  function onQuantityEnterMerge(idx, e) {
+    if (e?.preventDefault) e.preventDefault();
+    if (props.mergeDuplicates) {
+      const survivorIdx = maybeMergeDuplicate(idx);
+      if (survivorIdx !== null && survivorIdx !== undefined) {
+        nextTick(() => focusNextField(survivorIdx, 'unit'));
+        return;
+      }
+    }
+    focusNextField(idx, 'unit');
   }
 
   function onUnitPriceInput(idx) {
@@ -1068,24 +1116,18 @@
       }
     }
 
-    // Optional: prevent duplicates (product+unit+brand) → merge quantities
-    let wasMerged = false;
-    if (props.mergeDuplicates) {
-      wasMerged = maybeMergeDuplicate(idx);
-    }
+    // La unificación de duplicados (product+unit+brand) ocurre al terminar de editar cantidad
+    // (blur o Enter), no aquí, para permitir ajustar cantidad antes de sumar.
 
-    // Recalculate row after product selection (solo si no fue mergeada)
-    if (!wasMerged) {
-      syncPriceTypeMetadataToRow(idx);
-      if (r.product && r.unit) {
-        await refreshPurchaseCost(idx);
-      }
-      if (props.documentTypeIsSales) {
-        const applied = tryApplyAutoPricing(idx);
-        if (!applied) await applyDefaultCatalogPrice(idx);
-      }
-      recalcRow(idx);
+    syncPriceTypeMetadataToRow(idx);
+    if (r.product && r.unit) {
+      await refreshPurchaseCost(idx);
     }
+    if (props.documentTypeIsSales) {
+      const applied = tryApplyAutoPricing(idx);
+      if (!applied) await applyDefaultCatalogPrice(idx);
+    }
+    recalcRow(idx);
   }
 
   function onProductCleared(idx) {
@@ -1103,22 +1145,112 @@
     recalcRow(idx);
   }
 
+  /**
+   * Fallback de tipo de precio cuando la línea (p. ej. favorito) no lo trae y hay cuenta operativa.
+   */
+  async function ensureWorkAccountDefaultPriceTypeIfNeeded(idx) {
+    const r = linesLocal.value[idx];
+    if (!r || props.workAccountId === null || props.workAccountId === undefined || r.price_type) return;
+    try {
+      const { data } = await axios.get(`/api/work-accounts/${props.workAccountId}/`);
+      if (data.default_price_type) {
+        r.price_type = data.default_price_type;
+      }
+    } catch (error) {
+      if (error.response?.status === 404) {
+        console.warn(`Work account ${props.workAccountId} not found, skipping default price type`);
+      } else {
+        console.warn('Could not fetch work account default price type:', error);
+      }
+    }
+  }
+
+  /**
+   * Recalcula precio por línea con las mismas reglas que al elegir producto en el select
+   * (markup/margen desde costo, catalog default-price si aplica).
+   * Uso: import desde favoritos (lines_data puede traer precios obsoletos).
+   */
+  async function rehydratePricingForRow(idx) {
+    const r = linesLocal.value[idx];
+    if (!r?.product) return;
+
+    r.price_manually_edited = false;
+
+    await updateBrandsForProduct(idx, r.product);
+
+    try {
+      const params = {};
+      if (props.documentTypeId) params.document_type_id = props.documentTypeId;
+      if (r.unit) params.unit = r.unit;
+      const { data } = await axios.get(`/api/products/${r.product}/default-price/`, { params });
+
+      if (!r.unit && data.unit) r.unit = data.unit;
+      if (data.price_type != null && data.price_type !== undefined) {
+        r.price_type = data.price_type;
+      }
+      if (data.default_brand?.id != null && (r.brand == null || r.brand === '')) {
+        r.brand = data.default_brand.id;
+      }
+      if (data.purchase_unit_cost != null) {
+        r._purchase_unit_cost = Number(data.purchase_unit_cost);
+      }
+    } catch (e) {
+      console.warn('rehydratePricingForRow default-price:', e);
+    }
+
+    await ensureWorkAccountDefaultPriceTypeIfNeeded(idx);
+
+    syncPriceTypeMetadataToRow(idx);
+
+    if (r.product && r.unit) {
+      await refreshPurchaseCost(idx);
+    }
+
+    if (props.documentTypeIsSales) {
+      const applied = tryApplyAutoPricing(idx);
+      if (!applied) await applyDefaultCatalogPrice(idx);
+    } else {
+      await applyDefaultCatalogPrice(idx);
+    }
+
+    recalcRow(idx);
+  }
+
+  /**
+   * Tras importar favoritos: repreciar solo líneas marcadas por TransactionForm
+   * (__favoriteImportReprice), sin alterar líneas que ya había antes del append.
+   */
+  async function rehydratePricingAfterFavoriteImport() {
+    await nextTick();
+    for (let i = 0; i < linesLocal.value.length; i++) {
+      const row = linesLocal.value[i];
+      if (!row?.product || !row.__favoriteImportReprice) continue;
+      await rehydratePricingForRow(i);
+      delete row.__favoriteImportReprice;
+    }
+    emit('recalc');
+  }
+
+  /**
+   * Si hay otra línea con mismo product+unit+brand, suma cantidad ahí y elimina la fila actual.
+   * @returns {number|null} Índice de la fila que permanece (tras splice), o null si no hubo merge.
+   */
   function maybeMergeDuplicate(idx) {
     const r = linesLocal.value[idx];
-    if (!r.product) return false;
+    if (!r?.product) return null;
 
     for (let i = 0; i < linesLocal.value.length; i++) {
       if (i === idx) continue;
       const o = linesLocal.value[i];
       if (o.product === r.product && (o.unit || null) === (r.unit || null) && (o.brand || null) === (r.brand || null)) {
-        // merge into older row
+        const keepIdx = i;
         o.quantity = Number(o.quantity || 0) + Number(r.quantity || 0);
-        recalcRow(i);
+        recalcRow(keepIdx);
         linesLocal.value.splice(idx, 1);
-        return true; // La línea fue eliminada/mergeada
+        return keepIdx < idx ? keepIdx : keepIdx - 1;
       }
     }
-    return false; // No se encontró duplicado
+    return null;
   }
 
   // Validation function for lines
@@ -1256,9 +1388,10 @@
     }
   });
 
-  // Expose validation function
   defineExpose({
     validateLines,
+    rehydratePricingAfterFavoriteImport,
+    rehydratePricingForRow,
   });
 </script>
 
@@ -1284,6 +1417,40 @@
 
   :deep(.is-invalid .vs__dropdown-toggle:focus) {
     box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+  }
+
+  /*
+   * Deshabilitado: mismo aspecto que .form-control:disabled (Bootstrap),
+   * vue-select por defecto usa gris casi blanco (--vs-state-disabled-bg).
+   */
+  :deep(.vs--disabled) {
+    --vs-disabled-bg: var(--bs-secondary-bg, #e9ecef);
+    --vs-state-disabled-bg: var(--bs-secondary-bg, #e9ecef);
+  }
+
+  :deep(.vs--disabled .vs__dropdown-toggle) {
+    background-color: var(--bs-secondary-bg, #e9ecef) !important;
+    border-color: var(--bs-border-color, #ced4da);
+  }
+
+  :deep(.vs--disabled .vs__search) {
+    background-color: transparent !important;
+    color: var(--bs-secondary-color, #6c757d);
+  }
+
+  :deep(.vs--disabled.vs--single .vs__selected) {
+    color: var(--bs-secondary-color, #6c757d);
+  }
+
+  :deep(.vs--disabled .vs__open-indicator) {
+    fill: var(--bs-secondary-color, #6c757d);
+    opacity: 0.65;
+  }
+
+  .card-header .btn.btn-outline-primary:disabled,
+  .card-header .btn.btn-outline-primary.disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
   }
 
   /* Mejorar la apariencia de los inputs */
