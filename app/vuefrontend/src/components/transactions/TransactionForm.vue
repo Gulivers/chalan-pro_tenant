@@ -157,7 +157,7 @@
               </div>
 
               <div class="col-12">
-                <!-- Si viene desde schedule, mostrar título del work account (independiente del tipo de documento) -->
+                <!-- From schedule: show work account title (independent of document type) -->
                 <div v-if="isFromSchedule && workAccountTitle" class="mb-3">
                   <label class="form-label">Work Account</label>
                   <div
@@ -173,17 +173,17 @@
                     <strong>{{ workAccountTitle }}</strong>
                   </div>
                   <small class="form-text text-muted">
-                    Work Account seleccionado desde el Schedule
+                    Work account selected from the schedule
                   </small>
                 </div>
 
-                <!-- Mostrar BuilderSelector si NO es operacional Y NO viene desde schedule -->
+                <!-- Builder selector when document is not operational and not from schedule -->
                 <BuilderSelector
                   v-else-if="!isOperationalDocument && !isFromSchedule"
                   v-model="form.builder"
                   :error="errors.builder" />
 
-                <!-- Mostrar WorkAccountSelector si ES operacional Y NO viene desde schedule -->
+                <!-- Work account selector when document is operational and not from schedule -->
                 <WorkAccountSelector
                   v-else-if="isOperationalDocument && !isFromSchedule"
                   v-model="form.work_account"
@@ -227,7 +227,7 @@
           <!-- Right Column: Date and Notes -->
           <div class="col-12 col-md-6">
             <div class="row g-2">
-              <!-- Mobile: Stack favorites and date vertically, Desktop: Side by side -->
+              <!-- Mobile: stack favorites and date; desktop: side by side -->
               <div class="col-12 col-sm-6">
                 <label class="form-label d-flex gap-1">Add to favorites</label>
                 <div class="d-flex flex-column align-items-start">
@@ -271,7 +271,7 @@
                   @edit-favorite="onEditFavorite" />
               </div>
 
-              <!-- Botón para actualizar favorito cuando se ha importado uno -->
+              <!-- Update favorite when one is imported -->
               <div class="col-12" v-if="selectedFavoriteId && !isEditMode">
                 <div class="d-flex justify-content-end">
                   <button
@@ -358,9 +358,9 @@
                   v-if="currentDocumentTypeIsSales"
                   class="d-flex justify-content-between mt-2 pt-2 border-top">
                   <div>
-                    <span class="fw-semibold text-success">Beneficio estimado</span>
+                    <span class="fw-semibold text-success">Estimated profit</span>
                     <div class="small text-muted">
-                      Según costo de compra por línea (informativo)
+                      Based on purchase cost per line (informational)
                     </div>
                   </div>
                   <span
@@ -378,7 +378,7 @@
       </div>
     </div>
 
-    <!-- Modal Serial Number Assignment (post-save cuando hay SerializedItems) -->
+    <!-- Serial number assignment modal (after save when serialized items exist) -->
     <AssetTagAssignmentModal
       :show="showAssetTagModal"
       :document-id="documentIdForAssetTagModal"
@@ -386,7 +386,7 @@
       @close="onAssetTagModalClose"
       @saved="onAssetTagModalSaved" />
 
-    <!-- Modal para favoritos -->
+    <!-- Transaction favorites modal -->
     <TransactionFavoriteModal
       :transaction-data="currentTransactionData"
       :document-types-options="documentTypesOptions"
@@ -1190,7 +1190,7 @@ async function downloadTransactionPDF(documentId) {
     });
 
     if (!response.data || !response.data.file) {
-      throw new Error("No se recibió el archivo PDF");
+      throw new Error("No PDF file was returned from the server.");
     }
 
     // Decodificar base64 y crear blob
@@ -1237,8 +1237,8 @@ async function downloadTransactionPDF(documentId) {
     await Swal.fire({
       icon: "error",
       title: "Error",
-      text: "No se pudo generar el PDF del documento. Por favor, intente nuevamente.",
-      confirmButtonText: "Aceptar",
+      text: "Could not generate the document PDF. Please try again.",
+      confirmButtonText: "OK",
     });
     return false;
   }

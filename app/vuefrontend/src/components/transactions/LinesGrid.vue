@@ -12,7 +12,7 @@
               v-tt
               data-title="Add a new line to the document">
               <i class="bi bi-plus-lg me-1"></i>
-              Agregar fila
+              Add Row
             </button>
             <button
               class="btn btn-outline-info"
@@ -22,7 +22,7 @@
               v-tt
               data-title="Duplicate the selected lines">
               <i class="bi bi-files me-1"></i>
-              Duplicate selected
+              Duplicate Selected
             </button>
             <button
               class="btn btn-outline-danger"
@@ -32,7 +32,7 @@
               v-tt
               data-title="Remove the selected lines">
               <i class="bi bi-trash me-1"></i>
-              Delete selected
+              Delete Selected
             </button>
             <button
               v-if="documentId && documentTypeCreatesSerializedItems"
@@ -65,8 +65,8 @@
             v-tt
             data-title="Add a new line to the document">
             <i class="bi bi-plus-lg"></i>
-            <span class="d-none d-sm-inline ms-1">Agregar fila</span>
-            <span class="d-sm-none ms-1">Fila</span>
+            <span class="d-none d-sm-inline ms-1">Add Row</span>
+            <span class="d-sm-none ms-1">Add</span>
           </button>
           <button
             class="btn btn-outline-info btn-sm flex-fill"
@@ -393,7 +393,7 @@
                   @click="duplicateRow(idx)"
                   title="Duplicate line">
                   <i class="bi bi-copy"></i>
-                  <img src="@/assets/img/duplicate-alt.svg" alt="Duplicar" style="width: 18px; height: 18px; margin-left: 2px;" />
+                  <img src="@/assets/img/duplicate-alt.svg" alt="Duplicate" style="width: 18px; height: 18px; margin-left: 2px;" />
                 </button>
                 <button class="btn btn-sm btn-outline-danger" type="button" @click="removeRow(idx)" title="Remove line">
                   <i class="bi bi-x-lg"></i>
@@ -403,6 +403,84 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Bottom toolbar: same actions as header when the grid has many rows -->
+    <div class="card-footer bg-light border-top py-2 px-3 lines-grid-footer-actions">
+      <div class="d-none d-md-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex gap-2 flex-wrap">
+          <button
+            class="btn btn-outline-primary btn-sm"
+            type="button"
+            :disabled="disabled"
+            @click="addLine"
+            v-tt
+            data-title="Add a new line to the document">
+            <i class="bi bi-plus-lg me-1"></i>
+            Add Row
+          </button>
+          <button
+            class="btn btn-outline-info btn-sm"
+            type="button"
+            :disabled="!hasSelection"
+            @click="duplicateSelected"
+            v-tt
+            data-title="Duplicate the selected lines">
+            <i class="bi bi-files me-1"></i>
+            Duplicate Selected
+          </button>
+          <button
+            class="btn btn-outline-danger btn-sm"
+            type="button"
+            :disabled="!hasSelection"
+            @click="removeSelected"
+            v-tt
+            data-title="Remove the selected lines">
+            <i class="bi bi-trash me-1"></i>
+            Delete Selected
+          </button>
+        </div>
+        <div class="small text-muted">Rows: {{ linesLocal?.length || 0 }}</div>
+      </div>
+
+      <div class="d-md-none d-flex gap-1 flex-wrap">
+        <button
+          class="btn btn-outline-primary btn-sm flex-fill"
+          type="button"
+          :disabled="disabled"
+          @click="addLine"
+          v-tt
+          data-title="Add a new line to the document">
+          <i class="bi bi-plus-lg"></i>
+          <span class="d-none d-sm-inline ms-1">Add Row</span>
+          <span class="d-sm-none ms-1">Add</span>
+        </button>
+        <button
+          class="btn btn-outline-info btn-sm flex-fill"
+          type="button"
+          :disabled="!hasSelection"
+          @click="duplicateSelected"
+          v-tt
+          data-title="Duplicate the selected lines">
+          <i class="bi bi-files"></i>
+          <span class="d-none d-sm-inline ms-1">Duplicate</span>
+          <span class="d-sm-none ms-1">Copy</span>
+        </button>
+        <button
+          class="btn btn-outline-danger btn-sm flex-fill"
+          type="button"
+          :disabled="!hasSelection"
+          @click="removeSelected"
+          v-tt
+          data-title="Remove the selected lines">
+          <i class="bi bi-trash"></i>
+          <span class="d-none d-sm-inline ms-1">Delete</span>
+          <span class="d-sm-none ms-1">Del</span>
+        </button>
+      </div>
+      <div class="d-md-none small text-muted mt-2 text-end">
+        Rows: {{ linesLocal?.length || 0 }}
+      </div>
     </div>
   </div>
 </template>
@@ -427,7 +505,7 @@
     mergeDuplicates: { type: Boolean, default: true },
     /** Solo documentos de venta: precio automático desde costo de compra + tipo de precio */
     documentTypeIsSales: { type: Boolean, default: false },
-    /** Solo bloquea «Agregar fila» y los inputs de línea (sin overlay sobre la tabla) */
+    /** When true, disables Add Row and line inputs only (no full overlay). */
     disabled: { type: Boolean, default: false },
   });
   const emit = defineEmits(['update:lines', 'recalc', 'open-asset-tags']);
