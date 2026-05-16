@@ -4,7 +4,7 @@ from .views import (
     ContractViewSet, WorkPriceViewSet, ContractDetailsViewSet, 
     BuilderViewSet, JobViewSet, HouseModelViewSet, LoginView,
     validate_token, logout_view, weekly_summary, weekly_summary_list,
-    monthly_summary, login_view, user_permissions, request_password_reset, reset_password_confirm, 
+    monthly_summary, login_view, user_permissions,
     UserDetailView, get_house_model_jobs, geocode_view, download_contract_pdf,
     BuilderReadOnlyViewSet, JobReadOnlyViewSet, HouseReadOnlyViewSet
 )
@@ -31,8 +31,6 @@ urlpatterns = [
     path('api/logout/', logout_view, name='logout'),
     path('api/login/', login_view, name='api_login'),
     path('api/user-permissions/', user_permissions, name='user_permissions'),
-    path('api/request-password-reset/', request_password_reset, name='request_password_reset'),
-    path('api/password-reset-confirm/<uidb64>/<token>/', reset_password_confirm, name='password_reset_confirm'),
     path('api/weekly_summary/', weekly_summary, name='weekly_summary'),
     path('api/weekly_summary_list/', weekly_summary_list, name='weekly_summary_list'),
     path('api/monthly_summary/', monthly_summary, name='monthly_summary'),

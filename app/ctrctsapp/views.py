@@ -28,12 +28,6 @@ from datetime import datetime, timedelta
 
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
-from django.core.mail import EmailMultiAlternatives
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes
-from django.contrib.auth.tokens import default_token_generator
-from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.template.loader import render_to_string
 from django.db import connection
@@ -89,46 +83,6 @@ def _resolve_request_tenant(request):
     return None
 
 
-def _frontend_base_url_for_password_reset(request):
-    """
-    Base URL for password-reset links: the same origin the user used (tenant host),
-    not settings.FRONT_URL. If the request hits api.<TENANT_BASE_DOMAIN>, use the
-    tenant's primary domain from tenants_domain.
-    """
-    meta = request.META
-    proto = (meta.get('HTTP_X_FORWARDED_PROTO') or '').split(',')[0].strip().lower()
-    if not proto:
-        proto = 'https' if request.is_secure() else 'http'
-
-    forwarded_host = (meta.get('HTTP_X_FORWARDED_HOST') or '').split(',')[0].strip()
-    try:
-        host = forwarded_host or request.get_host()
-    except Exception:
-        host = forwarded_host
-
-    if not host:
-        return settings.FRONT_URL.rstrip('/')
-
-    tenant_base = (getattr(settings, 'TENANT_BASE_DOMAIN', '') or '').lower()
-    host_lc = host.lower()
-    if ':' in host_lc:
-        host_lc = host_lc.split(':')[0]
-
-    api_hosts = {f'api.{tenant_base}', f'www.api.{tenant_base}'} if tenant_base else set()
-    if tenant_base and host_lc in api_hosts:
-        tenant = getattr(connection, 'tenant', None)
-        if tenant is not None and getattr(tenant, 'schema_name', None) != get_public_schema_name():
-            from tenants.models import Domain
-
-            dom = Domain.objects.filter(tenant=tenant, is_primary=True).first() or Domain.objects.filter(
-                tenant=tenant
-            ).first()
-            if dom:
-                return f"{proto}://{dom.domain}".rstrip('/')
-
-    return f"{proto}://{host}".rstrip('/')
-
-
 @permission_classes([AllowAny])
 class UserDetailView(APIView):
     def get(self, request):
@@ -153,60 +107,6 @@ class UserDetailView(APIView):
             data['tenant_name'] = None
             data['tenant_logo_url'] = None
         return Response(data)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def request_password_reset(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        email = data.get('email')
-        try:
-            user = User.objects.get(email=email)
-            token = default_token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            base = _frontend_base_url_for_password_reset(request)
-            reset_url = f"{base}/reset-password-confirm?uid={uid}&token={token}"
-            text = f'Hello {user.username}! \n\n\nSomeone requested a link to change your password. Click the link below to proceed. \n\n\n{reset_url}'
-            html_content = render_to_string(
-                "forgot_password_instructions.html",
-                context={"username": user.username, 'reset_url': reset_url},
-            )
-            msg = EmailMultiAlternatives(
-                'Reset password instructions',
-                text,
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-            )
-            msg.attach_alternative(html_content, "text/html")
-            msg.send()
-            return JsonResponse({'message': 'Email sent'}, status=200)
-        except User.DoesNotExist:
-            return JsonResponse({'error': 'Error for recovery password'}, status=404)
-    return JsonResponse({'error': 'Method not allowed'}, status=405)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def reset_password_confirm(request, uidb64, token):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        new_password = data.get('new_password')
-
-        try:
-            uid = urlsafe_base64_decode(uidb64).decode()
-            user = get_object_or_404(User, pk=uid)
-
-            if default_token_generator.check_token(user, token):
-                user.set_password(new_password)
-                user.save()
-                return JsonResponse({'message': 'Password reset successfully'}, status=200)
-            else:
-                return JsonResponse({'error': 'Invalid token'}, status=400)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
 @api_view(['GET'])

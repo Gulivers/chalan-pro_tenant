@@ -42,6 +42,7 @@ urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
     path('api/', api_root, name='api-root'),  # Vista raíz del API
     # Incluir URLs de las apps (ya tienen el prefijo api/ en sus rutas)
+    path('', include('appcore.urls')),
     path('', include('ctrctsapp.urls')),
     path('', include('auditapp.urls')),
     path('', include('crewsapp.urls')),
