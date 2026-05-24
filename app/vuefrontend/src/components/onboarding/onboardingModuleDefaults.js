@@ -1,5 +1,5 @@
 /**
- * Onboarding module slugs persisted on Tenant.preferences — aligned with app navbar (Jobrithm SPA).
+ * Onboarding module slugs persisted on Tenant.preferences — aligned with app navbar (JobRhythm SPA).
  */
 export const ONBOARDING_MODULE_IDS = [
   'operations',

@@ -13,7 +13,7 @@
 # Uso:
 #   sudo /opt/chalanpro/scripts/deploy-landing-vps.sh
 #   sudo /opt/chalanpro/scripts/deploy-landing-vps.sh --no-pull
-#   sudo /opt/chalanpro/scripts/deploy-landing-vps.sh --url https://www.getjobrithm.com
+#   sudo /opt/chalanpro/scripts/deploy-landing-vps.sh --url https://www.getjobrhythm.com
 # ============================================================================
 
 set -euo pipefail
@@ -21,7 +21,7 @@ set -euo pipefail
 PROJECT_ROOT="/opt/chalanpro"
 COMPOSE_FILE="${PROJECT_ROOT}/docker-compose.yml"
 LOG_PREFIX="[deploy-landing-vps]"
-LANDING_URL="https://getjobrithm.com"
+LANDING_URL="https://getjobrhythm.com"
 DO_PULL=1
 
 for arg in "$@"; do

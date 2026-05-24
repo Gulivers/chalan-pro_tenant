@@ -29,9 +29,9 @@ TEMP_FILE=$(mktemp)
 
 # Dominios base que siempre deben estar (nuevo dominio + compatibilidad temporal)
 BASE_DOMAINS=(
-    "jobrithm.net"
-    "api.jobrithm.net"
-    "test-dominio-local.jobrithm.net"
+    "jobrhythm.net"
+    "api.jobrhythm.net"
+    "test-dominio-local.jobrhythm.net"
     "chalanpro.net"
     "api.chalanpro.net"
 )
@@ -51,7 +51,7 @@ grep -v "chalanpro\|[Jj]obrithm\|Chalan-Pro\|\.192\.168\.0\.105\|Dominios base\|
 
 # Agregar dominios base
 echo "" >> "$TEMP_FILE"
-echo "# Jobrithm - Dominios base" >> "$TEMP_FILE"
+echo "# JobRhythm - Dominios base" >> "$TEMP_FILE"
 for domain in "${BASE_DOMAINS[@]}"; do
     echo "$HOST_IP $domain" >> "$TEMP_FILE"
 done
@@ -59,13 +59,13 @@ done
 # Agregar dominios de tenants
 if [ -n "$TENANT_DOMAINS" ]; then
     echo "" >> "$TEMP_FILE"
-    echo "# Jobrithm - Dominios de tenants" >> "$TEMP_FILE"
+    echo "# JobRhythm - Dominios de tenants" >> "$TEMP_FILE"
     for domain in $TENANT_DOMAINS; do
         echo "$HOST_IP $domain" >> "$TEMP_FILE"
         # Compatibilidad de migración local: si el tenant viene en chalanpro.net,
-        # agregar también alias equivalente en jobrithm.net para pruebas.
+        # agregar también alias equivalente en jobrhythm.net para pruebas.
         if [[ "$domain" == *.chalanpro.net ]]; then
-            alias_domain="${domain%.chalanpro.net}.jobrithm.net"
+            alias_domain="${domain%.chalanpro.net}.jobrhythm.net"
             echo "$HOST_IP $alias_domain" >> "$TEMP_FILE"
         fi
     done

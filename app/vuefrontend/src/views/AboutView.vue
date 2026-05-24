@@ -28,7 +28,7 @@
           <div class="col-lg-8">
             <img
               :src="jobrithmLogoUrl"
-              alt="Jobrithm"
+              alt="JobRhythm"
               class="about-logo mb-2 mb-md-4"
               width="240"
               height="60" />
@@ -124,7 +124,7 @@ const copy = {
     heroTitle:
       "Construction Operations Platform for Residential Trade Contractors",
     heroText:
-      "Jobrithm helps residential trade contractors centralize contracts, field operations, scheduling, inventory, and billing in one secure web platform.",
+      "JobRhythm helps residential trade contractors centralize contracts, field operations, scheduling, inventory, and billing in one secure web platform.",
     metaTitle: "Built for teams that need control",
     metaItems: [
       "Office + field alignment",
@@ -207,7 +207,7 @@ const copy = {
           "Generate billing records and close jobs with complete operational history.",
       },
     ],
-    valueTitle: "Why teams choose Jobrithm",
+    valueTitle: "Why teams choose JobRhythm",
     valuePoints: [
       {
         title: "Single source of truth",
@@ -232,7 +232,7 @@ const copy = {
     heroTitle:
       "Plataforma de Operaciones de Construccion para Contratistas Residenciales",
     heroText:
-      "Jobrithm ayuda a los contratistas residenciales a centralizar contratos, operaciones de campo, programacion, inventario y facturacion en una sola plataforma web segura.",
+      "JobRhythm ayuda a los contratistas residenciales a centralizar contratos, operaciones de campo, programacion, inventario y facturacion en una sola plataforma web segura.",
     metaTitle: "Diseñado para equipos que necesitan control",
     metaItems: [
       "Alineacion entre oficina y campo",
@@ -315,7 +315,7 @@ const copy = {
           "Genera registros de facturacion y cierra trabajos con historial operativo completo.",
       },
     ],
-    valueTitle: "Por que los equipos eligen Jobrithm",
+    valueTitle: "Por que los equipos eligen JobRhythm",
     valuePoints: [
       {
         title: "Una sola fuente de verdad",

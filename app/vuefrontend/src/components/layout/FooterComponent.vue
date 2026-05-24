@@ -2,7 +2,7 @@
   <footer class="app-footer border-top">
     <div class="container py-4 py-md-4">
       <div class="row align-items-start gy-4 text-center text-lg-start">
-        <!-- Marca: logo tenant o Jobrithm por defecto -->
+        <!-- Marca: logo tenant o JobRhythm por defecto -->
         <div class="col-12 col-lg-3">
           <div
             class="d-flex flex-column align-items-center align-items-lg-start gap-2">
@@ -78,7 +78,7 @@
           class="col-12 d-flex flex-column flex-sm-row flex-wrap align-items-center justify-content-center gap-2 gap-sm-3">
           <span>
             © {{ currentYear }}
-            <strong class="text-body-secondary">Jobrithm</strong>
+            <strong class="text-body-secondary">JobRhythm</strong>
             . All rights reserved.
           </span>
           <span
@@ -95,9 +95,9 @@
           <span>
             <span class="text-muted">Support:</span>
             <a
-              href="mailto:team@jobrithm.net"
+              href="mailto:team@jobrhythm.net"
               class="footer-support-email ms-1">
-              team@jobrithm.net
+              team@jobrhythm.net
             </a>
           </span>
           <span
@@ -170,7 +170,7 @@ export default {
       return this.tenantLogoUrl || this.jobrithmLogoUrl;
     },
     footerLogoAlt() {
-      return this.tenantName || "Jobrithm";
+      return this.tenantName || "JobRhythm";
     },
   },
   mounted() {

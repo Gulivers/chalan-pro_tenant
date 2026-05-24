@@ -3,7 +3,7 @@
     <div class="step-header mb-4">
       <h3 class="fw-bold mb-2">Modules for your trial</h3>
       <p class="text-muted mb-0">
-        These operational areas mirror the Jobrithm app menu—you get them during
+        These operational areas mirror the JobRhythm app menu—you get them during
         your trial while module toggles are simplified.
       </p>
     </div>
@@ -70,7 +70,7 @@
       <div class="mt-4 text-center">
         <small class="text-muted">
           <i class="fas fa-info-circle me-1"></i>
-          {{ modules.length }} Jobrithm areas included with your workspace
+          {{ modules.length }} JobRhythm areas included with your workspace
         </small>
       </div>
     </div>

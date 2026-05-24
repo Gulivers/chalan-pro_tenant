@@ -13,7 +13,7 @@ export default {
     InventoryDashboard
   },
   metaInfo: {
-    title: 'Inventory Dashboard – Jobrithm'
+    title: 'Inventory Dashboard – JobRhythm'
   }
 }
 </script>

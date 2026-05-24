@@ -14,8 +14,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--domains',
             nargs='+',
-            default=['www.api.chalanpro.net', 'api.chalanpro.net'],
-            help='Lista de dominios a configurar (default: www.api.chalanpro.net api.chalanpro.net)'
+            default=['api.jobrhythm.net', 'www.jobrhythm.net', 'jobrhythm.net', 'api.jobrithm.net', 'www.jobrithm.net'],
+            help='Lista de dominios a configurar (default: dominios public JobRhythm + legacy jobrithm)'
         )
 
     def handle(self, *args, **options):
@@ -33,7 +33,7 @@ class Command(BaseCommand):
             return
         
         domains = options['domains']
-        primary_domain = domains[0] if domains else 'www.api.chalanpro.net'
+        primary_domain = domains[0] if domains else 'api.jobrhythm.net'
         
         self.stdout.write(
             self.style.SUCCESS(f'📋 Configurando dominios para schema "{public_schema}" (tenant: {tenant.name})')

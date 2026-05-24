@@ -4,9 +4,10 @@ Este documento da contexto a los agentes de IA (Cursor, Copilot, etc.) en el pro
 
 ## Nota de marca (importante)
 
-- A nivel comercial y de interfaz de usuario, el nombre del sistema es **Jobrithm**.
+- A nivel comercial y de interfaz de usuario, el nombre del sistema es **JobRhythm**.
 - **Chalan-Pro / chalanpro** se mantiene para nombres técnicos internos (rutas, repositorio, variables, infraestructura) cuando aplique.
-- En adelante, para textos visibles al usuario (web app, admin, landing, PDFs y mensajes), usar **Jobrithm**.
+- En adelante, para textos visibles al usuario (web app, admin, landing, PDFs y mensajes), usar **JobRhythm**.
+- Dominios actuales: SaaS `jobrhythm.net` (y subdominios tenant); landing `getjobrhythm.com`. Durante la transición (7–14 días) siguen activos `jobrithm.net` y `getjobrithm.com`.
 
 ## Stack
 

@@ -1,4 +1,4 @@
-# Jobrithm – Web de marketing (Landing)
+# JobRhythm – Web de marketing (Landing)
 
 **Inspiración (nicho y segmento):**
 
@@ -32,7 +32,7 @@ Ese espacio tiene:
 
 ---
 
-Sitio estático, orientado a SEO y conversión, para **getjobrithm.com**. Presenta Jobrithm como plataforma de operaciones de construcción para contratistas residenciales, supervisores y equipos de campo.
+Sitio estático, orientado a SEO y conversión, para **getjobrithm.com**. Presenta JobRhythm como plataforma de operaciones de construcción para contratistas residenciales, supervisores y equipos de campo.
 
 **No es la app interna.** Es la web pública que explica el producto, capta leads (demo, contacto, precios) y soporta el crecimiento orgánico.
 

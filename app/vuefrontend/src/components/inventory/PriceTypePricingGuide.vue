@@ -6,23 +6,23 @@
       <div class="min-w-0">
         <div class="fw-semibold text-body mb-2">Pricing from purchase cost</div>
         <p class="text-secondary small mb-2 mb-md-3">
-          On sales documents, when a line uses this price type, Jobrithm can set the
+          On sales documents, when a line uses this price type, JobRhythm can set the
           <strong>unit sale price</strong> from the product’s
           <strong>purchase unit cost</strong>
           (from the active purchase <code class="small">ProductPrice</code> for the line’s unit). Choose
           <strong>None</strong> to use list/catalog prices without deriving from cost.
         </p>
         <div class="border-start border-3 border-primary-subtle ps-3 mb-3 mb-md-4 small">
-          <strong class="text-body d-block mb-2">Which product price does Jobrithm use?</strong>
+          <strong class="text-body d-block mb-2">Which product price does JobRhythm use?</strong>
           <p class="mb-2 text-body-secondary">
             <strong class="text-body">If you use Markup or Margin (cost-based):</strong>
-            Jobrithm looks up prices in your inventory marked as <strong>purchase</strong> prices
+            JobRhythm looks up prices in your inventory marked as <strong>purchase</strong> prices
             (<code class="small">is_purchase=True</code> on <code class="small">ProductPrice</code>). That
             <strong>unit cost</strong> is what the sale price formula uses.
           </p>
           <p class="mb-0 text-body-secondary">
             <strong class="text-body">If you choose None (list price only):</strong>
-            Jobrithm does <strong>not</strong> use what you paid for the item (purchase cost) to set the price
+            JobRhythm does <strong>not</strong> use what you paid for the item (purchase cost) to set the price
             under the cost-based rule. Instead, it uses prices marked <strong>for sale</strong>
             (<code class="small">is_sale=True</code>) from your <strong>catalog</strong>.
           </p>

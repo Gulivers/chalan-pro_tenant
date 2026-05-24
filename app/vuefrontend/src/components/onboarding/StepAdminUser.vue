@@ -26,7 +26,7 @@
         :error="errors.email"
         :required="true"
         :maxlength="254"
-        hint="You will use this email to sign in to Jobrithm."
+        hint="You will use this email to sign in to JobRhythm."
         @blur="validateField('email')" />
 
       <div class="form-floating mb-3">
