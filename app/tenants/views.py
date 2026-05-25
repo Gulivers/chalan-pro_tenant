@@ -417,7 +417,7 @@ def create_tenant_onboarding(request):
         
         # Crear el dominio basado en el schema_name
         # Obtener el dominio base desde settings o usar uno por defecto
-        base_domain = getattr(settings, 'TENANT_BASE_DOMAIN', 'chalan-pro.net')
+        base_domain = getattr(settings, 'TENANT_BASE_DOMAIN', 'jobrhythm.net')
         # Obtener subdominio del schema_name (ahora usa guiones directamente, válido para DNS)
         subdomain = tenant.schema_to_subdomain()
         

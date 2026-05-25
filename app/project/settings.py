@@ -94,7 +94,7 @@ ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',')]
 
 # Configuración de dominios para django-tenants (definir ANTES de usar)
 # Dominio base para los tenants (usado en onboarding) - DEBE estar antes de su uso
-TENANT_BASE_DOMAIN = os.environ.get('TENANT_BASE_DOMAIN', 'chalan-pro.net')
+TENANT_BASE_DOMAIN = os.environ.get('TENANT_BASE_DOMAIN', 'jobrhythm.net')
 # Dominio público (para acceder al admin global)
 PUBLIC_SCHEMA_URLCONF = 'project.urls_public'
 # Dominio por defecto para desarrollo local
