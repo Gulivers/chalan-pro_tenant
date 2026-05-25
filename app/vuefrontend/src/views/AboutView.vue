@@ -27,7 +27,7 @@
         <div class="row align-items-center g-4">
           <div class="col-lg-8">
             <img
-              :src="jobrithmLogoUrl"
+              :src="jobrhythmLogoUrl"
               alt="JobRhythm"
               class="about-logo mb-2 mb-md-4"
               width="240"
@@ -115,12 +115,12 @@ import { ref } from "vue";
 
 const currentLang = ref("en");
 const base = process.env.BASE_URL || "/";
-const jobrithmLogoUrl = `${base}img/jobrithm-logo.png`;
+const jobrhythmLogoUrl = `${base}img/jobrhythm-logo.png`;
 
 const copy = {
   en: {
     langToggleLabel: "Language switch",
-    kicker: "ABOUT JOBRITHM",
+    kicker: "ABOUT JOBRHYTHM",
     heroTitle:
       "Construction Operations Platform for Residential Trade Contractors",
     heroText:
@@ -228,7 +228,7 @@ const copy = {
   },
   es: {
     langToggleLabel: "Cambio de idioma",
-    kicker: "ACERCA DE JOBRITHM",
+    kicker: "ACERCA DE JOBRHYTHM",
     heroTitle:
       "Plataforma de Operaciones de Construccion para Contratistas Residenciales",
     heroText:

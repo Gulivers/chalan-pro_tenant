@@ -283,7 +283,7 @@ async function downloadTemplate() {
     const safeDate = new Date().toISOString().slice(0, 10);
     XLSX.writeFile(
       wb,
-      `jobrithm_transaction_lines_all_products_${safeDate}.xlsx`
+      `jobrhythm_transaction_lines_all_products_${safeDate}.xlsx`
     );
 
     await Swal.fire({

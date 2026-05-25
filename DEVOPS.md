@@ -8,7 +8,7 @@ Documento de referencia para operar el servidor con **precisión, repetibilidad 
 
 | Componente | Contenedor | Puertos | Rol |
 |------------|------------|---------|-----|
-| **PostgreSQL 15** | `chalanpro_postgres` | 5432 | Base de datos multi-tenant (schemas) |
+| **PostgreSQL 15** | `chalanpro_postgres` | `127.0.0.1:5432` (solo VPS; no Internet) | Base de datos multi-tenant; `max_connections=200` |
 | **Backend Django** | `chalanpro_backend` | 8000 (interno) | API + Daphne (ASGI), migraciones, `collectstatic` |
 | **Frontend Vue.js** | `chalanpro_frontend` | — | Build → `app/vuefrontend/dist` (servido por Nginx) |
 | **Nginx** | `chalanpro_nginx` | 80, 443 | Reverse proxy, SSL/TLS, estáticos, WebSocket `/ws/` |
@@ -186,6 +186,39 @@ sudo /opt/chalanpro/scripts/restore_backup_VPS.sh YYYYMMDD_HHMMSS
 - **Logs:** usar `docker compose logs`; si se centraliza en ficheros, rotar con logrotate.
 - **Actualizaciones de seguridad:** mantener Ubuntu y las imágenes base (postgres, nginx, python) actualizadas; revisar CVE y renovar imágenes cuando proceda.
 - **Healthchecks:** el compose ya define healthcheck para `postgres`; `depends_on` con `condition: service_healthy` para el backend. Mantener este patrón.
+
+### PostgreSQL: puerto y conexiones (VPS)
+
+En `docker-compose.yml` (producción):
+
+- **Puerto:** `127.0.0.1:5432:5432` — acceso desde el host solo por SSH/túnel; backend y pgAdmin siguen usando `postgres:5432` en la red Docker.
+- **`max_connections=200`** — límite ampliado respecto al default (100).
+- **`idle_in_transaction_session_timeout=300000`** (5 min) — cierra transacciones colgadas.
+- **Backend:** `DJANGO_CONN_MAX_AGE=60` — reutiliza conexiones un minuto como máximo (antes 600 s), para no agotar el pool con Daphne.
+
+**Acceso local al VPS (psql / DBeaver):**
+
+```bash
+psql -h 127.0.0.1 -p 5432 -U chalanpro_user -d chalanpro
+```
+
+**Desde otra máquina:** túnel SSH, no abrir 5432 en el firewall público:
+
+```bash
+ssh -L 5432:127.0.0.1:5432 usuario@72.60.168.62
+```
+
+**Error `sorry, too many clients already`:**
+
+```bash
+cd /opt/chalanpro
+docker compose restart postgres
+sleep 8
+docker compose restart backend
+docker compose exec -T postgres psql -U chalanpro_user -d chalanpro -c "SELECT count(*) FROM pg_stat_activity;"
+```
+
+`docker-compose.dev.yml` mantiene `5432:5432` sin bind a localhost (desarrollo en LAN).
 
 ---
 

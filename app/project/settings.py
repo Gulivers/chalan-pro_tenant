@@ -389,7 +389,7 @@ if DATABASE_URL:
     # Use PostgreSQL with Render's DATABASE_URL
     db_config = dj_database_url.config(
         default=DATABASE_URL,
-        conn_max_age=600,
+        conn_max_age=int(os.environ.get('DJANGO_CONN_MAX_AGE', '60')),
         conn_health_checks=True,
     )
     # Cambiar el ENGINE a django-tenants

@@ -159,15 +159,15 @@ export default {
     };
   },
   computed: {
-    jobrithmLogoUrl() {
+    jobrhythmLogoUrl() {
       const base = process.env.BASE_URL || "/";
-      return `${base}img/jobrithm-logo.png`;
+      return `${base}img/jobrhythm-logo.png`;
     },
     footerLogoSrc() {
       if (this.tenantLogoFailed) {
-        return this.jobrithmLogoUrl;
+        return this.jobrhythmLogoUrl;
       }
-      return this.tenantLogoUrl || this.jobrithmLogoUrl;
+      return this.tenantLogoUrl || this.jobrhythmLogoUrl;
     },
     footerLogoAlt() {
       return this.tenantName || "JobRhythm";
