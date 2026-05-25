@@ -395,7 +395,9 @@ def create_tenant_onboarding(request):
             on_trial=True,
             is_active=True
         )
-        
+        from appbilling.services.trial import start_trial_for_tenant
+        start_trial_for_tenant(tenant)
+
         # Paso 3: Validar y guardar el tenant (django-tenants creará el schema automáticamente)
         try:
             logger.info(f"Validando tenant: {company_name}")

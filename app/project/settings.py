@@ -141,6 +141,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 SHARED_APPS = [
     'django_tenants',  # Debe ir primero
     'tenants',  # App del modelo Tenant (en schema public)
+    'appbilling',
     'daphne',  # Debe ir antes de django.contrib.staticfiles
     'django.contrib.contenttypes',
     'django.contrib.auth',
@@ -205,6 +206,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'appbilling.middleware.BillingEnforcementMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -498,6 +500,16 @@ else:
     EMAIL_USE_TLS = _use_tls
 
 FRONT_URL = os.environ.get('FRONT_URL', 'http://192.168.0.248:8080')
+
+# Stripe billing (JobRhythm SaaS)
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
+STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
+STRIPE_SUCCESS_URL = os.environ.get('STRIPE_SUCCESS_URL', '')
+STRIPE_CANCEL_URL = os.environ.get('STRIPE_CANCEL_URL', '')
+STRIPE_CUSTOMER_PORTAL_RETURN_URL = os.environ.get('STRIPE_CUSTOMER_PORTAL_RETURN_URL', '')
+BILLING_PAST_DUE_GRACE_DAYS = int(os.environ.get('BILLING_PAST_DUE_GRACE_DAYS', '7'))
+BILLING_ENFORCEMENT_ENABLED = _env_bool('BILLING_ENFORCEMENT_ENABLED', True)
 
 # Landing (getjobrhythm.com) contact form — inbox that receives submissions
 LANDING_CONTACT_TO_EMAIL = os.environ.get('LANDING_CONTACT_TO_EMAIL', 'team@jobrhythm.net')

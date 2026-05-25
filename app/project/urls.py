@@ -28,6 +28,7 @@ urlpatterns = [
     path('', include('appschedule.urls')),
     path('', include('appinventory.urls')),
     path('', include('apptransactions.urls')),
+    path('', include('appbilling.urls')),
 ]
 
 # Configurar archivos media (imágenes y PDFs) para desarrollo y producción
