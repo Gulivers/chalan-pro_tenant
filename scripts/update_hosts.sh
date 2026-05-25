@@ -47,7 +47,7 @@ print(' '.join(sorted(domains)))
 # Copiar líneas que no son de chalanpro/jobrithm (eliminar todas las líneas relacionadas)
 echo "Preservando líneas existentes..."
 # Eliminar líneas con chalanpro/jobrithm (incluye comentarios) y formato IP antiguo.
-grep -v "chalanpro\|[Jj]obrithm\|Chalan-Pro\|\.192\.168\.0\.105\|Dominios base\|Dominios de tenants" "$HOSTS_FILE" > "$TEMP_FILE" 2>/dev/null || cat "$HOSTS_FILE" | grep -v "chalanpro\|[Jj]obrithm\|Chalan-Pro\|\.192\.168\.0\.105\|Dominios base\|Dominios de tenants" > "$TEMP_FILE"
+grep -v "chalanpro\|[Jj]ob[r]ithm\|JobRhythm\|Chalan-Pro\|\.192\.168\.0\.105\|Dominios base\|Dominios de tenants" "$HOSTS_FILE" > "$TEMP_FILE" 2>/dev/null || cat "$HOSTS_FILE" | grep -v "chalanpro\|[Jj]ob[r]ithm\|JobRhythm\|Chalan-Pro\|\.192\.168\.0\.105\|Dominios base\|Dominios de tenants" > "$TEMP_FILE"
 
 # Agregar dominios base
 echo "" >> "$TEMP_FILE"
@@ -66,6 +66,10 @@ if [ -n "$TENANT_DOMAINS" ]; then
         # agregar también alias equivalente en jobrhythm.net para pruebas.
         if [[ "$domain" == *.chalanpro.net ]]; then
             alias_domain="${domain%.chalanpro.net}.jobrhythm.net"
+            echo "$HOST_IP $alias_domain" >> "$TEMP_FILE"
+        fi
+        if [[ "$domain" == *.jobrithm.net ]]; then
+            alias_domain="${domain%.jobrithm.net}.jobrhythm.net"
             echo "$HOST_IP $alias_domain" >> "$TEMP_FILE"
         fi
     done

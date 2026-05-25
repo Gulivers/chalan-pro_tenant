@@ -1,6 +1,45 @@
 # Configuración del Servidor Local de Desarrollo (ubuntu-house)
 
-Este documento describe la configuración completa del servidor local de desarrollo para Chalan-Pro en ubuntu-house.
+Este documento describe la configuración completa del servidor local de desarrollo para **JobRhythm** (repo técnico Chalan-Pro) en ubuntu-house.
+
+## Sincronizar `main` desde remoto (JobRhythm) — ¿rompe el entorno local?
+
+**Respuesta corta: no debería romper el stack local** si sigues usando `docker-compose.dev.yml` (no el de producción del VPS).
+
+| Qué cambió en `main` | Impacto en ubuntu-house |
+|----------------------|-------------------------|
+| Marca JobRhythm (Vue, landing, textos) | Solo código; tras `git pull` y rebuild frontend/local `npm run serve` verás el nombre nuevo. |
+| `nginx/legacy-redirects.conf` + `docker-compose.yml` prod | **No aplica** en local si no levantas el compose de producción. |
+| `envs/backend.dev.example.env` | Plantilla actualizada; tu `envs/backend.dev.env` **no está en Git** — no se sobrescribe sola. |
+| `TENANT_BASE_DOMAIN` por defecto `jobrhythm.net` en código | Afecta **nuevos** tenants si el `.env` local no define otra cosa. |
+
+**Pasos recomendados tras `git pull origin main` en ubuntu-house:**
+
+1. Actualizar plantilla y revisar tu env local (no reemplazar a ciegas si tienes datos de prueba):
+   ```bash
+   diff envs/backend.dev.example.env envs/backend.dev.env   # fusionar a mano
+   ```
+   Valores típicos de desarrollo:
+   - `TENANT_BASE_DOMAIN=jobrhythm.net`
+   - `ALLOWED_HOSTS` con `*.jobrhythm.net`, `jobrhythm.net`, `api.jobrhythm.net` (puedes **mantener** `*.chalanpro.net` en paralelo)
+   - `FRONT_URL=http://192.168.0.105:8080` o `http://jobrhythm.net:8080`
+
+2. Recrear backend para cargar env (igual que en VPS):
+   ```bash
+   docker compose -f docker-compose.dev.yml up -d --force-recreate backend
+   ```
+
+3. Actualizar `/etc/hosts` (solo ubuntu-house):
+   ```bash
+   sudo ./scripts/update_hosts.sh
+   ```
+   Acceso ejemplo: `http://test-dominio-local.jobrhythm.net:8080`
+
+4. Tenants existentes en BD local con dominio `*.chalanpro.net` o `*.jobrithm.net` siguen funcionando por hostname; opcional: migrar dominios como en producción (`migrate_domains_to_jobrithm.py` con `--old-base` / `--new-base`).
+
+5. Landing local (opcional): `cd landing && npm run build` — dominios reales de marketing no son necesarios en LAN.
+
+**Producción (VPS):** despliegue desde rama `main` con `docker-compose.yml` y `scripts/deploy-vps.sh`.
 
 ## 📋 Tabla de Contenidos
 
@@ -140,19 +179,23 @@ websocket_urlpatterns = [
 
 ### Variables de Entorno (`envs/backend.dev.env`)
 
+Ver plantilla actual en `envs/backend.dev.example.env` (JobRhythm + compatibilidad `chalanpro.net` / `jobrithm.net`).
+
+Ejemplo mínimo (copiar a `envs/backend.dev.env` y ajustar IP):
+
 ```bash
 DEBUG=True
-ALLOWED_HOSTS="192.168.0.105,192.168.0.248,localhost,127.0.0.1,api.chalanpro.net,chalanpro.net,*.chalanpro.net"
-TENANT_BASE_DOMAIN=chalanpro.net
+ALLOWED_HOSTS="192.168.0.105,192.168.0.248,localhost,127.0.0.1,api.jobrhythm.net,jobrhythm.net,*.jobrhythm.net,api.chalanpro.net,chalanpro.net,*.chalanpro.net,test-dominio-local.jobrhythm.net"
+TENANT_BASE_DOMAIN=jobrhythm.net
 FRONT_URL=http://192.168.0.105:8080
-CSRF_TRUSTED_ORIGINS=http://192.168.0.105,http://192.168.0.105:8080,http://*.chalanpro.net,http://*.chalanpro.net:8080
+CSRF_TRUSTED_ORIGINS=http://192.168.0.105,http://192.168.0.105:8080,http://*.jobrhythm.net,http://*.jobrhythm.net:8080,http://*.chalanpro.net,http://*.chalanpro.net:8080
 CORS_ALLOW_ALL_ORIGINS=True
 ```
 
 **Puntos clave**:
 - `DEBUG=True`: Habilita modo desarrollo y simplifica el stack de WebSocket
-- `ALLOWED_HOSTS`: Incluye la IP local y dominios de tenant
-- `TENANT_BASE_DOMAIN`: Dominio base para multi-tenant
+- `ALLOWED_HOSTS`: Incluye la IP local y dominios de tenant (`jobrhythm.net` recomendado; legacy opcional)
+- `TENANT_BASE_DOMAIN`: Dominio base para **nuevos** tenants en onboarding local
 - `FRONT_URL`: URL del frontend para redirecciones
 
 ---
