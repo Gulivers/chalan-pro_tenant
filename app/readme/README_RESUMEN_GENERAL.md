@@ -85,8 +85,7 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 **IP del Servidor:** `72.60.168.62`  
 **Dominio Base (actual):** `jobrhythm.net`  
 **Landing:** `getjobrhythm.com`  
-**Transición (7–14 días):** `jobrithm.net`, `getjobrithm.com`  
-**Dominio anterior (compatibilidad):** `chalanpro.net`  
+**Legacy (solo 301, sin app):** `jobrithm.net`, `getjobrithm.com`, `chalanpro.net`, `chalanpro.com`  
 **Repositorio Git:** `https://github.com/Gulivers/chalan-pro_tenant.git`
 
 ---
@@ -1061,7 +1060,57 @@ add_header X-XSS-Protection "1; mode=block" always;
 | **Landing**            | `https://getjobrhythm.com`              | Web de marketing                 |
 | **pgAdmin**            | `http://72.60.168.62:5050`              | Interfaz web de PostgreSQL       |
 
-### 7.2 Credenciales de Acceso
+**Ejemplo tenant Phoenix (schema `phoenix_electric_and_air_llc`):**
+
+| URL | Uso |
+|-----|-----|
+| `https://phoenix.jobrhythm.net/` | Dominio primario SaaS (producción) |
+| `https://phoenix.jobrhythm.net/login/` | Login del tenant |
+| `https://phoenix.jobrithm.net/` | Legacy → 301 a `phoenix.jobrhythm.net` (Nginx VPS) |
+
+### 7.2 Dominios legacy y redirecciones 301
+
+Los dominios antiguos **no sirven la aplicación**; Nginx en el VPS (`nginx/legacy-redirects.conf`) responde solo con **301** hacia JobRhythm:
+
+| Origen (inhabilitado) | Destino |
+|-----------------------|---------|
+| `getjobrithm.com`, `www` | `getjobrhythm.com` |
+| `jobrithm.net`, `www`, `api`, `*.jobrithm.net` | equivalente en `jobrhythm.net` |
+| `chalanpro.net`, `www`, `api`, `*.chalanpro.net` | equivalente en `jobrhythm.net` |
+| `chalanpro.com`, `www` | `getjobrhythm.com` |
+
+Verificación rápida:
+
+```bash
+curl -sI https://getjobrithm.com/ | grep -i location
+# location: https://getjobrhythm.com/
+
+curl -sI https://phoenix.jobrithm.net/login/ | grep -i location
+# location: https://phoenix.jobrhythm.net/login/
+```
+
+### 7.3 Dominios personalizados de clientes (fuera de `*.jobrhythm.net`)
+
+Algunos clientes conservan un **dominio propio** (registro/DNS en otro proveedor) que debe terminar en su subdominio JobRhythm.
+
+**Caso verificado: Phoenix Electric and Air — `phoenixelectricandair.net`**
+
+| Comprobación | Resultado (2026-05-25) |
+|--------------|------------------------|
+| DNS `phoenixelectricandair.net` | `160.153.175.22` (no apunta al VPS JobRhythm `72.60.168.62`) |
+| Cadena HTTPS completa | **Sí llega a** `https://phoenix.jobrhythm.net/` con **200** |
+| Paso 1 | `https://phoenixelectricandair.net/` → **301** → `https://phoenix.jobrithm.net/` (redirección configurada en el hosting del dominio del cliente) |
+| Paso 2 | `https://phoenix.jobrithm.net/` → **301** → `https://phoenix.jobrhythm.net/` (Nginx legacy en VPS) |
+| Destino final | `https://phoenix.jobrhythm.net/` — tenant `phoenix_electric_and_air_llc`, dominio primario en BD: `phoenix.jobrhythm.net` |
+
+```bash
+curl -sI -L -o /dev/null -w "%{url_effective}\n" https://phoenixelectricandair.net/
+# https://phoenix.jobrhythm.net/
+```
+
+**Recomendación (un solo salto 301):** en el panel DNS del dominio del cliente, apuntar `phoenixelectricandair.net` (y `www`) con registro **A** a `72.60.168.62` y añadir en el VPS un bloque Nginx que haga `return 301 https://phoenix.jobrhythm.net$request_uri;` (requiere certificado SSL para ese host, p. ej. certbot). Mientras el DNS siga en otra IP, el primer 301 seguirá gestionándose fuera del VPS.
+
+### 7.4 Credenciales de Acceso
 
 **Admin Django:**
 
@@ -1075,16 +1124,15 @@ add_header X-XSS-Protection "1; mode=block" always;
 - **Email:** `admin@chalanpro.net`
 - **Password:** `ChalanPro2024!`
 
-### 7.3 Post-migración y retiro de `chalanpro.net`
+### 7.5 Post-migración JobRhythm
 
-**Fecha objetivo de apagado (editable):** `2026-05-01`
-
-Checklist (transición JobRhythm):
-- [ ] Confirmar operación estable 7-14 días en `jobrhythm.net`, `api.jobrhythm.net`, `*.jobrhythm.net` y `getjobrhythm.com`.
-- [ ] Verificar dominios primarios en `tenants_domain` (`*.jobrhythm.net`) y legacy `*.jobrithm.net` activos.
-- [ ] Validar onboarding en `https://www.jobrhythm.net/onboarding` y correo `noreply@jobrhythm.net` / `team@jobrhythm.net`.
-- [ ] Mantener `jobrithm.net` y `getjobrithm.com` en paralelo; aplicar 301 cuando el tráfico legacy sea bajo.
-- [ ] Renovar wildcard `jobrhythm.net` con `renew_wildcard_certbot_auto_domain.sh` (token Hostinger en VPS).
+Checklist:
+- [x] Redirecciones 301 Nginx: dominios legacy → `jobrhythm.net` / `getjobrhythm.com` (`nginx/legacy-redirects.conf`).
+- [x] Wildcard SSL `*.jobrhythm.net` (`/etc/letsencrypt/live/jobrhythm.net-0001/`).
+- [x] `TENANT_BASE_DOMAIN=jobrhythm.net` en `envs/backend.env` (recrear backend tras cambiar env: `docker compose up -d --force-recreate backend`).
+- [ ] Confirmar operación estable en producción (login tenants, onboarding, API, correo).
+- [ ] Opcional: DNS de dominios de cliente (ej. `phoenixelectricandair.net`) → VPS para un único 301 directo a `*.jobrhythm.net`.
+- [ ] Renovar wildcard: `renew_wildcard_certbot_auto_domain.sh --domain jobrhythm.net` (cron + `/root/.hostinger-api-token`).
 
 ---
 
