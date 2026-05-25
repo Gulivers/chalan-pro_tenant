@@ -23,7 +23,7 @@ class TenantAdmin(TenantAdminMixin, admin.ModelAdmin):
             'fields': ('name', 'schema_name', 'tenant_id', 'email', 'client_type', 'logo', 'logo_preview', 'is_active')
         }),
         ('Configuración de Pago', {
-            'fields': ('paid_until', 'on_trial')
+            'fields': ('trial_start', 'trial_end', 'paid_until', 'on_trial')
         }),
         ('Metadata', {
             'fields': ('created_on',),

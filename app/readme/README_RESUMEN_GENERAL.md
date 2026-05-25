@@ -65,16 +65,16 @@
   - [9.5 Generar el Fixture JSON de Datos Maestros](#95-generar-el-fixture-json-de-datos-maestros)
   - [9.6 Workflow: Serialized Items e Inventory Transfers](#96-workflow-serialized-items-e-inventory-transfers)
   - [9.7 Cálculo dinámico de precios en líneas de documento](#97-precios-lineas-documento)
-- [10. Troubleshooting](#10-troubleshooting)
-  - [9.1 El Frontend No Carga](#91-el-frontend-no-carga)
-  - [9.2 El Backend No Responde](#92-el-backend-no-responde)
-  - [9.3 Problemas con Multi-Tenant](#93-problemas-con-multi-tenant)
-  - [9.4 Certificados SSL No Se Generan](#94-certificados-ssl-no-se-generan)
-  - [9.5 Errores 502 Bad Gateway](#95-errores-502-bad-gateway)
-  - [9.6 Problemas con WebSocket](#96-problemas-con-websocket)
-- [10.5 Errores 502 Bad Gateway](#105-errores-502-bad-gateway)
-- [10.6 Problemas con WebSocket](#106-problemas-con-websocket)
-- [11. Contacto y Soporte](#11-contacto-y-soporte)
+- [10. Billing (Stripe SaaS — appbilling)](#10-billing-stripe-saas--appbilling)
+  - [10.1 Arquitectura y schema](#101-arquitectura-y-schema)
+  - [10.2 Modelos y planes](#102-modelos-y-planes)
+  - [10.3 Endpoints API](#103-endpoints-api)
+  - [10.4 Trial, acceso y límites de cuadrillas](#104-trial-acceso-y-límites-de-cuadrillas)
+  - [10.5 Variables de entorno Stripe](#105-variables-de-entorno-stripe)
+  - [10.6 Comandos de gestión](#106-comandos-de-gestión)
+  - [10.7 Frontend y despliegue](#107-frontend-y-despliegue)
+- [11. Troubleshooting](#11-troubleshooting)
+- [12. Contacto y Soporte](#12-contacto-y-soporte)
 
 ---
 
@@ -213,6 +213,13 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 │   │       └── commands/
 │   │           ├── create_tenant.py       # Crear tenant manualmente
 │   │           └── list_tenants.py        # Listar tenants
+│   │
+│   ├── appbilling/                        # Billing Stripe (SHARED_APPS / schema public)
+│   │   ├── models.py                      # Plan, Subscription, PaymentEvent
+│   │   ├── views.py                       # API billing + webhook Stripe
+│   │   ├── middleware.py                  # Enforcement 402 post-trial
+│   │   ├── services/                      # Stripe, access, sync, crews limits
+│   │   └── management/commands/           # seed_plans, backfill_trial_dates, send_trial_reminders
 │   │
 │   ├── vuefrontend/                       # Frontend Vue.js
 │   │   ├── src/
@@ -1577,7 +1584,126 @@ La guía en pantalla para administradores del tipo de precio está en **`vuefron
 
 ---
 
-## 10. Troubleshooting
+## 10. Billing (Stripe SaaS — `appbilling`)
+
+Monetización SaaS con **Stripe Checkout**, **Customer Portal** y webhooks. La app Django vive en **`app/appbilling/`** (schema **public**, `SHARED_APPS`), al mismo nivel que `appinventory`, `apptransactions`, etc.
+
+**Dominio producción:** `jobrhythm.net` · **API:** `https://api.jobrhythm.net` · **Webhook Stripe:** `https://api.jobrhythm.net/stripe/webhook/`
+
+### 10.1 Arquitectura y schema
+
+| Capa | Ubicación |
+|------|-----------|
+| Modelos `Plan`, `Subscription`, `PaymentEvent` | Schema **public** (`appbilling`) |
+| Campos trial en `tenants.Tenant` | `trial_start`, `trial_end`, `on_trial`, `paid_until` |
+| Datos operativos (crews, contratos, etc.) | Schema por tenant |
+| Stripe Customer | Se crea en la **primera visita a Billing** (checkout o portal), no en onboarding |
+
+Las tablas en PostgreSQL conservan el prefijo histórico **`billing_*`** (`billing_plan`, `billing_subscription`, `billing_paymentevent`) mediante `db_table` en los modelos.
+
+### 10.2 Modelos y planes
+
+Planes sembrados con `seed_plans` (precios alineados con [getjobrhythm.com/pricing.html](https://getjobrhythm.com/pricing.html)):
+
+| Slug | Mensual | Anual (−15 %) | `max_crews` | `max_users` |
+|------|---------|---------------|-------------|-------------|
+| `starter` | $436 | $4,447 | 3 | 1 |
+| `professional` | $877 | $8,945 | 10 | 10 (recomendado) |
+| `enterprise` | $1,758 | $17,931 | ilimitado | ilimitado |
+
+El plan sugerido al upgrade viene de `landing_selected_plan` / `recommended_plan` del onboarding.
+
+### 10.3 Endpoints API
+
+| Método | Ruta | Auth | Descripción |
+|--------|------|------|-------------|
+| GET | `/api/billing/status/` | Token | Estado trial/suscripción, plan sugerido |
+| GET | `/api/billing/plans/` | Token | Catálogo activo (precios display) |
+| POST | `/api/billing/create-checkout-session/` | Token | Body: `plan_slug`, `billing_interval` (`monthly` \| `yearly`) |
+| POST | `/api/billing/create-customer-portal-session/` | Token | URL portal Stripe |
+| POST | `/stripe/webhook/` | Firma Stripe | Sincroniza suscripciones e invoices |
+
+Los **price IDs** de Stripe solo se resuelven en backend (modelo `Plan`), nunca desde el frontend.
+
+### 10.4 Trial, acceso y límites de cuadrillas
+
+- **Trial:** 30 días desde onboarding (`start_trial_for_tenant` en `create_tenant_onboarding`).
+- **Enforcement:** middleware `appbilling.middleware.BillingEnforcementMiddleware` → HTTP **402** en `/api/*` si no hay trial activo ni suscripción Stripe válida (rutas billing/login exentas).
+- **Grace `past_due`:** 7 días (`BILLING_PAST_DUE_GRACE_DAYS`).
+- **Cuadrillas:** `crewsapp` valida `max_crews` del plan efectivo al **crear** crew (`appbilling.services.crews`).
+- **Frontend:** `/billing`, guard en Vue Router, interceptor axios 402 → billing.
+
+Rutas siempre accesibles: `/billing`, login, logout, reset password, `user_detail`.
+
+### 10.5 Variables de entorno Stripe
+
+En `envs/backend.env` / VPS (no commitear claves reales):
+
+```bash
+STRIPE_SECRET_KEY=sk_...
+STRIPE_PUBLISHABLE_KEY=pk_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_SUCCESS_URL=          # opcional; por defecto {tenant}/billing/success
+STRIPE_CANCEL_URL=
+STRIPE_CUSTOMER_PORTAL_RETURN_URL=
+BILLING_PAST_DUE_GRACE_DAYS=7
+BILLING_ENFORCEMENT_ENABLED=True
+
+# IDs por plan (usados por seed_plans)
+STRIPE_STARTER_PRODUCT_ID=
+STRIPE_STARTER_PRICE_MONTHLY=
+STRIPE_STARTER_PRICE_YEARLY=
+STRIPE_PROFESSIONAL_PRODUCT_ID=
+STRIPE_PROFESSIONAL_PRICE_MONTHLY=
+STRIPE_PROFESSIONAL_PRICE_YEARLY=
+STRIPE_ENTERPRISE_PRODUCT_ID=
+STRIPE_ENTERPRISE_PRICE_MONTHLY=
+STRIPE_ENTERPRISE_PRICE_YEARLY=
+```
+
+Correos transaccionales de trial: `DEFAULT_FROM_EMAIL=noreply@jobrhythm.net`.
+
+### 10.6 Comandos de gestión
+
+```bash
+# Migraciones (schema public)
+docker compose exec backend python manage.py migrate_schemas --shared
+
+# Planes + Stripe IDs desde env
+docker compose exec backend python manage.py seed_plans
+
+# Trial dates en tenants existentes
+docker compose exec backend python manage.py backfill_trial_dates
+
+# Recordatorios trial (cron diario en VPS)
+docker compose exec backend python manage.py send_trial_reminders
+docker compose exec backend python manage.py send_trial_reminders --dry-run
+```
+
+**Admin Django (schema public):** `Plan`, `Subscription`, `PaymentEvent`, campos trial en `Tenant`. Para el cliente legacy, ajustar manualmente `trial_end` y/o `Subscription`.
+
+**Migración app `billing` → `appbilling` (solo si el VPS tenía la app antigua):**
+
+```sql
+UPDATE django_migrations SET app = 'appbilling' WHERE app = 'billing';
+```
+
+Luego `migrate_schemas --shared` para aplicar `appbilling.0002_rename_app_label_tables`.
+
+### 10.7 Frontend y despliegue
+
+| Archivo | Rol |
+|---------|-----|
+| `vuefrontend/src/views/BillingPage.vue` | UI planes, checkout, portal |
+| `vuefrontend/src/views/BillingSuccessView.vue` | Retorno post-Stripe |
+| `vuefrontend/src/api/billing.js` | Cliente API |
+| `vuefrontend/src/router/index.js` | Rutas + guard suscripción |
+
+Tras desplegar backend con cambios en `appbilling` o `tenants`: **`migrate_schemas --shared`**, **`seed_plans`**, configurar webhook en Stripe Dashboard apuntando a `https://api.jobrhythm.net/stripe/webhook/`.
+
+---
+
+## 11. Troubleshooting
 
 ### 10.1 El Frontend No Carga
 
@@ -1760,7 +1886,7 @@ La guía en pantalla para administradores del tipo de precio está en **`vuefron
 
 ---
 
-## 11. Contacto y Soporte
+## 12. Contacto y Soporte
 
 Para problemas o preguntas:
 

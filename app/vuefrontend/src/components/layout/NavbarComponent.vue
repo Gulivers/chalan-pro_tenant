@@ -113,6 +113,14 @@
                   </router-link>
                 </li>
                 <li>
+                  <router-link
+                    to="/billing"
+                    class="dropdown-item"
+                    @click="closeNavbar">
+                    Billing
+                  </router-link>
+                </li>
+                <li>
                   <h6
                     class="dropdown-header text-muted mb-0 mt-1 px-3 py-1 small">
                     Configuration

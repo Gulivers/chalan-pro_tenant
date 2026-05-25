@@ -120,6 +120,8 @@ class Tenant(TenantMixin):
     )
     
     # Configuraciones del tenant
+    trial_start = models.DateTimeField(null=True, blank=True, verbose_name="Inicio del trial")
+    trial_end = models.DateTimeField(null=True, blank=True, verbose_name="Fin del trial")
     paid_until = models.DateField(null=True, blank=True, verbose_name="Pagado hasta")
     on_trial = models.BooleanField(default=True, verbose_name="En período de prueba")
     

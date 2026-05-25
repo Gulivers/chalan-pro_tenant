@@ -1,6 +1,10 @@
 from rest_framework import serializers
-from .models import Crew, Truck, TruckAssignment, Category
 from django.contrib.auth.models import User
+from django.db import connection
+from django_tenants.utils import get_public_schema_name
+
+from utils.tenant_branding import _resolve_tenant
+from .models import Crew, Truck, TruckAssignment, Category
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,6 +36,15 @@ class CrewSerializer(serializers.ModelSerializer):
         instance = self.instance
         name = (attrs.get('name') or (instance.name if instance else '') or '').strip()
         category = attrs.get('category') if 'category' in attrs else (instance.category if instance else None)
+
+        if instance is None:
+            request = self.context.get('request')
+            tenant = _resolve_tenant(request) if request else getattr(connection, 'tenant', None)
+            if tenant and getattr(tenant, 'schema_name', None) != get_public_schema_name():
+                from appbilling.services.crews import validate_crew_create
+                crew_err = validate_crew_create(tenant)
+                if crew_err:
+                    raise serializers.ValidationError({'non_field_errors': [crew_err]})
 
         if name:
             qs = Crew.objects.filter(name__iexact=name, category=category)
