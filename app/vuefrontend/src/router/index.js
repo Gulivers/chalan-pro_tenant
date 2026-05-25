@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import axios from "axios";
+import { fetchBillingStatus } from "@/api/billing";
 
 // ───────────────────────────────────────────────────────────
 // LAZY IMPORTS (ordenado por módulos)
@@ -9,6 +10,8 @@ const LoginView = () => import("@views/LoginView.vue");
 const HomeView = () => import("@views/HomeView.vue");
 const AboutView = () => import("@/views/AboutView.vue");
 const OnboardingView = () => import("@views/OnboardingView.vue");
+const BillingPage = () => import("@views/BillingPage.vue");
+const BillingSuccessView = () => import("@views/BillingSuccessView.vue");
 const JobMap = () => import("@components/houses/JobMap.vue");
 const SupervisorCommunitiesList = () =>
   import("@components/houses/SupervisorCommunitiesList.vue");
@@ -170,6 +173,26 @@ const routes = [
     name: "about",
     component: AboutView,
     meta: { requiresAuth: false, requiredPermissions: [] },
+  },
+  {
+    path: "/billing",
+    name: "billing",
+    component: BillingPage,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: [],
+      billingExempt: true,
+    },
+  },
+  {
+    path: "/billing/success",
+    name: "billing-success",
+    component: BillingSuccessView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: [],
+      billingExempt: true,
+    },
   },
   {
     path: "/contracts",
@@ -1146,6 +1169,21 @@ router.beforeEach(async (to, from, next) => {
       console.log("Has permission:", hasPermission);
 
       if (hasPermission) {
+        const billingExempt = to.matched.some((r) => r.meta.billingExempt);
+        if (!billingExempt) {
+          try {
+            const billing = await fetchBillingStatus();
+            if (!billing.access_allowed) {
+              next({ name: "billing", query: { reason: billing.access_reason } });
+              return;
+            }
+          } catch (billingErr) {
+            if (billingErr.response?.status === 402) {
+              next({ name: "billing" });
+              return;
+            }
+          }
+        }
         next();
       } else {
         alert("You do not have permission to access this page");

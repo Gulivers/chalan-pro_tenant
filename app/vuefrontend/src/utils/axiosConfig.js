@@ -119,6 +119,15 @@ export function setupAxiosInterceptors() {
         return Promise.reject(error);
       }
 
+      // 402 → suscripción requerida (middleware billing)
+      if (status === 402 && data.code === 'subscription_required') {
+        const billingPath = data.redirect || '/billing';
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/billing')) {
+          router.push(billingPath);
+        }
+        return Promise.reject(error);
+      }
+
       // 👇 NUEVO: Manejo global del PROTECT (DELETE → 409 Conflict)
       // Backend debe devolver: { detail: "...", code: "in_use" }
       if (

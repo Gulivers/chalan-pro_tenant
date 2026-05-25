@@ -50,6 +50,7 @@ urlpatterns = [
     path('', include('appinventory.urls')),
     path('', include('apptransactions.urls')),
     path('', include('tenants.urls')),  # Incluir URLs de onboarding
+    path('', include('appbilling.urls')),
 ]
 
 # Configurar archivos media (imágenes y PDFs) para desarrollo y producción
