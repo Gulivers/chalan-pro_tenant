@@ -1,4 +1,4 @@
-# Generated manually for Jobrithm onboarding (landing plan persistence)
+# Generated manually for JobRhythm onboarding (landing plan persistence)
 
 from django.db import migrations, models
 

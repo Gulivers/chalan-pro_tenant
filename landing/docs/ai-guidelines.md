@@ -1,6 +1,6 @@
-# AI Guidelines – Landing Jobrithm (marketing SaaS)
+# AI Guidelines – Landing JobRhythm (marketing SaaS)
 
-Estándares para mantener consistencia, conversión y calidad en la web de marketing de **Jobrithm** (getjobrithm.com). En copy, meta, navegación y pies de página usar siempre **Jobrithm**; *Chalan-Pro* queda para contexto técnico del repositorio o rutas internas, no como nombre comercial en la landing.
+Estándares para mantener consistencia, conversión y calidad en la web de marketing de **JobRhythm** (getjobrithm.com). En copy, meta, navegación y pies de página usar siempre **JobRhythm**; *Chalan-Pro* queda para contexto técnico del repositorio o rutas internas, no como nombre comercial en la landing.
 
 ## Índice
 
@@ -24,7 +24,7 @@ Estándares para mantener consistencia, conversión y calidad en la web de marke
 
 ## Posicionamiento del producto
 
-Jobrithm es una **plataforma de operaciones de construcción** para:
+JobRhythm es una **plataforma de operaciones de construcción** para:
 
 - **Contratistas** y empresas de obra
 - **Supervisores** y jefes de obra
@@ -146,7 +146,7 @@ Cada página debe apoyar la conversión.
 
 ### En páginas importantes
 
-- **Value proposition** clara (qué es Jobrithm y para quién).
+- **Value proposition** clara (qué es JobRhythm y para quién).
 - **Indicador de confianza o prueba social** (placeholder si no hay datos aún).
 - **CTA fuerte above the fold** (ej. “Reservar demo”, “Ver precios”, “Contactar ventas”).
 - **CTA de nuevo cerca del final** de la página.
@@ -172,7 +172,7 @@ Mensajería concisa y orientada a SaaS. Evitar frases genéricas (“revoluciona
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="..." />
     <link rel="stylesheet" href="output.css" />
-    <title>Jobrithm – ...</title>
+    <title>JobRhythm – ...</title>
   </head>
   <body class="font-sans antialiased text-gray-900 bg-white">
     <!-- landing:inject-nav -->
@@ -287,7 +287,7 @@ Incluir estas variantes en meta keywords, títulos alternativos y contenido cuan
 - CTAs hacia el formulario de contacto: usar ancla `#landing-contact-form` cuando el objetivo sea el formulario (p. ej. `contact-en.html#landing-contact-form`).
 - En la raíz en inglés: logo y enlaces “home” coherentes con `index.html`.
 
-### Externos (app Jobrithm)
+### Externos (app JobRhythm)
 
 - **Login:** `https://jobrithm.net`
 - **Onboarding:** `https://www.jobrithm.net/onboarding`
@@ -295,7 +295,7 @@ Incluir estas variantes en meta keywords, títulos alternativos y contenido cuan
 
 ### Nav común (marca y contenido)
 
-- En **copy y UI visible** usar el nombre **Jobrithm** (logo, navegación, pies de página). La barra debe ser **coherente** en todas las páginas: mismos ítems lógicos (Features/Workflow o Funciones/Flujo, Contacto, selector EN/ES, CTA tipo “Book a demo” / “Reservar demo”). La página de precios puede estar oculta en el menú hasta definir pricing.
+- En **copy y UI visible** usar el nombre **JobRhythm** (logo, navegación, pies de página). La barra debe ser **coherente** en todas las páginas: mismos ítems lógicos (Features/Workflow o Funciones/Flujo, Contacto, selector EN/ES, CTA tipo “Book a demo” / “Reservar demo”). La página de precios puede estar oculta en el menú hasta definir pricing.
 - La implementación técnica del `<nav>` (partials + `build-nav.mjs`) está descrita en [Navegación global (build con parciales)](#navegación-global-build-con-parciales) y en **`landing/README.md`**.
 - En la **home** se prioriza conversión; el acceso principal a login suele vivir en el footer u otras zonas, no como elemento dominante del nav.
 
@@ -327,9 +327,9 @@ Incluir estas variantes en meta keywords, títulos alternativos y contenido cuan
 - **Desarrollo:** `npm run dev` (watch solo CSS) + `npm run build` o `npm run build:watch` cuando cambien HTML o partials del nav + `npm start` (servir `dist/` en puerto 3000).
 - **Deploy:** `dist/` se monta en Nginx para getjobrithm.com (ver `../../nginx/default.conf` desde esta carpeta `docs/`).
 
-### Arquitectura ideal (site map) – Website SaaS Jobrithm
+### Arquitectura ideal (site map) – Website SaaS JobRhythm
 
-Esta es la estructura recomendada de secciones y rutas para escalar la landing y el sitio público de Jobrithm. Úsala como referencia para nuevos contenidos, navegación y enlaces:
+Esta es la estructura recomendada de secciones y rutas para escalar la landing y el sitio público de JobRhythm. Úsala como referencia para nuevos contenidos, navegación y enlaces:
 
 ```
 /                # Home – Página principal (valor y CTA)

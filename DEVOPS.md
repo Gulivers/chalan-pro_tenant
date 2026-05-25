@@ -26,7 +26,7 @@ Documento de referencia para operar el servidor con **precisión, repetibilidad 
 - **Path:** `/opt/chalanpro` (raíz del repo y del compose).
 - **Compose:** `docker-compose.yml` (producción). No usar `docker-compose.dev.yml` en VPS.
 - **Secrets:** `.env` en `envs/` (postgres.env, backend.env, pgadmin.env). **Nunca** versionar secretos; solo templates o ejemplos sin valores reales.
-- **DNS (actual):** Hostinger → `jobrithm.net`, `api.jobrithm.net`, `*.jobrithm.net` apuntando a la IP del VPS.
+- **DNS (actual):** Hostinger → ``jobrhythm.net` (legacy `jobrithm.net`), `api.`jobrhythm.net` (legacy `jobrithm.net`), `*.`jobrhythm.net` (legacy `jobrithm.net`) apuntando a la IP del VPS.
 - **DNS (compatibilidad temporal):** se mantiene `chalanpro.net` durante transición/rollback controlado.
 - **SSL:** Let's Encrypt (Certbot); certificados en `/etc/letsencrypt`, challenge en `/var/www/certbot`.
 
@@ -260,7 +260,7 @@ Hostinger expone una **API** para gestionar DNS (documentación: [developers.hos
 **Uso (renovación manual con API)**
 
 ```bash
-HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrithm.net --email admin@jobrithm.net
+HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrithm.net --email admin@jobrhythm.net
 ```
 
 **Cron (renovación automática del wildcard)**
@@ -269,7 +269,7 @@ Si el token está en un archivo (p. ej. `/root/.hostinger-api-token`, `chmod 600
 
 ```bash
 # Renovar wildcard de jobrithm.net el día 1 de cada mes a las 03:00 (cert válido ~90 días)
-0 3 1 * * HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrithm.net --email admin@jobrithm.net
+0 3 1 * * HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrithm.net --email admin@jobrhythm.net
 ```
 
 O definir `HOSTINGER_API_TOKEN` en `/etc/environment` o en el cron y usar `sudo -E` en el script (el script ya usa `sudo -E certbot` para pasar el token a certbot y a los hooks).
@@ -279,9 +279,9 @@ O definir `HOSTINGER_API_TOKEN` en `/etc/environment` o en el cron y usar `sudo 
 **Fecha objetivo de apagado (editable):** `2026-05-01`
 
 Checklist sugerido:
-- [ ] Confirmar 7-14 días sin incidencias en `jobrithm.net` (`frontend`, `api`, `*.jobrithm.net`, WebSocket).
-- [ ] Verificar que onboarding y nuevos tenants se crean en `jobrithm.net`.
+- [ ] Confirmar 7-14 días sin incidencias en ``jobrhythm.net` (legacy `jobrithm.net`) (`frontend`, `api`, `*.`jobrhythm.net` (legacy `jobrithm.net`), WebSocket).
+- [ ] Verificar que onboarding y nuevos tenants se crean en ``jobrhythm.net` (legacy `jobrithm.net`).
 - [ ] Mantener redirecciones 301 desde `chalanpro.net` durante la ventana de transición.
-- [ ] Actualizar runbooks/monitoring/alertas para usar `jobrithm.net` como dominio principal.
+- [ ] Actualizar runbooks/monitoring/alertas para usar ``jobrhythm.net` (legacy `jobrithm.net`) como dominio principal.
 - [ ] En la fecha objetivo, retirar wildcard/hosts/rutas legacy de `chalanpro.net` si no hay dependencias.
 

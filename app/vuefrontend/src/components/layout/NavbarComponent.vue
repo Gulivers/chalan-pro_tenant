@@ -11,7 +11,7 @@
       @click="closeNavbar" />
     <div
       class="container-fluid navbar-modern-inner d-flex align-items-center ps-2 pe-3">
-      <!-- Marca (Jobrithm logo — mismo asset que la landing en public/img) -->
+      <!-- Marca (JobRhythm logo — mismo asset que la landing en public/img) -->
       <router-link
         class="navbar-brand py-0 d-flex align-items-center"
         to="/"
@@ -318,7 +318,7 @@ export default {
       /** URL absoluta del logo del tenant (desde /api/user_detail/) */
       tenantLogoUrl: null,
       tenantName: null,
-      /** Si falla la carga del logo del tenant, usar Jobrithm */
+      /** Si falla la carga del logo del tenant, usar JobRhythm */
       tenantLogoFailed: false,
     };
   },
@@ -334,7 +334,7 @@ export default {
       return this.tenantLogoUrl || this.jobrithmLogoUrl;
     },
     brandLogoAlt() {
-      return this.tenantName || "Jobrithm";
+      return this.tenantName || "JobRhythm";
     },
     shouldShowNavbar() {
       // Verificar si la ruta actual tiene hideNavbar en su meta

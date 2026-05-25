@@ -18,7 +18,7 @@ def api_root(request):
     Vista raíz del API REST que muestra los endpoints disponibles.
     """
     return Response({
-        'message': 'Chalan-Pro API',
+        'message': 'JobRhythm API',
         'version': '1.0',
         'endpoints': {
             'contracts': '/api/contract/',

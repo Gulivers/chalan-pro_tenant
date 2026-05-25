@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://getjobrithm.com/sitemap.xml
+Sitemap: https://getjobrhythm.com/sitemap.xml

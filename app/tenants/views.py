@@ -32,7 +32,7 @@ def _send_onboarding_welcome_email(
     user_chose_strong_password: bool,
     admin_name: Optional[str],
 ) -> None:
-    """Envía confirmación de onboarding desde DEFAULT_FROM_EMAIL (p. ej. noreply@jobrithm.net)."""
+    """Envía confirmación de onboarding desde DEFAULT_FROM_EMAIL (p. ej. noreply@jobrhythm.net)."""
     admin_display = (admin_name or "").strip() or None
     context = {
         "company_name": company_name,
@@ -43,7 +43,7 @@ def _send_onboarding_welcome_email(
         "admin_display_name": admin_display,
     }
     text_body = (
-        f"Your Jobrithm workspace is ready.\n\n"
+        f"Your JobRhythm workspace is ready.\n\n"
         f"Company: {company_name}\n"
         f"Username: {username}\n"
         f"Sign-in link: {login_url}\n\n"
@@ -54,7 +54,7 @@ def _send_onboarding_welcome_email(
         text_body += f"Temporary password: {temp_password}\n"
     html_body = render_to_string("onboarding_welcome_email.html", context)
     msg = EmailMultiAlternatives(
-        "Your Jobrithm workspace is ready",
+        "Your JobRhythm workspace is ready",
         text_body,
         settings.DEFAULT_FROM_EMAIL,
         [recipient_email],
@@ -68,7 +68,7 @@ def _send_onboarding_welcome_email(
 @permission_classes([AllowAny])
 def landing_contact(request):
     """
-    Public landing contact form (getjobrithm.com). Sends email to LANDING_CONTACT_TO_EMAIL.
+    Public landing contact form (getjobrhythm.com). Sends email to LANDING_CONTACT_TO_EMAIL.
     """
     from django.core.validators import validate_email
     from django.core.exceptions import ValidationError as DjangoValidationError
@@ -113,7 +113,7 @@ def landing_contact(request):
     topic = subj_es if locale == 'es' else subj_en
 
     to_email = getattr(settings, 'LANDING_CONTACT_TO_EMAIL', None) or settings.DEFAULT_FROM_EMAIL
-    mail_subject = f"[Jobrithm Contact] {topic} — {name}"
+    mail_subject = f"[JobRhythm Contact] {topic} — {name}"
 
     text_body = (
         f"New contact form submission (locale={locale})\n\n"
@@ -151,7 +151,7 @@ def api_root(request):
     Muestra los endpoints disponibles para onboarding y gestión de tenants.
     """
     return Response({
-        'message': 'Jobrithm API - Public Schema',
+        'message': 'JobRhythm API - Public Schema',
         'version': '1.0.0',
         'endpoints': {
             'onboarding': {
@@ -304,7 +304,7 @@ def create_tenant_onboarding(request):
                 preferences = prefs_list
         
         # Validar que preferences sea una lista válida
-        # Aligned with Jobrithm SPA navbar (exclude Dashboard + backend-only apps)
+        # Aligned with JobRhythm SPA navbar (exclude Dashboard + backend-only apps)
         valid_preferences = [
             'operations',
             'inventory',
@@ -417,7 +417,7 @@ def create_tenant_onboarding(request):
         
         # Crear el dominio basado en el schema_name
         # Obtener el dominio base desde settings o usar uno por defecto
-        base_domain = getattr(settings, 'TENANT_BASE_DOMAIN', 'chalan-pro.net')
+        base_domain = getattr(settings, 'TENANT_BASE_DOMAIN', 'jobrhythm.net')
         # Obtener subdominio del schema_name (ahora usa guiones directamente, válido para DNS)
         subdomain = tenant.schema_to_subdomain()
         

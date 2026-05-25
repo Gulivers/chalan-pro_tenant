@@ -94,7 +94,7 @@ ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',')]
 
 # Configuración de dominios para django-tenants (definir ANTES de usar)
 # Dominio base para los tenants (usado en onboarding) - DEBE estar antes de su uso
-TENANT_BASE_DOMAIN = os.environ.get('TENANT_BASE_DOMAIN', 'chalan-pro.net')
+TENANT_BASE_DOMAIN = os.environ.get('TENANT_BASE_DOMAIN', 'jobrhythm.net')
 # Dominio público (para acceder al admin global)
 PUBLIC_SCHEMA_URLCONF = 'project.urls_public'
 # Dominio por defecto para desarrollo local
@@ -486,7 +486,7 @@ except ValueError:
     EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'apikey')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_DEFAULT_FROM', 'noreply@jobrithm.net')
+DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_DEFAULT_FROM', 'noreply@jobrhythm.net')
 # Mutuamente excluyente: SSL (p. ej. 465) vs TLS/STARTTLS (p. ej. 587)
 _use_ssl = _env_bool('EMAIL_USE_SSL', False)
 _use_tls = _env_bool('EMAIL_USE_TLS', True)
@@ -499,8 +499,8 @@ else:
 
 FRONT_URL = os.environ.get('FRONT_URL', 'http://192.168.0.248:8080')
 
-# Landing (getjobrithm.com) contact form — inbox that receives submissions
-LANDING_CONTACT_TO_EMAIL = os.environ.get('LANDING_CONTACT_TO_EMAIL', 'noreply@jobrithm.net')
+# Landing (getjobrhythm.com) contact form — inbox that receives submissions
+LANDING_CONTACT_TO_EMAIL = os.environ.get('LANDING_CONTACT_TO_EMAIL', 'team@jobrhythm.net')
 
 # Channel Layers - Redis configuration
 REDIS_URL = os.environ.get('REDIS_URL')

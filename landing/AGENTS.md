@@ -1,18 +1,18 @@
-# Agentes – Landing Jobrithm (Marketing SaaS)
+# Agentes – Landing JobRhythm (Marketing SaaS)
 
-Contexto para agentes de IA (Cursor, Copilot, etc.) que trabajan en la **web de marketing** de Jobrithm (`getjobrithm.com`).
+Contexto para agentes de IA (Cursor, Copilot, etc.) que trabajan en la **web de marketing** de JobRhythm (`getjobrhythm.com`).
 
 ## Nota de marca (importante)
 
-- A nivel comercial y en **todo copy visible** en la landing (títulos, párrafos, CTAs, meta, navegación, pies de página), el nombre del sistema es **Jobrithm**.
+- A nivel comercial y en **todo copy visible** en la landing (títulos, párrafos, CTAs, meta, navegación, pies de página), el nombre del sistema es **JobRhythm**.
 - **Chalan-Pro / chalanpro** se mantiene para nombres técnicos cuando aplique: dominios ya publicados, variables o rutas del repositorio. No reescribir URLs ni dominios salvo que el usuario lo pida explícitamente.
 
 ## Qué es este proyecto
 
-- **Sitio estático de marketing** para `getjobrithm.com`: explicar el producto, captar leads y apoyar SEO.
-- **No es la app interna.** La app (Vue.js SPA, multi-tenant) está en `jobrithm.net`.
+- **Sitio estático de marketing** para `getjobrhythm.com`: explicar el producto, captar leads y apoyar SEO.
+- **No es la app interna.** La app (Vue.js SPA, multi-tenant) está en ``jobrhythm.net` (legacy `jobrithm.net`).
 - **Stack:** HTML5 estático + Tailwind CSS (CLI). JavaScript vanilla solo cuando sea necesario. Sin Vue, React, Alpine ni jQuery en la landing.
-- **Relación:** La landing enlaza a `jobrithm.net` para login y onboarding; objetivos de conversión: reservar demo, contactar ventas, ver precios.
+- **Relación:** La landing enlaza a ``jobrhythm.net` (legacy `jobrithm.net`) para login y onboarding; objetivos de conversión: reservar demo, contactar ventas, ver precios.
 
 ## Idiomas (obligatorio)
 
@@ -28,7 +28,7 @@ Mantener paridad de secciones, enlaces internos entre versiones ES/EN, y ejecuta
 
 ## Posicionamiento
 
-Jobrithm es una **plataforma de operaciones de construcción** para contratistas, supervisores y equipos de campo. La web debe transmitir: moderno, profesional, confiable, con CTAs claros y diseño tipo B2B SaaS (referencias de espíritu: Stripe, Linear, Notion; sector: Buildertrend, Procore, ServiceTitan).
+JobRhythm es una **plataforma de operaciones de construcción** para contratistas, supervisores y equipos de campo. La web debe transmitir: moderno, profesional, confiable, con CTAs claros y diseño tipo B2B SaaS (referencias de espíritu: Stripe, Linear, Notion; sector: Buildertrend, Procore, ServiceTitan).
 
 **Inspiración (nicho y segmento):**
 
@@ -88,7 +88,7 @@ El SEO se vuelve mucho más alcanzable.
 > So instead of guessing what's happening in the field, you see it in real time.
 
 Construction has a rhythm.
-Jobrithm runs it.
+JobRhythm runs it.
 
 ---
 
@@ -112,7 +112,7 @@ landing/
 2. **Seguir `docs/ai-guidelines.md`** — HTML, Tailwind, diseño B2B SaaS, estrategia de conversión, SEO, accesibilidad, rendimiento.
 3. **Colores:** Usar `primary` (#0d6efd), `primary-dark` (#0a58ca), `accent` (#ffc107) según `tailwind.config.js`.
 4. **Enlaces app:** Login → https://jobrithm.net, Onboarding → https://www.jobrithm.net/onboarding.
-5. **Marca en UI y copy:** Usar **Jobrithm** en textos visibles; no usar “Chalan-Pro” como nombre comercial en la landing salvo contexto técnico explícito.
+5. **Marca en UI y copy:** Usar **JobRhythm** en textos visibles; no usar “Chalan-Pro” como nombre comercial en la landing salvo contexto técnico explícito.
 6. **Bilingüe:** Cualquier cambio sustancial (copy, secciones nuevas, CTAs, meta, navegación) debe replicarse en **EN** e **ES** (`index.html` ↔ `index-es.html`, y pares `pricing` / `contact`, etc.).
 7. **Conversión:** Cada página importante debe tener value proposition, indicador de confianza (o placeholder), CTA above the fold y CTA cerca del final. Objetivos: reservar demo, contactar ventas, ver precios.
 8. **Rendimiento:** JavaScript mínimo; preferir CSS sobre JS; evitar dependencias innecesarias; first paint rápido.
@@ -128,8 +128,8 @@ landing/
 
 - **README landing:** `landing/README.md` — inspiración, nicho, diagrama de posicionamiento, comandos, estructura del proyecto y **navegación (parciales + `build-nav.mjs`)**.
 - **Estándares y guías:** `landing/docs/ai-guidelines.md` — diseño, conversión, SEO, accesibilidad; obligatorio para copy y maquetado.
-- **Proyecto principal (app):** `../AGENTS.md` (raíz del repo) — contexto global (Jobrithm / Chalan-Pro técnico).
-- **Nginx landing:** `nginx/default.conf` — server block `getjobrithm.com` (y hosts legacy si aplica).
+- **Proyecto principal (app):** `../AGENTS.md` (raíz del repo) — contexto global (JobRhythm / Chalan-Pro técnico).
+- **Nginx landing:** `nginx/default.conf` — server block `getjobrhythm.com` (y hosts legacy si aplica).
 
 ## Convenciones técnicas (resumen)
 
