@@ -71,6 +71,7 @@
         display: inline-flex;
       }
     </style>
+    <meta name="jobrhythm-api-base" content="https://api.jobrhythm.net" />
   </head>
   <body class="font-sans antialiased text-gray-900 bg-white">
     <!-- Nav -->
@@ -200,7 +201,7 @@
       </div>
     </nav>
 
-    <main>
+<main>
       <!-- Pricing hero -->
       <section
         class="relative pt-28 pb-16 sm:pt-32 sm:pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden bg-slate-950"
@@ -570,69 +571,8 @@
       </div>
     </footer>
 
-    <script>
-      (function () {
-        var PLAN_PRICES = {
-          starter: { monthly: 436, annual: 4447 },
-          professional: { monthly: 877, annual: 8945 },
-          enterprise: { monthly: 1758, annual: 17931 },
-        };
-        var PERIOD_LABELS = { monthly: "/ mes", annual: "/ año" };
-
-        function formatPrice(amount) {
-          return "$" + amount.toLocaleString("en-US");
-        }
-
-        function setBillingPeriod(period) {
-          var isAnnual = period === "annual";
-          document.querySelectorAll("[data-plan]").forEach(function (card) {
-            var key = card.getAttribute("data-plan");
-            var prices = PLAN_PRICES[key];
-            if (!prices) return;
-            var priceEl = card.querySelector("[data-plan-price]");
-            var periodEl = card.querySelector("[data-plan-period]");
-            var saveBadge = card.querySelector("[data-plan-save]");
-            if (priceEl) {
-              priceEl.textContent = formatPrice(
-                isAnnual ? prices.annual : prices.monthly
-              );
-            }
-            if (periodEl) {
-              periodEl.textContent = isAnnual
-                ? PERIOD_LABELS.annual
-                : PERIOD_LABELS.monthly;
-            }
-            if (saveBadge) {
-              saveBadge.classList.toggle("is-visible", isAnnual);
-            }
-            card.querySelectorAll("[data-billing-note]").forEach(function (
-              note
-            ) {
-              var notePeriod = note.getAttribute("data-billing-note");
-              note.classList.toggle("hidden", notePeriod !== period);
-            });
-          });
-          document
-            .querySelectorAll("#billing-toggle [data-billing]")
-            .forEach(function (btn) {
-              var active = btn.getAttribute("data-billing") === period;
-              btn.classList.toggle("billing-toggle-btn--active", active);
-              btn.setAttribute("aria-pressed", active ? "true" : "false");
-            });
-        }
-
-        var billingToggle = document.getElementById("billing-toggle");
-        if (billingToggle) {
-          billingToggle.addEventListener("click", function (event) {
-            var btn = event.target.closest("[data-billing]");
-            if (!btn) return;
-            setBillingPeriod(btn.getAttribute("data-billing"));
-          });
-          setBillingPeriod("monthly");
-        }
-      })();
-    </script>
-    <script>
+    <script src="js/pricing-plans.js" defer></script>
+<script>
       (function () {
         var toggle = document.getElementById("nav-toggle");
         var dropdown = document.getElementById("nav-dropdown");

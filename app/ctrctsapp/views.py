@@ -35,6 +35,7 @@ from django_tenants.utils import get_public_schema_name, get_tenant
 from .utils import geocode_address
 from utils.datatable import handle_datatable_query
 from utils.tenant_branding import get_tenant_logo_url
+from tenants.services.access import assert_login_allowed
 
 from weasyprint import (
     CSS,
@@ -140,6 +141,13 @@ class LoginView(APIView):
         user = authenticate(username=username, password=password)
 
         if user is not None:
+            tenant = _resolve_request_tenant(request)
+            ok, msg = assert_login_allowed(tenant)
+            if not ok:
+                return Response(
+                    {'error': msg, 'code': 'tenant_inactive'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
             token, created = Token.objects.get_or_create(user=user)
             permissions = list(user.get_all_permissions())
             return Response({
@@ -158,6 +166,13 @@ def login_view(request):
     # print(f"Intentando login_view: {username} {password}")
     user = authenticate(username=username, password=password)
     if user:
+        tenant = _resolve_request_tenant(request)
+        ok, msg = assert_login_allowed(tenant)
+        if not ok:
+            return Response(
+                {'error': msg, 'code': 'tenant_inactive'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         token, _ = Token.objects.get_or_create(user=user)
         return Response({'token': token.key}, status=status.HTTP_200_OK)
     else:
