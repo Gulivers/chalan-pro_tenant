@@ -119,7 +119,15 @@ export function setupAxiosInterceptors() {
         return Promise.reject(error);
       }
 
-      // 402 → suscripción requerida (middleware billing)
+      // 403 → workspace deactivated
+      if (status === 403 && data.code === 'tenant_inactive') {
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/account-suspended')) {
+          router.push(data.redirect || '/account-suspended');
+        }
+        return Promise.reject(error);
+      }
+
+      // 402 → subscription required
       if (status === 402 && data.code === 'subscription_required') {
         const billingPath = data.redirect || '/billing';
         if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/billing')) {

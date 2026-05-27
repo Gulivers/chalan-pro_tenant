@@ -182,6 +182,7 @@ const routes = [
       requiresAuth: true,
       requiredPermissions: [],
       billingExempt: true,
+      tenantAccessExempt: true,
     },
   },
   {
@@ -192,6 +193,18 @@ const routes = [
       requiresAuth: true,
       requiredPermissions: [],
       billingExempt: true,
+      tenantAccessExempt: true,
+    },
+  },
+  {
+    path: "/account-suspended",
+    name: "account-suspended",
+    component: () => import("@/views/AccountSuspendedView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: [],
+      billingExempt: true,
+      tenantAccessExempt: true,
     },
   },
   {
@@ -1169,15 +1182,26 @@ router.beforeEach(async (to, from, next) => {
       console.log("Has permission:", hasPermission);
 
       if (hasPermission) {
-        const billingExempt = to.matched.some((r) => r.meta.billingExempt);
-        if (!billingExempt) {
+        const accessExempt = to.matched.some(
+          (r) => r.meta.billingExempt || r.meta.tenantAccessExempt
+        );
+        if (!accessExempt) {
           try {
             const billing = await fetchBillingStatus();
+            if (billing.tenant_active === false) {
+              next({ name: "account-suspended" });
+              return;
+            }
             if (!billing.access_allowed) {
               next({ name: "billing", query: { reason: billing.access_reason } });
               return;
             }
           } catch (billingErr) {
+            if (billingErr.response?.status === 403
+              && billingErr.response?.data?.code === "tenant_inactive") {
+              next({ name: "account-suspended" });
+              return;
+            }
             if (billingErr.response?.status === 402) {
               next({ name: "billing" });
               return;

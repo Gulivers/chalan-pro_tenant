@@ -43,11 +43,41 @@
       sizes="96x96"
       href="icons/favicon-96x96.png" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <style>
+      .billing-toggle-btn {
+        padding: 0.5rem 1.25rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border-radius: 9999px;
+        color: rgb(203 213 225);
+        transition: color 0.2s, background 0.2s, box-shadow 0.2s;
+      }
+      .billing-toggle-btn:hover {
+        color: rgb(248 250 252);
+      }
+      .billing-toggle-btn--active {
+        color: rgb(248 250 252);
+        background: linear-gradient(
+          to right,
+          rgb(99 102 241),
+          rgb(34 211 238)
+        );
+        box-shadow: 0 4px 14px rgb(34 211 238 / 0.35);
+      }
+      .plan-save-badge {
+        display: none;
+        margin-bottom: 0.5rem;
+      }
+      .plan-save-badge.is-visible {
+        display: inline-flex;
+      }
+    </style>
+    <meta name="jobrhythm-api-base" content="https://api.jobrhythm.net" />
   </head>
   <body class="font-sans antialiased text-gray-900 bg-white">
     <!-- landing:inject-nav -->
 
-    <main>
+<main>
       <!-- Pricing hero -->
       <section
         class="relative pt-28 pb-16 sm:pt-32 sm:pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden bg-slate-950"
@@ -125,22 +155,61 @@
           </div>
 
           <div
+            class="flex justify-center mb-8 sm:mb-10"
+            role="group"
+            aria-label="Billing period"
+            id="billing-toggle">
+            <div
+              class="inline-flex p-1 rounded-full bg-white/10 border border-white/15 backdrop-blur">
+              <button
+                type="button"
+                class="billing-toggle-btn billing-toggle-btn--active"
+                data-billing="monthly"
+                aria-pressed="true">
+                Monthly
+              </button>
+              <button
+                type="button"
+                class="billing-toggle-btn"
+                data-billing="annual"
+                aria-pressed="false">
+                Annual
+                <span class="text-cyan-300 font-medium"> – Save 15%</span>
+              </button>
+            </div>
+          </div>
+
+          <div
             class="max-w-5xl mx-auto grid md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
             <!-- Starter -->
             <article
+              data-plan="starter"
               class="relative rounded-2xl border border-white/10 bg-white/[0.05] backdrop-blur p-6 sm:p-7 shadow-xl shadow-slate-900/60 flex flex-col">
               <h3 class="text-xl font-semibold text-slate-50 mb-1">Starter</h3>
               <p class="text-sm text-slate-300 mb-3">
                 For smaller companies running 1–3 crews.
               </p>
+              <span
+                class="plan-save-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-400/40"
+                data-plan-save>
+                Save 15%
+              </span>
               <p class="text-3xl sm:text-4xl font-bold text-slate-50 mb-1">
-                $436
-                <span class="text-base align-middle text-slate-300">
-                  / month
-                </span>
+                <span data-plan-price>$436</span
+                ><span
+                  class="text-base align-middle text-slate-300"
+                  data-plan-period>
+                  / month</span>
               </p>
-              <p class="text-xs text-slate-400 mb-6">
+              <p
+                class="text-xs text-slate-400 mb-6"
+                data-billing-note="monthly">
                 Billed monthly. No long-term commitment.
+              </p>
+              <p
+                class="text-xs text-slate-400 mb-6 hidden"
+                data-billing-note="annual">
+                Billed annually. Save 15% compared to monthly pricing.
               </p>
               <ul class="space-y-2.5 mb-6 text-slate-200 text-sm" role="list">
                 <li class="flex items-center gap-2">
@@ -181,6 +250,7 @@
 
             <!-- Professional (recommended) -->
             <article
+              data-plan="professional"
               class="relative rounded-2xl border border-cyan-400/60 bg-white/[0.07] backdrop-blur p-6 sm:p-7 shadow-2xl shadow-cyan-500/40 flex flex-col">
               <span
                 class="absolute -top-3 left-6 bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-50 px-3 py-1 rounded-full text-xs sm:text-sm font-medium shadow-md shadow-cyan-500/40">
@@ -192,14 +262,27 @@
               <p class="text-sm text-slate-300 mb-3">
                 For growing teams operating 4–10 crews.
               </p>
+              <span
+                class="plan-save-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-400/40"
+                data-plan-save>
+                Save 15%
+              </span>
               <p class="text-3xl sm:text-4xl font-bold text-slate-50 mb-1">
-                $877
-                <span class="text-base align-middle text-slate-300">
-                  / month
-                </span>
+                <span data-plan-price>$877</span
+                ><span
+                  class="text-base align-middle text-slate-300"
+                  data-plan-period>
+                  / month</span>
               </p>
-              <p class="text-xs text-slate-400 mb-6">
+              <p
+                class="text-xs text-slate-400 mb-6"
+                data-billing-note="monthly">
                 Billed monthly. Annual options available.
+              </p>
+              <p
+                class="text-xs text-slate-400 mb-6 hidden"
+                data-billing-note="annual">
+                Billed annually. Save 15% compared to monthly pricing.
               </p>
               <ul class="space-y-2.5 mb-6 text-slate-200 text-sm" role="list">
                 <li class="flex items-center gap-2">
@@ -245,6 +328,7 @@
 
             <!-- Enterprise -->
             <article
+              data-plan="enterprise"
               class="relative rounded-2xl border border-white/10 bg-white/[0.05] backdrop-blur p-6 sm:p-7 shadow-xl shadow-slate-900/60 flex flex-col">
               <h3 class="text-xl font-semibold text-slate-50 mb-1">
                 Enterprise
@@ -252,14 +336,27 @@
               <p class="text-sm text-slate-300 mb-3">
                 For larger contractors and multi-builder operations.
               </p>
+              <span
+                class="plan-save-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-400/40"
+                data-plan-save>
+                Save 15%
+              </span>
               <p class="text-3xl sm:text-4xl font-bold text-slate-50 mb-1">
-                $1,758
-                <span class="text-base align-middle text-slate-300">
-                  / month
-                </span>
+                <span data-plan-price>$1,758</span
+                ><span
+                  class="text-base align-middle text-slate-300"
+                  data-plan-period>
+                  / month</span>
               </p>
-              <p class="text-xs text-slate-400 mb-6">
+              <p
+                class="text-xs text-slate-400 mb-6"
+                data-billing-note="monthly">
                 Pricing can be adjusted for very large deployments.
+              </p>
+              <p
+                class="text-xs text-slate-400 mb-6 hidden"
+                data-billing-note="annual">
+                Billed annually. Save 15% compared to monthly pricing.
               </p>
               <ul class="space-y-2.5 mb-6 text-slate-200 text-sm" role="list">
                 <li class="flex items-center gap-2">
@@ -351,7 +448,8 @@
       </div>
     </footer>
 
-    <script>
+    <script src="js/pricing-plans.js" defer></script>
+<script>
       (function () {
         var toggle = document.getElementById("nav-toggle");
         var dropdown = document.getElementById("nav-dropdown");

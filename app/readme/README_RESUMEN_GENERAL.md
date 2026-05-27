@@ -73,6 +73,7 @@
   - [10.5 Variables de entorno Stripe](#105-variables-de-entorno-stripe)
   - [10.6 Comandos de gestión](#106-comandos-de-gestión)
   - [10.7 Frontend y despliegue](#107-frontend-y-despliegue)
+  - [10.8 Django admin: solo schema public](#108-django-admin-solo-schema-public)
 - [11. Troubleshooting](#11-troubleshooting)
 - [12. Contacto y Soporte](#12-contacto-y-soporte)
 
@@ -1586,6 +1587,8 @@ La guía en pantalla para administradores del tipo de precio está en **`vuefron
 
 ## 10. Billing (Stripe SaaS — `appbilling`)
 
+
+
 Monetización SaaS con **Stripe Checkout**, **Customer Portal** y webhooks. La app Django vive en **`app/appbilling/`** (schema **public**, `SHARED_APPS`), al mismo nivel que `appinventory`, `apptransactions`, etc.
 
 **Dominio producción:** `jobrhythm.net` · **API:** `https://api.jobrhythm.net` · **Webhook Stripe:** `https://api.jobrhythm.net/stripe/webhook/`
@@ -1618,22 +1621,34 @@ El plan sugerido al upgrade viene de `landing_selected_plan` / `recommended_plan
 | Método | Ruta | Auth | Descripción |
 |--------|------|------|-------------|
 | GET | `/api/billing/status/` | Token | Estado trial/suscripción, plan sugerido |
-| GET | `/api/billing/plans/` | Token | Catálogo activo (precios display) |
+| GET | `/api/billing/public-plans/` | Público | Catálogo activo (landing, sin auth) |
+| GET | `/api/billing/plans/` | Token | Mismo catálogo (app `/billing`) |
 | POST | `/api/billing/create-checkout-session/` | Token | Body: `plan_slug`, `billing_interval` (`monthly` \| `yearly`) |
 | POST | `/api/billing/create-customer-portal-session/` | Token | URL portal Stripe |
 | POST | `/stripe/webhook/` | Firma Stripe | Sincroniza suscripciones e invoices |
 
 Los **price IDs** de Stripe solo se resuelven en backend (modelo `Plan`), nunca desde el frontend.
 
-### 10.4 Trial, acceso y límites de cuadrillas
+### 10.4 Trial, acceso workspace y límites de cuadrillas
 
-- **Trial:** 30 días desde onboarding (`start_trial_for_tenant` en `create_tenant_onboarding`).
-- **Enforcement:** middleware `appbilling.middleware.BillingEnforcementMiddleware` → HTTP **402** en `/api/*` si no hay trial activo ni suscripción Stripe válida (rutas billing/login exentas).
+**Fuente de verdad:** `tenants.services.access.get_tenant_access(tenant)` — orden: `is_active` → billing (`get_billing_access`).
+
+| Condición | `access_allowed` | `access_reason` | HTTP API | Pantalla SPA |
+|-----------|------------------|-------------------|----------|--------------|
+| `is_active=false` | false | `tenant_inactive` | **403** | `/account-suspended` |
+| Trial OK o Stripe OK | true | `trial` / `active` / … | — | App normal |
+| Trial vencido / sin pago | false | `trial_expired` / `no_subscription` / … | **402** | `/billing?reason=...` |
+
+- **Trial:** 30 días desde onboarding (`start_trial_for_tenant`). Requiere `on_trial=true` y `now < trial_end`.
+- **Enforcement:** `tenants.middleware.TenantAccessEnforcementMiddleware` (schema tenant, no public):
+  - `/api/*` → 403 o 402 (exentas: billing, login, logout, validate-token, user_detail, …)
+  - **`/admin/*`** → HTML 403 (bloquea login y todo el admin del tenant si trial venció o workspace inactivo)
+- **Login:** `assert_login_allowed` — solo bloquea `tenant_inactive`; billing vencido permite token → guard manda a `/billing`.
 - **Grace `past_due`:** 7 días (`BILLING_PAST_DUE_GRACE_DAYS`).
-- **Cuadrillas:** `crewsapp` valida `max_crews` del plan efectivo al **crear** crew (`appbilling.services.crews`).
-- **Frontend:** `/billing`, guard en Vue Router, interceptor axios 402 → billing.
+- **Cuadrillas:** `crewsapp` → `appbilling.services.crews.validate_crew_create`.
+- **Frontend:** guard Vue (`tenant_active` primero), interceptor axios 403/402, rutas `/billing`, `/account-suspended`.
 
-Rutas siempre accesibles: `/billing`, login, logout, reset password, `user_detail`.
+Admin **public** (`api.jobrhythm.net/admin`) no se ve afectado.
 
 ### 10.5 Variables de entorno Stripe
 
@@ -1680,7 +1695,7 @@ docker compose exec backend python manage.py send_trial_reminders
 docker compose exec backend python manage.py send_trial_reminders --dry-run
 ```
 
-**Admin Django (schema public):** `Plan`, `Subscription`, `PaymentEvent`, campos trial en `Tenant`. Para el cliente legacy, ajustar manualmente `trial_end` y/o `Subscription`.
+**Admin Django (schema public):** ver [§10.8](#108-django-admin-solo-schema-public). Para el cliente legacy, ajustar manualmente `trial_end` y/o `Subscription`.
 
 **Migración app `billing` → `appbilling` (solo si el VPS tenía la app antigua):**
 
@@ -1700,6 +1715,39 @@ Luego `migrate_schemas --shared` para aplicar `appbilling.0002_rename_app_label_
 | `vuefrontend/src/router/index.js` | Rutas + guard suscripción |
 
 Tras desplegar backend con cambios en `appbilling` o `tenants`: **`migrate_schemas --shared`**, **`seed_plans`**, configurar webhook en Stripe Dashboard apuntando a `https://api.jobrhythm.net/stripe/webhook/`.
+
+**Precios en landing y app:** una sola fuente en el modelo `Plan` (admin o `seed_plans`). La landing (`pricing.html` / `pricing-en.html`) consume `GET /api/billing/public-plans/` vía `landing/src/js/pricing-plans.js` (mismo payload que `appbilling.catalog.list_active_plans`). En **getjobrhythm.com** la petición es **same-origin** (`/api/billing/public-plans/`) gracias al proxy en `nginx/default.conf` (bloque landing). En **local** (`npm start`, IP `192.168.x.x`) el script llama a `http://api.chalanpro.net:8000/api/billing/public-plans/` (requiere entrada en `hosts` y backend levantado). Tras cambiar precios en admin: `cd landing && npm run build` y desplegar `dist/`. En VPS también hace falta **pull** del backend (el endpoint devuelve 404 si el código no está desplegado).
+
+### 10.8 Django admin: solo schema public
+
+Las apps en **`SHARED_APPS`** (`tenants`, `appbilling`) registran modelos en el admin de Django. Sin restricción adicional, esos módulos también aparecen cuando un superusuario entra a `/admin/` desde el **subdominio de un cliente** (p. ej. `phoenix.jobrhythm.net`), lo cual no debe ocurrir.
+
+**Solución compartida:** `PublicSchemaOnlyAdminMixin` en `app/project/admin_mixins.py`. Comprueba que `connection.schema_name` (o `request.tenant.schema_name`) sea el schema **public** antes de conceder permisos de módulo, vista, alta, edición o borrado.
+
+| `ModelAdmin` | App | Modelos |
+|--------------|-----|---------|
+| `TenantAdmin` | `tenants` | `Tenant` |
+| `DomainAdmin` | `tenants` | `Domain` |
+| `PlanAdmin` | `appbilling` | `Plan` |
+| `SubscriptionAdmin` | `appbilling` | `Subscription` |
+| `PaymentEventAdmin` | `appbilling` | `PaymentEvent` |
+
+**Orden de herencia recomendado:** el mixin va **primero** (p. ej. `class TenantAdmin(PublicSchemaOnlyAdminMixin, TenantAdminMixin, admin.ModelAdmin)`).
+
+**Dónde sí se ve todo (operador / dueño del SaaS):**
+
+| Entorno | URL típica |
+|---------|------------|
+| Producción | `https://api.jobrhythm.net/admin/` |
+| Local (ubuntu-house) | `http://api.chalanpro.net:8000/admin/` |
+
+**Dónde no deben aparecer TENANTS ni BILLING (clientes):**
+
+| Entorno | URL típica |
+|---------|------------|
+| App del tenant | `https://{tenant}.jobrhythm.net` → `/admin/` (o `:8080/admin/` en dev con proxy) |
+
+**Añadir un nuevo modelo solo-admin-public:** importar `PublicSchemaOnlyAdminMixin` desde `project.admin_mixins` y aplicarlo al `ModelAdmin` del modelo en `SHARED_APPS`.
 
 ---
 

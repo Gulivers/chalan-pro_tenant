@@ -13,9 +13,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from django_tenants.utils import get_public_schema_name, schema_context
-
-from appbilling.models import Plan
+from appbilling.catalog import list_active_plans
 from appbilling.services.access import billing_status_payload
 from appbilling.services.checkout import create_checkout_session
 from appbilling.services.customer import ensure_stripe_customer
@@ -46,23 +44,16 @@ def billing_status(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
+def billing_public_plans(request):
+    """Public catalog for landing pages (no auth). Served from public schema."""
+    return Response({'plans': list_active_plans()})
+
+
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def billing_plans(request):
-    with schema_context(get_public_schema_name()):
-        plans = list(Plan.objects.filter(is_active=True).order_by('display_order'))
-    data = [
-        {
-            'slug': p.slug,
-            'name': p.name,
-            'monthly_price': str(p.monthly_price),
-            'yearly_price': str(p.yearly_price) if p.yearly_price else None,
-            'is_recommended': p.is_recommended,
-            'max_crews': p.max_crews,
-            'max_users': p.max_users,
-        }
-        for p in plans
-    ]
-    return Response({'plans': data})
+    return Response({'plans': list_active_plans()})
 
 
 @api_view(['POST'])

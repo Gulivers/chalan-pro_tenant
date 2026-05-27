@@ -10,7 +10,7 @@ from django.utils import timezone
 from django_tenants.utils import get_public_schema_name, schema_context
 
 from appbilling.models import Subscription
-from appbilling.services.plans import get_suggested_plan_slug, get_plan_by_slug, get_effective_plan_for_tenant
+from appbilling.services.plans import get_suggested_plan_slug, get_effective_plan_for_tenant
 
 
 GRACE_DAYS = getattr(settings, 'BILLING_PAST_DUE_GRACE_DAYS', 7)
@@ -138,37 +138,5 @@ def get_billing_access(tenant) -> BillingAccess:
 
 
 def billing_status_payload(tenant) -> dict:
-    access = get_billing_access(tenant)
-    plan = get_effective_plan_for_tenant(tenant)
-    suggested_plan = get_plan_by_slug(access.suggested_plan_slug)
-
-    return {
-        'access_allowed': access.allowed,
-        'access_reason': access.reason,
-        'trial_active': access.trial_active,
-        'trial_days_left': access.trial_days_left,
-        'trial_end': access.trial_end,
-        'subscription_status': access.subscription_status,
-        'suggested_plan_slug': access.suggested_plan_slug,
-        'needs_payment': access.needs_payment,
-        'in_grace_period': access.in_grace_period,
-        'current_plan_slug': access.current_plan_slug,
-        'landing_selected_plan': getattr(tenant, 'landing_selected_plan', None),
-        'recommended_plan': getattr(tenant, 'recommended_plan', None),
-        'plan_limits': {
-            'max_crews': plan.max_crews if plan else None,
-            'max_users': plan.max_users if plan else None,
-        },
-        'suggested_plan': _serialize_plan_brief(suggested_plan) if suggested_plan else None,
-    }
-
-
-def _serialize_plan_brief(plan) -> dict:
-    return {
-        'slug': plan.slug,
-        'name': plan.name,
-        'monthly_price': str(plan.monthly_price),
-        'yearly_price': str(plan.yearly_price) if plan.yearly_price else None,
-        'is_recommended': plan.is_recommended,
-        'max_crews': plan.max_crews,
-    }
+    from tenants.services.access import tenant_access_status_payload
+    return tenant_access_status_payload(tenant)

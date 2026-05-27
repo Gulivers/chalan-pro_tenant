@@ -2,7 +2,7 @@
 
 from rest_framework.permissions import BasePermission
 
-from appbilling.services.access import get_billing_access
+from tenants.services.access import get_tenant_access
 from utils.tenant_branding import _resolve_tenant
 
 
@@ -15,4 +15,4 @@ class BillingAccessPermission(BasePermission):
         tenant = _resolve_tenant(request)
         if tenant is None:
             return True
-        return get_billing_access(tenant).allowed
+        return get_tenant_access(tenant).allowed
