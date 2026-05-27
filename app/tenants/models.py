@@ -16,7 +16,7 @@ class Tenant(TenantMixin):
     Cada instancia representa un cliente con su propio schema.
     """
     # Nombre del tenant (ej: "Phoenix Electric")
-    name = models.CharField(max_length=100, unique=True, verbose_name="Nombre del Cliente")
+    name = models.CharField(max_length=100, unique=True, verbose_name="Client name")
     
     # Nombre del schema (ej: "phoenix")
     # django-tenants usa este campo para crear el schema
@@ -26,7 +26,7 @@ class Tenant(TenantMixin):
     tenant_id = models.CharField(max_length=100, unique=True, verbose_name="Tenant ID", blank=True)
     
     # Información de contacto
-    email = models.EmailField(max_length=255, verbose_name="Correo Electrónico", blank=True, null=True)
+    email = models.EmailField(max_length=255, verbose_name="Email", blank=True, null=True)
     
     # Tipo de cliente (para personalización)
     CLIENT_TYPE_CHOICES = [
@@ -41,7 +41,7 @@ class Tenant(TenantMixin):
         max_length=50,
         choices=CLIENT_TYPE_CHOICES,
         default='general',
-        verbose_name="Tipo de Cliente"
+        verbose_name="Client type"
     )
     
     # Logo del cliente
@@ -51,7 +51,7 @@ class Tenant(TenantMixin):
         upload_to='tenant_logos/',
         blank=True,
         null=True,
-        verbose_name="Logo del Cliente"
+        verbose_name="Client logo"
     )
     
     # Dirección de la empresa (opcional)
@@ -120,14 +120,14 @@ class Tenant(TenantMixin):
     )
     
     # Configuraciones del tenant
-    trial_start = models.DateTimeField(null=True, blank=True, verbose_name="Inicio del trial")
-    trial_end = models.DateTimeField(null=True, blank=True, verbose_name="Fin del trial")
-    paid_until = models.DateField(null=True, blank=True, verbose_name="Pagado hasta")
-    on_trial = models.BooleanField(default=True, verbose_name="En período de prueba")
+    trial_start = models.DateTimeField(null=True, blank=True, verbose_name="Trial start")
+    trial_end = models.DateTimeField(null=True, blank=True, verbose_name="Trial end")
+    paid_until = models.DateField(null=True, blank=True, verbose_name="Paid until")
+    on_trial = models.BooleanField(default=True, verbose_name="On trial")
     
     # Metadata adicional
-    created_on = models.DateField(auto_now_add=True, verbose_name="Creado el")
-    is_active = models.BooleanField(default=True, verbose_name="Activo")
+    created_on = models.DateField(auto_now_add=True, verbose_name="Created on")
+    is_active = models.BooleanField(default=True, verbose_name="Active")
     
     # Flag para controlar si se han importado los datos maestros de inventario
     seed_inventory_done = models.BooleanField(

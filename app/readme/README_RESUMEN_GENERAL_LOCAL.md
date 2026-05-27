@@ -432,6 +432,24 @@ El script `scripts/update_hosts.sh` actualiza automáticamente `/etc/hosts` con 
 sudo ./scripts/update_hosts.sh
 ```
 
+### Admin Django (schema `public` — Tenants, Billing)
+
+El admin de **Planes / Suscripciones / appbilling** y **Tenants** no usa el subdominio del tenant de prueba. Usa el dominio **API** en el **puerto 8000** (backend), no el 8080 del frontend:
+
+| URL | Uso |
+|-----|-----|
+| `http://api.chalanpro.net:8000/admin/` | Admin global (legacy chalanpro en hosts) |
+| `http://api.jobrhythm.net:8000/admin/` | Admin global (recomendado con marca JobRhythm) |
+
+Si el navegador no abre o devuelve error 500, en la base local suele faltar el registro del tenant `public`:
+
+```bash
+docker compose -f docker-compose.dev.yml exec backend python manage.py setup_public_domains
+docker compose -f docker-compose.dev.yml restart backend
+```
+
+`setup_public_domains` crea el tenant `public` si no existe y registra `api.jobrhythm.net`, `api.chalanpro.net`, etc. en `tenants_domain`.
+
 ### Identificación de Tenant
 
 En desarrollo local:

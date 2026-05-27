@@ -206,7 +206,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'appbilling.middleware.BillingEnforcementMiddleware',
+    'tenants.middleware.TenantAccessEnforcementMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -270,6 +270,17 @@ if DEBUG:
 # Permitir todas las solicitudes desde el frontend
 # En producción, usa CORS_ALLOWED_ORIGINS en lugar de CORS_ALLOW_ALL_ORIGINS
 CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'True') == 'True'  # Solo para desarrollo
+
+_cors_allowed_env = os.environ.get('CORS_ALLOWED_ORIGINS', '').strip()
+if _cors_allowed_env:
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_allowed_env.split(',') if o.strip()]
+elif not CORS_ALLOW_ALL_ORIGINS:
+    CORS_ALLOWED_ORIGINS = [
+        'https://getjobrhythm.com',
+        'https://www.getjobrhythm.com',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+    ]
 
 # CORS_ALLOWED_ORIGINS = [
 #     "http://192.168.0.248:3000",

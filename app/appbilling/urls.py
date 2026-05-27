@@ -4,6 +4,7 @@ from appbilling import views
 
 urlpatterns = [
     path('api/billing/status/', views.billing_status, name='billing-status'),
+    path('api/billing/public-plans/', views.billing_public_plans, name='billing-public-plans'),
     path('api/billing/plans/', views.billing_plans, name='billing-plans'),
     path(
         'api/billing/create-checkout-session/',

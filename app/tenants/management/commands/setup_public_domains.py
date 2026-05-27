@@ -14,23 +14,39 @@ class Command(BaseCommand):
         parser.add_argument(
             '--domains',
             nargs='+',
-            default=['api.jobrhythm.net', 'www.jobrhythm.net', 'jobrhythm.net', 'api.jobrithm.net', 'www.jobrithm.net'],
-            help='Lista de dominios a configurar (default: dominios public JobRhythm + legacy jobrithm)'
+            default=[
+                'api.jobrhythm.net',
+                'api.chalanpro.net',
+                'www.jobrhythm.net',
+                'jobrhythm.net',
+                'chalanpro.net',
+                'api.jobrithm.net',
+                'www.jobrithm.net',
+            ],
+            help='Lista de dominios a configurar (default: API public JobRhythm + legacy chalanpro/jobrithm)',
         )
+
+    def _ensure_public_tenant(self, public_schema: str) -> Tenant:
+        tenant = Tenant.objects.filter(schema_name=public_schema).first()
+        if tenant:
+            return tenant
+        tenant = Tenant(
+            schema_name=public_schema,
+            name='Public',
+            tenant_id='public_001',
+            on_trial=False,
+            is_active=True,
+        )
+        tenant.auto_create_schema = False
+        tenant.save()
+        self.stdout.write(
+            self.style.SUCCESS(f'✅ Tenant "{public_schema}" creado (id={tenant.pk})')
+        )
+        return tenant
 
     def handle(self, *args, **options):
         public_schema = get_public_schema_name()
-        
-        try:
-            tenant = Tenant.objects.get(schema_name=public_schema)
-        except Tenant.DoesNotExist:
-            self.stdout.write(
-                self.style.ERROR(f'❌ No se encontró el tenant para el schema "{public_schema}"')
-            )
-            self.stdout.write(
-                self.style.WARNING('💡 Ejecuta primero: python manage.py migrate_schemas --schema=public')
-            )
-            return
+        tenant = self._ensure_public_tenant(public_schema)
         
         domains = options['domains']
         primary_domain = domains[0] if domains else 'api.jobrhythm.net'
