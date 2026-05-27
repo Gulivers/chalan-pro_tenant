@@ -37,7 +37,13 @@ def process_webhook_payload(payload: bytes, sig_header: str):
     if not secret:
         raise ValueError('STRIPE_WEBHOOK_SECRET is not configured.')
 
-    event = stripe.Webhook.construct_event(payload, sig_header, secret)
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, secret)
+    except stripe.error.SignatureVerificationError as exc:
+        raise ValueError(f'Invalid webhook signature: {exc}') from exc
+    except ValueError as exc:
+        # Payload is not valid JSON
+        raise ValueError(f'Invalid webhook payload: {exc}') from exc
     event_id = event['id']
     event_type = event['type']
 
