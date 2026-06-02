@@ -27,9 +27,9 @@ def refresh_dynamic_domains():
     from tenants.models import Domain
 
     try:
-        active_domains = Domain.objects.filter(
-            tenant__is_active=True
-        ).values_list('domain', flat=True).distinct()
+        # Todos los dominios registrados deben poder resolver el tenant (ALLOWED_HOSTS).
+        # El bloqueo por tenant inactivo o billing va en TenantAccessEnforcementMiddleware.
+        active_domains = Domain.objects.values_list('domain', flat=True).distinct()
 
         # 1. ALLOWED_HOSTS
         domains_added = 0

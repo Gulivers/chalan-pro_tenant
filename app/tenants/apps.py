@@ -15,8 +15,8 @@ def load_domains_to_csrf_trusted_origins():
     try:
         from tenants.models import Domain
         
-        # Obtener todos los dominios activos desde la BD
-        active_domains = Domain.objects.filter(tenant__is_active=True).values_list('domain', flat=True)
+        # Todos los dominios (activos o no) para CSRF; el acceso se valida en middleware de billing.
+        active_domains = Domain.objects.values_list('domain', flat=True)
         
         # Determinar qué orígenes agregar según el entorno
         if settings.DEBUG:
