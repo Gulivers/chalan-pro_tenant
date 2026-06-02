@@ -107,6 +107,14 @@ class UserDetailView(APIView):
         else:
             data['tenant_name'] = None
             data['tenant_logo_url'] = None
+        data['is_tenant_owner'] = (
+            user.is_authenticated
+            and user.is_staff
+            and bool(user.email)
+            and tenant is not None
+            and bool(tenant.email)          # Fix 3: tenant.email is nullable
+            and user.email == tenant.email
+        )
         return Response(data)
 
 

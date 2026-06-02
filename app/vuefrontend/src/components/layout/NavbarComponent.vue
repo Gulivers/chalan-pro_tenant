@@ -112,7 +112,7 @@
                     About
                   </router-link>
                 </li>
-                <li>
+                <li v-if="isTenantOwner">
                   <router-link
                     to="/billing"
                     class="dropdown-item"
@@ -323,6 +323,7 @@ export default {
         /* About y Configuration solo en el menú de usuario (evita desborde en pantallas medianas) */
       ],
       userName: "",
+      isTenantOwner: false,
       /** URL absoluta del logo del tenant (desde /api/user_detail/) */
       tenantLogoUrl: null,
       tenantName: null,
@@ -380,6 +381,7 @@ export default {
       this.isLoggedIn = !!token;
       if (!this.isLoggedIn) {
         this.userName = "";
+        this.isTenantOwner = false;
         this.tenantLogoUrl = null;
         this.tenantName = null;
         this.tenantLogoFailed = false;
@@ -388,6 +390,7 @@ export default {
       this.getAuthenticatedUser().then((user) => {
         if (user) {
           this.userName = user.username;
+          this.isTenantOwner = !!user.is_tenant_owner;
           this.tenantLogoUrl = user.tenant_logo_url || null;
           this.tenantName = user.tenant_name || null;
           this.tenantLogoFailed = false;
