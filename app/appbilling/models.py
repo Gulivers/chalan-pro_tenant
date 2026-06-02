@@ -64,9 +64,9 @@ class Subscription(models.Model):
         blank=True,
         related_name='subscriptions',
     )
-    stripe_customer_id = models.CharField(max_length=64, blank=True, db_index=True)
-    stripe_subscription_id = models.CharField(max_length=64, blank=True, db_index=True)
-    stripe_checkout_session_id = models.CharField(max_length=64, blank=True)
+    stripe_customer_id = models.CharField(max_length=255, blank=True, db_index=True)
+    stripe_subscription_id = models.CharField(max_length=255, blank=True, db_index=True)
+    stripe_checkout_session_id = models.CharField(max_length=255, blank=True)
     status = models.CharField(max_length=32, default='incomplete', choices=STATUS_CHOICES)
     trial_start = models.DateTimeField(null=True, blank=True)
     trial_end = models.DateTimeField(null=True, blank=True)
@@ -75,7 +75,7 @@ class Subscription(models.Model):
     cancel_at_period_end = models.BooleanField(default=False)
     canceled_at = models.DateTimeField(null=True, blank=True)
     last_payment_status = models.CharField(max_length=32, blank=True)
-    last_invoice_id = models.CharField(max_length=64, blank=True)
+    last_invoice_id = models.CharField(max_length=255, blank=True)
     past_due_since = models.DateTimeField(
         null=True,
         blank=True,
@@ -95,7 +95,7 @@ class Subscription(models.Model):
 
 
 class PaymentEvent(models.Model):
-    stripe_event_id = models.CharField(max_length=64, unique=True)
+    stripe_event_id = models.CharField(max_length=255, unique=True)
     event_type = models.CharField(max_length=128)
     processed = models.BooleanField(default=False)
     processing_error = models.TextField(blank=True)
