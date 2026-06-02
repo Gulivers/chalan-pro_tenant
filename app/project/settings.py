@@ -499,7 +499,13 @@ except ValueError:
     EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'apikey')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_DEFAULT_FROM', 'noreply@jobrhythm.net')
+def _env_email(name: str, default: str) -> str:
+    """Evita que EMAIL_* vacío en .env anule el valor por defecto."""
+    value = (os.environ.get(name) or default).strip()
+    return value or default
+
+
+DEFAULT_FROM_EMAIL = _env_email('EMAIL_DEFAULT_FROM', 'noreply@jobrhythm.net')
 # Mutuamente excluyente: SSL (p. ej. 465) vs TLS/STARTTLS (p. ej. 587)
 _use_ssl = _env_bool('EMAIL_USE_SSL', False)
 _use_tls = _env_bool('EMAIL_USE_TLS', True)
@@ -523,7 +529,7 @@ BILLING_PAST_DUE_GRACE_DAYS = int(os.environ.get('BILLING_PAST_DUE_GRACE_DAYS', 
 BILLING_ENFORCEMENT_ENABLED = _env_bool('BILLING_ENFORCEMENT_ENABLED', True)
 
 # Landing (getjobrhythm.com) contact form — inbox that receives submissions
-LANDING_CONTACT_TO_EMAIL = os.environ.get('LANDING_CONTACT_TO_EMAIL', 'team@jobrhythm.net')
+LANDING_CONTACT_TO_EMAIL = _env_email('LANDING_CONTACT_TO_EMAIL', 'team@jobrhythm.net')
 
 # Channel Layers - Redis configuration
 REDIS_URL = os.environ.get('REDIS_URL')

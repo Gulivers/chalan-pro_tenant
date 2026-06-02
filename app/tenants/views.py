@@ -7,6 +7,7 @@ from typing import Optional
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.utils.html import escape
 from django.core.management import call_command
 from django.template.loader import render_to_string
 from django_tenants.utils import schema_context
@@ -112,7 +113,7 @@ def landing_contact(request):
     subj_en, subj_es = subject_labels[subject_key]
     topic = subj_es if locale == 'es' else subj_en
 
-    to_email = getattr(settings, 'LANDING_CONTACT_TO_EMAIL', None) or settings.DEFAULT_FROM_EMAIL
+    to_email = settings.LANDING_CONTACT_TO_EMAIL
     mail_subject = f"[JobRhythm Contact] {topic} — {name}"
 
     text_body = (
@@ -123,6 +124,20 @@ def landing_contact(request):
         f"Team size: {team_size or '—'}\n\n"
         f"Message:\n{message}\n"
     )
+    safe_name = escape(name)
+    safe_email = escape(email)
+    safe_message = escape(message)
+    safe_team = escape(team_size) if team_size else '—'
+    html_body = (
+        "<h2>JobRhythm — contact form</h2>"
+        f"<p><strong>Locale:</strong> {escape(locale)}</p>"
+        f"<p><strong>Topic:</strong> {escape(topic)} ({escape(subject_key)})</p>"
+        f"<p><strong>Name:</strong> {safe_name}</p>"
+        f"<p><strong>Email:</strong> <a href=\"mailto:{safe_email}\">{safe_email}</a></p>"
+        f"<p><strong>Team size:</strong> {safe_team}</p>"
+        f"<p><strong>Message:</strong></p><pre style=\"white-space:pre-wrap;font-family:inherit\">"
+        f"{safe_message}</pre>"
+    )
 
     msg = EmailMultiAlternatives(
         mail_subject,
@@ -131,10 +146,17 @@ def landing_contact(request):
         [to_email],
         reply_to=[email],
     )
+    msg.attach_alternative(html_body, 'text/html')
     try:
         msg.send(fail_silently=False)
+        logger.info(
+            'landing_contact: delivered to %s (from %s, topic=%s)',
+            to_email,
+            email,
+            subject_key,
+        )
     except Exception as exc:
-        logger.exception('landing_contact: send failed: %s', exc)
+        logger.exception('landing_contact: send failed to %s: %s', to_email, exc)
         return Response(
             {'success': False, 'error': 'Could not send your message. Please try again later.'},
             status=status.HTTP_502_BAD_GATEWAY,

@@ -1,5 +1,11 @@
 #!/bin/bash
-# Script de ayuda para Git Workflow - Chalan-Pro
+# Git Workflow Helper - Chalan-Pro / Jobrithm (ubuntu-house)
+#
+# Flujo habitual:
+#   - Desarrollo y commits en dev_local_inv-img
+#   - prepare-deploy: sube dev → main + sincroniza develop (despliegue desde main en VPS)
+#   - sync-all: trae main/develop/dev desde origin (sin subir)
+#
 # Uso: ./scripts/git-workflow.sh [comando]
 
 set -e
@@ -7,189 +13,309 @@ set -e
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_DIR"
 
-# Colores para output
+DEV_BRANCH="dev_local_inv-img"
+MAIN_BRANCH="main"
+DEVELOP_BRANCH="develop"
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Funciones de ayuda
 show_help() {
-    echo -e "${BLUE}Git Workflow Helper - Chalan-Pro${NC}"
+    echo -e "${BLUE}Git Workflow Helper - Chalan-Pro (ubuntu-house)${NC}"
+    echo ""
+    echo "Rama de trabajo: ${DEV_BRANCH}"
+    echo "Producción (VPS): ${MAIN_BRANCH}  |  Integración: ${DEVELOP_BRANCH}"
     echo ""
     echo "Uso: $0 [comando]"
     echo ""
-    echo "Comandos disponibles:"
-    echo "  status          - Mostrar estado actual de ramas"
-    echo "  sync-all        - Actualizar main, develop y dev_local_inv-img (traer del remoto)"
-    echo "  prepare-deploy  - Subir cambios locales a main remoto (preparar deploy VPS)"
-    echo "  sync-main       - Sincronizar main con origin/main"
-    echo "  sync-develop    - Sincronizar develop con origin/develop"
-    echo "  create-feature  - Crear nueva rama de feature desde develop"
-    echo "  merge-to-develop - Mergear rama actual a develop"
-    echo "  merge-to-main   - Mergear develop a main (solo después de pruebas)"
-    echo "  setup           - Configurar ramas iniciales (develop, ubuntu_house)"
-    echo "  compare         - Comparar ramas (main vs develop)"
+    echo "Comandos:"
+    echo "  status            - Estado de ramas y cambios locales"
+    echo "  sync-all          - Traer del remoto: main, develop y ${DEV_BRANCH}"
+    echo "  prepare-deploy    - Subir ${DEV_BRANCH} → main + sync develop (listo para VPS)"
+    echo "                      Opcional: mensaje de commit si hay cambios sin commitear"
+    echo "  sync-main         - Actualizar ${MAIN_BRANCH} local desde origin"
+    echo "  sync-develop      - Actualizar ${DEVELOP_BRANCH} desde origin y mergear ${MAIN_BRANCH}"
+    echo "  sync-dev          - Actualizar ${DEV_BRANCH} desde origin y mergear ${MAIN_BRANCH}"
+    echo "  push-dev          - Push de ${DEV_BRANCH} a origin (sin tocar main)"
+    echo "  merge-to-develop  - Mergear ${DEV_BRANCH} (o rama actual) → ${DEVELOP_BRANCH}"
+    echo "  merge-to-main     - Mergear ${DEV_BRANCH} → ${MAIN_BRANCH} + sync ${DEVELOP_BRANCH}"
+    echo "  create-feature    - Nueva rama feature/* desde ${DEVELOP_BRANCH}"
+    echo "  setup             - Configurar ${MAIN_BRANCH}, ${DEVELOP_BRANCH} y ${DEV_BRANCH}"
+    echo "  compare           - Comparar ${MAIN_BRANCH}, ${DEVELOP_BRANCH} y ${DEV_BRANCH}"
+    echo ""
+    echo "Ejemplos:"
+    echo "  $0 prepare-deploy"
+    echo "  $0 prepare-deploy \"feat(inventory): descripción\""
+    echo "  $0 sync-all"
     echo ""
 }
 
+require_clean_or_confirm() {
+    if git diff-index --quiet HEAD -- 2>/dev/null; then
+        return 0
+    fi
+    echo -e "${RED}⚠ Hay cambios sin commitear${NC}"
+    git status --short
+    read -p "¿Continuar de todos modos? (s/N): " -r
+    if [[ ! $REPLY =~ ^[Ss]$ ]]; then
+        echo "Cancelado."
+        exit 1
+    fi
+}
+
 show_status() {
-    echo -e "${BLUE}=== Estado Actual ===${NC}"
+    echo -e "${BLUE}=== Estado actual (ubuntu-house) ===${NC}"
     echo ""
-    echo -e "${YELLOW}Rama actual:${NC}"
-    git branch --show-current
+    echo -e "${YELLOW}Rama actual:${NC} $(git branch --show-current)"
     echo ""
-    echo -e "${YELLOW}Estado de ramas:${NC}"
-    git branch -vv
+    echo -e "${YELLOW}Ramas principales:${NC}"
+    git branch -vv | grep -E "^\*|${MAIN_BRANCH}|${DEVELOP_BRANCH}|${DEV_BRANCH}" || git branch -vv
     echo ""
-    echo -e "${YELLOW}Commits no sincronizados:${NC}"
-    git log --oneline --graph --all --decorate -10
+    for pair in "${MAIN_BRANCH}:origin/${MAIN_BRANCH}" "${DEVELOP_BRANCH}:origin/${DEVELOP_BRANCH}" "${DEV_BRANCH}:origin/${DEV_BRANCH}"; do
+        local="${pair%%:*}"
+        remote="${pair##*:}"
+        if git show-ref --verify --quiet "refs/heads/$local" 2>/dev/null; then
+            ahead=$(git rev-list --count "${remote}..${local}" 2>/dev/null || echo "?")
+            behind=$(git rev-list --count "${local}..${remote}" 2>/dev/null || echo "?")
+            echo "  $local: ↑$ahead ↓$behind respecto a $remote"
+        fi
+    done
     echo ""
-    echo -e "${YELLOW}Archivos sin commit:${NC}"
+    echo -e "${YELLOW}Últimos commits:${NC}"
+    git log --oneline --graph -8 "${MAIN_BRANCH}" "${DEVELOP_BRANCH}" "${DEV_BRANCH}" 2>/dev/null || git log --oneline -5
+    echo ""
+    echo -e "${YELLOW}Cambios sin commit:${NC}"
     git status --short
 }
 
 sync_main() {
-    echo -e "${BLUE}Sincronizando main...${NC}"
-    git checkout main
+    echo -e "${BLUE}Sincronizando ${MAIN_BRANCH}...${NC}"
+    require_clean_or_confirm
+    local current
+    current=$(git branch --show-current)
     git fetch origin
-    git pull origin main
-    echo -e "${GREEN}✓ Main sincronizado${NC}"
+    git checkout "$MAIN_BRANCH"
+    git pull --no-rebase origin "$MAIN_BRANCH"
+    if [ -n "$current" ] && [ "$current" != "$MAIN_BRANCH" ]; then
+        git checkout "$current" 2>/dev/null || true
+    fi
+    echo -e "${GREEN}✓ ${MAIN_BRANCH} sincronizado con origin${NC}"
 }
 
 sync_develop() {
-    echo -e "${BLUE}Sincronizando develop...${NC}"
-    if ! git show-ref --verify --quiet refs/heads/develop; then
-        echo -e "${YELLOW}La rama develop no existe. Creándola desde main...${NC}"
-        git checkout main
-        git checkout -b develop
-        git push -u origin develop
+    echo -e "${BLUE}Sincronizando ${DEVELOP_BRANCH}...${NC}"
+    require_clean_or_confirm
+    local current
+    current=$(git branch --show-current)
+    git fetch origin
+    if ! git show-ref --verify --quiet "refs/heads/${DEVELOP_BRANCH}"; then
+        echo -e "${YELLOW}Creando ${DEVELOP_BRANCH} desde ${MAIN_BRANCH}...${NC}"
+        git checkout "$MAIN_BRANCH"
+        git checkout -b "$DEVELOP_BRANCH"
+        git push -u origin "$DEVELOP_BRANCH"
     else
-        git checkout develop
-        git fetch origin
-        if git show-ref --verify --quiet refs/remotes/origin/develop; then
-            git pull origin develop
-        else
-            echo -e "${YELLOW}develop no existe en remoto. Creándola...${NC}"
-            git push -u origin develop
-        fi
+        git checkout "$DEVELOP_BRANCH"
+        git pull --no-rebase origin "$DEVELOP_BRANCH" 2>/dev/null || true
+        git merge "$MAIN_BRANCH" -m "Merge ${MAIN_BRANCH}: sync local"
+        echo -e "${GREEN}✓ ${DEVELOP_BRANCH} actualizado (incluye ${MAIN_BRANCH})${NC}"
     fi
-    echo -e "${GREEN}✓ Develop sincronizado${NC}"
+    if [ -n "$current" ] && [ "$current" != "$(git branch --show-current)" ]; then
+        git checkout "$current" 2>/dev/null || true
+    fi
+}
+
+sync_dev() {
+    echo -e "${BLUE}Sincronizando ${DEV_BRANCH}...${NC}"
+    require_clean_or_confirm
+    local current
+    current=$(git branch --show-current)
+    git fetch origin
+    if ! git show-ref --verify --quiet "refs/heads/${DEV_BRANCH}"; then
+        echo -e "${RED}Error: la rama ${DEV_BRANCH} no existe. Ejecuta: $0 setup${NC}"
+        exit 1
+    fi
+    git checkout "$DEV_BRANCH"
+    git pull --no-rebase origin "$DEV_BRANCH"
+    git merge "$MAIN_BRANCH" -m "Merge ${MAIN_BRANCH}: sync local"
+    echo -e "${GREEN}✓ ${DEV_BRANCH} actualizado${NC}"
+    if [ -n "$current" ] && [ "$current" != "$DEV_BRANCH" ]; then
+        git checkout "$current" 2>/dev/null || true
+    fi
+}
+
+push_dev() {
+    local current
+    current=$(git branch --show-current)
+    if [ "$current" != "$DEV_BRANCH" ]; then
+        echo -e "${YELLOW}Cambiando a ${DEV_BRANCH}...${NC}"
+        git checkout "$DEV_BRANCH"
+    fi
+    if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+        echo -e "${RED}Hay cambios sin commitear. Haz commit antes del push.${NC}"
+        exit 1
+    fi
+    git push origin "$DEV_BRANCH"
+    echo -e "${GREEN}✓ origin/${DEV_BRANCH} actualizado${NC}"
 }
 
 create_feature() {
-    read -p "Nombre de la feature (sin espacios, ej: schedule-fix): " feature_name
+    read -p "Nombre de la feature (ej: schedule-fix): " feature_name
     if [ -z "$feature_name" ]; then
-        echo -e "${RED}Error: Debes proporcionar un nombre${NC}"
+        echo -e "${RED}Error: debes indicar un nombre${NC}"
         exit 1
     fi
-    
-    echo -e "${BLUE}Creando feature branch: feature/$feature_name${NC}"
     sync_develop
     git checkout -b "feature/$feature_name"
-    echo -e "${GREEN}✓ Rama feature/$feature_name creada${NC}"
-    echo -e "${YELLOW}Ahora puedes hacer tus cambios y commits${NC}"
+    echo -e "${GREEN}✓ Rama feature/$feature_name creada desde ${DEVELOP_BRANCH}${NC}"
 }
 
 merge_to_develop() {
-    current_branch=$(git branch --show-current)
-    if [ "$current_branch" = "main" ]; then
-        echo -e "${RED}Error: No puedes mergear main directamente a develop${NC}"
-        exit 1
+    local source="${1:-$DEV_BRANCH}"
+    local current
+    current=$(git branch --show-current)
+
+    if [ "$current" = "$MAIN_BRANCH" ] || [ "$current" = "$DEVELOP_BRANCH" ]; then
+        echo -e "${YELLOW}Usando rama fuente: ${source}${NC}"
+    elif [ "$current" != "$DEV_BRANCH" ] && [[ "$current" != feature/* ]]; then
+        read -p "¿Mergear rama actual ($current) a ${DEVELOP_BRANCH}? (s/N): " -r
+        if [[ $REPLY =~ ^[Ss]$ ]]; then
+            source="$current"
+        fi
+    else
+        source="${current:-$DEV_BRANCH}"
     fi
-    
-    echo -e "${BLUE}Mergeando $current_branch a develop...${NC}"
+
+    echo -e "${BLUE}Mergeando ${source} → ${DEVELOP_BRANCH}...${NC}"
+    require_clean_or_confirm
     sync_develop
-    git merge "$current_branch" --no-ff
+    git checkout "$DEVELOP_BRANCH"
+    git merge "$source" --no-ff -m "Merge ${source}: integración develop"
     echo -e "${GREEN}✓ Merge completado${NC}"
-    read -p "¿Hacer push a origin/develop? (y/n): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        git push origin develop
+    read -p "¿Push a origin/${DEVELOP_BRANCH}? (s/n): " -r
+    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+        git push origin "$DEVELOP_BRANCH"
         echo -e "${GREEN}✓ Push completado${NC}"
     fi
+    git checkout "$DEV_BRANCH" 2>/dev/null || true
 }
 
 merge_to_main() {
-    echo -e "${YELLOW}⚠️  ADVERTENCIA: Esto mergeará develop a main${NC}"
-    echo -e "${YELLOW}⚠️  Asegúrate de haber probado todo en ubuntu-house${NC}"
-    read -p "¿Continuar? (y/n): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    local source="${1:-$DEV_BRANCH}"
+    echo -e "${YELLOW}⚠️  Mergeará ${source} → ${MAIN_BRANCH} (producción / VPS)${NC}"
+    echo -e "${YELLOW}⚠️  Prueba antes en ubuntu-house${NC}"
+    read -p "¿Continuar? (s/N): " -r
+    if [[ ! $REPLY =~ ^[Ss]$ ]]; then
         echo "Cancelado"
         exit 0
     fi
-    
-    echo -e "${BLUE}Mergeando develop a main...${NC}"
-    sync_main
-    sync_develop
-    git checkout main
-    git merge develop --no-ff
-    echo -e "${GREEN}✓ Merge completado${NC}"
-    echo -e "${YELLOW}Revisa los cambios antes de hacer push:${NC}"
-    git log --oneline -5
-    read -p "¿Hacer push a origin/main? (y/n): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        git push origin main
-        echo -e "${GREEN}✓ Push a main completado${NC}"
-        echo -e "${YELLOW}⚠️  Recuerda hacer pull en el VPS Hostinger${NC}"
+
+    require_clean_or_confirm
+    local current
+    current=$(git branch --show-current)
+
+    if ! git diff-index --quiet HEAD -- 2>/dev/null && [ "$current" = "$DEV_BRANCH" ]; then
+        echo -e "${RED}Commitea en ${DEV_BRANCH} antes, o usa: $0 prepare-deploy \"mensaje\"${NC}"
+        exit 1
     fi
+
+    git fetch origin
+    git checkout "$MAIN_BRANCH"
+    git pull --no-rebase origin "$MAIN_BRANCH"
+    git merge "$source" --no-ff -m "Merge ${source}: release a producción"
+    echo -e "${GREEN}✓ Merge en ${MAIN_BRANCH} local${NC}"
+    git log --oneline -3
+    read -p "¿Push a origin/${MAIN_BRANCH}? (s/N): " -r
+    if [[ $REPLY =~ ^[Ss]$ ]]; then
+        git push origin "$MAIN_BRANCH"
+        echo -e "${GREEN}✓ origin/${MAIN_BRANCH} actualizado${NC}"
+        if git show-ref --verify --quiet "refs/heads/${DEVELOP_BRANCH}"; then
+            git checkout "$DEVELOP_BRANCH"
+            git pull --no-rebase origin "$DEVELOP_BRANCH" 2>/dev/null || true
+            git merge "$MAIN_BRANCH" -m "Merge ${MAIN_BRANCH}: sync post-release"
+            read -p "¿Push a origin/${DEVELOP_BRANCH}? (s/n): " -r
+            if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+                git push origin "$DEVELOP_BRANCH"
+            fi
+        fi
+        echo -e "${YELLOW}VPS: cd /opt/chalanpro && sudo ./scripts/deploy-vps.sh${NC}"
+    fi
+    git checkout "$DEV_BRANCH" 2>/dev/null || git checkout "$current" 2>/dev/null || true
 }
 
 setup_branches() {
-    echo -e "${BLUE}Configurando ramas iniciales...${NC}"
-    
-    # Sincronizar main
-    sync_main
-    
-    # Crear/actualizar develop
-    sync_develop
-    
-    # Crear/actualizar ubuntu_house
-    if ! git show-ref --verify --quiet refs/heads/ubuntu_house; then
-        echo -e "${BLUE}Creando rama ubuntu_house...${NC}"
-        git checkout -b ubuntu_house
-        echo -e "${GREEN}✓ Rama ubuntu_house creada${NC}"
+    echo -e "${BLUE}Configurando ramas (${MAIN_BRANCH}, ${DEVELOP_BRANCH}, ${DEV_BRANCH})...${NC}"
+    local current
+    current=$(git branch --show-current)
+    git fetch origin
+
+    git checkout "$MAIN_BRANCH"
+    git pull --no-rebase origin "$MAIN_BRANCH"
+    echo -e "${GREEN}✓ ${MAIN_BRANCH}${NC}"
+
+    if ! git show-ref --verify --quiet "refs/heads/${DEVELOP_BRANCH}"; then
+        git checkout -b "$DEVELOP_BRANCH"
+        git push -u origin "$DEVELOP_BRANCH"
     else
-        echo -e "${BLUE}Actualizando rama ubuntu_house...${NC}"
-        git checkout ubuntu_house
-        if git show-ref --verify --quiet refs/remotes/origin/ubuntu_house; then
-            git pull origin ubuntu_house
-        fi
+        git checkout "$DEVELOP_BRANCH"
+        git pull --no-rebase origin "$DEVELOP_BRANCH" 2>/dev/null || true
+        git merge "$MAIN_BRANCH" -m "Merge ${MAIN_BRANCH}: setup" || true
     fi
-    
-    echo -e "${GREEN}✓ Setup completado${NC}"
+    echo -e "${GREEN}✓ ${DEVELOP_BRANCH}${NC}"
+
+    if ! git show-ref --verify --quiet "refs/heads/${DEV_BRANCH}"; then
+        git checkout -b "$DEV_BRANCH" "$DEVELOP_BRANCH"
+        git push -u origin "$DEV_BRANCH"
+    else
+        git checkout "$DEV_BRANCH"
+        git pull --no-rebase origin "$DEV_BRANCH" 2>/dev/null || true
+        git merge "$MAIN_BRANCH" -m "Merge ${MAIN_BRANCH}: setup" || true
+    fi
+    echo -e "${GREEN}✓ ${DEV_BRANCH}${NC}"
+
+    if [ -n "$current" ]; then
+        git checkout "$current" 2>/dev/null || git checkout "$DEV_BRANCH"
+    fi
     echo ""
-    echo -e "${YELLOW}Ramas configuradas:${NC}"
-    git branch -a | grep -E "(main|develop|ubuntu_house)"
+    git branch -vv | grep -E "^\*|${MAIN_BRANCH}|${DEVELOP_BRANCH}|${DEV_BRANCH}" || true
 }
 
 compare_branches() {
-    echo -e "${BLUE}Comparando main y develop...${NC}"
+    echo -e "${BLUE}Comparación de ramas${NC}"
     echo ""
-    echo -e "${YELLOW}Commits en develop que no están en main:${NC}"
-    git log main..develop --oneline || echo "No hay diferencias"
+    echo -e "${YELLOW}${DEVELOP_BRANCH} no está en ${MAIN_BRANCH}:${NC}"
+    git log "${MAIN_BRANCH}..${DEVELOP_BRANCH}" --oneline 2>/dev/null | head -5 || echo "  (ninguno o ramas iguales)"
     echo ""
-    echo -e "${YELLOW}Commits en main que no están en develop:${NC}"
-    git log develop..main --oneline || echo "No hay diferencias"
+    echo -e "${YELLOW}${MAIN_BRANCH} no está en ${DEVELOP_BRANCH}:${NC}"
+    git log "${DEVELOP_BRANCH}..${MAIN_BRANCH}" --oneline 2>/dev/null | head -5 || echo "  (ninguno o ramas iguales)"
     echo ""
-    echo -e "${YELLOW}Archivos diferentes:${NC}"
-    git diff --name-status main..develop || echo "No hay diferencias"
+    echo -e "${YELLOW}${DEV_BRANCH} no está en ${MAIN_BRANCH}:${NC}"
+    git log "${MAIN_BRANCH}..${DEV_BRANCH}" --oneline 2>/dev/null | head -10 || echo "  (ninguno)"
+    echo ""
+    echo -e "${YELLOW}${MAIN_BRANCH} no está en ${DEV_BRANCH}:${NC}"
+    git log "${DEV_BRANCH}..${MAIN_BRANCH}" --oneline 2>/dev/null | head -5 || echo "  (ninguno)"
 }
 
 sync_all() {
-    echo -e "${BLUE}Ejecutando sync_local_branches.sh...${NC}"
-    exec "$REPO_DIR/scripts/sync_local_branches.sh"
+    if [ -x "$REPO_DIR/scripts/sync_local_branches.sh" ]; then
+        exec "$REPO_DIR/scripts/sync_local_branches.sh"
+    fi
+    echo -e "${RED}No se encontró scripts/sync_local_branches.sh${NC}"
+    exit 1
 }
 
 prepare_deploy() {
-    echo -e "${BLUE}Ejecutando sync_local_prepare_deploy.sh...${NC}"
-    exec "$REPO_DIR/scripts/sync_local_prepare_deploy.sh" "${@:2}"
+    if [ -x "$REPO_DIR/scripts/sync_local_prepare_deploy.sh" ]; then
+        shift
+        exec "$REPO_DIR/scripts/sync_local_prepare_deploy.sh" "$@"
+    fi
+    echo -e "${RED}No se encontró scripts/sync_local_prepare_deploy.sh${NC}"
+    echo "Copia o recrea el script en ubuntu-house (está en .gitignore, solo local)."
+    exit 1
 }
 
-# Main
 case "${1:-help}" in
     status)
         show_status
@@ -206,14 +332,20 @@ case "${1:-help}" in
     sync-develop)
         sync_develop
         ;;
+    sync-dev)
+        sync_dev
+        ;;
+    push-dev)
+        push_dev
+        ;;
     create-feature)
         create_feature
         ;;
     merge-to-develop)
-        merge_to_develop
+        merge_to_develop "${2:-}"
         ;;
     merge-to-main)
-        merge_to_main
+        merge_to_main "${2:-}"
         ;;
     setup)
         setup_branches
@@ -230,4 +362,3 @@ case "${1:-help}" in
         exit 1
         ;;
 esac
-
