@@ -3,6 +3,7 @@ Vistas para el sistema de onboarding y gestión de tenants
 """
 import logging
 import os
+import re
 from typing import Optional
 
 from django.conf import settings
@@ -87,6 +88,7 @@ def landing_contact(request):
 
     name = (data.get('name') or '').strip()
     email = (data.get('email') or '').strip()
+    phone = (data.get('phone') or '').strip()
     subject_key = (data.get('subject') or 'demo').strip()
     team_size = (data.get('team_size') or '').strip()
     message = (data.get('message') or '').strip()
@@ -100,6 +102,16 @@ def landing_contact(request):
         validate_email(email)
     except DjangoValidationError:
         return Response({'success': False, 'error': 'Please provide a valid email address.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not phone or len(phone) < 7 or len(phone) > 40:
+        return Response(
+            {'success': False, 'error': 'Please provide a valid phone number.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if not re.fullmatch(r'[\d\s+\-().]{7,40}', phone):
+        return Response(
+            {'success': False, 'error': 'Please provide a valid phone number.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     allowed_subjects = {'demo', 'sales', 'support'}
     if subject_key not in allowed_subjects:
@@ -121,11 +133,13 @@ def landing_contact(request):
         f"Topic: {subject_key} ({topic})\n"
         f"Name: {name}\n"
         f"Email: {email}\n"
+        f"Phone: {phone}\n"
         f"Team size: {team_size or '—'}\n\n"
         f"Message:\n{message}\n"
     )
     safe_name = escape(name)
     safe_email = escape(email)
+    safe_phone = escape(phone)
     safe_message = escape(message)
     safe_team = escape(team_size) if team_size else '—'
     html_body = (
@@ -134,6 +148,7 @@ def landing_contact(request):
         f"<p><strong>Topic:</strong> {escape(topic)} ({escape(subject_key)})</p>"
         f"<p><strong>Name:</strong> {safe_name}</p>"
         f"<p><strong>Email:</strong> <a href=\"mailto:{safe_email}\">{safe_email}</a></p>"
+        f"<p><strong>Phone:</strong> {safe_phone}</p>"
         f"<p><strong>Team size:</strong> {safe_team}</p>"
         f"<p><strong>Message:</strong></p><pre style=\"white-space:pre-wrap;font-family:inherit\">"
         f"{safe_message}</pre>"
