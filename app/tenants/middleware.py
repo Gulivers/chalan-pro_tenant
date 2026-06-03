@@ -13,6 +13,13 @@ from tenants.services.access import get_tenant_access
 from utils.tenant_branding import _resolve_tenant
 
 
+def _request_scheme(request) -> str:
+    forwarded = (request.META.get('HTTP_X_FORWARDED_PROTO') or '').split(',')[0].strip()
+    if forwarded:
+        return forwarded
+    return request.scheme or 'https'
+
+
 def _spa_url(request, path: str) -> str:
     """Build an absolute SPA URL on the *current tenant host*.
 
@@ -20,15 +27,22 @@ def _spa_url(request, path: str) -> str:
     routes (/login, /billing) live on the frontend (e.g. :8080 in dev, same host
     via Nginx in prod). A relative link would resolve against the backend and
     404, and FRONT_URL points to the global/legacy domain (wrong host for a
-    tenant). So we keep the tenant hostname from the request and borrow only the
-    scheme/port from FRONT_URL.
+    tenant). So we keep the tenant hostname from the request.
+
+    In production Nginx serves SPA on 443/80 without an explicit port; FRONT_URL
+    often defaults to :8080 for local dev and must not be appended here.
     """
     raw_host = request.META.get('HTTP_HOST') or request.META.get('SERVER_NAME') or ''
-    host = raw_host.split(':')[0]
-    front = urlsplit(getattr(settings, 'FRONT_URL', '') or '')
-    scheme = front.scheme or request.scheme
-    port = f':{front.port}' if front.port else ''
-    return f'{scheme}://{host}{port}{path}'
+    hostname = raw_host.split(':')[0]
+
+    if settings.DEBUG:
+        front = urlsplit(getattr(settings, 'FRONT_URL', '') or '')
+        scheme = front.scheme or request.scheme
+        port = f':{front.port}' if front.port else ''
+        return f'{scheme}://{hostname}{port}{path}'
+
+    scheme = _request_scheme(request)
+    return f'{scheme}://{hostname}{path}'
 
 # API paths always allowed (prefix match on request.path)
 TENANT_ACCESS_API_EXEMPT_PREFIXES = (
