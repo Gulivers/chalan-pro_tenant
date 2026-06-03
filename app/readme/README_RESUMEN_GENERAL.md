@@ -484,18 +484,18 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 | **CNAME** | www  | jobrithm.net        | 300   | Frontend (www)                              |
 | **CAA**   | @    | (varios)            | 14400 | Certificados SSL                            |
 
-**Nota:** El registro wildcard `*` permite que cualquier subdominio (ej: `tenant1.`jobrhythm.net` (legacy `jobrithm.net`)) resuelva a la IP del servidor.
+**Nota:** El registro wildcard `*` permite que cualquier subdominio (ej: `tenant1.`jobrhythm.net`(legacy`jobrithm.net`)) resuelva a la IP del servidor.
 
 ### 2.2.2 Configuración de Certificados SSL
 
-**Certificado Wildcard actual:** `*.`jobrhythm.net` (legacy `jobrithm.net`)
+**Certificado Wildcard actual:** `*.`jobrhythm.net`(legacy`jobrithm.net`)
 
 Este certificado cubre:
 
 - ``jobrhythm.net` (legacy `jobrithm.net`)
-- `www.`jobrhythm.net` (legacy `jobrithm.net`)
-- `api.`jobrhythm.net` (legacy `jobrithm.net`)
-- `*.`jobrhythm.net` (legacy `jobrithm.net`) (cualquier subdominio de tenant)
+- `www.`jobrhythm.net`(legacy`jobrithm.net`)
+- `api.`jobrhythm.net`(legacy`jobrithm.net`)
+- `*.`jobrhythm.net`(legacy`jobrithm.net`) (cualquier subdominio de tenant)
 
 **Ubicación:** `/etc/letsencrypt/live/jobrithm.net/`
 
@@ -904,7 +904,7 @@ git status --short
 | **Puerto**             | `5432`                                                     |
 | **Base de Datos**      | `chalanpro`                                                |
 | **Usuario**            | `chalanpro_user`                                           |
-| **Contraseña**         | `2hSGqPHiNhaktRS_lxY3CprmDBYtHJxsIxWZhe-iqd4`              |
+| **Contraseña**         | ``                                                         |
 | **Schema por Defecto** | `public` (para gestión de tenants)                         |
 
 ### 5.2 Conexión desde el Servidor
@@ -1070,22 +1070,22 @@ add_header X-XSS-Protection "1; mode=block" always;
 
 **Ejemplo tenant Phoenix (schema `phoenix_electric_and_air_llc`):**
 
-| URL | Uso |
-|-----|-----|
-| `https://phoenix.jobrhythm.net/` | Dominio primario SaaS (producción) |
-| `https://phoenix.jobrhythm.net/login/` | Login del tenant |
-| `https://phoenix.jobrithm.net/` | Legacy → 301 a `phoenix.jobrhythm.net` (Nginx VPS) |
+| URL                                    | Uso                                                |
+| -------------------------------------- | -------------------------------------------------- |
+| `https://phoenix.jobrhythm.net/`       | Dominio primario SaaS (producción)                 |
+| `https://phoenix.jobrhythm.net/login/` | Login del tenant                                   |
+| `https://phoenix.jobrithm.net/`        | Legacy → 301 a `phoenix.jobrhythm.net` (Nginx VPS) |
 
 ### 7.2 Dominios legacy y redirecciones 301
 
 Los dominios antiguos **no sirven la aplicación**; Nginx en el VPS (`nginx/legacy-redirects.conf`) responde solo con **301** hacia JobRhythm:
 
-| Origen (inhabilitado) | Destino |
-|-----------------------|---------|
-| `getjobrithm.com`, `www` | `getjobrhythm.com` |
-| `jobrithm.net`, `www`, `api`, `*.jobrithm.net` | equivalente en `jobrhythm.net` |
+| Origen (inhabilitado)                            | Destino                        |
+| ------------------------------------------------ | ------------------------------ |
+| `getjobrithm.com`, `www`                         | `getjobrhythm.com`             |
+| `jobrithm.net`, `www`, `api`, `*.jobrithm.net`   | equivalente en `jobrhythm.net` |
 | `chalanpro.net`, `www`, `api`, `*.chalanpro.net` | equivalente en `jobrhythm.net` |
-| `chalanpro.com`, `www` | `getjobrhythm.com` |
+| `chalanpro.com`, `www`                           | `getjobrhythm.com`             |
 
 Verificación rápida:
 
@@ -1103,13 +1103,13 @@ Algunos clientes conservan un **dominio propio** (registro/DNS en otro proveedor
 
 **Caso verificado: Phoenix Electric and Air — `phoenixelectricandair.net`**
 
-| Comprobación | Resultado (2026-05-25) |
-|--------------|------------------------|
-| DNS `phoenixelectricandair.net` | `160.153.175.22` (no apunta al VPS JobRhythm `72.60.168.62`) |
-| Cadena HTTPS completa | **Sí llega a** `https://phoenix.jobrhythm.net/` con **200** |
-| Paso 1 | `https://phoenixelectricandair.net/` → **301** → `https://phoenix.jobrithm.net/` (redirección configurada en el hosting del dominio del cliente) |
-| Paso 2 | `https://phoenix.jobrithm.net/` → **301** → `https://phoenix.jobrhythm.net/` (Nginx legacy en VPS) |
-| Destino final | `https://phoenix.jobrhythm.net/` — tenant `phoenix_electric_and_air_llc`, dominio primario en BD: `phoenix.jobrhythm.net` |
+| Comprobación                    | Resultado (2026-05-25)                                                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| DNS `phoenixelectricandair.net` | `160.153.175.22` (no apunta al VPS JobRhythm `72.60.168.62`)                                                                                     |
+| Cadena HTTPS completa           | **Sí llega a** `https://phoenix.jobrhythm.net/` con **200**                                                                                      |
+| Paso 1                          | `https://phoenixelectricandair.net/` → **301** → `https://phoenix.jobrithm.net/` (redirección configurada en el hosting del dominio del cliente) |
+| Paso 2                          | `https://phoenix.jobrithm.net/` → **301** → `https://phoenix.jobrhythm.net/` (Nginx legacy en VPS)                                               |
+| Destino final                   | `https://phoenix.jobrhythm.net/` — tenant `phoenix_electric_and_air_llc`, dominio primario en BD: `phoenix.jobrhythm.net`                        |
 
 ```bash
 curl -sI -L -o /dev/null -w "%{url_effective}\n" https://phoenixelectricandair.net/
@@ -1135,6 +1135,7 @@ curl -sI -L -o /dev/null -w "%{url_effective}\n" https://phoenixelectricandair.n
 ### 7.5 Post-migración JobRhythm
 
 Checklist:
+
 - [x] Redirecciones 301 Nginx: dominios legacy → `jobrhythm.net` / `getjobrhythm.com` (`nginx/legacy-redirects.conf`).
 - [x] Wildcard SSL `*.jobrhythm.net` (`/etc/letsencrypt/live/jobrhythm.net-0001/`).
 - [x] `TENANT_BASE_DOMAIN=jobrhythm.net` en `envs/backend.env` (recrear backend tras cambiar env: `docker compose up -d --force-recreate backend`).
@@ -1540,11 +1541,11 @@ Sirve para alimentar **`_purchase_unit_cost`** en la grilla al cambiar **unidad*
 
 #### 9.7.4 Documentos de venta (`is_sales`) vs otros
 
-| Aspecto | Documento de venta (`is_sales`) | No venta |
-|--------|----------------------------------|----------|
-| Columna **Margin %** en grilla | Visible y editable según permisos | Oculta; no participa en la UX de margen/markup automático desde costo como en ventas |
-| Auto-precio desde **costo + PriceType** (`MARKUP` / `MARGIN`) | Activo cuando se cumplen las condiciones del apartado siguiente | No aplica ese flujo desde costo en el mismo modo “venta” |
-| Sugerencias / hints de pricing | Pueden mostrarse (margen/markup/manual) | No orientadas al margen de venta desde costo |
+| Aspecto                                                       | Documento de venta (`is_sales`)                                 | No venta                                                                             |
+| ------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Columna **Margin %** en grilla                                | Visible y editable según permisos                               | Oculta; no participa en la UX de margen/markup automático desde costo como en ventas |
+| Auto-precio desde **costo + PriceType** (`MARKUP` / `MARGIN`) | Activo cuando se cumplen las condiciones del apartado siguiente | No aplica ese flujo desde costo en el mismo modo “venta”                             |
+| Sugerencias / hints de pricing                                | Pueden mostrarse (margen/markup/manual)                         | No orientadas al margen de venta desde costo                                         |
 
 #### 9.7.5 Cuándo el precio unitario sale del **costo de compra** (ventas)
 
@@ -1587,20 +1588,18 @@ La guía en pantalla para administradores del tipo de precio está en **`vuefron
 
 ## 10. Billing (Stripe SaaS — `appbilling`)
 
-
-
 Monetización SaaS con **Stripe Checkout**, **Customer Portal** y webhooks. La app Django vive en **`app/appbilling/`** (schema **public**, `SHARED_APPS`), al mismo nivel que `appinventory`, `apptransactions`, etc.
 
 **Dominio producción:** `jobrhythm.net` · **API:** `https://api.jobrhythm.net` · **Webhook Stripe:** `https://api.jobrhythm.net/stripe/webhook/`
 
 ### 10.1 Arquitectura y schema
 
-| Capa | Ubicación |
-|------|-----------|
-| Modelos `Plan`, `Subscription`, `PaymentEvent` | Schema **public** (`appbilling`) |
-| Campos trial en `tenants.Tenant` | `trial_start`, `trial_end`, `on_trial`, `paid_until` |
-| Datos operativos (crews, contratos, etc.) | Schema por tenant |
-| Stripe Customer | Se crea en la **primera visita a Billing** (checkout o portal), no en onboarding |
+| Capa                                           | Ubicación                                                                        |
+| ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| Modelos `Plan`, `Subscription`, `PaymentEvent` | Schema **public** (`appbilling`)                                                 |
+| Campos trial en `tenants.Tenant`               | `trial_start`, `trial_end`, `on_trial`, `paid_until`                             |
+| Datos operativos (crews, contratos, etc.)      | Schema por tenant                                                                |
+| Stripe Customer                                | Se crea en la **primera visita a Billing** (checkout o portal), no en onboarding |
 
 Las tablas en PostgreSQL conservan el prefijo histórico **`billing_*`** (`billing_plan`, `billing_subscription`, `billing_paymentevent`) mediante `db_table` en los modelos.
 
@@ -1608,24 +1607,24 @@ Las tablas en PostgreSQL conservan el prefijo histórico **`billing_*`** (`billi
 
 Planes sembrados con `seed_plans` (precios alineados con [getjobrhythm.com/pricing.html](https://getjobrhythm.com/pricing.html)):
 
-| Slug | Mensual | Anual (−15 %) | `max_crews` | `max_users` |
-|------|---------|---------------|-------------|-------------|
-| `starter` | $436 | $4,447 | 3 | 1 |
-| `professional` | $877 | $8,945 | 10 | 10 (recomendado) |
-| `enterprise` | $1,758 | $17,931 | ilimitado | ilimitado |
+| Slug           | Mensual | Anual (−15 %) | `max_crews` | `max_users`      |
+| -------------- | ------- | ------------- | ----------- | ---------------- |
+| `starter`      | $436    | $4,447        | 3           | 1                |
+| `professional` | $877    | $8,945        | 10          | 10 (recomendado) |
+| `enterprise`   | $1,758  | $17,931       | ilimitado   | ilimitado        |
 
 El plan sugerido al upgrade viene de `landing_selected_plan` / `recommended_plan` del onboarding.
 
 ### 10.3 Endpoints API
 
-| Método | Ruta | Auth | Descripción |
-|--------|------|------|-------------|
-| GET | `/api/billing/status/` | Token | Estado trial/suscripción, plan sugerido |
-| GET | `/api/billing/public-plans/` | Público | Catálogo activo (landing, sin auth) |
-| GET | `/api/billing/plans/` | Token | Mismo catálogo (app `/billing`) |
-| POST | `/api/billing/create-checkout-session/` | Token | Body: `plan_slug`, `billing_interval` (`monthly` \| `yearly`) |
-| POST | `/api/billing/create-customer-portal-session/` | Token | URL portal Stripe |
-| POST | `/stripe/webhook/` | Firma Stripe | Sincroniza suscripciones e invoices |
+| Método | Ruta                                           | Auth         | Descripción                                                   |
+| ------ | ---------------------------------------------- | ------------ | ------------------------------------------------------------- |
+| GET    | `/api/billing/status/`                         | Token        | Estado trial/suscripción, plan sugerido                       |
+| GET    | `/api/billing/public-plans/`                   | Público      | Catálogo activo (landing, sin auth)                           |
+| GET    | `/api/billing/plans/`                          | Token        | Mismo catálogo (app `/billing`)                               |
+| POST   | `/api/billing/create-checkout-session/`        | Token        | Body: `plan_slug`, `billing_interval` (`monthly` \| `yearly`) |
+| POST   | `/api/billing/create-customer-portal-session/` | Token        | URL portal Stripe                                             |
+| POST   | `/stripe/webhook/`                             | Firma Stripe | Sincroniza suscripciones e invoices                           |
 
 Los **price IDs** de Stripe solo se resuelven en backend (modelo `Plan`), nunca desde el frontend.
 
@@ -1633,11 +1632,11 @@ Los **price IDs** de Stripe solo se resuelven en backend (modelo `Plan`), nunca 
 
 **Fuente de verdad:** `tenants.services.access.get_tenant_access(tenant)` — orden: `is_active` → billing (`get_billing_access`).
 
-| Condición | `access_allowed` | `access_reason` | HTTP API | Pantalla SPA |
-|-----------|------------------|-------------------|----------|--------------|
-| `is_active=false` | false | `tenant_inactive` | **403** | `/account-suspended` |
-| Trial OK o Stripe OK | true | `trial` / `active` / … | — | App normal |
-| Trial vencido / sin pago | false | `trial_expired` / `no_subscription` / … | **402** | `/billing?reason=...` |
+| Condición                | `access_allowed` | `access_reason`                         | HTTP API | Pantalla SPA          |
+| ------------------------ | ---------------- | --------------------------------------- | -------- | --------------------- |
+| `is_active=false`        | false            | `tenant_inactive`                       | **403**  | `/account-suspended`  |
+| Trial OK o Stripe OK     | true             | `trial` / `active` / …                  | —        | App normal            |
+| Trial vencido / sin pago | false            | `trial_expired` / `no_subscription` / … | **402**  | `/billing?reason=...` |
 
 - **Trial:** 30 días desde onboarding (`start_trial_for_tenant`). Requiere `on_trial=true` y `now < trial_end`.
 - **Enforcement:** `tenants.middleware.TenantAccessEnforcementMiddleware` (schema tenant, no public):
@@ -1707,12 +1706,12 @@ Luego `migrate_schemas --shared` para aplicar `appbilling.0002_rename_app_label_
 
 ### 10.7 Frontend y despliegue
 
-| Archivo | Rol |
-|---------|-----|
-| `vuefrontend/src/views/BillingPage.vue` | UI planes, checkout, portal |
-| `vuefrontend/src/views/BillingSuccessView.vue` | Retorno post-Stripe |
-| `vuefrontend/src/api/billing.js` | Cliente API |
-| `vuefrontend/src/router/index.js` | Rutas + guard suscripción |
+| Archivo                                        | Rol                         |
+| ---------------------------------------------- | --------------------------- |
+| `vuefrontend/src/views/BillingPage.vue`        | UI planes, checkout, portal |
+| `vuefrontend/src/views/BillingSuccessView.vue` | Retorno post-Stripe         |
+| `vuefrontend/src/api/billing.js`               | Cliente API                 |
+| `vuefrontend/src/router/index.js`              | Rutas + guard suscripción   |
 
 Tras desplegar backend con cambios en `appbilling` o `tenants`: **`migrate_schemas --shared`**, **`seed_plans`**, configurar webhook en Stripe Dashboard apuntando a `https://api.jobrhythm.net/stripe/webhook/`.
 
@@ -1724,11 +1723,11 @@ Las apps en **`SHARED_APPS`** (`tenants`, `appbilling`) registran modelos en el 
 
 **Solución compartida:** `PublicSchemaOnlyAdminMixin` en `app/project/admin_mixins.py`. Comprueba que `connection.schema_name` (o `request.tenant.schema_name`) sea el schema **public** antes de conceder permisos de módulo, vista, alta, edición o borrado.
 
-| `ModelAdmin` | App | Modelos |
-|--------------|-----|---------|
-| `TenantAdmin` | `tenants` | `Tenant` |
-| `DomainAdmin` | `tenants` | `Domain` |
-| `PlanAdmin` | `appbilling` | `Plan` |
+| `ModelAdmin`        | App          | Modelos        |
+| ------------------- | ------------ | -------------- |
+| `TenantAdmin`       | `tenants`    | `Tenant`       |
+| `DomainAdmin`       | `tenants`    | `Domain`       |
+| `PlanAdmin`         | `appbilling` | `Plan`         |
 | `SubscriptionAdmin` | `appbilling` | `Subscription` |
 | `PaymentEventAdmin` | `appbilling` | `PaymentEvent` |
 
@@ -1736,15 +1735,15 @@ Las apps en **`SHARED_APPS`** (`tenants`, `appbilling`) registran modelos en el 
 
 **Dónde sí se ve todo (operador / dueño del SaaS):**
 
-| Entorno | URL típica |
-|---------|------------|
-| Producción | `https://api.jobrhythm.net/admin/` |
+| Entorno              | URL típica                             |
+| -------------------- | -------------------------------------- |
+| Producción           | `https://api.jobrhythm.net/admin/`     |
 | Local (ubuntu-house) | `http://api.chalanpro.net:8000/admin/` |
 
 **Dónde no deben aparecer TENANTS ni BILLING (clientes):**
 
-| Entorno | URL típica |
-|---------|------------|
+| Entorno        | URL típica                                                                       |
+| -------------- | -------------------------------------------------------------------------------- |
 | App del tenant | `https://{tenant}.jobrhythm.net` → `/admin/` (o `:8080/admin/` en dev con proxy) |
 
 **Añadir un nuevo modelo solo-admin-public:** importar `PublicSchemaOnlyAdminMixin` desde `project.admin_mixins` y aplicarlo al `ModelAdmin` del modelo en `SHARED_APPS`.
