@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 64" role="img" aria-label="Maestro">
+  <rect width="96" height="64" rx="4" fill="#252525"/>
+  <circle cx="38" cy="30" r="15" fill="#EB001B"/>
+  <circle cx="58" cy="30" r="15" fill="#009DDC"/>
+  <path fill="#6C6C6C" d="M48 18.5a15 15 0 000 23 15 15 0 000-23z"/>
+  <text x="48" y="54" text-anchor="middle" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="700" letter-spacing=".3">maestro</text>
+</svg>
