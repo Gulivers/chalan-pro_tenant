@@ -4,6 +4,106 @@
  * - Local: api.chalanpro.net:8000 o ?api_base=
  */
 (function () {
+  /** Cuenta dígitos antes de la posición del cursor (para restaurar selección). */
+  function countDigitsBefore(str, pos) {
+    var n = 0;
+    for (var i = 0; i < pos && i < str.length; i++) {
+      if (/\d/.test(str.charAt(i))) n++;
+    }
+    return n;
+  }
+
+  function positionAfterDigits(formatted, digitCount) {
+    if (digitCount <= 0) return 0;
+    var seen = 0;
+    for (var i = 0; i < formatted.length; i++) {
+      if (/\d/.test(formatted.charAt(i))) {
+        seen++;
+        if (seen === digitCount) return i + 1;
+      }
+    }
+    return formatted.length;
+  }
+
+  /**
+   * Formato al escribir:
+   * - 10 dígitos (NANP): (555) 123-4567
+   * - 11 dígitos empezando por 1: +1 (555) 123-4567
+   * - Con "+": código país + bloque nacional
+   */
+  function formatPhoneInput(value) {
+    if (!value) return "";
+    var trimmed = value.trim();
+    var startsWithPlus = trimmed.charAt(0) === "+";
+    var digits = value.replace(/\D/g, "");
+    if (!digits) return startsWithPlus ? "+" : "";
+
+    if (!startsWithPlus && digits.length === 11 && digits.charAt(0) === "1") {
+      return formatPhoneInput("+" + digits);
+    }
+
+    var useIntl = startsWithPlus || digits.length > 10;
+    if (!useIntl) {
+      var d = digits.slice(0, 10);
+      if (d.length <= 3) return d.length ? "(" + d : "";
+      if (d.length <= 6) return "(" + d.slice(0, 3) + ") " + d.slice(3);
+      return (
+        "(" +
+        d.slice(0, 3) +
+        ") " +
+        d.slice(3, 6) +
+        "-" +
+        d.slice(6, 10)
+      );
+    }
+
+    var ccLen = digits.length > 10 ? digits.length - 10 : 1;
+    var cc = digits.slice(0, ccLen);
+    var nat = digits.slice(ccLen, ccLen + 10);
+    var out = "+" + cc;
+    if (!nat) return out;
+    if (nat.length <= 3) return out + " (" + nat;
+    if (nat.length <= 6) {
+      return out + " (" + nat.slice(0, 3) + ") " + nat.slice(3);
+    }
+    return (
+      out +
+      " (" +
+      nat.slice(0, 3) +
+      ") " +
+      nat.slice(3, 6) +
+      "-" +
+      nat.slice(6, 10)
+    );
+  }
+
+  function initPhoneFormatting(form) {
+    var phoneInput = form.querySelector('input[name="phone"]');
+    if (!phoneInput) return;
+
+    phoneInput.setAttribute("maxlength", "40");
+
+    phoneInput.addEventListener("input", function () {
+      var el = phoneInput;
+      var start = el.selectionStart || 0;
+      var digitsBefore = countDigitsBefore(el.value, start);
+      var formatted = formatPhoneInput(el.value);
+      if (formatted === el.value) return;
+      el.value = formatted;
+      var pos = positionAfterDigits(formatted, digitsBefore);
+      try {
+        el.setSelectionRange(pos, pos);
+      } catch (_e) {
+        /* input type=tel en algunos navegadores */
+      }
+    });
+
+    phoneInput.addEventListener("blur", function () {
+      var formatted = formatPhoneInput(phoneInput.value);
+      if (formatted !== phoneInput.value) phoneInput.value = formatted;
+    });
+  }
+
   function isLocalDevHost(hostname) {
     return (
       hostname === "localhost" ||
@@ -70,6 +170,8 @@
     };
     var copy = messages[locale] || messages.en;
 
+    initPhoneFormatting(form);
+
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       if (okEl) {
@@ -88,6 +190,7 @@
       var payload = {
         name: fd.get("name"),
         email: fd.get("email"),
+        phone: fd.get("phone"),
         subject: fd.get("subject"),
         team_size: fd.get("team_size"),
         message: fd.get("message"),
