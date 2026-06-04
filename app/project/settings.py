@@ -340,7 +340,22 @@ REST_FRAMEWORK = {
     # Otras configuraciones útiles para DRF
      "EXCEPTION_HANDLER": "project.api.exception_handler.custom_exception_handler",
 
+    'DEFAULT_THROTTLE_RATES': {
+        'onboarding_create_ip': os.environ.get('ONBOARDING_THROTTLE_IP', '5/hour'),
+        'onboarding_create_email': os.environ.get('ONBOARDING_THROTTLE_EMAIL', '3/day'),
+        'onboarding_verify_ip': os.environ.get('ONBOARDING_VERIFY_THROTTLE_IP', '20/hour'),
+    },
 }
+
+# Public onboarding abuse protection (see tenants/throttles.py)
+ONBOARDING_THROTTLE_IP = os.environ.get('ONBOARDING_THROTTLE_IP', '5/hour')
+ONBOARDING_THROTTLE_EMAIL = os.environ.get('ONBOARDING_THROTTLE_EMAIL', '3/day')
+ONBOARDING_VERIFY_THROTTLE_IP = os.environ.get('ONBOARDING_VERIFY_THROTTLE_IP', '20/hour')
+ONBOARDING_VERIFY_EXPIRY_HOURS = int(os.environ.get('ONBOARDING_VERIFY_EXPIRY_HOURS', '24'))
+
+# Cloudflare Turnstile (public onboarding CAPTCHA)
+TURNSTILE_SITE_KEY = os.environ.get('TURNSTILE_SITE_KEY', '')
+TURNSTILE_SECRET_KEY = os.environ.get('TURNSTILE_SECRET_KEY', '')
 
 # Asegurarse de que se está utilizando el modelo de usuarios predeterminado de Django
 AUTH_USER_MODEL = 'auth.User'

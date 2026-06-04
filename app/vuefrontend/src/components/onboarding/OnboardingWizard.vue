@@ -52,9 +52,25 @@
               <StepReview v-if="currentStep === 4" :company-info="formData.companyInfo" :admin-user="formData.adminUser"
                 :preferences="formData.preferences" :recommended-plan="recommendedPlan"
                 :landing-selected-plan="landingSelectedPlan" :is-submitting="isSubmitting"
+                :turnstile-site-key="turnstileSiteKey"
                 :error-message="submitError" @submit="handleFinalSubmit" @go-back="goToPreviousStep" />
             </div>
           </transition>
+
+          <div v-if="verificationPending" class="verification-pending card border-success shadow-sm mt-4">
+            <div class="card-body p-4 text-center">
+              <i class="fas fa-envelope-circle-check fa-2x text-success mb-3"></i>
+              <h2 class="h5 fw-bold">Check your email</h2>
+              <p class="text-muted mb-2">
+                We sent a confirmation link to <strong>{{ verificationEmail }}</strong>.
+                Open it to create your workspace and start your trial.
+              </p>
+              <p v-if="debugVerifyUrl" class="small text-muted mb-0">
+                Dev link:
+                <a :href="debugVerifyUrl">{{ debugVerifyUrl }}</a>
+              </p>
+            </div>
+          </div>
 
           <!-- Navigation Buttons -->
           <div v-if="currentStep < 4" class="wizard-actions mt-5 pt-4 border-top">
@@ -86,7 +102,7 @@ import StepCompanyInfo from './StepCompanyInfo.vue'
 import StepAdminUser from './StepAdminUser.vue'
 import StepPreferences from './StepPreferences.vue'
 import StepReview from './StepReview.vue'
-import { createTenantWorkspace } from '@/api/onboarding'
+import { createTenantWorkspace, fetchOnboardingConfig } from '@/api/onboarding'
 import { normalizeLandingPlan } from './planFromQuery.js'
 import {
   defaultOnboardingPreferences,
@@ -110,6 +126,10 @@ const landingSelectedPlan = ref(null)
 const currentStep = ref(1)
 const isSubmitting = ref(false)
 const submitError = ref('')
+const turnstileSiteKey = ref('')
+const verificationPending = ref(false)
+const verificationEmail = ref('')
+const debugVerifyUrl = ref('')
 
 // Form data structure
 const formData = reactive({
@@ -138,9 +158,16 @@ const stepErrors = reactive({
 })
 
 // Load from localStorage on mount; honor ?plan= from marketing site
-onMounted(() => {
+onMounted(async () => {
   landingSelectedPlan.value = normalizeLandingPlan(route.query.plan)
   loadFromLocalStorage()
+
+  try {
+    const config = await fetchOnboardingConfig()
+    turnstileSiteKey.value = config.turnstile_site_key || ''
+  } catch (error) {
+    console.warn('Could not load onboarding config:', error)
+  }
 
   watch(() => formData, () => {
     saveToLocalStorage()
@@ -362,7 +389,7 @@ const loadFromLocalStorage = () => {
 }
 
 // Final submit
-const handleFinalSubmit = async () => {
+const handleFinalSubmit = async (turnstileToken) => {
   // Validate all steps before submitting
   if (!validateStep1() || !validateStep2() || !validateStep3()) {
     submitError.value = 'Please fix the highlighted fields before continuing.'
@@ -399,12 +426,19 @@ const handleFinalSubmit = async () => {
       preferences: formData.preferences
     }
 
-    const response = await createTenantWorkspace(payload)
+    const response = await createTenantWorkspace(payload, turnstileToken)
 
-    // Clear localStorage on success
     localStorage.removeItem('onboarding_progress')
 
-    // Redirect based on response
+    if (response.verification_required) {
+      verificationPending.value = true
+      verificationEmail.value = response.email || formData.adminUser.email
+      debugVerifyUrl.value = response.debug_verify_url || ''
+      submitError.value = ''
+      return
+    }
+
+    // Legacy direct-create response (fallback)
     if (response.url) {
       window.location.href = response.url
     } else if (response.tenant && response.tenant.domain) {
