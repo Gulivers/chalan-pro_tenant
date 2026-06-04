@@ -127,6 +127,12 @@ const routes = [
     meta: { hideNavbar: true, requiresAuth: false },
   },
   {
+    path: "/onboarding/verify",
+    name: "onboarding-verify",
+    component: () => import("@/views/OnboardingVerifyView.vue"),
+    meta: { hideNavbar: true, requiresAuth: false },
+  },
+  {
     path: "/logout",
     name: "logout",
     beforeEnter: (to, from, next) => {
@@ -1223,6 +1229,7 @@ router.beforeEach(async (to, from, next) => {
     // Si estamos en una ruta pública, no redirigir
     const publicRoutes = [
       "onboarding",
+      "onboarding-verify",
       "login",
       "reset_password",
       "reset_password_confirm",

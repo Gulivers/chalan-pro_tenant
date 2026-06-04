@@ -8,6 +8,7 @@ from django.core.validators import MinValueValidator
 from django.utils.text import slugify
 from django_tenants.models import TenantMixin, DomainMixin
 import re
+import uuid
 
 
 class Tenant(TenantMixin):
@@ -276,6 +277,31 @@ class Tenant(TenantMixin):
         except Exception:
             return None
         return self.logo.url
+
+
+class OnboardingPendingRegistration(models.Model):
+    """Temporary onboarding payload until the admin email is verified."""
+
+    token = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    email = models.EmailField(max_length=255, db_index=True)
+    company_name = models.CharField(max_length=100)
+    payload = models.JSONField(default=dict)
+    logo = models.ImageField(upload_to='onboarding_pending/', blank=True, null=True)
+    expires_at = models.DateTimeField(db_index=True)
+    verified_at = models.DateTimeField(blank=True, null=True)
+    consumed_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    client_ip = models.GenericIPAddressField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Pending onboarding registration'
+        verbose_name_plural = 'Pending onboarding registrations'
+        indexes = [
+            models.Index(fields=['email', 'consumed_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.company_name} ({self.email})'
 
 
 class Domain(DomainMixin):

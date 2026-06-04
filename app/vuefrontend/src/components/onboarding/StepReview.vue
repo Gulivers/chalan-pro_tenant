@@ -162,8 +162,17 @@
       </div>
 
       <p class="text-center text-muted small mb-3 mb-md-4">
-        Your workspace will be ready in a few seconds. You can update these settings later.
+        We will email you a confirmation link. Your workspace is created only after you verify your email.
       </p>
+
+      <div class="d-flex justify-content-center mb-4">
+        <TurnstileWidget
+          :site-key="turnstileSiteKey"
+          @update:token="onTurnstileToken"
+          @error="onTurnstileError"
+        />
+      </div>
+      <p v-if="turnstileError" class="text-danger small text-center">{{ turnstileError }}</p>
 
       <div class="wizard-actions mt-4 pt-4 border-top">
         <div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3">
@@ -185,8 +194,8 @@
           >
             <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
             <i v-else class="fas fa-rocket me-2"></i>
-            <span v-if="isSubmitting">Creating your workspace…</span>
-            <span v-else>Start My 30-Day Trial</span>
+            <span v-if="isSubmitting">Sending verification email…</span>
+            <span v-else>Send verification email</span>
           </button>
         </div>
       </div>
@@ -195,7 +204,8 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
+import TurnstileWidget from './TurnstileWidget.vue'
 
 const props = defineProps({
   companyInfo: {
@@ -225,10 +235,17 @@ const props = defineProps({
   errorMessage: {
     type: String,
     default: ''
+  },
+  turnstileSiteKey: {
+    type: String,
+    default: ''
   }
 })
 
 const emit = defineEmits(['submit', 'go-back'])
+
+const turnstileToken = ref('')
+const turnstileError = ref('')
 
 const logoPreview = ref(null)
 
@@ -301,7 +318,23 @@ const getModuleIcon = (id) => {
 }
 
 const handleSubmit = () => {
-  emit('submit')
+  turnstileError.value = ''
+  if (props.turnstileSiteKey && !turnstileToken.value) {
+    turnstileError.value = 'Please complete the CAPTCHA verification.'
+    return
+  }
+  emit('submit', turnstileToken.value)
+}
+
+const onTurnstileToken = (token) => {
+  turnstileToken.value = token || ''
+  if (token) {
+    turnstileError.value = ''
+  }
+}
+
+const onTurnstileError = (message) => {
+  turnstileError.value = message
 }
 
 const handleGoBack = () => {

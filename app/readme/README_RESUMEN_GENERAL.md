@@ -50,6 +50,7 @@
     - [🟢 Prioridad Baja](#-prioridad-baja)
   - [6.3 Configuración Actual de Headers de Seguridad](#63-configuración-actual-de-headers-de-seguridad)
   - [6.4 Checklist de Seguridad](#64-checklist-de-seguridad)
+  - [6.5 Remediación de seguridad — Onboarding público](#65-remediación-de-seguridad--onboarding-público)
 - [7. URLs del Sistema](#7-urls-del-sistema)
   - [7.1 URLs de Producción](#71-urls-de-producción)
   - [7.2 Credenciales de Acceso](#72-credenciales-de-acceso)
@@ -344,56 +345,46 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ 3. PETICIÓN HTTP POST                                           │
+│ 3. PETICIÓN HTTP POST (paso 1 — solicitud)                      │
 │    POST /api/onboarding/                                        │
-│    Body: { name, email, ... }                                   │
-│    Host: www.chalanpro.net                                      │
+│    Body: FormData + turnstile_token + datos del wizard          │
+│    Host: api.jobrhythm.net (schema public)                      │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ 4. NGINX                                                        │
-│    - Recibe petición en puerto 443                              │
-│    - Proxy a backend:8000                                       │
-│    - Pasa header Host: www.chalanpro.net                        │
+│ 3b. PROTECCIONES DE SEGURIDAD (ver sección 6.5)                 │
+│    - Nginx limit_req (1 req/min por IP en /api/onboarding/)     │
+│    - DRF throttling (IP + email)                                 │
+│    - Cloudflare Turnstile (CAPTCHA server-side)                 │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ 5. MIDDLEWARE STACK (Django)                                    │
-│    ┌─────────────────────────────────────────────┐              │
-│    │ TenantHostnameNormalizerMiddleware          │              │
-│    │ - Normaliza hostname (remueve puerto)       │              │
-│    └─────────────────────────────────────────────┘              │
-│    ┌─────────────────────────────────────────────┐              │
-│    │ DynamicAllowedHostsMiddleware               │              │
-│    │ - Consulta BD: dominios activos             │              │
-│    │ - Actualiza ALLOWED_HOSTS dinámicamente     │              │
-│    └─────────────────────────────────────────────┘              │
-│    ┌─────────────────────────────────────────────┐              │
-│    │ TenantMainMiddleware (django-tenants)       │              │
-│    │ - Detecta tenant por hostname               │              │
-│    │ - www.chalanpro.net → schema 'public'       │              │
-│    └─────────────────────────────────────────────┘              │
-│    ┌─────────────────────────────────────────────┐              │
-│    │ DynamicCSRFMiddleware                       │              │
-│    │ - Consulta BD: dominios activos             │              │
-│    │ - Actualiza CSRF_TRUSTED_ORIGINS            │              │
-│    └─────────────────────────────────────────────┘              │
+│ 4. NGINX → BACKEND (schema public)                               │
+│    - Throttling / CAPTCHA / validación de formulario            │
+│    - Guarda OnboardingPendingRegistration (sin crear schema)    │
+│    - Envía email: {FRONT_URL}/onboarding/verify?token=...       │
+│    - Respuesta 202: verification_required: true                 │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ 6. VISTA: create_tenant_onboarding()                            │
-│    (tenants/views.py)                                           │
-│    - Valida datos del formulario                                │
-│    - Genera schema_name único (ej: "chalan-onboarding")         │
-│    - Genera dominio único (ej: "chalan-onboarding.chalanpro.net")│
+│ 5. USUARIO CONFIRMA EMAIL                                       │
+│    GET /onboarding/verify?token=...  →  POST /api/onboarding/verify/ │
 └───────────────────────────┬─────────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ 7. CREACIÓN DEL TENANT                                          │
+│ 6. VISTA: verify_onboarding_email() → provision_tenant_workspace│
+│    (tenants/services/onboarding_provision.py)                   │
+│    - Valida token, expiración y email no registrado             │
+│    - Genera schema_name y dominio únicos                        │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 7. CREACIÓN DEL TENANT (solo tras verificación)               │
 │    - Tenant.objects.create(                                     │
 │        name="Chalan Onboarding",                                │
 │        schema_name="chalan-onboarding",                         │
@@ -460,13 +451,14 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 
 ### 2.1.2 Puntos Clave del Flujo
 
-1. **Onboarding en Schema Público**: El formulario de onboarding se procesa en el schema `public` (dominio `www.chalanpro.net`), no en un tenant específico.
+1. **Onboarding en Schema Público**: El formulario se procesa en el schema `public` (dominio `api.jobrhythm.net`). La creación del schema del tenant ocurre **solo** tras verificar el email ([6.5](#65-remediación-de-seguridad--onboarding-público)).
+2. **Protección anti-abuso**: Throttling DRF, `limit_req` en Nginx, Turnstile y verificación de email en `POST /api/onboarding/` antes de provisionar.
 
-2. **Creación Automática del Schema**: `django-tenants` crea automáticamente el schema en PostgreSQL cuando se crea un `Tenant` con `auto_create_schema=True`.
+3. **Creación Automática del Schema**: `django-tenants` crea automáticamente el schema en PostgreSQL cuando se crea un `Tenant` con `auto_create_schema=True` (tras la verificación de email).
 
-3. **Actualización Dinámica**: Los middlewares `DynamicAllowedHostsMiddleware` y `DynamicCSRFMiddleware` actualizan las configuraciones cada 5 minutos, permitiendo que nuevos tenants funcionen sin reiniciar.
+4. **Actualización Dinámica**: Los middlewares `DynamicAllowedHostsMiddleware` y `DynamicCSRFMiddleware` actualizan las configuraciones cada 5 minutos, permitiendo que nuevos tenants funcionen sin reiniciar.
 
-4. **Mismo Frontend para Todos**: Todos los tenants comparten el mismo build del frontend Vue.js. El backend detecta el tenant por hostname y cambia al schema correspondiente.
+5. **Mismo Frontend para Todos**: Todos los tenants comparten el mismo build del frontend Vue.js. El backend detecta el tenant por hostname y cambia al schema correspondiente.
 
 ---
 
@@ -1004,8 +996,8 @@ psql -h 72.60.168.62 -p 5432 -U chalanpro_user -d chalanpro
    - Monitoreo de recursos (CPU, RAM, disco)
 
 6. **Rate Limiting:**
-   - Limitar requests por IP en Nginx
-   - Proteger endpoints de API contra abuso
+   - ~~Limitar requests por IP en Nginx~~ ✅ Implementado en onboarding (ver [6.5](#65-remediación-de-seguridad--onboarding-público))
+   - ~~Proteger endpoints de API contra abuso~~ ✅ Throttling DRF + CAPTCHA + verificación de email
 
 #### 🟢 Prioridad Baja
 
@@ -1049,7 +1041,140 @@ add_header X-XSS-Protection "1; mode=block" always;
 - [ ] Backups automáticos configurados
 - [ ] Fail2Ban configurado
 - [ ] Monitoreo y alertas activos
-- [ ] Rate limiting configurado
+- [x] Rate limiting en onboarding (DRF + Nginx + CAPTCHA + verificación email — ver [6.5](#65-remediación-de-seguridad--onboarding-público))
+
+### 6.5 Remediación de seguridad — Onboarding público
+
+**Hallazgo auditado:** onboarding público (`POST /api/onboarding/`) permitía creación ilimitada de tenants sin rate limit (severidad **High**).  
+**Fecha de remediación:** 2025-06-02.  
+**Archivos principales:** `app/tenants/throttles.py`, `app/tenants/views.py`, `app/tenants/services/`, `nginx/default.conf`, `nginx/default.dev.conf`, frontend onboarding (`TurnstileWidget.vue`, `OnboardingVerifyView.vue`).
+
+#### Remediation Applied
+
+##### 1. DRF throttling (capa aplicación)
+
+Throttling de Django REST Framework en el endpoint público de onboarding:
+
+| Scope | Límite por defecto | Variable de entorno |
+| ----- | ------------------ | ------------------- |
+| IP (`onboarding_create_ip`) | 5 POST/hora | `ONBOARDING_THROTTLE_IP` |
+| Email (`onboarding_create_email`) | 3 POST/día | `ONBOARDING_THROTTLE_EMAIL` |
+| Verificación (`onboarding_verify_ip`) | 20 POST/hora | `ONBOARDING_VERIFY_THROTTLE_IP` |
+
+- Clases: `OnboardingCreateIPThrottle`, `OnboardingCreateEmailThrottle`, `OnboardingVerifyIPThrottle` (`app/tenants/throttles.py`).
+- Respuesta ante exceso: **HTTP 429** antes de ejecutar lógica pesada (sin crear schema).
+- La IP se toma de `X-Forwarded-For` (Nginx como reverse proxy).
+- Auditoría: log `onboarding_rate_limited scope=... ip=...`.
+
+Configuración en `app/project/settings.py` → `REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']`.
+
+##### 2. Nginx `limit_req` (capa borde)
+
+Protección adicional en Nginx para rutas de creación de tenant (filtro grueso anti-ráfaga):
+
+```nginx
+# nginx/default.conf y nginx/default.dev.conf (contexto http)
+limit_req_zone $binary_remote_addr zone=onboarding_create:10m rate=1r/m;
+limit_req_status 429;
+
+# Location específica (antes del location /api/ genérico)
+location ~ ^/api/onboarding(/create-tenant/)?$ {
+    limit_req zone=onboarding_create burst=0 nodelay;
+    proxy_pass http://backend:8000;
+    ...
+}
+```
+
+- **Nota:** Nginx solo admite `r/s` y `r/m` (no `r/h`); `1r/m` complementa el throttling fino de DRF (`5/hour`).
+- Aplica en bloques que proxyan `/api/onboarding/` hacia el backend (`api.jobrhythm.net`, `jobrhythm.net`, subdominios `*.jobrhythm.net`).
+- Tras cambiar Nginx en VPS: `docker compose restart nginx`.
+
+##### 3. CAPTCHA — Cloudflare Turnstile
+
+Verificación server-side antes de aceptar una solicitud de onboarding:
+
+| Componente | Ubicación |
+| ---------- | --------- |
+| Verificación backend | `app/tenants/services/captcha.py` |
+| Widget frontend | `app/vuefrontend/src/components/onboarding/TurnstileWidget.vue` |
+| Config pública (site key) | `GET /api/onboarding/config/` |
+
+**Cómo obtener las claves Turnstile**
+
+1. Entrar en [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Turnstile**.
+2. **Add site** → nombre (ej. `JobRhythm Onboarding`), dominios (`jobrhythm.net`, `getjobrhythm.com`, `localhost` en dev).
+3. Elegir widget (recomendado: **Managed**).
+4. Copiar **Site Key** (pública, va al frontend vía API) y **Secret Key** (solo backend).
+
+**Configuración en el VPS** (`envs/backend.env` o variables del contenedor backend):
+
+```bash
+TURNSTILE_SITE_KEY=<site-key-de-cloudflare>
+TURNSTILE_SECRET_KEY=<secret-key-de-cloudflare>
+```
+
+**Desarrollo local** (`envs/backend.dev.env`) — claves de prueba de Cloudflare (siempre pasan):
+
+```bash
+TURNSTILE_SITE_KEY=1x00000000000000000000AA
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+```
+
+- El frontend obtiene la site key con `GET /api/onboarding/config/` al cargar el wizard.
+- El token se envía en `POST /api/onboarding/` como `turnstile_token` / `cf_turnstile_response`.
+- Si `TURNSTILE_SECRET_KEY` no está configurada y `DEBUG=True`, el backend omite la verificación (solo desarrollo).
+
+##### 4. Verificación de email antes de crear el schema
+
+Flujo en **dos pasos** — el schema PostgreSQL y las migraciones **no** se ejecutan hasta confirmar el email:
+
+| Paso | Endpoint | Acción |
+| ---- | -------- | ------ |
+| 1 | `POST /api/onboarding/` | Valida datos + CAPTCHA → guarda `OnboardingPendingRegistration` → envía email con enlace |
+| 2 | `POST /api/onboarding/verify/` | Valida token UUID → provisiona tenant (schema, dominio, migraciones, admin) |
+
+- Modelo: `OnboardingPendingRegistration` (schema `public`, migración `tenants.0006`).
+- Enlace del email: `{FRONT_URL}/onboarding/verify?token=<uuid>` (vista `OnboardingVerifyView.vue`).
+- Expiración del token: `ONBOARDING_VERIFY_EXPIRY_HOURS` (default **24** horas).
+- Requiere SMTP configurado (`EMAIL_HOST_PASSWORD`) en producción.
+- En `DEBUG` sin SMTP, la API devuelve `debug_verify_url` para pruebas locales.
+
+**Variables relacionadas:**
+
+```bash
+ONBOARDING_VERIFY_EXPIRY_HOURS=24
+FRONT_URL=https://jobrhythm.net   # base del enlace de verificación
+```
+
+**Despliegue tras este cambio:**
+
+```bash
+# VPS — schema public (modelo pending)
+docker compose exec backend python manage.py migrate_schemas --shared
+
+docker compose restart backend nginx
+# Rebuild frontend si cambió el wizard / verify view
+```
+
+#### Security Impact
+
+| Riesgo mitigado | Antes | Después |
+| --------------- | ----- | ------- |
+| Creación masiva automatizada de tenants | Ilimitada por IP/email | Limitada (DRF + Nginx) |
+| Abuso de CPU/DB/disco por migraciones | Cada POST creaba schema | Schema solo tras verificar email |
+| Squatting de subdominios | Posible en volumen | Coste por intento (CAPTCHA + email + throttles) |
+| Bots en formulario público | Sin fricción | Turnstile + verificación de buzón |
+
+**Reducción de severidad:** finding **High** → **mitigado** en la capa de abuso automatizado del onboarding.
+
+#### Potential Side Effects
+
+1. **NAT / oficina compartida:** varios registros legítimos desde la misma IP pública pueden recibir **429** (ajustar `ONBOARDING_THROTTLE_IP` si hace falta).
+2. **Nginx `1r/m`:** un segundo `POST /api/onboarding/` en menos de 1 minuto desde la misma IP puede ser rechazado en el borde (antes de llegar a Django).
+3. **Cache DRF por worker:** con varios workers Daphne, el límite efectivo por IP puede ser mayor por proceso; Nginx compensa en producción.
+4. **Verificación de email obligatoria:** el usuario debe abrir el enlace del correo; sin SMTP en producción el onboarding no completa el flujo.
+5. **`FRONT_URL` incorrecto:** el enlace del email apuntará al host equivocado — verificar en `envs/backend.env` del VPS.
+6. **Turnstile en producción:** sin claves reales de Cloudflare, el CAPTCHA fallará (`TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` obligatorias con `DEBUG=False`).
 
 ---
 
@@ -1066,7 +1191,7 @@ add_header X-XSS-Protection "1; mode=block" always;
 | **Admin Django**       | `https://api.jobrhythm.net/admin/`      | Panel de administración          |
 | **Tenant Login**       | `https://{tenant}.jobrhythm.net/login/` | Login de tenant específico       |
 | **Landing**            | `https://getjobrhythm.com`              | Web de marketing                 |
-| **pgAdmin**            | `http://72.60.168.62:5050`              | Interfaz web de PostgreSQL       |
+| **pgAdmin**            | ``                                      | Interfaz web de PostgreSQL       |
 
 **Ejemplo tenant Phoenix (schema `phoenix_electric_and_air_llc`):**
 
@@ -1124,7 +1249,7 @@ curl -sI -L -o /dev/null -w "%{url_effective}\n" https://phoenixelectricandair.n
 
 - **URL:** `https://api.jobrhythm.net/admin/`
 - **Username:** `superchalan`
-- **Password:** `d162025OH$!`
+- **Password:** ``
 
 **pgAdmin:**
 
