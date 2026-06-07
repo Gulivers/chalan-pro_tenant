@@ -51,6 +51,7 @@
   - [6.3 Configuración Actual de Headers de Seguridad](#63-configuración-actual-de-headers-de-seguridad)
   - [6.4 Checklist de Seguridad](#64-checklist-de-seguridad)
   - [6.5 Remediación de seguridad — Onboarding público](#65-remediación-de-seguridad--onboarding-público)
+  - [6.6 Política de secretos en documentación](#66-política-de-secretos-en-documentación)
 - [7. URLs del Sistema](#7-urls-del-sistema)
   - [7.1 URLs de Producción](#71-urls-de-producción)
   - [7.2 Credenciales de Acceso](#72-credenciales-de-acceso)
@@ -84,7 +85,7 @@
 
 Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con Ubuntu 24.04 LTS. La plataforma permite la creación dinámica de tenants mediante un proceso de onboarding, donde cada tenant obtiene su propio subdominio y schema de base de datos aislado.
 
-**IP del Servidor:** `72.60.168.62`  
+**VPS (Hostinger):** IP y acceso SSH → panel **hPanel → VPS** (no documentar en este repositorio).  
 **Dominio Base (actual):** `jobrhythm.net`  
 **Landing:** `getjobrhythm.com`  
 **Legacy (solo 301, sin app):** `jobrithm.net`, `getjobrithm.com`, `chalanpro.net`, `chalanpro.com`  
@@ -466,13 +467,15 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 
 ### 2.2.1 Configuración de DNS en Hostinger
 
+**IP del VPS:** obtener en **hPanel → VPS** (usar `<IP-VPS>` en los registros A; no fijar la IP en Git si el servidor cambia).
+
 **Panel DNS:** https://hpanel.hostinger.com/domain/jobrithm.net/dns
 
 | Tipo      | Name | Points to / Content | TTL   | Propósito                                   |
 | --------- | ---- | ------------------- | ----- | ------------------------------------------- |
-| **A**     | @    | 72.60.168.62        | 14400 | Frontend principal                          |
-| **A**     | api  | 72.60.168.62        | 14400 | API REST y Admin Django                     |
-| **A**     | \*   | 72.60.168.62        | 14400 | Subdominios dinámicos de tenants (wildcard) |
+| **A**     | @    | <IP-VPS>        | 14400 | Frontend principal                          |
+| **A**     | api  | <IP-VPS>        | 14400 | API REST y Admin Django                     |
+| **A**     | \*   | <IP-VPS>        | 14400 | Subdominios dinámicos de tenants (wildcard) |
 | **CNAME** | www  | jobrithm.net        | 300   | Frontend (www)                              |
 | **CAA**   | @    | (varios)            | 14400 | Certificados SSL                            |
 
@@ -542,7 +545,7 @@ O definir `HOSTINGER_API_TOKEN` en `/etc/environment` o en el cron y usar `sudo 
 
 ```bash
 TENANT_BASE_DOMAIN=jobrhythm.net
-ALLOWED_HOSTS="chalanpro.net,*.chalanpro.net,...,jobrithm.net,*.jobrithm.net,...,jobrhythm.net,*.jobrhythm.net,www.jobrhythm.net,api.jobrhythm.net,...,72.60.168.62,localhost,127.0.0.1"
+ALLOWED_HOSTS="chalanpro.net,*.chalanpro.net,...,jobrithm.net,*.jobrithm.net,...,jobrhythm.net,*.jobrhythm.net,www.jobrhythm.net,api.jobrhythm.net,...,<IP-VPS>,localhost,127.0.0.1"
 CSRF_TRUSTED_ORIGINS=...,https://jobrithm.net,...,https://jobrhythm.net,...,https://*.jobrhythm.net
 EMAIL_DEFAULT_FROM=noreply@jobrhythm.net
 LANDING_CONTACT_TO_EMAIL=team@jobrhythm.net
@@ -643,7 +646,7 @@ docker compose exec backend python manage.py create_tenant_superuser \
   --schema mi-tenant \
   --username admin \
   --email admin@example.com \
-  --password mi_password
+  --password '<contraseña-segura>'
 ```
 
 ---
@@ -888,16 +891,20 @@ git status --short
 
 ## 5. Host y Credenciales PostgreSQL
 
+## 5. Host y Credenciales PostgreSQL
+
+> **Secretos:** contraseña y URL completas en `envs/postgres.env` (`POSTGRES_PASSWORD`, `POSTGRES_USER`) y `envs/backend.env` (`DATABASE_URL`). Ver [§6.6](#66-política-de-secretos-en-documentación).
+
 ### 5.1 Información de Conexión
 
-| Parámetro              | Valor                                                      |
-| ---------------------- | ---------------------------------------------------------- |
-| **Host**               | `localhost` (desde el servidor) o `72.60.168.62` (externo) |
-| **Puerto**             | `5432`                                                     |
-| **Base de Datos**      | `chalanpro`                                                |
-| **Usuario**            | `chalanpro_user`                                           |
-| **Contraseña**         | ``                                                         |
-| **Schema por Defecto** | `public` (para gestión de tenants)                         |
+| Parámetro              | Valor                                                   |
+| ---------------------- | ------------------------------------------------------- |
+| **Host**               | `localhost` / servicio Docker `postgres` (desde el VPS) |
+| **Puerto**             | `5432`                                                  |
+| **Base de Datos**      | `chalanpro`                                             |
+| **Usuario**            | `chalanpro_user` (ver `envs/postgres.env`)              |
+| **Contraseña**         | Ver `envs/postgres.env` → `POSTGRES_PASSWORD`           |
+| **Schema por Defecto** | `public` (para gestión de tenants)                      |
 
 ### 5.2 Conexión desde el Servidor
 
@@ -913,24 +920,20 @@ docker compose exec postgres psql -U chalanpro_user -d chalanpro
 
 **Requisitos:**
 
-- Puerto 5432 debe estar abierto en el firewall
-- PostgreSQL debe aceptar conexiones externas (verificar `postgresql.conf` y `pg_hba.conf`)
+- Preferir **túnel SSH** (ver `DEVOPS.md`); evitar exponer PostgreSQL a Internet.
+- Si aplica acceso externo: IP del VPS en hPanel → VPS (no documentar aquí).
 
 ```bash
-# Desde otra máquina
-psql -h 72.60.168.62 -p 5432 -U chalanpro_user -d chalanpro
+# Túnel SSH (recomendado) — host según tu ~/.ssh/config
+ssh -L 5432:127.0.0.1:5432 <alias-vps>
+psql -h localhost -p 5432 -U chalanpro_user -d chalanpro
 ```
-
-**Nota:** Por seguridad, se recomienda usar un túnel SSH o VPN en lugar de exponer PostgreSQL directamente a Internet.
 
 ### 5.4 Conexión desde pgAdmin
 
-**URL:** `http://72.60.168.62:5050`
+**URL:** puerto `5050` del VPS (mapear solo si es imprescindible; preferir túnel SSH).
 
-**Credenciales pgAdmin:**
-
-- **Email:** `admin@chalanpro.net`
-- **Password:** `ChalanPro2024!`
+**Credenciales pgAdmin:** ver `envs/pgadmin.env` (`PGADMIN_DEFAULT_EMAIL`, `PGADMIN_DEFAULT_PASSWORD`).
 
 **Configuración del servidor en pgAdmin:**
 
@@ -938,8 +941,8 @@ psql -h 72.60.168.62 -p 5432 -U chalanpro_user -d chalanpro
 - **Host:** `postgres` (nombre del servicio Docker) o `172.x.x.x` (IP del contenedor)
 - **Port:** `5432`
 - **Maintenance database:** `chalanpro`
-- **Username:** `chalanpro_user`
-- **Password:** `2hSGqPHiNhaktRS_lxY3CprmDBYtHJxsIxWZhe-iqd4`
+- **Username:** `chalanpro_user` (ver `envs/postgres.env`)
+- **Password:** ver `envs/postgres.env` → `POSTGRES_PASSWORD`
 
 ---
 
@@ -1176,6 +1179,24 @@ docker compose restart backend nginx
 5. **`FRONT_URL` incorrecto:** el enlace del email apuntará al host equivocado — verificar en `envs/backend.env` del VPS.
 6. **Turnstile en producción:** sin claves reales de Cloudflare, el CAPTCHA fallará (`TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` obligatorias con `DEBUG=False`).
 
+### 6.6 Política de secretos en documentación
+
+**Regla:** este repositorio **no** debe contener contraseñas, claves API, tokens ni valores que permitan acceso a producción. La documentación solo nombra **variables** y **rutas** bajo `envs/` (archivos reales en `.gitignore`; plantillas en `*.example.env`).
+
+| Tipo de secreto | Dónde configurarlo | No documentar en markdown |
+| ----------------- | ------------------ | ------------------------- |
+| PostgreSQL | `envs/postgres.env` → `POSTGRES_PASSWORD`, `POSTGRES_USER` | Contraseñas, URLs con password embebida |
+| Django / DB URL | `envs/backend.env` → `DATABASE_URL`, `DJANGO_SECRET_KEY` | Secret key, connection strings completos |
+| Admin Django | `createsuperuser` en VPS o gestión interna | Usuario/contraseña de superuser |
+| pgAdmin | `envs/pgadmin.env` | Email/contraseña de pgAdmin |
+| SMTP / onboarding | `envs/backend.env` → `EMAIL_*` | Contraseñas de buzón |
+| Stripe | `envs/backend.env` → `STRIPE_*` | Cualquier `sk_…`, `pk_…`, `whsec_…` real o de ejemplo |
+| Turnstile | `envs/backend.env` → `TURNSTILE_*` | Secret key (site key pública solo vía API config) |
+| Hostinger API (certbot DNS) | `/root/.hostinger-api-token` en el VPS (`chmod 600`) | Token en Git o markdown |
+| IP / SSH del VPS | hPanel → VPS → detalles; alias en `~/.ssh/config` | IP fija repetida como credencial; contraseñas SSH |
+
+En tablas DNS de este documento, `<IP-VPS>` significa la IP pública actual del VPS en Hostinger (consultar panel, no commitear si cambia de servidor).
+
 ---
 
 ## 7. URLs del Sistema
@@ -1191,7 +1212,7 @@ docker compose restart backend nginx
 | **Admin Django**       | `https://api.jobrhythm.net/admin/`      | Panel de administración          |
 | **Tenant Login**       | `https://{tenant}.jobrhythm.net/login/` | Login de tenant específico       |
 | **Landing**            | `https://getjobrhythm.com`              | Web de marketing                 |
-| **pgAdmin**            | ``                                      | Interfaz web de PostgreSQL       |
+| **pgAdmin**            | Túnel SSH → puerto `5050` (ver `envs/pgadmin.env`) | Interfaz web de PostgreSQL       |
 
 **Ejemplo tenant Phoenix (schema `phoenix_electric_and_air_llc`):**
 
@@ -1230,7 +1251,7 @@ Algunos clientes conservan un **dominio propio** (registro/DNS en otro proveedor
 
 | Comprobación                    | Resultado (2026-05-25)                                                                                                                           |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| DNS `phoenixelectricandair.net` | `160.153.175.22` (no apunta al VPS JobRhythm `72.60.168.62`)                                                                                     |
+| DNS `phoenixelectricandair.net` | `160.153.175.22` (no apunta al VPS JobRhythm `<IP-VPS>`)                                                                                     |
 | Cadena HTTPS completa           | **Sí llega a** `https://phoenix.jobrhythm.net/` con **200**                                                                                      |
 | Paso 1                          | `https://phoenixelectricandair.net/` → **301** → `https://phoenix.jobrithm.net/` (redirección configurada en el hosting del dominio del cliente) |
 | Paso 2                          | `https://phoenix.jobrithm.net/` → **301** → `https://phoenix.jobrhythm.net/` (Nginx legacy en VPS)                                               |
@@ -1241,21 +1262,21 @@ curl -sI -L -o /dev/null -w "%{url_effective}\n" https://phoenixelectricandair.n
 # https://phoenix.jobrhythm.net/
 ```
 
-**Recomendación (un solo salto 301):** en el panel DNS del dominio del cliente, apuntar `phoenixelectricandair.net` (y `www`) con registro **A** a `72.60.168.62` y añadir en el VPS un bloque Nginx que haga `return 301 https://phoenix.jobrhythm.net$request_uri;` (requiere certificado SSL para ese host, p. ej. certbot). Mientras el DNS siga en otra IP, el primer 301 seguirá gestionándose fuera del VPS.
+**Recomendación (un solo salto 301):** en el panel DNS del dominio del cliente, apuntar `phoenixelectricandair.net` (y `www`) con registro **A** a `<IP-VPS>` y añadir en el VPS un bloque Nginx que haga `return 301 https://phoenix.jobrhythm.net$request_uri;` (requiere certificado SSL para ese host, p. ej. certbot). Mientras el DNS siga en otra IP, el primer 301 seguirá gestionándose fuera del VPS.
 
 ### 7.4 Credenciales de Acceso
+
+> **Política:** no documentar contraseñas en markdown. Usar solo `envs/` en el VPS (ver [§6.6](#66-política-de-secretos-en-documentación)).
 
 **Admin Django:**
 
 - **URL:** `https://api.jobrhythm.net/admin/`
-- **Username:** `superchalan`
-- **Password:** ``
+- **Usuario / contraseña:** gestionar en el VPS (`createsuperuser` o variables en `envs/backend.env` si aplica)
 
 **pgAdmin:**
 
-- **URL:** `http://72.60.168.62:5050`
-- **Email:** `admin@chalanpro.net`
-- **Password:** `ChalanPro2024!`
+- **Acceso:** puerto `5050` (restringir por firewall o túnel SSH)
+- **Credenciales:** `envs/pgadmin.env`
 
 ### 7.5 Post-migración JobRhythm
 
@@ -1776,28 +1797,25 @@ Admin **public** (`api.jobrhythm.net/admin`) no se ve afectado.
 
 ### 10.5 Variables de entorno Stripe
 
-En `envs/backend.env` / VPS (no commitear claves reales):
+Definir **solo** en `envs/backend.env` del VPS (plantilla: `envs/backend.dev.example.env`). **No** pegar claves reales en markdown ni en Git.
+
+| Variable | Descripción |
+| -------- | ----------- |
+| `STRIPE_SECRET_KEY` | Clave secreta Stripe (Dashboard → Developers → API keys) |
+| `STRIPE_PUBLISHABLE_KEY` | Clave publicable (frontend / Checkout) |
+| `STRIPE_WEBHOOK_SECRET` | Secreto del endpoint webhook (`whsec_…` en Stripe Dashboard) |
+| `STRIPE_SUCCESS_URL` | URL post-checkout (opcional) |
+| `STRIPE_CANCEL_URL` | URL cancelación checkout |
+| `STRIPE_CUSTOMER_PORTAL_RETURN_URL` | Return URL del portal de cliente |
+| `BILLING_PAST_DUE_GRACE_DAYS` | Días de gracia en `past_due` (default `7`) |
+| `BILLING_ENFORCEMENT_ENABLED` | Activar enforcement de billing |
+| `STRIPE_*_PRODUCT_ID` / `STRIPE_*_PRICE_*` | IDs de productos/precios por plan (`seed_plans`) |
 
 ```bash
-STRIPE_SECRET_KEY=sk_...
-STRIPE_PUBLISHABLE_KEY=pk_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_SUCCESS_URL=          # opcional; por defecto {tenant}/billing/success
-STRIPE_CANCEL_URL=
-STRIPE_CUSTOMER_PORTAL_RETURN_URL=
-BILLING_PAST_DUE_GRACE_DAYS=7
-BILLING_ENFORCEMENT_ENABLED=True
-
-# IDs por plan (usados por seed_plans)
-STRIPE_STARTER_PRODUCT_ID=
-STRIPE_STARTER_PRICE_MONTHLY=
-STRIPE_STARTER_PRICE_YEARLY=
-STRIPE_PROFESSIONAL_PRODUCT_ID=
-STRIPE_PROFESSIONAL_PRICE_MONTHLY=
-STRIPE_PROFESSIONAL_PRICE_YEARLY=
-STRIPE_ENTERPRISE_PRODUCT_ID=
-STRIPE_ENTERPRISE_PRICE_MONTHLY=
-STRIPE_ENTERPRISE_PRICE_YEARLY=
+# Ejemplo de nombres en envs/backend.env — valores reales solo en el servidor
+STRIPE_SECRET_KEY=
+STRIPE_PUBLISHABLE_KEY=
+STRIPE_WEBHOOK_SECRET=
 ```
 
 Correos transaccionales de trial: `DEFAULT_FROM_EMAIL=noreply@jobrhythm.net`.

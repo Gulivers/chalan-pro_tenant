@@ -205,7 +205,7 @@ psql -h 127.0.0.1 -p 5432 -U chalanpro_user -d chalanpro
 **Desde otra máquina:** túnel SSH, no abrir 5432 en el firewall público:
 
 ```bash
-ssh -L 5432:127.0.0.1:5432 usuario@72.60.168.62
+ssh -L 5432:127.0.0.1:5432 <alias-vps>
 ```
 
 **Error `sorry, too many clients already`:**
