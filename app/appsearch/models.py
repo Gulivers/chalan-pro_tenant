@@ -6,6 +6,12 @@ from pgvector.django import HnswIndex, VectorField
 
 
 class SearchIndex(models.Model):
+    """
+    Índice de búsqueda persistido por tenant: una fila por entidad indexable
+    (hoy DocumentLine). Guarda el texto denormalizado, embedding vectorial,
+    FTS y metadata filtrable; es lo que consulta la búsqueda semántica.
+    """
+
     SOURCE_DOCUMENT_LINE = 'document_line'
     SOURCE_DOCUMENT = 'document'
     SOURCE_BUILDER = 'builder'
@@ -60,6 +66,14 @@ class SearchIndex(models.Model):
 
 
 class IndexOutbox(models.Model):
+    """
+    Cola de trabajo desacoplada: registra qué entidad debe reindexarse o
+    eliminarse del SearchIndex. Las señales encolan aquí; process_index_outbox
+    procesa las entradas pendientes sin bloquear el guardado de transacciones.
+    IndexOutbox mantiene SearchIndex al día con el catálogo de transacciones.
+    Las preguntas del usuario se procesan contra SearchIndex, no pasan por el outbox.
+    """
+
     ACTION_UPSERT = 'upsert'
     ACTION_DELETE = 'delete'
 
