@@ -62,23 +62,44 @@
             v-model="search"
             type="text"
             class="form-control form-control-sm"
-            placeholder="Search by document type, party, notes..."
-            autocomplete="off" />
+            :placeholder="smartSearch ? smartSearchPlaceholder : classicSearchPlaceholder"
+            autocomplete="off"
+            @input="onSearchInput" />
           <button
             v-show="search && search.length"
             @mousedown.prevent
-            @click="search = ''"
+            @click="clearSearch"
             type="button"
             class="btn-clear-x"
             title="Clear">
             ×
           </button>
         </div>
+        <div class="form-check form-check-sm mt-1">
+          <input
+            id="smart-search-toggle"
+            v-model="smartSearch"
+            class="form-check-input"
+            type="checkbox"
+            @change="onSmartSearchToggle" />
+          <label class="form-check-label small text-muted" for="smart-search-toggle">
+            Smart search (AI)
+          </label>
+        </div>
+        <div
+          v-if="smartSearch && searchMeta.summary"
+          class="small text-muted mt-1">
+          {{ searchMeta.summary }}
+        </div>
       </div>
     </div>
 
     <!-- Main Table with Overlay -->
-    <BOverlay :show="isLoading" rounded="sm" opacity="0.85" variant="light">
+    <BOverlay
+      :show="isLoading || smartSearchLoading"
+      rounded="sm"
+      opacity="0.85"
+      variant="light">
       <template #overlay>
         <div class="text-center">
           <BSpinner type="border" variant="secondary" class="mb-3" />
@@ -191,7 +212,7 @@
 import TxCard from "@/components/layout/TxCard.vue";
 import "@/assets/css/base.css";
 
-import { ref, computed, onMounted, getCurrentInstance } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, getCurrentInstance } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { BOverlay, BSpinner } from "bootstrap-vue-next";
@@ -204,6 +225,15 @@ const documentTypesMap = ref({}); // id -> type_code
 const partiesMap = ref({}); // id -> name
 const workAccountsMap = ref({}); // id -> display
 const search = ref("");
+const smartSearch = ref(false);
+const smartSearchLoading = ref(false);
+const smartSearchDocumentIds = ref(null);
+const searchMeta = ref({ summary: "" });
+const searchDebounceTimer = ref(null);
+const classicSearchPlaceholder =
+  "Search by document type, party, notes...";
+const smartSearchPlaceholder =
+  "e.g. Harbor Freight purchases over $500, breakers for Pulte...";
 const perPage = ref(25);
 const currentPage = ref(1);
 
@@ -353,13 +383,23 @@ onMounted(async () => {
 });
 
 const filteredItems = computed(() => {
-  if (!search.value) return transactions.value;
+  let items = transactions.value;
+
+  if (smartSearch.value && Array.isArray(smartSearchDocumentIds.value)) {
+    const idSet = new Set(smartSearchDocumentIds.value);
+    items = items.filter((item) => idSet.has(item.id));
+    return items;
+  }
+
+  if (!search.value) return items;
   const q = search.value.toLowerCase();
-  return transactions.value.filter((item) => {
+  return items.filter((item) => {
     const hay = [
       documentTypesMap.value[item.document_type] || "",
       partiesMap.value[item.party] || "",
+      item.builder_name || "",
       workAccountsMap.value[item.work_account] || "",
+      item.work_account_display || "",
       item.notes || "",
     ].map((v) => (v || "").toString().toLowerCase());
     return hay.some((t) => t.includes(q));
@@ -379,12 +419,103 @@ const refreshList = async () => {
   isLoading.value = true;
   try {
     await fetchTransactions();
+    if (smartSearch.value && search.value.trim()) {
+      await runSmartSearch(search.value.trim());
+    }
   } finally {
     setTimeout(() => {
       isLoading.value = false;
     }, 300);
   }
 };
+
+const buildSearchSummary = (payload) => {
+  const parts = [];
+  if (payload?.count != null) {
+    parts.push(`${payload.count} match${payload.count === 1 ? "" : "es"}`);
+  }
+  const builder = payload?.resolved_entities?.builder?.name;
+  const workAccount = payload?.resolved_entities?.work_account?.title;
+  if (workAccount) parts.push(`Work Account: ${workAccount}`);
+  if (builder) parts.push(`Party: ${builder}`);
+  const filters = payload?.applied_filters || {};
+  if (filters.final_price_gte != null) {
+    parts.push(`>= $${filters.final_price_gte}`);
+  }
+  if (filters.date_from || filters.date_to) {
+    parts.push(`${filters.date_from || "…"} → ${filters.date_to || "…"}`);
+  }
+  return parts.join(" · ");
+};
+
+const runSmartSearch = async (query) => {
+  smartSearchLoading.value = true;
+  try {
+    const response = await axios.post("/api/search/transactions/", {
+      query,
+      limit: 100,
+    });
+    smartSearchDocumentIds.value = response.data?.document_ids || [];
+    searchMeta.value = {
+      summary: buildSearchSummary(response.data),
+    };
+    currentPage.value = 1;
+  } catch (err) {
+    smartSearchDocumentIds.value = [];
+    searchMeta.value = { summary: "" };
+    const detail =
+      err?.response?.data?.detail ||
+      "Smart search is unavailable. Check the search index and OpenAI configuration.";
+    proxy?.notifyError?.(
+      typeof detail === "string" ? detail : "Smart search failed."
+    );
+  } finally {
+    smartSearchLoading.value = false;
+  }
+};
+
+const onSearchInput = () => {
+  if (!smartSearch.value) {
+    smartSearchDocumentIds.value = null;
+    searchMeta.value = { summary: "" };
+    return;
+  }
+
+  if (searchDebounceTimer.value) {
+    clearTimeout(searchDebounceTimer.value);
+  }
+
+  const query = search.value.trim();
+  if (!query) {
+    smartSearchDocumentIds.value = null;
+    searchMeta.value = { summary: "" };
+    return;
+  }
+
+  searchDebounceTimer.value = setTimeout(() => {
+    runSmartSearch(query);
+  }, 450);
+};
+
+const onSmartSearchToggle = () => {
+  smartSearchDocumentIds.value = null;
+  searchMeta.value = { summary: "" };
+  if (smartSearch.value && search.value.trim()) {
+    runSmartSearch(search.value.trim());
+  }
+};
+
+const clearSearch = () => {
+  search.value = "";
+  smartSearchDocumentIds.value = null;
+  searchMeta.value = { summary: "" };
+};
+
+onBeforeUnmount(() => {
+  if (searchDebounceTimer.value) {
+    clearTimeout(searchDebounceTimer.value);
+  }
+});
 
 const formatDate = (dateString) => {
   if (!dateString) return "—";
