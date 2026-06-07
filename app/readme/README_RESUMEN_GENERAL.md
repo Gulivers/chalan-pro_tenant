@@ -76,8 +76,13 @@
   - [10.6 Comandos de gestión](#106-comandos-de-gestión)
   - [10.7 Frontend y despliegue](#107-frontend-y-despliegue)
   - [10.8 Django admin: solo schema public](#108-django-admin-solo-schema-public)
-- [11. Troubleshooting](#11-troubleshooting)
-- [12. Contacto y Soporte](#12-contacto-y-soporte)
+- [11. Semantic Search (appsearch — JobRhythm)](#11-semantic-search-appsearch--jobrhythm)
+  - [11.1 Resumen y modelos](#111-resumen-y-modelos)
+  - [11.2 Variables de entorno y PostgreSQL](#112-variables-de-entorno-y-postgresql)
+  - [11.3 Comandos de gestión](#113-comandos-de-gestión)
+  - [11.4 API y UI (Fase 2)](#114-api-y-ui-fase-2)
+- [12. Troubleshooting](#12-troubleshooting)
+- [13. Contacto y Soporte](#13-contacto-y-soporte)
 
 ---
 
@@ -241,6 +246,7 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 │   ├── appinventory/                      # App de inventario
 │   ├── appschedule/                       # App de programación
 │   ├── apptransactions/                   # App de transacciones
+│   ├── appsearch/                         # Búsqueda semántica (SearchIndex, pgvector)
 │   ├── ctrctsapp/                         # App de contratos
 │   ├── crewsapp/                          # App de equipos
 │   └── auditapp/                          # App de auditoría
@@ -1893,7 +1899,117 @@ Las apps en **`SHARED_APPS`** (`tenants`, `appbilling`) registran modelos en el 
 
 ---
 
-## 11. Troubleshooting
+## 11. Semantic Search (`appsearch` — JobRhythm)
+
+Documentación detallada en **`app/appsearch/README.md`**. Resumen operativo para VPS y referencia de comandos.
+
+### 11.1 Resumen y modelos
+
+Capa desacoplada por schema de tenant para búsqueda semántica de transacciones:
+
+| Modelo | Función |
+|--------|---------|
+| **`SearchIndex`** | Índice persistido: `chunk_text`, embedding (1536 dims), FTS (`search_vector`) y `metadata` JSON por `DocumentLine` |
+| **`IndexOutbox`** | Cola de trabajos: al guardar/borrar líneas o cambiar cabecera de documento, se encola upsert/delete; **no** interviene cuando el usuario busca |
+
+Flujo de indexación: señal → `IndexOutbox` → cron `process_index_outbox_all` → OpenAI → `SearchIndex`.
+
+### 11.2 Variables de entorno y PostgreSQL
+
+En `envs/backend.env` (plantilla: `envs/backend.dev.example.env`):
+
+- `OPENAI_API_KEY` — API OpenAI (`text-embedding-3-small`; independiente de suscripción ChatGPT Pro)
+- `SEARCH_EMBEDDING_MODEL`, `SEARCH_EMBEDDING_DIMENSIONS=1536`
+- `SEARCH_INDEXING_ENABLED=True`
+
+Infraestructura:
+
+- Imagen Postgres **`pgvector/pgvector:pg15`** (ver `docker-compose.yml`)
+- Tras cambiar env del backend: `docker compose up -d --force-recreate backend`
+
+### 11.3 Comandos de gestión
+
+En **ubuntu-house** añadir `-f docker-compose.dev.yml` a `docker compose`. En **VPS** usar los comandos tal cual.
+
+#### `migrate_schemas`
+
+Aplica migraciones en **todos** los schemas (public + tenants), creando tablas `appsearch_*` y extensión `vector` donde corresponda.
+
+```bash
+docker compose exec backend python manage.py migrate_schemas
+```
+
+Ejecutar tras desplegar cambios en modelos de `appsearch`.
+
+#### `reindex_document_lines`
+
+Reconstruye el **SearchIndex completo** del tenant: texto denormalizado, embeddings OpenAI y FTS. Uso típico: backfill inicial o cambio de modelo de embedding.
+
+```bash
+docker compose exec backend python manage.py reindex_document_lines --schema NOMBRE_SCHEMA
+
+# Sin OpenAI (solo chunk + FTS)
+docker compose exec backend python manage.py reindex_document_lines --schema NOMBRE_SCHEMA --no-embed
+
+# Solo un documento
+docker compose exec backend python manage.py reindex_document_lines --schema NOMBRE_SCHEMA --document-id 123
+```
+
+#### `process_index_outbox`
+
+Procesa la cola **pendiente** de `IndexOutbox` (cambios incrementales tras guardar transacciones en la app).
+
+```bash
+docker compose exec backend python manage.py process_index_outbox --schema NOMBRE_SCHEMA
+
+# Solo las líneas de un documento concreto (reindex directo, sin outbox)
+docker compose -f docker-compose.dev.yml exec backend python manage.py reindex_document_lines --schema TU_SCHEMA --document-id 123
+
+docker compose exec backend python manage.py process_index_outbox --schema NOMBRE_SCHEMA --limit 200
+```
+
+Tras importaciones masivas o depuración en un tenant concreto.
+
+#### `process_index_outbox_all` (Fase A — cron)
+
+Procesa la cola en **todos los tenants activos**. Ejecutar desde cron en el **host** (no dentro del contenedor backend):
+
+```bash
+# Manual en VPS
+docker compose exec backend python manage.py process_index_outbox_all --limit 200
+
+# Script unificado (ubuntu-house: --dev)
+./scripts/process_search_outbox_cron.sh --dev
+/opt/chalanpro/scripts/process_search_outbox_cron.sh
+```
+
+**Crontab VPS (cada 3 minutos):**
+
+```cron
+*/3 * * * * root /opt/chalanpro/scripts/process_search_outbox_cron.sh
+```
+
+Log: `/var/log/chalanpro/search-outbox.log`. Crear el directorio si no existe: `sudo mkdir -p /var/log/chalanpro`.
+
+Salida distinta de cero si hubo entradas fallidas o errores por tenant (útil para alertas). Por defecto continúa con el siguiente tenant; `--fail-fast` detiene al primer error.
+
+### 11.4 API y UI (Fase 2)
+
+**API:** `POST /api/search/transactions/`
+
+```json
+{ "query": "Harbor Freight purchases over $500 this month", "limit": 50 }
+```
+
+**Respuesta:** `document_ids`, `results[]` (snippet, score, metadata), `applied_filters`, `resolved_entities`.
+
+**UI:** checkbox *Smart search (AI)* en la lista `/transactions`. Requiere `apptransactions.view_document`.
+
+**Admin (por tenant):** Search index entries · Index outbox entries.
+
+---
+
+## 12. Troubleshooting
 
 ### 10.1 El Frontend No Carga
 
@@ -2076,7 +2192,7 @@ Las apps en **`SHARED_APPS`** (`tenants`, `appbilling`) registran modelos en el 
 
 ---
 
-## 12. Contacto y Soporte
+## 13. Contacto y Soporte
 
 Para problemas o preguntas:
 
