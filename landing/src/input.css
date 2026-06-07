@@ -10,7 +10,8 @@
   /* Anclas de navegación: compensar barra fija (h-16) */
   #about-experts,
   #testimonials,
-  #faq {
+  #faq,
+  #landing-contact-form {
     scroll-margin-top: 6rem;
   }
 }
