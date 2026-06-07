@@ -149,6 +149,7 @@ SHARED_APPS = [
     'django.contrib.messages',
     'django.contrib.admin',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'channels',
     'rest_framework',
     'rest_framework.authtoken',
@@ -165,11 +166,13 @@ TENANT_APPS = [
     'django.contrib.messages',
     'django.contrib.admin',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'channels',
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
     'corsheaders',
+    'appsearch.apps.AppsearchConfig',
     'auditapp',
     'ctrctsapp',
     'crewsapp',
@@ -567,6 +570,13 @@ else:
     }
 
 ENABLE_WEBSOCKET_NOTIFICATIONS = os.environ.get('ENABLE_WEBSOCKET_NOTIFICATIONS', 'True') == 'True'
+
+# Semantic search (OpenAI embeddings + pgvector SearchIndex)
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+SEARCH_EMBEDDING_MODEL = os.environ.get('SEARCH_EMBEDDING_MODEL', 'text-embedding-3-small')
+SEARCH_EMBEDDING_DIMENSIONS = int(os.environ.get('SEARCH_EMBEDDING_DIMENSIONS', '1536'))
+SEARCH_INDEXING_ENABLED = os.environ.get('SEARCH_INDEXING_ENABLED', 'True') == 'True'
+SEARCH_INDEX_BATCH_SIZE = int(os.environ.get('SEARCH_INDEX_BATCH_SIZE', '50'))
 
 LOG_DIR = os.path.join(BASE_DIR, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
