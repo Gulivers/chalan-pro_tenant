@@ -42,7 +42,7 @@ git push origin main
 
 ```bash
 # Conectar al VPS (o usar deploy remoto)
-ssh ubuntu@72.60.168.62  # o tu alias
+ssh <alias-vps>   # host en ~/.ssh/config — IP en hPanel, no en Git
 
 # En el VPS
 cd /opt/chalanpro

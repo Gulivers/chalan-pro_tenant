@@ -340,29 +340,31 @@ backend:
 
 ### Credenciales de PostgreSQL
 
-Para conectarte a PostgreSQL desde el host local o desde herramientas externas (como DBeaver, pgAdmin, etc.):
+> **Política:** contraseñas y URLs solo en `envs/postgres.env` y `envs/backend.dev.env` (ver `envs/backend.dev.example.env`). No documentar valores reales en markdown ([README VPS §6.6](README_RESUMEN_GENERAL.md#66-política-de-secretos-en-documentación)).
 
 **Conexión desde el host (fuera de Docker)**:
+
 ```
 Host: localhost (o 127.0.0.1)
 Puerto: 5432
 Base de datos: chalanpro
-Usuario: chalanpro_user
-Contraseña: 2hSGqPHiNhaktRS_lxY3CprmDBYtHJxsIxWZhe-iqd4
+Usuario: chalanpro_user  → envs/postgres.env (POSTGRES_USER)
+Contraseña: ver envs/postgres.env (POSTGRES_PASSWORD)
 ```
 
 **Conexión desde dentro de Docker (desde el contenedor backend)**:
+
 ```
 Host: postgres (nombre del servicio en docker-compose)
 Puerto: 5432
 Base de datos: chalanpro
-Usuario: chalanpro_user
-Contraseña: 2hSGqPHiNhaktRS_lxY3CprmDBYtHJxsIxWZhe-iqd4
+Usuario / contraseña: envs/postgres.env
 ```
 
-**String de conexión (Connection String)**:
+**String de conexión (Connection String):**
+
 ```
-postgres://chalanpro_user:2hSGqPHiNhaktRS_lxY3CprmDBYtHJxsIxWZhe-iqd4@localhost:5432/chalanpro
+# Ver DATABASE_URL en envs/backend.dev.env (no pegar la URL con password en docs)
 ```
 
 **Ejemplos de conexión**:
@@ -378,30 +380,15 @@ docker compose -f docker-compose.dev.yml exec postgres psql -U chalanpro_user -d
 
 2. **Desde Python (psycopg2)**:
 ```python
+import os
 import psycopg2
 
-conn = psycopg2.connect(
-    host="localhost",
-    port=5432,
-    database="chalanpro",
-    user="chalanpro_user",
-    password="2hSGqPHiNhaktRS_lxY3CprmDBYtHJxsIxWZhe-iqd4"
-)
+conn = psycopg2.connect(os.environ["DATABASE_URL"])  # envs/backend.dev.env
 ```
 
 3. **Desde Django (settings.py)**:
 ```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'chalanpro',
-        'USER': 'chalanpro_user',
-        'PASSWORD': '2hSGqPHiNhaktRS_lxY3CprmDBYtHJxsIxWZhe-iqd4',
-        'HOST': 'postgres',  # Desde dentro de Docker
-        # 'HOST': 'localhost',  # Desde el host
-        'PORT': '5432',
-    }
-}
+# DATABASE_URL desde envs/backend.dev.env — no hardcodear PASSWORD en código ni docs
 ```
 
 **Nota**: Las credenciales están definidas en `envs/postgres.env` y `envs/backend.dev.env`.

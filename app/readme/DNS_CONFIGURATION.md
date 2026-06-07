@@ -2,7 +2,7 @@
 
 ## IP del Servidor VPS
 ```
-72.60.168.62
+<IP-VPS>
 ```
 
 ## Estado del cambio de dominio
@@ -18,7 +18,7 @@
 ### 1. Registro A - Dominio Raíz (@)
 **Tipo:** A  
 **Nombre:** @  
-**Points to:** 72.60.168.62  
+**Points to:** <IP-VPS>  
 **TTL:** 300 (migración) / 14400 (estable)
 
 Este registro apunta el dominio principal `jobrhythm.net` al servidor.
@@ -26,7 +26,7 @@ Este registro apunta el dominio principal `jobrhythm.net` al servidor.
 ### 2. Registro A - Subdominio API
 **Tipo:** A  
 **Nombre:** api  
-**Points to:** 72.60.168.62  
+**Points to:** <IP-VPS>  
 **TTL:** 300 / 14400
 
 Este registro apunta `api.jobrhythm.net` al servidor para el API REST y Admin de Django.
@@ -34,7 +34,7 @@ Este registro apunta `api.jobrhythm.net` al servidor para el API REST y Admin de
 ### 3. Registro A - Wildcard tenants (*)
 **Tipo:** A  
 **Nombre:** *  
-**Points to:** 72.60.168.62  
+**Points to:** <IP-VPS>  
 **TTL:** 300 / 14400
 
 Permite que cualquier subdominio tenant (ej: `phoenix.jobrhythm.net`) resuelva al VPS.
@@ -49,7 +49,7 @@ Permite que cualquier subdominio tenant (ej: `phoenix.jobrhythm.net`) resuelva a
 
 | Tipo | Name | Points to | TTL |
 |------|------|-----------|-----|
-| **A** | @ | 72.60.168.62 | 300 |
+| **A** | @ | <IP-VPS> | 300 |
 | **CNAME** | www | getjobrhythm.com | 300 |
 
 Los registros de correo (MX, SPF, DKIM) en `jobrhythm.net` se mantienen en Hostinger para `noreply@jobrhythm.net` y `team@jobrhythm.net`.
@@ -70,7 +70,7 @@ nslookup getjobrhythm.com
 nslookup www.getjobrhythm.com
 ```
 
-Las consultas A deberían devolver **72.60.168.62**.
+Las consultas A deberían devolver **<IP-VPS>**.
 
 ## URLs Finales
 
