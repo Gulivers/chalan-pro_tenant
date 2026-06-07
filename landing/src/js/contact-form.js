@@ -141,7 +141,8 @@
   }
 
   function initContactForm() {
-    var form = document.getElementById("landing-contact-form");
+    var section = document.getElementById("landing-contact-form");
+    var form = section && section.querySelector("form");
     if (!form) return;
 
     var okEl = document.getElementById("contact-form-success");
