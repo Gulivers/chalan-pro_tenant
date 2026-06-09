@@ -34,6 +34,8 @@ MONTH_PATTERN = re.compile(
 )
 PURCHASE_PATTERN = re.compile(r'\b(purchases?|compras?)\b', re.IGNORECASE)
 SALES_PATTERN = re.compile(r'\b(sales?|ventas?)\b', re.IGNORECASE)
+PURCHASE_INVOICE_PATTERN = re.compile(r'\bpurchase\s+invoices?\b', re.IGNORECASE)
+SALES_INVOICE_PATTERN = re.compile(r'\bsales?\s+invoices?\b', re.IGNORECASE)
 
 
 def _parse_amount(value: str) -> float | None:
@@ -63,7 +65,7 @@ def parse_search_intent(query: str, *, today: date | None = None) -> tuple[dict,
     if amount_match:
         amount = _parse_amount(amount_match.group(1))
         if amount is not None:
-            filters['final_price_gte'] = amount
+            filters['amount_gte'] = amount
         remaining = remaining[:amount_match.start()] + remaining[amount_match.end():]
 
     if THIS_MONTH_PATTERN.search(remaining):
@@ -80,11 +82,15 @@ def parse_search_intent(query: str, *, today: date | None = None) -> tuple[dict,
         filters['date_to'] = date_to
         remaining = remaining[:month_match.start()] + remaining[month_match.end():]
 
-    if PURCHASE_PATTERN.search(remaining):
+    if PURCHASE_INVOICE_PATTERN.search(remaining):
+        filters['is_purchase'] = True
+    elif PURCHASE_PATTERN.search(remaining):
         filters['is_purchase'] = True
         remaining = PURCHASE_PATTERN.sub(' ', remaining)
 
-    if SALES_PATTERN.search(remaining):
+    if SALES_INVOICE_PATTERN.search(remaining):
+        filters['is_sales'] = True
+    elif SALES_PATTERN.search(remaining):
         filters['is_sales'] = True
         remaining = SALES_PATTERN.sub(' ', remaining)
 
