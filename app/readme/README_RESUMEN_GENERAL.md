@@ -479,9 +479,9 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 
 | Tipo      | Name | Points to / Content | TTL   | Propósito                                   |
 | --------- | ---- | ------------------- | ----- | ------------------------------------------- |
-| **A**     | @    | <IP-VPS>        | 14400 | Frontend principal                          |
-| **A**     | api  | <IP-VPS>        | 14400 | API REST y Admin Django                     |
-| **A**     | \*   | <IP-VPS>        | 14400 | Subdominios dinámicos de tenants (wildcard) |
+| **A**     | @    | <IP-VPS>            | 14400 | Frontend principal                          |
+| **A**     | api  | <IP-VPS>            | 14400 | API REST y Admin Django                     |
+| **A**     | \*   | <IP-VPS>            | 14400 | Subdominios dinámicos de tenants (wildcard) |
 | **CNAME** | www  | jobrithm.net        | 300   | Frontend (www)                              |
 | **CAA**   | @    | (varios)            | 14400 | Certificados SSL                            |
 
@@ -1064,11 +1064,11 @@ add_header X-XSS-Protection "1; mode=block" always;
 
 Throttling de Django REST Framework en el endpoint público de onboarding:
 
-| Scope | Límite por defecto | Variable de entorno |
-| ----- | ------------------ | ------------------- |
-| IP (`onboarding_create_ip`) | 5 POST/hora | `ONBOARDING_THROTTLE_IP` |
-| Email (`onboarding_create_email`) | 3 POST/día | `ONBOARDING_THROTTLE_EMAIL` |
-| Verificación (`onboarding_verify_ip`) | 20 POST/hora | `ONBOARDING_VERIFY_THROTTLE_IP` |
+| Scope                                 | Límite por defecto | Variable de entorno             |
+| ------------------------------------- | ------------------ | ------------------------------- |
+| IP (`onboarding_create_ip`)           | 5 POST/hora        | `ONBOARDING_THROTTLE_IP`        |
+| Email (`onboarding_create_email`)     | 3 POST/día         | `ONBOARDING_THROTTLE_EMAIL`     |
+| Verificación (`onboarding_verify_ip`) | 20 POST/hora       | `ONBOARDING_VERIFY_THROTTLE_IP` |
 
 - Clases: `OnboardingCreateIPThrottle`, `OnboardingCreateEmailThrottle`, `OnboardingVerifyIPThrottle` (`app/tenants/throttles.py`).
 - Respuesta ante exceso: **HTTP 429** antes de ejecutar lógica pesada (sin crear schema).
@@ -1102,11 +1102,11 @@ location ~ ^/api/onboarding(/create-tenant/)?$ {
 
 Verificación server-side antes de aceptar una solicitud de onboarding:
 
-| Componente | Ubicación |
-| ---------- | --------- |
-| Verificación backend | `app/tenants/services/captcha.py` |
-| Widget frontend | `app/vuefrontend/src/components/onboarding/TurnstileWidget.vue` |
-| Config pública (site key) | `GET /api/onboarding/config/` |
+| Componente                | Ubicación                                                       |
+| ------------------------- | --------------------------------------------------------------- |
+| Verificación backend      | `app/tenants/services/captcha.py`                               |
+| Widget frontend           | `app/vuefrontend/src/components/onboarding/TurnstileWidget.vue` |
+| Config pública (site key) | `GET /api/onboarding/config/`                                   |
 
 **Cómo obtener las claves Turnstile**
 
@@ -1137,10 +1137,10 @@ TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 
 Flujo en **dos pasos** — el schema PostgreSQL y las migraciones **no** se ejecutan hasta confirmar el email:
 
-| Paso | Endpoint | Acción |
-| ---- | -------- | ------ |
-| 1 | `POST /api/onboarding/` | Valida datos + CAPTCHA → guarda `OnboardingPendingRegistration` → envía email con enlace |
-| 2 | `POST /api/onboarding/verify/` | Valida token UUID → provisiona tenant (schema, dominio, migraciones, admin) |
+| Paso | Endpoint                       | Acción                                                                                   |
+| ---- | ------------------------------ | ---------------------------------------------------------------------------------------- |
+| 1    | `POST /api/onboarding/`        | Valida datos + CAPTCHA → guarda `OnboardingPendingRegistration` → envía email con enlace |
+| 2    | `POST /api/onboarding/verify/` | Valida token UUID → provisiona tenant (schema, dominio, migraciones, admin)              |
 
 - Modelo: `OnboardingPendingRegistration` (schema `public`, migración `tenants.0006`).
 - Enlace del email: `{FRONT_URL}/onboarding/verify?token=<uuid>` (vista `OnboardingVerifyView.vue`).
@@ -1167,12 +1167,12 @@ docker compose restart backend nginx
 
 #### Security Impact
 
-| Riesgo mitigado | Antes | Después |
-| --------------- | ----- | ------- |
-| Creación masiva automatizada de tenants | Ilimitada por IP/email | Limitada (DRF + Nginx) |
-| Abuso de CPU/DB/disco por migraciones | Cada POST creaba schema | Schema solo tras verificar email |
-| Squatting de subdominios | Posible en volumen | Coste por intento (CAPTCHA + email + throttles) |
-| Bots en formulario público | Sin fricción | Turnstile + verificación de buzón |
+| Riesgo mitigado                         | Antes                   | Después                                         |
+| --------------------------------------- | ----------------------- | ----------------------------------------------- |
+| Creación masiva automatizada de tenants | Ilimitada por IP/email  | Limitada (DRF + Nginx)                          |
+| Abuso de CPU/DB/disco por migraciones   | Cada POST creaba schema | Schema solo tras verificar email                |
+| Squatting de subdominios                | Posible en volumen      | Coste por intento (CAPTCHA + email + throttles) |
+| Bots en formulario público              | Sin fricción            | Turnstile + verificación de buzón               |
 
 **Reducción de severidad:** finding **High** → **mitigado** en la capa de abuso automatizado del onboarding.
 
@@ -1189,17 +1189,17 @@ docker compose restart backend nginx
 
 **Regla:** este repositorio **no** debe contener contraseñas, claves API, tokens ni valores que permitan acceso a producción. La documentación solo nombra **variables** y **rutas** bajo `envs/` (archivos reales en `.gitignore`; plantillas en `*.example.env`).
 
-| Tipo de secreto | Dónde configurarlo | No documentar en markdown |
-| ----------------- | ------------------ | ------------------------- |
-| PostgreSQL | `envs/postgres.env` → `POSTGRES_PASSWORD`, `POSTGRES_USER` | Contraseñas, URLs con password embebida |
-| Django / DB URL | `envs/backend.env` → `DATABASE_URL`, `DJANGO_SECRET_KEY` | Secret key, connection strings completos |
-| Admin Django | `createsuperuser` en VPS o gestión interna | Usuario/contraseña de superuser |
-| pgAdmin | `envs/pgadmin.env` | Email/contraseña de pgAdmin |
-| SMTP / onboarding | `envs/backend.env` → `EMAIL_*` | Contraseñas de buzón |
-| Stripe | `envs/backend.env` → `STRIPE_*` | Cualquier `sk_…`, `pk_…`, `whsec_…` real o de ejemplo |
-| Turnstile | `envs/backend.env` → `TURNSTILE_*` | Secret key (site key pública solo vía API config) |
-| Hostinger API (certbot DNS) | `/root/.hostinger-api-token` en el VPS (`chmod 600`) | Token en Git o markdown |
-| IP / SSH del VPS | hPanel → VPS → detalles; alias en `~/.ssh/config` | IP fija repetida como credencial; contraseñas SSH |
+| Tipo de secreto             | Dónde configurarlo                                         | No documentar en markdown                             |
+| --------------------------- | ---------------------------------------------------------- | ----------------------------------------------------- |
+| PostgreSQL                  | `envs/postgres.env` → `POSTGRES_PASSWORD`, `POSTGRES_USER` | Contraseñas, URLs con password embebida               |
+| Django / DB URL             | `envs/backend.env` → `DATABASE_URL`, `DJANGO_SECRET_KEY`   | Secret key, connection strings completos              |
+| Admin Django                | `createsuperuser` en VPS o gestión interna                 | Usuario/contraseña de superuser                       |
+| pgAdmin                     | `envs/pgadmin.env`                                         | Email/contraseña de pgAdmin                           |
+| SMTP / onboarding           | `envs/backend.env` → `EMAIL_*`                             | Contraseñas de buzón                                  |
+| Stripe                      | `envs/backend.env` → `STRIPE_*`                            | Cualquier `sk_…`, `pk_…`, `whsec_…` real o de ejemplo |
+| Turnstile                   | `envs/backend.env` → `TURNSTILE_*`                         | Secret key (site key pública solo vía API config)     |
+| Hostinger API (certbot DNS) | `/root/.hostinger-api-token` en el VPS (`chmod 600`)       | Token en Git o markdown                               |
+| IP / SSH del VPS            | hPanel → VPS → detalles; alias en `~/.ssh/config`          | IP fija repetida como credencial; contraseñas SSH     |
 
 En tablas DNS de este documento, `<IP-VPS>` significa la IP pública actual del VPS en Hostinger (consultar panel, no commitear si cambia de servidor).
 
@@ -1209,15 +1209,15 @@ En tablas DNS de este documento, `<IP-VPS>` significa la IP pública actual del 
 
 ### 7.1 URLs de Producción
 
-| Servicio               | URL                                     | Descripción                      |
-| ---------------------- | --------------------------------------- | -------------------------------- |
-| **Frontend Principal** | `https://jobrhythm.net`                 | Frontend Vue.js (público)        |
-| **Frontend (www)**     | `https://www.jobrhythm.net`             | Frontend Vue.js (www)            |
-| **Onboarding**         | `https://www.jobrhythm.net/onboarding`  | Formulario de creación de tenant |
-| **API REST**           | `https://api.jobrhythm.net/api/`        | API REST de Django               |
-| **Admin Django**       | `https://api.jobrhythm.net/admin/`      | Panel de administración          |
-| **Tenant Login**       | `https://{tenant}.jobrhythm.net/login/` | Login de tenant específico       |
-| **Landing**            | `https://getjobrhythm.com`              | Web de marketing                 |
+| Servicio               | URL                                                | Descripción                      |
+| ---------------------- | -------------------------------------------------- | -------------------------------- |
+| **Frontend Principal** | `https://jobrhythm.net`                            | Frontend Vue.js (público)        |
+| **Frontend (www)**     | `https://www.jobrhythm.net`                        | Frontend Vue.js (www)            |
+| **Onboarding**         | `https://www.jobrhythm.net/onboarding`             | Formulario de creación de tenant |
+| **API REST**           | `https://api.jobrhythm.net/api/`                   | API REST de Django               |
+| **Admin Django**       | `https://api.jobrhythm.net/admin/`                 | Panel de administración          |
+| **Tenant Login**       | `https://{tenant}.jobrhythm.net/login/`            | Login de tenant específico       |
+| **Landing**            | `https://getjobrhythm.com`                         | Web de marketing                 |
 | **pgAdmin**            | Túnel SSH → puerto `5050` (ver `envs/pgadmin.env`) | Interfaz web de PostgreSQL       |
 
 **Ejemplo tenant Phoenix (schema `phoenix_electric_and_air_llc`):**
@@ -1257,7 +1257,7 @@ Algunos clientes conservan un **dominio propio** (registro/DNS en otro proveedor
 
 | Comprobación                    | Resultado (2026-05-25)                                                                                                                           |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| DNS `phoenixelectricandair.net` | `160.153.175.22` (no apunta al VPS JobRhythm `<IP-VPS>`)                                                                                     |
+| DNS `phoenixelectricandair.net` | `160.153.175.22` (no apunta al VPS JobRhythm `<IP-VPS>`)                                                                                         |
 | Cadena HTTPS completa           | **Sí llega a** `https://phoenix.jobrhythm.net/` con **200**                                                                                      |
 | Paso 1                          | `https://phoenixelectricandair.net/` → **301** → `https://phoenix.jobrithm.net/` (redirección configurada en el hosting del dominio del cliente) |
 | Paso 2                          | `https://phoenix.jobrithm.net/` → **301** → `https://phoenix.jobrhythm.net/` (Nginx legacy en VPS)                                               |
@@ -1805,17 +1805,17 @@ Admin **public** (`api.jobrhythm.net/admin`) no se ve afectado.
 
 Definir **solo** en `envs/backend.env` del VPS (plantilla: `envs/backend.dev.example.env`). **No** pegar claves reales en markdown ni en Git.
 
-| Variable | Descripción |
-| -------- | ----------- |
-| `STRIPE_SECRET_KEY` | Clave secreta Stripe (Dashboard → Developers → API keys) |
-| `STRIPE_PUBLISHABLE_KEY` | Clave publicable (frontend / Checkout) |
-| `STRIPE_WEBHOOK_SECRET` | Secreto del endpoint webhook (`whsec_…` en Stripe Dashboard) |
-| `STRIPE_SUCCESS_URL` | URL post-checkout (opcional) |
-| `STRIPE_CANCEL_URL` | URL cancelación checkout |
-| `STRIPE_CUSTOMER_PORTAL_RETURN_URL` | Return URL del portal de cliente |
-| `BILLING_PAST_DUE_GRACE_DAYS` | Días de gracia en `past_due` (default `7`) |
-| `BILLING_ENFORCEMENT_ENABLED` | Activar enforcement de billing |
-| `STRIPE_*_PRODUCT_ID` / `STRIPE_*_PRICE_*` | IDs de productos/precios por plan (`seed_plans`) |
+| Variable                                   | Descripción                                                  |
+| ------------------------------------------ | ------------------------------------------------------------ |
+| `STRIPE_SECRET_KEY`                        | Clave secreta Stripe (Dashboard → Developers → API keys)     |
+| `STRIPE_PUBLISHABLE_KEY`                   | Clave publicable (frontend / Checkout)                       |
+| `STRIPE_WEBHOOK_SECRET`                    | Secreto del endpoint webhook (`whsec_…` en Stripe Dashboard) |
+| `STRIPE_SUCCESS_URL`                       | URL post-checkout (opcional)                                 |
+| `STRIPE_CANCEL_URL`                        | URL cancelación checkout                                     |
+| `STRIPE_CUSTOMER_PORTAL_RETURN_URL`        | Return URL del portal de cliente                             |
+| `BILLING_PAST_DUE_GRACE_DAYS`              | Días de gracia en `past_due` (default `7`)                   |
+| `BILLING_ENFORCEMENT_ENABLED`              | Activar enforcement de billing                               |
+| `STRIPE_*_PRODUCT_ID` / `STRIPE_*_PRICE_*` | IDs de productos/precios por plan (`seed_plans`)             |
 
 ```bash
 # Ejemplo de nombres en envs/backend.env — valores reales solo en el servidor
@@ -1907,9 +1907,9 @@ Documentación detallada en **`app/appsearch/README.md`**. Resumen operativo par
 
 Capa desacoplada por schema de tenant para búsqueda semántica de transacciones:
 
-| Modelo | Función |
-|--------|---------|
-| **`SearchIndex`** | Índice persistido: `chunk_text`, embedding (1536 dims), FTS (`search_vector`) y `metadata` JSON por `DocumentLine` |
+| Modelo            | Función                                                                                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`SearchIndex`** | Índice persistido: `chunk_text`, embedding (1536 dims), FTS (`search_vector`) y `metadata` JSON por `DocumentLine`                             |
 | **`IndexOutbox`** | Cola de trabajos: al guardar/borrar líneas o cambiar cabecera de documento, se encola upsert/delete; **no** interviene cuando el usuario busca |
 
 Flujo de indexación: señal → `IndexOutbox` → cron `process_index_outbox_all` → OpenAI → `SearchIndex`.
@@ -1989,7 +1989,7 @@ docker compose exec backend python manage.py process_index_outbox_all --limit 20
 */3 * * * * root /opt/chalanpro/scripts/process_search_outbox_cron.sh
 ```
 
-Log: `/var/log/chalanpro/search-outbox.log`. Crear el directorio si no existe: `sudo mkdir -p /var/log/chalanpro`.
+Log VPS: `/var/log/chalanpro/search-outbox.log` (`sudo mkdir -p /var/log/chalanpro`). En **ubuntu-house**, log en `logs/search-outbox.log` con `--dev`.
 
 Salida distinta de cero si hubo entradas fallidas o errores por tenant (útil para alertas). Por defecto continúa con el siguiente tenant; `--fail-fast` detiene al primer error.
 
@@ -2002,6 +2002,8 @@ Salida distinta de cero si hubo entradas fallidas o errores por tenant (útil pa
 ```
 
 **Respuesta:** `document_ids`, `results[]` (snippet, score, metadata), `applied_filters`, `resolved_entities`.
+
+Resolución de **Party / Work Account** con matching difuso (p. ej. «Globo Dinner» → Builder «Globo Dine»). Búsqueda acotada al **schema del tenant** del subdominio (django-tenants).
 
 **UI:** checkbox *Smart search (AI)* en la lista `/transactions`. Requiere `apptransactions.view_document`.
 
