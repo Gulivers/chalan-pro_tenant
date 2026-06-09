@@ -2003,7 +2003,12 @@ Salida distinta de cero si hubo entradas fallidas o errores por tenant (útil pa
 
 **Respuesta:** `document_ids`, `results[]` (snippet, score, metadata), `applied_filters`, `resolved_entities`.
 
-Resolución de **Party / Work Account** con matching difuso (p. ej. «Globo Dinner» → Builder «Globo Dine»). Búsqueda acotada al **schema del tenant** del subdominio (django-tenants).
+Resolución de **Party / Work Account / DocumentType** con matching difuso. Búsqueda acotada al **schema del tenant** del subdominio (django-tenants).
+
+**Filtros de monto (Fase 2.5):**
+
+- **`document_total_gte`** — «over $6,000» cuando no queda texto de producto (totales de factura vía `Document.total_amount`).
+- **`line_final_price_gte`** — mismo patrón de monto pero con concepto/producto en la consulta (p. ej. cable + mínimo por línea).
 
 **UI:** checkbox *Smart search (AI)* en la lista `/transactions`. Requiere `apptransactions.view_document`.
 
