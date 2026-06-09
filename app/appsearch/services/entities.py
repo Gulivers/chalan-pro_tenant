@@ -2,6 +2,7 @@ import re
 from difflib import SequenceMatcher
 
 from apptransactions.models import DocumentType, WorkAccount
+from appsearch.models import BuilderAlias
 from ctrctsapp.models import Builder
 
 MIN_ENTITY_SCORE = 30
@@ -138,11 +139,23 @@ def resolve_entities(query: str) -> tuple[dict, str]:
 
     builder = None
     best_builder_score = 0
+    matched_builder_label = None
     for item in Builder.objects.filter(is_active=True):
         score = _score_match(query_lower, item.name or '')
         if score > best_builder_score:
             best_builder_score = score
             builder = item
+            matched_builder_label = item.name
+
+    for alias_row in BuilderAlias.objects.filter(is_active=True).select_related('builder'):
+        builder_obj = alias_row.builder
+        if not builder_obj or not builder_obj.is_active:
+            continue
+        score = _score_match(query_lower, alias_row.alias or '')
+        if score > best_builder_score:
+            best_builder_score = score
+            builder = builder_obj
+            matched_builder_label = alias_row.alias
 
     if work_account and best_wa_score >= MIN_ENTITY_SCORE:
         resolved['work_account'] = {
@@ -160,7 +173,12 @@ def resolve_entities(query: str) -> tuple[dict, str]:
                 'is_supplier': builder.is_supplier(),
                 'is_customer': builder.is_customer(),
             }
-            remaining = _strip_entity_mention(remaining, builder.name, query_lower)
+            if matched_builder_label and matched_builder_label.lower() != (builder.name or '').lower():
+                resolved['builder']['matched_alias'] = matched_builder_label
+            strip_label = matched_builder_label or builder.name
+            remaining = _strip_entity_mention(remaining, strip_label, query_lower)
+            if matched_builder_label and matched_builder_label.lower() != (builder.name or '').lower():
+                remaining = _strip_entity_mention(remaining, builder.name, query_lower)
 
     remaining = _normalize(remaining)
     return resolved, remaining

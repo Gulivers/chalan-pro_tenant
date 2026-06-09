@@ -51,7 +51,7 @@ class Command(BaseCommand):
         limit = options['limit']
         fail_fast = options['fail_fast']
 
-        totals = {'tenants': 0, 'processed': 0, 'failed': 0, 'errors': 0}
+        totals = {'tenants': 0, 'processed': 0, 'failed': 0, 'dead_letter': 0, 'errors': 0}
 
         for tenant in tenants:
             totals['tenants'] += 1
@@ -76,9 +76,11 @@ class Command(BaseCommand):
 
             totals['processed'] += stats['processed']
             totals['failed'] += stats['failed']
+            totals['dead_letter'] += stats.get('dead_letter', 0)
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"  processed={stats['processed']} failed={stats['failed']}"
+                    f"  processed={stats['processed']} failed={stats['failed']} "
+                    f"dead_letter={stats.get('dead_letter', 0)}"
                 )
             )
 
@@ -88,6 +90,7 @@ class Command(BaseCommand):
                 f"tenants={totals['tenants']} "
                 f"processed={totals['processed']} "
                 f"failed={totals['failed']} "
+                f"dead_letter={totals['dead_letter']} "
                 f"tenant_errors={totals['errors']}"
             )
         )

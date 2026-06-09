@@ -2010,9 +2010,23 @@ Resolución de **Party / Work Account / DocumentType** con matching difuso. Bús
 - **`document_total_gte`** — «over $6,000» cuando no queda texto de producto (totales de factura vía `Document.total_amount`).
 - **`line_final_price_gte`** — mismo patrón de monto pero con concepto/producto en la consulta (p. ej. cable + mínimo por línea).
 
-**UI:** checkbox *Smart search (AI)* en la lista `/transactions`. Requiere `apptransactions.view_document`.
+**UI:** checkbox *Smart search (AI)* y botón **Similar** por fila en `/transactions`. Requiere `apptransactions.view_document`.
 
-**Admin (por tenant):** Search index entries · Index outbox entries.
+### 11.5 Fase 3 — Advanced Retrieval
+
+Ver **`app/appsearch/README.md`**. Resumen:
+
+| Capacidad | Detalle |
+|-----------|---------|
+| **Similares** | `POST /api/search/transactions/similar/` con `document_id` o `document_line_id` |
+| **Rank fusion** | `SEARCH_FUSION_MODE` (`weighted` / `rrf`), pesos vector/FTS tunables |
+| **Builder aliases** | Modelo `BuilderAlias` en admin del tenant |
+| **Outbox** | `SEARCH_OUTBOX_MAX_ATTEMPTS`, dead letter (`dead_letter_at`), `outbox_status`, `requeue_dead_letter_outbox` |
+| **Métricas** | `SearchTelemetry`, comandos `search_metrics` y `search_eval` (recall@k) |
+
+Tras desplegar: **`migrate_schemas`**.
+
+**Admin (por tenant):** Search index · Index outbox · Builder search aliases · Search telemetry.
 
 ---
 

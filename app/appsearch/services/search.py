@@ -6,6 +6,7 @@ from pgvector.django import CosineDistance
 from appsearch.models import SearchIndex
 from appsearch.services.embeddings import EmbeddingServiceError, embed_texts
 from appsearch.services.entities import resolve_entities
+from appsearch.services.fusion import fuse_hybrid_candidates
 from appsearch.services.intent import parse_search_intent
 from appsearch.services.indexer import assert_tenant_schema
 
@@ -65,12 +66,6 @@ def _apply_metadata_filters(queryset, filters: dict):
 
 
 def _apply_amount_filter(filters: dict, semantic_query: str) -> dict:
-    """
-    Route amount intent to document total vs line price.
-
-    Document total: party/type queries without product text (e.g. purchases over $6000).
-    Line price: product/concept queries (e.g. Cable 10/3 over $100).
-    """
     amount_gte = filters.pop('amount_gte', None)
     if amount_gte is None:
         return filters
@@ -106,6 +101,49 @@ def _aggregate_by_document(rows, *, limit: int) -> list[dict]:
     return ordered[:limit]
 
 
+def _hybrid_rank_rows(base_qs, semantic_query: str, *, candidate_limit: int) -> list[dict]:
+    query_embedding = embed_texts([semantic_query])[0]
+    fts_query = SearchQuery(semantic_query, config='english')
+
+    vector_hits = []
+    for item in (
+        base_qs
+        .annotate(distance=CosineDistance('embedding', query_embedding))
+        .order_by('distance')[:candidate_limit]
+    ):
+        vector_hits.append({
+            'key': item.pk,
+            'item': item,
+            'vector_distance': float(item.distance or 1.0),
+        })
+
+    fts_hits = []
+    for item in (
+        base_qs
+        .annotate(fts_rank=SearchRank('search_vector', fts_query))
+        .filter(fts_rank__gt=0)
+        .order_by('-fts_rank')[:candidate_limit]
+    ):
+        fts_hits.append({
+            'key': item.pk,
+            'item': item,
+            'fts_rank': float(item.fts_rank or 0.0),
+        })
+
+    fused = fuse_hybrid_candidates(vector_hits, fts_hits)
+    rows = []
+    for hit in fused:
+        item = hit['item']
+        rows.append({
+            'document_line_id': item.source_id,
+            'document_id': item.metadata.get('document_id'),
+            'score': hit['score'],
+            'snippet': _build_snippet(item.chunk_text),
+            'metadata': item.metadata,
+        })
+    return rows
+
+
 def search_transactions(
     query: str,
     *,
@@ -136,37 +174,17 @@ def search_transactions(
     )
     base_qs = _apply_metadata_filters(base_qs, merged_filters)
 
+    candidate_limit = max(limit * 4, 20)
     rows: list[dict] = []
 
     if semantic_query:
         try:
-            query_embedding = embed_texts([semantic_query])[0]
+            rows = _hybrid_rank_rows(base_qs, semantic_query, candidate_limit=candidate_limit)
         except EmbeddingServiceError:
             logger.exception('Failed to embed search query')
             raise
-
-        vector_qs = (
-            base_qs
-            .annotate(distance=CosineDistance('embedding', query_embedding))
-            .annotate(
-                fts_rank=SearchRank('search_vector', SearchQuery(semantic_query, config='english')),
-            )
-            .order_by('distance')[: limit * 4]
-        )
-
-        for item in vector_qs:
-            distance = float(item.distance or 1.0)
-            fts_rank = float(item.fts_rank or 0.0)
-            score = max(0.0, (1.0 - distance) * 0.75 + min(fts_rank, 1.0) * 0.25)
-            rows.append({
-                'document_line_id': item.source_id,
-                'document_id': item.metadata.get('document_id'),
-                'score': round(score, 4),
-                'snippet': _build_snippet(item.chunk_text),
-                'metadata': item.metadata,
-            })
     else:
-        fallback_qs = base_qs.order_by('-indexed_at')[: limit * 4]
+        fallback_qs = base_qs.order_by('-indexed_at')[:candidate_limit]
         for item in fallback_qs:
             rows.append({
                 'document_line_id': item.source_id,

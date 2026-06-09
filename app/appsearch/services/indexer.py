@@ -141,11 +141,16 @@ def process_outbox_entry(entry: IndexOutbox, *, embed: bool = True) -> None:
 def process_pending_outbox(*, limit: int = 100, embed: bool = True) -> dict:
     assert_tenant_schema()
 
+    max_attempts = getattr(settings, 'SEARCH_OUTBOX_MAX_ATTEMPTS', 5)
+
     pending = list(
-        IndexOutbox.objects.filter(processed_at__isnull=True)
+        IndexOutbox.objects.filter(
+            processed_at__isnull=True,
+            dead_letter_at__isnull=True,
+        )
         .order_by('created_at')[:limit]
     )
-    stats = {'processed': 0, 'failed': 0, 'skipped_embed': 0}
+    stats = {'processed': 0, 'failed': 0, 'dead_letter': 0, 'skipped_embed': 0}
 
     for entry in pending:
         try:
@@ -158,13 +163,19 @@ def process_pending_outbox(*, limit: int = 100, embed: bool = True) -> dict:
         except EmbeddingServiceError as exc:
             entry.attempts += 1
             entry.last_error = str(exc)[:2000]
-            entry.save(update_fields=['attempts', 'last_error'])
+            if entry.attempts >= max_attempts:
+                entry.dead_letter_at = timezone.now()
+                stats['dead_letter'] += 1
+            entry.save(update_fields=['attempts', 'last_error', 'dead_letter_at'])
             stats['failed'] += 1
             logger.warning('Outbox entry %s failed (embedding): %s', entry.id, exc)
         except Exception as exc:
             entry.attempts += 1
             entry.last_error = str(exc)[:2000]
-            entry.save(update_fields=['attempts', 'last_error'])
+            if entry.attempts >= max_attempts:
+                entry.dead_letter_at = timezone.now()
+                stats['dead_letter'] += 1
+            entry.save(update_fields=['attempts', 'last_error', 'dead_letter_at'])
             stats['failed'] += 1
             logger.exception('Outbox entry %s failed', entry.id)
 

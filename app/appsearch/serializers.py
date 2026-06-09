@@ -24,3 +24,29 @@ class TransactionSearchResponseSerializer(serializers.Serializer):
     results = TransactionSearchResultSerializer(many=True)
     document_ids = serializers.ListField(child=serializers.IntegerField())
     count = serializers.IntegerField()
+
+
+class SimilarTransactionSearchRequestSerializer(serializers.Serializer):
+    document_id = serializers.IntegerField(required=False, min_value=1)
+    document_line_id = serializers.IntegerField(required=False, min_value=1)
+    limit = serializers.IntegerField(required=False, min_value=1, max_value=50, default=20)
+
+    def validate(self, attrs):
+        if not attrs.get('document_id') and not attrs.get('document_line_id'):
+            raise serializers.ValidationError(
+                'Provide document_id or document_line_id.'
+            )
+        return attrs
+
+
+class SimilarSeedSerializer(serializers.Serializer):
+    document_id = serializers.IntegerField(allow_null=True)
+    document_line_id = serializers.IntegerField()
+    snippet = serializers.CharField()
+
+
+class SimilarTransactionSearchResponseSerializer(serializers.Serializer):
+    seed = SimilarSeedSerializer()
+    results = TransactionSearchResultSerializer(many=True)
+    document_ids = serializers.ListField(child=serializers.IntegerField())
+    count = serializers.IntegerField()

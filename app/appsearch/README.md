@@ -124,6 +124,63 @@ Tras cambiar metadata del chunk (`document_total_amount`), ejecutar `reindex_doc
 
 Checkbox **Smart search (AI)** en `/transactions` (Vue). Requiere permiso `apptransactions.view_document`.
 
+Botón **Similar** por fila → `POST /api/search/transactions/similar/`.
+
+---
+
+## Fase 3 — Advanced Retrieval
+
+### Transacciones similares
+
+`POST /api/search/transactions/similar/`
+
+```json
+{ "document_id": 75, "limit": 20 }
+```
+
+Opcional: `document_line_id` en lugar de `document_id`. Excluye el documento origen; k-NN sobre embeddings de `SearchIndex`.
+
+### Rank fusion (híbrido)
+
+Variables en `envs/backend*.env`:
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `SEARCH_FUSION_MODE` | `weighted` | `weighted` o `rrf` |
+| `SEARCH_FUSION_VECTOR_WEIGHT` | `0.6` | Peso similitud vectorial |
+| `SEARCH_FUSION_FTS_WEIGHT` | `0.4` | Peso FTS (BM25-like via SearchRank) |
+| `SEARCH_FUSION_RRF_K` | `60` | Constante k para RRF |
+
+### Aliases de Builder
+
+Modelo **`BuilderAlias`** (admin por tenant): alias → `ctrctsapp.Builder`. Usado en resolución de party (`matched_alias` en respuesta API).
+
+### Outbox robusto
+
+| Variable | Default |
+|----------|---------|
+| `SEARCH_OUTBOX_MAX_ATTEMPTS` | `5` |
+
+Tras agotar reintentos → `dead_letter_at`. Comandos:
+
+```bash
+docker compose exec backend python manage.py outbox_status
+docker compose exec backend python manage.py requeue_dead_letter_outbox --schema TU_SCHEMA
+```
+
+### Métricas
+
+Telemetría ligera en **`SearchTelemetry`** (latencia y recuento por request):
+
+```bash
+docker compose exec backend python manage.py search_metrics --schema TU_SCHEMA --days 7
+docker compose exec backend python manage.py search_eval --schema TU_SCHEMA --queries-file /path/eval.json
+```
+
+`search_eval` espera JSON: `[{"query":"...", "expected_document_ids":[1,2]}]`.
+
+Tras desplegar Fase 3: **`migrate_schemas`**.
+
 ---
 
 ## Admin

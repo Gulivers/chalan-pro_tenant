@@ -96,7 +96,7 @@
 
     <!-- Main Table with Overlay -->
     <BOverlay
-      :show="isLoading || smartSearchLoading"
+      :show="isLoading || smartSearchLoading || similarSearchLoading"
       rounded="sm"
       opacity="0.85"
       variant="light">
@@ -174,6 +174,13 @@
               </router-link>
               <button
                 v-if="hasPermission('apptransactions.view_document')"
+                @click="findSimilarTransactions(data.item.id)"
+                class="btn btn-outline-info me-1"
+                title="Find similar transactions">
+                Similar
+              </button>
+              <button
+                v-if="hasPermission('apptransactions.view_document')"
                 @click="printTransaction(data.item.id)"
                 class="btn btn-outline-dark me-1">
                 Print
@@ -228,6 +235,8 @@ const search = ref("");
 const smartSearch = ref(false);
 const smartSearchLoading = ref(false);
 const smartSearchDocumentIds = ref(null);
+const similarSearchDocumentIds = ref(null);
+const similarSearchLoading = ref(false);
 const searchMeta = ref({ summary: "" });
 const searchDebounceTimer = ref(null);
 const classicSearchPlaceholder =
@@ -391,6 +400,12 @@ const filteredItems = computed(() => {
     return items;
   }
 
+  if (Array.isArray(similarSearchDocumentIds.value)) {
+    const idSet = new Set(similarSearchDocumentIds.value);
+    items = items.filter((item) => idSet.has(item.id));
+    return items;
+  }
+
   if (!search.value) return items;
   const q = search.value.toLowerCase();
   return items.filter((item) => {
@@ -454,6 +469,7 @@ const buildSearchSummary = (payload) => {
 };
 
 const runSmartSearch = async (query) => {
+  similarSearchDocumentIds.value = null;
   smartSearchLoading.value = true;
   try {
     const response = await axios.post("/api/search/transactions/", {
@@ -479,7 +495,39 @@ const runSmartSearch = async (query) => {
   }
 };
 
+const findSimilarTransactions = async (documentId) => {
+  smartSearch.value = false;
+  smartSearchDocumentIds.value = null;
+  search.value = "";
+  similarSearchLoading.value = true;
+  try {
+    const response = await axios.post("/api/search/transactions/similar/", {
+      document_id: documentId,
+      limit: 50,
+    });
+    similarSearchDocumentIds.value = response.data?.document_ids || [];
+    const seedSnippet = response.data?.seed?.snippet || "";
+    const count = response.data?.count ?? 0;
+    searchMeta.value = {
+      summary: `Similar to #${documentId}: ${count} match${count === 1 ? "" : "es"}${seedSnippet ? ` · ${seedSnippet.slice(0, 80)}` : ""}`,
+    };
+    currentPage.value = 1;
+  } catch (err) {
+    similarSearchDocumentIds.value = null;
+    searchMeta.value = { summary: "" };
+    const detail =
+      err?.response?.data?.detail ||
+      "Similar search is unavailable. Reindex document lines if needed.";
+    proxy?.notifyError?.(
+      typeof detail === "string" ? detail : "Similar search failed."
+    );
+  } finally {
+    similarSearchLoading.value = false;
+  }
+};
+
 const onSearchInput = () => {
+  similarSearchDocumentIds.value = null;
   if (!smartSearch.value) {
     smartSearchDocumentIds.value = null;
     searchMeta.value = { summary: "" };
@@ -503,6 +551,7 @@ const onSearchInput = () => {
 };
 
 const onSmartSearchToggle = () => {
+  similarSearchDocumentIds.value = null;
   smartSearchDocumentIds.value = null;
   searchMeta.value = { summary: "" };
   if (smartSearch.value && search.value.trim()) {
@@ -513,6 +562,7 @@ const onSmartSearchToggle = () => {
 const clearSearch = () => {
   search.value = "";
   smartSearchDocumentIds.value = null;
+  similarSearchDocumentIds.value = null;
   searchMeta.value = { summary: "" };
 };
 
