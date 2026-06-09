@@ -436,11 +436,16 @@ const buildSearchSummary = (payload) => {
   }
   const builder = payload?.resolved_entities?.builder?.name;
   const workAccount = payload?.resolved_entities?.work_account?.title;
+  const docType = payload?.resolved_entities?.document_type?.type_code;
   if (workAccount) parts.push(`Work Account: ${workAccount}`);
   if (builder) parts.push(`Party: ${builder}`);
+  if (docType) parts.push(`Type: ${docType}`);
   const filters = payload?.applied_filters || {};
-  if (filters.final_price_gte != null) {
-    parts.push(`>= $${filters.final_price_gte}`);
+  if (filters.document_total_gte != null) {
+    parts.push(`Doc total >= $${filters.document_total_gte}`);
+  }
+  if (filters.line_final_price_gte != null) {
+    parts.push(`Line >= $${filters.line_final_price_gte}`);
   }
   if (filters.date_from || filters.date_to) {
     parts.push(`${filters.date_from || "…"} → ${filters.date_to || "…"}`);

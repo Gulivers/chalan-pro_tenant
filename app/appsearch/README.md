@@ -108,7 +108,17 @@ Log: `/var/log/chalanpro/search-outbox.log` (VPS) o `logs/search-outbox.log` (mo
 
 **Respuesta:** `document_ids`, `results[]` (snippet, score, metadata), `applied_filters`, `resolved_entities`.
 
-Pipeline: parser de intents (montos, fechas, compras/ventas) → resolución de entidades (`Builder`, `WorkAccount`) → filtros SQL en metadata → similitud vectorial + FTS en `SearchIndex`.
+Pipeline: parser de intents (montos, fechas, compras/ventas) → resolución de entidades (`DocumentType`, `Builder`, `WorkAccount`) → filtros SQL en metadata → similitud vectorial + FTS en `SearchIndex`.
+
+**Fase 2.5 — filtros estructurados:**
+
+| Filtro | Cuándo |
+|--------|--------|
+| `document_type_id` | Código (`PINV`) o descripción fuzzy (`Purchase Invoice`) |
+| `document_total_gte` | Monto «over $X» sin texto de producto (p. ej. compras por party) |
+| `line_final_price_gte` | Monto «over $X» con texto semántico de producto/concepto |
+
+Tras cambiar metadata del chunk (`document_total_amount`), ejecutar `reindex_document_lines` por tenant (opcional para total de documento: el filtro usa `Document.total_amount` en BD).
 
 ### UI
 

@@ -1,7 +1,7 @@
 import re
 from difflib import SequenceMatcher
 
-from apptransactions.models import WorkAccount
+from apptransactions.models import DocumentType, WorkAccount
 from ctrctsapp.models import Builder
 
 MIN_ENTITY_SCORE = 30
@@ -16,7 +16,10 @@ def _normalize(text: str) -> str:
 def _token_fuzzy_match(left: str, right: str) -> bool:
     if not left or not right:
         return False
-    if left == right or left in right or right in left:
+    if left == right:
+        return True
+    min_len = min(len(left), len(right))
+    if min_len >= 4 and (left in right or right in left):
         return True
     return SequenceMatcher(None, left, right).ratio() >= TOKEN_FUZZY_RATIO
 
@@ -48,6 +51,27 @@ def _score_match(query_lower: str, candidate: str) -> int:
     return 0
 
 
+def _score_document_type(query_lower: str, doc_type: DocumentType) -> int:
+    type_code = (doc_type.type_code or '').strip()
+    if not type_code:
+        return 0
+
+    code_lower = type_code.lower()
+    if re.search(rf'\b{re.escape(code_lower)}\b', query_lower):
+        return len(code_lower) + 200
+
+    description_score = _score_match(query_lower, doc_type.description or '')
+    if description_score >= MIN_ENTITY_SCORE + 20:
+        return description_score
+
+    if len(code_lower) >= 4:
+        code_fuzzy_score = _score_match(query_lower, code_lower)
+        if code_fuzzy_score >= MIN_ENTITY_SCORE:
+            return code_fuzzy_score
+
+    return 0
+
+
 def _strip_entity_mention(remaining: str, entity_name: str, query_lower: str) -> str:
     text = remaining
     if entity_name:
@@ -64,16 +88,46 @@ def _strip_entity_mention(remaining: str, entity_name: str, query_lower: str) ->
     return _normalize(text)
 
 
+def _strip_document_type_mention(remaining: str, doc_type: DocumentType, query_lower: str) -> str:
+    text = remaining
+    if doc_type.type_code:
+        text = re.sub(
+            rf'\b{re.escape(doc_type.type_code)}\b',
+            ' ',
+            text,
+            flags=re.IGNORECASE,
+        )
+    if doc_type.description:
+        text = _strip_entity_mention(text, doc_type.description, query_lower)
+    return _normalize(text)
+
+
 def resolve_entities(query: str) -> tuple[dict, str]:
     """
-    Resolve WorkAccount and Builder mentions in the query.
-    WorkAccount titles take priority over builder names when both match.
+    Resolve DocumentType, WorkAccount and Builder mentions in the query.
     Returns resolved entity metadata and the query with matched phrases removed.
     """
     resolved: dict = {}
     remaining = _normalize(query)
-    query_lower = remaining.lower()
 
+    query_lower = remaining.lower()
+    document_type = None
+    best_doc_type_score = 0
+    for doc_type in DocumentType.objects.filter(is_active=True):
+        score = _score_document_type(query_lower, doc_type)
+        if score > best_doc_type_score:
+            best_doc_type_score = score
+            document_type = doc_type
+
+    if document_type and best_doc_type_score >= MIN_ENTITY_SCORE:
+        resolved['document_type'] = {
+            'id': document_type.id,
+            'type_code': document_type.type_code,
+            'description': document_type.description,
+        }
+        remaining = _strip_document_type_mention(remaining, document_type, query_lower)
+
+    query_lower = remaining.lower()
     work_account = None
     best_wa_score = 0
     for wa in WorkAccount.objects.filter(is_active=True).select_related('builder'):
@@ -97,6 +151,7 @@ def resolve_entities(query: str) -> tuple[dict, str]:
         }
         remaining = _strip_entity_mention(remaining, work_account.title, query_lower)
 
+    query_lower = remaining.lower()
     if builder and best_builder_score >= MIN_ENTITY_SCORE:
         if not work_account or builder.id != getattr(work_account, 'builder_id', None):
             resolved['builder'] = {

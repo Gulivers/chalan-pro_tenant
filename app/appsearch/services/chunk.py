@@ -78,6 +78,7 @@ def build_document_line_chunk(line: DocumentLine) -> tuple[str, dict]:
         'brand_name': getattr(brand, 'name', None),
         'warehouse_id': line.warehouse_id,
         'date': document.date.isoformat() if document and document.date else None,
+        'document_total_amount': _decimal_to_str(getattr(document, 'total_amount', None)),
         'final_price': _decimal_to_str(line.final_price),
         'quantity': _decimal_to_str(line.quantity),
         'unit_price': _decimal_to_str(line.unit_price),

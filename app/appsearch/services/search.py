@@ -11,6 +11,8 @@ from appsearch.services.indexer import assert_tenant_schema
 
 logger = logging.getLogger(__name__)
 
+NUMERIC_JSON_PATTERN = r"^-?[0-9]+(\.[0-9]+)?$"
+
 
 def _apply_metadata_filters(queryset, filters: dict):
     queryset = queryset.filter(metadata__is_active=True)
@@ -20,6 +22,9 @@ def _apply_metadata_filters(queryset, filters: dict):
 
     if filters.get('work_account_id') is not None:
         queryset = queryset.filter(metadata__work_account_id=filters['work_account_id'])
+
+    if filters.get('document_type_id') is not None:
+        queryset = queryset.filter(metadata__document_type_id=filters['document_type_id'])
 
     if filters.get('is_purchase') is True:
         queryset = queryset.filter(metadata__is_purchase=True)
@@ -34,15 +39,47 @@ def _apply_metadata_filters(queryset, filters: dict):
     if date_to:
         queryset = queryset.filter(metadata__date__lte=date_to)
 
-    final_price_gte = filters.get('final_price_gte')
-    if final_price_gte is not None:
+    line_final_price_gte = filters.get('line_final_price_gte')
+    if line_final_price_gte is not None:
         queryset = queryset.extra(
-            where=["(metadata->>'final_price') ~ '^-?[0-9]+(\\.[0-9]+)?$' "
-                   "AND (metadata->>'final_price')::numeric >= %s"],
-            params=[final_price_gte],
+            where=[
+                f"(metadata->>'final_price') ~ '{NUMERIC_JSON_PATTERN}' "
+                "AND (metadata->>'final_price')::numeric >= %s"
+            ],
+            params=[line_final_price_gte],
+        )
+
+    document_total_gte = filters.get('document_total_gte')
+    if document_total_gte is not None:
+        queryset = queryset.extra(
+            where=[
+                "(metadata->>'document_id') ~ '^[0-9]+$' AND "
+                "(metadata->>'document_id')::bigint IN ("
+                "SELECT id FROM apptransactions_document "
+                "WHERE is_active = TRUE AND total_amount >= %s)"
+            ],
+            params=[document_total_gte],
         )
 
     return queryset
+
+
+def _apply_amount_filter(filters: dict, semantic_query: str) -> dict:
+    """
+    Route amount intent to document total vs line price.
+
+    Document total: party/type queries without product text (e.g. purchases over $6000).
+    Line price: product/concept queries (e.g. Cable 10/3 over $100).
+    """
+    amount_gte = filters.pop('amount_gte', None)
+    if amount_gte is None:
+        return filters
+
+    if (semantic_query or '').strip():
+        filters['line_final_price_gte'] = amount_gte
+    else:
+        filters['document_total_gte'] = amount_gte
+    return filters
 
 
 def _build_snippet(chunk_text: str, max_len: int = 180) -> str:
@@ -88,6 +125,10 @@ def search_transactions(
         merged_filters['builder_id'] = resolved_entities['builder']['id']
     if resolved_entities.get('work_account'):
         merged_filters['work_account_id'] = resolved_entities['work_account']['id']
+    if resolved_entities.get('document_type'):
+        merged_filters['document_type_id'] = resolved_entities['document_type']['id']
+
+    merged_filters = _apply_amount_filter(merged_filters, semantic_query)
 
     base_qs = SearchIndex.objects.filter(
         source_type=SearchIndex.SOURCE_DOCUMENT_LINE,
