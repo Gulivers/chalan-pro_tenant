@@ -1,0 +1,17 @@
+[
+  {
+    "alias": "Homedepot",
+    "builder_name": "Home Depot",
+    "notes": "Typo sin espacio; probado en Smart search."
+  },
+  {
+    "alias": "Globo Dinner",
+    "builder_name": "Globo Dine",
+    "notes": "Fuzzy party; nombre comercial alternativo."
+  },
+  {
+    "alias": "Harbor Freight",
+    "builder_name": "Harbor Freight",
+    "notes": "Plantilla: ajustar builder_name al party real del tenant."
+  }
+]

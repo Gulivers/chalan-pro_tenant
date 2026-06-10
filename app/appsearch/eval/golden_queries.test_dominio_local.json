@@ -1,0 +1,340 @@
+[
+  {
+    "id": "product_exact",
+    "category": "product_exact",
+    "query": "red stucco tape",
+    "expected_document_ids": [
+      60
+    ],
+    "min_count": 1,
+    "forbidden_document_ids": [
+      63
+    ]
+  },
+  {
+    "id": "product_exact_2",
+    "category": "product_exact",
+    "query": "6 ft. Ladder",
+    "expected_document_ids": [
+      60,
+      55,
+      49,
+      48,
+      51,
+      61,
+      67,
+      50,
+      63
+    ],
+    "min_count": 9,
+    "forbidden_document_ids": [
+      17,
+      18,
+      19
+    ]
+  },
+  {
+    "id": "product_exact_3",
+    "category": "product_exact",
+    "query": "Makita 1 9/16 Rotary Hammer",
+    "expected_document_ids": [
+      67,
+      51,
+      61,
+      49,
+      48,
+      60
+    ],
+    "min_count": 6,
+    "forbidden_document_ids": [
+      74,
+      63
+    ]
+  },
+  {
+    "id": "product_category",
+    "category": "product_category",
+    "query": "construction material",
+    "expected_document_ids": [
+      60,
+      63
+    ],
+    "min_count": 2,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "party_fuzzy",
+    "category": "party_fuzzy",
+    "query": "Globo Dinner purchases over $6000",
+    "expected_document_ids": [
+      75
+    ],
+    "min_count": 1,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "party_alias",
+    "category": "party_alias",
+    "query": "Homedepot purchases",
+    "expected_document_ids": [
+      74,
+      67,
+      66,
+      61,
+      48,
+      49,
+      51,
+      50
+    ],
+    "min_count": 8,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "party_date",
+    "category": "party_date",
+    "query": "Home Depot purchases this month",
+    "expected_document_ids": [
+      74
+    ],
+    "min_count": 1,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "intent_purchase",
+    "category": "intent_purchase",
+    "query": "compras",
+    "expected_document_ids": [
+      75,
+      74,
+      67,
+      66,
+      60,
+      61
+    ],
+    "min_count": 6,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "intent_sales",
+    "category": "intent_sales",
+    "query": "sales",
+    "expected_document_ids": [
+      63,
+      64
+    ],
+    "min_count": 2,
+    "forbidden_document_ids": [],
+    "notes": "Intención ventas: al menos facturas/tickets de venta conocidos; no exige listar todos los docs is_sales."
+  },
+  {
+    "id": "intent_sales_party",
+    "category": "intent_sales_party",
+    "query": "sales Pulte",
+    "expected_document_ids": [
+      63,
+      5,
+      8,
+      3,
+      54,
+      53,
+      9,
+      7
+    ],
+    "min_count": 8,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "intent_sales_party_2",
+    "category": "intent_sales_party",
+    "query": "sales from Pulte",
+    "expected_document_ids": [
+      63,
+      5,
+      8,
+      3,
+      54,
+      53,
+      9,
+      7
+    ],
+    "min_count": 8,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "intent_purchase_party",
+    "category": "intent_purchase_party",
+    "query": "compras Pulte",
+    "expected_document_ids": [
+      1,
+      2,
+      4,
+      6,
+      10
+    ],
+    "min_count": 5,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "doc_type_po",
+    "category": "doc_type_po",
+    "query": "purchase order",
+    "expected_document_ids": [
+      1,
+      2,
+      4,
+      6,
+      10,
+      11
+    ],
+    "min_count": 6,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "doc_type_so",
+    "category": "doc_type_so",
+    "query": "sales order",
+    "expected_document_ids": [],
+    "min_count": 0,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "doc_type_pinv",
+    "category": "doc_type_pinv",
+    "query": "PINV Home Depot",
+    "expected_document_ids": [
+      74,
+      67,
+      66,
+      61,
+      48,
+      49,
+      51,
+      50
+    ],
+    "min_count": 8,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "doc_type_inv",
+    "category": "doc_type_inv",
+    "query": "sales invoice",
+    "expected_document_ids": [
+      64,
+      52
+    ],
+    "min_count": 2,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "doc_type_prn",
+    "category": "doc_type_prn",
+    "query": "purchase return",
+    "expected_document_ids": [],
+    "min_count": 0,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "doc_type_grn",
+    "category": "doc_type_grn",
+    "query": "goods receipt",
+    "expected_document_ids": [],
+    "min_count": 0,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "doc_type_iniinv",
+    "category": "doc_type_iniinv",
+    "query": "initial inventory",
+    "expected_document_ids": [
+      60
+    ],
+    "min_count": 1,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "unresolved_type",
+    "category": "unresolved_type",
+    "query": "missing material",
+    "expected_document_ids": [],
+    "min_count": 0,
+    "forbidden_document_ids": [],
+    "expect_notice": true,
+    "notes": "No transaction type matches \"missing material\"."
+  },
+  {
+    "id": "product_party",
+    "category": "product_party",
+    "query": "romex Home Depot",
+    "expected_document_ids": [],
+    "min_count": 0,
+    "forbidden_document_ids": [],
+    "notes": "No relevant transactions matched your search."
+  },
+  {
+    "id": "amount_line",
+    "category": "amount_line",
+    "query": "breaker over $45",
+    "expected_document_ids": [
+      60,
+      52,
+      67,
+      48,
+      61,
+      74,
+      51,
+      49
+    ],
+    "min_count": 8,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "party_only",
+    "category": "party_only",
+    "query": "Phoenix and Air",
+    "expected_document_ids": [
+      60
+    ],
+    "min_count": 1,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "doc_type_code",
+    "category": "doc_type_code",
+    "query": "PINV",
+    "expected_document_ids": [
+      75,
+      74,
+      67,
+      66,
+      61,
+      48,
+      49,
+      50,
+      51
+    ],
+    "min_count": 9,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "question_mark",
+    "category": "question_mark",
+    "query": "Home Depot purchases this month?",
+    "expected_document_ids": [
+      74
+    ],
+    "min_count": 1,
+    "forbidden_document_ids": []
+  },
+  {
+    "id": "spanish_no_block",
+    "category": "spanish_no_block",
+    "query": "ventas",
+    "expected_document_ids": [
+      63,
+      64
+    ],
+    "min_count": 2,
+    "forbidden_document_ids": [],
+    "notes": "Equivalente español de sales; no debe bloquearse como tipo inexistente."
+  }
+]

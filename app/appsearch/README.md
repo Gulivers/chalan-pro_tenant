@@ -185,7 +185,14 @@ docker compose exec backend python manage.py search_metrics --schema TU_SCHEMA -
 docker compose exec backend python manage.py search_eval --schema TU_SCHEMA --queries-file /path/eval.json
 ```
 
-`search_eval` espera JSON: `[{"query":"...", "expected_document_ids":[1,2]}]`.
+`search_eval` espera JSON en `app/appsearch/eval/golden_queries.<schema>.json`. Ver **`app/appsearch/eval/README.md`**.
+
+```bash
+./scripts/run_search_eval.sh --dev test_dominio_local
+./scripts/run_search_eval.sh --dev test_dominio_local --fail-under 0.95
+python manage.py seed_builder_aliases --schema TU_SCHEMA
+./scripts/reindex_search_after_chunk_change.sh --dev --schema TU_SCHEMA
+```
 
 Tras desplegar Fase 3: **`migrate_schemas`**.
 
