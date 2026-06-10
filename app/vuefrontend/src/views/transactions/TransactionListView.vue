@@ -445,6 +445,9 @@ const refreshList = async () => {
 };
 
 const buildSearchSummary = (payload) => {
+  if (payload?.notice) {
+    return payload.notice;
+  }
   const parts = [];
   if (payload?.count != null) {
     parts.push(`${payload.count} match${payload.count === 1 ? "" : "es"}`);

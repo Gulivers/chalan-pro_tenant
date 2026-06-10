@@ -114,9 +114,17 @@ Pipeline: parser de intents (montos, fechas, compras/ventas) → resolución de 
 
 | Filtro | Cuándo |
 |--------|--------|
-| `document_type_id` | Código (`PINV`) o descripción fuzzy (`Purchase Invoice`) |
+| `document_type_id` | Código (`PINV`) o descripción fuzzy (`Purchase Invoice`). Frases compuestas (`sales order`, `purchase return`, …) no se descomponen en filtros `is_sales`/`is_purchase` para evitar conflictos. |
 | `document_total_gte` | Monto «over $X» sin texto de producto (p. ej. compras por party) |
 | `line_final_price_gte` | Monto «over $X» con texto semántico de producto/concepto |
+
+**Relevancia (Fase 3.1):**
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `SEARCH_MIN_RELEVANCE_SCORE` | `0.12` | Descarta coincidencias híbridas por debajo de este score |
+
+Si la consulta parece un **tipo de transacción** (p. ej. «missing material») y ningún `DocumentType` del tenant coincide, la API devuelve **0 resultados** con `notice` en lugar de buscar semánticamente «material» en productos/categorías.
 
 Tras cambiar metadata del chunk (`document_total_amount`), ejecutar `reindex_document_lines` por tenant (opcional para total de documento: el filtro usa `Document.total_amount` en BD).
 

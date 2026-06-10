@@ -583,6 +583,7 @@ SEARCH_FUSION_VECTOR_WEIGHT = float(os.environ.get('SEARCH_FUSION_VECTOR_WEIGHT'
 SEARCH_FUSION_FTS_WEIGHT = float(os.environ.get('SEARCH_FUSION_FTS_WEIGHT', '0.4'))
 SEARCH_FUSION_RRF_K = int(os.environ.get('SEARCH_FUSION_RRF_K', '60'))
 SEARCH_TELEMETRY_ENABLED = os.environ.get('SEARCH_TELEMETRY_ENABLED', 'True') == 'True'
+SEARCH_MIN_RELEVANCE_SCORE = float(os.environ.get('SEARCH_MIN_RELEVANCE_SCORE', '0.12'))
 
 LOG_DIR = os.path.join(BASE_DIR, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)

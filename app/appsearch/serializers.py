@@ -24,6 +24,7 @@ class TransactionSearchResponseSerializer(serializers.Serializer):
     results = TransactionSearchResultSerializer(many=True)
     document_ids = serializers.ListField(child=serializers.IntegerField())
     count = serializers.IntegerField()
+    notice = serializers.CharField(required=False, allow_blank=True)
 
 
 class SimilarTransactionSearchRequestSerializer(serializers.Serializer):

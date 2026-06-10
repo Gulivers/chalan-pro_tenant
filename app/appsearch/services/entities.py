@@ -9,6 +9,17 @@ MIN_ENTITY_SCORE = 30
 TOKEN_FUZZY_RATIO = 0.72
 STRING_FUZZY_RATIO = 0.82
 
+# Tokens for ad-hoc / custom transaction type names (e.g. "Missing Material").
+EXTRA_TRANSACTION_VOCAB = frozenset({
+    'missing', 'shortage', 'loss', 'adjustment', 'transfer', 'stock', 'material',
+})
+
+# Parsed by intent.py — not standalone document type names.
+INTENT_ONLY_TOKENS = frozenset({
+    'purchase', 'purchases', 'compra', 'compras',
+    'sale', 'sales', 'venta', 'ventas',
+})
+
 
 def _normalize(text: str) -> str:
     return re.sub(r'\s+', ' ', (text or '').strip())
@@ -61,9 +72,25 @@ def _score_document_type(query_lower: str, doc_type: DocumentType) -> int:
     if re.search(rf'\b{re.escape(code_lower)}\b', query_lower):
         return len(code_lower) + 200
 
-    description_score = _score_match(query_lower, doc_type.description or '')
-    if description_score >= MIN_ENTITY_SCORE + 20:
-        return description_score
+    description = (doc_type.description or '').strip()
+    if description:
+        desc_lower = description.lower()
+        if desc_lower in query_lower:
+            return len(desc_lower) + 180
+        if query_lower in desc_lower:
+            return len(query_lower) + 120
+
+        query_tokens = [token for token in query_lower.split() if token]
+        desc_tokens = [token for token in desc_lower.split() if token]
+        if query_tokens and desc_tokens:
+            matched_query_tokens = sum(
+                1
+                for query_token in query_tokens
+                if any(_token_fuzzy_match(query_token, desc_token) for desc_token in desc_tokens)
+            )
+            if matched_query_tokens == len(query_tokens):
+                bonus = 20 if matched_query_tokens == len(desc_tokens) else 0
+                return matched_query_tokens * 35 + len(desc_lower) + bonus
 
     if len(code_lower) >= 4:
         code_fuzzy_score = _score_match(query_lower, code_lower)
@@ -71,6 +98,24 @@ def _score_document_type(query_lower: str, doc_type: DocumentType) -> int:
             return code_fuzzy_score
 
     return 0
+
+
+def _pick_document_type(query_lower: str, doc_types) -> tuple[DocumentType | None, int]:
+    scored: list[tuple[int, DocumentType]] = []
+    for doc_type in doc_types:
+        score = _score_document_type(query_lower, doc_type)
+        if score >= MIN_ENTITY_SCORE:
+            scored.append((score, doc_type))
+
+    if not scored:
+        return None, 0
+
+    scored.sort(key=lambda item: item[0], reverse=True)
+    best_score = scored[0][0]
+    best = [doc_type for score, doc_type in scored if score == best_score]
+    if len(best) != 1:
+        return None, 0
+    return best[0], best_score
 
 
 def _strip_entity_mention(remaining: str, entity_name: str, query_lower: str) -> str:
@@ -103,6 +148,50 @@ def _strip_document_type_mention(remaining: str, doc_type: DocumentType, query_l
     return _normalize(text)
 
 
+def _tokenize_vocab(text: str) -> list[str]:
+    return [token for token in re.findall(r"[a-z']+", (text or '').lower()) if token]
+
+
+def _transaction_vocabulary() -> frozenset[str]:
+    tokens = set(EXTRA_TRANSACTION_VOCAB)
+    for doc_type in DocumentType.objects.filter(is_active=True):
+        for part in (doc_type.type_code or '', doc_type.description or ''):
+            tokens.update(_tokenize_vocab(part))
+    return frozenset(tokens)
+
+
+def looks_like_unresolved_document_type(
+    query: str,
+    *,
+    document_type_resolved: bool,
+    has_purchase_sales_intent: bool = False,
+) -> bool:
+    """
+    True when the query reads like a transaction type label but no DocumentType matched.
+
+    Example: "missing material" with no such type → avoid semantic fallback on "material".
+    Counter-example: "construction material" → product/category search, not a type name.
+    """
+    if document_type_resolved:
+        return False
+
+    text = _normalize(query)
+    if not text:
+        return False
+
+    tokens = _tokenize_vocab(text)
+    if not tokens or len(tokens) > 6:
+        return False
+
+    if all(token in INTENT_ONLY_TOKENS for token in tokens):
+        return False
+    if has_purchase_sales_intent and not (query or '').strip():
+        return False
+
+    vocab = _transaction_vocabulary()
+    return all(token in vocab for token in tokens)
+
+
 def resolve_entities(query: str) -> tuple[dict, str]:
     """
     Resolve DocumentType, WorkAccount and Builder mentions in the query.
@@ -112,15 +201,12 @@ def resolve_entities(query: str) -> tuple[dict, str]:
     remaining = _normalize(query)
 
     query_lower = remaining.lower()
-    document_type = None
-    best_doc_type_score = 0
-    for doc_type in DocumentType.objects.filter(is_active=True):
-        score = _score_document_type(query_lower, doc_type)
-        if score > best_doc_type_score:
-            best_doc_type_score = score
-            document_type = doc_type
+    document_type, best_doc_type_score = _pick_document_type(
+        query_lower,
+        DocumentType.objects.filter(is_active=True),
+    )
 
-    if document_type and best_doc_type_score >= MIN_ENTITY_SCORE:
+    if document_type:
         resolved['document_type'] = {
             'id': document_type.id,
             'type_code': document_type.type_code,
