@@ -1,17 +1,33 @@
-[
-  {
-    "alias": "Homedepot",
-    "builder_name": "Home Depot",
-    "notes": "Typo sin espacio; probado en Smart search."
+{
+  "_meta": {
+    "file": "builder_aliases.recommended.json",
+    "purpose": "Plantilla de alias de party (Builder) para resolución en búsqueda semántica. No sustituye el admin del tenant: seed idempotente vía seed_builder_aliases. Ajustar builder_name a parties reales de cada tenant antes de ejecutar.",
+    "used_by": [
+      "python manage.py seed_builder_aliases --schema NOMBRE_SCHEMA",
+      "python manage.py seed_builder_aliases --schema NOMBRE_SCHEMA --dry-run"
+    ],
+    "admin_ui": "Builder search aliases (por tenant)",
+    "row_fields": {
+      "alias": "Texto alternativo que escribe el usuario (p. ej. Homedepot)",
+      "builder_name": "Nombre exacto del Builder en el tenant (case-insensitive)",
+      "notes": "Comentario humano; no lo usa el comando"
+    }
   },
-  {
-    "alias": "Globo Dinner",
-    "builder_name": "Globo Dine",
-    "notes": "Fuzzy party; nombre comercial alternativo."
-  },
-  {
-    "alias": "Harbor Freight",
-    "builder_name": "Harbor Freight",
-    "notes": "Plantilla: ajustar builder_name al party real del tenant."
-  }
-]
+  "aliases": [
+    {
+      "alias": "Homedepot",
+      "builder_name": "Home Depot",
+      "notes": "Typo sin espacio; probado en Smart search."
+    },
+    {
+      "alias": "Globo Dinner",
+      "builder_name": "Globo Dine",
+      "notes": "Fuzzy party; nombre comercial alternativo."
+    },
+    {
+      "alias": "Harbor Freight",
+      "builder_name": "Harbor Freight",
+      "notes": "Plantilla: ajustar builder_name al party real del tenant."
+    }
+  ]
+}

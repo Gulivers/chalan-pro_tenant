@@ -2,6 +2,17 @@
 
 Archivos en este directorio para **evaluar y mantener** Smart search sin adivinar.
 
+## Archivos JSON (`app/appsearch/eval/`)
+
+JSON estándar no admite comentarios `//`. Cada archivo incluye un bloque **`_meta`** al inicio que documenta para qué sirve; los comandos leen solo `cases` o `aliases`.
+
+| Archivo | Para qué es |
+|---------|-------------|
+| **`golden_queries.<schema>.json`** | Baseline de **regresión** Smart search para un tenant: lista de consultas con resultados esperados (`expected_document_ids`, `min_count`, `forbidden_document_ids`, etc.). Usado por `search_eval` y `./scripts/run_search_eval.sh`. Plantilla: `golden_queries.test_dominio_local.json`. |
+| **`builder_aliases.recommended.json`** | Plantilla de **alias de party** (nombre alternativo → `Builder` del tenant). Usado por `seed_builder_aliases`; el admin del tenant sigue siendo la fuente de verdad en producción. |
+
+Campos útiles en **`_meta`**: `purpose`, `used_by`, `tenant_schema` (golden), `refresh_baseline`, `row_fields` (aliases).
+
 ## Golden queries (`golden_queries.<schema>.json`)
 
 Lista de ~26 consultas de referencia para el tenant `test_dominio_local` (plantilla para otros tenants).

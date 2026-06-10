@@ -13,6 +13,18 @@ DEFAULT_ALIASES_FILE = (
 )
 
 
+def _load_aliases_document(raw) -> list:
+    """Accept legacy array or `{ "_meta": {...}, "aliases": [...] }`."""
+    if isinstance(raw, list):
+        return raw
+    if isinstance(raw, dict) and isinstance(raw.get('aliases'), list):
+        return raw['aliases']
+    raise CommandError(
+        'Aliases file must be a JSON array or an object with an "aliases" array '
+        '(optional "_meta" documents file purpose).'
+    )
+
+
 class Command(BaseCommand):
     help = (
         'Create or update BuilderAlias rows from a JSON file (idempotent). '
@@ -25,7 +37,7 @@ class Command(BaseCommand):
             '--file',
             dest='aliases_file',
             default=str(DEFAULT_ALIASES_FILE),
-            help='Path to JSON array: [{"alias":"...", "builder_name":"..."}]',
+            help='Path to JSON: array or `{ "_meta", "aliases" }` with alias rows.',
         )
         parser.add_argument(
             '--dry-run',
@@ -37,14 +49,14 @@ class Command(BaseCommand):
         aliases_path = Path(options['aliases_file'])
         try:
             with aliases_path.open(encoding='utf-8') as handle:
-                rows = json.load(handle)
+                rows = _load_aliases_document(json.load(handle))
         except OSError as exc:
             raise CommandError(f'Cannot read aliases file: {exc}') from exc
         except json.JSONDecodeError as exc:
             raise CommandError(f'Invalid JSON in aliases file: {exc}') from exc
 
-        if not isinstance(rows, list):
-            raise CommandError('Aliases file must contain a JSON array.')
+        if not rows:
+            raise CommandError('Aliases file must contain at least one alias row.')
 
         created = updated = skipped = 0
         dry_run = options['dry_run']

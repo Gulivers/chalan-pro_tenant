@@ -21,6 +21,31 @@ def default_queries_file(schema: str) -> Path:
     return tenant_specific
 
 
+def _load_eval_document(raw) -> tuple[dict | None, list]:
+    """Accept legacy array or `{ "_meta": {...}, "cases": [...] }`."""
+    if isinstance(raw, list):
+        if not raw:
+            raise CommandError('queries-file must contain a non-empty JSON array.')
+        return None, raw
+    if isinstance(raw, dict) and isinstance(raw.get('cases'), list):
+        cases = raw['cases']
+        if not cases:
+            raise CommandError('queries-file cases array must not be empty.')
+        meta = raw.get('_meta')
+        return (meta if isinstance(meta, dict) else None), cases
+    raise CommandError(
+        'queries-file must be a JSON array or an object with a "cases" array '
+        '(optional "_meta" documents file purpose).'
+    )
+
+
+def _write_eval_document(path: Path, *, meta: dict | None, cases: list) -> None:
+    payload = {'_meta': meta, 'cases': cases} if meta else cases
+    with path.open('w', encoding='utf-8') as handle:
+        json.dump(payload, handle, indent=2, ensure_ascii=False)
+        handle.write('\n')
+
+
 class Command(BaseCommand):
     help = (
         'Evaluate semantic search against golden queries (recall@k, min_count, forbidden ids). '
@@ -63,14 +88,11 @@ class Command(BaseCommand):
 
         try:
             with queries_file.open(encoding='utf-8') as handle:
-                cases = json.load(handle)
+                file_meta, cases = _load_eval_document(json.load(handle))
         except OSError as exc:
             raise CommandError(f'Cannot read queries file: {exc}') from exc
         except json.JSONDecodeError as exc:
             raise CommandError(f'Invalid JSON in queries file: {exc}') from exc
-
-        if not isinstance(cases, list) or not cases:
-            raise CommandError('queries-file must contain a non-empty JSON array.')
 
         recalls = []
         failures = []
@@ -134,9 +156,11 @@ class Command(BaseCommand):
                     failures.append(f'{case_id}: {detail}')
 
         if update_baseline:
-            with queries_file.open('w', encoding='utf-8') as handle:
-                json.dump(updated_cases or cases, handle, indent=2, ensure_ascii=False)
-                handle.write('\n')
+            _write_eval_document(
+                queries_file,
+                meta=file_meta,
+                cases=updated_cases or cases,
+            )
             self.stdout.write(self.style.SUCCESS(f'Baseline updated: {queries_file}'))
             return
 
