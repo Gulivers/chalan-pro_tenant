@@ -80,7 +80,9 @@
   - [11.1 Resumen y modelos](#111-resumen-y-modelos)
   - [11.2 Variables de entorno y PostgreSQL](#112-variables-de-entorno-y-postgresql)
   - [11.3 Comandos de gestión](#113-comandos-de-gestión)
+  - [11.3.1 Scripts shell en el host](#1131-scripts-shell-en-el-host)
   - [11.4 API y UI (Fase 2)](#114-api-y-ui-fase-2)
+  - [11.5 Fase 3 — Advanced Retrieval y afinación](#115-fase-3--advanced-retrieval-y-afinación)
 - [12. Troubleshooting](#12-troubleshooting)
 - [13. Contacto y Soporte](#13-contacto-y-soporte)
 
@@ -1921,6 +1923,7 @@ En `envs/backend.env` (plantilla: `envs/backend.dev.example.env`):
 - `OPENAI_API_KEY` — API OpenAI (`text-embedding-3-small`; independiente de suscripción ChatGPT Pro)
 - `SEARCH_EMBEDDING_MODEL`, `SEARCH_EMBEDDING_DIMENSIONS=1536`
 - `SEARCH_INDEXING_ENABLED=True`
+- `SEARCH_MIN_RELEVANCE_SCORE=0.12` — umbral de relevancia híbrida (subir = menos ruido; ver `app/appsearch/eval/README.md`)
 
 Infraestructura:
 
@@ -1993,6 +1996,42 @@ Log VPS: `/var/log/chalanpro/search-outbox.log` (`sudo mkdir -p /var/log/chalanp
 
 Salida distinta de cero si hubo entradas fallidas o errores por tenant (útil para alertas). Por defecto continúa con el siguiente tenant; `--fail-fast` detiene al primer error.
 
+#### 11.3.1 Scripts shell en el host
+
+Scripts en **`scripts/`** pensados para ejecutarse en el **host** (ubuntu-house o VPS), no dentro del contenedor. En ubuntu-house usar **`--dev`** para apuntar a `docker-compose.dev.yml` y logs en `logs/`.
+
+| Script | Para qué sirve |
+|--------|----------------|
+| **`process_search_outbox_cron.sh`** | Indexación **incremental**: procesa `IndexOutbox` en todos los tenants vía `process_index_outbox_all`. Diseñado para **cron** (p. ej. cada 3 min) tras crear/editar transacciones en la app. Usa `flock` para evitar solapamientos. Log: `logs/search-outbox.log` (dev) o `/var/log/chalanpro/search-outbox.log` (VPS). |
+| **`run_search_eval.sh`** | **Regresión de Smart search**: ejecuta `search_eval` contra el JSON golden del tenant (`app/appsearch/eval/golden_queries.<schema>.json`). Comprueba recall@k, `min_count`, IDs prohibidos y avisos esperados. Falla con exit code ≠ 0 si algo se rompe. Opciones: `--fail-under 0.95`, `--update-baseline` (refrescar expected IDs tras cambio aprobado). |
+| **`reindex_search_after_chunk_change.sh`** | **Reindex completo** tras cambios en `app/appsearch/services/chunk.py` o metadata indexada: primero drena outbox pendiente, luego `reindex_document_lines` (embeddings OpenAI). Un tenant: `--schema NOMBRE_SCHEMA`; todos: `--all-tenants`. |
+
+Ejemplos **ubuntu-house**:
+
+```bash
+# Cron / manual — cola de indexación
+./scripts/process_search_outbox_cron.sh --dev
+
+# Verificar que las ~26 golden queries siguen pasando
+./scripts/run_search_eval.sh --dev test_dominio_local
+./scripts/run_search_eval.sh --dev test_dominio_local --fail-under 0.95
+
+# Tras modificar chunk/metadata del índice
+./scripts/reindex_search_after_chunk_change.sh --dev --schema test_dominio_local
+```
+
+Ejemplos **VPS** (sin `--dev`; ruta típica `/opt/chalanpro`):
+
+```bash
+/opt/chalanpro/scripts/process_search_outbox_cron.sh
+/opt/chalanpro/scripts/run_search_eval.sh NOMBRE_SCHEMA --fail-under 0.95
+/opt/chalanpro/scripts/reindex_search_after_chunk_change.sh --schema NOMBRE_SCHEMA
+```
+
+Documentación ampliada: **`app/appsearch/eval/README.md`**.
+
+Comando Django relacionado (no es `.sh`): `seed_builder_aliases --schema NOMBRE_SCHEMA` — carga alias de party desde `app/appsearch/eval/builder_aliases.recommended.json`.
+
 ### 11.4 API y UI (Fase 2)
 
 **API:** `POST /api/search/transactions/`
@@ -2012,17 +2051,19 @@ Resolución de **Party / Work Account / DocumentType** con matching difuso. Bús
 
 **UI:** checkbox *Smart search (AI)* y botón **Similar** por fila en `/transactions`. Requiere `apptransactions.view_document`.
 
-### 11.5 Fase 3 — Advanced Retrieval
+### 11.5 Fase 3 — Advanced Retrieval y afinación
 
-Ver **`app/appsearch/README.md`**. Resumen:
+Ver **`app/appsearch/README.md`** y **`app/appsearch/eval/README.md`**. Resumen:
 
 | Capacidad | Detalle |
 |-----------|---------|
 | **Similares** | `POST /api/search/transactions/similar/` con `document_id` o `document_line_id` |
 | **Rank fusion** | `SEARCH_FUSION_MODE` (`weighted` / `rrf`), pesos vector/FTS tunables |
-| **Builder aliases** | Modelo `BuilderAlias` en admin del tenant |
+| **Builder aliases** | Modelo `BuilderAlias` en admin del tenant; plantilla JSON + `seed_builder_aliases` |
 | **Outbox** | `SEARCH_OUTBOX_MAX_ATTEMPTS`, dead letter (`dead_letter_at`), `outbox_status`, `requeue_dead_letter_outbox` |
-| **Métricas** | `SearchTelemetry`, comandos `search_metrics` y `search_eval` (recall@k) |
+| **Métricas** | `SearchTelemetry`, comandos `search_metrics` y `search_eval` |
+| **Golden queries** | `app/appsearch/eval/golden_queries.<schema>.json` + `./scripts/run_search_eval.sh` |
+| **Relevancia** | `SEARCH_MIN_RELEVANCE_SCORE`, filtro por tokens en snippet, tipos compuestos (`sales order`, …) |
 
 Tras desplegar: **`migrate_schemas`**.
 
