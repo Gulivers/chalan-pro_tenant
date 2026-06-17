@@ -36,6 +36,15 @@ PURCHASE_PATTERN = re.compile(r'\b(purchases?|compras?)\b', re.IGNORECASE)
 SALES_PATTERN = re.compile(r'\b(sales?|ventas?)\b', re.IGNORECASE)
 PURCHASE_INVOICE_PATTERN = re.compile(r'\bpurchase\s+invoices?\b', re.IGNORECASE)
 SALES_INVOICE_PATTERN = re.compile(r'\bsales?\s+invoices?\b', re.IGNORECASE)
+PURCHASE_ORDER_PATTERN = re.compile(r'\bpurchase\s+orders?\b', re.IGNORECASE)
+SALES_ORDER_PATTERN = re.compile(r'\bsales?\s+orders?\b', re.IGNORECASE)
+PURCHASE_RETURN_PATTERN = re.compile(r'\bpurchase\s+returns?\b', re.IGNORECASE)
+PURCHASE_REQUISITION_PATTERN = re.compile(r'\bpurchase\s+requisitions?\b', re.IGNORECASE)
+SALES_QUOTATION_PATTERN = re.compile(r'\bsales?\s+quotations?\b', re.IGNORECASE)
+SALES_CREDIT_NOTE_PATTERN = re.compile(
+    r'\bsales?\s+(?:credit\s+notes?|returns?)\b',
+    re.IGNORECASE,
+)
 
 
 def _parse_amount(value: str) -> float | None:
@@ -84,12 +93,24 @@ def parse_search_intent(query: str, *, today: date | None = None) -> tuple[dict,
 
     if PURCHASE_INVOICE_PATTERN.search(remaining):
         filters['is_purchase'] = True
+    elif PURCHASE_RETURN_PATTERN.search(remaining):
+        pass
+    elif PURCHASE_REQUISITION_PATTERN.search(remaining):
+        pass
+    elif PURCHASE_ORDER_PATTERN.search(remaining):
+        pass  # leave phrase for DocumentType resolution (PO)
     elif PURCHASE_PATTERN.search(remaining):
         filters['is_purchase'] = True
         remaining = PURCHASE_PATTERN.sub(' ', remaining)
 
     if SALES_INVOICE_PATTERN.search(remaining):
         filters['is_sales'] = True
+    elif SALES_CREDIT_NOTE_PATTERN.search(remaining):
+        pass
+    elif SALES_QUOTATION_PATTERN.search(remaining):
+        pass
+    elif SALES_ORDER_PATTERN.search(remaining):
+        pass  # leave phrase for DocumentType resolution (SO)
     elif SALES_PATTERN.search(remaining):
         filters['is_sales'] = True
         remaining = SALES_PATTERN.sub(' ', remaining)

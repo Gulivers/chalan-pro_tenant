@@ -8,6 +8,7 @@ app/vuefrontend/dist/
 node_modules/
 
 # Ignore build artifacts and logs
+logs/
 *.log
 *.log.*
 

@@ -16,6 +16,7 @@
         :filterable="true"
         :clearable="true"
         :loading="loading"
+        :disabled="disabled"
         placeholder="Search party..."
         class="flex-grow-1"
         :class="{ 'is-invalid': hasError }"
@@ -25,12 +26,12 @@
         <template #no-options>Type to search parties...</template>
       </v-select>
       <AddBuilderButton 
-        :is-disabled="!hasPermission('ctrctsapp.add_builder')"
+        :is-disabled="disabled || !hasPermission('ctrctsapp.add_builder')"
         @builder-added="handleBuilderAdded" />
       <EditBuilderButton 
         v-if="selectedValue && selectedBuilder"
         :builder="selectedBuilder"
-        :is-disabled="!hasPermission('ctrctsapp.change_builder')"
+        :is-disabled="disabled || !hasPermission('ctrctsapp.change_builder')"
         @builder-updated="handleBuilderUpdated" />
     </div>
     <div v-if="hasError" class="invalid-feedback d-block">{{ errorMessage }}</div>
@@ -91,6 +92,10 @@ const props = defineProps({
     default: null
   },
   required: {
+    type: Boolean,
+    default: false
+  },
+  disabled: {
     type: Boolean,
     default: false
   }

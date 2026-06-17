@@ -1,11 +1,12 @@
 import base64
 from datetime import datetime
-from django.db.models import Q, Prefetch
+from django.db.models import Q, Prefetch, Count
 from django.utils.dateparse import parse_datetime
 from django.shortcuts import render, get_object_or_404
 from django.db import IntegrityError
 from django.http import JsonResponse
 from rest_framework import viewsets, status, filters, permissions
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action, api_view, permission_classes
 from django_filters.rest_framework import DjangoFilterBackend
@@ -20,9 +21,9 @@ from .models import (
     PriceType, WorkAccount, TransactionFavorite
 )
 from .serializers import (
-    DocumentTypeSerializer,PartyTypeSerializer,PartyCategorySerializer,PartySerializer,
-    DocumentSerializer, DocumentLineSerializer, WorkAccountSerializer,
-    TransactionFavoriteSerializer, TransactionFavoriteImportSerializer
+    DocumentTypeSerializer, PartyTypeSerializer, PartyCategorySerializer, PartySerializer,
+    DocumentSerializer, DocumentListSerializer, DocumentLineSerializer, WorkAccountSerializer,
+    TransactionFavoriteSerializer, TransactionFavoriteImportSerializer,
 )
 from rest_framework.authentication import TokenAuthentication
 
@@ -179,6 +180,108 @@ class DocumentViewSet(viewsets.ModelViewSet):
         doc = self.get_object()
         ser = DocumentLineSerializer(doc.lines.all(), many=True)
         return Response(ser.data)
+
+
+class DocumentListProviderAPIView(APIView):
+    """
+    Endpoint para provider pattern: paginación, búsqueda y orden en servidor.
+    Respuesta: { items, totalRows, stats }
+    """
+
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    _ALLOWED_ORDERING = {
+        "id",
+        "-id",
+        "date",
+        "-date",
+        "total_amount",
+        "-total_amount",
+        "total_discount",
+        "-total_discount",
+    }
+
+    def get(self, request):
+        try:
+            page = int(request.query_params.get("page", 1))
+            per_page = int(request.query_params.get("per_page", 25))
+            search = request.query_params.get("search", "").strip()
+            ordering = request.query_params.get("ordering", "-id")
+            document_ids_param = request.query_params.get("document_ids", "").strip()
+
+            queryset = (
+                Document.objects.select_related(
+                    "document_type",
+                    "builder",
+                    "work_account",
+                    "work_account__builder",
+                    "work_account__job",
+                )
+                .annotate(lines_count=Count("lines"))
+                .order_by("-id")
+            )
+
+            if document_ids_param:
+                raw_ids = [part.strip() for part in document_ids_param.split(",") if part.strip()]
+                try:
+                    document_ids = [int(part) for part in raw_ids]
+                except ValueError:
+                    return Response(
+                        {"error": "Invalid document_ids parameter."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if document_ids:
+                    queryset = queryset.filter(id__in=document_ids)
+                else:
+                    queryset = queryset.none()
+
+            if search:
+                words = search.split()
+                for word in words:
+                    q = (
+                        Q(notes__icontains=word)
+                        | Q(document_type__type_code__icontains=word)
+                        | Q(builder__name__icontains=word)
+                        | Q(work_account__title__icontains=word)
+                        | Q(work_account__lot__icontains=word)
+                        | Q(work_account__job__name__icontains=word)
+                        | Q(work_account__address__icontains=word)
+                    )
+                    if word.isdigit():
+                        q = q | Q(id=int(word))
+                    queryset = queryset.filter(q)
+
+            if ordering in self._ALLOWED_ORDERING:
+                queryset = queryset.order_by(ordering)
+
+            total_count = queryset.count()
+            active_count = queryset.filter(is_active=True).count()
+            inactive_count = queryset.filter(is_active=False).count()
+
+            start = (page - 1) * per_page
+            end = start + per_page
+            paginated = queryset[start:end]
+
+            serializer = DocumentListSerializer(paginated, many=True)
+            return Response(
+                {
+                    "items": serializer.data,
+                    "totalRows": total_count,
+                    "stats": {
+                        "total": total_count,
+                        "active": active_count,
+                        "inactive": inactive_count,
+                    },
+                }
+            )
+        except (ValueError, TypeError) as exc:
+            return Response(
+                {"error": "Invalid parameters.", "detail": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # Líneas (CRUD independiente)
