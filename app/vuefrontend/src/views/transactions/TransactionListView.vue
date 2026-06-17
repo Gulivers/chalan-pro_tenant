@@ -1,6 +1,5 @@
 <template>
   <TxCard class="shadow-sm mt-0">
-    <!-- Header del card -->
     <template #header>
       <div
         class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-2">
@@ -16,7 +15,6 @@
       </div>
     </template>
 
-    <!-- Toolbar: stats + refresh -->
     <div
       class="listview-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
       <span class="badge bg-primary stats-badge">{{ stats.total }} Total</span>
@@ -37,7 +35,6 @@
       </button>
     </div>
 
-    <!-- Filters: entries per page + search -->
     <div class="listview-filters row g-2 g-md-3 mb-3 align-items-end">
       <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
         <label
@@ -66,9 +63,7 @@
             v-model="search"
             type="text"
             class="form-control form-control-sm"
-            :placeholder="
-              smartSearch ? smartSearchPlaceholder : classicSearchPlaceholder
-            "
+            placeholder="Search by document type, party, notes..."
             autocomplete="off"
             @input="onSearchInput" />
           <button
@@ -81,33 +76,10 @@
             ×
           </button>
         </div>
-        <div class="form-check form-check-sm mt-1">
-          <input
-            id="smart-search-toggle"
-            v-model="smartSearch"
-            class="form-check-input"
-            type="checkbox"
-            @change="onSmartSearchToggle" />
-          <label
-            class="form-check-label small text-muted"
-            for="smart-search-toggle">
-            Smart search (AI)
-          </label>
-        </div>
-        <div
-          v-if="smartSearch && searchMeta.summary"
-          class="small text-muted mt-1">
-          {{ searchMeta.summary }}
-        </div>
       </div>
     </div>
 
-    <!-- Main Table with Overlay -->
-    <BOverlay
-      :show="isLoading || smartSearchLoading || similarSearchLoading"
-      rounded="sm"
-      opacity="0.85"
-      variant="light">
+    <BOverlay :show="isLoading" rounded="sm" opacity="0.85" variant="light">
       <template #overlay>
         <div class="text-center">
           <BSpinner type="border" variant="secondary" class="mb-3" />
@@ -120,7 +92,7 @@
         ref="transactionTable"
         :provider="provider"
         :fields="fields"
-        :filter="tableFilter"
+        :filter="search"
         :per-page="perPage"
         :current-page="currentPage"
         no-provider-sorting
@@ -153,9 +125,7 @@
         </template>
 
         <template #cell(is_active)="data">
-          <span
-            v-if="data.item.is_active"
-            class="badge bg-success">
+          <span v-if="data.item.is_active" class="badge bg-success">
             Active
           </span>
           <span v-else class="badge bg-secondary">Voided</span>
@@ -169,13 +139,6 @@
               class="btn btn-outline-success me-1">
               View
             </router-link>
-            <button
-              v-if="hasPermission('apptransactions.view_document')"
-              @click="findSimilarTransactions(data.item.id)"
-              class="btn btn-outline-info me-1"
-              title="Find similar transactions">
-              Similar
-            </button>
             <button
               v-if="hasPermission('apptransactions.view_document')"
               @click="printTransaction(data.item.id)"
@@ -214,13 +177,7 @@
 import TxCard from "@/components/layout/TxCard.vue";
 import "@/assets/css/base.css";
 
-import {
-  ref,
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  getCurrentInstance,
-} from "vue";
+import { ref, nextTick, getCurrentInstance } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { BOverlay, BSpinner, BTable, BPagination } from "bootstrap-vue-next";
@@ -234,17 +191,6 @@ const isLoading = ref(true);
 const stats = ref({ total: 0, active: 0, inactive: 0 });
 const totalRows = ref(0);
 const search = ref("");
-const smartSearch = ref(false);
-const smartSearchLoading = ref(false);
-const smartSearchDocumentIds = ref(null);
-const similarSearchDocumentIds = ref(null);
-const similarSearchLoading = ref(false);
-const searchMeta = ref({ summary: "" });
-const searchDebounceTimer = ref(null);
-const classicSearchPlaceholder =
-  "Search by document type, party, notes...";
-const smartSearchPlaceholder =
-  "e.g. Harbor Freight purchases over $500, breakers for Pulte...";
 const perPage = ref(25);
 const currentPage = ref(1);
 
@@ -315,13 +261,6 @@ const fields = [
   },
 ];
 
-const tableFilter = computed(() => {
-  if (smartSearch.value || Array.isArray(similarSearchDocumentIds.value)) {
-    return "";
-  }
-  return search.value;
-});
-
 const provider = async (context) => {
   try {
     if (!isLoading.value) {
@@ -336,25 +275,9 @@ const provider = async (context) => {
       ordering: "-id",
     });
 
-    if (smartSearch.value && Array.isArray(smartSearchDocumentIds.value)) {
-      if (!smartSearchDocumentIds.value.length) {
-        stats.value = { total: 0, active: 0, inactive: 0 };
-        totalRows.value = 0;
-        return [];
-      }
-      params.set("document_ids", smartSearchDocumentIds.value.join(","));
-    } else if (Array.isArray(similarSearchDocumentIds.value)) {
-      if (!similarSearchDocumentIds.value.length) {
-        stats.value = { total: 0, active: 0, inactive: 0 };
-        totalRows.value = 0;
-        return [];
-      }
-      params.set("document_ids", similarSearchDocumentIds.value.join(","));
-    } else {
-      const classicSearch = search.value.trim();
-      if (classicSearch) {
-        params.set("search", classicSearch);
-      }
+    const classicSearch = search.value.trim();
+    if (classicSearch) {
+      params.set("search", classicSearch);
     }
 
     const response = await axios.get(`${ENDPOINT}?${params}`);
@@ -384,140 +307,15 @@ const refreshList = () => {
   transactionTable.value?.refresh();
 };
 
-const buildSearchSummary = (payload) => {
-  if (payload?.notice) {
-    return payload.notice;
-  }
-  const parts = [];
-  if (payload?.count != null) {
-    parts.push(`${payload.count} match${payload.count === 1 ? "" : "es"}`);
-  }
-  const builder = payload?.resolved_entities?.builder?.name;
-  const workAccount = payload?.resolved_entities?.work_account?.title;
-  const docType = payload?.resolved_entities?.document_type?.type_code;
-  if (workAccount) parts.push(`Work Account: ${workAccount}`);
-  if (builder) parts.push(`Party: ${builder}`);
-  if (docType) parts.push(`Type: ${docType}`);
-  const filters = payload?.applied_filters || {};
-  if (filters.document_total_gte != null) {
-    parts.push(`Doc total >= $${filters.document_total_gte}`);
-  }
-  if (filters.line_final_price_gte != null) {
-    parts.push(`Line >= $${filters.line_final_price_gte}`);
-  }
-  if (filters.date_from || filters.date_to) {
-    parts.push(`${filters.date_from || "…"} → ${filters.date_to || "…"}`);
-  }
-  return parts.join(" · ");
-};
-
-const runSmartSearch = async (query) => {
-  similarSearchDocumentIds.value = null;
-  smartSearchLoading.value = true;
-  try {
-    const response = await axios.post("/api/search/transactions/", {
-      query,
-      limit: 100,
-    });
-    smartSearchDocumentIds.value = response.data?.document_ids || [];
-    searchMeta.value = {
-      summary: buildSearchSummary(response.data),
-    };
-    currentPage.value = 1;
-    transactionTable.value?.refresh();
-  } catch (err) {
-    smartSearchDocumentIds.value = [];
-    searchMeta.value = { summary: "" };
-    const detail =
-      err?.response?.data?.detail ||
-      "Smart search is unavailable. Check the search index and OpenAI configuration.";
-    proxy?.notifyError?.(
-      typeof detail === "string" ? detail : "Smart search failed."
-    );
-    transactionTable.value?.refresh();
-  } finally {
-    smartSearchLoading.value = false;
-  }
-};
-
-const findSimilarTransactions = async (documentId) => {
-  smartSearch.value = false;
-  smartSearchDocumentIds.value = null;
-  search.value = "";
-  similarSearchLoading.value = true;
-  try {
-    const response = await axios.post("/api/search/transactions/similar/", {
-      document_id: documentId,
-      limit: 50,
-    });
-    similarSearchDocumentIds.value = response.data?.document_ids || [];
-    const seedSnippet = response.data?.seed?.snippet || "";
-    const count = response.data?.count ?? 0;
-    searchMeta.value = {
-      summary: `Similar to #${documentId}: ${count} match${count === 1 ? "" : "es"}${seedSnippet ? ` · ${seedSnippet.slice(0, 80)}` : ""}`,
-    };
-    currentPage.value = 1;
-    transactionTable.value?.refresh();
-  } catch (err) {
-    similarSearchDocumentIds.value = null;
-    searchMeta.value = { summary: "" };
-    const detail =
-      err?.response?.data?.detail ||
-      "Similar search is unavailable. Reindex document lines if needed.";
-    proxy?.notifyError?.(
-      typeof detail === "string" ? detail : "Similar search failed."
-    );
-  } finally {
-    similarSearchLoading.value = false;
-  }
-};
-
 const resetToDefaultList = async () => {
-  if (searchDebounceTimer.value) {
-    clearTimeout(searchDebounceTimer.value);
-    searchDebounceTimer.value = null;
-  }
-  smartSearchDocumentIds.value = null;
-  similarSearchDocumentIds.value = null;
-  searchMeta.value = { summary: "" };
   currentPage.value = 1;
   await nextTick();
   refreshList();
 };
 
 const onSearchInput = () => {
-  similarSearchDocumentIds.value = null;
-  if (!smartSearch.value) {
-    searchMeta.value = { summary: "" };
-    if (!search.value.trim()) {
-      resetToDefaultList();
-    }
-    return;
-  }
-
-  if (searchDebounceTimer.value) {
-    clearTimeout(searchDebounceTimer.value);
-  }
-
-  const query = search.value.trim();
-  if (!query) {
+  if (!search.value.trim()) {
     resetToDefaultList();
-    return;
-  }
-
-  searchDebounceTimer.value = setTimeout(() => {
-    runSmartSearch(query);
-  }, 450);
-};
-
-const onSmartSearchToggle = () => {
-  similarSearchDocumentIds.value = null;
-  smartSearchDocumentIds.value = null;
-  searchMeta.value = { summary: "" };
-  if (smartSearch.value && search.value.trim()) {
-    runSmartSearch(search.value.trim());
-  } else {
-    transactionTable.value?.refresh();
   }
 };
 
@@ -525,12 +323,6 @@ const clearSearch = async () => {
   search.value = "";
   await resetToDefaultList();
 };
-
-onBeforeUnmount(() => {
-  if (searchDebounceTimer.value) {
-    clearTimeout(searchDebounceTimer.value);
-  }
-});
 
 const formatDate = (dateString) => {
   if (!dateString) return "—";

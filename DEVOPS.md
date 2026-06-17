@@ -176,25 +176,6 @@ sudo /opt/chalanpro/scripts/restore_backup_VPS.sh YYYYMMDD_HHMMSS
 - Programar con cron (ej. diario a las 3:00): `0 3 * * * root /opt/chalanpro/scripts/backup_completo_VPS.sh --retention 7`
 - Probar restauración de forma periódica.
 
-### Semantic Search — outbox (Fase A)
-
-Tras desplegar `appsearch` con `OPENAI_API_KEY` y `migrate_schemas`, programar indexación incremental cada 2–3 minutos en el **host**:
-
-```bash
-sudo mkdir -p /var/log/chalanpro
-sudo chmod +x /opt/chalanpro/scripts/process_search_outbox_cron.sh
-```
-
-Crontab (root o `/etc/cron.d/chalanpro-search-outbox`):
-
-```cron
-*/3 * * * * root /opt/chalanpro/scripts/process_search_outbox_cron.sh
-```
-
-Log: `/var/log/chalanpro/search-outbox.log`. Prueba manual: `/opt/chalanpro/scripts/process_search_outbox_cron.sh`.
-
-En **ubuntu-house** usar `./scripts/process_search_outbox_cron.sh --dev` (log en `logs/search-outbox.log`).
-
 ---
 
 ## 5. Buenas prácticas
