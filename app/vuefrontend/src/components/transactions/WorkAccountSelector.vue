@@ -10,6 +10,7 @@
         :filterable="true"
         :clearable="true"
         :loading="loading"
+        :disabled="disabled"
         placeholder="Search work account..."
         class="flex-grow-1"
         :class="{ 'is-invalid': hasError }"
@@ -22,7 +23,7 @@
         class="btn btn-outline-secondary btn-sm ms-1"
         type="button"
         @click="openModal('add')"
-        :disabled="!hasPermission('apptransactions.add_workaccount')"
+        :disabled="disabled || !hasPermission('apptransactions.add_workaccount')"
         v-tt
         data-title="Add a new work account to the system">
         <img src="@assets/img/icon-addlink.svg" alt="Add" width="15" height="15" />
@@ -32,7 +33,7 @@
         class="btn btn-outline-secondary btn-sm ms-1"
         type="button"
         @click="openModal('edit', selectedValue)"
-        :disabled="!hasPermission('apptransactions.change_workaccount')"
+        :disabled="disabled || !hasPermission('apptransactions.change_workaccount')"
         v-tt
         data-title="Edit the currently selected work account">
         <img src="@assets/img/icon-changelink.svg" alt="Edit" width="15" height="15" />
@@ -94,6 +95,10 @@
     showLabel: {
       type: Boolean,
       default: true,
+    },
+    disabled: {
+      type: Boolean,
+      default: false,
     },
   });
 

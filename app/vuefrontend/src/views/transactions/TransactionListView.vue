@@ -40,7 +40,9 @@
     <!-- Filters: entries per page + search -->
     <div class="listview-filters row g-2 g-md-3 mb-3 align-items-end">
       <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-        <label for="per-page-select" class="form-label small listview-filter-label mb-1">
+        <label
+          for="per-page-select"
+          class="form-label small listview-filter-label mb-1">
           Entries per page:
         </label>
         <select
@@ -53,7 +55,9 @@
         </select>
       </div>
       <div class="col-12 col-sm-6 col-lg-5 col-xl-4 ms-lg-auto">
-        <label for="search-input" class="form-label small listview-filter-label mb-1">
+        <label
+          for="search-input"
+          class="form-label small listview-filter-label mb-1">
           Search:
         </label>
         <div class="search-wrapper position-relative">
@@ -62,7 +66,9 @@
             v-model="search"
             type="text"
             class="form-control form-control-sm"
-            :placeholder="smartSearch ? smartSearchPlaceholder : classicSearchPlaceholder"
+            :placeholder="
+              smartSearch ? smartSearchPlaceholder : classicSearchPlaceholder
+            "
             autocomplete="off"
             @input="onSearchInput" />
           <button
@@ -82,7 +88,9 @@
             class="form-check-input"
             type="checkbox"
             @change="onSmartSearchToggle" />
-          <label class="form-check-label small text-muted" for="smart-search-toggle">
+          <label
+            class="form-check-label small text-muted"
+            for="smart-search-toggle">
             Smart search (AI)
           </label>
         </div>
@@ -108,30 +116,28 @@
         </div>
       </template>
 
-      <!-- tabla -->
-      <b-table
-        :items="filteredItems"
+      <BTable
+        ref="transactionTable"
+        :provider="provider"
         :fields="fields"
+        :filter="tableFilter"
         :per-page="perPage"
         :current-page="currentPage"
+        no-provider-sorting
         bordered
         hover
         responsive
         striped>
         <template #cell(document_type_code)="data">
-          {{ documentTypesMap[data.item.document_type] || "—" }}
+          {{ data.item.document_type_code || "—" }}
         </template>
 
-        <template #cell(party_name)="data">
-          {{ data.item.builder_name || partiesMap[data.item.party] || "—" }}
+        <template #cell(builder_name)="data">
+          {{ data.item.builder_name || "—" }}
         </template>
 
         <template #cell(work_account_display)="data">
-          {{
-            data.item.work_account_display ||
-            workAccountsMap[data.item.work_account] ||
-            "—"
-          }}
+          {{ data.item.work_account_display || "—" }}
         </template>
 
         <template #cell(date)="data">
@@ -147,68 +153,57 @@
         </template>
 
         <template #cell(is_active)="data">
-          <td class="text-center">
-            <span v-if="data.item.is_active" class="badge bg-success">
-              Active
-            </span>
-            <span v-else class="badge bg-secondary">Voided</span>
-          </td>
-        </template>
-
-        <template #cell(lines_count)="data">
-          <td class="text-center">
-            <span class="badge bg-info">
-              {{ data.item.lines?.length || 0 }}
-            </span>
-          </td>
+          <span
+            v-if="data.item.is_active"
+            class="badge bg-success">
+            Active
+          </span>
+          <span v-else class="badge bg-secondary">Voided</span>
         </template>
 
         <template #cell(actions)="data">
-          <td class="text-center">
-            <div class="btn-group btn-group-sm" role="group">
-              <router-link
-                v-if="hasPermission('apptransactions.view_document')"
-                :to="`/transactions/form?id=${data.item.id}&mode=view`"
-                class="btn btn-outline-success me-1">
-                View
-              </router-link>
-              <button
-                v-if="hasPermission('apptransactions.view_document')"
-                @click="findSimilarTransactions(data.item.id)"
-                class="btn btn-outline-info me-1"
-                title="Find similar transactions">
-                Similar
-              </button>
-              <button
-                v-if="hasPermission('apptransactions.view_document')"
-                @click="printTransaction(data.item.id)"
-                class="btn btn-outline-dark me-1">
-                Print
-              </button>
-              <router-link
-                v-if="hasPermission('apptransactions.change_document')"
-                :to="`/transactions/form?id=${data.item.id}`"
-                class="btn btn-outline-primary me-1">
-                Edit
-              </router-link>
-              <button
-                v-if="hasPermission('apptransactions.delete_document')"
-                @click="
-                  deleteTransaction(data.item.id, data.item.document_type_code)
-                "
-                class="btn btn-outline-danger">
-                Delete
-              </button>
-            </div>
-          </td>
+          <div class="btn-group btn-group-sm" role="group">
+            <router-link
+              v-if="hasPermission('apptransactions.view_document')"
+              :to="`/transactions/form?id=${data.item.id}&mode=view`"
+              class="btn btn-outline-success me-1">
+              View
+            </router-link>
+            <button
+              v-if="hasPermission('apptransactions.view_document')"
+              @click="findSimilarTransactions(data.item.id)"
+              class="btn btn-outline-info me-1"
+              title="Find similar transactions">
+              Similar
+            </button>
+            <button
+              v-if="hasPermission('apptransactions.view_document')"
+              @click="printTransaction(data.item.id)"
+              class="btn btn-outline-dark me-1">
+              Print
+            </button>
+            <router-link
+              v-if="hasPermission('apptransactions.change_document')"
+              :to="`/transactions/form?id=${data.item.id}`"
+              class="btn btn-outline-primary me-1">
+              Edit
+            </router-link>
+            <button
+              v-if="hasPermission('apptransactions.delete_document')"
+              @click="
+                deleteTransaction(data.item.id, data.item.document_type_code)
+              "
+              class="btn btn-outline-danger">
+              Delete
+            </button>
+          </div>
         </template>
-      </b-table>
+      </BTable>
 
-      <!-- paginación a la derecha -->
       <div class="d-flex justify-content-end mt-3">
-        <b-pagination
+        <BPagination
           v-model="currentPage"
-          :total-rows="filteredItems.length"
+          :total-rows="totalRows"
           :per-page="perPage" />
       </div>
     </BOverlay>
@@ -219,18 +214,25 @@
 import TxCard from "@/components/layout/TxCard.vue";
 import "@/assets/css/base.css";
 
-import { ref, computed, onMounted, onBeforeUnmount, getCurrentInstance } from "vue";
+import {
+  ref,
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  getCurrentInstance,
+} from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { BOverlay, BSpinner } from "bootstrap-vue-next";
+import { BOverlay, BSpinner, BTable, BPagination } from "bootstrap-vue-next";
+
+const ENDPOINT = "/api/documents-provider/";
 
 const { proxy } = getCurrentInstance();
 
-const transactions = ref([]);
-const isLoading = ref(false);
-const documentTypesMap = ref({}); // id -> type_code
-const partiesMap = ref({}); // id -> name
-const workAccountsMap = ref({}); // id -> display
+const transactionTable = ref(null);
+const isLoading = ref(true);
+const stats = ref({ total: 0, active: 0, inactive: 0 });
+const totalRows = ref(0);
 const search = ref("");
 const smartSearch = ref(false);
 const smartSearchLoading = ref(false);
@@ -262,7 +264,7 @@ const fields = [
     tdClass: "text-start",
   },
   {
-    key: "party_name",
+    key: "builder_name",
     label: "Party",
     sortable: true,
     thClass: "text-start",
@@ -282,7 +284,6 @@ const fields = [
     thClass: "text-center",
     tdClass: "text-center",
   },
-  // { key: 'lines_count', label: 'Lines', thClass: 'text-center', tdClass: 'text-center', sortable: true },
   {
     key: "total_amount",
     label: "Total",
@@ -314,134 +315,73 @@ const fields = [
   },
 ];
 
-// Helpers para DRF con o sin paginación
-const normalizeList = (data) =>
-  Array.isArray(data) ? data : data?.results ?? [];
+const tableFilter = computed(() => {
+  if (smartSearch.value || Array.isArray(similarSearchDocumentIds.value)) {
+    return "";
+  }
+  return search.value;
+});
 
-const fetchTransactions = async () => {
+const provider = async (context) => {
   try {
-    const res = await axios.get("/api/documents/?ordering=-id");
-    transactions.value = normalizeList(res.data);
-  } catch (err) {
-    const msg = err?.response?.data;
-    const status = err?.response?.status;
-    console.error(
-      "Error fetching transactions:",
-      { status, data: typeof msg === "string" ? msg?.slice?.(0, 300) : msg },
-      err
-    );
-    let userMsg = "Error loading transactions.";
-    if (status >= 500 || typeof msg === "string") {
-      userMsg =
-        "Server error loading transactions. Please try again or contact support.";
-    } else if (msg && typeof msg === "object") {
-      const d = msg.detail ?? msg.non_field_errors?.[0];
-      if (d && typeof d === "string") userMsg = d;
-      else if (Array.isArray(d) && d[0]) userMsg = String(d[0]);
+    if (!isLoading.value) {
+      isLoading.value = true;
     }
-    proxy?.notifyError?.(
-      typeof userMsg === "string" ? userMsg : "Error loading transactions."
-    );
-  }
-};
 
-const fetchDocumentTypes = async () => {
-  try {
-    const res = await axios.get("/api/document-types/?ordering=type_code");
-    const arr = normalizeList(res.data);
-    documentTypesMap.value = Object.fromEntries(
-      arr.map((dt) => [dt.id, dt.type_code])
-    );
-  } catch (err) {
-    console.error("Error fetching document types", err);
-    proxy?.notifyError?.("Error loading document types.");
-  }
-};
+    const page = context.currentPage || 1;
+    const perPageValue = context.perPage || 25;
+    const params = new URLSearchParams({
+      page: String(page),
+      per_page: String(perPageValue),
+      ordering: "-id",
+    });
 
-const fetchParties = async () => {
-  try {
-    const res = await axios.get("/api/parties/?ordering=name");
-    const arr = normalizeList(res.data);
-    partiesMap.value = Object.fromEntries(arr.map((p) => [p.id, p.name]));
-  } catch (err) {
-    console.error("Error fetching parties", err);
-    proxy?.notifyError?.("Error loading parties.");
-  }
-};
-
-const fetchWorkAccounts = async () => {
-  try {
-    const res = await axios.get("/api/work-accounts/?ordering=-id");
-    const arr = normalizeList(res.data);
-    workAccountsMap.value = Object.fromEntries(
-      arr.map((wa) => [wa.id, wa.title])
-    );
-  } catch (err) {
-    console.error("Error fetching work accounts", err);
-    proxy?.notifyError?.("Error loading work accounts.");
-  }
-};
-
-onMounted(async () => {
-  await Promise.all([
-    fetchTransactions(),
-    fetchDocumentTypes(),
-    fetchParties(),
-    fetchWorkAccounts(),
-  ]);
-});
-
-const filteredItems = computed(() => {
-  let items = transactions.value;
-
-  if (smartSearch.value && Array.isArray(smartSearchDocumentIds.value)) {
-    const idSet = new Set(smartSearchDocumentIds.value);
-    items = items.filter((item) => idSet.has(item.id));
-    return items;
-  }
-
-  if (Array.isArray(similarSearchDocumentIds.value)) {
-    const idSet = new Set(similarSearchDocumentIds.value);
-    items = items.filter((item) => idSet.has(item.id));
-    return items;
-  }
-
-  if (!search.value) return items;
-  const q = search.value.toLowerCase();
-  return items.filter((item) => {
-    const hay = [
-      documentTypesMap.value[item.document_type] || "",
-      partiesMap.value[item.party] || "",
-      item.builder_name || "",
-      workAccountsMap.value[item.work_account] || "",
-      item.work_account_display || "",
-      item.notes || "",
-    ].map((v) => (v || "").toString().toLowerCase());
-    return hay.some((t) => t.includes(q));
-  });
-});
-
-const stats = computed(() => {
-  const items = filteredItems.value;
-  return {
-    total: items.length,
-    active: items.filter((i) => i.is_active).length,
-    inactive: items.filter((i) => !i.is_active).length,
-  };
-});
-
-const refreshList = async () => {
-  isLoading.value = true;
-  try {
-    await fetchTransactions();
-    if (smartSearch.value && search.value.trim()) {
-      await runSmartSearch(search.value.trim());
+    if (smartSearch.value && Array.isArray(smartSearchDocumentIds.value)) {
+      if (!smartSearchDocumentIds.value.length) {
+        stats.value = { total: 0, active: 0, inactive: 0 };
+        totalRows.value = 0;
+        return [];
+      }
+      params.set("document_ids", smartSearchDocumentIds.value.join(","));
+    } else if (Array.isArray(similarSearchDocumentIds.value)) {
+      if (!similarSearchDocumentIds.value.length) {
+        stats.value = { total: 0, active: 0, inactive: 0 };
+        totalRows.value = 0;
+        return [];
+      }
+      params.set("document_ids", similarSearchDocumentIds.value.join(","));
+    } else {
+      const classicSearch = search.value.trim();
+      if (classicSearch) {
+        params.set("search", classicSearch);
+      }
     }
+
+    const response = await axios.get(`${ENDPOINT}?${params}`);
+
+    if (response.data?.items) {
+      if (response.data.stats) {
+        stats.value = response.data.stats;
+      }
+      totalRows.value = response.data.totalRows || 0;
+      return response.data.items;
+    }
+
+    throw new Error("Invalid response format");
+  } catch (err) {
+    console.error("Error loading transactions:", err);
+    proxy?.notifyError?.("Error loading transactions.");
+    return [];
   } finally {
     setTimeout(() => {
       isLoading.value = false;
     }, 300);
   }
+};
+
+const refreshList = () => {
+  isLoading.value = true;
+  transactionTable.value?.refresh();
 };
 
 const buildSearchSummary = (payload) => {
@@ -484,6 +424,7 @@ const runSmartSearch = async (query) => {
       summary: buildSearchSummary(response.data),
     };
     currentPage.value = 1;
+    transactionTable.value?.refresh();
   } catch (err) {
     smartSearchDocumentIds.value = [];
     searchMeta.value = { summary: "" };
@@ -493,6 +434,7 @@ const runSmartSearch = async (query) => {
     proxy?.notifyError?.(
       typeof detail === "string" ? detail : "Smart search failed."
     );
+    transactionTable.value?.refresh();
   } finally {
     smartSearchLoading.value = false;
   }
@@ -515,6 +457,7 @@ const findSimilarTransactions = async (documentId) => {
       summary: `Similar to #${documentId}: ${count} match${count === 1 ? "" : "es"}${seedSnippet ? ` · ${seedSnippet.slice(0, 80)}` : ""}`,
     };
     currentPage.value = 1;
+    transactionTable.value?.refresh();
   } catch (err) {
     similarSearchDocumentIds.value = null;
     searchMeta.value = { summary: "" };
@@ -529,11 +472,26 @@ const findSimilarTransactions = async (documentId) => {
   }
 };
 
+const resetToDefaultList = async () => {
+  if (searchDebounceTimer.value) {
+    clearTimeout(searchDebounceTimer.value);
+    searchDebounceTimer.value = null;
+  }
+  smartSearchDocumentIds.value = null;
+  similarSearchDocumentIds.value = null;
+  searchMeta.value = { summary: "" };
+  currentPage.value = 1;
+  await nextTick();
+  refreshList();
+};
+
 const onSearchInput = () => {
   similarSearchDocumentIds.value = null;
   if (!smartSearch.value) {
-    smartSearchDocumentIds.value = null;
     searchMeta.value = { summary: "" };
+    if (!search.value.trim()) {
+      resetToDefaultList();
+    }
     return;
   }
 
@@ -543,8 +501,7 @@ const onSearchInput = () => {
 
   const query = search.value.trim();
   if (!query) {
-    smartSearchDocumentIds.value = null;
-    searchMeta.value = { summary: "" };
+    resetToDefaultList();
     return;
   }
 
@@ -559,14 +516,14 @@ const onSmartSearchToggle = () => {
   searchMeta.value = { summary: "" };
   if (smartSearch.value && search.value.trim()) {
     runSmartSearch(search.value.trim());
+  } else {
+    transactionTable.value?.refresh();
   }
 };
 
-const clearSearch = () => {
+const clearSearch = async () => {
   search.value = "";
-  smartSearchDocumentIds.value = null;
-  similarSearchDocumentIds.value = null;
-  searchMeta.value = { summary: "" };
+  await resetToDefaultList();
 };
 
 onBeforeUnmount(() => {
@@ -597,11 +554,10 @@ const deleteTransaction = (id, documentTypeCode) => {
     async () => {
       try {
         await axios.delete(`/api/documents/${id}/`);
-        transactions.value = transactions.value.filter((t) => t.id !== id);
         proxy?.notifyToastSuccess?.("The transaction has been deleted.");
+        refreshList();
       } catch (err) {
         console.error("Error deleting transaction", err);
-        // Manejo de tu custom_exception_handler (409 in use)
         const detail =
           err?.response?.data?.detail || "Error deleting the transaction.";
         proxy?.notifyError?.(detail);
@@ -610,7 +566,6 @@ const deleteTransaction = (id, documentTypeCode) => {
   );
 };
 
-// Función helper para detectar si es dispositivo móvil
 const isMobileDevice = () => {
   return (
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -619,7 +574,6 @@ const isMobileDevice = () => {
   );
 };
 
-// Función para imprimir PDF de transacción
 const printTransaction = async (documentId) => {
   try {
     const response = await axios.get(`/api/documents/${documentId}/pdf/`, {
@@ -632,7 +586,6 @@ const printTransaction = async (documentId) => {
       throw new Error("No se recibió el archivo PDF");
     }
 
-    // Decodificar base64 y crear blob
     const byteCharacters = atob(response.data.file);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
@@ -643,7 +596,6 @@ const printTransaction = async (documentId) => {
     const url = window.URL.createObjectURL(blob);
 
     if (isMobileDevice()) {
-      // En móvil: descargar directamente
       const link = document.createElement("a");
       link.href = url;
       link.download = response.data.filename || `transaction_${documentId}.pdf`;
@@ -652,10 +604,8 @@ const printTransaction = async (documentId) => {
       document.body.removeChild(link);
       proxy?.notifyToastSuccess?.("PDF generated and downloaded successfully.");
     } else {
-      // En desktop: abrir en nueva ventana
       const newWindow = window.open(url, "_blank");
       if (!newWindow) {
-        // Si no se puede abrir nueva ventana (bloqueador de popups), descargar
         const link = document.createElement("a");
         link.href = url;
         link.download =
@@ -671,7 +621,6 @@ const printTransaction = async (documentId) => {
       }
     }
 
-    // Limpiar la URL después de un tiempo
     setTimeout(() => {
       window.URL.revokeObjectURL(url);
     }, 1000);

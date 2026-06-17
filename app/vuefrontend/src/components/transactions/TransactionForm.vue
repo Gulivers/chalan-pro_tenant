@@ -7,7 +7,7 @@
         <div
           class="d-none d-md-flex align-items-center justify-content-between">
           <h6 class="mb-0 text-primary">
-            {{ isEditMode ? "Edit Transaction" : "New Transaction" }}
+            {{ pageTitle }}
           </h6>
           <div class="d-flex align-items-center gap-3">
             <!-- is_active switch -->
@@ -23,7 +23,8 @@
                 type="checkbox"
                 role="switch"
                 id="isActiveSwitch"
-                v-model="form.is_active" />
+                v-model="form.is_active"
+                :disabled="isReadOnly" />
               <label
                 class="form-check-label"
                 :class="{ 'text-danger': !form.is_active }"
@@ -42,28 +43,29 @@
                 v-if="!isEditMode"
                 class="btn btn-success"
                 type="button"
-                :disabled="submitting"
+                :disabled="formBusy"
                 @click="handleSaveAndAddAnother">
-                <span v-if="!submitting">+</span>
+                <span v-if="!formBusy">+</span>
                 <span
                   v-else
                   class="spinner-border spinner-border-sm me-2"
                   role="status"
                   aria-hidden="true"></span>
-                {{ submitting ? "Saving..." : "Save and Add Another" }}
+                {{ saveButtonLabel }}
               </button>
               <button
+                v-if="!isViewMode"
                 class="btn btn-primary"
                 type="button"
-                :disabled="submitting"
+                :disabled="formBusy"
                 @click="handleSubmit">
-                <span v-if="!submitting">💾</span>
+                <span v-if="!formBusy">💾</span>
                 <span
                   v-else
                   class="spinner-border spinner-border-sm me-2"
                   role="status"
                   aria-hidden="true"></span>
-                {{ submitting ? "Saving..." : "Save" }}
+                {{ saveButtonLabel }}
               </button>
             </div>
           </div>
@@ -74,7 +76,7 @@
           <!-- Title Row -->
           <div class="d-flex align-items-center justify-content-between mb-2">
             <h6 class="mb-0 text-primary">
-              {{ isEditMode ? "Edit Transaction" : "New Transaction" }}
+              {{ pageTitle }}
             </h6>
             <!-- is_active switch -->
             <div
@@ -89,7 +91,8 @@
                 type="checkbox"
                 role="switch"
                 id="isActiveSwitchMobile"
-                v-model="form.is_active" />
+                v-model="form.is_active"
+                :disabled="isReadOnly" />
               <label
                 class="form-check-label small"
                 :class="{ 'text-danger': !form.is_active }"
@@ -111,33 +114,30 @@
               v-if="!isEditMode"
               class="btn btn-success btn-sm flex-fill"
               type="button"
-              :disabled="submitting"
+              :disabled="formBusy"
               @click="handleSaveAndAddAnother">
-              <span v-if="!submitting">+</span>
+              <span v-if="!formBusy">+</span>
               <span
                 v-else
                 class="spinner-border spinner-border-sm me-1"
                 role="status"
                 aria-hidden="true"></span>
-              <span class="d-none d-sm-inline">
-                {{ submitting ? "Saving..." : "Save & Add" }}
-              </span>
-              <span class="d-sm-none">
-                {{ submitting ? "Saving..." : "Add" }}
-              </span>
+              <span class="d-none d-sm-inline">{{ saveButtonLabelMobile }}</span>
+              <span class="d-sm-none">{{ saveButtonLabelMobileShort }}</span>
             </button>
             <button
+              v-if="!isViewMode"
               class="btn btn-primary btn-sm flex-fill"
               type="button"
-              :disabled="submitting"
+              :disabled="formBusy"
               @click="handleSubmit">
-              <span v-if="!submitting">💾</span>
+              <span v-if="!formBusy">💾</span>
               <span
                 v-else
                 class="spinner-border spinner-border-sm me-1"
                 role="status"
                 aria-hidden="true"></span>
-              {{ submitting ? "Saving..." : "Save" }}
+              {{ saveButtonLabel }}
             </button>
           </div>
         </div>
@@ -153,7 +153,8 @@
                 <DocumentTypeSelector
                   v-model="form.document_type"
                   :error="errors.document_type"
-                  :required="true" />
+                  :required="true"
+                  :disabled="isReadOnly" />
               </div>
 
               <div class="col-12">
@@ -181,16 +182,18 @@
                 <BuilderSelector
                   v-else-if="!isOperationalDocument && !isFromSchedule"
                   v-model="form.builder"
-                  :error="errors.builder" />
+                  :error="errors.builder"
+                  :disabled="isReadOnly" />
 
                 <!-- Work account selector when document is operational and not from schedule -->
                 <WorkAccountSelector
                   v-else-if="isOperationalDocument && !isFromSchedule"
                   v-model="form.work_account"
-                  :error="errors.work_account" />
+                  :error="errors.work_account"
+                  :disabled="isReadOnly" />
               </div>
 
-              <div class="col-12 mt-1">
+              <div v-if="!isViewMode" class="col-12 mt-1">
                 <div
                   class="form-check form-switch mb-2 my-1 ms-2 d-flex align-items-center flex-wrap gap-2"
                   v-tt
@@ -228,7 +231,7 @@
           <div class="col-12 col-md-6">
             <div class="row g-2">
               <!-- Mobile: stack favorites and date; desktop: side by side -->
-              <div class="col-12 col-sm-6">
+              <div v-if="!isViewMode" class="col-12 col-sm-6">
                 <label class="form-label d-flex gap-1">Add to favorites</label>
                 <div class="d-flex flex-column align-items-start">
                   <button
@@ -256,13 +259,14 @@
                   type="date"
                   class="form-control"
                   v-model="form.date"
-                  id="dateInput" />
+                  id="dateInput"
+                  :disabled="isReadOnly" />
                 <div class="text-danger small" v-if="errors.date">
                   {{ errors.date[0] }}
                 </div>
               </div>
 
-              <div class="col-12">
+              <div v-if="!isViewMode" class="col-12">
                 <FavoriteTransactionSelector
                   ref="favoriteSelectorRef"
                   v-model="selectedFavoriteId"
@@ -297,7 +301,9 @@
                   class="form-control"
                   v-model.trim="form.notes"
                   placeholder="Additional notes..."
-                  id="notesInput"></textarea>
+                  id="notesInput"
+                  :disabled="isReadOnly"
+                  :readonly="isViewMode"></textarea>
                 <div class="text-danger small" v-if="errors.notes">
                   {{ errors.notes[0] }}
                 </div>
@@ -308,7 +314,12 @@
 
         <hr class="my-4" />
 
-        <p v-if="linesGridDisabled" class="text-muted small mb-2">
+        <p v-if="loadingDocument" class="text-muted small mb-2">
+          Loading transaction...
+        </p>
+        <p
+          v-else-if="linesGridDisabled && !isViewMode"
+          class="text-muted small mb-2">
           Select a document type or import a favorite to edit lines.
         </p>
 
@@ -466,8 +477,36 @@ const workAccountParam = route.query.work_account_id
   : route.query.work_account
   ? Number(route.query.work_account)
   : null; // Fallback para compatibilidad
-const isEditMode = !!idParam;
+const isViewMode = computed(() => route.query.mode === "view");
+const isEditMode = computed(() => !!idParam && !isViewMode.value);
 const submitting = ref(false);
+const loadingDocument = ref(!!idParam);
+const formBusy = computed(() => submitting.value || loadingDocument.value);
+const isReadOnly = computed(() => isViewMode.value || loadingDocument.value);
+
+const pageTitle = computed(() => {
+  if (isViewMode.value) return "View Transaction";
+  if (isEditMode.value) return "Edit Transaction";
+  return "New Transaction";
+});
+
+const saveButtonLabel = computed(() => {
+  if (loadingDocument.value) return "Loading...";
+  if (submitting.value) return "Saving...";
+  return "Save";
+});
+
+const saveButtonLabelMobile = computed(() => {
+  if (loadingDocument.value) return "Loading...";
+  if (submitting.value) return "Saving...";
+  return "Save & Add";
+});
+
+const saveButtonLabelMobileShort = computed(() => {
+  if (loadingDocument.value) return "Loading...";
+  if (submitting.value) return "Saving...";
+  return "Add";
+});
 /** Muestra el panel de importación Excel solo si el usuario lo activa (carga diferida del chunk) */
 const showExcelImportPanel = ref(false);
 const loading = reactive({
@@ -671,7 +710,8 @@ const linesGridUnlockedByFavoriteImport = ref(false);
 
 const linesGridDisabled = computed(
   () =>
-    !form.document_type && !linesGridUnlockedByFavoriteImport.value
+    isReadOnly.value ||
+    (!form.document_type && !linesGridUnlockedByFavoriteImport.value)
 );
 
 // Opciones adicionales para los componentes
@@ -1078,6 +1118,7 @@ function resetFormForNewTransaction() {
 
 // Función para guardar y agregar otra transacción
 async function handleSaveAndAddAnother() {
+  if (formBusy.value) return;
   submitting.value = true;
   clearErrors();
   try {
@@ -1340,6 +1381,7 @@ async function fetchStaticOptions() {
 }
 
 async function loadDocument(id) {
+  loadingDocument.value = true;
   try {
     const { data } = await axios.get(`/api/documents/${id}/`);
     // console.log("💊Soy loadDocument")
@@ -1512,6 +1554,8 @@ async function loadDocument(id) {
     });
     router.push({ name: "transactions" }).catch(() => {});
     return;
+  } finally {
+    loadingDocument.value = false;
   }
 }
 
@@ -1672,6 +1716,7 @@ function applyServerErrors(errData) {
 }
 
 async function handleSubmit() {
+  if (isViewMode.value || formBusy.value) return;
   submitting.value = true;
   clearErrors();
   try {
@@ -1705,8 +1750,10 @@ async function handleSubmit() {
       });
     });
 
-    const url = isEditMode ? `/api/documents/${idParam}/` : "/api/documents/";
-    const method = isEditMode ? "put" : "post";
+    const url = isEditMode.value
+      ? `/api/documents/${idParam}/`
+      : "/api/documents/";
+    const method = isEditMode.value ? "put" : "post";
     const { data } = await axios[method](url, payload);
     const documentId = data.id || idParam;
 
@@ -2078,7 +2125,7 @@ onMounted(async () => {
     await loadWorkAccountTitle(workAccountParam);
   }
 
-  if (isEditMode) {
+  if (idParam) {
     await loadDocument(idParam);
     // Si viene desde schedule y estamos editando, también cargar el título si no se cargó antes
     if (workAccountParam && !workAccountTitle.value && form.work_account) {

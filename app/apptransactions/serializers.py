@@ -263,6 +263,46 @@ class DocumentLineInlineSerializer(serializers.ModelSerializer):
         return obj.serialized_items_created.count()
 
 
+class DocumentListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for transaction list views (no lines / serialized items)."""
+
+    document_type_code = serializers.CharField(source="document_type.type_code", read_only=True)
+    builder_name = serializers.SerializerMethodField()
+    work_account_display = serializers.SerializerMethodField()
+    lines_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Document
+        fields = [
+            "id",
+            "document_type",
+            "document_type_code",
+            "date",
+            "builder",
+            "builder_name",
+            "work_account",
+            "work_account_display",
+            "notes",
+            "total_discount",
+            "total_amount",
+            "is_active",
+            "lines_count",
+        ]
+
+    def get_builder_name(self, obj):
+        builder = getattr(obj, "builder", None)
+        return getattr(builder, "name", None) or ""
+
+    def get_work_account_display(self, obj):
+        wa = getattr(obj, "work_account", None)
+        if not wa:
+            return ""
+        try:
+            return str(wa)
+        except Exception:
+            return getattr(wa, "title", "") or ""
+
+
 class DocumentSerializer(serializers.ModelSerializer):
     document_type_code = serializers.CharField(source="document_type.type_code", read_only=True)
     document_type_creates_serialized_items = serializers.BooleanField(

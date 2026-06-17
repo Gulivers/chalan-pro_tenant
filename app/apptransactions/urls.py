@@ -2,8 +2,8 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     DocumentTypeViewSet, PartyTypeViewSet, PartyCategoryViewSet, PartyViewSet,
-    DocumentViewSet, DocumentLineViewSet, WorkAccountViewSet, TransactionFavoriteViewSet,
-    download_transaction_pdf
+    DocumentViewSet, DocumentListProviderAPIView, DocumentLineViewSet, WorkAccountViewSet,
+    TransactionFavoriteViewSet, download_transaction_pdf,
 )
 
 router = DefaultRouter()
@@ -18,5 +18,6 @@ router.register(r'transaction-favorites', TransactionFavoriteViewSet, basename='
 
 urlpatterns = [
     path('api/', include(router.urls)),
+    path('api/documents-provider/', DocumentListProviderAPIView.as_view(), name='documents-provider'),
     path('api/documents/<int:document_id>/pdf/', download_transaction_pdf, name='download-transaction-pdf'),
 ]
