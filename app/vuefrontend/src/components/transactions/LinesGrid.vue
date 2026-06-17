@@ -17,7 +17,7 @@
             <button
               class="btn btn-outline-info"
               type="button"
-              :disabled="!hasSelection"
+              :disabled="disabled || !hasSelection"
               @click="duplicateSelected"
               v-tt
               data-title="Duplicate the selected lines">
@@ -27,7 +27,7 @@
             <button
               class="btn btn-outline-danger"
               type="button"
-              :disabled="!hasSelection"
+              :disabled="disabled || !hasSelection"
               @click="removeSelected"
               v-tt
               data-title="Remove the selected lines">
@@ -38,6 +38,7 @@
               v-if="documentId && documentTypeCreatesSerializedItems"
               class="btn btn-outline-secondary"
               type="button"
+              :disabled="disabled"
               @click="$emit('open-asset-tags')"
               v-tt
               data-title="Assign serial numbers for serialized items of this document (only for document types that create serialized items, e.g. GRN)">
@@ -71,7 +72,7 @@
           <button
             class="btn btn-outline-info btn-sm flex-fill"
             type="button"
-            :disabled="!hasSelection"
+            :disabled="disabled || !hasSelection"
             @click="duplicateSelected"
             v-tt
             data-title="Duplicate the selected lines">
@@ -82,7 +83,7 @@
           <button
             class="btn btn-outline-danger btn-sm flex-fill"
             type="button"
-            :disabled="!hasSelection"
+            :disabled="disabled || !hasSelection"
             @click="removeSelected"
             v-tt
             data-title="Remove the selected lines">
@@ -94,6 +95,7 @@
           v-if="documentId && documentTypeCreatesSerializedItems"
           class="btn btn-outline-secondary btn-sm flex-fill"
           type="button"
+          :disabled="disabled"
           @click="$emit('open-asset-tags')"
           v-tt
           data-title="Assign serial numbers for serialized items of this document (only for document types that create serialized items, e.g. GRN)">
@@ -422,7 +424,7 @@
           <button
             class="btn btn-outline-info btn-sm"
             type="button"
-            :disabled="!hasSelection"
+            :disabled="disabled || !hasSelection"
             @click="duplicateSelected"
             v-tt
             data-title="Duplicate the selected lines">
@@ -432,7 +434,7 @@
           <button
             class="btn btn-outline-danger btn-sm"
             type="button"
-            :disabled="!hasSelection"
+            :disabled="disabled || !hasSelection"
             @click="removeSelected"
             v-tt
             data-title="Remove the selected lines">
@@ -458,7 +460,7 @@
         <button
           class="btn btn-outline-info btn-sm flex-fill"
           type="button"
-          :disabled="!hasSelection"
+          :disabled="disabled || !hasSelection"
           @click="duplicateSelected"
           v-tt
           data-title="Duplicate the selected lines">
@@ -469,7 +471,7 @@
         <button
           class="btn btn-outline-danger btn-sm flex-fill"
           type="button"
-          :disabled="!hasSelection"
+          :disabled="disabled || !hasSelection"
           @click="removeSelected"
           v-tt
           data-title="Remove the selected lines">

@@ -15,6 +15,7 @@
         v-model="selectedValue"
         :clearable="false"
         :loading="loading"
+        :disabled="disabled"
         placeholder="Select document type..."
         class="flex-grow-1"
         :class="{ 'is-invalid': hasError }"
@@ -25,7 +26,7 @@
         class="btn btn-outline-secondary btn-sm ms-1"
         type="button"
         @click="openModal('add')"
-        :disabled="!hasPermission('apptransactions.add_documenttype')"
+        :disabled="disabled || !hasPermission('apptransactions.add_documenttype')"
         v-tt
         data-title="Add a new document type to the system">
         <img src="@assets/img/icon-addlink.svg" alt="Add" width="15" height="15" />
@@ -35,7 +36,7 @@
         class="btn btn-outline-secondary btn-sm ms-1"
         type="button"
         @click="openModal('edit', selectedValue)"
-        :disabled="!hasPermission('apptransactions.change_documenttype')"
+        :disabled="disabled || !hasPermission('apptransactions.change_documenttype')"
         v-tt
         data-title="Edit the currently selected document type">
         <img src="@assets/img/icon-changelink.svg" alt="Edit" width="15" height="15" />
@@ -82,6 +83,10 @@ const props = defineProps({
   required: {
     type: Boolean,
     default: true
+  },
+  disabled: {
+    type: Boolean,
+    default: false
   }
 })
 

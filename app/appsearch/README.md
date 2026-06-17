@@ -114,15 +114,87 @@ Pipeline: parser de intents (montos, fechas, compras/ventas) → resolución de 
 
 | Filtro | Cuándo |
 |--------|--------|
-| `document_type_id` | Código (`PINV`) o descripción fuzzy (`Purchase Invoice`) |
+| `document_type_id` | Código (`PINV`) o descripción fuzzy (`Purchase Invoice`). Frases compuestas (`sales order`, `purchase return`, …) no se descomponen en filtros `is_sales`/`is_purchase` para evitar conflictos. |
 | `document_total_gte` | Monto «over $X» sin texto de producto (p. ej. compras por party) |
 | `line_final_price_gte` | Monto «over $X» con texto semántico de producto/concepto |
+
+**Relevancia (Fase 3.1):**
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `SEARCH_MIN_RELEVANCE_SCORE` | `0.12` | Descarta coincidencias híbridas por debajo de este score |
+
+Si la consulta parece un **tipo de transacción** (p. ej. «missing material») y ningún `DocumentType` del tenant coincide, la API devuelve **0 resultados** con `notice` en lugar de buscar semánticamente «material» en productos/categorías.
 
 Tras cambiar metadata del chunk (`document_total_amount`), ejecutar `reindex_document_lines` por tenant (opcional para total de documento: el filtro usa `Document.total_amount` en BD).
 
 ### UI
 
 Checkbox **Smart search (AI)** en `/transactions` (Vue). Requiere permiso `apptransactions.view_document`.
+
+Botón **Similar** por fila → `POST /api/search/transactions/similar/`.
+
+---
+
+## Fase 3 — Advanced Retrieval
+
+### Transacciones similares
+
+`POST /api/search/transactions/similar/`
+
+```json
+{ "document_id": 75, "limit": 20 }
+```
+
+Opcional: `document_line_id` en lugar de `document_id`. Excluye el documento origen; k-NN sobre embeddings de `SearchIndex`.
+
+### Rank fusion (híbrido)
+
+Variables en `envs/backend*.env`:
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `SEARCH_FUSION_MODE` | `weighted` | `weighted` o `rrf` |
+| `SEARCH_FUSION_VECTOR_WEIGHT` | `0.6` | Peso similitud vectorial |
+| `SEARCH_FUSION_FTS_WEIGHT` | `0.4` | Peso FTS (BM25-like via SearchRank) |
+| `SEARCH_FUSION_RRF_K` | `60` | Constante k para RRF |
+
+### Aliases de Builder
+
+Modelo **`BuilderAlias`** (admin por tenant): alias → `ctrctsapp.Builder`. Usado en resolución de party (`matched_alias` en respuesta API).
+
+### Outbox robusto
+
+| Variable | Default |
+|----------|---------|
+| `SEARCH_OUTBOX_MAX_ATTEMPTS` | `5` |
+
+Tras agotar reintentos → `dead_letter_at`. Comandos:
+
+```bash
+docker compose exec backend python manage.py outbox_status
+docker compose exec backend python manage.py requeue_dead_letter_outbox --schema TU_SCHEMA
+```
+
+### Métricas
+
+Telemetría ligera en **`SearchTelemetry`** (latencia y recuento por request):
+
+```bash
+docker compose exec backend python manage.py search_metrics --schema TU_SCHEMA --days 7
+docker compose exec backend python manage.py search_eval --schema TU_SCHEMA --queries-file /path/eval.json
+```
+
+`search_eval` espera JSON en `app/appsearch/eval/golden_queries.<schema>.json`. Ver **`app/appsearch/eval/README.md`**.
+
+```bash
+./scripts/run_search_eval.sh --dev test_dominio_local
+./scripts/run_search_eval.sh --dev test_dominio_local --fail-under 0.95
+python manage.py seed_builder_aliases --schema TU_SCHEMA
+./scripts/reindex_search_after_chunk_change.sh --dev --schema TU_SCHEMA
+```
+
+Tras desplegar Fase 3: **`migrate_schemas`**.
 
 ---
 

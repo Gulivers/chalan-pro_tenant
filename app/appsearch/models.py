@@ -89,6 +89,11 @@ class IndexOutbox(models.Model):
     processed_at = models.DateTimeField(null=True, blank=True)
     attempts = models.PositiveSmallIntegerField(default=0)
     last_error = models.TextField(blank=True)
+    dead_letter_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='Set when max retry attempts are exhausted (requires manual requeue).',
+    )
 
     class Meta:
         verbose_name = 'Index outbox entry'
@@ -97,10 +102,68 @@ class IndexOutbox(models.Model):
             models.Index(
                 fields=['processed_at', 'created_at'],
                 name='search_outbox_pending',
-                condition=models.Q(processed_at__isnull=True),
+                condition=models.Q(processed_at__isnull=True, dead_letter_at__isnull=True),
             ),
+            models.Index(fields=['dead_letter_at'], name='search_outbox_dead_letter'),
         ]
         ordering = ['created_at']
 
     def __str__(self):
         return f'{self.action} {self.source_type}:{self.source_id}'
+
+    @property
+    def is_dead_letter(self) -> bool:
+        return self.dead_letter_at is not None and self.processed_at is None
+
+
+class BuilderAlias(models.Model):
+    """Alternate names for Builder party resolution in semantic search."""
+
+    builder = models.ForeignKey(
+        'ctrctsapp.Builder',
+        on_delete=models.CASCADE,
+        related_name='search_aliases',
+    )
+    alias = models.CharField(max_length=255)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Builder search alias'
+        verbose_name_plural = 'Builder search aliases'
+        ordering = ['alias']
+        indexes = [
+            models.Index(fields=['alias'], name='search_builder_alias'),
+        ]
+
+    def __str__(self):
+        return f'{self.alias} → {self.builder_id}'
+
+
+class SearchTelemetry(models.Model):
+    """Lightweight API latency/result metrics per tenant (Phase 3)."""
+
+    OP_SEARCH = 'search'
+    OP_SIMILAR = 'similar'
+
+    OPERATION_CHOICES = [
+        (OP_SEARCH, 'Transaction search'),
+        (OP_SIMILAR, 'Similar transactions'),
+    ]
+
+    operation = models.CharField(max_length=16, choices=OPERATION_CHOICES)
+    latency_ms = models.PositiveIntegerField()
+    result_count = models.PositiveIntegerField(default=0)
+    query_length = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Search telemetry entry'
+        verbose_name_plural = 'Search telemetry entries'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['operation', 'created_at'], name='search_telemetry_op_created'),
+        ]
+
+    def __str__(self):
+        return f'{self.operation} {self.latency_ms}ms ({self.result_count} results)'
