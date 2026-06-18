@@ -660,7 +660,7 @@ docker compose exec backend python manage.py create_tenant_superuser \
 cd /opt/chalanpro
 
 # 2. Actualizar código desde Git
-git pull origin main
+git fetch origin && git checkout main_deploy && git pull origin main_deploy
 
 # 3. Reconstruir y reiniciar el contenedor backend
 cd /opt/chalanpro
@@ -696,7 +696,7 @@ docker compose logs -f backend | grep -i "websocket\|tenant"
 cd /opt/chalanpro
 
 # 2. Actualizar código desde Git
-git pull origin main
+git fetch origin && git checkout main_deploy && git pull origin main_deploy
 
 # 3. Reconstruir el frontend (esto compila Vue.js)
 cd /opt/chalanpro
@@ -718,7 +718,7 @@ docker compose logs -f frontend
 ```bash
 # 1. Actualizar código
 cd /opt/chalanpro
-git pull origin main
+git fetch origin && git checkout main_deploy && git pull origin main_deploy
 
 # 2. Reconstruir ambos servicios
 cd /opt/chalanpro
@@ -746,7 +746,7 @@ sudo /opt/chalanpro/scripts/deploy-landing-vps.sh
 
 **Flujo del script (`scripts/deploy-landing-vps.sh`):**
 
-1. Actualiza código desde `origin/main` (fetch + checkout + pull `--ff-only`).
+1. Actualiza código desde `origin/main_deploy` (fetch + checkout + pull `--ff-only`).
 2. Reinicia solo `nginx` (no reconstruye `backend`/`frontend`, no migraciones).
 3. Ejecuta smoke test HTTP(S) a la landing (`https://getjobrhythm.com` por defecto).
 
@@ -786,77 +786,48 @@ El repositorio Git se movió de `/opt/chalanpro/app/` a `/opt/chalanpro/` para i
 - `certbot/` (certificados SSL)
 - `backups/` (backups de base de datos)
 
-### 4.1.1 Branches Actuales
+### 4.1.1 Branches actuales (junio 2026)
+
+| Rama | Uso |
+|------|-----|
+| **`main_deploy`** | Producción VPS — `deploy-vps.sh` / `deploy-landing-vps.sh` |
+| **`dev_local_status`** | Desarrollo ubuntu-house |
+| **`main`**, **`develop`**, **`dev_local_inv-img`** | Históricas (no desplegar; incluyen búsqueda semántica archivada) |
 
 ```bash
-# Ver branches locales
 cd /opt/chalanpro
-git branch
-
-# Ver branches remotos
-git branch -r
-
-# Ver todas las branches (locales + remotas)
 git branch -a
 ```
 
-**Branches principales:**
-
-- `main`: Branch de producción (estable)
-- `chalan_onboarding_local_12-8-25`: Branch de desarrollo/onboarding
-
-### 4.1.2 Actualizar Branch Main con Últimos Cambios
+### 4.1.2 Actualizar código en el VPS antes de desplegar
 
 ```bash
-# 1. Asegurarse de estar en main
 cd /opt/chalanpro
-git checkout main
-
-# 2. Obtener últimos cambios del remoto
 git fetch origin
-
-# 3. Ver diferencias antes de hacer merge
-git log HEAD..origin/main
-
-# 4. Hacer merge de origin/main a main local
-git merge origin/main
-
-# O usar pull (fetch + merge en un comando)
-git pull origin main
-
-# 5. Si hay conflictos, resolverlos y hacer commit
-# git add .
-# git commit -m "Resolve merge conflicts"
-
-# 6. Verificar el estado
-git status
+git checkout main_deploy
+git pull origin main_deploy
 git log --oneline -5
+git status
 ```
 
-### 4.1.3 Verificar Estado del Repositorio
+O usar directamente:
 
 ```bash
-# Ver estado actual (archivos modificados, staged, etc.)
-git status
-
-# Ver último commit
-git log -1
-
-# Ver diferencias con el remoto
-git fetch origin
-git diff main origin/main
-
-# Ver historial de commits
-git log --oneline -10
-
-# Ver información del remoto
-git remote -v
-
-# Verificar si hay cambios sin commitear
-git status --short
+sudo /opt/chalanpro/scripts/deploy-vps.sh
 ```
 
-### 4.1.4 Workflow Recomendado
+### 4.1.3 Verificar estado del repositorio
+
+```bash
+git status
+git log -1
+git fetch origin
+git diff main_deploy origin/main_deploy
+git log --oneline -10
+git remote -v
+```
+
+### 4.1.4 Workflow recomendado (VPS)
 
 1. **Antes de desplegar:**
 
@@ -864,21 +835,20 @@ git status --short
    cd /opt/chalanpro
    git fetch origin
    git status
-   git log HEAD..origin/main  # Ver qué cambios hay
+   git log HEAD..origin/main_deploy
    ```
 
-2. **Actualizar main:**
+2. **Actualizar rama de despliegue:**
 
    ```bash
-   git checkout main
-   git pull origin main
+   git checkout main_deploy
+   git pull origin main_deploy
    ```
 
-3. **Desplegar cambios:**
+3. **Desplegar:**
 
    ```bash
-   cd /opt/chalanpro
-   docker compose up -d --build backend frontend
+   sudo /opt/chalanpro/scripts/deploy-vps.sh
    ```
 
 4. **Verificar:**

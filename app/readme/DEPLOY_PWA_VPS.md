@@ -20,22 +20,24 @@ ls -la dist/
 # Debe haber: manifest.json, service-worker.js (o precache-manifest.*.js), img/icons/
 
 # 3. Verificar rama y cambios
+git checkout dev_local_status
 git status
 git diff --stat
 ```
 
-## Flujo Git (merge a main)
+## Flujo Git (hacia producción)
 
 ```bash
-# Opción recomendada: usar el script prepare_deploy
-./scripts/prepare_deploy.sh
-# Por defecto mergea dev_local_inv-img → main, push, y sincroniza develop
+# 1) Commit y push en desarrollo
+git checkout dev_local_status
+git add -A && git commit -m "feat: descripción"
+git push origin dev_local_status
 
-# O manualmente:
-git checkout main
-git pull origin main
-git merge dev_local_inv-img
-git push origin main
+# 2) Integrar en rama de despliegue
+git checkout main_deploy
+git pull origin main_deploy
+git merge dev_local_status --no-ff -m "Merge dev_local_status: descripción"
+git push origin main_deploy
 ```
 
 ## Deploy en VPS
@@ -50,7 +52,7 @@ sudo ./scripts/deploy-vps.sh
 ```
 
 El script hace:
-- `git pull origin main`
+- `git pull origin main_deploy`
 - `docker compose build --no-cache backend frontend`
 - Migraciones, collectstatic
 - Reinicio de servicios
