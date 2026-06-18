@@ -6,7 +6,7 @@
 #   Desplegar cambios de landing sin tocar backend/migraciones.
 #
 # Flujo:
-#   1) (Opcional) Actualiza código de main (fetch + checkout + pull --ff-only)
+#   1) (Opcional) Actualiza código de main_deploy (fetch + checkout + pull --ff-only)
 #   2) Reinicia nginx para servir la última versión estática de landing/dist
 #   3) Ejecuta smoke test HTTP(S) de la URL de landing
 #
@@ -44,6 +44,8 @@ for arg in "$@"; do
     esac
 done
 
+DEPLOY_BRANCH="${DEPLOY_BRANCH:-main_deploy}"
+
 cd "$PROJECT_ROOT"
 
 if [ ! -f "$COMPOSE_FILE" ]; then
@@ -54,10 +56,10 @@ fi
 echo "$LOG_PREFIX Inicio: $(date -Iseconds)"
 
 if [ "$DO_PULL" -eq 1 ]; then
-    echo "$LOG_PREFIX Paso 1/3: actualizar main desde origin..."
+    echo "$LOG_PREFIX Paso 1/3: actualizar ${DEPLOY_BRANCH} desde origin..."
     git fetch origin
-    git checkout main
-    git pull --ff-only origin main
+    git checkout "$DEPLOY_BRANCH"
+    git pull --ff-only origin "$DEPLOY_BRANCH"
 else
     echo "$LOG_PREFIX Paso 1/3: omitido (--no-pull)"
 fi

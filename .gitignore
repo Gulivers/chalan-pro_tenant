@@ -64,6 +64,7 @@ app/vuefrontend/.env
 # Ignore readme directory except specific files
 readme/*
 !readme/README_RESUMEN_GENERAL.md
+!readme/DEPLOY_GIT_LOCAL.md
 
 # Ignore certbot directory
 certbot/
