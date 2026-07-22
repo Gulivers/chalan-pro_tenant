@@ -2,18 +2,16 @@
 
 Este documento describe la configuración completa del servidor local de desarrollo para **JobRhythm** (repo técnico Chalan-Pro) en ubuntu-house.
 
-## Sincronizar `main` desde remoto (JobRhythm) — ¿rompe el entorno local?
+## Sincronizar desde remoto en ubuntu-house
 
-**Respuesta corta: no debería romper el stack local** si sigues usando `docker-compose.dev.yml` (no el de producción del VPS).
+**Rama de trabajo:** `dev_local_status` (no `main` ni `develop`, que son históricas).
 
-| Qué cambió en `main` | Impacto en ubuntu-house |
-|----------------------|-------------------------|
-| Marca JobRhythm (Vue, landing, textos) | Solo código; tras `git pull` y rebuild frontend/local `npm run serve` verás el nombre nuevo. |
-| `nginx/legacy-redirects.conf` + `docker-compose.yml` prod | **No aplica** en local si no levantas el compose de producción. |
-| `envs/backend.dev.example.env` | Plantilla actualizada; tu `envs/backend.dev.env` **no está en Git** — no se sobrescribe sola. |
-| `TENANT_BASE_DOMAIN` por defecto `jobrhythm.net` en código | Afecta **nuevos** tenants si el `.env` local no define otra cosa. |
+**Pasos recomendados tras integrar cambios remotos:**
 
-**Pasos recomendados tras `git pull origin main` en ubuntu-house:**
+```bash
+git checkout dev_local_status
+git pull origin dev_local_status
+```
 
 1. Actualizar plantilla y revisar tu env local (no reemplazar a ciegas si tienes datos de prueba):
    ```bash
@@ -39,7 +37,9 @@ Este documento describe la configuración completa del servidor local de desarro
 
 5. Landing local (opcional): `cd landing && npm run build` — dominios reales de marketing no son necesarios en LAN.
 
-**Producción (VPS):** despliegue desde rama `main` con `docker-compose.yml` y `scripts/deploy-vps.sh`.
+**Producción (VPS):** despliegue desde rama **`main_deploy`** con `docker-compose.yml` y `scripts/deploy-vps.sh`.
+
+**Desarrollo (ubuntu-house):** rama **`dev_local_status`**, `docker-compose.dev.yml`.
 
 ## 📋 Tabla de Contenidos
 

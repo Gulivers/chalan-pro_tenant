@@ -31,7 +31,17 @@ Este documento da contexto a los agentes de IA (Cursor, Copilot, etc.) en el pro
 
 - Las reglas específicas del entorno ubuntu-house están en **`.cursor/rules/`** (por ejemplo `ubuntu-house.mdc`). Cursor las aplica automáticamente.
 - **Idioma:** responder en español por defecto.
-- **Git:** sincronización local descrita en `readme/DEPLOY_GIT_LOCAL.md` (o el doc equivalente en `readme/`). No incluir `envs/*.env` ni `postgres_data/` en commits.
+- **Git:** sincronización local en `readme/DEPLOY_GIT_LOCAL.md`. No incluir `envs/*.env` ni `postgres_data/` en commits.
+
+## Ramas Git (junio 2026)
+
+| Rama | Uso |
+|------|-----|
+| **`dev_local_status`** | Desarrollo activo en ubuntu-house |
+| **`main_deploy`** | Producción VPS (`deploy-vps.sh`, `deploy-landing-vps.sh`) |
+| **`main`**, **`develop`**, **`dev_local_inv-img`** | Históricas (con búsqueda semántica archivada; no desplegar) |
+
+Flujo: commit en `dev_local_status` → merge a `main_deploy` → push → en VPS `sudo ./scripts/deploy-vps.sh`.
 
 ## Documentación útil
 

@@ -64,6 +64,7 @@ app/vuefrontend/.env
 # Ignore readme directory except specific files
 readme/*
 !readme/README_RESUMEN_GENERAL.md
+!readme/DEPLOY_GIT_LOCAL.md
 
 # Ignore certbot directory
 certbot/
@@ -79,6 +80,12 @@ scripts/sync_local_branches.sh
 scripts/deploy_to_hostinger.sh
 scripts/sync_local_prepare_deploy.sh
 scripts/sync_main_with_remote.sh
+
+# Migraciones de datos one-off / dumps locales (solo ubuntu-house)
+A-TMP_migration/
+
+# Hosts locales (IPs LAN); no versionar cambios de máquina
+scripts/hosts_entries.txt
 
 # Scripts Certbot wildcard / Hostinger API (específicos del VPS)
 scripts/certbot_hostinger_auth.py

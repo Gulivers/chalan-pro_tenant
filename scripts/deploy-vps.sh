@@ -5,7 +5,7 @@
 # Uso: sudo /opt/chalanpro/scripts/deploy-vps.sh [--no-pull] [--no-build] [--no-migrate]
 #
 # Ejecutar desde el VPS. Por defecto:
-#   - git pull origin main
+#   - git pull origin main_deploy
 #   - build de backend y frontend
 #   - up de servicios en orden, migraciones, collectstatic, restart
 #
@@ -32,6 +32,8 @@ for arg in "$@"; do
     esac
 done
 
+DEPLOY_BRANCH="${DEPLOY_BRANCH:-main_deploy}"
+
 cd "$PROJECT_ROOT"
 
 if [ ! -f "$COMPOSE_FILE" ]; then
@@ -41,12 +43,12 @@ fi
 
 echo "$LOG_PREFIX Iniciando deploy en $(hostname) — $(date -Iseconds)"
 
-# --- Git (solo main)
+# --- Git (rama de despliegue: main_deploy)
 if [ "$DO_PULL" -eq 1 ]; then
-    echo "$LOG_PREFIX Git fetch + checkout main + pull..."
+    echo "$LOG_PREFIX Git fetch + checkout ${DEPLOY_BRANCH} + pull..."
     git fetch origin
-    git checkout main
-    git pull origin main
+    git checkout "$DEPLOY_BRANCH"
+    git pull origin "$DEPLOY_BRANCH"
 else
     echo "$LOG_PREFIX Omitting git pull (--no-pull)"
 fi

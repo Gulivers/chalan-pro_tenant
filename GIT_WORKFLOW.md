@@ -1,13 +1,49 @@
 # Git Workflow - Desarrollo Local y Producción VPS
 
-## Objetivo
-Mantener la rama `main` estable para producción (VPS Hostinger) mientras se desarrolla en local (ubuntu-house) sin romper el sistema en producción.
+## Ramas actuales (junio 2026)
+
+| Rama | Rol |
+|------|-----|
+| **`dev_local_status`** | Desarrollo activo en ubuntu-house |
+| **`main_deploy`** | Producción VPS — única rama que debe desplegarse |
+| **`main`**, **`develop`**, **`dev_local_inv-img`** | Históricas (archivo; incluyen búsqueda semántica no desplegada) |
+
+**Flujo resumido:** `dev_local_status` → merge → `main_deploy` → push → `deploy-vps.sh` en VPS.
+
+Detalle operativo: `readme/DEPLOY_GIT_LOCAL.md` y `AGENTS.md`.
+
+---
+
+## Objetivo (modelo clásico — referencia)
+
+Mantener la rama de **despliegue** estable para producción (VPS Hostinger) mientras se desarrolla en local (ubuntu-house) sin romper el sistema en producción. Desde junio 2026 la rama de despliegue es **`main_deploy`** (antes `main`).
 
 ## Estrategia de Ramas
 
-### Ramas Principales
+### Ramas activas
 
-1. **`main`** (Producción)
+1. **`main_deploy`** (Producción VPS)
+   - ✅ Código probado listo para Hostinger
+   - ✅ Usada por `scripts/deploy-vps.sh` y `deploy-landing-vps.sh`
+   - ✅ Recibe merges desde `dev_local_status`
+
+2. **`dev_local_status`** (Desarrollo ubuntu-house)
+   - ✅ Rama de trabajo habitual en casa
+   - ✅ Commits y pruebas con `docker-compose.dev.yml`
+   - ✅ Sin búsqueda semántica (`appsearch` eliminado)
+
+### Ramas históricas (no desplegar)
+
+- **`main`**, **`develop`**, **`dev_local_inv-img`**: conservan el historial con búsqueda semántica; no usar para VPS.
+- **`backup-dev_local_inv-img-semantic-search-*`**: snapshot de recuperación.
+
+### Ramas legacy en este documento
+
+Las secciones siguientes describen el modelo **`main` / `develop` / feature`** usado antes de junio 2026. Sustituir mentalmente **`main` → `main_deploy`** y **`develop` / `dev_local_inv-img` → `dev_local_status`** para el flujo actual.
+
+### Ramas Principales (referencia histórica)
+
+1. **`main`** (Producción — histórica)
    - ✅ **Solo código probado y estable**
    - ✅ Usado por el VPS en Hostinger
    - ✅ **NUNCA** hacer push directo de cambios experimentales
