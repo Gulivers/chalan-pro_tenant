@@ -172,7 +172,6 @@ TENANT_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'corsheaders',
-    'appsearch.apps.AppsearchConfig',
     'auditapp',
     'ctrctsapp',
     'crewsapp',
@@ -570,20 +569,6 @@ else:
     }
 
 ENABLE_WEBSOCKET_NOTIFICATIONS = os.environ.get('ENABLE_WEBSOCKET_NOTIFICATIONS', 'True') == 'True'
-
-# Semantic search (OpenAI embeddings + pgvector SearchIndex)
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
-SEARCH_EMBEDDING_MODEL = os.environ.get('SEARCH_EMBEDDING_MODEL', 'text-embedding-3-small')
-SEARCH_EMBEDDING_DIMENSIONS = int(os.environ.get('SEARCH_EMBEDDING_DIMENSIONS', '1536'))
-SEARCH_INDEXING_ENABLED = os.environ.get('SEARCH_INDEXING_ENABLED', 'True') == 'True'
-SEARCH_INDEX_BATCH_SIZE = int(os.environ.get('SEARCH_INDEX_BATCH_SIZE', '50'))
-SEARCH_OUTBOX_MAX_ATTEMPTS = int(os.environ.get('SEARCH_OUTBOX_MAX_ATTEMPTS', '5'))
-SEARCH_FUSION_MODE = os.environ.get('SEARCH_FUSION_MODE', 'weighted')
-SEARCH_FUSION_VECTOR_WEIGHT = float(os.environ.get('SEARCH_FUSION_VECTOR_WEIGHT', '0.6'))
-SEARCH_FUSION_FTS_WEIGHT = float(os.environ.get('SEARCH_FUSION_FTS_WEIGHT', '0.4'))
-SEARCH_FUSION_RRF_K = int(os.environ.get('SEARCH_FUSION_RRF_K', '60'))
-SEARCH_TELEMETRY_ENABLED = os.environ.get('SEARCH_TELEMETRY_ENABLED', 'True') == 'True'
-SEARCH_MIN_RELEVANCE_SCORE = float(os.environ.get('SEARCH_MIN_RELEVANCE_SCORE', '0.12'))
 
 LOG_DIR = os.path.join(BASE_DIR, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)

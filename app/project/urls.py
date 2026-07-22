@@ -28,7 +28,6 @@ urlpatterns = [
     path('', include('appschedule.urls')),
     path('', include('appinventory.urls')),
     path('', include('apptransactions.urls')),
-    path('', include('appsearch.urls')),
     path('', include('appbilling.urls')),
 ]
 

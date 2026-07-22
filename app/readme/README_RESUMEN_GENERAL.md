@@ -76,13 +76,6 @@
   - [10.6 Comandos de gestión](#106-comandos-de-gestión)
   - [10.7 Frontend y despliegue](#107-frontend-y-despliegue)
   - [10.8 Django admin: solo schema public](#108-django-admin-solo-schema-public)
-- [11. Semantic Search (appsearch — JobRhythm)](#11-semantic-search-appsearch--jobrhythm)
-  - [11.1 Resumen y modelos](#111-resumen-y-modelos)
-  - [11.2 Variables de entorno y PostgreSQL](#112-variables-de-entorno-y-postgresql)
-  - [11.3 Comandos de gestión](#113-comandos-de-gestión)
-  - [11.3.1 Scripts shell en el host](#1131-scripts-shell-en-el-host)
-  - [11.4 API y UI (Fase 2)](#114-api-y-ui-fase-2)
-  - [11.5 Fase 3 — Advanced Retrieval y afinación](#115-fase-3--advanced-retrieval-y-afinación)
 - [12. Troubleshooting](#12-troubleshooting)
 - [13. Contacto y Soporte](#13-contacto-y-soporte)
 
@@ -248,7 +241,6 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 │   ├── appinventory/                      # App de inventario
 │   ├── appschedule/                       # App de programación
 │   ├── apptransactions/                   # App de transacciones
-│   ├── appsearch/                         # Búsqueda semántica (SearchIndex, pgvector)
 │   ├── ctrctsapp/                         # App de contratos
 │   ├── crewsapp/                          # App de equipos
 │   └── auditapp/                          # App de auditoría
@@ -668,7 +660,7 @@ docker compose exec backend python manage.py create_tenant_superuser \
 cd /opt/chalanpro
 
 # 2. Actualizar código desde Git
-git pull origin main
+git fetch origin && git checkout main_deploy && git pull origin main_deploy
 
 # 3. Reconstruir y reiniciar el contenedor backend
 cd /opt/chalanpro
@@ -704,7 +696,7 @@ docker compose logs -f backend | grep -i "websocket\|tenant"
 cd /opt/chalanpro
 
 # 2. Actualizar código desde Git
-git pull origin main
+git fetch origin && git checkout main_deploy && git pull origin main_deploy
 
 # 3. Reconstruir el frontend (esto compila Vue.js)
 cd /opt/chalanpro
@@ -726,7 +718,7 @@ docker compose logs -f frontend
 ```bash
 # 1. Actualizar código
 cd /opt/chalanpro
-git pull origin main
+git fetch origin && git checkout main_deploy && git pull origin main_deploy
 
 # 2. Reconstruir ambos servicios
 cd /opt/chalanpro
@@ -754,7 +746,7 @@ sudo /opt/chalanpro/scripts/deploy-landing-vps.sh
 
 **Flujo del script (`scripts/deploy-landing-vps.sh`):**
 
-1. Actualiza código desde `origin/main` (fetch + checkout + pull `--ff-only`).
+1. Actualiza código desde `origin/main_deploy` (fetch + checkout + pull `--ff-only`).
 2. Reinicia solo `nginx` (no reconstruye `backend`/`frontend`, no migraciones).
 3. Ejecuta smoke test HTTP(S) a la landing (`https://getjobrhythm.com` por defecto).
 
@@ -794,77 +786,48 @@ El repositorio Git se movió de `/opt/chalanpro/app/` a `/opt/chalanpro/` para i
 - `certbot/` (certificados SSL)
 - `backups/` (backups de base de datos)
 
-### 4.1.1 Branches Actuales
+### 4.1.1 Branches actuales (junio 2026)
+
+| Rama | Uso |
+|------|-----|
+| **`main_deploy`** | Producción VPS — `deploy-vps.sh` / `deploy-landing-vps.sh` |
+| **`dev_local_status`** | Desarrollo ubuntu-house |
+| **`main`**, **`develop`**, **`dev_local_inv-img`** | Históricas (no desplegar; incluyen búsqueda semántica archivada) |
 
 ```bash
-# Ver branches locales
 cd /opt/chalanpro
-git branch
-
-# Ver branches remotos
-git branch -r
-
-# Ver todas las branches (locales + remotas)
 git branch -a
 ```
 
-**Branches principales:**
-
-- `main`: Branch de producción (estable)
-- `chalan_onboarding_local_12-8-25`: Branch de desarrollo/onboarding
-
-### 4.1.2 Actualizar Branch Main con Últimos Cambios
+### 4.1.2 Actualizar código en el VPS antes de desplegar
 
 ```bash
-# 1. Asegurarse de estar en main
 cd /opt/chalanpro
-git checkout main
-
-# 2. Obtener últimos cambios del remoto
 git fetch origin
-
-# 3. Ver diferencias antes de hacer merge
-git log HEAD..origin/main
-
-# 4. Hacer merge de origin/main a main local
-git merge origin/main
-
-# O usar pull (fetch + merge en un comando)
-git pull origin main
-
-# 5. Si hay conflictos, resolverlos y hacer commit
-# git add .
-# git commit -m "Resolve merge conflicts"
-
-# 6. Verificar el estado
-git status
+git checkout main_deploy
+git pull origin main_deploy
 git log --oneline -5
+git status
 ```
 
-### 4.1.3 Verificar Estado del Repositorio
+O usar directamente:
 
 ```bash
-# Ver estado actual (archivos modificados, staged, etc.)
-git status
-
-# Ver último commit
-git log -1
-
-# Ver diferencias con el remoto
-git fetch origin
-git diff main origin/main
-
-# Ver historial de commits
-git log --oneline -10
-
-# Ver información del remoto
-git remote -v
-
-# Verificar si hay cambios sin commitear
-git status --short
+sudo /opt/chalanpro/scripts/deploy-vps.sh
 ```
 
-### 4.1.4 Workflow Recomendado
+### 4.1.3 Verificar estado del repositorio
+
+```bash
+git status
+git log -1
+git fetch origin
+git diff main_deploy origin/main_deploy
+git log --oneline -10
+git remote -v
+```
+
+### 4.1.4 Workflow recomendado (VPS)
 
 1. **Antes de desplegar:**
 
@@ -872,21 +835,20 @@ git status --short
    cd /opt/chalanpro
    git fetch origin
    git status
-   git log HEAD..origin/main  # Ver qué cambios hay
+   git log HEAD..origin/main_deploy
    ```
 
-2. **Actualizar main:**
+2. **Actualizar rama de despliegue:**
 
    ```bash
-   git checkout main
-   git pull origin main
+   git checkout main_deploy
+   git pull origin main_deploy
    ```
 
-3. **Desplegar cambios:**
+3. **Desplegar:**
 
    ```bash
-   cd /opt/chalanpro
-   docker compose up -d --build backend frontend
+   sudo /opt/chalanpro/scripts/deploy-vps.sh
    ```
 
 4. **Verificar:**
@@ -1898,176 +1860,6 @@ Las apps en **`SHARED_APPS`** (`tenants`, `appbilling`) registran modelos en el 
 | App del tenant | `https://{tenant}.jobrhythm.net` → `/admin/` (o `:8080/admin/` en dev con proxy) |
 
 **Añadir un nuevo modelo solo-admin-public:** importar `PublicSchemaOnlyAdminMixin` desde `project.admin_mixins` y aplicarlo al `ModelAdmin` del modelo en `SHARED_APPS`.
-
----
-
-## 11. Semantic Search (`appsearch` — JobRhythm)
-
-Documentación detallada en **`app/appsearch/README.md`**. Resumen operativo para VPS y referencia de comandos.
-
-### 11.1 Resumen y modelos
-
-Capa desacoplada por schema de tenant para búsqueda semántica de transacciones:
-
-| Modelo            | Función                                                                                                                                        |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`SearchIndex`** | Índice persistido: `chunk_text`, embedding (1536 dims), FTS (`search_vector`) y `metadata` JSON por `DocumentLine`                             |
-| **`IndexOutbox`** | Cola de trabajos: al guardar/borrar líneas o cambiar cabecera de documento, se encola upsert/delete; **no** interviene cuando el usuario busca |
-
-Flujo de indexación: señal → `IndexOutbox` → cron `process_index_outbox_all` → OpenAI → `SearchIndex`.
-
-### 11.2 Variables de entorno y PostgreSQL
-
-En `envs/backend.env` (plantilla: `envs/backend.dev.example.env`):
-
-- `OPENAI_API_KEY` — API OpenAI (`text-embedding-3-small`; independiente de suscripción ChatGPT Pro)
-- `SEARCH_EMBEDDING_MODEL`, `SEARCH_EMBEDDING_DIMENSIONS=1536`
-- `SEARCH_INDEXING_ENABLED=True`
-- `SEARCH_MIN_RELEVANCE_SCORE=0.12` — umbral de relevancia híbrida (subir = menos ruido; ver `app/appsearch/eval/README.md`)
-
-Infraestructura:
-
-- Imagen Postgres **`pgvector/pgvector:pg15`** (ver `docker-compose.yml`)
-- Tras cambiar env del backend: `docker compose up -d --force-recreate backend`
-
-### 11.3 Comandos de gestión
-
-En **ubuntu-house** añadir `-f docker-compose.dev.yml` a `docker compose`. En **VPS** usar los comandos tal cual.
-
-#### `migrate_schemas`
-
-Aplica migraciones en **todos** los schemas (public + tenants), creando tablas `appsearch_*` y extensión `vector` donde corresponda.
-
-```bash
-docker compose exec backend python manage.py migrate_schemas
-```
-
-Ejecutar tras desplegar cambios en modelos de `appsearch`.
-
-#### `reindex_document_lines`
-
-Reconstruye el **SearchIndex completo** del tenant: texto denormalizado, embeddings OpenAI y FTS. Uso típico: backfill inicial o cambio de modelo de embedding.
-
-```bash
-docker compose exec backend python manage.py reindex_document_lines --schema NOMBRE_SCHEMA
-
-# Sin OpenAI (solo chunk + FTS)
-docker compose exec backend python manage.py reindex_document_lines --schema NOMBRE_SCHEMA --no-embed
-
-# Solo un documento
-docker compose exec backend python manage.py reindex_document_lines --schema NOMBRE_SCHEMA --document-id 123
-```
-
-#### `process_index_outbox`
-
-Procesa la cola **pendiente** de `IndexOutbox` (cambios incrementales tras guardar transacciones en la app).
-
-```bash
-docker compose exec backend python manage.py process_index_outbox --schema NOMBRE_SCHEMA
-
-# Solo las líneas de un documento concreto (reindex directo, sin outbox)
-docker compose -f docker-compose.dev.yml exec backend python manage.py reindex_document_lines --schema TU_SCHEMA --document-id 123
-
-docker compose exec backend python manage.py process_index_outbox --schema NOMBRE_SCHEMA --limit 200
-```
-
-Tras importaciones masivas o depuración en un tenant concreto.
-
-#### `process_index_outbox_all` (Fase A — cron)
-
-Procesa la cola en **todos los tenants activos**. Ejecutar desde cron en el **host** (no dentro del contenedor backend):
-
-```bash
-# Manual en VPS
-docker compose exec backend python manage.py process_index_outbox_all --limit 200
-
-# Script unificado (ubuntu-house: --dev)
-./scripts/process_search_outbox_cron.sh --dev
-/opt/chalanpro/scripts/process_search_outbox_cron.sh
-```
-
-**Crontab VPS (cada 3 minutos):**
-
-```cron
-*/3 * * * * root /opt/chalanpro/scripts/process_search_outbox_cron.sh
-```
-
-Log VPS: `/var/log/chalanpro/search-outbox.log` (`sudo mkdir -p /var/log/chalanpro`). En **ubuntu-house**, log en `logs/search-outbox.log` con `--dev`.
-
-Salida distinta de cero si hubo entradas fallidas o errores por tenant (útil para alertas). Por defecto continúa con el siguiente tenant; `--fail-fast` detiene al primer error.
-
-#### 11.3.1 Scripts shell en el host
-
-Scripts en **`scripts/`** pensados para ejecutarse en el **host** (ubuntu-house o VPS), no dentro del contenedor. En ubuntu-house usar **`--dev`** para apuntar a `docker-compose.dev.yml` y logs en `logs/`.
-
-| Script | Para qué sirve |
-|--------|----------------|
-| **`process_search_outbox_cron.sh`** | Indexación **incremental**: procesa `IndexOutbox` en todos los tenants vía `process_index_outbox_all`. Diseñado para **cron** (p. ej. cada 3 min) tras crear/editar transacciones en la app. Usa `flock` para evitar solapamientos. Log: `logs/search-outbox.log` (dev) o `/var/log/chalanpro/search-outbox.log` (VPS). |
-| **`run_search_eval.sh`** | **Regresión de Smart search**: ejecuta `search_eval` contra el JSON golden del tenant (`app/appsearch/eval/golden_queries.<schema>.json`). Comprueba recall@k, `min_count`, IDs prohibidos y avisos esperados. Falla con exit code ≠ 0 si algo se rompe. Opciones: `--fail-under 0.95`, `--update-baseline` (refrescar expected IDs tras cambio aprobado). |
-| **`reindex_search_after_chunk_change.sh`** | **Reindex completo** tras cambios en `app/appsearch/services/chunk.py` o metadata indexada: primero drena outbox pendiente, luego `reindex_document_lines` (embeddings OpenAI). Un tenant: `--schema NOMBRE_SCHEMA`; todos: `--all-tenants`. |
-
-Ejemplos **ubuntu-house**:
-
-```bash
-# Cron / manual — cola de indexación
-./scripts/process_search_outbox_cron.sh --dev
-
-# Verificar que las ~26 golden queries siguen pasando
-./scripts/run_search_eval.sh --dev test_dominio_local
-./scripts/run_search_eval.sh --dev test_dominio_local --fail-under 0.95
-
-# Tras modificar chunk/metadata del índice
-./scripts/reindex_search_after_chunk_change.sh --dev --schema test_dominio_local
-```
-
-Ejemplos **VPS** (sin `--dev`; ruta típica `/opt/chalanpro`):
-
-```bash
-/opt/chalanpro/scripts/process_search_outbox_cron.sh
-/opt/chalanpro/scripts/run_search_eval.sh NOMBRE_SCHEMA --fail-under 0.95
-/opt/chalanpro/scripts/reindex_search_after_chunk_change.sh --schema NOMBRE_SCHEMA
-```
-
-Documentación ampliada: **`app/appsearch/eval/README.md`**.
-
-Comando Django relacionado (no es `.sh`): `seed_builder_aliases --schema NOMBRE_SCHEMA` — carga alias de party desde `app/appsearch/eval/builder_aliases.recommended.json`.
-
-### 11.4 API y UI (Fase 2)
-
-**API:** `POST /api/search/transactions/`
-
-```json
-{ "query": "Harbor Freight purchases over $500 this month", "limit": 50 }
-```
-
-**Respuesta:** `document_ids`, `results[]` (snippet, score, metadata), `applied_filters`, `resolved_entities`.
-
-Resolución de **Party / Work Account / DocumentType** con matching difuso. Búsqueda acotada al **schema del tenant** del subdominio (django-tenants).
-
-**Filtros de monto (Fase 2.5):**
-
-- **`document_total_gte`** — «over $6,000» cuando no queda texto de producto (totales de factura vía `Document.total_amount`).
-- **`line_final_price_gte`** — mismo patrón de monto pero con concepto/producto en la consulta (p. ej. cable + mínimo por línea).
-
-**UI:** checkbox *Smart search (AI)* y botón **Similar** por fila en `/transactions`. Requiere `apptransactions.view_document`.
-
-### 11.5 Fase 3 — Advanced Retrieval y afinación
-
-Ver **`app/appsearch/README.md`** y **`app/appsearch/eval/README.md`**. Resumen:
-
-| Capacidad | Detalle |
-|-----------|---------|
-| **Similares** | `POST /api/search/transactions/similar/` con `document_id` o `document_line_id` |
-| **Rank fusion** | `SEARCH_FUSION_MODE` (`weighted` / `rrf`), pesos vector/FTS tunables |
-| **Builder aliases** | Modelo `BuilderAlias` en admin del tenant; plantilla JSON + `seed_builder_aliases` |
-| **Outbox** | `SEARCH_OUTBOX_MAX_ATTEMPTS`, dead letter (`dead_letter_at`), `outbox_status`, `requeue_dead_letter_outbox` |
-| **Métricas** | `SearchTelemetry`, comandos `search_metrics` y `search_eval` |
-| **Golden queries** | `app/appsearch/eval/golden_queries.<schema>.json` + `./scripts/run_search_eval.sh` |
-| **Relevancia** | `SEARCH_MIN_RELEVANCE_SCORE`, filtro por tokens en snippet, tipos compuestos (`sales order`, …) |
-
-Tras desplegar: **`migrate_schemas`**.
-
-**Admin (por tenant):** Search index · Index outbox · Builder search aliases · Search telemetry.
 
 ---
 

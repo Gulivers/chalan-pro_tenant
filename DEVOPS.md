@@ -70,8 +70,8 @@ O manualmente, siempre desde la raíz del proyecto:
 ```bash
 cd /opt/chalanpro
 git fetch origin
-git checkout main
-git pull origin main
+git checkout main_deploy
+git pull origin main_deploy
 
 docker compose build --no-cache backend frontend  # si hubo cambios en Dockerfile o dependencias
 docker compose up -d postgres
@@ -85,7 +85,7 @@ docker compose up -d nginx
 docker compose restart backend frontend nginx
 ```
 
-- **Solo `main`** debe desplegarse en producción. No hacer `git pull` de `develop` o ramas de feature en el VPS.
+- **Solo `main_deploy`** debe desplegarse en producción. No hacer `git pull` de `main`, `develop`, `dev_local_inv-img` ni ramas de feature en el VPS.
 - **Migraciones:** siempre con `migrate --noinput`. Si usas schemas por tenant, seguir `INSTRUCCIONES_MIGRACIONES.md` (p. ej. `migrate_schemas`).
 
 ### 3.3 Rollback rápido
@@ -93,7 +93,7 @@ docker compose restart backend frontend nginx
 ```bash
 cd /opt/chalanpro
 git log -1 --oneline   # anotar commit actual
-git checkout main
+git checkout main_deploy
 git reset --hard <commit-anterior>
 docker compose build backend frontend
 docker compose up -d backend frontend nginx
@@ -176,30 +176,11 @@ sudo /opt/chalanpro/scripts/restore_backup_VPS.sh YYYYMMDD_HHMMSS
 - Programar con cron (ej. diario a las 3:00): `0 3 * * * root /opt/chalanpro/scripts/backup_completo_VPS.sh --retention 7`
 - Probar restauración de forma periódica.
 
-### Semantic Search — outbox (Fase A)
-
-Tras desplegar `appsearch` con `OPENAI_API_KEY` y `migrate_schemas`, programar indexación incremental cada 2–3 minutos en el **host**:
-
-```bash
-sudo mkdir -p /var/log/chalanpro
-sudo chmod +x /opt/chalanpro/scripts/process_search_outbox_cron.sh
-```
-
-Crontab (root o `/etc/cron.d/chalanpro-search-outbox`):
-
-```cron
-*/3 * * * * root /opt/chalanpro/scripts/process_search_outbox_cron.sh
-```
-
-Log: `/var/log/chalanpro/search-outbox.log`. Prueba manual: `/opt/chalanpro/scripts/process_search_outbox_cron.sh`.
-
-En **ubuntu-house** usar `./scripts/process_search_outbox_cron.sh --dev` (log en `logs/search-outbox.log`).
-
 ---
 
 ## 5. Buenas prácticas
 
-- **No editar código ni config sensible directamente en el VPS.** Todo cambio vía repo (rama `main`) y deploy con el proceso definido.
+- **No editar código ni config sensible directamente en el VPS.** Todo cambio vía repo (rama **`main_deploy`**) y deploy con el proceso definido.
 - **Secrets:** solo en `envs/*.env` (fuera de Git). No hardcodear en Dockerfile ni en código.
 - **Un solo compose en producción:** `docker-compose.yml`. No exponer PgAdmin a internet si no es necesario; restringir por firewall o no mapear puerto en producción.
 - **Logs:** usar `docker compose logs`; si se centraliza en ficheros, rotar con logrotate.
@@ -254,7 +235,7 @@ docker compose exec -T postgres psql -U chalanpro_user -d chalanpro -c "SELECT c
 | `scripts/restore_backup_VPS.sh` | Restaurar backup para rollback |
 | `init-certbot.sh` / `init-certbot-wildcard.sh` | Obtención/renovación SSL |
 | `enable-https.sh` | Cambio de config Nginx a HTTPS |
-| `GIT_WORKFLOW.md` | Ramas, merge a `main`, deploy en VPS |
+| `GIT_WORKFLOW.md` | Ramas, merge a `main_deploy`, deploy en VPS |
 | `app/INSTRUCCIONES_MIGRACIONES.md` | Migraciones Django y tenants |
 
 ---
@@ -273,9 +254,9 @@ Así, al entrar por SSH y abrir `chalanpro-vps.code-workspace`, tendrás el mism
 
 ---
 
-## 8. Checklist pre-deploy (antes de merge a `main`)
+## 8. Checklist pre-deploy (antes de merge a `main_deploy`)
 
-- [ ] Código probado en entorno de desarrollo (p. ej. `develop` en ubuntu-house).
+- [ ] Código probado en entorno de desarrollo (`dev_local_status` en ubuntu-house).
 - [ ] Migraciones probadas (incl. tenants si aplica); en producción usar `migrate_schemas`.
 - [ ] Build del frontend sin errores.
 - [ ] WebSockets y API probados.
