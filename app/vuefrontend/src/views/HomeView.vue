@@ -5,25 +5,6 @@
       <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
     </div>
 
-    <!-- Sales vs Purchases Comparison (Top) -->
-    <div class="row mb-3">
-      <div class="col-xl-12 col-lg-12">
-        <div class="card shadow mb-4">
-          <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
-              Sales vs Purchases (Last 12 Months)
-            </h6>
-          </div>
-          <div class="card-body">
-            <CustomersSuppliersComparison
-              :comparison-data="comparisonData"
-              :loading="loadingComparison"
-              @refresh="loadComparison" />
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Content Row -->
     <div class="row">
       <!-- Area Chart -->
@@ -58,7 +39,7 @@
       </div>
       <!-- Bar Supervisor Chart -->
       <div
-        v-if="this.hasPermission('ctrctsapp.add_contract')"
+        v-if="this.hasPermission('apptransactions.add_workaccount')"
         class="col-xl-12 col-lg-12">
         <div class="card shadow mb-4">
           <div class="card-header py-3">
@@ -70,6 +51,24 @@
             <div class="chart-bar">
               <WeeklySupervisorChart />
             </div>
+          </div>
+        </div>
+      </div>
+      <!-- Sales vs Purchases Comparison -->
+      <div
+        v-if="this.hasPermission('apptransactions.add_document')"
+        class="col-xl-12 col-lg-12">
+        <div class="card shadow mb-4">
+          <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+              Sales vs Purchases (Last 12 Months)
+            </h6>
+          </div>
+          <div class="card-body">
+            <CustomersSuppliersComparison
+              :comparison-data="comparisonData"
+              :loading="loadingComparison"
+              @refresh="loadComparison" />
           </div>
         </div>
       </div>
