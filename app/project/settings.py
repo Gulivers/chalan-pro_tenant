@@ -178,6 +178,7 @@ TENANT_APPS = [
     'appschedule',
     'appinventory',
     'apptransactions',
+    'appassistant',
     'appcore',
 ]
 
@@ -547,6 +548,9 @@ BILLING_ENFORCEMENT_ENABLED = _env_bool('BILLING_ENFORCEMENT_ENABLED', True)
 
 # Landing (getjobrhythm.com) contact form — inbox that receives submissions
 LANDING_CONTACT_TO_EMAIL = _env_email('LANDING_CONTACT_TO_EMAIL', 'team@jobrhythm.net')
+
+# JobRhythm Assistant (Level 1). When False, query endpoint returns 503.
+ASSISTANT_ENABLED = os.environ.get('ASSISTANT_ENABLED', 'True') == 'True'
 
 # Channel Layers - Redis configuration
 REDIS_URL = os.environ.get('REDIS_URL')
