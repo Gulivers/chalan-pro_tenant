@@ -36,6 +36,22 @@ class DeterministicRouterTests(SimpleTestCase):
             'period': 'this_month',
         })
 
+    def test_case2_sum_all_vendors_this_month(self):
+        result = route('How much did we spend this month?')
+        self.assertEqual(result.matched_case, 2)
+        self.assertEqual(result.tool_name, 'sum_purchase_spending')
+        self.assertEqual(result.params, {'period': 'this_month'})
+
+    def test_case1_list_without_vendor(self):
+        result = route('Show me transactions over $1,500 this month.')
+        self.assertEqual(result.matched_case, 1)
+        self.assertEqual(result.tool_name, 'list_purchase_transactions')
+        self.assertEqual(result.params, {
+            'min_amount': '1500.00',
+            'period': 'this_month',
+        })
+        self.assertNotIn('vendor', result.params)
+
     def test_case3_purchases_by_vendor(self):
         result = route('Show purchases by vendor this month.')
         self.assertEqual(result.matched_case, 3)
@@ -75,16 +91,44 @@ class DeterministicRouterTests(SimpleTestCase):
         self.assertEqual(result.matched_case, 5)
         self.assertEqual(result.params, {'limit': 5, 'months': 3})
 
+    def test_case5_paraphrase_three_last_month(self):
+        """'one vendors' + 'three last month' must not fall back to months=12."""
+        result = route(
+            'Show the one vendors with the highest spending of three last month'
+        )
+        self.assertEqual(result.matched_case, 5)
+        self.assertEqual(result.params, {'limit': 1, 'months': 3})
+
+    def test_case5_vendors_without_limit_word(self):
+        result = route(
+            'Show the vendors with the highest spending of three last month'
+        )
+        self.assertEqual(result.matched_case, 5)
+        self.assertEqual(result.params, {'limit': 5, 'months': 3})
+
     def test_case6_spending_timeseries(self):
         for msg in (
             'Graph spending for the last three months.',
             'graph spending for the last 3 months',
             'Chart spending for the last three months',
+            'Can you Graph spending for the last three months?',
         ):
             result = route(msg)
             self.assertEqual(result.matched_case, 6, msg)
             self.assertEqual(result.tool_name, 'spending_timeseries', msg)
             self.assertEqual(result.params, {'months': 3}, msg)
+
+    def test_case6_graph_this_month_paraphrases(self):
+        for msg in (
+            'Can you Graph spending for the this month?',
+            'Can you Graph purshases for the this month?',
+            'Graph spending for this month.',
+            'graph purchases for this month',
+        ):
+            result = route(msg)
+            self.assertEqual(result.matched_case, 6, msg)
+            self.assertEqual(result.tool_name, 'spending_timeseries', msg)
+            self.assertEqual(result.params, {'period': 'this_month', 'months': 1}, msg)
 
     def test_list_before_sum_specificity(self):
         # Must not route amount+transactions as a sum query.

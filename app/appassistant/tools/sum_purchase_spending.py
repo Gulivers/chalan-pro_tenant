@@ -1,5 +1,5 @@
 """
-sum_purchase_spending — Net invoiced spending for a vendor and period.
+sum_purchase_spending — Net invoiced spending for vendor(s) and period.
 
 Metric: active PINV Document.total_amount only (not gross, PRN, or PO).
 """
@@ -16,8 +16,9 @@ from appassistant.tools._common import (
     optional_int,
     optional_str,
     parse_period_bounds,
+    parse_vendor_ids,
     require_view_document,
-    resolve_vendor_or_raise,
+    resolve_vendors_or_raise,
     sum_amount,
     tool_result,
 )
@@ -27,7 +28,8 @@ from appassistant.tools.base import AssistantTool
 class SumPurchaseSpendingTool(AssistantTool):
     name = 'sum_purchase_spending'
     description = (
-        'Sum Net invoiced spending (active PINV total_amount) for a vendor and period. '
+        'Sum Net invoiced spending (active PINV total_amount) for a period. '
+        'Vendor(s) optional — omit for all vendors. '
         f'Spend definition: {SPEND_DEFINITION}'
     )
     spend_definition = SPEND_DEFINITION
@@ -35,14 +37,10 @@ class SumPurchaseSpendingTool(AssistantTool):
     def validate_params(self, params: dict[str, Any]) -> dict[str, Any]:
         params = dict(params or {})
         date_from, date_to = parse_period_bounds(params)
-        vendor = optional_str(params, 'vendor')
-        vendor_id = optional_int(params, 'vendor_id', min_v=1)
-        if vendor is None and vendor_id is None:
-            from appassistant.tools.errors import validation_error
-            raise validation_error('vendor or vendor_id is required.')
         return {
-            'vendor': vendor,
-            'vendor_id': vendor_id,
+            'vendor': optional_str(params, 'vendor'),
+            'vendor_id': optional_int(params, 'vendor_id', min_v=1),
+            'vendor_ids': parse_vendor_ids(params),
             'date_from': date_from,
             'date_to': date_to,
         }
@@ -50,29 +48,39 @@ class SumPurchaseSpendingTool(AssistantTool):
     def execute(self, *, user, params: dict[str, Any]) -> dict[str, Any]:
         require_view_document(user)
         p = self.validate_params(params)
-        builder = resolve_vendor_or_raise(
+        builders = resolve_vendors_or_raise(
             vendor=p['vendor'],
             vendor_id=p['vendor_id'],
-            required=True,
+            vendor_ids=p['vendor_ids'],
+            required=False,
         )
         qs = filtered_spend_qs(
             date_from=p['date_from'],
             date_to=p['date_to'],
-            builder=builder,
+            builders=builders,
         )
         total = sum_amount(qs)
         count = qs.count()
         period = period_phrase(p['date_from'], p['date_to'])
+        if not builders:
+            vendor_label = None
+            title = SPEND_METRIC_SHORT
+        elif len(builders) == 1:
+            vendor_label = builders[0].name
+            title = f'{SPEND_METRIC_SHORT} with {vendor_label}'
+        else:
+            vendor_label = ', '.join(b.name for b in builders)
+            title = f'{SPEND_METRIC_SHORT} with selected vendors'
         blocks = [
             kpi_currency(
                 block_id='total-spending',
-                title=f'{SPEND_METRIC_SHORT} with {builder.name}',
+                title=title,
                 amount=total,
                 subtitle=f'{SPEND_METRIC_LABEL} · {period} · {count} invoice(s)',
             ),
         ]
         message = net_spending_message(
-            vendor_name=builder.name,
+            vendor_name=vendor_label,
             amount=total,
             date_from=p['date_from'],
             date_to=p['date_to'],

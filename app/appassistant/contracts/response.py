@@ -31,7 +31,8 @@ ALLOWED_ROUTE_KEYS = frozenset({
 
 # Canonical path templates for entity_link (frontend allowlist).
 ROUTE_PATH_TEMPLATES = {
-    'transactions-form': '/transactions/form?id={id}',
+    # Read-only Assistant: documents open in view mode (not edit).
+    'transactions-form': '/transactions/form?id={id}&mode=view',
     'builder-view': '/builder/view/{id}',
 }
 
@@ -85,24 +86,36 @@ def build_assistant_response(
     router: str = 'deterministic',
     currency: str | None = None,
     timezone: str | None = None,
+    conversation_id: str | UUID | None = None,
+    active_filters: dict | None = None,
+    state_expired: bool = False,
+    intent: str | None = None,
 ) -> dict:
     """Build a Level-1 Assistant API response with spend_definition injected."""
     ctx = deepcopy(context) if context else {}
     ctx['spend_definition'] = SPEND_DEFINITION
+    if active_filters is not None:
+        ctx['active_filters'] = active_filters
+    meta: dict[str, Any] = {
+        'request_id': str(request_id),
+        'partial': bool(partial),
+        'currency': currency or DEFAULT_CURRENCY,
+        'timezone': timezone or _default_timezone(),
+        'router': router,
+        'tools_executed': list(tools_executed or []),
+        'state_expired': bool(state_expired),
+    }
+    if conversation_id is not None:
+        meta['conversation_id'] = str(conversation_id)
+    if intent:
+        meta['intent'] = intent
     return {
         'schema_version': SCHEMA_VERSION,
         'message': message,
         'blocks': list(blocks or []),
         'sources': list(sources or []),
         'context': ctx,
-        'meta': {
-            'request_id': str(request_id),
-            'partial': bool(partial),
-            'currency': currency or DEFAULT_CURRENCY,
-            'timezone': timezone or _default_timezone(),
-            'router': router,
-            'tools_executed': list(tools_executed or []),
-        },
+        'meta': meta,
     }
 
 

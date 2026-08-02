@@ -43,6 +43,13 @@ def period_phrase(date_from: date, date_to: date, *, months: int | None = None) 
     except Exception:
         pass
 
+    try:
+        last_from, last_to = resolve_period(period='last_month')
+        if date_from == last_from and date_to == last_to:
+            return 'last month'
+    except Exception:
+        pass
+
     if months is not None and months >= 1:
         try:
             last_from, last_to = resolve_period(months=months)
@@ -51,6 +58,15 @@ def period_phrase(date_from: date, date_to: date, *, months: int | None = None) 
                 return f'the last {months} {unit}'
         except Exception:
             pass
+
+    # N previous full calendar months (excluding current month).
+    for n in range(2, 13):
+        try:
+            prev_from, prev_to = resolve_period(period=f'previous_{n}_calendar_months')
+            if date_from == prev_from and date_to == prev_to:
+                return f'the previous {n} calendar months'
+        except Exception:
+            break
 
     return f'{date_from.isoformat()} to {date_to.isoformat()}'
 
@@ -108,6 +124,11 @@ def by_vendor_message(
     months: int | None = None,
 ) -> str:
     period = period_phrase(date_from, date_to, months=months)
+    if invoice_count == 0:
+        return (
+            f'No purchase invoices found for {period} '
+            f'({date_from.isoformat()} to {date_to.isoformat()}).'
+        )
     vlabel = 'vendor' if vendor_count == 1 else 'vendors'
     return (
         f'{SPEND_METRIC_LABEL} by vendor {period}: '
@@ -145,9 +166,17 @@ def timeseries_message(
     vendor_name: str | None,
     months: int,
     invoice_count: int,
+    date_from: date | None = None,
+    date_to: date | None = None,
 ) -> str:
-    unit = 'month' if months == 1 else 'months'
     scope = f' for {vendor_name}' if vendor_name else ''
+    if date_from is not None and date_to is not None:
+        period = period_phrase(date_from, date_to, months=months)
+        return (
+            f'{SPEND_METRIC_LABEL}{scope} {period}, '
+            f'based on {invoice_count_label(invoice_count)}.'
+        )
+    unit = 'month' if months == 1 else 'months'
     return (
         f'{SPEND_METRIC_LABEL}{scope} over the last {months} {unit}, '
         f'based on {invoice_count_label(invoice_count)}.'

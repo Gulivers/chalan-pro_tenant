@@ -109,6 +109,12 @@
           </div>
         </div>
 
+        <ActiveFilterChips
+          :active-filters="activeFilters"
+          :disabled="status === 'loading'"
+          @remove="onRemoveFilterChip"
+          @clear-all="onClearFilters" />
+
         <footer class="assistant-panel__footer">
           <form class="assistant-input-row" @submit.prevent="submit">
             <label class="visually-hidden" for="assistant-input">Message</label>
@@ -144,17 +150,33 @@ import {
 } from '@/utils/assistantBus';
 import { postQuery, getAssistantErrorInfo } from '@/services/assistantApi';
 import { useAssistantContext } from '@/composables/useAssistantContext';
+import ActiveFilterChips from './ActiveFilterChips.vue';
 import BlockRenderer from './BlockRenderer.vue';
 import SourcesBlock from './blocks/SourcesBlock.vue';
 
 const SUGGESTIONS = [
-  'Show me Home Depot transactions over $1,500 this month.',
-  'How much did we spend with Home Depot this month?',
+  'Show me transactions over $1,500 this month.',
+  'How much did we spend this month?',
   'Show purchases by vendor this month.',
   'Compare purchases by supplier for the last six months.',
   'Show the five vendors with the highest spending.',
   'Graph spending for the last three months.',
 ];
+
+function messageForRemovedChip(chip) {
+  if (!chip || typeof chip !== 'object') return null;
+  if (chip.key === 'vendor') {
+    const name = String(chip.label || '').trim();
+    return name ? `Remove vendor ${name}.` : 'Any vendor.';
+  }
+  if (chip.key === 'min_amount') {
+    return 'Include all amounts.';
+  }
+  if (chip.key === 'comparison_period') {
+    return 'Clear comparison.';
+  }
+  return null;
+}
 
 let msgSeq = 0;
 function nextMsgId() {
@@ -165,6 +187,7 @@ function nextMsgId() {
 export default {
   name: 'AssistantPanel',
   components: {
+    ActiveFilterChips,
     BlockRenderer,
     SourcesBlock,
   },
@@ -181,6 +204,8 @@ export default {
       messages: [],
       suggestions: SUGGESTIONS,
       lastUserMessage: null,
+      conversationId: null,
+      activeFilters: null,
       _mediaQuery: null,
     };
   },
@@ -277,23 +302,47 @@ export default {
       this.draft = prompt;
       this.submit();
     },
+    onRemoveFilterChip(chip) {
+      const message = messageForRemovedChip(chip);
+      if (!message || this.status === 'loading') return;
+      this.draft = message;
+      this.submit();
+    },
+    onClearFilters() {
+      if (this.status === 'loading') return;
+      this.submitMessage('Start over.', { startOver: true });
+    },
     async submit() {
       const message = String(this.draft || '').trim();
       if (!message || this.status === 'loading') return;
-
       this.draft = '';
-      this.lastUserMessage = message;
+      await this.submitMessage(message, {});
+    },
+    async submitMessage(message, options = {}) {
+      const text = String(message || '').trim();
+      if (!text || this.status === 'loading') return;
+
+      this.lastUserMessage = text;
       this.messages.push({
         id: nextMsgId(),
         role: 'user',
-        text: message,
+        text,
       });
       this.status = 'loading';
       this.scrollToBottom();
 
       try {
-        const data = await postQuery(message, this.pageContext || {});
-        const assistantMsg = {
+        const data = await postQuery(text, this.pageContext || {}, {
+          conversationId: this.conversationId,
+          startOver: !!options.startOver,
+        });
+        const nextConversationId = data?.meta?.conversation_id;
+        if (typeof nextConversationId === 'string' && nextConversationId) {
+          this.conversationId = nextConversationId;
+        }
+        const nextFilters = data?.context?.active_filters || null;
+        this.activeFilters = nextFilters;
+        this.messages.push({
           id: nextMsgId(),
           role: 'assistant',
           text: typeof data?.message === 'string' ? data.message : '',
@@ -302,8 +351,7 @@ export default {
           partial: !!(data?.meta && data.meta.partial),
           error: null,
           canRetry: false,
-        };
-        this.messages.push(assistantMsg);
+        });
         this.status = 'idle';
       } catch (error) {
         const info = getAssistantErrorInfo(error);

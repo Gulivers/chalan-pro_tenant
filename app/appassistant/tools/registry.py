@@ -34,6 +34,7 @@ _default_registry: ToolRegistry | None = None
 
 def _register_level1_tools(registry: ToolRegistry) -> None:
     from .compare_purchases_by_vendor import ComparePurchasesByVendorTool
+    from .compare_vendor_spending_periods import CompareVendorSpendingPeriodsTool
     from .list_purchase_transactions import ListPurchaseTransactionsTool
     from .purchases_by_vendor import PurchasesByVendorTool
     from .spending_timeseries import SpendingTimeseriesTool
@@ -45,6 +46,7 @@ def _register_level1_tools(registry: ToolRegistry) -> None:
         SumPurchaseSpendingTool,
         PurchasesByVendorTool,
         ComparePurchasesByVendorTool,
+        CompareVendorSpendingPeriodsTool,
         TopVendorsBySpendingTool,
         SpendingTimeseriesTool,
     ):
@@ -52,7 +54,7 @@ def _register_level1_tools(registry: ToolRegistry) -> None:
 
 
 def get_default_registry() -> ToolRegistry:
-    """Level-1 registry with the six spend tools (Increment B)."""
+    """Level-1 registry with spend tools (including period comparison)."""
     global _default_registry
     if _default_registry is None:
         _default_registry = ToolRegistry()

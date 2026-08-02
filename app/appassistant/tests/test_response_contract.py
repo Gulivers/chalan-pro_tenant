@@ -51,7 +51,7 @@ class ResponseContractTests(SimpleTestCase):
             'entity_type': 'document',
             'entity_id': 1,
             'route_key': 'transactions-form',
-            'path': '/transactions/form?id=1',
+            'path': '/transactions/form?id=1&mode=view',
         }]
         self.assertEqual(validate_response_payload(payload), [])
         payload['blocks'][0]['route_key'] = 'arbitrary-route'

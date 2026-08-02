@@ -6,9 +6,10 @@ const QUERY_URL = '/api/assistant/query/';
  * POST a natural-language query to JobRhythm Assistant.
  * @param {string} message
  * @param {{ view?: string|null, route_name?: string|null, entity_type?: string|null, entity_id?: number|null }} context
+ * @param {{ conversationId?: string|null, startOver?: boolean }} [options]
  * @returns {Promise<object>} structured assistant response
  */
-export async function postQuery(message, context = {}) {
+export async function postQuery(message, context = {}, options = {}) {
   const payload = {
     schema_version: '1',
     message: String(message || '').trim(),
@@ -19,6 +20,13 @@ export async function postQuery(message, context = {}) {
       entity_id: context.entity_id ?? null,
     },
   };
+  if (options.conversationId) {
+    payload.conversation_id = String(options.conversationId);
+  }
+  if (options.startOver) {
+    payload.start_over = true;
+  }
+  // Never send filters/state — backend is the source of truth.
   const response = await axios.post(QUERY_URL, payload);
   return response.data;
 }

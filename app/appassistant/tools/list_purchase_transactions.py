@@ -20,8 +20,9 @@ from appassistant.tools._common import (
     parse_min_amount,
     parse_offset,
     parse_period_bounds,
+    parse_vendor_ids,
     require_view_document,
-    resolve_vendor_or_raise,
+    resolve_vendors_or_raise,
     tool_result,
 )
 from appassistant.tools.base import AssistantTool
@@ -30,7 +31,7 @@ from appassistant.tools.base import AssistantTool
 class ListPurchaseTransactionsTool(AssistantTool):
     name = 'list_purchase_transactions'
     description = (
-        'List active PINV documents (Net invoiced spending) filtered by vendor, '
+        'List active PINV documents (Net invoiced spending) filtered by vendor(s), '
         f'min amount, and period. Spend definition: {SPEND_DEFINITION}'
     )
     spend_definition = SPEND_DEFINITION
@@ -41,6 +42,7 @@ class ListPurchaseTransactionsTool(AssistantTool):
         return {
             'vendor': optional_str(params, 'vendor'),
             'vendor_id': optional_int(params, 'vendor_id', min_v=1),
+            'vendor_ids': parse_vendor_ids(params),
             'min_amount': parse_min_amount(params),
             'date_from': date_from,
             'date_to': date_to,
@@ -51,15 +53,16 @@ class ListPurchaseTransactionsTool(AssistantTool):
     def execute(self, *, user, params: dict[str, Any]) -> dict[str, Any]:
         require_view_document(user)
         p = self.validate_params(params)
-        builder = resolve_vendor_or_raise(
+        builders = resolve_vendors_or_raise(
             vendor=p['vendor'],
             vendor_id=p['vendor_id'],
+            vendor_ids=p['vendor_ids'],
             required=False,
         )
         qs = filtered_spend_qs(
             date_from=p['date_from'],
             date_to=p['date_to'],
-            builder=builder,
+            builders=builders,
             min_amount=p['min_amount'],
         ).order_by('-date', '-id')
 
@@ -95,6 +98,12 @@ class ListPurchaseTransactionsTool(AssistantTool):
                 )
             )
 
+        vendor_label = None
+        if len(builders) == 1:
+            vendor_label = builders[0].name
+        elif len(builders) > 1:
+            vendor_label = ', '.join(b.name for b in builders)
+
         blocks = [
             kpi_block(
                 block_id='purchase-count',
@@ -116,7 +125,7 @@ class ListPurchaseTransactionsTool(AssistantTool):
             *links,
         ]
         message = list_invoices_message(
-            vendor_name=builder.name if builder else None,
+            vendor_name=vendor_label,
             invoice_count=total,
             date_from=p['date_from'],
             date_to=p['date_to'],

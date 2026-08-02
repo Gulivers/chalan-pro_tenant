@@ -21,6 +21,7 @@ from appassistant.tools._common import (
     optional_int,
     optional_str,
     parse_months,
+    parse_period_bounds,
     require_view_document,
     resolve_vendor_or_raise,
     tool_result,
@@ -32,19 +33,40 @@ from appassistant.tools.errors import validation_error
 class SpendingTimeseriesTool(AssistantTool):
     name = 'spending_timeseries'
     description = (
-        'Monthly Net invoiced spending time series over the last N months (optional vendor). '
+        'Monthly Net invoiced spending time series. '
+        'Accepts months (1..12) or period (e.g. this_month). Optional vendor. '
         f'Spend definition: {SPEND_DEFINITION}'
     )
     spend_definition = SPEND_DEFINITION
 
     def validate_params(self, params: dict[str, Any]) -> dict[str, Any]:
         params = dict(params or {})
-        months = parse_months(params, required=True)
-        assert months is not None
+        months = parse_months(params, required=False)
+        period = optional_str(params, 'period', max_len=64)
+        has_explicit_range = bool(params.get('date_from') or params.get('date_to'))
         try:
-            date_from, date_to = resolve_period(months=months)
+            if months is not None and not period and not has_explicit_range:
+                date_from, date_to = resolve_period(months=months)
+            elif period or has_explicit_range or months is not None:
+                # period=this_month, last_3_months, or months+period from planners.
+                date_from, date_to = parse_period_bounds(params)
+                if months is None:
+                    months = max(
+                        1,
+                        (date_to.year - date_from.year) * 12
+                        + (date_to.month - date_from.month)
+                        + 1,
+                    )
+            else:
+                raise validation_error(
+                    'Provide months (1..12) or period (e.g. this_month).'
+                )
         except Exception as exc:  # noqa: BLE001
             from appassistant.services.periods import PeriodValidationError
+            from appassistant.tools.errors import ToolError
+
+            if isinstance(exc, ToolError):
+                raise
             if isinstance(exc, PeriodValidationError):
                 raise validation_error(str(exc)) from exc
             raise
@@ -114,6 +136,8 @@ class SpendingTimeseriesTool(AssistantTool):
             vendor_name=builder.name if builder else None,
             months=p['months'],
             invoice_count=invoice_count,
+            date_from=p['date_from'],
+            date_to=p['date_to'],
         )
         return tool_result(
             tool_name=self.name,

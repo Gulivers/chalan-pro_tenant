@@ -5,6 +5,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.db import transaction
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.utils import timezone
 from apptransactions.models import (
     DocumentType, PartyType, PartyCategory, Party, Document, DocumentLine,
     WorkAccount, TransactionFavorite
@@ -428,7 +429,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         # Crear el documento paso a paso para evitar problemas con ForeignKeys
         # Primero, extraer los valores que necesitamos
         document_type = validated_data.pop('document_type')
-        date = validated_data.pop('date', None)
+        date = validated_data.pop('date', None) or timezone.localdate()
         builder = validated_data.pop('builder', None)
         notes = validated_data.pop('notes', '')
         is_active = validated_data.pop('is_active', True)

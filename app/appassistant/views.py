@@ -1,4 +1,4 @@
-"""JobRhythm Assistant API views (Level 1 — Increment C orchestration)."""
+"""JobRhythm Assistant API views (Level 1 — Increment C2 conversation)."""
 
 from __future__ import annotations
 
@@ -30,8 +30,8 @@ class AssistantQueryView(APIView):
     """
     POST /api/assistant/query/
 
-    Increment C: auth + permission → DeterministicRouter → tool → structured response.
-    No LLM.
+    Auth + permission → conversation state → continuity/router → tool → response.
+    No LLM (C4). Client may send conversation_id; never authoritative state.
     """
 
     authentication_classes = [TokenAuthentication]
@@ -71,14 +71,13 @@ class AssistantQueryView(APIView):
             )
             return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
 
-        # Ignore any authority keys that might still be present on the raw body.
-        # Tenant/user come only from auth + schema middleware.
-
         result = run_assistant_query(
             user=request.user,
             message=parsed['message'],
             context=parsed['context'],
             request_id=request_id,
+            conversation_id=parsed.get('conversation_id'),
+            start_over=bool(parsed.get('start_over')),
         )
         payload = result.payload
         errors = validate_response_payload(payload)
@@ -95,6 +94,9 @@ class AssistantQueryView(APIView):
                 error_code='response_contract_error',
                 params_safe=sanitize_context_for_audit(parsed['context']),
                 duration_ms=_elapsed_ms(started),
+                conversation=result.conversation_id or None,
+                intent=result.intent,
+                clarification=result.clarification,
             )
             return Response(
                 {'detail': 'Internal response contract error.', 'code': 'response_contract_error'},
@@ -112,14 +114,19 @@ class AssistantQueryView(APIView):
             row_count=result.row_count,
             duration_ms=duration_ms,
             schema_name=resolve_schema_name(request),
+            conversation=result.conversation_id or None,
+            intent=result.intent,
+            clarification=result.clarification,
         )
         logger.info(
             'assistant.query ok request_id=%s user_id=%s schema=%s tool=%s '
-            'success=%s row_count=%s duration_ms=%s',
+            'conversation_id=%s intent=%s success=%s row_count=%s duration_ms=%s',
             request_id,
             getattr(request.user, 'pk', None),
             resolve_schema_name(request),
             result.tool_name or 'none',
+            result.conversation_id or '',
+            result.intent or '',
             result.success,
             result.row_count,
             duration_ms,

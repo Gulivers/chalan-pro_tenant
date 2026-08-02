@@ -9,7 +9,7 @@ from uuid import UUID
 from django.db import connection
 from django_tenants.utils import get_public_schema_name
 
-from appassistant.models import AssistantQueryLog
+from appassistant.models import AssistantConversation, AssistantQueryLog
 
 logger = logging.getLogger('appassistant.audit')
 
@@ -48,12 +48,24 @@ def log_assistant_query(
     row_count: int = 0,
     duration_ms: int = 0,
     schema_name: str | None = None,
+    conversation: AssistantConversation | str | UUID | None = None,
+    intent: str = '',
+    clarification: bool = False,
 ) -> AssistantQueryLog | None:
     """
     Persist a minimal audit row. Never store full prompts or result payloads.
     Failures are logged but do not break the API response.
     """
     schema = schema_name or resolve_schema_name()
+    conv_obj = None
+    if isinstance(conversation, AssistantConversation):
+        conv_obj = conversation
+    elif conversation:
+        try:
+            conv_obj = AssistantConversation.objects.filter(pk=conversation).first()
+        except Exception:
+            conv_obj = None
+
     payload = {
         'schema_name': schema,
         'request_id': str(request_id),
@@ -62,13 +74,18 @@ def log_assistant_query(
         'error_code': error_code or '',
         'row_count': row_count,
         'duration_ms': duration_ms,
+        'intent': intent or '',
+        'clarification': bool(clarification),
     }
     try:
         return AssistantQueryLog.objects.create(
             user=user if getattr(user, 'is_authenticated', False) else None,
+            conversation=conv_obj,
             schema_name=schema,
             request_id=request_id,
             tool_name=tool_name or '',
+            intent=intent or '',
+            clarification=bool(clarification),
             params_safe=params_safe or {},
             success=success,
             error_code=error_code or '',

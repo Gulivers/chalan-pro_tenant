@@ -149,11 +149,61 @@ def resolve_vendor_or_raise(
         raise not_found_error(exc.message) from exc
 
 
+def parse_vendor_ids(params: dict, *, key: str = 'vendor_ids', maximum: int = 10) -> list[int]:
+    """Optional list of positive builder IDs (already resolved by Django)."""
+    if key not in params or params[key] is None or params[key] == '':
+        return []
+    value = params[key]
+    if not isinstance(value, list):
+        raise validation_error(f'{key} must be a list of positive integers.')
+    if len(value) > maximum:
+        raise validation_error(f'{key} must have at most {maximum} entries.')
+    out: list[int] = []
+    for item in value:
+        if not isinstance(item, int) or isinstance(item, bool) or item < 1:
+            raise validation_error(f'{key} entries must be positive integers.')
+        if item not in out:
+            out.append(item)
+    return out
+
+
+def resolve_vendors_or_raise(
+    *,
+    vendor: str | None = None,
+    vendor_id: int | None = None,
+    vendor_ids: list[int] | None = None,
+    required: bool = False,
+) -> list:
+    """
+    Resolve one or more vendors in the current tenant schema.
+
+    Returns a list of Builder instances (possibly empty when not required).
+    """
+    ids = list(vendor_ids or [])
+    if vendor_id is not None and vendor_id not in ids:
+        ids.append(vendor_id)
+
+    builders = []
+    if ids:
+        for vid in ids:
+            builders.append(resolve_vendor_or_raise(vendor_id=vid, required=True))
+        return builders
+
+    if vendor:
+        return [resolve_vendor_or_raise(vendor=vendor, required=True)]
+
+    if required:
+        raise validation_error('vendor, vendor_id, or vendor_ids is required.')
+    return []
+
+
 def filtered_spend_qs(
     *,
     date_from: date | None = None,
     date_to: date | None = None,
     builder=None,
+    builders: list | None = None,
+    builder_ids: list[int] | None = None,
     min_amount: Decimal | None = None,
 ) -> QuerySet:
     """
@@ -166,8 +216,24 @@ def filtered_spend_qs(
         qs = qs.filter(date__gte=date_from)
     if date_to is not None:
         qs = qs.filter(date__lte=date_to)
+
+    ids: list[int] = []
     if builder is not None:
-        qs = qs.filter(builder_id=builder.pk)
+        ids.append(builder.pk)
+    if builders:
+        for item in builders:
+            pk = getattr(item, 'pk', item)
+            if isinstance(pk, int) and pk not in ids:
+                ids.append(pk)
+    if builder_ids:
+        for pk in builder_ids:
+            if isinstance(pk, int) and pk not in ids:
+                ids.append(pk)
+    if len(ids) == 1:
+        qs = qs.filter(builder_id=ids[0])
+    elif len(ids) > 1:
+        qs = qs.filter(builder_id__in=ids)
+
     if min_amount is not None:
         # Inclusive lower bound on total_amount.
         qs = qs.filter(total_amount__gte=min_amount)

@@ -22,7 +22,11 @@ export function resolveEntityLinkLocation(block) {
   // Ignore block.path for navigation. Backend may send a canonical path for
   // display/debug; the client always builds the known route from id.
   if (routeKey === 'transactions-form') {
-    return { name: 'transactions-form', query: { id: String(entityId) } };
+    // Level-1 Assistant is read-only: open documents in view mode (same as list "View").
+    return {
+      name: 'transactions-form',
+      query: { id: String(entityId), mode: 'view' },
+    };
   }
 
   if (routeKey === 'builder-view') {

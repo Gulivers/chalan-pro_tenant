@@ -37,7 +37,7 @@ _MONEY = r'\$?\s*([\d,]+(?:\.\d{1,2})?)'
 UNSUPPORTED_CLARIFICATION = (
     'This query is not supported yet. Please rephrase using one of these patterns:\n'
     '1. Show me <vendor> transactions over $<amount> this month.\n'
-    '2. How much did we spend with <vendor> this month?\n'
+    '2. How much did we spend this month? / How much did we spend with <vendor> this month?\n'
     '3. Show purchases by vendor this month.\n'
     '4. Compare purchases by supplier for the last six months.\n'
     '5. Show the five vendors with the highest spending.\n'
@@ -67,6 +67,26 @@ def route(message: str) -> RouteResult:
     normalized = ' '.join(text.lower().split())
 
     # Case 1 — list_purchase_transactions (before sum: both mention vendor + month)
+    # Vendorless first (anchored) so "Show me transactions over $1,500..." is
+    # not mis-captured as vendor "Show Me", and does not steal vendor+list cases.
+    m = re.search(
+        r'^(?:show\s+(?:me\s+)?)?transactions?\s+over\s+'
+        + _MONEY
+        + r'\s+this\s+month',
+        normalized,
+    )
+    if m:
+        amount = _parse_money(m.group(1))
+        if amount is not None:
+            return RouteResult(
+                tool_name='list_purchase_transactions',
+                params={
+                    'min_amount': str(amount),
+                    'period': 'this_month',
+                },
+                matched_case=1,
+            )
+
     # "Show me Harbor Freight transactions over $1,500 this month."
     m = re.search(
         r'(?:show\s+(?:me\s+)?)?'
@@ -103,10 +123,26 @@ def route(message: str) -> RouteResult:
                 matched_case=2,
             )
 
+    # "How much did we spend this month?" (all vendors)
+    if re.search(
+        r'how\s+much\s+(?:did\s+we\s+|have\s+we\s+)?'
+        r'spend(?:ing)?\s+this\s+month',
+        normalized,
+    ):
+        return RouteResult(
+            tool_name='sum_purchase_spending',
+            params={'period': 'this_month'},
+            matched_case=2,
+        )
+
     # Case 6 — spending_timeseries (before compare: both use "last N months")
-    # "Graph spending for the last three months."
+    # Accepts optional "Can you", spending/purchases (+ common typo purshases),
+    # and "this month" / "the this month".
+    _graph_subject = r'(?:spending|purchases?|purshases?)'
     m = re.search(
-        r'(?:graph|chart|plot)\s+spending\s+(?:for\s+)?(?:the\s+)?last\s+'
+        r'(?:can\s+you\s+)?'
+        r'(?:graph|chart|plot)\s+' + _graph_subject + r'\s+'
+        r'(?:for\s+)?(?:the\s+)?last\s+'
         r'(\d+|' + _word_alt() + r')\s+months?',
         normalized,
     )
@@ -118,6 +154,18 @@ def route(message: str) -> RouteResult:
                 params={'months': months},
                 matched_case=6,
             )
+
+    if re.search(
+        r'(?:can\s+you\s+)?'
+        r'(?:graph|chart|plot)\s+' + _graph_subject + r'\s+'
+        r'(?:for\s+)?(?:the\s+)?(?:this\s+month|month\s+to\s+date|mtd)',
+        normalized,
+    ):
+        return RouteResult(
+            tool_name='spending_timeseries',
+            params={'period': 'this_month', 'months': 1},
+            matched_case=6,
+        )
 
     # Case 4 — compare_purchases_by_vendor
     # "Compare purchases by supplier for the last six months."
@@ -138,17 +186,18 @@ def route(message: str) -> RouteResult:
 
     # Case 5 — top_vendors_by_spending
     # "Show the five vendors with the highest spending."
+    # Also: "Show the one vendors with the highest spending of three last month"
     # Decision: highest spending without an explicit period → last 12 months
     # (recent historical), not only this_month. Documented product choice.
     m = re.search(
         r'(?:show\s+(?:me\s+|the\s+)?)?'
-        r'(\d+|' + _word_alt() + r')\s+'
+        r'(?:(\d+|' + _word_alt() + r')\s+)?'
         + _VENDOR_SUPPLIER
         + r'\s+with\s+(?:the\s+)?highest\s+spending',
         normalized,
     )
     if m:
-        limit = _parse_int_word(m.group(1))
+        limit = _parse_int_word(m.group(1)) if m.group(1) else 5
         if limit is not None:
             months = _extract_last_n_months(normalized)
             params: dict[str, Any] = {'limit': limit}
@@ -223,11 +272,27 @@ def _clean_vendor(raw: str) -> str | None:
 
 
 def _extract_last_n_months(normalized: str) -> int | None:
-    m = re.search(
-        r'(?:for\s+|over\s+|in\s+)?(?:the\s+)?last\s+'
+    """
+    Accept common paraphrases for rolling last-N-months windows:
+      - last three months / the last 3 months
+      - three last month / of three last months
+      - previous 3 calendar months (treated as months=N for top_vendors)
+    """
+    patterns = (
+        r'(?:for\s+|over\s+|in\s+|of\s+)?(?:the\s+)?last\s+'
         r'(\d+|' + _word_alt() + r')\s+months?',
-        normalized,
+        r'(?:for\s+|over\s+|in\s+|of\s+)?(?:the\s+)?'
+        r'(\d+|' + _word_alt() + r')\s+last\s+months?',
+        r'(?:for\s+|over\s+|in\s+|of\s+)?(?:the\s+)?'
+        r'(?:previous|last)\s+(\d+|' + _word_alt() + r')\s+'
+        r'(?:calendar\s+)?months?',
+        r'(?:for\s+|over\s+|in\s+|of\s+)?(?:the\s+)?'
+        r'(\d+|' + _word_alt() + r')\s+(?:calendar\s+)?months?',
     )
-    if not m:
-        return None
-    return _parse_int_word(m.group(1))
+    for pattern in patterns:
+        m = re.search(pattern, normalized)
+        if m:
+            value = _parse_int_word(m.group(1))
+            if value is not None:
+                return value
+    return None

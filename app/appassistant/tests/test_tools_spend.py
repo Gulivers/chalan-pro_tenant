@@ -186,7 +186,10 @@ class SpendToolsTests(TenantTestCase):
         links = [b for b in result['blocks'] if b['type'] == 'entity_link']
         self.assertEqual(len(links), 1)
         self.assertEqual(links[0]['route_key'], 'transactions-form')
-        self.assertEqual(links[0]['path'], f'/transactions/form?id={self.doc_harbor.pk}')
+        self.assertEqual(
+            links[0]['path'],
+            f'/transactions/form?id={self.doc_harbor.pk}&mode=view',
+        )
         self._assert_no_floats(result)
 
     @patch('appassistant.services.periods._today', return_value=date(2026, 7, 15))
@@ -201,6 +204,19 @@ class SpendToolsTests(TenantTestCase):
         self.assertEqual(kpi['format'], 'currency')
         self.assertIsInstance(kpi['value'], str)
         self._assert_no_floats(result)
+
+    @patch('appassistant.services.periods._today', return_value=date(2026, 7, 15))
+    def test_sum_purchase_spending_all_vendors(self, _mock):
+        result = execute_tool_strict(
+            'sum_purchase_spending',
+            user=self.user,
+            params={'period': 'this_month'},
+        )
+        kpi = next(b for b in result['blocks'] if b['type'] == 'kpi')
+        # Harbor 2100 + Other Vendor 500
+        self.assertEqual(kpi['value'], '2600.00')
+        self.assertIn('this month', result['message'].lower())
+        self.assertNotIn(' with ', result['message'])
 
     @patch('appassistant.services.periods._today', return_value=date(2026, 7, 15))
     def test_purchases_by_vendor(self, _mock):
@@ -263,6 +279,31 @@ class SpendToolsTests(TenantTestCase):
         self.assertIn('bar_chart', types)
 
     @patch('appassistant.services.periods._today', return_value=date(2026, 7, 15))
+    def test_compare_null_builder_monthly_totals(self, _mock):
+        """Unassigned builder rows must populate month columns, not only Total."""
+        doc_null = Document.objects.create(
+            document_type=self.pinv,
+            builder=None,
+            total_amount=Decimal('450.00'),
+            notes='Unassigned PINV',
+            is_active=True,
+            created_by=self.user,
+        )
+        _set_doc_date(doc_null, self.today)
+
+        result = execute_tool_strict(
+            'compare_purchases_by_vendor',
+            user=self.user,
+            params={'months': 3, 'top_n': 10},
+        )
+        table = next(b for b in result['blocks'] if b['type'] == 'table')
+        null_rows = [r for r in table['rows'] if r.get('vendor_id') is None]
+        self.assertEqual(len(null_rows), 1)
+        self.assertEqual(null_rows[0]['total'], '450.00')
+        self.assertEqual(null_rows[0]['2026-07'], '450.00')
+        self._assert_no_floats(result)
+
+    @patch('appassistant.services.periods._today', return_value=date(2026, 7, 15))
     def test_ambiguous_vendor(self, _mock):
         result = execute_tool(
             'sum_purchase_spending',
@@ -315,12 +356,13 @@ class SpendToolsTests(TenantTestCase):
             )
         self.assertEqual(ctx.exception.code, 'permission')
 
-    def test_registry_has_six_tools(self):
+    def test_registry_has_spend_tools(self):
         names = get_default_registry().names()
         self.assertEqual(
             names,
             [
                 'compare_purchases_by_vendor',
+                'compare_vendor_spending_periods',
                 'list_purchase_transactions',
                 'purchases_by_vendor',
                 'spending_timeseries',

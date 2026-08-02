@@ -41,6 +41,7 @@ class PurchasesByVendorTool(AssistantTool):
             'date_to': date_to,
             'limit': parse_limit(params, default=20, maximum=50),
             'include_chart': parse_bool(params, 'include_chart', default=True),
+            'include_table': parse_bool(params, 'include_table', default=True),
         }
 
     def execute(self, *, user, params: dict[str, Any]) -> dict[str, Any]:
@@ -80,19 +81,21 @@ class PurchasesByVendorTool(AssistantTool):
             labels.append(name)
             values.append(as_money_str(amount))
 
-        blocks: list[dict] = [
-            table_block(
-                block_id='purchases-by-vendor',
-                title=f'{SPEND_METRIC_LABEL} by vendor',
-                columns=columns,
-                rows=rows,
-                pagination={
-                    'limit': p['limit'],
-                    'offset': 0,
-                    'total': total_vendors,
-                },
-            ),
-        ]
+        blocks: list[dict] = []
+        if p['include_table']:
+            blocks.append(
+                table_block(
+                    block_id='purchases-by-vendor',
+                    title=f'{SPEND_METRIC_LABEL} by vendor',
+                    columns=columns,
+                    rows=rows,
+                    pagination={
+                        'limit': p['limit'],
+                        'offset': 0,
+                        'total': total_vendors,
+                    },
+                ),
+            )
         if p['include_chart'] and labels:
             blocks.append(
                 bar_chart_block(
@@ -101,6 +104,16 @@ class PurchasesByVendorTool(AssistantTool):
                     labels=labels,
                     values=values,
                     series_name=SPEND_METRIC_LABEL,
+                )
+            )
+        if not blocks:
+            # Fail closed to a table if presentation flags clear everything.
+            blocks.append(
+                table_block(
+                    block_id='purchases-by-vendor',
+                    title=f'{SPEND_METRIC_LABEL} by vendor',
+                    columns=columns,
+                    rows=rows,
                 )
             )
 

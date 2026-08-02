@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from uuid import UUID
 
 
 SCHEMA_VERSION = '1'
@@ -10,6 +11,15 @@ MAX_MESSAGE_LENGTH = 2000
 ALLOWED_ENTITY_TYPES = frozenset({'document', 'builder', None})
 # tenant_id / user_id / schema_name are never accepted as authority.
 IGNORED_AUTHORITY_KEYS = frozenset({'tenant_id', 'user_id', 'schema_name', 'tenant'})
+# Client must not send authoritative conversational state.
+IGNORED_STATE_KEYS = frozenset({
+    'state',
+    'active_filters',
+    'filters',
+    'resolved_filters',
+    'tool',
+    'params',
+})
 
 
 class AssistantRequestError(Exception):
@@ -42,10 +52,31 @@ def _optional_int(value: Any, field: str) -> int | None:
     return value
 
 
+def _optional_bool(value: Any, field: str) -> bool:
+    if value is None or value == '':
+        return False
+    if isinstance(value, bool):
+        return value
+    raise AssistantRequestError({field: ['Must be a boolean or null.']})
+
+
+def _optional_uuid(value: Any, field: str) -> str | None:
+    if value is None or value == '':
+        return None
+    if not isinstance(value, str):
+        raise AssistantRequestError({field: ['Must be a UUID string or null.']})
+    text = value.strip()
+    try:
+        return str(UUID(text))
+    except (ValueError, TypeError) as exc:
+        raise AssistantRequestError({field: ['Must be a valid UUID.']}) from exc
+
+
 def parse_assistant_request(data: Any) -> dict:
     """
     Validate and normalize the Assistant query payload.
-    Authority keys (tenant/user) in the body are ignored, never trusted.
+    Authority keys (tenant/user) and conversational state in the body are
+    ignored / rejected — never trusted.
     """
     if not isinstance(data, dict):
         raise AssistantRequestError({'non_field_errors': ['Request body must be a JSON object.']})
@@ -65,6 +96,16 @@ def parse_assistant_request(data: Any) -> dict:
             {'message': [f'Must be at most {MAX_MESSAGE_LENGTH} characters.']}
         )
 
+    # Reject authoritative state blobs if the client tries to send them.
+    for key in IGNORED_STATE_KEYS:
+        if key in data and data[key] not in (None, '', {}, []):
+            raise AssistantRequestError(
+                {key: ['Client-supplied state is not accepted. Send conversation_id only.']}
+            )
+
+    conversation_id = _optional_uuid(data.get('conversation_id'), 'conversation_id')
+    start_over = _optional_bool(data.get('start_over'), 'start_over')
+
     raw_context = data.get('context') or {}
     if not isinstance(raw_context, dict):
         raise AssistantRequestError({'context': ['Must be an object or null.']})
@@ -74,6 +115,8 @@ def parse_assistant_request(data: Any) -> dict:
 
     # Explicitly drop authority keys; never use them.
     for key in IGNORED_AUTHORITY_KEYS:
+        raw_context.pop(key, None)
+    for key in IGNORED_STATE_KEYS:
         raw_context.pop(key, None)
 
     view = _optional_str(raw_context.get('view'), 'context.view')
@@ -88,6 +131,8 @@ def parse_assistant_request(data: Any) -> dict:
     return {
         'schema_version': SCHEMA_VERSION,
         'message': message,
+        'conversation_id': conversation_id,
+        'start_over': start_over,
         'context': {
             'view': view,
             'route_name': route_name,

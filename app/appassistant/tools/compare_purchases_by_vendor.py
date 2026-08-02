@@ -24,6 +24,7 @@ from appassistant.services.copy import compare_vendors_message
 from appassistant.services.spend import SPEND_DEFINITION, SPEND_METRIC_LABEL
 from appassistant.tools._common import (
     filtered_spend_qs,
+    parse_bool,
     parse_limit,
     parse_months,
     require_view_document,
@@ -55,6 +56,8 @@ class ComparePurchasesByVendorTool(AssistantTool):
             'date_from': date_from,
             'date_to': date_to,
             'top_n': top_n,
+            'include_chart': parse_bool(params, 'include_chart', default=True),
+            'include_table': parse_bool(params, 'include_table', default=True),
         }
 
     def execute(self, *, user, params: dict[str, Any]) -> dict[str, Any]:
@@ -71,13 +74,14 @@ class ComparePurchasesByVendorTool(AssistantTool):
             .annotate(total=Sum('total_amount'))
             .order_by('-total', 'builder__name', 'builder_id')[: p['top_n']]
         )
-        top_ids = [row['builder_id'] for row in top if row['builder_id'] is not None]
+        concrete_ids = [row['builder_id'] for row in top if row['builder_id'] is not None]
+        include_null_builder = any(row['builder_id'] is None for row in top)
 
-        # Monthly totals for those vendors
-        monthly_map: dict[int, dict[str, Decimal]] = defaultdict(dict)
-        if top_ids:
+        # Monthly totals keyed by builder_id (None allowed for unassigned invoices).
+        monthly_map: dict[Any, dict[str, Decimal]] = defaultdict(dict)
+        if concrete_ids:
             monthly_rows = (
-                qs.filter(builder_id__in=top_ids)
+                qs.filter(builder_id__in=concrete_ids)
                 .annotate(month=TruncMonth('date'))
                 .values('builder_id', 'month')
                 .annotate(total=Sum('total_amount'))
@@ -87,6 +91,20 @@ class ComparePurchasesByVendorTool(AssistantTool):
                     continue
                 label = row['month'].strftime('%Y-%m')
                 monthly_map[row['builder_id']][label] = (
+                    coerce_money(row['total']) if row['total'] is not None else zero_money()
+                )
+        if include_null_builder:
+            monthly_rows_null = (
+                qs.filter(builder_id__isnull=True)
+                .annotate(month=TruncMonth('date'))
+                .values('month')
+                .annotate(total=Sum('total_amount'))
+            )
+            for row in monthly_rows_null:
+                if not row['month']:
+                    continue
+                label = row['month'].strftime('%Y-%m')
+                monthly_map[None][label] = (
                     coerce_money(row['total']) if row['total'] is not None else zero_money()
                 )
 
@@ -107,22 +125,25 @@ class ComparePurchasesByVendorTool(AssistantTool):
                 'vendor': name,
                 'total': as_money_str(total),
             }
+            vendor_months = monthly_map.get(vendor_id, {})
             for label in month_labels:
-                amount = monthly_map.get(vendor_id or -1, {}).get(label, zero_money())
+                amount = vendor_months.get(label, zero_money())
                 entry[label] = as_money_str(amount)
             rows.append(entry)
             chart_labels.append(name)
             chart_values.append(as_money_str(total))
 
-        blocks: list[dict] = [
-            table_block(
-                block_id='compare-purchases-by-vendor',
-                title=f'{SPEND_METRIC_LABEL} by vendor (last {p["months"]} months)',
-                columns=columns,
-                rows=rows,
-            ),
-        ]
-        if chart_labels:
+        blocks: list[dict] = []
+        if p['include_table']:
+            blocks.append(
+                table_block(
+                    block_id='compare-purchases-by-vendor',
+                    title=f'{SPEND_METRIC_LABEL} by vendor (last {p["months"]} months)',
+                    columns=columns,
+                    rows=rows,
+                ),
+            )
+        if p['include_chart'] and chart_labels:
             blocks.append(
                 bar_chart_block(
                     block_id='compare-purchases-by-vendor-chart',
@@ -130,6 +151,15 @@ class ComparePurchasesByVendorTool(AssistantTool):
                     labels=chart_labels,
                     values=chart_values,
                     series_name=SPEND_METRIC_LABEL,
+                )
+            )
+        if not blocks:
+            blocks.append(
+                table_block(
+                    block_id='compare-purchases-by-vendor',
+                    title=f'{SPEND_METRIC_LABEL} by vendor (last {p["months"]} months)',
+                    columns=columns,
+                    rows=rows,
                 )
             )
 

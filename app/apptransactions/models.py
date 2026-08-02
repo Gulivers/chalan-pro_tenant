@@ -6,6 +6,7 @@ from django.db.models.functions import Lower
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from appinventory.models import Product, UnitOfMeasure, Warehouse, PriceType, ProductBrand
 from ctrctsapp.models import Builder, Job, HouseModel
 
@@ -200,7 +201,8 @@ class WorkAccount(models.Model):
 
 class Document(models.Model):
     document_type = models.ForeignKey(DocumentType, on_delete=models.CASCADE)
-    date = models.DateField(auto_now_add=True)
+    # Writable from API/UI; frontend defaults to today on create and keeps stored date on edit.
+    date = models.DateField(default=timezone.localdate)
     # Contraparte comercial (para reglas de venta/compra y cobranza)
     builder = models.ForeignKey(Builder, on_delete=models.PROTECT, null=True, blank=True)
     # Identidad de la obra (builder+job+house_model+lot/address encapsulados)

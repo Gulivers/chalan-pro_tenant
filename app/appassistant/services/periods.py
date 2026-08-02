@@ -7,12 +7,28 @@ Returned bounds are inclusive calendar dates (date_from, date_to).
 
 from __future__ import annotations
 
+import re
 from calendar import monthrange
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from django.conf import settings
 from django.utils import timezone
+
+_WORD_MONTH_COUNTS = {
+    'one': 1,
+    'two': 2,
+    'three': 3,
+    'four': 4,
+    'five': 5,
+    'six': 6,
+    'seven': 7,
+    'eight': 8,
+    'nine': 9,
+    'ten': 10,
+    'eleven': 11,
+    'twelve': 12,
+}
 
 
 class PeriodValidationError(ValueError):
@@ -63,6 +79,61 @@ def _add_months(year: int, month: int, delta: int) -> tuple[int, int]:
     return idx // 12, (idx % 12) + 1
 
 
+def _quarter_of(day: date) -> int:
+    return (day.month - 1) // 3 + 1
+
+
+def _quarter_bounds(year: int, quarter: int) -> tuple[date, date]:
+    start_month = (quarter - 1) * 3 + 1
+    end_month = start_month + 2
+    return _month_start(year, start_month), _month_end(year, end_month)
+
+
+def _week_start_monday(day: date) -> date:
+    return day - timedelta(days=day.weekday())
+
+
+def previous_calendar_months(n: int = 1) -> tuple[date, date]:
+    """
+    Inclusive span of the N full calendar months immediately before the
+    current month (current month is excluded).
+
+    Example (today = 2026-08-01):
+      n=1 → 2026-07-01 .. 2026-07-31
+      n=2 → 2026-06-01 .. 2026-07-31
+    """
+    if not isinstance(n, int) or isinstance(n, bool) or n < 1 or n > 12:
+        raise PeriodValidationError('previous calendar months must be an integer in [1..12].')
+    today = _today()
+    end_year, end_month = _add_months(today.year, today.month, -1)
+    start_year, start_month = _add_months(today.year, today.month, -n)
+    return (
+        _month_start(start_year, start_month),
+        _month_end(end_year, end_month),
+    )
+
+
+def re_match_previous_months(period_key: str) -> int | None:
+    """
+    Parse labels like previous_2_calendar_months / last_2_calendar_months.
+    """
+    m = re.fullmatch(
+        r'(?:previous|last)_(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)'
+        r'_calendar_months?',
+        (period_key or '').strip().lower(),
+    )
+    if not m:
+        return None
+    token = m.group(1)
+    if token.isdigit():
+        value = int(token)
+    else:
+        value = _WORD_MONTH_COUNTS.get(token)
+    if value is None or value < 1 or value > 12:
+        return None
+    return value
+
+
 def resolve_period(
     *,
     period: str | None = None,
@@ -75,11 +146,15 @@ def resolve_period(
 
     Supported:
     - explicit date_from / date_to
-    - period='this_month'
+    - period='this_month' / 'month_to_date' → month-to-date (no future days)
+    - period='calendar_month' → full current calendar month
+    - period='last_month'
+    - period='this_year' / 'year_to_date'
     - period='last_n_months' with months in [1..12]
     - months alone (treated as last_n_months)
 
     Uses settings.TIME_ZONE / active timezone (product default: UTC).
+    Relative ranges that include the current month end at local today (D4).
     """
     # Ensure Django TZ context matches product settings when possible.
     _ = getattr(settings, 'TIME_ZONE', 'UTC')
@@ -105,12 +180,80 @@ def resolve_period(
             )
         return start, end
 
-    if period_key == 'this_month':
-        today = _today()
+    today = _today()
+
+    if period_key == 'today':
+        return today, today
+
+    if period_key == 'yesterday':
+        day = today - timedelta(days=1)
+        return day, day
+
+    if period_key == 'this_week':
+        start = _week_start_monday(today)
+        return start, today
+
+    if period_key == 'last_week':
+        this_week_start = _week_start_monday(today)
+        end = this_week_start - timedelta(days=1)
+        start = end - timedelta(days=6)
+        return start, end
+
+    if period_key in ('this_month', 'month_to_date', 'mtd'):
+        # D4: spend "this month" = month-to-date (exclude future calendar days).
+        return _month_start(today.year, today.month), today
+
+    if period_key == 'calendar_month':
         return _month_start(today.year, today.month), _month_end(today.year, today.month)
+
+    if period_key in ('last_month', 'previous_month', 'previous_calendar_month'):
+        return previous_calendar_months(1)
+
+    m_prev = None
+    if period_key:
+        m_prev = re_match_previous_months(period_key)
+    if m_prev is not None:
+        return previous_calendar_months(m_prev)
+
+    if period_key in ('this_quarter', 'quarter_to_date'):
+        q = _quarter_of(today)
+        start, _ = _quarter_bounds(today.year, q)
+        return start, today
+
+    if period_key == 'last_quarter':
+        q = _quarter_of(today) - 1
+        year = today.year
+        if q < 1:
+            q = 4
+            year -= 1
+        return _quarter_bounds(year, q)
+
+    if period_key in ('this_year', 'year_to_date', 'ytd'):
+        return date(today.year, 1, 1), today
+
+    if period_key in ('last_six_months', 'last_6_months'):
+        months = 6
+
+    # Alias: last_3_months / last_three_months → months=N rolling window.
+    if period_key and months is None:
+        m_last = re.fullmatch(
+            r'last_(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)'
+            r'_months?',
+            period_key,
+        )
+        if m_last:
+            token = m_last.group(1)
+            months = int(token) if token.isdigit() else _WORD_MONTH_COUNTS.get(token)
 
     if period_key in ('last_n_months', 'last_months') or (
         period_key is None and months is not None
+    ) or period_key in ('last_six_months', 'last_6_months') or (
+        period_key
+        and re.fullmatch(
+            r'last_(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)'
+            r'_months?',
+            period_key,
+        )
     ):
         if months is None:
             raise PeriodValidationError('months is required for last_n_months.')
@@ -118,20 +261,23 @@ def resolve_period(
             raise PeriodValidationError('months must be an integer in [1..12].')
         if months < 1 or months > 12:
             raise PeriodValidationError('months must be an integer in [1..12].')
-        today = _today()
         start_year, start_month = _add_months(today.year, today.month, -(months - 1))
         return (
             _month_start(start_year, start_month),
-            _month_end(today.year, today.month),
+            today,
         )
 
     if period_key:
         raise PeriodValidationError(
-            f'Unsupported period "{period}". Use this_month, last_n_months, or date_from/date_to.'
+            f'Unsupported period "{period}". '
+            'Use today, yesterday, this_week, last_week, this_month, '
+            'month_to_date, calendar_month, last_month, this_quarter, '
+            'last_quarter, this_year, last_n_months, or date_from/date_to.'
         )
 
     raise PeriodValidationError(
-        'Provide period (this_month / last_n_months), months, or date_from/date_to.'
+        'Provide period (this_month / last_month / last_n_months), months, '
+        'or date_from/date_to.'
     )
 
 
