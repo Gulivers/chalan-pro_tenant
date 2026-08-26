@@ -136,11 +136,29 @@ def by_vendor_message(
     )
 
 
-def compare_vendors_message(*, vendor_count: int, months: int, invoice_count: int) -> str:
-    unit = 'month' if months == 1 else 'months'
+def compare_vendors_message(
+    *,
+    vendor_count: int,
+    invoice_count: int,
+    months: int | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
+) -> str:
     vlabel = 'vendor' if vendor_count == 1 else 'vendors'
+    if date_from is not None and date_to is not None:
+        period = period_phrase(date_from, date_to, months=months)
+        return (
+            f'{SPEND_METRIC_LABEL} comparison for {period}: '
+            f'top {vendor_count} {vlabel}, based on {invoice_count_label(invoice_count)}.'
+        )
+    if months is not None:
+        unit = 'month' if months == 1 else 'months'
+        return (
+            f'{SPEND_METRIC_LABEL} comparison for the last {months} {unit}: '
+            f'top {vendor_count} {vlabel}, based on {invoice_count_label(invoice_count)}.'
+        )
     return (
-        f'{SPEND_METRIC_LABEL} comparison for the last {months} {unit}: '
+        f'{SPEND_METRIC_LABEL} comparison: '
         f'top {vendor_count} {vlabel}, based on {invoice_count_label(invoice_count)}.'
     )
 

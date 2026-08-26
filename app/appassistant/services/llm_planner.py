@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from django.conf import settings
+from django.utils import timezone
 
 from appassistant.services.conversation_state import (
     ALLOWED_PRESENTATION,
@@ -24,7 +25,7 @@ from appassistant.services.conversation_state import (
 )
 from appassistant.services.continuity_planner import resolved_period_value
 from appassistant.services.filter_merger import ALLOWED_OPERATIONS, FilterOperation
-from appassistant.services.periods import PeriodValidationError
+from appassistant.services.periods import PeriodValidationError, resolve_period
 from appassistant.services.spend import SPEND_DEFINITION, SPEND_METRIC_LABEL
 from appassistant.services.vendors import (
     AmbiguousVendorError,
@@ -35,7 +36,8 @@ from appassistant.tools.registry import get_default_registry
 
 logger = logging.getLogger('appassistant.llm')
 
-# Params the model may propose for a brand-new query (names/labels only).
+# Params the model may propose for a brand-new query.
+# Vendor names/labels only for entities; date_* accepted as ISO after Django validate.
 _LLM_PARAM_KEYS = frozenset({
     'vendor',
     'min_amount',
@@ -45,6 +47,8 @@ _LLM_PARAM_KEYS = frozenset({
     'top_n',
     'include_chart',
     'include_table',
+    'date_from',
+    'date_to',
 })
 
 
@@ -74,6 +78,19 @@ def llm_planner_enabled() -> bool:
     return bool(key)
 
 
+def llm_planner_primary_enabled() -> bool:
+    """
+    LLM-first orchestration (Fase 1).
+
+    Requires ASSISTANT_LLM_PRIMARY plus a usable LLM (enabled + API key).
+    When False, DeterministicRouter remains first authority (legacy).
+    """
+    if not llm_planner_enabled():
+        return False
+    flag = getattr(settings, 'ASSISTANT_LLM_PRIMARY', False)
+    return flag in (True, 'True', 'true', '1', 1)
+
+
 def plan_with_llm(
     message: str,
     *,
@@ -92,12 +109,16 @@ def plan_with_llm(
     model = getattr(settings, 'ASSISTANT_LLM_MODEL', 'gpt-4.1-mini') or 'gpt-4.1-mini'
     compact = compact_state_for_planner(None if state_expired else previous_state)
     tools_catalog = _tools_catalog()
+    tz_name = getattr(settings, 'TIME_ZONE', 'UTC') or 'UTC'
+    today_iso = timezone.localdate().isoformat()
 
-    system = _system_prompt()
+    system = _system_prompt(today_iso=today_iso, timezone_name=tz_name)
     user_payload = {
         'user_message': (message or '').strip()[:2000],
         'conversation_state': compact,
         'state_expired': bool(state_expired),
+        'today': today_iso,
+        'timezone': tz_name,
         'page_context': {
             k: (page_context or {}).get(k)
             for k in ('view', 'route_name', 'entity_type', 'entity_id')
@@ -123,6 +144,14 @@ def plan_with_llm(
             'last_n_months',
             'last_six_months',
         ],
+        'temporal_contract': {
+            'prefer_period_labels_for': 'common fixed periods in allowed_periods',
+            'use_date_from_date_to_for': (
+                'variable natural-language spans (e.g. last 3 weeks) as ISO YYYY-MM-DD'
+            ),
+            'date_bounds': 'inclusive calendar dates in timezone',
+            'ambiguous_relative': 'clarify; do not invent dates',
+        },
     }
 
     try:
@@ -170,20 +199,41 @@ def _call_openai(*, system: str, user_payload: dict[str, Any], model: str) -> st
     return content
 
 
-def _system_prompt() -> str:
+def _system_prompt(*, today_iso: str, timezone_name: str) -> str:
     tool_names = ', '.join(sorted(ALLOWED_TOOLS))
     return f"""You are the JobRhythm Assistant planner (Level 1, read-only spend analytics).
+Users ask in natural language; they do not know tool names, period labels, or internal schemas.
+You interpret intent and propose a tool + typed params. Django validates and executes.
 Return ONLY a JSON object (no markdown) with this shape:
 {{
   "intent": "string",
   "is_new_query": boolean,
   "start_over": boolean,
   "tool": "tool_name or null",
-  "params": {{"vendor": "name", "min_amount": "1500.00", "period": "this_month", "months": 6}},
+  "params": {{
+    "vendor": "name",
+    "min_amount": "1500.00",
+    "period": "this_month",
+    "months": 6,
+    "date_from": "YYYY-MM-DD",
+    "date_to": "YYYY-MM-DD"
+  }},
   "filter_operations": [{{"field": "vendor|min_amount|period|tool|presentation", "operation": "set|add|remove|clear|replace_period|compare_with_period|change_tool|change_presentation|reset|clarify", "value": ...}}],
   "presentation": ["message","kpi","table","bar_chart","sources"] or null,
   "clarification": "short question or null"
 }}
+
+Temporal contract (hybrid):
+- Product today={today_iso}, timezone={timezone_name}. Compute relative dates from that today.
+- For common fixed periods, prefer period labels from allowed_periods
+  (this_month, last_month, this_week, last_week, year_to_date, …).
+- For variable natural-language spans with no matching label (e.g. "last three weeks",
+  "últimas 3 semanas", "from June 1 to June 20"), set date_from and date_to as inclusive
+  ISO dates YYYY-MM-DD. Do not invent a fake period label for those.
+- this_month / month_to_date = month start through today (not the full calendar month).
+- Ambiguous time ("recently", "around May", "hace poco") → clarification; do not invent dates.
+- Do not send only one of date_from/date_to. Inclusive span must be ≤ 366 days.
+- When using date_from/date_to, omit period/months unless a label clearly also applies.
 
 Rules:
 - Metric is always Net invoiced spending (active PINV only). Spend definition: {SPEND_DEFINITION}
@@ -193,6 +243,14 @@ Rules:
 - Prefer vendor NAMES in params/operations; Django will resolve IDs.
 - Vendor is optional for sum_purchase_spending and list_purchase_transactions.
   "How much did we spend this month?" → tool sum_purchase_spending, params {{"period": "this_month"}} (no vendor).
+  "¿Cuánto gasté en las últimas tres semanas?" → sum_purchase_spending with date_from/date_to
+  covering the last 21 days ending today (no vendor).
+- "Compare purchases by supplier for the last six months." → compare_purchases_by_vendor
+  with months=6 (or period last_n_months / last_six_months).
+- "Compare purchases by supplier for the last three weeks." /
+  "Compara compras por proveedor en las últimas tres semanas." →
+  compare_purchases_by_vendor with date_from/date_to for the last 21 days ending today.
+  Do NOT invent months for week-based spans; months is only for month windows.
 - is_new_query=true when the user starts a different complete question with enough params.
 - is_new_query=false for follow-ups that refine/replace/remove filters or change presentation/tool.
 - Explicit new vendor name in a full question → replace (is_new_query=true or set vendor), do not keep the previous vendor.
@@ -204,12 +262,11 @@ Rules:
   (full previous calendar month; no absolute dates needed).
 - "two previous calendar months" → replace_period with period_label previous_2_calendar_months
   (the two full calendar months before the current month; current month excluded).
+- Follow-up with a variable span → replace_period value {{"date_from":"...","date_to":"..."}}.
 - "compare with last month" → compare_with_period + tool compare_vendor_spending_periods.
-- this_month means month-to-date through today, not the full calendar month.
-- Prefer period_label over inventing date_from/date_to.
 - "Graph spending/purchases for this month" → tool spending_timeseries with
   params {{"period": "this_month", "months": 1}} (never omit months for that tool
-  unless period is set).
+  unless period or an explicit date range is set).
 - "Graph spending for the last N months" → spending_timeseries with months=N.
 - "show the documents" → change_tool to list_purchase_transactions, inherit filters.
 - "graph it" / "as a table" → change_presentation only.
@@ -341,6 +398,8 @@ def _sanitize_params(raw: Any) -> dict[str, Any]:
         return {}
     out: dict[str, Any] = {}
     for key in _LLM_PARAM_KEYS:
+        if key in ('date_from', 'date_to'):
+            continue
         if key not in raw or raw[key] is None or raw[key] == '':
             continue
         value = raw[key]
@@ -362,7 +421,18 @@ def _sanitize_params(raw: Any) -> dict[str, Any]:
         elif key in ('include_chart', 'include_table'):
             if isinstance(value, bool):
                 out[key] = value
-    # Never accept vendor_id / vendor_ids / date_* from the model as authority.
+    # Explicit ISO range: accepted only after Django period validation.
+    # Never accept vendor_id / vendor_ids from the model as authority.
+    if raw.get('date_from') not in (None, '') or raw.get('date_to') not in (None, ''):
+        try:
+            start, end = resolve_period(
+                date_from=raw.get('date_from'),
+                date_to=raw.get('date_to'),
+            )
+            out['date_from'] = start.isoformat()
+            out['date_to'] = end.isoformat()
+        except PeriodValidationError:
+            pass
     return out
 
 
@@ -506,14 +576,22 @@ def _normalize_period_value(value: Any) -> dict[str, str] | None:
         except PeriodValidationError:
             return None
     if isinstance(date_from, str) and isinstance(date_to, str) and date_from and date_to:
+        try:
+            start, end = resolve_period(
+                date_from=date_from.strip(),
+                date_to=date_to.strip(),
+            )
+        except PeriodValidationError:
+            return None
         out = {
             'period_label': (
                 label.strip().lower()
                 if isinstance(label, str) and label.strip()
                 else 'custom_range'
             ),
-            'date_from': date_from.strip(),
-            'date_to': date_to.strip(),
+            'date_from': start.isoformat(),
+            'date_to': end.isoformat(),
+            'timezone': getattr(settings, 'TIME_ZONE', 'UTC') or 'UTC',
         }
         tz = value.get('timezone')
         if isinstance(tz, str) and tz.strip():

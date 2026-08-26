@@ -1,14 +1,19 @@
 """
-Assistant query orchestrator (Increment C4).
+Assistant query orchestrator (Increment C4 + LLM-primary flag).
 
-Flow:
+Flow when ASSISTANT_LLM_PRIMARY=True (+ LLM enabled + key):
   message (+ conversation_id)
     → load/create conversation (user + schema scoped)
-    → DeterministicRouter (complete known queries = authority)
-    → LLM planner when enabled (natural language / follow-ups)
-    → deterministic continuity fallback
+    → LLM planner (natural language → tool + typed params)
+    → Continuity planner fallback
+    → DeterministicRouter fallback
     → FilterMerger → execute_tool → persist state
-    → structured response with active_filters
+
+Flow when ASSISTANT_LLM_PRIMARY=False (legacy):
+  → DeterministicRouter (complete known queries = authority)
+  → LLM planner
+  → Continuity planner
+  → DeterministicRouter empty / unsupported
 
 Fail closed on tool errors (HTTP 200 + clarification blocks).
 LLM never supplies tenant/user authority, SQL, or trusted entity IDs.
@@ -44,6 +49,7 @@ from appassistant.services.llm_planner import (
     LLMPlan,
     build_new_query_params_from_llm,
     llm_planner_enabled,
+    llm_planner_primary_enabled,
     plan_with_llm,
 )
 from appassistant.services.state_builder import build_state_after_tool
@@ -149,12 +155,30 @@ def run_assistant_query(
     )
     prev_state, state_expired = get_reusable_state(conversation)
     conv_id = str(conversation.id)
-
-    # Complete new queries (DeterministicRouter match) are authoritative:
-    # explicit tool params replace prior filters. Continuity only applies when
-    # the utterance is a follow-up that the router does not recognize.
     routed_preview: RouteResult = route(message)
-    if routed_preview.tool_name:
+    llm_primary = llm_planner_primary_enabled()
+
+    # Fase 1: LLM interprets natural language first when the flag is on.
+    if llm_primary:
+        llm_plan = plan_with_llm(
+            message,
+            previous_state=prev_state,
+            state_expired=state_expired,
+            page_context=ctx,
+        )
+        if llm_plan.ok:
+            return _run_llm_plan(
+                user=user,
+                message=message,
+                context=ctx,
+                request_id=request_id,
+                conversation=conversation,
+                prev_state=prev_state,
+                state_expired=state_expired,
+                plan=llm_plan,
+            )
+    elif routed_preview.tool_name:
+        # Legacy: complete DeterministicRouter matches are authoritative.
         return _run_routed_query(
             user=user,
             message=message,
@@ -170,9 +194,8 @@ def run_assistant_query(
                 else 'new_query'
             ),
         )
-
-    # LLM planner for natural language / follow-ups (C4), then continuity fallback.
-    if llm_planner_enabled():
+    elif llm_planner_enabled():
+        # Legacy: LLM only when the router did not match a complete query.
         llm_plan = plan_with_llm(
             message,
             previous_state=prev_state,
@@ -219,7 +242,13 @@ def run_assistant_query(
             continuity=continuity,
         )
 
-    # Neither a complete routed query nor a recognized follow-up / LLM plan.
+    # Fallback: deterministic route (match or unsupported clarification).
+    # Under LLM-primary this is the rescue path after LLM/continuity miss.
+    intent = 'unsupported'
+    if routed_preview.tool_name and routed_preview.matched_case:
+        intent = f'case_{routed_preview.matched_case}'
+    elif routed_preview.tool_name:
+        intent = 'new_query'
     return _run_routed_query(
         user=user,
         message=message,
@@ -229,7 +258,7 @@ def run_assistant_query(
         state_expired=state_expired,
         routed=routed_preview,
         router_name='deterministic',
-        intent='unsupported',
+        intent=intent,
     )
 
 

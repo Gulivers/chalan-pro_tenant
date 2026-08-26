@@ -27,7 +27,11 @@ def _set_doc_date(doc: Document, d: date) -> None:
     doc.refresh_from_db()
 
 
-@override_settings(TIME_ZONE='UTC', ASSISTANT_ENABLED=True)
+@override_settings(
+    TIME_ZONE='UTC',
+    ASSISTANT_ENABLED=True,
+    ASSISTANT_LLM_PRIMARY=False,
+)
 class C3CompareAndMultiVendorTests(TenantTestCase):
     @classmethod
     def setup_tenant(cls, tenant):
@@ -39,6 +43,10 @@ class C3CompareAndMultiVendorTests(TenantTestCase):
 
     def setUp(self):
         super().setUp()
+        # TenantTestCase ignores class-level @override_settings for custom flags.
+        self._llm_primary_ctx = self.settings(ASSISTANT_LLM_PRIMARY=False)
+        self._llm_primary_ctx.enable()
+        self.addCleanup(self._llm_primary_ctx.disable)
         reset_default_registry()
         self.pinv, _ = DocumentType.objects.get_or_create(
             type_code=SPEND_TYPE_CODE,

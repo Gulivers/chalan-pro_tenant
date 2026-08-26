@@ -277,6 +277,84 @@ class SpendToolsTests(TenantTestCase):
         types = {b['type'] for b in result['blocks']}
         self.assertIn('table', types)
         self.assertIn('bar_chart', types)
+        table = next(b for b in result['blocks'] if b['type'] == 'table')
+        # Classic months path keeps monthly breakdown columns.
+        self.assertIn('2026-07', {c['key'] for c in table['columns']})
+
+    @patch('appassistant.services.periods._today', return_value=date(2026, 8, 2))
+    def test_compare_purchases_by_vendor_explicit_short_range(self, _mock):
+        """Last ~3 weeks via date_from/date_to: totals by vendor, no months required."""
+        recent = Document.objects.create(
+            document_type=self.pinv,
+            builder=self.other,
+            total_amount=Decimal('75.00'),
+            is_active=True,
+            created_by=self.user,
+        )
+        _set_doc_date(recent, date(2026, 7, 20))
+
+        result = execute_tool_strict(
+            'compare_purchases_by_vendor',
+            user=self.user,
+            params={
+                'date_from': '2026-07-13',
+                'date_to': '2026-08-02',
+                'top_n': 10,
+            },
+        )
+        table = next(b for b in result['blocks'] if b['type'] == 'table')
+        col_keys = {c['key'] for c in table['columns']}
+        self.assertEqual(col_keys, {'vendor', 'total'})
+        vendors = {r['vendor']: r['total'] for r in table['rows']}
+        # Harbor 2000+100 on 2026-07-15; Other 500 (fixture) + 75 (recent).
+        self.assertEqual(vendors['Harbor Freight'], '2100.00')
+        self.assertEqual(vendors['Other Vendor'], '575.00')
+        self.assertNotIn('months is required', result.get('message', '').lower())
+        self.assertIn('2026-07-13', result['message'])
+        self._assert_no_floats(result)
+
+    def test_compare_purchases_by_vendor_requires_period_or_range(self):
+        with self.assertRaises(ToolError) as ctx:
+            execute_tool_strict(
+                'compare_purchases_by_vendor',
+                user=self.user,
+                params={'top_n': 5},
+            )
+        self.assertEqual(ctx.exception.code, 'validation')
+        self.assertIn('date_from', ctx.exception.message.lower())
+
+    @patch('appassistant.services.periods._today', return_value=date(2026, 8, 2))
+    def test_compare_explicit_short_range_ignores_residual_months(self, _mock):
+        """LLM may send months=1 with week-span dates; bounds win → totals only."""
+        result = execute_tool_strict(
+            'compare_purchases_by_vendor',
+            user=self.user,
+            params={
+                'months': 1,
+                'date_from': '2026-07-13',
+                'date_to': '2026-08-02',
+                'top_n': 10,
+            },
+        )
+        table = next(b for b in result['blocks'] if b['type'] == 'table')
+        self.assertEqual({c['key'] for c in table['columns']}, {'vendor', 'total'})
+
+    @patch('appassistant.services.periods._today', return_value=date(2026, 8, 2))
+    def test_compare_explicit_long_range_monthly_breakdown(self, _mock):
+        """Explicit range ≥45 days without months still gets monthly columns."""
+        result = execute_tool_strict(
+            'compare_purchases_by_vendor',
+            user=self.user,
+            params={
+                'date_from': '2026-05-01',
+                'date_to': '2026-08-02',
+                'top_n': 5,
+            },
+        )
+        table = next(b for b in result['blocks'] if b['type'] == 'table')
+        col_keys = {c['key'] for c in table['columns']}
+        self.assertIn('2026-07', col_keys)
+        self.assertIn('total', col_keys)
 
     @patch('appassistant.services.periods._today', return_value=date(2026, 7, 15))
     def test_compare_null_builder_monthly_totals(self, _mock):
