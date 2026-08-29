@@ -7,10 +7,22 @@
     scroll-behavior: smooth;
   }
 
-  /* Anclas de navegación: compensar barra fija (h-16) */
+  ::selection {
+    background: rgba(34, 211, 238, 0.28);
+    color: #f8fafc;
+  }
+
+  :focus-visible {
+    outline: 2px solid #22d3ee;
+    outline-offset: 3px;
+  }
+
+  /* Anclas de navegación: compensar barra sticky (h-16) */
   #about-experts,
   #testimonials,
   #faq,
+  #offer,
+  #key-features,
   #landing-contact-form {
     scroll-margin-top: 6rem;
   }
@@ -47,5 +59,132 @@
 
   .payment-methods-bar__paypal .payment-methods-bar__logo {
     @apply w-[5.35rem] sm:w-[5.75rem];
+  }
+
+  .product-mockup-frame {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 28px 64px -12px rgba(2, 6, 23, 0.72),
+      0 10px 24px -8px rgba(2, 6, 23, 0.5),
+      0 0 48px -10px rgba(34, 211, 238, 0.22);
+  }
+
+  .feature-ui-card {
+    @apply rounded-2xl border border-white/10 bg-white/[0.04] p-6 sm:p-7;
+    transition:
+      transform 200ms ease,
+      border-color 200ms ease,
+      box-shadow 200ms ease,
+      background-color 200ms ease;
+  }
+
+  .feature-ui-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(34, 211, 238, 0.38);
+    background-color: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 18px 40px -18px rgba(2, 6, 23, 0.7);
+  }
+
+  .feature-ui-card__icon {
+    @apply mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-slate-800/80 text-slate-100;
+  }
+
+  .solution-highlight {
+    @apply relative rounded-2xl p-px;
+    background: linear-gradient(
+      135deg,
+      rgba(34, 211, 238, 0.55),
+      rgba(99, 102, 241, 0.15) 42%,
+      rgba(34, 211, 238, 0.4)
+    );
+  }
+
+  .solution-highlight__inner {
+    @apply rounded-2xl bg-slate-950/90 px-6 py-7 sm:px-10 sm:py-9;
+  }
+
+  .hero-pricing-card {
+    @apply relative mx-auto max-w-3xl rounded-2xl p-px;
+    background: linear-gradient(
+      160deg,
+      rgba(34, 211, 238, 0.75),
+      rgba(15, 23, 42, 0.2) 38%,
+      rgba(34, 211, 238, 0.45)
+    );
+    box-shadow:
+      0 28px 64px -16px rgba(2, 6, 23, 0.7),
+      0 0 48px -12px rgba(34, 211, 238, 0.2);
+  }
+
+  .hero-pricing-card__inner {
+    @apply rounded-2xl bg-slate-950/95 px-6 py-8 sm:px-10 sm:py-10;
+  }
+
+  .hero-badge {
+    @apply inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 sm:text-sm;
+  }
+
+  .testimonials-marquee {
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  }
+
+  .testimonials-marquee__track {
+    display: flex;
+    width: max-content;
+    gap: 1.5rem;
+    animation: landing-marquee 48s linear infinite;
+  }
+
+  .testimonials-marquee:hover .testimonials-marquee__track {
+    animation-play-state: paused;
+  }
+
+  .testimonial-card {
+    @apply flex w-[min(22rem,85vw)] shrink-0 flex-col rounded-2xl border border-white/10 bg-white/[0.04] p-6;
+  }
+
+  .avatar-portrait {
+    @apply h-12 w-12 shrink-0 rounded-full border border-white/15 object-cover;
+    box-shadow: 0 8px 18px -8px rgba(2, 6, 23, 0.8);
+  }
+}
+
+@keyframes landing-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .testimonials-marquee {
+    mask-image: none;
+  }
+
+  .testimonials-marquee__track {
+    animation: none;
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+
+  .testimonials-marquee__track .testimonial-card {
+    width: auto;
+  }
+
+  .testimonials-marquee__track .testimonial-card--clone {
+    display: none;
+  }
+}
+
+@media (max-width: 639px) {
+  @media (prefers-reduced-motion: reduce) {
+    .testimonials-marquee__track {
+      grid-template-columns: 1fr;
+    }
   }
 }
