@@ -46,7 +46,7 @@
     <main>
       <!-- Hero -->
       <section
-        class="relative pt-28 pb-20 sm:pt-28 sm:pb-28 lg:pb-28 px-4 sm:px-6 lg:px-8 overflow-hidden bg-slate-950"
+        class="relative pt-16 pb-20 sm:pt-20 sm:pb-28 lg:pb-28 px-4 sm:px-6 lg:px-8 overflow-hidden bg-slate-950"
         aria-labelledby="hero-heading">
         <!-- Dark gradient background accents -->
         <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
@@ -87,26 +87,8 @@
                 misma información.
               </p>
 
-              <!-- Benefit chips -->
               <div
-                class="flex flex-wrap gap-2.5 justify-center lg:justify-start mb-9">
-                <span
-                  class="inline-flex items-center px-3 py-1.5 rounded-full bg-white/5 text-slate-100 text-xs sm:text-sm font-medium border border-white/15 backdrop-blur">
-                  Controla cuadrillas, contratos y materiales
-                </span>
-                <span
-                  class="inline-flex items-center px-3 py-1.5 rounded-full bg-white/5 text-slate-100 text-xs sm:text-sm font-medium border border-white/15 backdrop-blur">
-                  Sigue tu facturación y tus cuentas por cobrar
-                </span>
-                <span
-                  class="inline-flex items-center px-3 py-1.5 rounded-full bg-white/5 text-slate-100 text-xs sm:text-sm font-medium border border-white/15 backdrop-blur">
-                  Comunicación de obra y documentos en un solo sistema
-                </span>
-              </div>
-
-              <!-- CTAs -->
-              <div
-                class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-7">
+                class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-6">
                 <a
                   href="contact.html#landing-contact-form"
                   class="inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 via-indigo-400 to-cyan-400 text-slate-50 font-semibold shadow-xl shadow-cyan-500/40 hover:shadow-2xl hover:shadow-cyan-400/50 hover:from-indigo-400 hover:to-cyan-300 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950">
@@ -114,19 +96,26 @@
                 </a>
               </div>
 
-              <!-- Trust microcopy -->
+              <div
+                class="flex flex-wrap gap-2.5 justify-center lg:justify-start mb-5"
+                aria-label="Capacidades clave">
+                <span class="hero-badge">Controla cuadrillas</span>
+                <span class="hero-badge">Sigue tu facturación</span>
+                <span class="hero-badge">Comunicación de obra</span>
+              </div>
+
               <p class="text-xs sm:text-sm text-slate-400">
                 Onboarding rápido • Sin tarjeta de crédito • Diseñado para operaciones de campo reales
               </p>
             </div>
 
             <!-- Right column: product mockup + floating cards (posicionadas % sobre el mockup) -->
-            <div class="relative hidden lg:block">
-              <div class="relative w-full max-w-[720px] -ml-4 xl:-ml-8">
+            <div class="relative mt-10 lg:mt-0">
+              <div class="relative w-full max-w-[720px] mx-auto lg:-ml-4 xl:-ml-8">
                 <!-- Product screenshot frame (mismo marco que operational-chaos) -->
                 <div class="group flex w-full justify-center lg:justify-start select-none">
                   <div
-                    class="relative w-full max-w-[100%] overflow-hidden rounded-2xl border border-white/15 bg-white/5 shadow-2xl shadow-slate-900/70 h-full">
+                    class="product-mockup-frame relative w-full max-w-[100%] overflow-hidden rounded-2xl bg-white/5 h-full">
                     <div
                       class="pointer-events-none absolute inset-0 bg-gradient-to-tr from-cyan-400/10 via-transparent to-indigo-500/20 opacity-70 group-hover:opacity-90 transition-opacity z-10"></div>
                     <img
@@ -140,23 +129,23 @@
 
                 <!-- Floating stat card 1: esquina superior izquierda (fondo/escritorio, fuera de pantallas) -->
                 <div
-                  class="pointer-events-none absolute z-20 left-[2%] top-[5%] w-[min(11rem,calc(100%-1rem))] rounded-2xl border border-cyan-400/40 bg-slate-900/85 bg-gradient-to-br from-slate-900/90 via-slate-900/75 to-slate-900/90 p-2.5 sm:p-3 shadow-xl shadow-cyan-500/25 backdrop-blur-md">
+                  class="pointer-events-none absolute z-20 left-[2%] top-[5%] hidden w-[min(11rem,calc(100%-1rem))] rounded-2xl border border-cyan-400/40 bg-slate-900/85 bg-gradient-to-br from-slate-900/90 via-slate-900/75 to-slate-900/90 p-2.5 sm:p-3 shadow-xl shadow-cyan-500/25 backdrop-blur-md lg:block">
                   <p
                     class="text-[0.6rem] sm:text-[0.65rem] font-medium text-slate-300 uppercase tracking-wide">
                     Órdenes de trabajo
                   </p>
                   <p class="text-xl sm:text-2xl font-semibold text-slate-50 mt-0.5">24</p>
-                  <p class="text-[0.65rem] sm:text-[0.7rem] text-cyan-300 mt-0.5">+8 esta semana</p>
+                  <p class="text-[0.65rem] sm:text-[0.7rem] text-emerald-400 mt-0.5">+8 esta semana</p>
                 </div>
 
                 <!-- Floating stat card 2: esquina superior derecha (simétrica, sin tapar móvil/desktop) -->
                 <div
-                  class="pointer-events-none absolute z-20 right-[2%] top-[7%] w-[min(10.5rem,calc(100%-1rem))] rounded-2xl border border-indigo-400/40 bg-slate-900/85 bg-gradient-to-br from-slate-900/90 via-slate-900/75 to-slate-900/90 p-2.5 sm:p-3 shadow-xl shadow-indigo-500/25 backdrop-blur-md">
+                  class="pointer-events-none absolute z-20 right-[2%] top-[7%] hidden w-[min(10.5rem,calc(100%-1rem))] rounded-2xl border border-indigo-400/40 bg-slate-900/85 bg-gradient-to-br from-slate-900/90 via-slate-900/75 to-slate-900/90 p-2.5 sm:p-3 shadow-xl shadow-indigo-500/25 backdrop-blur-md lg:block">
                   <p
                     class="text-[0.6rem] sm:text-[0.65rem] font-medium text-slate-300 uppercase tracking-wide">
                     Cuadrillas esta semana
                   </p>
-                  <p class="text-xl sm:text-2xl font-semibold text-cyan-300 mt-0.5">12</p>
+                  <p class="text-xl sm:text-2xl font-semibold text-slate-50 mt-0.5">12</p>
                   <p class="text-[0.65rem] sm:text-[0.7rem] text-slate-400 mt-0.5">
                     En proyectos activos
                   </p>
@@ -505,9 +494,9 @@
                 Programación de cuadrillas
               </h3>
               <p class="text-slate-300 text-sm leading-relaxed">
-                Coordinate crews, communities, and jobs with full visibility.
-                Assign work, see who’s where, and keep the week aligned without
-                chasing updates.
+                Coordina cuadrillas, comunidades y obras con visibilidad total.
+                Asigna trabajo, ve quién está dónde y alinea la semana sin
+                perseguir actualizaciones.
               </p>
             </article>
             <article
@@ -528,7 +517,7 @@
                 </svg>
               </div>
               <h3 class="text-base font-semibold text-slate-50 mb-2">
-                Piece Work Contracts
+                Contratos por destajo
               </h3>
               <p class="text-slate-300 text-sm leading-relaxed">
                 Crea y sigue contratos por trabajo a destajo en un solo lugar. Menos duplicados, menos retrabajo manual y un vínculo claro entre obras y pagos.
@@ -555,9 +544,9 @@
                 Preparación de materiales e inventario
               </h3>
               <p class="text-slate-300 text-sm leading-relaxed">
-                Track materials, costs, and warehouse movements in one place.
-                Know what’s in stock, what left the yard, and which job it’s
-                tied to.
+                Sigue materiales, costos y movimientos de almacén en un solo lugar.
+                Sabes qué hay en stock, qué salió del patio y a qué obra está
+                ligado.
               </p>
             </article>
             <article
@@ -635,7 +624,7 @@
                 <strong class="text-slate-200">
                   ¿Qué lleva este camión?
                 </strong>
-                and
+                y
                 <strong class="text-slate-200">
                   ¿Qué equipo tiene esta cuadrilla?
                 </strong>
@@ -645,29 +634,31 @@
           </div>
 
           <!-- Bridge -->
-          <div class="text-center">
-            <p
-              class="text-lg sm:text-xl font-semibold text-slate-100 max-w-2xl mx-auto leading-snug mb-4">
-              Un sistema. Una fuente de verdad. Números por obra que puedes defender.
-            </p>
-            <p class="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto">
-              Mira cómo funciona en la práctica:
-              <a
-                href="#key-features"
-                class="text-cyan-300 hover:text-cyan-200 font-medium underline underline-offset-2">
-                explora las funciones abajo
-              </a>
-              o
-              <a
-                href="contact.html#landing-contact-form"
-                class="text-cyan-300 hover:text-cyan-200 font-medium underline underline-offset-2">
-                reserva una demo
-              </a>
-              y revisa tu flujo antes del próximo arranque de obra.
-            </p>
+          <div class="solution-highlight max-w-3xl mx-auto">
+            <div class="solution-highlight__inner text-center">
+              <p
+                class="text-lg sm:text-xl font-semibold text-slate-50 max-w-2xl mx-auto leading-snug mb-4">
+                Un sistema. Una fuente de verdad. Números por obra que puedes defender.
+              </p>
+              <p class="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto">
+                Mira cómo funciona en la práctica:
+                <a
+                  href="#key-features"
+                  class="text-cyan-300 hover:text-cyan-200 font-medium underline underline-offset-2">
+                  explora las funciones abajo
+                </a>
+                o
+                <a
+                  href="contact.html#landing-contact-form"
+                  class="text-cyan-300 hover:text-cyan-200 font-medium underline underline-offset-2">
+                  reserva una demo
+                </a>
+                y revisa tu flujo antes del próximo arranque de obra.
+              </p>
+            </div>
           </div>
         </div>
-
+      </section>
 
       <!-- Cómo JobRhythm lleva tu operación de construcción -->
       <section
@@ -1086,148 +1077,70 @@
             Todo lo que campo y oficina necesitan para llevar las operaciones residenciales desde una sola plataforma.
           </p>
           <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            <article
-              class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 sm:p-7 shadow-xl shadow-slate-900/50 hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-200">
-              <div
-                class="w-10 h-10 rounded-xl bg-cyan-400/20 border border-cyan-400/30 flex items-center justify-center mb-4">
-                <svg
-                  class="w-5 h-5 text-cyan-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <article class="feature-ui-card">
+              <div class="feature-ui-card__icon" aria-hidden="true">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-slate-50 mb-2">
-                Operaciones
-              </h3>
+              <h3 class="text-lg font-semibold text-slate-50 mb-2">Operaciones</h3>
               <p class="text-slate-300 text-sm leading-relaxed">
-                Programación semanal, visor de órdenes de trabajo, movimientos y transacciones de material, cuentas de obra: misma zona del menú que resume el ritmo campo–oficina.
+                Programación semanal, visor de órdenes de trabajo, movimientos de material y cuentas de obra en un solo ritmo campo–oficina.
               </p>
             </article>
-            <article
-              class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 sm:p-7 shadow-xl shadow-slate-900/50 hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-200">
-              <div
-                class="w-10 h-10 rounded-xl bg-cyan-400/20 border border-cyan-400/30 flex items-center justify-center mb-4">
-                <svg
-                  class="w-5 h-5 text-cyan-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            <article class="feature-ui-card">
+              <div class="feature-ui-card__icon" aria-hidden="true">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-slate-50 mb-2">
-                Inventario
-              </h3>
+              <h3 class="text-lg font-semibold text-slate-50 mb-2">Inventario</h3>
               <p class="text-slate-300 text-sm leading-relaxed">
-                Productos, almacenes, transferencias, series, categorías y tableros: el inventario como lo agrupa JobRhythm para obra negra, acabados y fases típicas de residencial.
+                Productos, almacenes, transferencias y tableros para obra negra, acabados y las fases típicas de residencial.
               </p>
             </article>
-            <article
-              class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 sm:p-7 shadow-xl shadow-slate-900/50 hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-200">
-              <div
-                class="w-10 h-10 rounded-xl bg-indigo-400/20 border border-indigo-400/30 flex items-center justify-center mb-4">
-                <svg
-                  class="w-5 h-5 text-indigo-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <article class="feature-ui-card">
+              <div class="feature-ui-card__icon" aria-hidden="true">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-slate-50 mb-2">
-                Contratos y precios (trabajo a destajo)
-              </h3>
+              <h3 class="text-lg font-semibold text-slate-50 mb-2">Contratos por destajo</h3>
               <p class="text-slate-300 text-sm leading-relaxed">
-                Contratos por trabajo a destajo y precios por unidad de obra: lo que paga la producción de campo, distinto del contrato tipo builder con el constructor. Incluye precios por trabajo a destajo y precios por constructor en el menú.
+                Contratos y precios por unidad de obra: lo que se paga a campo, con vínculo claro a cada casa y constructor.
               </p>
             </article>
-            <article
-              class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 sm:p-7 shadow-xl shadow-slate-900/50 hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-200">
-              <div
-                class="w-10 h-10 rounded-xl bg-indigo-400/20 border border-indigo-400/30 flex items-center justify-center mb-4">
-                <svg
-                  class="w-5 h-5 text-indigo-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            <article class="feature-ui-card">
+              <div class="feature-ui-card__icon" aria-hidden="true">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M5 13h14M5 17h8M7 3h8l4 4v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-slate-50 mb-2">
-                Entidades
-              </h3>
+              <h3 class="text-lg font-semibold text-slate-50 mb-2">Entidades</h3>
               <p class="text-slate-300 text-sm leading-relaxed">
-                Constructores y partes, tipos y categorías de parte: maestros que alimentan contratos, transacciones y reporting sin mezclar el concepto con el contrato por trabajo a destajo.
+                Constructores, partes y categorías maestras que alimentan contratos y reportes sin mezclar el destajo.
               </p>
             </article>
-            <article
-              class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 sm:p-7 shadow-xl shadow-slate-900/50 hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-200">
-              <div
-                class="w-10 h-10 rounded-xl bg-cyan-400/20 border border-cyan-400/30 flex items-center justify-center mb-4">
-                <svg
-                  class="w-5 h-5 text-cyan-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            <article class="feature-ui-card">
+              <div class="feature-ui-card__icon" aria-hidden="true">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 17h.01M16 17h.01M3 11h18M5 11V7a2 2 0 012-2h5l2 2h5a2 2 0 012 2v4M5 17a2 2 0 100-4 2 2 0 000 4zm12 0a2 2 0 100-4 2 2 0 000 4z" />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-slate-50 mb-2">
-                Cuadrillas y flota
-              </h3>
+              <h3 class="text-lg font-semibold text-slate-50 mb-2">Flota</h3>
               <p class="text-slate-300 text-sm leading-relaxed">
-                Categorías, cuadrillas, camiones y asignaciones de flota: quién sale a cada obra y con qué vehículo, alineado al menú Crews and Fleet.
+                Cuadrillas, camiones y asignaciones: quién sale a cada obra y con qué vehículo.
               </p>
             </article>
-            <article
-              class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 sm:p-7 shadow-xl shadow-slate-900/50 hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-200">
-              <div
-                class="w-10 h-10 rounded-xl bg-indigo-400/20 border border-indigo-400/30 flex items-center justify-center mb-4">
-                <svg
-                  class="w-5 h-5 text-indigo-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            <article class="feature-ui-card">
+              <div class="feature-ui-card__icon" aria-hidden="true">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-slate-50 mb-2">
-                Comunidades
-              </h3>
+              <h3 class="text-lg font-semibold text-slate-50 mb-2">Comunidades</h3>
               <p class="text-slate-300 text-sm leading-relaxed">
-                Mapa de comunidades y comunidades de supervisor: lotes y subdivisiones donde discurren programación, materiales y trabajo a destajo.
+                Mapas y lotes de comunidad donde discurren programación, materiales y destajo.
               </p>
             </article>
           </div>
@@ -1324,18 +1237,13 @@
             </p>
           </div>
 
-          <div class="flex justify-center mb-12 sm:mb-14">
-            <div class="inline-flex flex-col items-center rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-8 sm:px-10 py-6 sm:py-7 backdrop-blur text-center">
-              <span class="text-4xl sm:text-5xl font-bold tabular-nums text-cyan-300">4,000+</span>
-              <span class="text-sm sm:text-base font-medium text-slate-300 mt-1 max-w-xs sm:max-w-md">
-                Proyectos residenciales completados con éxito en toda Florida
-              </span>
-            </div>
-          </div>
+          <p class="text-center text-slate-300 text-base sm:text-lg mb-12 sm:mb-14">
+            Más de <span class="tabular-nums font-semibold text-amber-300">4,000</span> proyectos residenciales entregados en Florida.
+          </p>
 
           <div class="grid lg:grid-cols-2 gap-10 lg:gap-14 items-start mb-12 sm:mb-14">
             <div class="space-y-5">
-              <blockquote class="border-l-4 border-cyan-400/80 pl-5 sm:pl-6">
+              <blockquote class="rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4">
                 <p class="text-lg sm:text-xl font-semibold text-slate-100 leading-snug">
                   No creamos JobRhythm desde una sala de juntas.
                 </p>
@@ -1481,77 +1389,136 @@
             </h2>
           </div>
 
-          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            <article class="flex flex-col rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 sm:p-7 shadow-xl shadow-slate-900/50 hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-200">
-              <div class="flex items-center gap-3 mb-4">
-                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/40 to-cyan-500/40 border border-white/15 text-sm font-bold text-slate-100" aria-hidden="true">CL</div>
-                <div>
-                  <p class="font-semibold text-slate-50">Carlos Luna</p>
-                  <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+          <div class="testimonials-marquee" aria-label="Opiniones de profesionales de la construcción">
+            <div class="testimonials-marquee__track">
+              <article class="testimonial-card">
+                <div class="flex items-center gap-3 mb-4">
+                  <img src="img/avatars/carlos.svg" alt="" width="48" height="48" class="avatar-portrait" />
+                  <div>
+                    <p class="font-semibold text-slate-50">Carlos Luna</p>
+                    <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+                  </div>
                 </div>
-              </div>
-              <blockquote class="text-slate-300 text-sm sm:text-base leading-relaxed flex-1">
-                <p>&ldquo;JobRhythm es fácil de usar y hace la coordinación diaria mucho más simple. Todo está organizado y disponible cuando lo necesito.&rdquo;</p>
-              </blockquote>
-            </article>
-
-            <article class="flex flex-col rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 sm:p-7 shadow-xl shadow-slate-900/50 hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-200">
-              <div class="flex items-center gap-3 mb-4">
-                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/40 to-cyan-500/40 border border-white/15 text-sm font-bold text-slate-100" aria-hidden="true">MJ</div>
-                <div>
-                  <p class="font-semibold text-slate-50">Mike Jordan</p>
-                  <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+                <blockquote class="text-slate-300 text-sm leading-relaxed flex-1">
+                  <p>&ldquo;JobRhythm es fácil de usar y hace la coordinación diaria mucho más simple. Todo está organizado y disponible cuando lo necesito.&rdquo;</p>
+                </blockquote>
+              </article>
+              <article class="testimonial-card">
+                <div class="flex items-center gap-3 mb-4">
+                  <img src="img/avatars/mike.svg" alt="" width="48" height="48" class="avatar-portrait" />
+                  <div>
+                    <p class="font-semibold text-slate-50">Mike Jordan</p>
+                    <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+                  </div>
                 </div>
-              </div>
-              <blockquote class="text-slate-300 text-sm sm:text-base leading-relaxed flex-1">
-                <p>&ldquo;El chat y las notas de la casa cambiaron por completo cómo me comunico con el equipo. La información importante ya no se pierde.&rdquo;</p>
-              </blockquote>
-            </article>
-
-            <article class="flex flex-col rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 sm:p-7 shadow-xl shadow-slate-900/50 hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-200">
-              <div class="flex items-center gap-3 mb-4">
-                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/40 to-cyan-500/40 border border-white/15 text-sm font-bold text-slate-100" aria-hidden="true">PV</div>
-                <div>
-                  <p class="font-semibold text-slate-50">Pablo Valencia</p>
-                  <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+                <blockquote class="text-slate-300 text-sm leading-relaxed flex-1">
+                  <p>&ldquo;El chat y las notas de la casa cambiaron por completo cómo me comunico con el equipo. La información importante ya no se pierde.&rdquo;</p>
+                </blockquote>
+              </article>
+              <article class="testimonial-card">
+                <div class="flex items-center gap-3 mb-4">
+                  <img src="img/avatars/pablo.svg" alt="" width="48" height="48" class="avatar-portrait" />
+                  <div>
+                    <p class="font-semibold text-slate-50">Pablo Valencia</p>
+                    <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+                  </div>
                 </div>
-              </div>
-              <blockquote class="text-slate-300 text-sm sm:text-base leading-relaxed flex-1">
-                <p>&ldquo;El sistema de programación le dio a nuestra empresa un salto cuántico en coordinación. Todos saben dónde deben estar y cuándo.&rdquo;</p>
-              </blockquote>
-            </article>
-
-            <article class="flex flex-col rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 sm:p-7 shadow-xl shadow-slate-900/50 hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-200">
-              <div class="flex items-center gap-3 mb-4">
-                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/40 to-cyan-500/40 border border-white/15 text-sm font-bold text-slate-100" aria-hidden="true">OH</div>
-                <div>
-                  <p class="font-semibold text-slate-50">Oliver Hernandez</p>
-                  <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+                <blockquote class="text-slate-300 text-sm leading-relaxed flex-1">
+                  <p>&ldquo;El sistema de programación le dio a nuestra empresa un salto cuántico en coordinación. Todos saben dónde deben estar y cuándo.&rdquo;</p>
+                </blockquote>
+              </article>
+              <article class="testimonial-card">
+                <div class="flex items-center gap-3 mb-4">
+                  <img src="img/avatars/oliver.svg" alt="" width="48" height="48" class="avatar-portrait" />
+                  <div>
+                    <p class="font-semibold text-slate-50">Oliver Hernandez</p>
+                    <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+                  </div>
                 </div>
-              </div>
-              <blockquote class="text-slate-300 text-sm sm:text-base leading-relaxed flex-1">
-                <p>&ldquo;Los contratos por trabajo a destajo brindan información precisa para los pagos a las cuadrillas. Ha mejorado significativamente la transparencia y la responsabilidad.&rdquo;</p>
-              </blockquote>
-            </article>
-
-            <article class="flex flex-col rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 sm:p-7 shadow-xl shadow-slate-900/50 hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-200 sm:col-span-2 lg:col-span-1">
-              <div class="flex items-center gap-3 mb-4">
-                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/40 to-cyan-500/40 border border-white/15 text-sm font-bold text-slate-100" aria-hidden="true">SV</div>
-                <div>
-                  <p class="font-semibold text-slate-50">Santiago Valencia</p>
-                  <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+                <blockquote class="text-slate-300 text-sm leading-relaxed flex-1">
+                  <p>&ldquo;Los contratos por destajo brindan información precisa para los pagos a las cuadrillas. Mejoró la transparencia y la responsabilidad.&rdquo;</p>
+                </blockquote>
+              </article>
+              <article class="testimonial-card">
+                <div class="flex items-center gap-3 mb-4">
+                  <img src="img/avatars/santiago.svg" alt="" width="48" height="48" class="avatar-portrait" />
+                  <div>
+                    <p class="font-semibold text-slate-50">Santiago Valencia</p>
+                    <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+                  </div>
                 </div>
-              </div>
-              <blockquote class="text-slate-300 text-sm sm:text-base leading-relaxed flex-1">
-                <p>&ldquo;Puedo subir fotos y planos en PDF, documentar el avance, compartir notas y coordinar personal directamente desde el campo.&rdquo;</p>
-              </blockquote>
-            </article>
+                <blockquote class="text-slate-300 text-sm leading-relaxed flex-1">
+                  <p>&ldquo;Puedo subir fotos y planos en PDF, documentar el avance, compartir notas y coordinar personal directamente desde el campo.&rdquo;</p>
+                </blockquote>
+              </article>
+              <article class="testimonial-card testimonial-card--clone" aria-hidden="true">
+                <div class="flex items-center gap-3 mb-4">
+                  <img src="img/avatars/carlos.svg" alt="" width="48" height="48" class="avatar-portrait" />
+                  <div>
+                    <p class="font-semibold text-slate-50">Carlos Luna</p>
+                    <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+                  </div>
+                </div>
+                <blockquote class="text-slate-300 text-sm leading-relaxed flex-1">
+                  <p>&ldquo;JobRhythm es fácil de usar y hace la coordinación diaria mucho más simple. Todo está organizado y disponible cuando lo necesito.&rdquo;</p>
+                </blockquote>
+              </article>
+              <article class="testimonial-card testimonial-card--clone" aria-hidden="true">
+                <div class="flex items-center gap-3 mb-4">
+                  <img src="img/avatars/mike.svg" alt="" width="48" height="48" class="avatar-portrait" />
+                  <div>
+                    <p class="font-semibold text-slate-50">Mike Jordan</p>
+                    <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+                  </div>
+                </div>
+                <blockquote class="text-slate-300 text-sm leading-relaxed flex-1">
+                  <p>&ldquo;El chat y las notas de la casa cambiaron por completo cómo me comunico con el equipo. La información importante ya no se pierde.&rdquo;</p>
+                </blockquote>
+              </article>
+              <article class="testimonial-card testimonial-card--clone" aria-hidden="true">
+                <div class="flex items-center gap-3 mb-4">
+                  <img src="img/avatars/pablo.svg" alt="" width="48" height="48" class="avatar-portrait" />
+                  <div>
+                    <p class="font-semibold text-slate-50">Pablo Valencia</p>
+                    <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+                  </div>
+                </div>
+                <blockquote class="text-slate-300 text-sm leading-relaxed flex-1">
+                  <p>&ldquo;El sistema de programación le dio a nuestra empresa un salto cuántico en coordinación. Todos saben dónde deben estar y cuándo.&rdquo;</p>
+                </blockquote>
+              </article>
+              <article class="testimonial-card testimonial-card--clone" aria-hidden="true">
+                <div class="flex items-center gap-3 mb-4">
+                  <img src="img/avatars/oliver.svg" alt="" width="48" height="48" class="avatar-portrait" />
+                  <div>
+                    <p class="font-semibold text-slate-50">Oliver Hernandez</p>
+                    <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+                  </div>
+                </div>
+                <blockquote class="text-slate-300 text-sm leading-relaxed flex-1">
+                  <p>&ldquo;Los contratos por destajo brindan información precisa para los pagos a las cuadrillas. Mejoró la transparencia y la responsabilidad.&rdquo;</p>
+                </blockquote>
+              </article>
+              <article class="testimonial-card testimonial-card--clone" aria-hidden="true">
+                <div class="flex items-center gap-3 mb-4">
+                  <img src="img/avatars/santiago.svg" alt="" width="48" height="48" class="avatar-portrait" />
+                  <div>
+                    <p class="font-semibold text-slate-50">Santiago Valencia</p>
+                    <p class="text-amber-400 text-sm tracking-wide" role="img" aria-label="5 de 5 estrellas">★★★★★</p>
+                  </div>
+                </div>
+                <blockquote class="text-slate-300 text-sm leading-relaxed flex-1">
+                  <p>&ldquo;Puedo subir fotos y planos en PDF, documentar el avance, compartir notas y coordinar personal directamente desde el campo.&rdquo;</p>
+                </blockquote>
+              </article>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- Oferta -->
       <section
+        id="offer"
         class="relative py-20 sm:py-24 lg:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden bg-slate-950 border-t border-slate-800/80"
         aria-labelledby="offer-heading">
         <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
@@ -1560,11 +1527,7 @@
         </div>
 
         <div class="relative max-w-screen-2xl mx-auto">
-          <div class="text-center mb-12 sm:mb-14">
-            <p class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-white/10 text-cyan-300 border border-white/15 backdrop-blur mb-6">
-              <span class="inline-block h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
-              Oferta de lanzamiento
-            </p>
+          <div class="text-center mb-10 sm:mb-12">
             <h2
               id="offer-heading"
               class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-50 max-w-4xl mx-auto leading-tight">
@@ -1572,208 +1535,65 @@
             </h2>
           </div>
 
-          <div class="grid lg:grid-cols-2 gap-8 lg:gap-10 max-w-5xl mx-auto items-stretch">
-            <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-7 sm:p-8 shadow-xl shadow-slate-900/50">
-              <h3 class="text-xl sm:text-2xl font-bold text-slate-50 mb-6">Lo que recibirás</h3>
-              <ul class="space-y-4" role="list">
-                <li class="flex items-start gap-3 text-slate-200 text-sm sm:text-base">
-                  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-400" aria-hidden="true">
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                  </span>
-                  Acceso completo a la plataforma JobRhythm
-                </li>
-                <li class="flex items-start gap-3 text-slate-200 text-sm sm:text-base">
-                  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-400" aria-hidden="true">
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                  </span>
-                  Configuración inicial del sistema
-                </li>
-                <li class="flex items-start gap-3 text-slate-200 text-sm sm:text-base">
-                  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-400" aria-hidden="true">
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                  </span>
-                  Onboarding personalizado
-                </li>
-                <li class="flex items-start gap-3 text-slate-200 text-sm sm:text-base">
-                  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-400" aria-hidden="true">
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                  </span>
-                  Un mes completo de soporte y orientación
-                </li>
-                <li class="flex items-start gap-3 text-slate-200 text-sm sm:text-base">
-                  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-400" aria-hidden="true">
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                  </span>
-                  Acceso amigable en móvil
-                </li>
-                <li class="flex items-start gap-3 text-slate-200 text-sm sm:text-base">
-                  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-400" aria-hidden="true">
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                  </span>
-                  Herramientas de comunicación de cuadrillas
-                </li>
-                <li class="flex items-start gap-3 text-slate-200 text-sm sm:text-base">
-                  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-400" aria-hidden="true">
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                  </span>
-                  Herramientas de programación y coordinación
-                </li>
-                <li class="flex items-start gap-3 text-slate-200 text-sm sm:text-base">
-                  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-400" aria-hidden="true">
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                  </span>
-                  Notas de casa y documentación con fotos
-                </li>
-              </ul>
-            </div>
-
-            <div class="flex flex-col rounded-2xl border border-cyan-400/35 bg-gradient-to-br from-indigo-500/15 via-slate-900/80 to-cyan-500/15 backdrop-blur p-7 sm:p-8 shadow-xl shadow-cyan-500/10">
-              <h3 class="text-xl sm:text-2xl font-bold text-slate-50 mb-5">Oferta de lanzamiento por tiempo limitado</h3>
-              <div class="rounded-xl border border-amber-400/30 bg-amber-500/10 px-5 py-4 mb-6">
-                <p class="text-lg sm:text-xl font-bold text-amber-200">
-                  <span aria-hidden="true">🎁 </span>Primer mes completamente gratis
-                </p>
-              </div>
-              <ul class="space-y-3 mb-6 text-slate-200 text-sm sm:text-base font-medium" role="list">
-                <li class="flex items-center gap-2">
-                  <span class="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" aria-hidden="true"></span>
-                  Sin riesgo.
-                </li>
-                <li class="flex items-center gap-2">
-                  <span class="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" aria-hidden="true"></span>
-                  Sin compromiso a largo plazo.
-                </li>
-              </ul>
-              <p class="text-slate-300 text-sm sm:text-base leading-relaxed mb-8 flex-1">
-                Experimenta cómo JobRhythm puede transformar tu operación antes de tomar una decisión definitiva.
+          <div class="hero-pricing-card">
+            <div class="hero-pricing-card__inner">
+              <p class="mb-5 inline-flex items-center rounded-full border border-amber-400/35 bg-amber-500/15 px-4 py-1.5 text-sm font-semibold text-amber-200">
+                Primer mes gratis
               </p>
-              <div class="flex flex-col sm:flex-row gap-3">
-                <!-- Onboarding free deshabilitado temporalmente
-                <a
-                  href="https://www.jobrhythm.net/onboarding"
-                  class="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 via-indigo-400 to-cyan-400 text-slate-50 font-semibold shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-400/40 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950"
-                  target="_blank"
-                  rel="noopener noreferrer">
-                  Empezar mes gratis
-                </a>
-                -->
-                <a
-                  href="contact.html#landing-contact-form"
-                  class="inline-flex items-center justify-center px-6 py-3.5 rounded-xl border border-white/25 text-slate-100 font-semibold bg-white/5 hover:bg-white/10 hover:border-cyan-300/60 transition-colors backdrop-blur">
-                  Reservar demo
-                </a>
+              <h3 class="text-2xl sm:text-3xl font-bold text-slate-50 mb-3">Oferta de lanzamiento</h3>
+              <p class="text-slate-300 text-base sm:text-lg leading-relaxed mb-8 max-w-xl">
+                Acceso completo, onboarding y soporte el primer mes. Garantía de 30 días sin riesgo: cancela antes de que termine la prueba.
+              </p>
+
+              <ul class="grid sm:grid-cols-2 gap-3 mb-8" role="list">
+                <li class="flex items-start gap-3 text-slate-200 text-sm sm:text-base">
+                  <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400" aria-hidden="true">
+                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                  </span>
+                  Plataforma JobRhythm completa
+                </li>
+                <li class="flex items-start gap-3 text-slate-200 text-sm sm:text-base">
+                  <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400" aria-hidden="true">
+                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                  </span>
+                  Configuración e onboarding
+                </li>
+                <li class="flex items-start gap-3 text-slate-200 text-sm sm:text-base">
+                  <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400" aria-hidden="true">
+                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                  </span>
+                  Un mes de soporte
+                </li>
+                <li class="flex items-start gap-3 text-slate-200 text-sm sm:text-base">
+                  <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400" aria-hidden="true">
+                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                  </span>
+                  Programación, destajo y campo
+                </li>
+              </ul>
+
+              <div class="mb-8 rounded-xl border border-white/10 bg-white/[0.03] p-5">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">Bonos incluidos</p>
+                <ul class="space-y-2 text-sm sm:text-base text-slate-200" role="list">
+                  <li>Configuración inicial del servidor</li>
+                  <li>Certificado SSL de seguridad</li>
+                  <li>Asistencia guiada de lanzamiento</li>
+                </ul>
               </div>
+
+              <ul class="mb-8 flex flex-wrap gap-2 text-sm text-slate-300" role="list">
+                <li class="rounded-full border border-white/10 px-3 py-1">Sin contratos complicados</li>
+                <li class="rounded-full border border-white/10 px-3 py-1">Sin cargos ocultos</li>
+                <li class="rounded-full border border-white/10 px-3 py-1">Sin sorpresas</li>
+              </ul>
+
+              <a
+                href="contact.html#landing-contact-form"
+                class="inline-flex w-full sm:w-auto items-center justify-center px-8 py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 via-indigo-400 to-cyan-400 text-slate-50 font-semibold shadow-xl shadow-cyan-500/40 hover:shadow-2xl hover:shadow-cyan-400/50 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950">
+                Reservar demo
+              </a>
             </div>
           </div>
-        </div>
-      </section>
-
-      <!-- Bonos -->
-      <section
-        class="relative py-20 sm:py-24 lg:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden bg-slate-900 border-t border-slate-800/80"
-        aria-labelledby="bonus-heading">
-        <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div class="absolute top-1/3 left-0 w-72 h-72 bg-amber-500/10 blur-3xl rounded-full opacity-60"></div>
-          <div class="absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-500/10 blur-3xl rounded-full opacity-70"></div>
-        </div>
-
-        <div class="relative max-w-screen-2xl mx-auto">
-          <div class="text-center mb-12 sm:mb-14">
-            <p class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-white/10 text-cyan-300 border border-white/15 backdrop-blur mb-6">
-              <span class="inline-block h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
-              Bonos
-            </p>
-            <h2
-              id="bonus-heading"
-              class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-50 max-w-4xl mx-auto leading-tight">
-              Bonos adicionales incluidos
-            </h2>
-          </div>
-
-          <div class="witness-card">
-            <div class="dashed_row_7" role="list">
-              <article class="flex items-start gap-4" role="listitem">
-                <div class="w-10 h-10 shrink-0 rounded-xl bg-cyan-400/15 border border-cyan-400/25 flex items-center justify-center mt-0.5" aria-hidden="true">
-                  <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="inline-block rounded-xl border border-amber-400/30 bg-amber-500/10 px-5 py-4 mb-6">
-                    <p class="text-sm sm:text-base font-bold text-amber-200">Bono #1</p>
-                  </div>
-                  <h3 class="text-base sm:text-lg font-semibold text-slate-100 mb-1.5 leading-snug">Configuración inicial del servidor gratis</h3>
-                  <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
-                    Nos encargamos de la configuración inicial del servidor para que puedas enfocarte en dirigir tu negocio.
-                  </p>
-                </div>
-              </article>
-
-              <article class="flex items-start gap-4" role="listitem">
-                <div class="w-10 h-10 shrink-0 rounded-xl bg-indigo-400/15 border border-indigo-400/25 flex items-center justify-center mt-0.5" aria-hidden="true">
-                  <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="inline-block rounded-xl border border-amber-400/30 bg-amber-500/10 px-5 py-4 mb-6">
-                    <p class="text-sm sm:text-base font-bold text-amber-200">Bono #2</p>
-                  </div>
-                  <h3 class="text-base sm:text-lg font-semibold text-slate-100 mb-1.5 leading-snug">Certificado SSL de seguridad gratis</h3>
-                  <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
-                    Tus datos permanecen protegidos con conexiones cifradas estándar de la industria.
-                  </p>
-                </div>
-              </article>
-
-              <article class="flex items-start gap-4" role="listitem">
-                <div class="w-10 h-10 shrink-0 rounded-xl bg-cyan-400/15 border border-cyan-400/25 flex items-center justify-center mt-0.5" aria-hidden="true">
-                  <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="inline-block rounded-xl border border-amber-400/30 bg-amber-500/10 px-5 py-4 mb-6">
-                    <p class="text-sm sm:text-base font-bold text-amber-200">Bono #3</p>
-                  </div>
-                  <h3 class="text-base sm:text-lg font-semibold text-slate-100 mb-1.5 leading-snug">Asistencia guiada de lanzamiento</h3>
-                  <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
-                    Te ayudamos a que tu equipo empiece de forma rápida y eficiente.
-                  </p>
-                </div>
-              </article>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Garantía -->
-      <section
-        class="relative py-20 sm:py-24 lg:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden bg-slate-900 border-t border-slate-800/80"
-        aria-labelledby="guarantee-heading">
-        <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-48 bg-emerald-500/10 blur-3xl rounded-full opacity-50"></div>
-        </div>
-
-        <div class="relative max-w-3xl mx-auto text-center">
-          <p class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-white/10 text-cyan-300 border border-white/15 backdrop-blur mb-6">
-            <span class="inline-block h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
-            Nuestra garantía
-          </p>
-          <div class="w-12 h-12 mx-auto rounded-xl bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center mb-6" aria-hidden="true">
-            <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          </div>
-          <h2
-            id="guarantee-heading"
-            class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-50 mb-6 leading-tight">
-            Garantía de 30 días sin riesgo
-          </h2>
-          <p class="text-base sm:text-lg text-slate-300 leading-relaxed mb-6">
-            Confiamos en que JobRhythm mejorará la comunicación, la visibilidad y la coordinación en toda tu operación.
-          </p>
-          <p class="text-base sm:text-lg text-slate-200 font-medium mb-4">Prueba la plataforma durante 30 días.</p>
-          <p class="text-base sm:text-lg text-slate-300 leading-relaxed mb-10">
-            Si decides que no es lo adecuado, cancela antes de que termine tu periodo de prueba.
-          </p>
-          <ul class="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4 text-sm sm:text-base font-medium text-slate-200" role="list">
-            <li class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-white/10 bg-white/[0.03]">Sin contratos complicados.</li>
-            <li class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-white/10 bg-white/[0.03]">Sin cargos ocultos.</li>
-            <li class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl border border-white/10 bg-white/[0.03]">Sin sorpresas.</li>
-          </ul>
         </div>
       </section>
 
@@ -1838,7 +1658,7 @@
           <div class="text-center mb-12 sm:mb-14">
             <p class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-white/10 text-cyan-300 border border-white/15 backdrop-blur mb-6">
               <span class="inline-block h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
-              FAQ
+              Preguntas frecuentes
             </p>
             <h2
               id="faq-heading"
