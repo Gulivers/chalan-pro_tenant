@@ -24,8 +24,19 @@
           height="50"
           @error="onTenantLogoError" />
       </router-link>
-      <!-- Botón de mensajes (fuera del collapsible, se mantiene) -->
-      <ul v-if="shouldShowNavbar" class="navbar-nav me-2">
+      <!-- Botones globales (fuera del collapsible) -->
+      <ul v-if="shouldShowNavbar" class="navbar-nav me-2 align-items-center flex-row gap-1">
+        <li v-if="showAssistantButton" class="nav-item d-flex align-items-center">
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-light assistant-nav-btn"
+            title="JobRhythm Assistant"
+            aria-label="Open JobRhythm Assistant"
+            @click="openAssistant">
+            <i class="bi bi-magic me-1" aria-hidden="true" />
+            <span class="assistant-nav-btn__label">Assistant</span>
+          </button>
+        </li>
         <li class="nav-item d-flex align-items-center">
           <NavbarMessagesDropdown v-if="shouldShowNavbar" />
         </li>
@@ -167,6 +178,7 @@
 
 <script>
 import NavbarMessagesDropdown from "./NavbarMessagesDropdown.vue";
+import { openAssistant } from "@/utils/assistantBus";
 
 export default {
   components: {
@@ -357,6 +369,20 @@ export default {
         );
       };
     },
+    /** Authenticated users; prefer view_document when permissions are cached. */
+    showAssistantButton() {
+      if (!this.isLoggedIn) return false;
+      try {
+        const raw = localStorage.getItem("userPermissions");
+        if (!raw) return true;
+        const parsed = JSON.parse(raw);
+        const perms = parsed?.permissions;
+        if (!Array.isArray(perms)) return true;
+        return perms.includes("apptransactions.view_document");
+      } catch {
+        return true;
+      }
+    },
   },
   mounted() {
     this.checkUserIdentity();
@@ -457,6 +483,10 @@ export default {
       });
       this.syncMobileMenuBodyScroll();
     },
+    openAssistant() {
+      this.closeNavbar();
+      openAssistant();
+    },
   },
   watch: {
     $route() {
@@ -469,4 +499,17 @@ export default {
 
 <style scoped>
 /* Los estilos del navbar se manejan completamente en skin-modern.css */
+.assistant-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.55rem;
+}
+
+@media (max-width: 575.98px) {
+  .assistant-nav-btn__label {
+    display: none;
+  }
+}
 </style>

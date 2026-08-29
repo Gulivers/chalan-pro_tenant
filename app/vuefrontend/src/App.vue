@@ -1,5 +1,6 @@
 <script setup>
 import * as Layout from '@components/layout';
+import AssistantPanel from '@/components/assistant/AssistantPanel.vue';
 </script>
 
 <template>
@@ -9,6 +10,7 @@ import * as Layout from '@components/layout';
       <router-view />
     </main>
     <Layout.FooterComponent />
+    <AssistantPanel />
   </div>
 </template>
 

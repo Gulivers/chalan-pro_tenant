@@ -470,6 +470,25 @@ const route = useRoute();
 const router = useRouter();
 const { proxy } = getCurrentInstance();
 
+/** Local calendar date as YYYY-MM-DD (avoids UTC shift from toISOString). */
+function todayLocalISO() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Keep API date as YYYY-MM-DD without timezone conversion. */
+function toDateInputValue(value) {
+  if (!value) return todayLocalISO();
+  if (typeof value === "string") {
+    const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (match) return match[1];
+  }
+  return todayLocalISO();
+}
+
 const idParam = route.query.id ? Number(route.query.id) : null;
 // Leer work_account_id de query params (como en contracts)
 const workAccountParam = route.query.work_account_id
@@ -531,7 +550,7 @@ const form = reactive({
   document_type: null,
   builder: null,
   work_account: workAccountParam, // Prellenar desde query params si está disponible
-  date: new Date().toISOString().slice(0, 10), // date format (YYYY-MM-DD)
+  date: todayLocalISO(), // default today only for new documents
   notes: "",
   created_by: null, // opcional, normalmente lo setea el backend desde request.user
   is_active: true,
@@ -924,7 +943,7 @@ async function onFavoriteSelected(favoriteData) {
     form.document_type = docData.document_type;
     form.builder = docData.builder;
     form.work_account = docData.work_account;
-    form.date = docData.date || new Date().toISOString().slice(0, 10);
+    form.date = toDateInputValue(docData.date);
     form.notes = docData.notes || "";
     form.is_active = docData.is_active !== undefined ? docData.is_active : true;
   }
@@ -1084,7 +1103,7 @@ function resetFormForNewTransaction() {
   form.document_type = null;
   form.builder = null;
   form.work_account = null;
-  form.date = new Date().toISOString().slice(0, 10);
+  form.date = todayLocalISO();
   form.notes = "";
   form.is_active = true;
 
@@ -1455,9 +1474,8 @@ async function loadDocument(id) {
       }
     }
 
-    form.date = data.date
-      ? new Date(data.date).toISOString().slice(0, 10)
-      : new Date().toISOString().slice(0, 10);
+    // Edit/view: keep stored document date (do not reset to today).
+    form.date = toDateInputValue(data.date);
     form.notes = data.notes || "";
     form.is_active = data.is_active;
 

@@ -178,6 +178,7 @@ TENANT_APPS = [
     'appschedule',
     'appinventory',
     'apptransactions',
+    'appassistant',
     'appcore',
 ]
 
@@ -547,6 +548,19 @@ BILLING_ENFORCEMENT_ENABLED = _env_bool('BILLING_ENFORCEMENT_ENABLED', True)
 
 # Landing (getjobrhythm.com) contact form — inbox that receives submissions
 LANDING_CONTACT_TO_EMAIL = _env_email('LANDING_CONTACT_TO_EMAIL', 'team@jobrhythm.net')
+
+# JobRhythm Assistant (Level 1). When False, query endpoint returns 503.
+ASSISTANT_ENABLED = os.environ.get('ASSISTANT_ENABLED', 'True') == 'True'
+
+# LLM planner (C4). Disabled unless explicitly enabled + API key present.
+ASSISTANT_LLM_ENABLED = os.environ.get('ASSISTANT_LLM_ENABLED', 'False') == 'True'
+ASSISTANT_LLM_MODEL = os.environ.get('ASSISTANT_LLM_MODEL', 'gpt-4.1-mini')
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+ASSISTANT_LLM_TIMEOUT_SECONDS = int(os.environ.get('ASSISTANT_LLM_TIMEOUT_SECONDS', '30'))
+ASSISTANT_LLM_MAX_TOKENS = int(os.environ.get('ASSISTANT_LLM_MAX_TOKENS', '800'))
+# When True (+ LLM enabled + key): OpenAI plans first; deterministic router is fallback.
+# When False: legacy order (DeterministicRouter → LLM → Continuity).
+ASSISTANT_LLM_PRIMARY = os.environ.get('ASSISTANT_LLM_PRIMARY', 'False') == 'True'
 
 # Channel Layers - Redis configuration
 REDIS_URL = os.environ.get('REDIS_URL')
