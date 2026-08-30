@@ -35,6 +35,7 @@ module.exports = defineConfig({
         '@utils': path.resolve(__dirname, 'src/utils'),
         '@mixins': path.resolve(__dirname, 'src/mixins'),
         '@helpers': path.resolve(__dirname, 'src/helpers'),
+        '@ui': path.resolve(__dirname, 'src/ui'),
         vue$: 'vue/dist/vue.esm-bundler.js', // mantenemos esto
       },
     },

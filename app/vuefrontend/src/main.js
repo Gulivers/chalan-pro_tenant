@@ -36,6 +36,11 @@ import "@/assets/scss/custom-bootstrap.scss"; // custom scss npm install sass sa
 // ───────────────────────────────────────────────────────────────
 import "@/assets/css/skin-modern.css";
 
+// JobRhythm Design System (Pilot): after skin-modern; scoped to .jr-pilot
+import "@/assets/css/jr-design-system.css";
+import PrimeVue from "primevue/config";
+import { JobRhythmPreset } from "@/ui/jr-primevue-preset";
+
 // Bootstrap JS (bundle = incluye Popper). Importa SOLO uno
 import "bootstrap/dist/js/bootstrap.bundle.min.js"; // OAHP
 // import 'bootstrap/dist/js/bootstrap.min.js';
@@ -162,6 +167,18 @@ const pinia = createPinia();
 app.use(pinia);
 app.use(store);
 app.use(TooltipDirective);
+const primeUiLicense = (process.env.VUE_APP_PRIMEUI_LICENSE || "").trim();
+
+app.use(PrimeVue, {
+  ...(primeUiLicense ? { license: primeUiLicense } : {}),
+  theme: {
+    preset: JobRhythmPreset,
+    options: {
+      darkModeSelector: "none",
+      cssLayer: { name: "primevue", order: "theme, base, primevue, utilities" },
+    },
+  },
+});
 
 app.component("BTable", BTable);
 app.component("BPagination", BPagination);

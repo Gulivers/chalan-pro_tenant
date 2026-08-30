@@ -46,7 +46,7 @@ services:
   # Usar: docker compose -f docker-compose.dev.yml up frontend-dev
   # O ejecutar directamente: cd app/vuefrontend && npm run serve
   frontend-dev:
-    image: node:22-alpine
+    image: node:24-alpine
     container_name: chalanpro_frontend_dev
     working_dir: /app
     volumes:

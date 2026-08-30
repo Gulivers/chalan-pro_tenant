@@ -1,0 +1,585 @@
+/*
+  JobRhythm Design System (Products Pilot)
+
+  Tailwind v4 utilities are nested under .jr-pilot so Bootstrap utilities
+  (e.g. .p-4) keep winning outside migrated screens.
+
+  Do not use `@import ".../utilities.css" important(.jr-pilot)` — CSS treats
+  that as a media query and emits invalid `@media important(.jr-pilot)`.
+
+  Preflight is intentionally omitted — it would reset Bootstrap globally.
+*/
+
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss-primeui";
+
+@source "../../**/*.{vue,js}";
+
+@layer utilities {
+  .jr-pilot {
+    @tailwind utilities;
+  }
+}
+
+@theme {
+  --font-jr-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --color-jr-page: #f3f4f6;
+  --color-jr-surface: #ffffff;
+  --color-jr-surface-muted: #f9fafb;
+  --color-jr-border: #e5e7eb;
+  --color-jr-text: #111827;
+  --color-jr-muted: #4b5563;
+  --color-jr-primary: #2563eb;
+  --color-jr-primary-hover: #1d4ed8;
+  --color-jr-success: #16a34a;
+  /* Fill tokens are not AA on white at 0.8125rem. Use 700 for labels. */
+  --color-jr-success-text: #15803d;
+  --color-jr-danger: #dc2626;
+  --color-jr-warning: #d97706;
+  --color-jr-info: #0284c7;
+  --color-jr-info-text: #0369a1;
+
+  --radius-jr-control: 0.5rem;
+  --radius-jr-panel: 0.75rem;
+
+  --shadow-jr-overlay: 0 16px 40px rgba(15, 23, 42, 0.16);
+}
+
+@layer components {
+  .jr-pilot {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    text-align: left;
+    color: var(--color-jr-text);
+    font-family: var(--font-jr-sans);
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    background: var(--color-jr-page);
+  }
+
+  .jr-pilot *,
+  .jr-pilot *::before,
+  .jr-pilot *::after {
+    box-sizing: border-box;
+  }
+
+  .jr-pilot.jr-page {
+    min-height: 100%;
+    padding: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .jr-pilot.jr-page {
+      padding: 1.25rem 1.5rem;
+    }
+  }
+
+  .jr-pilot .jr-page-header {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .jr-pilot .jr-page-header__title {
+    margin: 0;
+    font-size: 1.3125rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--color-jr-text);
+    text-align: left;
+  }
+
+  .jr-pilot .jr-page-header__desc {
+    margin: 0.35rem 0 0;
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--color-jr-muted);
+    text-align: left;
+  }
+
+  .jr-pilot .jr-page-header__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .jr-pilot .jr-page-header {
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .jr-pilot .jr-page-header__actions {
+      flex-shrink: 0;
+      justify-content: flex-end;
+    }
+  }
+
+  .jr-pilot .jr-section {
+    margin-bottom: 1.25rem;
+  }
+
+  .jr-pilot .jr-section__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-jr-border);
+  }
+
+  .jr-pilot .jr-section__title {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--color-jr-text);
+    text-align: left;
+  }
+
+  .jr-pilot .jr-field {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+    text-align: left;
+  }
+
+  .jr-pilot .jr-field__label {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--color-jr-text);
+    text-align: left;
+  }
+
+  .jr-pilot .jr-field__required {
+    margin-left: 0.15rem;
+    color: var(--color-jr-danger);
+  }
+
+  .jr-pilot .jr-field__hint {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--color-jr-muted);
+  }
+
+  .jr-pilot .jr-field__error {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-jr-danger);
+  }
+
+  .jr-pilot .jr-select-addon {
+    display: flex;
+    align-items: stretch;
+    gap: 0.35rem;
+  }
+
+  .jr-pilot .jr-select-addon__select {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .jr-pilot .jr-select-addon__actions {
+    display: flex;
+    align-items: stretch;
+    gap: 0.35rem;
+  }
+
+  .jr-pilot .jr-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0;
+    border: 1px solid var(--color-jr-border);
+    border-radius: var(--radius-jr-control);
+    background: var(--color-jr-surface);
+    color: var(--color-jr-muted);
+    cursor: pointer;
+  }
+
+  .jr-pilot .jr-icon-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .jr-pilot .jr-icon-btn:hover:not(:disabled) {
+    border-color: #d1d5db;
+    color: var(--color-jr-text);
+    background: var(--color-jr-surface-muted);
+  }
+
+  .jr-pilot .jr-icon-btn:focus-visible {
+    outline: 2px solid var(--color-jr-primary);
+    outline-offset: 2px;
+  }
+
+  .jr-pilot .jr-icon-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .jr-pilot .jr-row-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.1rem;
+  }
+
+  .jr-pilot .jr-row-actions__btn.p-button {
+    min-width: 0;
+    min-height: 2.25rem;
+    padding: 0.15rem 0.45rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    gap: 0.3rem;
+  }
+
+  .jr-pilot .jr-row-actions__btn .p-button-icon,
+  .jr-pilot .jr-row-actions__btn svg {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  .jr-pilot .jr-row-actions__btn.p-button-success,
+  .jr-pilot .jr-row-actions__btn.p-button-success .p-button-label,
+  .jr-pilot .jr-row-actions__btn.p-button-success .p-button-icon,
+  .jr-pilot .jr-row-actions__btn.p-button-success svg {
+    --p-button-text-success-color: var(--color-jr-success-text);
+    --p-button-text-success-hover-color: var(--color-jr-success-text);
+    color: var(--color-jr-success-text);
+  }
+
+  .jr-pilot .jr-row-actions__btn.p-button-info,
+  .jr-pilot .jr-row-actions__btn.p-button-info .p-button-label,
+  .jr-pilot .jr-row-actions__btn.p-button-info .p-button-icon,
+  .jr-pilot .jr-row-actions__btn.p-button-info svg {
+    --p-button-text-info-color: var(--color-jr-info-text);
+    --p-button-text-info-hover-color: var(--color-jr-info-text);
+    color: var(--color-jr-info-text);
+  }
+
+  .jr-pilot .jr-row-actions__btn.p-button-danger,
+  .jr-pilot .jr-row-actions__btn.p-button-danger .p-button-label,
+  .jr-pilot .jr-row-actions__btn.p-button-danger .p-button-icon,
+  .jr-pilot .jr-row-actions__btn.p-button-danger svg {
+    --p-button-text-danger-color: var(--color-jr-danger);
+    --p-button-text-danger-hover-color: var(--color-jr-danger);
+    color: var(--color-jr-danger);
+  }
+
+  .jr-pilot .jr-row-actions__more {
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .jr-pilot .jr-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    text-align: left;
+  }
+
+  .jr-pilot .jr-checkbox__label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-jr-text);
+  }
+
+  .jr-pilot .jr-toolbar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-jr-border);
+  }
+
+  .jr-pilot .jr-toolbar__stats,
+  .jr-pilot .jr-toolbar__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .jr-pilot .jr-toolbar {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .jr-pilot .jr-icon-btn {
+      width: 2.5rem;
+      min-width: 2.5rem;
+      min-height: 2.5rem;
+    }
+  }
+
+  .jr-pilot .jr-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    padding: 1.25rem 0;
+    text-align: left;
+  }
+
+  .jr-pilot .jr-empty-state__title {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--color-jr-text);
+  }
+
+  .jr-pilot .jr-empty-state__desc {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--color-jr-muted);
+  }
+
+  .jr-pilot .jr-empty-state__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .jr-pilot .jr-control:not(.p-button):not(.p-datatable) {
+    width: 100%;
+  }
+
+  .jr-pilot .p-inputtext,
+  .jr-pilot .p-select,
+  .jr-pilot .p-multiselect,
+  .jr-pilot .p-datepicker,
+  .jr-pilot .p-inputnumber,
+  .jr-pilot .p-inputnumber-input {
+    min-height: 2.75rem;
+    border-radius: var(--radius-jr-control);
+  }
+
+  .jr-pilot .p-button {
+    width: auto;
+    min-height: 2.75rem;
+    border-radius: var(--radius-jr-control);
+  }
+
+  .jr-pilot .p-button.p-button-sm,
+  .jr-pilot .p-button-sm {
+    min-height: 2.5rem;
+  }
+
+  .jr-pilot .jr-control:focus-visible,
+  .jr-pilot .p-button:focus-visible,
+  .jr-pilot .p-inputtext:focus-visible,
+  .jr-pilot .p-select:focus-visible,
+  .jr-pilot .p-checkbox:focus-visible {
+    outline: 2px solid var(--color-jr-primary);
+    outline-offset: 2px;
+  }
+
+  @media (min-width: 768px) {
+    .jr-pilot .p-inputtext,
+    .jr-pilot .p-select,
+    .jr-pilot .p-multiselect,
+    .jr-pilot .p-datepicker,
+    .jr-pilot .p-inputnumber,
+    .jr-pilot .p-inputnumber-input,
+    .jr-pilot .p-button:not(.p-button-sm) {
+      min-height: 2.5rem;
+    }
+  }
+
+  .jr-pilot .p-datatable {
+    border: 1px solid var(--color-jr-border);
+    border-radius: var(--radius-jr-panel);
+    background: var(--color-jr-surface);
+    overflow: visible;
+  }
+
+  .p-drawer.jr-pilot,
+  .p-drawer-mask .jr-pilot {
+    font-family: var(--font-jr-sans);
+    text-align: left;
+  }
+
+  /* Portaled overlays must not inherit .jr-pilot page width / page fill. */
+  .jr-pilot.jr-overlay,
+  .p-menu.jr-overlay {
+    width: max-content;
+    min-width: 0;
+    max-width: 12rem;
+    padding: 0.2rem;
+    background: var(--color-jr-surface);
+    color: var(--color-jr-text);
+    border: 1px solid var(--color-jr-border);
+    border-radius: var(--radius-jr-control);
+    box-shadow: var(--shadow-jr-overlay);
+    font-family: var(--font-jr-sans);
+    font-size: 0.875rem;
+    text-align: left;
+  }
+
+  .p-menu.jr-overlay .p-menu-list,
+  .p-menu.jr-overlay .p-menu-root-list {
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    width: max-content;
+  }
+
+  .p-menu.jr-overlay .p-menu-item,
+  .p-menu.jr-overlay .p-menuitem,
+  .p-menu.jr-overlay .p-menu-item-content,
+  .p-menu.jr-overlay .p-menuitem-content {
+    width: auto;
+    min-width: 0;
+    padding: 0;
+  }
+
+  .p-menu.jr-overlay .p-menu-item-link,
+  .p-menu.jr-overlay .p-menuitem-link {
+    display: flex;
+    align-items: center;
+    width: auto;
+    min-width: 0;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.65rem;
+    margin: 0;
+  }
+
+  .p-menu.jr-overlay .p-menu-item-label,
+  .p-menu.jr-overlay .p-menuitem-text {
+    padding: 0;
+    margin: 0;
+  }
+
+  .p-menu.jr-overlay :focus-visible,
+  .p-menu.jr-overlay .p-menu-item-link:focus-visible,
+  .p-menu.jr-overlay .p-menuitem-link:focus-visible,
+  .p-menu.jr-overlay .p-menu-item[data-focused="true"],
+  .p-menu.jr-overlay .p-menuitem[data-focused="true"] {
+    outline: 2px solid var(--color-jr-primary);
+    outline-offset: -2px;
+  }
+
+  .p-menu.jr-overlay .jr-menu-danger,
+  .p-menu.jr-overlay .jr-menu-danger .p-menu-item-link,
+  .p-menu.jr-overlay .jr-menu-danger .p-menuitem-link {
+    color: var(--color-jr-danger);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jr-pilot *,
+  .jr-pilot *::before,
+  .jr-pilot *::after,
+  .jr-overlay *,
+  .jr-overlay *::before,
+  .jr-overlay *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+  PrimeVue 5 / PrimeUI: ocultar aviso de licencia inválida.
+  Solución soportada: VUE_APP_PRIMEUI_LICENSE (community gratis en primeui.dev/licenses/community).
+*/
+#p-license-host {
+  display: none !important;
+}
+
+.p-menu.jr-row-menu {
+  --p-menu-min-width: 0;
+  --p-menu-item-padding: 0.25rem 0.5rem 0.25rem 0.4rem;
+  --p-menu-item-gap: 0.35rem;
+  width: max-content !important;
+  min-width: 0 !important;
+  padding: 0.15rem !important;
+}
+
+.p-menu.jr-row-menu .p-menu-list,
+.p-menu.jr-row-menu .p-menu-root-list {
+  width: max-content !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.p-menu.jr-row-menu .p-menu-item,
+.p-menu.jr-row-menu .p-menu-item-content {
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.p-menu.jr-row-menu .p-menu-item-link {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  width: auto !important;
+  min-height: 2.5rem !important;
+  margin: 0 !important;
+  padding: 0.5rem 0.75rem 0.5rem 0.65rem !important;
+}
+
+.p-menu.jr-row-menu .p-menu-item-icon {
+  width: 1rem !important;
+  height: 1rem !important;
+  margin: 0 !important;
+}
+
+.p-menu.jr-row-menu .p-menu-item-label {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.p-menu.jr-row-menu .jr-row-actions__item--success,
+.p-menu.jr-row-menu .jr-row-actions__item--success .p-menu-item-link,
+.p-menu.jr-row-menu .jr-row-actions__item--success .p-menu-item-icon,
+.p-menu.jr-row-menu .jr-row-actions__item--success .p-menu-item-label {
+  color: var(--color-jr-success-text);
+}
+
+.p-menu.jr-row-menu .p-menu-item[data-focused="true"],
+.p-menu.jr-row-menu .p-menuitem[data-focused="true"] {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: -2px;
+}
+
+.p-menu.jr-row-menu .jr-row-actions__item--info,
+.p-menu.jr-row-menu .jr-row-actions__item--info .p-menu-item-link,
+.p-menu.jr-row-menu .jr-row-actions__item--info .p-menu-item-icon,
+.p-menu.jr-row-menu .jr-row-actions__item--info .p-menu-item-label {
+  color: var(--color-jr-info-text);
+}
+
+.p-menu.jr-row-menu .jr-row-actions__item--danger,
+.p-menu.jr-row-menu .jr-row-actions__item--danger .p-menu-item-link,
+.p-menu.jr-row-menu .jr-row-actions__item--danger .p-menu-item-icon,
+.p-menu.jr-row-menu .jr-row-actions__item--danger .p-menu-item-label {
+  color: var(--color-jr-danger);
+}

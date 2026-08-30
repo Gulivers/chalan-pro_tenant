@@ -1,321 +1,339 @@
 <template>
-  <TxCard class="mt-0">
-    <!-- Header del card -->
-    <template #header>
-      <div
-        class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-2">
-        <h5 class="text-primary mb-0 fw-semibold listview-title">Products</h5>
-        <div>
-          <button
-            v-if="hasPermission('appinventory.add_product')"
-            class="btn btn-success btn-sm"
-            @click="goToCreateForm">
-            + New Product
-          </button>
+  <JRPage>
+    <div class="jr-product-list__masthead">
+      <div class="jr-product-list__masthead-text">
+        <JRPageHeader title="Products" />
+        <div class="jr-product-list__summary" aria-live="polite">
+          <Tag :value="`${stats.total} Total`" severity="info" />
+          <Tag :value="`${stats.active} Active`" severity="success" />
+          <Tag :value="`${stats.inactive} Inactive`" severity="secondary" />
         </div>
       </div>
-    </template>
+      <JRButton
+        v-if="hasPermission('appinventory.add_product')"
+        type="button"
+        class="jr-product-list__create"
+        @click="goToCreateForm">
+        + New Product
+      </JRButton>
+    </div>
 
-    <div class="card-body">
-      <!-- Toolbar: stats + refresh -->
-      <div
-        class="listview-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
-        <span class="badge bg-primary stats-badge">
-          {{ stats.total }} Total
+    <div class="jr-product-list__toolbar">
+      <div class="jr-product-list__search">
+        <label class="visually-hidden" for="filter-input">
+          Search products
+        </label>
+        <span class="jr-product-list__search-icon" aria-hidden="true">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6">
+            <circle cx="6.75" cy="6.75" r="4.25" />
+            <path d="m10.2 10.2 3.3 3.3" />
+          </svg>
         </span>
-        <span class="badge bg-success stats-badge">
-          {{ stats.active }} Active
-        </span>
-        <span class="badge bg-secondary stats-badge">
-          {{ stats.inactive }} Inactive
-        </span>
-        <span
-          class="listview-toolbar-divider d-none d-sm-inline"
-          aria-hidden="true"></span>
-        <button
+        <JRInput
+          inputId="filter-input"
+          v-model="filter"
+          type="search"
+          placeholder="Search products..." />
+      </div>
+
+      <div class="jr-product-list__cluster">
+        <label class="visually-hidden" for="per-page-select">
+          Entries per page
+        </label>
+        <JRSelect
+          class="jr-product-list__entries"
+          inputId="per-page-select"
+          v-model="perPage"
+          :options="pageOptions"
+          optionLabel="label"
+          optionValue="value" />
+
+        <ToggleButton
+          v-if="canBulkUpdate"
+          v-model="showBulkPricesPanel"
+          class="jr-product-list__bulk-toggle"
+          onLabel="Bulk Excel"
+          offLabel="Bulk Excel"
+          aria-controls="product-bulk-prices-panel"
+          v-tt
+          data-title="Updates product prices and units from Excel. This can overwrite existing values." />
+
+        <JRButton
           type="button"
-          class="btn btn-outline-success btn-sm listview-refresh-btn"
+          variant="ghost"
+          size="sm"
+          class="jr-product-list__refresh"
           @click="refreshTable">
-          Refresh List
-        </button>
-      </div>
-
-      <!-- Filters: entries per page + bulk switch (optional) + search -->
-      <div class="listview-filters row g-2 g-md-3 mb-2 align-items-end">
-        <div class="col-12 col-sm-6 col-lg-3 col-xl-2">
-          <BFormGroup
-            label="Entries per page:"
-            label-for="per-page-select"
-            label-size="sm"
-            class="mb-0 listview-filter-group">
-            <BFormSelect
-              id="per-page-select"
-              v-model="perPage"
-              :options="pageOptions"
-              size="sm"
-              class="form-select form-select-sm" />
-          </BFormGroup>
-        </div>
-        <div
-          v-if="hasPermission('appinventory.add_productprice')"
-          class="col-12 col-sm-6 col-lg-4 col-xl-4">
-          <BFormGroup
-            label="Bulk update prices &amp; units from Excel:"
-            label-for="product-list-bulk-prices-switch"
-            label-size="sm"
-            class="mb-0 listview-filter-group">
-            <div
-              class="form-check form-switch m-2 d-flex align-items-center bulk-prices-switch-wrap">
-              <input
-                id="product-list-bulk-prices-switch"
-                v-model="showBulkPricesPanel"
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                :aria-label="
-                  showBulkPricesPanel
-                    ? 'Disable bulk update panel'
-                    : 'Enable bulk update panel'
-                "
-                aria-controls="product-bulk-prices-panel" />
-            </div>
-          </BFormGroup>
-        </div>
-        <div
-          class="col-12 col-sm-12 col-lg ms-lg-auto listview-filter-search-col">
-          <BFormGroup
-            label="Search:"
-            label-for="filter-input"
-            label-size="sm"
-            class="mb-0 listview-filter-group">
-            <BFormInput
-              id="filter-input"
-              v-model="filter"
-              type="search"
-              placeholder="Search by name, SKU, model #, category, unit, brand..."
-              size="sm"
-              class="form-control form-control-sm" />
-          </BFormGroup>
-        </div>
-      </div>
-
-      <div
-        v-if="
-          showBulkPricesPanel && hasPermission('appinventory.add_productprice')
-        "
-        class="mb-3">
-        <ProductPricesBulkExcelPanel
-          id="product-bulk-prices-panel"
-          @updated="refreshTable" />
-      </div>
-
-      <!-- Main Table with Overlay -->
-      <BOverlay :show="isLoading" rounded="sm" opacity="0.85" variant="light">
-        <template #overlay>
-          <div class="text-center">
-            <BSpinner type="border" variant="secondary" class="mb-3" />
-            <div class="h5 text-primary">Loading Products...</div>
-            <div class="text-muted">Please wait while we fetch the data</div>
-          </div>
-        </template>
-
-        <BTable
-          ref="productTable"
-          :provider="provider"
-          :fields="fields"
-          :filter="filter"
-          :per-page="perPage"
-          :current-page="currentPage"
-          no-provider-sorting
-          bordered
-          hover
-          responsive
-          striped
-          class="table-bordered">
-          <!-- ID Column -->
-          <template #cell(id)="row">
-            <strong>{{ row.item.id }}</strong>
-          </template>
-
-          <!-- Name Column -->
-          <template #cell(name)="row">
-            <div class="text-start">
-              <a
-                href="#"
-                @click.prevent="openImageGallery(row.item.id)"
-                class="text-decoration-none text-primary"
-                style="cursor: pointer"
-                v-tt
-                data-title="View product images">
-                {{ row.item.name }}
-              </a>
-            </div>
-          </template>
-
-          <template #cell(model_number)="row">
-            <div class="text-start text-break small">
-              {{
-                (row.item.model_number || "").trim()
-                  ? row.item.model_number
-                  : "—"
-              }}
-            </div>
-          </template>
-
-          <!-- Category Column -->
-          <template #cell(category_name)="row">
-            <div class="text-start">
-              {{ row.item.category_name || "—" }}
-            </div>
-          </template>
-
-          <!-- Tracking Mode Column -->
-          <template #cell(tracking_mode)="row">
-            <span
-              v-if="row.item.tracking_mode === 'SERIALIZED'"
-              class="badge bg-info"
-              style="font-size: 0.75rem">
-              SERIALIZED
-            </span>
-            <span v-else class="badge bg-secondary" style="font-size: 0.75rem">
-              QUANTITY
-            </span>
-          </template>
-
-          <!-- Default Brand Column -->
-          <template #cell(default_brand)="row">
-            <div class="text-start">
-              <span v-if="row.item.default_brand?.name">
-                <span class="badge bg-primary" style="font-size: 0.75rem">
-                  {{ row.item.default_brand.name }}
-                </span>
-                <small v-if="row.item.brands_count > 1" class="text-muted ms-1">
-                  ({{ row.item.brands_count }} brands)
-                </small>
-              </span>
-              <span v-else class="text-muted">No brand assigned</span>
-            </div>
-          </template>
-
-          <!-- Active Column -->
-          <template #cell(is_active)="row">
-            <span
-              class="badge"
-              :class="row.item.is_active ? 'bg-success' : 'bg-secondary'"
-              style="font-size: 0.75rem">
-              {{ row.item.is_active ? "Active" : "Inactive" }}
-            </span>
-          </template>
-
-          <!-- Actions Column -->
-          <template #cell(actions)="row">
-            <div class="btn-group btn-group-sm">
-              <button
-                v-if="hasPermission('appinventory.view_product')"
-                class="btn btn-outline-success me-1"
-                @click="viewItem(row.item.id)">
-                View
-              </button>
-              <button
-                v-if="hasPermission('appinventory.change_product')"
-                class="btn btn-outline-primary me-1"
-                @click="editItem(row.item.id)">
-                Edit
-              </button>
-              <button
-                v-if="hasPermission('appinventory.delete_product')"
-                class="btn btn-outline-danger"
-                @click="deleteItem(row.item.id)">
-                Delete
-              </button>
-            </div>
-          </template>
-        </BTable>
-      </BOverlay>
-
-      <!-- Pagination -->
-      <div class="d-flex justify-content-end mt-3">
-        <BPagination
-          v-model="currentPage"
-          :total-rows="totalRows"
-          :per-page="perPage"
-          @update:model-value="onPageChange" />
+          <RefreshIcon />
+          Refresh
+        </JRButton>
       </div>
     </div>
 
-    <!-- Product Image Gallery Modal -->
+    <div
+      v-if="showBulkPricesPanel && canBulkUpdate"
+      class="jr-product-list__bulk">
+      <ProductPricesBulkExcelPanel
+        id="product-bulk-prices-panel"
+        @updated="refreshTable" />
+    </div>
+
+    <!-- Mobile: compact scan list, not a squeezed desktop table -->
+    <div v-if="isMobile" class="jr-product-list__mobile">
+      <JREmptyState
+        v-if="!products.length && !isLoading"
+        :title="emptyTitle"
+        :description="emptyDescription" />
+      <p v-if="isLoading && !products.length" class="jr-product-list__loading">
+        Loading products…
+      </p>
+      <p
+        v-else-if="isLoading && products.length"
+        class="jr-product-list__loading"
+        aria-live="polite">
+        Updating…
+      </p>
+      <ul
+        v-if="products.length"
+        class="jr-product-list__rows"
+        :aria-busy="isLoading ? 'true' : 'false'">
+        <li v-for="item in products" :key="item.id" class="jr-product-row">
+          <div class="jr-product-row__main">
+            <button
+              type="button"
+              class="jr-product-cell"
+              :aria-label="`View images of ${item.name}`"
+              v-tt
+              data-title="View product images"
+              @click="openImageGallery(item.id)">
+              <img
+                v-if="productImageSrc(item)"
+                :src="productImageSrc(item)"
+                :alt="item.name"
+                class="jr-product-cell__img"
+                @error="onProductImageError(item)" />
+              <span v-else class="jr-product-cell__ph" aria-hidden="true" />
+              <span class="jr-product-cell__text">
+                <span class="jr-product-cell__name">{{ item.name }}</span>
+              </span>
+            </button>
+            <p class="jr-product-row__meta">
+              <span>{{ item.sku }}</span>
+              <span v-if="item.category_name" aria-hidden="true">·</span>
+              <span v-if="item.category_name">{{ item.category_name }}</span>
+            </p>
+          </div>
+          <div class="jr-product-row__aside">
+            <Tag
+              :value="item.is_active ? 'Active' : 'Inactive'"
+              :severity="item.is_active ? 'success' : 'secondary'" />
+            <JRRowActions
+              v-if="hasRowActions"
+              :actions="getRowActions(item)"
+              :compact="true"
+              :entity-label="item.name" />
+          </div>
+        </li>
+      </ul>
+      <Paginator
+        v-if="totalRows > 0"
+        class="jr-product-list__pager"
+        :rows="perPage"
+        :totalRecords="totalRows"
+        :first="tableFirst"
+        template="PrevPageLink CurrentPageReport NextPageLink"
+        currentPageReportTemplate="{first}–{last} of {totalRecords}"
+        @page="onTablePage" />
+    </div>
+
+    <!-- Desktop / tablet: dense operational table -->
+    <div v-else class="jr-product-list__table">
+      <JRDataTable
+        :value="products"
+        :loading="isLoading"
+        dataKey="id"
+        lazy
+        paginator
+        :rows="perPage"
+        :totalRecords="totalRows"
+        :first="tableFirst"
+        :sortField="sortField"
+        :sortOrder="sortOrder"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+        currentPageReportTemplate="{first}–{last} of {totalRecords}"
+        scrollable
+        stripedRows
+        tableStyle="min-width: 56rem"
+        :emptyTitle="emptyTitle"
+        :emptyDescription="emptyDescription"
+        @page="onTablePage"
+        @sort="onTableSort">
+        <Column
+          field="id"
+          header="Id"
+          sortable
+          headerClass="jr-col-id"
+          bodyClass="jr-col-id" />
+        <Column field="name" header="Name" sortable>
+          <template #body="{ data }">
+            <button
+              type="button"
+              class="jr-product-cell"
+              :aria-label="`View images of ${data.name}`"
+              v-tt
+              data-title="View product images"
+              @click="openImageGallery(data.id)">
+              <img
+                v-if="productImageSrc(data)"
+                :src="productImageSrc(data)"
+                :alt="data.name"
+                class="jr-product-cell__img"
+                @error="onProductImageError(data)" />
+              <span v-else class="jr-product-cell__ph" aria-hidden="true" />
+              <span class="jr-product-cell__text">
+                <span class="jr-product-cell__name">{{ data.name }}</span>
+                <span v-if="data.sku" class="jr-product-cell__meta">{{ data.sku }}</span>
+              </span>
+            </button>
+          </template>
+        </Column>
+        <Column field="sku" header="SKU" sortable />
+        <Column field="category_name" header="Category" sortable>
+          <template #body="{ data }">
+            {{ data.category_name || "—" }}
+          </template>
+        </Column>
+        <Column field="tracking_mode" header="Tracking" sortable>
+          <template #body="{ data }">
+            <Tag
+              v-if="data.tracking_mode === 'SERIALIZED'"
+              value="Serial"
+              severity="info" />
+            <Tag v-else value="Qty" severity="secondary" />
+          </template>
+        </Column>
+        <Column field="default_brand" header="Brand">
+          <template #body="{ data }">
+            <span v-if="data.default_brand?.name">
+              {{ data.default_brand.name }}
+              <span v-if="data.brands_count > 1" class="jr-product-list__muted">
+                +{{ data.brands_count - 1 }}
+              </span>
+            </span>
+            <span v-else class="jr-product-list__muted">—</span>
+          </template>
+        </Column>
+        <Column
+          field="reorder_level"
+          header="Reorder"
+          sortable
+          headerClass="jr-col-num"
+          bodyClass="jr-col-num" />
+        <Column field="unit_name" header="Unit" sortable />
+        <Column field="is_active" header="Status" sortable>
+          <template #body="{ data }">
+            <Tag
+              :value="data.is_active ? 'Active' : 'Inactive'"
+              :severity="data.is_active ? 'success' : 'secondary'" />
+          </template>
+        </Column>
+        <Column
+          v-if="hasRowActions"
+          header="Actions"
+          :sortable="false"
+          headerClass="jr-col-actions"
+          bodyClass="jr-col-actions">
+          <template #body="{ data }">
+            <JRRowActions
+              :actions="getRowActions(data)"
+              :compact="false"
+              :entity-label="data.name" />
+          </template>
+        </Column>
+      </JRDataTable>
+    </div>
+
     <ProductImageGallery
       ref="productImageGallery"
       :productId="selectedProductId" />
-  </TxCard>
+  </JRPage>
 </template>
 
 <script>
-import TxCard from "@components/layout/TxCard.vue";
 import ProductImageGallery from "@components/inventory/ProductImageGallery.vue";
 import ProductPricesBulkExcelPanel from "@components/inventory/ProductPricesBulkExcelPanel.vue";
-import "@assets/css/base.css";
 import axios from "axios";
 import {
-  computed,
   ref,
+  computed,
   watch,
   onMounted,
+  onUnmounted,
   getCurrentInstance,
   nextTick,
 } from "vue";
 import { useRouter } from "vue-router";
-
-// Bootstrap Vue Next components
+import Column from "primevue/column";
+import Paginator from "primevue/paginator";
+import EyeIcon from "@primevue/icons/eye";
+import PencilIcon from "@primevue/icons/pencil";
+import RefreshIcon from "@primevue/icons/refresh";
+import TrashIcon from "@primevue/icons/trash";
+import Tag from "primevue/tag";
+import ToggleButton from "primevue/togglebutton";
 import {
-  BTable,
-  BFormGroup,
-  BFormInput,
-  BInputGroup,
-  BInputGroupText,
-  BButton,
-  BFormSelect,
-  BPagination,
-  BOverlay,
-  BSpinner,
-} from "bootstrap-vue-next";
+  JRPage,
+  JRPageHeader,
+  JRButton,
+  JRSelect,
+  JRInput,
+  JRDataTable,
+  JREmptyState,
+  JRRowActions,
+} from "@ui";
 
-// Provider endpoint for server-side rendering
 const ENDPOINT = "/api/products-provider/";
+const MOBILE_MQ = "(max-width: 767.98px)";
 
 export default {
   name: "ProductListView",
   components: {
-    TxCard,
     ProductImageGallery,
     ProductPricesBulkExcelPanel,
-    BTable,
-    BFormGroup,
-    BFormInput,
-    BInputGroup,
-    BInputGroupText,
-    BButton,
-    BFormSelect,
-    BPagination,
-    BOverlay,
-    BSpinner,
+    Column,
+    Paginator,
+    RefreshIcon,
+    Tag,
+    ToggleButton,
+    JRPage,
+    JRPageHeader,
+    JRButton,
+    JRSelect,
+    JRInput,
+    JRDataTable,
+    JREmptyState,
+    JRRowActions,
   },
 
   setup() {
     const router = useRouter();
     const { proxy } = getCurrentInstance();
 
-    // Reactive data
     const products = ref([]);
     const stats = ref({
       total: 0,
       active: 0,
       inactive: 0,
     });
-    const lastUpdate = ref(null);
-    const isLoading = ref(true); // Start with loading state
+    const isLoading = ref(true);
+    const loadError = ref(false);
 
-    // Table controls
     const currentPage = ref(1);
     const perPage = ref(25);
     const filter = ref("");
@@ -323,130 +341,89 @@ export default {
     const selectedProductId = ref(null);
     const productImageGallery = ref(null);
     const showBulkPricesPanel = ref(false);
+    const sortField = ref("id");
+    const sortOrder = ref(-1);
+    let searchTimer = null;
 
-    // Table configuration
-    const fields = [
-      {
-        key: "id",
-        label: "ID",
-        sortable: true,
-        thClass: "text-center",
-        tdClass: "text-center",
-      },
-      { key: "name", label: "Name", sortable: true, thClass: "text-start" },
-      { key: "sku", label: "SKU", sortable: true },
-      {
-        key: "model_number",
-        label: "Model #",
-        sortable: true,
-        thClass: "text-start",
-        tdClass: "text-start",
-      },
-      { key: "category_name", label: "Category", sortable: true },
-      {
-        key: "tracking_mode",
-        label: "Tracking",
-        sortable: true,
-        thClass: "text-center",
-        tdClass: "text-center",
-      },
-      { key: "default_brand", label: "Default Brand", sortable: false },
-      {
-        key: "reorder_level",
-        label: "Reorder Level",
-        sortable: true,
-        thClass: "text-center",
-        tdClass: "text-center",
-      },
-      { key: "unit_name", label: "Default Unit", sortable: true },
-      {
-        key: "is_active",
-        label: "Status",
-        sortable: true,
-        thClass: "text-center",
-        tdClass: "text-center",
-      },
-      {
-        key: "actions",
-        label: "Actions",
-        sortable: false,
-        thClass: "text-center",
-        tdClass: "text-center",
-        thStyle: { width: "12%", whiteSpace: "nowrap" },
-        tdStyle: { whiteSpace: "nowrap" },
-      },
-    ];
+    const isMobile = ref(
+      typeof window !== "undefined" && window.matchMedia
+        ? window.matchMedia(MOBILE_MQ).matches
+        : false
+    );
+    let mediaQuery = null;
+    let onMedia = null;
 
     const pageOptions = [
-      { value: 10, text: "10" },
-      { value: 25, text: "25" },
-      { value: 50, text: "50" },
-      { value: 100, text: "100" },
+      { value: 10, label: "10" },
+      { value: 25, label: "25" },
+      { value: 50, label: "50" },
+      { value: 100, label: "100" },
     ];
 
-    // Provider function for server-side rendering
-    const provider = async (context) => {
-      try {
-        console.log("📡 Provider called with context:", context);
+    const tableFirst = computed(() => (currentPage.value - 1) * perPage.value);
+    const emptyTitle = computed(() =>
+      loadError.value ? "Could not load products" : "No products"
+    );
+    const emptyDescription = computed(() =>
+      loadError.value ? "Try Refresh." : "No products match the current search."
+    );
 
-        // Only show loading if not already loading (avoid flickering)
-        if (!isLoading.value) {
-          isLoading.value = true;
-        }
+    const canBulkUpdate = computed(
+      () =>
+        !!proxy?.hasPermission?.("appinventory.change_product") &&
+        !!proxy?.hasPermission?.("appinventory.add_productprice") &&
+        !!proxy?.hasPermission?.("appinventory.change_productprice")
+    );
 
-        // Use context values for pagination (from BTable provider context)
-        const page = context.currentPage || 1;
-        const perPageValue = context.perPage || 25;
+    const hasRowActions = computed(
+      () =>
+        !!proxy?.hasPermission?.("appinventory.view_product") ||
+        !!proxy?.hasPermission?.("appinventory.change_product") ||
+        !!proxy?.hasPermission?.("appinventory.delete_product")
+    );
 
-        const params = new URLSearchParams({
-          page: page,
-          per_page: perPageValue,
-          search: context.filter || "",
-          ordering: context.sortBy
-            ? getOrderingFromSortBy(context.sortBy)
-            : "-id",
+    const getRowActions = (product) => {
+      const actions = [];
+      if (proxy?.hasPermission?.("appinventory.view_product")) {
+        actions.push({
+          key: "view",
+          label: "View",
+          severity: "success",
+          icon: EyeIcon,
+          command: () => viewItem(product.id),
         });
-
-        const response = await axios.get(`${ENDPOINT}?${params}`);
-
-        if (response.data && response.data.items) {
-          // Update stats from server response
-          if (response.data.stats) {
-            stats.value = response.data.stats;
-          }
-          totalRows.value = response.data.totalRows || 0;
-          lastUpdate.value = new Date().toLocaleString();
-
-          console.log(
-            "✅ Provider response:",
-            response.data.items.length,
-            "items"
-          );
-          return response.data.items;
-        } else {
-          throw new Error("Invalid response format");
-        }
-      } catch (error) {
-        console.error("❌ Provider error:", error);
-        proxy?.notifyError?.("Error loading products.");
-        return [];
-      } finally {
-        // Add a small delay to show the loading state (minimum 300ms for UX)
-        setTimeout(() => {
-          isLoading.value = false;
-        }, 300);
       }
+      if (proxy?.hasPermission?.("appinventory.change_product")) {
+        actions.push({
+          key: "edit",
+          label: "Edit",
+          severity: "info",
+          icon: PencilIcon,
+          command: () => editItem(product.id),
+        });
+      }
+      if (proxy?.hasPermission?.("appinventory.delete_product")) {
+        actions.push({
+          key: "delete",
+          label: "Delete",
+          severity: "danger",
+          icon: TrashIcon,
+          command: () => deleteItem(product.id),
+        });
+      }
+      return actions;
     };
 
-    // Helper function to convert sortBy to Django ordering
-    // Bootstrap Vue Next passes sortBy as array: [{key: 'id', order: 'desc'}]
     const getOrderingFromSortBy = (sortBy) => {
       if (!sortBy) return "-id";
 
       let field;
       let desc = false;
 
-      if (Array.isArray(sortBy) && sortBy.length > 0) {
+      if (sortBy.sortField) {
+        field = sortBy.sortField;
+        desc = sortBy.sortOrder === -1;
+      } else if (Array.isArray(sortBy) && sortBy.length > 0) {
         const first = sortBy[0];
         field = first.key ?? first.field;
         const order = first.order ?? (first.sortDesc ? "desc" : "asc");
@@ -457,45 +434,88 @@ export default {
       }
 
       if (!field) return "-id";
-      // Map API field names to Django model ordering (category_name -> category__name)
-      const fieldMap = { category_name: "category__name" };
-      const djangoField = fieldMap[field] ?? field;
+      const fieldMap = {
+        id: "id",
+        name: "name",
+        sku: "sku",
+        model_number: "model_number",
+        category_name: "category__name",
+        tracking_mode: "tracking_mode",
+        reorder_level: "reorder_level",
+        unit_name: "unit_default__name",
+        is_active: "is_active",
+      };
+      const djangoField = fieldMap[field];
+      if (!djangoField) return "-id";
       return desc ? `-${djangoField}` : djangoField;
     };
 
-    // Table reference
-    const productTable = ref(null);
+    const loadProducts = async () => {
+      if (!isLoading.value) {
+        isLoading.value = true;
+      }
 
-    // Page change handler
-    const onPageChange = (page) => {
-      console.log("📄 Page changed to:", page);
-      currentPage.value = page;
-      // The provider will be called automatically by BTable
-    };
+      try {
+        const params = new URLSearchParams({
+          page: currentPage.value,
+          per_page: perPage.value,
+          search: filter.value || "",
+          ordering: getOrderingFromSortBy({
+            sortField: sortField.value,
+            sortOrder: sortOrder.value,
+          }),
+        });
 
-    // Refresh function for manual refresh
-    const refreshTable = () => {
-      console.log("🔄 Refreshing table...");
-      isLoading.value = true;
-      // The provider will be called automatically by BTable
-      // We just need to trigger a refresh
-      if (productTable.value) {
-        productTable.value.refresh();
+        const response = await axios.get(`${ENDPOINT}?${params}`);
+
+        if (response.data && response.data.items) {
+          if (response.data.stats) {
+            stats.value = response.data.stats;
+          }
+          totalRows.value = response.data.totalRows || 0;
+          products.value = response.data.items;
+          loadError.value = false;
+        } else {
+          throw new Error("Invalid response format");
+        }
+      } catch (error) {
+        loadError.value = true;
+        products.value = [];
+        totalRows.value = 0;
+        stats.value = { total: 0, active: 0, inactive: 0 };
+        proxy?.notifyError?.("Error loading products.");
+      } finally {
+        setTimeout(() => {
+          isLoading.value = false;
+        }, 300);
       }
     };
 
-    // Load products on mount - not needed with provider pattern
-    onMounted(async () => {
-      console.log("🚀 ProductListView mounted with provider pattern");
-    });
+    const onTablePage = (event) => {
+      currentPage.value = (event.page ?? 0) + 1;
+      if (event.rows && event.rows !== perPage.value) {
+        perPage.value = event.rows;
+      }
+      loadProducts();
+    };
+
+    const onTableSort = (event) => {
+      sortField.value = event.sortField || "id";
+      sortOrder.value = event.sortOrder ?? -1;
+      currentPage.value = 1;
+      loadProducts();
+    };
+
+    const refreshTable = () => {
+      isLoading.value = true;
+      loadProducts();
+    };
 
     const goToCreateForm = () => {
-      // Unificar en una sola ruta con querys
       router.push({ name: "product-form", query: { mode: "create" } });
     };
 
     const viewItem = (id) => {
-      // Navigate to view mode using query parameter
       router.push({ name: "product-form", query: { mode: "view", id: id } });
     };
 
@@ -507,19 +527,15 @@ export default {
     };
 
     const deleteItem = (id) => {
-      // Use the same pattern as BuilderView
       proxy?.confirmDelete?.(
         "Are you sure?",
         `Delete product #${id}? This action cannot be undone.`,
         async () => {
           try {
             await axios.delete(`/api/products/${id}/`);
-            // Show success toast and refresh table
             proxy?.notifyToastSuccess?.("The product has been deleted.");
-            // Refresh the table to show updated data
             refreshTable();
           } catch (error) {
-            console.error("Error deleting product:", error);
             const status = error?.response?.status;
             const data = error?.response?.data;
 
@@ -541,73 +557,98 @@ export default {
       );
     };
 
+    const brokenImageIds = ref({});
+
+    const productImageSrc = (product) => {
+      if (!product?.id || brokenImageIds.value[product.id]) return "";
+      return product.image || "";
+    };
+
+    const onProductImageError = (product) => {
+      if (!product?.id) return;
+      brokenImageIds.value = { ...brokenImageIds.value, [product.id]: true };
+    };
+
     const openImageGallery = (productId) => {
-      console.log("🖼️ openImageGallery llamado con productId:", productId);
-      console.log(
-        "📦 Producto completo:",
-        products.value.find((p) => p.id === productId) ||
-          "No encontrado en products array"
-      );
-
       selectedProductId.value = productId;
-      console.log(
-        "✅ selectedProductId actualizado a:",
-        selectedProductId.value
-      );
-      console.log(
-        "🔗 URL de la galería sería: /api/products/" + productId + "/images/"
-      );
-
-      // Esperar al siguiente tick para asegurar que el componente esté montado
       nextTick(() => {
-        console.log("⏱️ nextTick ejecutado");
-        console.log(
-          "🔍 productImageGallery.value existe?",
-          !!productImageGallery.value
-        );
-
         if (productImageGallery.value) {
-          console.log("🚀 Llamando a openModal()");
           productImageGallery.value.openModal();
-        } else {
-          console.error("❌ productImageGallery.value es null o undefined");
         }
       });
     };
 
+    onMounted(() => {
+      if (typeof window !== "undefined" && window.matchMedia) {
+        mediaQuery = window.matchMedia(MOBILE_MQ);
+        isMobile.value = mediaQuery.matches;
+        onMedia = (event) => {
+          isMobile.value = event.matches;
+        };
+        if (mediaQuery.addEventListener) {
+          mediaQuery.addEventListener("change", onMedia);
+        } else {
+          mediaQuery.addListener(onMedia);
+        }
+      }
+      loadProducts();
+    });
+
+    onUnmounted(() => {
+      if (searchTimer) clearTimeout(searchTimer);
+      if (mediaQuery && onMedia) {
+        if (mediaQuery.removeEventListener) {
+          mediaQuery.removeEventListener("change", onMedia);
+        } else {
+          mediaQuery.removeListener(onMedia);
+        }
+      }
+    });
+
+    watch(perPage, () => {
+      currentPage.value = 1;
+      loadProducts();
+    });
+
+    watch(filter, () => {
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        currentPage.value = 1;
+        loadProducts();
+      }, 300);
+    });
+
     return {
-      // Data
       products,
       stats,
-      lastUpdate,
       isLoading,
-
-      // Table controls
+      loadError,
       currentPage,
       perPage,
       filter,
       totalRows,
-
-      // Table reference
-      productTable,
-
-      // Configuration
-      fields,
+      sortField,
+      sortOrder,
+      tableFirst,
       pageOptions,
-
-      // Provider
-      provider,
-
-      // Methods
+      emptyTitle,
+      emptyDescription,
+      isMobile,
+      hasRowActions,
+      getRowActions,
       refreshTable,
-      onPageChange,
+      onTablePage,
+      onTableSort,
       goToCreateForm,
       viewItem,
       editItem,
       deleteItem,
       openImageGallery,
+      productImageSrc,
+      onProductImageError,
       productImageGallery,
       selectedProductId,
+      canBulkUpdate,
       showBulkPricesPanel,
     };
   },
@@ -615,60 +656,302 @@ export default {
 </script>
 
 <style scoped>
-/* Listview header: toolbar + filters */
-.listview-title {
-  font-size: 1.1rem;
-  letter-spacing: -0.01em;
+.jr-product-list__masthead {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
-.listview-toolbar {
-  padding: 0.5rem 0.75rem;
-  background-color: rgba(13, 110, 253, 0.06);
-  border: 1px solid rgba(13, 110, 253, 0.12);
-  border-radius: 0.375rem;
+
+.jr-product-list__masthead :deep(.jr-page-header) {
+  margin-bottom: 0.25rem;
 }
-.listview-toolbar .stats-badge {
-  font-size: 0.7rem;
-  font-weight: 500;
-  padding: 0.25rem 0.5rem;
-  line-height: 1.2;
+
+.jr-product-list__create {
+  width: 100%;
 }
-.listview-toolbar-divider {
-  width: 1px;
-  height: 1.25rem;
-  background-color: rgba(0, 0, 0, 0.12);
-  margin: 0 0.15rem;
+
+.jr-product-list__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
 }
-.listview-refresh-btn {
-  padding: 0.2rem 0.6rem;
-  font-size: 0.8rem;
-}
-.listview-filters .listview-filter-group label {
-  font-size: 0.8rem;
-  color: var(--bs-secondary-color);
-}
-.table td {
-  vertical-align: middle;
-}
-.badge {
+
+.jr-product-list__summary :deep(.p-tag) {
   font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
-.card {
-  border: none;
+
+.jr-product-list__toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
 }
-.form-select-sm,
-.form-control-sm {
-  font-size: 0.8rem;
+
+.jr-product-list__search {
+  position: relative;
+  min-width: 0;
+  flex: 1 1 auto;
 }
-/* Search ocupa el resto de la fila de filtros; ancho mínimo legible */
-.listview-filter-search-col {
-  min-width: min(100%, 240px);
+
+.jr-product-list__bulk-toggle {
+  opacity: 0.85;
 }
-/* Alinea la altura del switch con form-select-sm / form-control-sm (~31px) */
-.bulk-prices-switch-wrap {
-  min-height: 31px;
-  justify-content: center;
+
+.jr-product-list__search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  z-index: 1;
+  display: flex;
+  color: var(--color-jr-muted, #4b5563);
+  pointer-events: none;
+  transform: translateY(-50%);
 }
-.text-muted.small {
-  font-size: 0.8rem;
+
+.jr-product-list__search :deep(.p-inputtext) {
+  padding-left: 2.25rem;
+}
+
+.jr-product-list__cluster {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  align-self: flex-start;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+
+.jr-product-list__entries {
+  width: 4.75rem;
+  flex: 0 0 auto;
+}
+
+.jr-product-list__cluster :deep(.jr-product-list__entries.p-select),
+.jr-product-list__cluster :deep(.p-select) {
+  width: 4.75rem;
+}
+
+.jr-product-list__cluster :deep(.p-togglebutton) {
+  flex: 0 0 auto;
+  min-height: 2.5rem;
+  white-space: nowrap;
+}
+
+.jr-product-list__bulk {
+  margin-bottom: 1rem;
+}
+
+.jr-product-list__loading,
+.jr-product-list__muted {
+  color: var(--color-jr-muted, #4b5563);
+}
+
+.jr-product-list__loading {
+  margin: 0;
+  padding: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.jr-product-list__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-jr-border, #e5e7eb);
+}
+
+.jr-product-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
+}
+
+.jr-product-row__main {
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.jr-product-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.jr-product-cell__img,
+.jr-product-cell__ph {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border: 1px solid var(--color-jr-border, #e5e7eb);
+  border-radius: var(--radius-jr-control, 0.5rem);
+  background: var(--color-jr-surface-muted, #f9fafb);
+  object-fit: cover;
+}
+
+.jr-product-cell__ph {
+  display: block;
+}
+
+.jr-product-cell__text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.jr-product-cell__name {
+  overflow: hidden;
+  color: var(--color-jr-primary, #2563eb);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jr-product-cell__meta {
+  overflow: hidden;
+  color: var(--color-jr-muted, #4b5563);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jr-product-cell:hover .jr-product-cell__name {
+  color: var(--color-jr-primary-hover, #1d4ed8);
+  text-decoration: underline;
+}
+
+.jr-product-cell:focus-visible {
+  outline: 2px solid var(--color-jr-primary, #2563eb);
+  outline-offset: 2px;
+}
+
+.jr-product-row__meta {
+  margin: 0.2rem 0 0 calc(2.5rem + 0.75rem);
+  font-size: 0.75rem;
+  color: var(--color-jr-muted, #4b5563);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jr-product-row__aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.jr-product-list__rows[aria-busy="true"] {
+  opacity: 0.55;
+}
+
+.jr-product-list__pager {
+  margin-top: 0.5rem;
+}
+
+.jr-product-list__pager :deep(.p-paginator) {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.jr-product-list__table :deep(.p-datatable) {
+  --p-datatable-row-striped-background: var(--color-jr-surface-muted, #f9fafb);
+  border: 1px solid var(--color-jr-border, #e5e7eb);
+  border-radius: var(--radius-jr-panel, 0.75rem);
+  background: var(--color-jr-surface, #ffffff);
+}
+
+.jr-product-list__table :deep(.p-datatable-table-container) {
+  overflow-x: auto;
+}
+
+.jr-product-list__table :deep(.p-datatable-thead > tr > th) {
+  background: var(--color-jr-surface-muted, #f9fafb);
+  color: var(--color-jr-text, #111827);
+  font-weight: 600;
+}
+
+.jr-product-list__table :deep(.p-datatable-tbody > tr > td) {
+  font-size: 0.875rem;
+  vertical-align: middle;
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
+.jr-product-list__table :deep(.p-tag),
+.jr-product-row__aside :deep(.p-tag) {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 0.1rem 0.4rem;
+}
+
+.jr-col-id {
+  width: 3.5rem;
+  color: var(--color-jr-muted, #4b5563);
+  font-variant-numeric: tabular-nums;
+}
+
+.jr-col-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.jr-col-actions {
+  width: 16.5rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .jr-product-list__masthead {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .jr-product-list__create {
+    width: auto;
+  }
+
+  .jr-product-list__toolbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .jr-product-list__search {
+    flex: 0 1 18rem;
+    max-width: 18rem;
+  }
+
+  .jr-product-list__cluster {
+    align-self: center;
+  }
 }
 </style>

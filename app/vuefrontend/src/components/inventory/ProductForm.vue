@@ -1,389 +1,269 @@
 <template>
-  <div class="container-fluid position-relative my-2">
-    <h3 class="text-center text-warning mb-2">Product Form</h3>
-    <div class="card shadow mb-2 mx-3">
-      <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <div class="flex-grow-1 text-center px-2">
-          <h6 class="mb-0 text-primary">{{ pageTitle }}</h6>
+  <JRPage>
+    <JRPageHeader :title="pageTitle">
+      <template #actions>
+        <JRButton
+          v-if="
+            isReadOnly &&
+            currentProductId &&
+            hasPermission('appinventory.change_product')
+          "
+          variant="primary"
+          size="sm"
+          v-tt
+          data-title="Switch to edit mode for this product"
+          @click="goToEdit">
+          Edit product
+        </JRButton>
+        <JRButton variant="secondary" size="sm" @click="cancelForm">
+          Back
+        </JRButton>
+      </template>
+    </JRPageHeader>
+
+    <form class="jr-product-form" @submit.prevent="handleSubmit" novalidate>
+      <JRSection title="Identity">
+        <div class="jr-form-grid jr-form-grid--measure">
+          <JRField label="Name" required inputId="product-name" :error="fieldErrors.name">
+            <JRInput
+              inputId="product-name"
+              v-model="product.name"
+              :disabled="isReadOnly"
+              :invalid="!!fieldErrors.name"
+              v-tt
+              data-title="Product name for identification and display purposes" />
+          </JRField>
+          <JRField
+            label="SKU"
+            required
+            inputId="product-sku"
+            :error="fieldErrors.sku"
+            hint="Required (min 3). Unique identifier for warehouse/purchasing.">
+            <JRInput
+              inputId="product-sku"
+              v-model="product.sku"
+              :disabled="isReadOnly"
+              :invalid="!!fieldErrors.sku"
+              v-tt
+              data-title="Unique identifier for warehouse and purchasing operations" />
+          </JRField>
+          <JRField
+            label="Model #"
+            inputId="product-model-number"
+            :error="fieldErrors.model_number"
+            hint="Optional. Manufacturer or catalog model (e.g. 14A19060W6CCT02-02).">
+            <JRInput
+              inputId="product-model-number"
+              v-model="product.model_number"
+              :disabled="isReadOnly"
+              :invalid="!!fieldErrors.model_number"
+              v-tt
+              data-title="Manufacturer or catalog model reference" />
+          </JRField>
         </div>
-        <div class="d-flex align-items-center gap-2 ms-auto">
-          <button
-            v-if="
-              isReadOnly &&
-              currentProductId &&
-              hasPermission('appinventory.change_product')
-            "
-            type="button"
-            class="btn btn-primary btn-sm"
-            @click="goToEdit"
-            v-tt
-            data-title="Switch to edit mode for this product">
-            <i class="fas fa-pen me-1" aria-hidden="true"></i>
-            Edit product
-          </button>
-          <button class="btn btn-outline-secondary btn-sm" @click="cancelForm">
-            Back
-          </button>
+      </JRSection>
+
+      <JRSection title="Classification">
+        <div class="jr-form-grid jr-form-grid--measure">
+          <JRField
+            label="Category"
+            required
+            inputId="product-category"
+            :error="fieldErrors.category"
+            hint="Required. Group products for filtering and analytics.">
+            <JRSelectAddon
+              inputId="product-category"
+              v-model="product.category"
+              :options="categories"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Select Category"
+              :disabled="
+                isReadOnly ||
+                !hasPermission('appinventory.add_productcategory')
+              "
+              :invalid="!!fieldErrors.category"
+              :showAdd="true"
+              :showEdit="!!product.category"
+              :addDisabled="
+                isReadOnly ||
+                !hasPermission('appinventory.add_productcategory')
+              "
+              :editDisabled="
+                isReadOnly ||
+                !hasPermission('appinventory.change_productcategory')
+              "
+              addLabel="Add a new category to the system"
+              editLabel="Edit the currently selected category"
+              filter
+              v-tt
+              data-title="Required field for product categorization"
+              @show="loadCategories"
+              @add="openCategoryModal('add')"
+              @edit="openCategoryModal('edit', product.category)" />
+          </JRField>
+
+          <JRField
+            label="Brands"
+            required
+            inputId="product-brands"
+            :error="fieldErrors.brands"
+            hint="Required for product traceability and brand management.">
+            <JRSelectAddon
+              inputId="product-brands"
+              v-model="product.brands"
+              :options="brands"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Select Brands"
+              multiple
+              showClear
+              :disabled="
+                isReadOnly ||
+                !hasPermission('appinventory.add_productcategory')
+              "
+              :invalid="!!fieldErrors.brands"
+              :showAdd="true"
+              :addDisabled="
+                isReadOnly || !hasPermission('appinventory.add_productbrand')
+              "
+              addLabel="Add a new brand to the system"
+              filter
+              v-tt
+              data-title="Required field - select one or more brands"
+              @show="loadBrands"
+              @add="openBrandModal('add')" />
+            <p
+              v-if="product.brands && product.brands.length > 0"
+              class="jr-product-form__helper">
+              <strong>Default Brand:</strong>
+              {{ getDefaultBrandName() || "Will be auto-assigned" }}
+            </p>
+          </JRField>
+
+          <JRField
+            label="Default Unit"
+            required
+            inputId="product-unit-default"
+            :error="fieldErrors.unit_default"
+            hint="Required. Primary unit used for stock and valuations (e.g., EA, FT).">
+            <JRSelectAddon
+              inputId="product-unit-default"
+              v-model="product.unit_default"
+              :options="units"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Select Unit"
+              :disabled="
+                isReadOnly ||
+                !hasPermission('appinventory.add_productcategory')
+              "
+              :invalid="!!fieldErrors.unit_default"
+              :showAdd="true"
+              :showEdit="!!product.unit_default"
+              :addDisabled="
+                isReadOnly ||
+                !hasPermission('appinventory.add_unitofmeasure')
+              "
+              :editDisabled="
+                isReadOnly ||
+                !hasPermission('appinventory.change_unitofmeasure')
+              "
+              addLabel="Add a new unit of measure to the system"
+              editLabel="Edit the currently selected unit"
+              filter
+              v-tt
+              data-title="Required field for unit selection"
+              @show="loadUnits"
+              @add="openUnitModal('add')"
+              @edit="openUnitModal('edit', product.unit_default)" />
+          </JRField>
         </div>
+      </JRSection>
+
+      <JRSection title="Inventory">
+        <div class="jr-form-grid jr-form-grid--measure">
+          <JRField
+            label="Reorder Level"
+            inputId="product-reorder-level"
+            hint="Alert threshold to trigger restock notifications">
+            <JRInput
+              inputId="product-reorder-level"
+              type="number"
+              :min="0"
+              :modelValue="product.reorder_level"
+              :disabled="isReadOnly"
+              v-tt
+              data-title="Optional. Used for low-stock alerts and inventory management"
+              @update:modelValue="
+                product.reorder_level = $event == null ? 0 : $event
+              " />
+          </JRField>
+
+          <JRField
+            label="Tracking Mode"
+            inputId="product-tracking-mode"
+            hint="QUANTITY = stock by quantity; SERIALIZED = track by individual units (equipment/tools).">
+            <JRSelect
+              inputId="product-tracking-mode"
+              v-model="product.tracking_mode"
+              :options="trackingModeOptions"
+              optionLabel="label"
+              optionValue="value"
+              :disabled="isReadOnly"
+              placeholder="Select tracking mode..." />
+            <p
+              v-if="product.tracking_mode === 'SERIALIZED'"
+              class="jr-product-form__info">
+              Serialized products create one unit (SerializedItem) per
+              quantity on purchase.
+            </p>
+          </JRField>
+
+          <JRField>
+            <JRCheckbox
+              v-model="product.is_active"
+              inputId="isActive"
+              label="Active"
+              :disabled="isReadOnly"
+              v-tt
+              data-title="Toggle product availability in the system" />
+          </JRField>
+        </div>
+      </JRSection>
+
+      <JRSection title="Price and Unit Settings">
+        <ProductPriceUnitTable
+          ref="productPriceUnitTable"
+          v-model="productPriceUnits"
+          :priceTypes="priceTypes"
+          :units="units"
+          :readonly="isReadOnly"
+          @open-modal="handleOpenModal"
+          @edit-modal="handleEditModal"
+          @refresh-priceTypes="loadPriceTypes"
+          @refresh-units="loadUnits" />
+      </JRSection>
+
+      <div class="jr-product-form__actions">
+        <JRButton
+          type="submit"
+          variant="primary"
+          :disabled="isReadOnly || submitting">
+          {{
+            submitting
+              ? "Saving..."
+              : $route?.query?.id || $route?.params?.id || objectId
+              ? "Update"
+              : "Save"
+          }}
+        </JRButton>
+        <JRButton type="button" variant="secondary" @click="cancelForm">
+          Cancel
+        </JRButton>
       </div>
+    </form>
 
-      <div class="card-body">
-        <form @submit.prevent="handleSubmit" novalidate>
-          <!-- Product fields -->
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label d-flex align-items-center gap-2">
-                Name
-              </label>
-              <input
-                v-model.trim="product.name"
-                type="text"
-                class="form-control"
-                :class="{ 'is-invalid': fieldErrors.name }"
-                :disabled="isReadOnly"
-                required
-                minlength="3"
-                maxlength="255"
-                v-tt
-                data-title="Product name for identification and display purposes" />
-              <div v-if="fieldErrors.name" class="invalid-feedback">
-                {{ fieldErrors.name }}
-              </div>
-            </div>
-
-            <div class="col-md-6 mb-3">
-              <label class="form-label d-flex align-items-center gap-2">
-                SKU
-                <i
-                  v-tt
-                  class="fas fa-info-circle text-muted"
-                  data-title="Required (min 3). Unique identifier for warehouse/purchasing."></i>
-              </label>
-              <input
-                v-model.trim="product.sku"
-                type="text"
-                class="form-control"
-                :class="{ 'is-invalid': fieldErrors.sku }"
-                :disabled="isReadOnly"
-                required
-                minlength="3"
-                maxlength="100"
-                v-tt
-                data-title="Unique identifier for warehouse and purchasing operations" />
-              <div v-if="fieldErrors.sku" class="invalid-feedback">
-                {{ fieldErrors.sku }}
-              </div>
-            </div>
-
-            <div class="col-md-6 mb-3">
-              <label class="form-label d-flex align-items-center gap-2">
-                Model #
-                <i
-                  v-tt
-                  class="fas fa-info-circle text-muted"
-                  data-title="Optional. Manufacturer or catalog model (e.g. 14A19060W6CCT02-02)."></i>
-              </label>
-              <input
-                v-model.trim="product.model_number"
-                type="text"
-                class="form-control"
-                maxlength="128"
-                :class="{ 'is-invalid': fieldErrors.model_number }"
-                :disabled="isReadOnly"
-                autocomplete="off"
-                v-tt
-                data-title="Manufacturer or catalog model reference" />
-              <div v-if="fieldErrors.model_number" class="invalid-feedback">
-                {{ fieldErrors.model_number }}
-              </div>
-            </div>
-
-            <!-- Category -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label d-flex align-items-center gap-2">
-                Category
-                <i
-                  v-tt
-                  class="fas fa-info-circle text-muted"
-                  data-title="Required. Group products for filtering and analytics."></i>
-              </label>
-              <div class="d-flex align-items-center">
-                <v-select
-                  :options="categories"
-                  v-model="product.category"
-                  :reduce="(cat) => cat.id"
-                  label="name"
-                  placeholder="Select Category"
-                  class="flex-grow-1"
-                  :class="{ 'is-invalid': fieldErrors.category }"
-                  :disabled="
-                    isReadOnly ||
-                    !hasPermission('appinventory.add_productcategory')
-                  "
-                  @open="loadCategories"
-                  v-tt
-                  data-title="Required field for product categorization" />
-                <button
-                  class="btn btn-outline-secondary btn-sm ms-1"
-                  type="button"
-                  @click="openCategoryModal('add')"
-                  :disabled="
-                    isReadOnly ||
-                    !hasPermission('appinventory.add_productcategory')
-                  "
-                  v-tt
-                  data-title="Add a new category to the system">
-                  <img
-                    src="@assets/img/icon-addlink.svg"
-                    alt="Add"
-                    width="15"
-                    height="15" />
-                </button>
-                <button
-                  v-if="product.category"
-                  class="btn btn-outline-secondary btn-sm ms-1"
-                  type="button"
-                  @click="openCategoryModal('edit', product.category)"
-                  :disabled="
-                    isReadOnly ||
-                    !hasPermission('appinventory.change_productcategory')
-                  "
-                  v-tt
-                  data-title="Edit the currently selected category">
-                  <img
-                    src="@assets/img/icon-changelink.svg"
-                    alt="Edit"
-                    width="15"
-                    height="15" />
-                </button>
-              </div>
-              <div v-if="fieldErrors.category" class="invalid-feedback d-block">
-                {{ fieldErrors.category }}
-              </div>
-            </div>
-
-            <!-- Brands (multiple selection) -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label d-flex align-items-center gap-2">
-                Brands
-                <i
-                  v-tt
-                  class="fas fa-info-circle text-muted"
-                  data-title="Required for product traceability and brand management"></i>
-              </label>
-              <div class="d-flex align-items-center">
-                <v-select
-                  :options="brands"
-                  label="name"
-                  :reduce="(brand) => brand.id"
-                  v-model="product.brands"
-                  placeholder="Select Brands"
-                  class="flex-grow-1"
-                  :class="{ 'is-invalid': fieldErrors.brands }"
-                  :disabled="
-                    isReadOnly ||
-                    !hasPermission('appinventory.add_productcategory')
-                  "
-                  multiple
-                  :close-on-select="false"
-                  :clearable="true"
-                  @open="loadBrands"
-                  v-tt
-                  data-title="Required field - select one or more brands" />
-                <button
-                  class="btn btn-outline-secondary btn-sm ms-1"
-                  type="button"
-                  @click="openBrandModal('add')"
-                  :disabled="
-                    isReadOnly ||
-                    !hasPermission('appinventory.add_productbrand')
-                  "
-                  v-tt
-                  data-title="Add a new brand to the system">
-                  <img
-                    src="@assets/img/icon-addlink.svg"
-                    alt="Add"
-                    width="15"
-                    height="15" />
-                </button>
-              </div>
-              <div v-if="fieldErrors.brands" class="invalid-feedback d-block">
-                {{ fieldErrors.brands }}
-              </div>
-              <div
-                v-if="product.brands && product.brands.length > 0"
-                class="small text-muted mt-1">
-                <strong>Default Brand:</strong>
-                {{ getDefaultBrandName() || "Will be auto-assigned" }}
-              </div>
-            </div>
-
-            <!-- Default Unit -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label d-flex align-items-center gap-2">
-                Default Unit
-                <i
-                  v-tt
-                  class="fas fa-info-circle text-muted"
-                  data-title="Required. Primary unit used for stock and valuations (e.g., EA, FT)."></i>
-              </label>
-              <div class="d-flex align-items-center">
-                <v-select
-                  :options="units"
-                  v-model="product.unit_default"
-                  :reduce="(unit) => unit.id"
-                  label="name"
-                  placeholder="Select Unit"
-                  class="flex-grow-1"
-                  :class="{ 'is-invalid': fieldErrors.unit_default }"
-                  :disabled="
-                    isReadOnly ||
-                    !hasPermission('appinventory.add_productcategory')
-                  "
-                  @open="loadUnits"
-                  v-tt
-                  data-title="Required field for unit selection" />
-                <button
-                  class="btn btn-outline-secondary btn-sm ms-1"
-                  type="button"
-                  @click="openUnitModal('add')"
-                  :disabled="
-                    isReadOnly ||
-                    !hasPermission('appinventory.add_unitofmeasure')
-                  "
-                  v-tt
-                  data-title="Add a new unit of measure to the system">
-                  <img
-                    src="@assets/img/icon-addlink.svg"
-                    alt="Add"
-                    width="15"
-                    height="15" />
-                </button>
-                <button
-                  v-if="product.unit_default"
-                  class="btn btn-outline-secondary btn-sm ms-1"
-                  type="button"
-                  @click="openUnitModal('edit', product.unit_default)"
-                  :disabled="
-                    isReadOnly ||
-                    !hasPermission('appinventory.change_unitofmeasure')
-                  "
-                  v-tt
-                  data-title="Edit the currently selected unit">
-                  <img
-                    src="@assets/img/icon-changelink.svg"
-                    alt="Edit"
-                    width="15"
-                    height="15" />
-                </button>
-              </div>
-              <div
-                v-if="fieldErrors.unit_default"
-                class="invalid-feedback d-block">
-                {{ fieldErrors.unit_default }}
-              </div>
-            </div>
-
-            <div class="col-md-6 mb-3">
-              <label class="form-label d-flex align-items-center gap-2">
-                Reorder Level
-                <i
-                  v-tt
-                  class="fas fa-info-circle text-muted"
-                  data-title="Alert threshold to trigger restock notifications"></i>
-              </label>
-              <input
-                v-model.number="product.reorder_level"
-                type="number"
-                step="0.01"
-                class="form-control"
-                :disabled="isReadOnly"
-                min="0"
-                v-tt
-                data-title="Optional. Used for low-stock alerts and inventory management" />
-            </div>
-
-            <!-- Tracking Mode -->
-            <div class="col-md-6 mb-3">
-              <label class="form-label d-flex align-items-center gap-2">
-                Tracking Mode
-                <i
-                  v-tt
-                  class="fas fa-info-circle text-muted"
-                  data-title="QUANTITY = stock by quantity; SERIALIZED = track by individual units (equipment/tools)."></i>
-              </label>
-              <v-select
-                v-model="product.tracking_mode"
-                :options="trackingModeOptions"
-                :reduce="(o) => o.value"
-                label="label"
-                class="flex-grow-1"
-                :disabled="isReadOnly"
-                placeholder="Select tracking mode..." />
-              <div
-                v-if="product.tracking_mode === 'SERIALIZED'"
-                class="alert alert-info small mt-2 mb-0 py-2">
-                Serialized products create one unit (SerializedItem) per
-                quantity on purchase.
-              </div>
-            </div>
-
-            <div class="col-md-6 mb-1 d-flex align-items-center gap-2">
-              <input
-                v-model="product.is_active"
-                type="checkbox"
-                class="form-check-input"
-                id="isActive"
-                :disabled="isReadOnly" />
-              <label
-                for="isActive"
-                class="form-check-label"
-                v-tt
-                data-title="Toggle product availability in the system">
-                Active
-              </label>
-            </div>
-          </div>
-
-          <!-- Combined ProductUnit + ProductPrice table -->
-          <ProductPriceUnitTable
-            ref="productPriceUnitTable"
-            v-model="productPriceUnits"
-            :priceTypes="priceTypes"
-            :units="units"
-            @open-modal="handleOpenModal"
-            @edit-modal="handleEditModal"
-            @refresh-priceTypes="loadPriceTypes"
-            @refresh-units="loadUnits"
-            :readonly="isReadOnly" />
-
-          <div class="mt-4 d-flex gap-2">
-            <button
-              type="submit"
-              class="btn btn-primary"
-              :disabled="isReadOnly || submitting">
-              <i v-if="!submitting" class="fas fa-save me-1"></i>
-              <i v-else class="fas fa-spinner fa-spin me-1"></i>
-              {{
-                submitting
-                  ? "Saving..."
-                  : $route?.query?.id || $route?.params?.id || objectId
-                  ? "Update"
-                  : "Save"
-              }}
-            </button>
-            <button
-              type="button"
-              class="btn btn-outline-secondary"
-              @click="cancelForm">
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modals for Category, Brand, Unit, PriceType -->
     <CategoryModal
       ref="categoryModal"
       :objectId="modalObjectId"
@@ -400,20 +280,29 @@
       ref="priceTypeModal"
       :objectId="modalObjectId"
       @refresh="loadPriceTypes" />
-  </div>
+  </JRPage>
 </template>
 
 <script>
 // Options API to keep consistency with current codebase
 import axios from "axios";
-import VSelect from "vue-select";
-import "vue-select/dist/vue-select.css";
 import Swal from "sweetalert2";
 import ProductPriceUnitTable from "@/components/inventory/ProductPriceUnitTable.vue";
 import CategoryModal from "@/components/inventory/CategoryModal.vue";
 import BrandModal from "@/components/inventory/BrandModal.vue";
 import UnitModal from "@/components/inventory/UnitModal.vue";
 import PriceTypeModal from "@/components/inventory/PriceTypeModal.vue";
+import {
+  JRPage,
+  JRPageHeader,
+  JRSection,
+  JRField,
+  JRButton,
+  JRInput,
+  JRSelect,
+  JRSelectAddon,
+  JRCheckbox,
+} from "@ui";
 
 const LIST_ROUTE_NAME = "product-list"; // ProductListView (/products)
 
@@ -421,11 +310,19 @@ export default {
   name: "ProductForm",
   components: {
     ProductPriceUnitTable,
-    VSelect,
     CategoryModal,
     BrandModal,
     UnitModal,
     PriceTypeModal,
+    JRPage,
+    JRPageHeader,
+    JRSection,
+    JRField,
+    JRButton,
+    JRInput,
+    JRSelect,
+    JRSelectAddon,
+    JRCheckbox,
   },
   props: {
     objectId: {
@@ -947,24 +844,36 @@ export default {
     },
 
     loadCategories() {
-      axios.get("/api/productcategory/").then((res) => {
-        this.categories = res.data;
-      });
+      axios
+        .get("/api/productcategory/")
+        .then((res) => {
+          this.categories = res.data;
+        })
+        .catch(() => this.notifyToastError?.("Failed to load categories"));
     },
     loadBrands() {
-      axios.get("/api/productbrand/").then((res) => {
-        this.brands = res.data;
-      });
+      axios
+        .get("/api/productbrand/")
+        .then((res) => {
+          this.brands = res.data;
+        })
+        .catch(() => this.notifyToastError?.("Failed to load brands"));
     },
     loadUnits() {
-      axios.get("/api/unitsofmeasure/").then((res) => {
-        this.units = res.data;
-      });
+      axios
+        .get("/api/unitsofmeasure/")
+        .then((res) => {
+          this.units = res.data;
+        })
+        .catch(() => this.notifyToastError?.("Failed to load units"));
     },
     loadPriceTypes() {
-      axios.get("/api/pricetypes/").then((res) => {
-        this.priceTypes = res.data;
-      });
+      axios
+        .get("/api/pricetypes/")
+        .then((res) => {
+          this.priceTypes = res.data;
+        })
+        .catch(() => this.notifyToastError?.("Failed to load price types"));
     },
 
     handleOpenModal(type) {
@@ -1163,44 +1072,46 @@ export default {
 </script>
 
 <style scoped>
-.card-header {
-  background-color: #f3f3f3;
-}
-.card-header h5 {
-  font-weight: 600;
-}
-/* Optional: add a red border on invalid vue-select to match Bootstrap */
-:deep(.is-invalid .vs__dropdown-toggle) {
-  border-color: #dc3545;
-}
-:deep(.is-invalid .vs__dropdown-toggle:focus) {
-  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+.jr-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
 }
 
-@media (max-width: 768px) {
-  .container-fluid {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-
-  .card {
-    margin-left: 0.25rem !important;
-    margin-right: 0.25rem !important;
-  }
-
-  .card-header {
-    padding: 0.75rem;
-  }
-
-  .card-body {
-    padding: 1rem;
+@media (min-width: 768px) {
+  .jr-form-grid--measure {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 48rem;
   }
 }
 
-@media (max-width: 992px) and (min-width: 769px) {
-  .card {
-    margin-left: 1rem !important;
-    margin-right: 1rem !important;
-  }
+.jr-product-form__helper {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-jr-muted, #4b5563);
+}
+
+.jr-product-form__info {
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-jr-text, #111827);
+  background: var(--color-jr-surface-muted, #f9fafb);
+  border: 1px solid var(--color-jr-border, #e5e7eb);
+  border-radius: var(--radius-jr-control, 0.5rem);
+}
+
+.jr-product-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 0.75rem 0 0.25rem;
+  margin-top: 0.5rem;
+  background: var(--color-jr-page, #f3f4f6);
+  border-top: 1px solid var(--color-jr-border, #e5e7eb);
 }
 </style>
