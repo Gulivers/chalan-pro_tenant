@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-29T17:58:00.000Z",
+  "title": "Design System: JobRhythm Admin",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Action Blue",
+        "canonical": "#2563eb",
+        "tonalRamp": ["#0f172a", "#1e3a8a", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe", "#eff6ff"]
+      },
+      "primary-deep": {
+        "role": "primary",
+        "displayName": "Deep Blueprint",
+        "canonical": "#1e3a8a",
+        "tonalRamp": ["#0b1220", "#111827", "#1e3a8a", "#1e40af", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe"]
+      },
+      "section-accent": {
+        "role": "accent",
+        "displayName": "Section Amber",
+        "canonical": "#c08500",
+        "tonalRamp": ["#2a1f00", "#553f00", "#805f00", "#ab7f00", "#c08500", "#d4a017", "#e6b82e", "#f0cc5c", "#f7df8a", "#fdf2c2"]
+      },
+      "neutral-surface": {
+        "role": "neutral",
+        "displayName": "Surface Gray",
+        "canonical": "#f1f3f5",
+        "tonalRamp": ["#343a40", "#495057", "#6c757d", "#868e96", "#adb5bd", "#ced4da", "#dee2e6", "#e9ecef", "#f1f3f5", "#f8f9fa"]
+      }
+    },
+    "typographyMeta": {
+      "body": {
+        "displayName": "Body UI",
+        "purpose": "Default copy and controls; Inter-forward in skin-modern.css."
+      },
+      "label": {
+        "displayName": "Form Label",
+        "purpose": "Field labels at 600 weight, gray-600 tone."
+      },
+      "title": {
+        "displayName": "Page Title",
+        "purpose": "Module/page headings such as .main-title."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-rest",
+        "value": "0 12px 35px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.05)",
+        "purpose": "Default card elevation in skin-modern.css."
+      },
+      {
+        "name": "focus-ring-blue",
+        "value": "0 0 0 3px rgba(59, 130, 246, 0.25)",
+        "purpose": "Input and switch focus halo."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default transition for controls and switches."
+      }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "992px" },
+      { "name": "xl", "value": "1200px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Default affirmative action in admin forms and toolbars.",
+      "html": "<button class=\"ds-btn-primary\">Save changes</button>",
+      "css": ".ds-btn-primary { background-color: #2563eb; color: #ffffff; border: 1px solid #1e4fd3; border-radius: 0.7rem; padding: 0.6rem 1.4rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease; } .ds-btn-primary:hover { background-color: #1d4ed8; border-color: #1c46bb; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); }"
+    },
+    {
+      "name": "Modern Navbar",
+      "kind": "nav",
+      "refersTo": "navbar",
+      "description": "Global shell navigation with deep blue gradient and white links.",
+      "html": "<nav class=\"ds-navbar\"><span class=\"ds-navbar-brand\">JobRhythm</span><a class=\"ds-nav-link ds-nav-link-active\" href=\"#\">Schedule</a><a class=\"ds-nav-link\" href=\"#\">Inventory</a></nav>",
+      "css": ".ds-navbar { display: flex; align-items: center; gap: 1rem; padding: 0.5rem 1rem; background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: #ffffff; } .ds-navbar-brand { font-weight: 700; margin-right: 1rem; color: #ffffff; } .ds-nav-link { color: rgba(255,255,255,0.92); text-decoration: none; padding: 0.35rem 0.65rem; border-radius: 0.5rem; font-weight: 500; } .ds-nav-link-active, .ds-nav-link:hover { color: #ffffff; background: rgba(255,255,255,0.08); }"
+    },
+    {
+      "name": "Modern Card",
+      "kind": "card",
+      "refersTo": "card-modern",
+      "description": "Primary content container for forms, filters, and tables.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\">Inventory</div><div class=\"ds-card-body\">Content</div></div>",
+      "css": ".ds-card { background: #f1f3f5; border-radius: 1.25rem; padding: 2rem 2.5rem; box-shadow: 0 12px 35px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.05); border: none; text-align: left; } .ds-card-header { background: transparent; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 0.75rem; margin-bottom: 1rem; font-weight: 600; color: #212529; } .ds-card-body { color: #212529; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Standard Bootstrap-style field used across modules.",
+      "html": "<label class=\"ds-field-label\">Search</label><input class=\"ds-input\" type=\"text\" placeholder=\"Filter records\" />",
+      "css": ".ds-field-label { display: block; margin-bottom: 0.5rem; font-size: 0.95rem; font-weight: 600; color: #4b5563; } .ds-input { width: 100%; max-width: 320px; display: block; padding: 0.65rem 0.9rem; font-size: 1rem; color: #212529; background-color: #ffffff; border: 1px solid #cbd0d6; border-radius: 0.65rem; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); transition: border-color 0.2s ease, box-shadow 0.2s ease; } .ds-input:focus-visible { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); }"
+    },
+    {
+      "name": "Modern Table Wrapper",
+      "kind": "custom",
+      "refersTo": "table-modern",
+      "description": "Rounded white table container with gray header band.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>Item</th><th>Qty</th></tr></thead><tbody><tr><td>Cable</td><td>24</td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.8rem; overflow: hidden; } .ds-table thead th { background: #f3f4f6; font-weight: 600; text-align: left; padding: 0.75rem 1rem; color: #212529; } .ds-table tbody td { padding: 0.75rem 1rem; border-top: 1px solid #e5e7eb; color: #212529; } .ds-table tbody tr:hover { background: #f1f5f9; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Modern Field Console",
+    "overview": "The incumbent JobRhythm admin UI is a Vue 3 + Bootstrap 5 operational console with an active skin-modern.css overlay on top of custom-bootstrap.scss. Users see soft gray backgrounds, rounded cards, Inter-forward typography, a deep-blue gradient navbar, and Tailwind-inspired primary blues.",
+    "keyCharacteristics": [
+      "Data-dense tables, filters, and forms for daily contractor operations",
+      "Active visual layer: skin-modern.css with rounded cards and modern navbar",
+      "Bootstrap primitives plus AG Grid, vue-select, and module-local SCSS",
+      "Legacy chalanpro-theme.scss exists but is not imported in main.js"
+    ],
+    "rules": [
+      {
+        "name": "Layered Source Rule",
+        "body": "Treat skin-modern.css + NavbarComponent classes as the visible incumbent for shell/navigation; do not assume custom-bootstrap.scss alone describes the UI.",
+        "section": "colors"
+      },
+      {
+        "name": "Status Semantics Rule",
+        "body": "Success, warning, danger, and info colors must remain unambiguous for operational states.",
+        "section": "colors"
+      },
+      {
+        "name": "Density Rule",
+        "body": "Prefer readable operational density; avoid marketing-scale whitespace inside modules.",
+        "section": "typography"
+      },
+      {
+        "name": "Single Global Layer Rule",
+        "body": "During upgrade, consolidate to one global style authority; avoid adding a fourth parallel global skin.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do treat skin-modern.css as the primary visual reference for the current global shell.",
+      "Do preserve Bootstrap semantic colors for validation and operational feedback.",
+      "Do maintain scannable table/form density and clear filter toolbars.",
+      "Do consolidate overlapping global styles during frontend upgrade."
+    ],
+    "donts": [
+      "Don't assume custom-bootstrap.scss alone describes what users see.",
+      "Don't activate chalanpro-theme.scss without an explicit product decision.",
+      "Don't replace operational tables with decorative card layouts without a responsive strategy.",
+      "Don't use gradient text, glow shadows, or decorative motion in core workflows."
+    ]
+  }
+}

@@ -306,6 +306,10 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 
 - **`vuefrontend/src/components/layout/NavbarMessagesDropdown.vue`**: Componente de mensajes. Verifica si debe mostrarse antes de hacer llamadas API para evitar 401 en rutas públicas.
 
+- **Design System piloto (`vuefrontend/src/ui/`, `vuefrontend/src/assets/css/jr-design-system.css`)**: primitivos JR para pantallas migradas a `JRPage` / `.jr-pilot` (hoy Product Form y Product List). No sustituyen Navbar/Footer ni el skin Bootstrap global. Los overlays portaleados (p. ej. menús) usan `.jr-overlay`, no el `jr-pilot` de página.
+
+- **`JRRowActions`**: acciones de fila reutilizables. En desktop, botones PrimeVue `text` (View/Edit/Delete o equivalentes). En móvil, kebab + `Menu` popup con los mismos ítems, iconos y color por severity. Es presentacional: el padre decide qué acciones pasar (permisos, confirmación de delete, navegación). Primer consumidor: `vuefrontend/src/views/inventory/ProductListView.vue`.
+
 #### Infraestructura
 
 - **`docker-compose.yml`**: Define los 5 servicios (postgres, backend, frontend, nginx, pgadmin), volúmenes, redes, y dependencias.
