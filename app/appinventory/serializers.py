@@ -211,13 +211,48 @@ class ProductListSerializer(serializers.ModelSerializer):
     brands_count = serializers.SerializerMethodField()
     unit_name = serializers.CharField(source='unit_default.name', default='', read_only=True)
     unit_default_code = serializers.CharField(source='unit_default.code', default='', read_only=True)
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'sku', 'model_number', 'category_name', 'default_brand', 'brands_count',
-            'reorder_level', 'unit_name', 'unit_default_code', 'tracking_mode', 'is_active'
+            'reorder_level', 'unit_name', 'unit_default_code', 'tracking_mode', 'is_active', 'image'
         ]
+
+    def get_image(self, obj):
+        """
+        Thumbnail for list views: prefer primary image of the default brand,
+        then any image for that brand, then any product image.
+        """
+        images = list(obj.images.all())
+        if not images:
+            return None
+
+        default_brand = obj.get_default_brand()
+        default_brand_id = default_brand.id if default_brand else None
+
+        def brand_id(image):
+            assignment = getattr(image, 'assignment', None)
+            brand = getattr(assignment, 'brand', None) if assignment else None
+            return getattr(brand, 'id', None)
+
+        def image_url(image):
+            return image.image.url if image.image else None
+
+        if default_brand_id is not None:
+            default_brand_images = [
+                image for image in images if brand_id(image) == default_brand_id
+            ]
+            if default_brand_images:
+                return image_url(default_brand_images[0])
+
+        for image in images:
+            url = image_url(image)
+            if url:
+                return url
+
+        return None
     
     def get_default_brand(self, obj):
         """Obtiene la marca predeterminada del producto"""

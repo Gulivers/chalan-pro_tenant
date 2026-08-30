@@ -1,7 +1,7 @@
 # Django core
 from django.views.generic import TemplateView
 from django.db import models, transaction
-from django.db.models import F, Sum, OuterRef, Subquery, Count, Max, Q
+from django.db.models import F, Sum, OuterRef, Subquery, Count, Max, Q, Prefetch
 from django.db.models.deletion import ProtectedError
 from django.utils import timezone
 from django.db import IntegrityError
@@ -241,7 +241,7 @@ class PriceTypeViewSet(viewsets.ModelViewSet):
     filterset_fields = ['is_active']
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.select_related('unit_default', 'category').all()
+    queryset = Product.objects.select_related('unit_default', 'category').prefetch_related('images').all()
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -543,7 +543,15 @@ class ProductListProviderAPIView(APIView):
             ordering = request.query_params.get('ordering', '-id')  # Descendente por ID
             
             # Construir queryset base
-            queryset = Product.objects.select_related('category', 'unit_default').prefetch_related('brands')
+            queryset = Product.objects.select_related('category', 'unit_default').prefetch_related(
+                'brands',
+                Prefetch(
+                    'images',
+                    queryset=ProductImage.objects.select_related(
+                        'assignment__brand'
+                    ).order_by('-is_primary', '-uploaded_at'),
+                ),
+            )
             
             # Aplicar filtros
             if is_active is not None:
