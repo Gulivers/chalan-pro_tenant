@@ -1,5 +1,11 @@
 # AI Guidelines – Estándares del frontend del Proyecto
 
+> **Obsoleto como guía visual del frontend upgrade.**  
+> Este archivo documenta el frontend **incumbente Bootstrap 5** (`b-table`, `btn-success`, `badge`, `form-control`, vue-select). **No** usarlo para migrar o diseñar List Views / pantallas JR.  
+> Guía vigente del piloto: [`app/vuefrontend/src/ui/LIST_VIEWS.md`](../vuefrontend/src/ui/LIST_VIEWS.md) y paleta en [`app/vuefrontend/src/ui/README.md`](../vuefrontend/src/ui/README.md).  
+> Referencia: `ProductListView.vue`.  
+> Lo que sí permanece de este doc para cualquier pantalla: permisos Django, `v-tt` / `data-title`, toasts, `search` multi-palabra, contratos API y reglas de backend.
+
 Clasificación por tipo de componente.
 
 ## Índice
@@ -9,6 +15,7 @@ Clasificación por tipo de componente.
 - [Selects: usar v-select (vue-select)](#selects-usar-v-select-vue-select)
 - [Campos requeridos](#campos-requeridos)
 - [Toast al guardar (crear/editar)](#toast-al-guardar-creareditar)
+- [ViewList JR / PrimeVue (piloto)](#viewlist-jr--primevue-piloto)
 - [ViewList (b-table)](#viewlist-b-table)
 - [Botón agregar registro (btn-success)](#botón-agregar-registro-btn-success)
 - [Botones de acción (View, Edit, Delete)](#botones-de-acción-view-edit-delete)
@@ -121,7 +128,19 @@ router.push({ name: "list-route" });
 
 ---
 
+## ViewList JR / PrimeVue (piloto)
+
+**Esta es la guía vigente para List Views del upgrade.** No usar la sección Bootstrap de abajo.
+
+- Contrato: [`app/vuefrontend/src/ui/LIST_VIEWS.md`](../vuefrontend/src/ui/LIST_VIEWS.md)
+- Paleta (Products): [`app/vuefrontend/src/ui/README.md`](../vuefrontend/src/ui/README.md)
+- Implementación: `app/vuefrontend/src/views/inventory/ProductListView.vue`
+
+---
+
 ## ViewList (b-table)
+
+> **Obsoleto para el frontend upgrade.** Conservado solo como referencia de listas que aún no se han migrado a JR. No copiar `btn-success`, `badge bg-*` ni `listview-toolbar` en pantallas nuevas.
 
 ### Botón agregar registro (btn-success)
 

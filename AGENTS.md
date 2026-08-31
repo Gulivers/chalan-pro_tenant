@@ -47,7 +47,7 @@ Flujo: commit en `dev_local_status` → merge a `main_deploy` → push → en VP
 
 - Local / ubuntu-house: `app/readme/README_RESUMEN_GENERAL_LOCAL.md`
 - Resumen general produccion en VPS en Hostinger: `app/readme/README_RESUMEN_GENERAL.md`
-- Estándares del frontend del Proyecto: `app/docs/ai-guidelines.md`
+- Estándares visuales del frontend upgrade (piloto List Views): `app/vuefrontend/src/ui/LIST_VIEWS.md` y paleta en `app/vuefrontend/src/ui/README.md`. `app/docs/ai-guidelines.md` es **obsoleto** como guía Bootstrap del upgrade (sigue valiendo para `v-tt`, toasts, search y backend).
 - Workflow Git: `GIT_WORKFLOW.md`, `WORKFLOW_RESUMEN.md`
 - Sincronización Git local: `readme/DEPLOY_GIT_LOCAL.md`
 - Deploy en VPS (cuando aplique): `DEVOPS.md` (sección 3.2; script `scripts/deploy-vps.sh` con opciones `--no-pull`, `--no-build`, `--no-migrate`; usar `--no-migrate` cuando no hay cambios en modelos).
