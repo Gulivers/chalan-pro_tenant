@@ -6,7 +6,7 @@
         :key="action.key"
         type="button"
         class="jr-row-actions__btn"
-        :severity="action.severity"
+        :severity="primeSeverity(action)"
         :label="action.label"
         text
         size="small"
@@ -126,7 +126,7 @@ export default {
           label: action.label,
           icon: iconIsComponent ? undefined : action.icon,
           iconComponent: iconIsComponent ? action.icon : undefined,
-          class: action.severity ? `jr-row-actions__item--${action.severity}` : undefined,
+          class: `jr-row-actions__item--${action.severity || 'primary'}`,
           command: action.command,
         };
       });
@@ -158,6 +158,10 @@ export default {
   methods: {
     isIconComponent(icon) {
       return !!(icon && typeof icon !== 'string');
+    },
+    primeSeverity(action) {
+      if (!action?.severity || action.severity === 'primary') return undefined;
+      return action.severity;
     },
     actionAriaLabel(action) {
       return this.entityLabel ? `${action.label} ${this.entityLabel}` : action.label;

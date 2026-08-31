@@ -21,7 +21,7 @@ const SEVERITY = {
   primary: null,
   secondary: 'secondary',
   danger: 'danger',
-  ghost: null,
+  ghost: 'secondary',
 };
 
 export default {

@@ -1,13 +1,11 @@
 <template>
-  <div
-    class="product-prices-bulk-excel-panel border rounded-3 p-3 bg-body-secondary bg-opacity-25">
-    <h6 class="small fw-semibold mb-2 text-primary">
+  <div id="product-bulk-prices-panel" class="jr-bulk-excel">
+    <h2 class="jr-bulk-excel__title">
       Update inventory prices &amp; units of measure
-    </h6>
-    <p class="small text-muted mb-3">
+    </h2>
+    <p class="jr-bulk-excel__hint">
       Download the same template used for transaction lines, then edit
-      <strong>unit_code</strong>
-      ,
+      <strong>unit_code</strong>,
       <strong>unit_price</strong>
       and
       <strong>price_type_name</strong>
@@ -17,44 +15,38 @@
       <strong>unit_code</strong>
       is filled, the product default unit is updated.
     </p>
-    <div class="product-prices-bulk-actions">
-      <div class="d-flex align-items-start gap-2 gap-sm-3">
-        <i
-          class="bi bi-file-earmark-arrow-up text-success fs-5 mt-4 flex-shrink-0"
-          aria-hidden="true" />
-        <div class="flex-grow-1 min-w-0">
-          <label
-            class="form-label small fw-semibold text-body mb-2 mb-sm-1"
-            for="bulk-prices-file-input">
-            Apply to inventory
-          </label>
-          <div
-            class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 gap-sm-3">
-            <input
-              id="bulk-prices-file-input"
-              ref="bulkPricesFileInput"
-              type="file"
-              class="form-control form-control-sm min-w-0 product-prices-bulk-file-input"
-              accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-              :disabled="busy || optionsLoading"
-              @change="onBulkPricesFile" />
-            <button
-              type="button"
-              class="btn btn-outline-success btn-sm d-inline-flex align-items-center justify-content-center gap-2 flex-shrink-0 product-prices-bulk-download-btn"
-              :disabled="busy || optionsLoading"
-              @click="downloadTemplate">
-              <img
-                :src="excelIconUrl"
-                alt=""
-                width="20"
-                height="20"
-                class="excel-template-icon flex-shrink-0" />
-              Download Excel template
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+
+    <JRField
+      label="Apply to inventory"
+      hint="Use a .xlsx file from the template. This can overwrite existing sale prices.">
+      <FileUpload
+        ref="fileUpload"
+        class="jr-bulk-excel__upload"
+        mode="basic"
+        name="file"
+        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        :auto="false"
+        customUpload
+        :disabled="busy || optionsLoading"
+        chooseLabel="Choose .xlsx"
+        :chooseButtonProps="{ fluid: true }"
+        @select="onFileSelect" />
+    </JRField>
+
+    <JRButton
+      type="button"
+      variant="secondary"
+      :disabled="busy || optionsLoading"
+      :fluid="true"
+      @click="downloadTemplate">
+      <img
+        :src="excelIconUrl"
+        alt=""
+        width="20"
+        height="20"
+        class="jr-bulk-excel__excel-icon" />
+      Download Excel template
+    </JRButton>
   </div>
 </template>
 
@@ -62,6 +54,8 @@
 import { ref, onMounted } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
+import FileUpload from "primevue/fileupload";
+import { JRButton, JRField } from "@ui";
 import excelIconUrl from "@/assets/img/microsoft-excel-icon.svg";
 
 const emit = defineEmits(["updated"]);
@@ -106,9 +100,13 @@ const HEADER_DESC = [
 
 const busy = ref(false);
 const optionsLoading = ref(true);
-const bulkPricesFileInput = ref(null);
+const fileUpload = ref(null);
 const priceTypesOptions = ref([]);
 const warehousesOptions = ref([]);
+
+function resetFileInput() {
+  fileUpload.value?.clear?.();
+}
 
 async function loadTemplateOptions() {
   optionsLoading.value = true;
@@ -142,8 +140,8 @@ onMounted(() => {
   loadTemplateOptions();
 });
 
-async function onBulkPricesFile(ev) {
-  const file = ev.target.files?.[0];
+async function onFileSelect(event) {
+  const file = event?.files?.[0];
   if (!file) return;
   if (!/\.xlsx$/i.test(file.name)) {
     await Swal.fire({
@@ -152,7 +150,7 @@ async function onBulkPricesFile(ev) {
       text: "Use a .xlsx file (download the template above).",
       confirmButtonText: "OK",
     });
-    if (bulkPricesFileInput.value) bulkPricesFileInput.value.value = "";
+    resetFileInput();
     return;
   }
   const ok = await Swal.fire({
@@ -164,7 +162,7 @@ async function onBulkPricesFile(ev) {
     cancelButtonText: "Cancel",
   });
   if (!ok.isConfirmed) {
-    if (bulkPricesFileInput.value) bulkPricesFileInput.value.value = "";
+    resetFileInput();
     return;
   }
 
@@ -219,7 +217,7 @@ async function onBulkPricesFile(ev) {
     });
   } finally {
     busy.value = false;
-    if (bulkPricesFileInput.value) bulkPricesFileInput.value.value = "";
+    resetFileInput();
   }
 }
 
@@ -306,27 +304,55 @@ async function downloadTemplate() {
 </script>
 
 <style scoped>
-.product-prices-bulk-excel-panel {
-  border-color: rgba(25, 135, 84, 0.35) !important;
+.jr-bulk-excel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+  text-align: left;
 }
-/* Input file: como máximo 50% del ancho del bloque (en móvil, ancho completo) */
-.product-prices-bulk-file-input {
+
+.jr-bulk-excel__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-jr-text);
+}
+
+.jr-bulk-excel__hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-jr-muted);
+}
+
+.jr-bulk-excel__hint strong {
+  color: var(--color-jr-text);
+  font-weight: 600;
+}
+
+.jr-bulk-excel__excel-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+.jr-bulk-excel__upload {
   width: 100%;
-  max-width: 50%;
 }
-@media (max-width: 575.98px) {
-  .product-prices-bulk-file-input {
-    max-width: 100%;
-  }
+
+.jr-bulk-excel__upload :deep(.p-fileupload-basic),
+.jr-bulk-excel__upload :deep(.p-fileupload-basic-content) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 0.5rem;
 }
-/* ≥sm: fila con botón a la derecha del input */
-.product-prices-bulk-actions .product-prices-bulk-download-btn {
-  white-space: nowrap;
-}
-@media (max-width: 575.98px) {
-  .product-prices-bulk-actions .product-prices-bulk-download-btn {
-    white-space: normal;
-    text-align: center;
-  }
+
+.jr-bulk-excel__upload :deep(.p-fileupload-file-label),
+.jr-bulk-excel__upload :deep(.p-fileupload-filename) {
+  font-size: 0.75rem;
+  color: var(--color-jr-muted);
 }
 </style>

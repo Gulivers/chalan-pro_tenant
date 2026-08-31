@@ -1,5 +1,8 @@
 <template>
   <div class="jr-toolbar">
+    <div v-if="$slots.start" class="jr-toolbar__start">
+      <slot name="start" />
+    </div>
     <div v-if="$slots.stats" class="jr-toolbar__stats">
       <slot name="stats" />
     </div>

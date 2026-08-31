@@ -1,5 +1,5 @@
 <template>
-  <Badge :value="value" :severity="severity">
+  <Badge class="jr-badge" :value="value" :severity="severity">
     <slot />
   </Badge>
 </template>
