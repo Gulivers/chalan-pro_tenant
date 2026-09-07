@@ -12,6 +12,7 @@
     :minFractionDigits="minFractionDigits"
     :maxFractionDigits="maxFractionDigits"
     :useGrouping="false"
+    :inputProps="numberInputProps"
     fluid
     @update:modelValue="$emit('update:modelValue', $event)"
   />
@@ -24,6 +25,9 @@
     :invalid="invalid"
     :placeholder="placeholder"
     :id="inputId"
+    :aria-describedby="ariaDescribedby || undefined"
+    :aria-invalid="invalid ? 'true' : undefined"
+    :aria-required="required ? 'true' : undefined"
     fluid
     @update:modelValue="$emit('update:modelValue', $event)"
   />
@@ -77,7 +81,24 @@ export default {
       type: Number,
       default: undefined,
     },
+    ariaDescribedby: {
+      type: String,
+      default: '',
+    },
+    required: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['update:modelValue'],
+  computed: {
+    numberInputProps() {
+      const props = {};
+      if (this.ariaDescribedby) props['aria-describedby'] = this.ariaDescribedby;
+      if (this.invalid) props['aria-invalid'] = 'true';
+      if (this.required) props['aria-required'] = 'true';
+      return Object.keys(props).length ? props : undefined;
+    },
+  },
 };
 </script>

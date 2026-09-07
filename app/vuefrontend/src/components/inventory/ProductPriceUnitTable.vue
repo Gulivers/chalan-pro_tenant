@@ -1,32 +1,35 @@
 <template>
   <div class="jr-price-unit">
-    <div class="jr-price-unit__toolbar">
+    <div v-if="!hideToolbar" class="jr-price-unit__toolbar">
       <JRButton
         variant="secondary"
         size="sm"
         :disabled="readonly"
-        v-tt
-        data-title="Add a new price row"
         @click="addRowFromToolbar">
         + Add Row
       </JRButton>
     </div>
 
-    <!-- Mobile: compact row list + sheet (not a 10-col input grid) -->
-    <div v-if="isMobile" class="jr-price-unit__mobile">
+    <div v-if="isCompact" class="jr-price-unit__compact">
       <JREmptyState
         v-if="!priceUnitRows.length"
         title="No price rows"
-        description="Add a row to define purchase or sale prices." />
+        description="Add a row to define purchase or sale prices.">
+        <JRButton
+          v-if="!readonly"
+          variant="secondary"
+          size="sm"
+          @click="addRowFromToolbar">
+          + Add Row
+        </JRButton>
+      </JREmptyState>
       <ul v-else class="jr-price-row-list">
         <li
           v-for="(row, index) in priceUnitRows"
           :key="'m-' + index"
-          class="jr-price-row-item">
-          <button
-            type="button"
-            class="jr-price-row-item__main"
-            @click="openSheet(index)">
+          class="jr-price-row-item"
+          :class="{ 'jr-price-row-item--error': !!rowError(index) }">
+          <div class="jr-price-row-item__main">
             <span class="jr-price-row-item__title">
               {{ priceTypeLabel(row) || "Price type" }}
               <span class="jr-price-row-item__sep" aria-hidden="true">·</span>
@@ -36,173 +39,165 @@
               <span class="jr-price-row-item__price">{{
                 formatPrice(row.price)
               }}</span>
-              <JRBadge v-if="row.is_purchase" value="Purchase" />
-              <JRBadge v-if="row.is_sale" value="Sale" />
+              <JRBadge
+                v-if="row.is_purchase"
+                value="Purchase"
+                severity="info" />
+              <JRBadge v-if="row.is_sale" value="Sale" severity="success" />
               <JRBadge
                 v-if="row.is_default"
                 value="Default"
                 severity="info" />
               <JRBadge
-                :value="row.is_active !== false ? 'Active' : 'Inactive'"
-                :severity="row.is_active !== false ? 'success' : 'secondary'" />
+                v-if="row.is_active === false"
+                value="Inactive"
+                severity="secondary" />
+              <span
+                v-if="dateRangeLabel(row)"
+                class="jr-price-row-item__dates">
+                {{ dateRangeLabel(row) }}
+              </span>
             </span>
-          </button>
-          <JRButton
-            variant="danger"
-            size="sm"
-            :disabled="readonly"
-            aria-label="Remove this row"
-            v-tt
-            data-title="Remove this row (changes apply after Save)."
-            @click="removeRow(index)">
-            Delete
-          </JRButton>
+            <p v-if="rowError(index)" class="jr-price-row-error" role="alert">
+              {{ rowError(index) }}
+            </p>
+          </div>
+          <div class="jr-price-row-item__actions">
+            <JRRowActions
+              :compact="false"
+              :entity-label="rowEntityLabel(row)"
+              :actions="rowPrimaryActions(index)" />
+            <JRRowActions
+              v-if="!readonly"
+              :compact="true"
+              :entity-label="rowEntityLabel(row)"
+              :actions="rowMaintenanceActions(index)" />
+          </div>
         </li>
       </ul>
     </div>
 
-    <!-- Desktop: dense editable table -->
-    <div v-else class="jr-price-unit__desktop">
-      <div class="jr-price-table-scroll">
-        <table class="jr-price-table">
+    <div v-else class="jr-price-unit__table">
+      <JREmptyState
+        v-if="!priceUnitRows.length"
+        title="No price rows"
+        description="Add a row to define purchase or sale prices.">
+        <JRButton
+          v-if="!readonly"
+          variant="secondary"
+          size="sm"
+          @click="addRowFromToolbar">
+          + Add Row
+        </JRButton>
+      </JREmptyState>
+      <div v-else class="jr-price-table-scroll">
+        <table class="jr-price-table jr-price-table--sentence">
+          <colgroup>
+            <col class="jr-price-col--type" />
+            <col class="jr-price-col--unit" />
+            <col class="jr-price-col--price" />
+            <col class="jr-price-col--flag" />
+            <col class="jr-price-col--flag" />
+            <col class="jr-price-col--flag" />
+            <col class="jr-price-col--actions" />
+          </colgroup>
           <thead>
             <tr>
               <th>Price Type</th>
               <th>Unit</th>
-              <th class="jr-price-table__flag">Purchase</th>
-              <th class="jr-price-table__flag">Sale</th>
               <th>Price</th>
+              <th class="jr-price-table__flag">Sale</th>
+              <th class="jr-price-table__flag">Purchase</th>
               <th class="jr-price-table__flag">Default</th>
-              <th>Valid From</th>
-              <th>Valid Until</th>
-              <th class="jr-price-table__flag">Active</th>
-              <th>Actions</th>
+              <th class="jr-price-table__actions">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(row, index) in priceUnitRows" :key="'d-' + index">
-              <td>
-                <JRSelectAddon
-                  v-model="row.price_type"
-                  :options="priceTypes"
-                  optionLabel="name"
-                  optionValue="id"
-                  placeholder="Select Price Type"
-                  :disabled="readonly"
-                  :showAdd="true"
-                  :showEdit="!!row.price_type"
-                  addLabel="Add a new price type"
-                  editLabel="Edit selected price type"
-                  filter
-                  v-tt
-                  data-title="Required. Choose the price policy (e.g., Contractors, Wholesale, Counter)."
-                  @show="$emit('refresh-priceTypes')"
-                  @add="openModal('priceType')"
-                  @edit="editModal('priceType', row.price_type)" />
-              </td>
-              <td>
-                <JRSelectAddon
-                  v-model="row.unit"
-                  :options="units"
-                  optionLabel="name"
-                  optionValue="id"
-                  placeholder="Select Unit"
-                  :disabled="readonly"
-                  :showAdd="true"
-                  :showEdit="!!row.unit"
-                  addLabel="Add a new unit"
-                  editLabel="Edit selected unit"
-                  filter
-                  v-tt
-                  data-title="Required. Unit of measure for this price (e.g., EA, Box, Pair)."
-                  @show="$emit('refresh-units')"
-                  @add="openModal('unit')"
-                  @edit="editModal('unit', row.unit)" />
-              </td>
-              <td class="jr-price-table__flag">
-                <JRCheckbox
-                  v-model="row.is_purchase"
-                  :disabled="readonly"
-                  ariaLabel="Purchase"
-                  v-tt
-                  data-title="Check if this price applies to purchasing costs." />
-              </td>
-              <td class="jr-price-table__flag">
-                <JRCheckbox
-                  v-model="row.is_sale"
-                  :disabled="readonly"
-                  ariaLabel="Sale"
-                  v-tt
-                  data-title="Check if this price is used for sales." />
-              </td>
-              <td class="jr-price-table__price">
-                <JRInput
-                  type="number"
-                  :modelValue="emptyToNull(row.price)"
-                  :disabled="readonly"
-                  :min="0"
-                  :minFractionDigits="0"
-                  :maxFractionDigits="2"
-                  placeholder="Enter price"
-                  v-tt
-                  data-title="Numeric amount (non‑negative)."
-                  @update:modelValue="setRowPrice(row, $event)" />
-              </td>
-              <td class="jr-price-table__flag">
-                <input
-                  type="radio"
-                  class="jr-price-default"
-                  name="jr-price-default-desktop"
-                  aria-label="Default price row"
-                  :checked="row.is_default"
-                  :disabled="readonly || row.is_purchase"
-                  v-tt
-                  :data-title="
-                    row.is_purchase
-                      ? 'Default price is not available for purchase prices. Only sale prices can be marked as default.'
-                      : 'Marks the primary price row. One default is recommended.'
-                  "
-                  @change="setDefault(index)" />
-              </td>
-              <td>
-                <JRDatePicker
-                  :modelValue="isoToDate(row.valid_from)"
-                  :disabled="readonly"
-                  placeholder="Start date"
-                  v-tt
-                  data-title="Start date of price validity (optional)."
-                  @update:modelValue="setRowDate(row, 'valid_from', $event)" />
-              </td>
-              <td>
-                <JRDatePicker
-                  :modelValue="isoToDate(row.valid_until)"
-                  :disabled="readonly"
-                  placeholder="End date"
-                  v-tt
-                  data-title="End date of price validity (optional)."
-                  @update:modelValue="setRowDate(row, 'valid_until', $event)" />
-              </td>
-              <td class="jr-price-table__flag">
-                <JRCheckbox
-                  v-model="row.is_active"
-                  :disabled="readonly"
-                  ariaLabel="Active"
-                  v-tt
-                  data-title="Enable/disable this price row." />
-              </td>
-              <td class="jr-price-table__flag">
-                <JRButton
-                  variant="danger"
-                  size="sm"
-                  :disabled="readonly"
-                  aria-label="Remove this row"
-                  v-tt
-                  data-title="Remove this row (changes apply after Save)."
-                  @click="removeRow(index)">
-                  Delete
-                </JRButton>
-              </td>
-            </tr>
+            <template v-for="(row, index) in priceUnitRows" :key="'d-' + index">
+              <tr :class="{ 'jr-price-table__row--error': !!rowError(index) }">
+                <td>
+                  <JRSelect
+                    v-model="row.price_type"
+                    :options="priceTypes"
+                    optionLabel="name"
+                    optionValue="id"
+                    placeholder="Select Price Type"
+                    :disabled="readonly"
+                    :invalid="!!rowError(index)"
+                    filter
+                    @show="$emit('refresh-priceTypes')" />
+                </td>
+                <td>
+                  <JRSelect
+                    v-model="row.unit"
+                    :options="units"
+                    optionLabel="name"
+                    optionValue="id"
+                    placeholder="Select Unit"
+                    :disabled="readonly"
+                    :invalid="!!rowError(index)"
+                    filter
+                    @show="$emit('refresh-units')" />
+                </td>
+                <td class="jr-price-table__price">
+                  <div class="jr-price-input">
+                    <JRInput
+                      type="number"
+                      :modelValue="emptyToNull(row.price)"
+                      :disabled="readonly"
+                      :invalid="!!rowError(index)"
+                      :min="0"
+                      :minFractionDigits="0"
+                      :maxFractionDigits="2"
+                      placeholder="Enter price"
+                      @update:modelValue="setRowPrice(row, $event)" />
+                    <span v-if="unitLabel(row)" class="jr-price-suffix">{{
+                      unitLabel(row)
+                    }}</span>
+                    <JRBadge
+                      v-if="row.is_active === false"
+                      value="Inactive"
+                      severity="secondary" />
+                  </div>
+                  <p
+                    v-if="dateRangeLabel(row)"
+                    class="jr-price-row-dates">
+                    {{ dateRangeLabel(row) }}
+                  </p>
+                </td>
+                <td class="jr-price-table__flag">
+                  <JRCheckbox
+                    :modelValue="row.is_sale"
+                    :disabled="readonly"
+                    ariaLabel="Sale"
+                    @update:modelValue="setSale(row, $event)" />
+                </td>
+                <td class="jr-price-table__flag">
+                  <JRCheckbox
+                    v-model="row.is_purchase"
+                    :disabled="readonly"
+                    ariaLabel="Purchase" />
+                </td>
+                <td class="jr-price-table__flag">
+                  <JRCheckbox
+                    :modelValue="!!row.is_default"
+                    :disabled="readonly || !row.is_sale"
+                    ariaLabel="Default sale price"
+                    @update:modelValue="onRowDefault(index, $event)" />
+                </td>
+                <td class="jr-price-table__actions">
+                  <JRRowActions
+                    :compact="false"
+                    :entity-label="rowEntityLabel(row)"
+                    :actions="rowLineActions(index)" />
+                </td>
+              </tr>
+              <tr v-if="rowError(index)">
+                <td colspan="7" class="jr-price-row-error" role="alert">
+                  {{ rowError(index) }}
+                </td>
+              </tr>
+            </template>
           </tbody>
         </table>
       </div>
@@ -215,40 +210,47 @@
       position="right"
       @update:visible="onSheetVisible">
       <div v-if="sheetRow" class="jr-price-sheet">
-        <JRField label="Price Type" required>
+        <p v-if="sheetError" class="jr-price-sheet__banner" role="alert">
+          {{ sheetError }}
+        </p>
+        <JRField label="Price Type" required inputId="price-sheet-type">
           <JRSelectAddon
+            inputId="price-sheet-type"
             v-model="sheetRow.price_type"
             :options="priceTypes"
             optionLabel="name"
             optionValue="id"
             placeholder="Select Price Type"
             :disabled="readonly"
+            :invalid="!!sheetError"
             :showAdd="true"
             :showEdit="!!sheetRow.price_type"
+            :addDisabled="readonly || !hasPermission('appinventory.add_pricetype')"
+            :editDisabled="readonly || !hasPermission('appinventory.change_pricetype')"
             addLabel="Add a new price type"
             editLabel="Edit selected price type"
             filter
-            v-tt
-            data-title="Required. Choose the price policy (e.g., Contractors, Wholesale, Counter)."
             @show="$emit('refresh-priceTypes')"
             @add="openModal('priceType')"
             @edit="editModal('priceType', sheetRow.price_type)" />
         </JRField>
-        <JRField label="Unit" required>
+        <JRField label="Unit" required inputId="price-sheet-unit">
           <JRSelectAddon
+            inputId="price-sheet-unit"
             v-model="sheetRow.unit"
             :options="units"
             optionLabel="name"
             optionValue="id"
             placeholder="Select Unit"
             :disabled="readonly"
+            :invalid="!!sheetError"
             :showAdd="true"
             :showEdit="!!sheetRow.unit"
+            :addDisabled="readonly || !hasPermission('appinventory.add_unitofmeasure')"
+            :editDisabled="readonly || !hasPermission('appinventory.change_unitofmeasure')"
             addLabel="Add a new unit"
             editLabel="Edit selected unit"
             filter
-            v-tt
-            data-title="Required. Unit of measure for this price (e.g., EA, Box, Pair)."
             @show="$emit('refresh-units')"
             @add="openModal('unit')"
             @edit="editModal('unit', sheetRow.unit)" />
@@ -257,92 +259,88 @@
           <JRCheckbox
             v-model="sheetRow.is_purchase"
             label="Purchase"
-            :disabled="readonly"
-            v-tt
-            data-title="Check if this price applies to purchasing costs." />
+            :disabled="readonly" />
           <JRCheckbox
-            v-model="sheetRow.is_sale"
+            :modelValue="sheetRow.is_sale"
             label="Sale"
             :disabled="readonly"
-            v-tt
-            data-title="Check if this price is used for sales." />
+            @update:modelValue="setSale(sheetRow, $event)" />
           <JRCheckbox
             v-model="sheetRow.is_active"
             label="Active"
-            :disabled="readonly"
-            v-tt
-            data-title="Enable/disable this price row." />
+            :disabled="readonly" />
         </div>
-        <JRField label="Price">
-          <JRInput
-            type="number"
-            :modelValue="emptyToNull(sheetRow.price)"
-            :disabled="readonly"
-            :min="0"
-            :minFractionDigits="0"
-            :maxFractionDigits="2"
-            placeholder="Enter price"
-            v-tt
-            data-title="Numeric amount (non‑negative)."
-            @update:modelValue="setRowPrice(sheetRow, $event)" />
+        <JRField label="Price" inputId="price-sheet-price">
+          <div class="jr-price-input">
+            <JRInput
+              inputId="price-sheet-price"
+              type="number"
+              :modelValue="emptyToNull(sheetRow.price)"
+              :disabled="readonly"
+              :min="0"
+              :minFractionDigits="0"
+              :maxFractionDigits="2"
+              placeholder="Enter price"
+              @update:modelValue="setRowPrice(sheetRow, $event)" />
+            <span v-if="unitLabel(sheetRow)" class="jr-price-suffix">{{
+              unitLabel(sheetRow)
+            }}</span>
+          </div>
         </JRField>
-        <JRField label="Default">
-          <label class="jr-price-default-label">
-            <input
-              type="radio"
-              class="jr-price-default"
-              name="jr-price-default-sheet"
-              :checked="sheetRow.is_default"
-              :disabled="readonly || sheetRow.is_purchase"
-              v-tt
-              :data-title="
-                sheetRow.is_purchase
-                  ? 'Default price is not available for purchase prices. Only sale prices can be marked as default.'
-                  : 'Marks the primary price row. One default is recommended.'
-              "
-              @change="setDefault(sheetIndex)" />
-            <span>Use as default sale price</span>
-          </label>
+        <JRField label="Default sale price">
+          <JRCheckbox
+            :modelValue="!!sheetRow.is_default"
+            label="Use as default sale price"
+            :disabled="readonly || !sheetRow.is_sale"
+            @update:modelValue="onDefaultCheck($event)" />
         </JRField>
-        <JRField label="Valid From">
+        <JRField label="Valid From" inputId="price-sheet-from">
           <JRDatePicker
+            inputId="price-sheet-from"
             :modelValue="isoToDate(sheetRow.valid_from)"
             :disabled="readonly"
             placeholder="Start date"
-            v-tt
-            data-title="Start date of price validity (optional)."
             @update:modelValue="setRowDate(sheetRow, 'valid_from', $event)" />
         </JRField>
-        <JRField label="Valid Until">
+        <JRField label="Valid Until" inputId="price-sheet-until">
           <JRDatePicker
+            inputId="price-sheet-until"
             :modelValue="isoToDate(sheetRow.valid_until)"
             :disabled="readonly"
             placeholder="End date"
-            v-tt
-            data-title="End date of price validity (optional)."
             @update:modelValue="setRowDate(sheetRow, 'valid_until', $event)" />
         </JRField>
       </div>
       <template #footer>
         <div class="jr-price-sheet__footer">
           <JRButton variant="primary" @click="closeSheet">Done</JRButton>
-          <JRButton
-            variant="danger"
-            :disabled="readonly || sheetIndex == null"
-            v-tt
-            data-title="Remove this row (changes apply after Save)."
-            @click="removeSheetRow">
-            Delete
-          </JRButton>
+          <JRRowActions
+            v-if="!readonly && sheetIndex != null"
+            :compact="false"
+            :entity-label="rowEntityLabel(sheetRow)"
+            :actions="rowMaintenanceActions(sheetIndex)" />
         </div>
       </template>
     </JRDrawer>
+
+    <JRDialog
+      :visible="deleteDialogVisible"
+      header="Delete price row"
+      message="Delete this price row?"
+      confirmLabel="Delete"
+      confirmVariant="danger"
+      @update:visible="onDeleteVisible"
+      @confirm="confirmPendingDelete" />
   </div>
 </template>
 
 <script>
+import EyeIcon from "@primevue/icons/eye";
+import PencilIcon from "@primevue/icons/pencil";
+import TrashIcon from "@primevue/icons/trash";
 import {
   JRButton,
+  JRSelect,
   JRSelectAddon,
   JRCheckbox,
   JRInput,
@@ -351,14 +349,19 @@ import {
   JRField,
   JRBadge,
   JREmptyState,
+  JRDialog,
+  JRRowActions,
 } from "@ui";
+import CopyIcon from "@/ui/CopyIcon.vue";
 
-const MOBILE_MQ = "(max-width: 767.98px)";
+const PHONE_MQ = "(max-width: 767.98px)";
+const TABLET_MQ = "(min-width: 768px) and (max-width: 1023.98px)";
 
 export default {
   name: "ProductPriceUnitTable",
   components: {
     JRButton,
+    JRSelect,
     JRSelectAddon,
     JRCheckbox,
     JRInput,
@@ -367,12 +370,16 @@ export default {
     JRField,
     JRBadge,
     JREmptyState,
+    JRDialog,
+    JRRowActions,
   },
   props: {
     modelValue: { type: Array, required: true },
     priceTypes: { type: Array, default: () => [] },
     units: { type: Array, default: () => [] },
     readonly: { type: Boolean, default: false },
+    hideToolbar: { type: Boolean, default: false },
+    rowErrors: { type: Array, default: () => [] },
   },
   emits: [
     "update:modelValue",
@@ -384,13 +391,20 @@ export default {
 
   data() {
     return {
-      isMobile: false,
+      isPhone: false,
+      isTablet: false,
       sheetOpen: false,
       sheetIndex: null,
+      deleteDialogVisible: false,
+      pendingDeleteIndex: null,
+      deleteResolved: false,
     };
   },
 
   computed: {
+    isCompact() {
+      return this.isPhone || this.isTablet;
+    },
     priceUnitRows: {
       get() {
         return this.modelValue;
@@ -403,58 +417,50 @@ export default {
       if (this.sheetIndex == null) return null;
       return this.priceUnitRows[this.sheetIndex] || null;
     },
-  },
-
-  watch: {
-    // ensure at least one row when parent hasn't provided any yet (create mode)
-    modelValue: {
-      handler(val) {
-        if (!this.readonly && (!val || val.length === 0)) {
-          this.addRow();
-        }
-      },
-      immediate: true,
-      deep: false,
+    sheetError() {
+      return this.rowError(this.sheetIndex);
     },
   },
 
   created() {
-    if (typeof window !== "undefined" && window.matchMedia) {
-      this.isMobile = window.matchMedia(MOBILE_MQ).matches;
-    }
+    this.syncViewport();
   },
 
   mounted() {
-    if (typeof window !== "undefined" && window.matchMedia) {
-      this._mediaQuery = window.matchMedia(MOBILE_MQ);
-      this.isMobile = this._mediaQuery.matches;
-      this._onMedia = (event) => {
-        this.isMobile = event.matches;
-        if (!event.matches) this.closeSheet();
-      };
-      if (this._mediaQuery.addEventListener) {
-        this._mediaQuery.addEventListener("change", this._onMedia);
-      } else {
-        this._mediaQuery.addListener(this._onMedia);
-      }
-    }
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    this._phoneMq = window.matchMedia(PHONE_MQ);
+    this._tabletMq = window.matchMedia(TABLET_MQ);
+    this._onMedia = () => {
+      this.syncViewport();
+    };
+    [this._phoneMq, this._tabletMq].forEach((mq) => {
+      if (mq.addEventListener) mq.addEventListener("change", this._onMedia);
+      else mq.addListener(this._onMedia);
+    });
   },
 
   beforeUnmount() {
-    if (this._mediaQuery && this._onMedia) {
-      if (this._mediaQuery.removeEventListener) {
-        this._mediaQuery.removeEventListener("change", this._onMedia);
-      } else {
-        this._mediaQuery.removeListener(this._onMedia);
-      }
-    }
+    [this._phoneMq, this._tabletMq].forEach((mq) => {
+      if (!mq || !this._onMedia) return;
+      if (mq.removeEventListener) mq.removeEventListener("change", this._onMedia);
+      else mq.removeListener(this._onMedia);
+    });
   },
 
   methods: {
-    /**
-     * Rows must use real booleans for API/DB (not null/undefined/other).
-     * @returns {string[]} English messages; empty when valid.
-     */
+    syncViewport() {
+      if (typeof window === "undefined" || !window.matchMedia) {
+        this.isPhone = false;
+        this.isTablet = false;
+        return;
+      }
+      this.isPhone = window.matchMedia(PHONE_MQ).matches;
+      this.isTablet = window.matchMedia(TABLET_MQ).matches;
+    },
+    rowError(index) {
+      if (index == null) return "";
+      return this.rowErrors[index] || "";
+    },
     validateStrictPurchaseSaleFlags() {
       const errors = [];
       this.priceUnitRows.forEach((row, idx) => {
@@ -473,6 +479,72 @@ export default {
       return errors;
     },
 
+    rowEntityLabel(row) {
+      const type = this.priceTypeLabel(row) || "Price type";
+      const unit = this.unitLabel(row) || "unit";
+      return `${type} · ${unit}`;
+    },
+    rowPrimaryActions(index) {
+      const viewing = this.readonly;
+      return [
+        {
+          key: viewing ? "view" : "edit",
+          label: viewing ? "View" : "Edit",
+          severity: viewing ? "success" : "primary",
+          icon: viewing ? EyeIcon : PencilIcon,
+          command: () => this.openSheet(index),
+        },
+      ];
+    },
+    rowLineActions(index) {
+      const actions = [...this.rowPrimaryActions(index)];
+      if (!this.readonly) {
+        actions.push(...this.rowMaintenanceActions(index));
+      }
+      return actions;
+    },
+    rowMaintenanceActions(index) {
+      return [
+        {
+          key: "duplicate",
+          label: "Duplicate",
+          severity: "secondary",
+          icon: CopyIcon,
+          command: () => this.duplicateRow(index),
+        },
+        {
+          key: "delete",
+          label: "Delete",
+          severity: "danger",
+          icon: TrashIcon,
+          command: () => this.requestDelete(index),
+        },
+      ];
+    },
+    duplicateRow(index) {
+      const source = this.priceUnitRows[index];
+      if (!source || this.readonly) return;
+      const copy = {
+        id: null,
+        price_type: source.price_type,
+        unit: source.unit,
+        is_purchase: !!source.is_purchase,
+        is_sale: !!source.is_sale,
+        price: source.price,
+        is_default: false,
+        valid_from: source.valid_from || "",
+        valid_until: source.valid_until || "",
+        is_active: source.is_active !== false,
+      };
+      this.priceUnitRows.splice(index + 1, 0, copy);
+    },
+    removeRowAt(index) {
+      this.priceUnitRows.splice(index, 1);
+      if (this.sheetIndex === index) this.closeSheet();
+      else if (this.sheetIndex != null && this.sheetIndex > index) {
+        this.sheetIndex -= 1;
+      }
+    },
     addRow(prefill = null) {
       const row = Object.assign(
         {
@@ -489,27 +561,80 @@ export default {
         },
         prefill || {}
       );
-      // push directly is fine here because parent passes an array reference via v-model
       this.priceUnitRows.push(row);
     },
+    rowNeedsDeleteConfirm(row) {
+      if (!row) return false;
+      return !!(row.id || row.price || row.price_type || row.unit);
+    },
+    requestDelete(index) {
+      const row = this.priceUnitRows[index];
+      if (!this.rowNeedsDeleteConfirm(row)) {
+        this.removeRowAt(index);
+        return;
+      }
+      this.pendingDeleteIndex = index;
+      this.deleteResolved = false;
+      this.deleteDialogVisible = true;
+    },
+    confirmPendingDelete() {
+      const index = this.pendingDeleteIndex;
+      this.deleteResolved = true;
+      this.pendingDeleteIndex = null;
+      this.deleteDialogVisible = false;
+      if (index == null) return;
+      this.removeRowAt(index);
+    },
+    onDeleteVisible(visible) {
+      this.deleteDialogVisible = visible;
+      if (visible) return;
+      if (this.deleteResolved) {
+        this.deleteResolved = false;
+        return;
+      }
+      this.pendingDeleteIndex = null;
+    },
     removeRow(index) {
-      this.priceUnitRows.splice(index, 1);
+      this.requestDelete(index);
     },
     setDefault(index) {
       this.priceUnitRows.forEach((row, i) => {
         row.is_default = i === index;
       });
     },
+    onDefaultCheck(value) {
+      if (this.sheetIndex == null) return;
+      this.onRowDefault(this.sheetIndex, value);
+    },
+    onRowDefault(index, value) {
+      if (index == null) return;
+      if (value) this.setDefault(index);
+      else if (this.priceUnitRows[index]) {
+        this.priceUnitRows[index].is_default = false;
+      }
+    },
+    setSale(row, value) {
+      row.is_sale = !!value;
+      if (!row.is_sale && row.is_default) row.is_default = false;
+    },
     openModal(type) {
-      this.$emit("open-modal", type);
+      if (this.readonly) return;
+      const fromSheet = this.sheetOpen;
+      const sheetIndex = this.sheetIndex;
+      if (fromSheet) this.closeSheet();
+      this.$emit("open-modal", { type, fromSheet, sheetIndex });
     },
     editModal(type, id) {
-      if (id) this.$emit("edit-modal", { type, id });
+      if (this.readonly || !id) return;
+      const fromSheet = this.sheetOpen;
+      const sheetIndex = this.sheetIndex;
+      if (fromSheet) this.closeSheet();
+      this.$emit("edit-modal", { type, id, fromSheet, sheetIndex });
     },
 
     addRowFromToolbar() {
       this.addRow();
-      if (this.isMobile && !this.readonly) {
+      if (this.isCompact && !this.readonly) {
         this.openSheet(this.priceUnitRows.length - 1);
       }
     },
@@ -525,16 +650,31 @@ export default {
       this.sheetOpen = visible;
       if (!visible) this.sheetIndex = null;
     },
-    removeSheetRow() {
-      if (this.sheetIndex == null) return;
-      this.removeRow(this.sheetIndex);
-      this.closeSheet();
-    },
     labelById(list, id) {
       const nid = typeof id === "object" ? id?.id : id;
       if (nid === null || nid === undefined || nid === "") return "";
-      const found = (list || []).find((item) => item.id === nid);
+      const found = (list || []).find(
+        (item) => String(item.id) === String(nid)
+      );
       return found ? found.name : "";
+    },
+    formatShortDate(value) {
+      const date = this.isoToDate(value);
+      if (!date) return "";
+      return date.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    },
+    dateRangeLabel(row) {
+      if (!row) return "";
+      const from = this.formatShortDate(row.valid_from);
+      const until = this.formatShortDate(row.valid_until);
+      if (!from && !until) return "";
+      if (from && until) return `${from} – ${until}`;
+      if (from) return `From ${from}`;
+      return `Until ${until}`;
     },
     priceTypeLabel(row) {
       return this.labelById(this.priceTypes, row.price_type);
@@ -610,6 +750,10 @@ export default {
   background: var(--color-jr-surface, #ffffff);
 }
 
+.jr-price-row-item--error {
+  border-color: var(--color-jr-danger);
+}
+
 .jr-price-row-item__main {
   flex: 1 1 auto;
   min-width: 0;
@@ -617,21 +761,10 @@ export default {
   flex-direction: column;
   align-items: flex-start;
   gap: 0.35rem;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  color: inherit;
-}
-
-.jr-price-row-item__main:focus-visible {
-  outline: 2px solid var(--color-jr-primary, #2563eb);
-  outline-offset: 2px;
 }
 
 .jr-price-row-item__title {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: var(--color-jr-text, #111827);
 }
@@ -649,9 +782,17 @@ export default {
 }
 
 .jr-price-row-item__price {
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: var(--color-jr-text, #111827);
+}
+
+.jr-price-row-item__dates,
+.jr-price-row-dates {
+  margin: 0.3rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--color-jr-muted, #4b5563);
 }
 
 .jr-price-table-scroll {
@@ -664,14 +805,44 @@ export default {
 
 .jr-price-table {
   width: 100%;
-  min-width: 56rem;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 0.875rem;
 }
 
+.jr-price-table--sentence {
+  min-width: 50rem;
+}
+
+.jr-price-col--type {
+  width: 18%;
+}
+
+.jr-price-col--unit {
+  width: 16%;
+}
+
+.jr-price-col--price {
+  width: 18%;
+}
+
+.jr-price-col--flag {
+  width: 8%;
+}
+
+.jr-price-col--actions {
+  width: 26%;
+}
+
+.jr-price-th {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .jr-price-table th,
 .jr-price-table td {
-  padding: 0.5rem 0.45rem;
+  padding: 0.55rem 0.6rem;
   border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
   vertical-align: middle;
   text-align: left;
@@ -690,11 +861,50 @@ export default {
 }
 
 .jr-price-table__price {
-  min-width: 6.5rem;
+  min-width: 0;
 }
 
-.jr-price-table :deep(.jr-select-addon) {
-  min-width: 14rem;
+.jr-price-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.jr-price-suffix {
+  font-size: 0.75rem;
+  color: var(--color-jr-muted, #4b5563);
+  white-space: nowrap;
+}
+
+.jr-price-table th.jr-price-table__actions,
+.jr-price-table td.jr-price-table__actions {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.jr-price-table td.jr-price-table__actions :deep(.jr-row-actions) {
+  justify-content: center;
+  width: 100%;
+}
+
+.jr-price-row-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex-shrink: 0;
+}
+
+.jr-price-table :deep(.p-select.jr-control) {
+  min-width: 0;
+  width: 100%;
+}
+
+.jr-price-table :deep(.p-inputnumber) {
+  width: 6.25rem;
+  max-width: 7rem;
+  min-width: 5.25rem;
+  flex: 0 0 auto;
 }
 
 .jr-price-table :deep(.p-inputtext),
@@ -707,18 +917,37 @@ export default {
 }
 
 .jr-price-default {
-  width: 1rem;
-  height: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
   accent-color: var(--color-jr-primary, #2563eb);
+}
+
+.jr-price-default-hit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  margin: 0;
 }
 
 .jr-price-default-label {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  min-height: 2.5rem;
-  font-size: 0.8125rem;
+  min-height: 2.75rem;
+  font-size: 0.9375rem;
   font-weight: 600;
+}
+
+.jr-price-row-error,
+.jr-price-sheet__banner {
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-jr-danger-text);
+  background: var(--color-jr-danger-subtle);
 }
 
 .jr-price-sheet {
@@ -730,7 +959,13 @@ export default {
 .jr-price-sheet__flags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem 1rem;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+}
+
+.jr-price-sheet__flags :deep(.jr-checkbox),
+.jr-price-sheet :deep(.jr-checkbox) {
+  column-gap: 0.85rem;
 }
 
 .jr-price-sheet__footer {
@@ -745,7 +980,7 @@ export default {
   width: min(28rem, 100vw);
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 1023.98px) {
   .p-drawer.jr-price-row-drawer {
     width: 100vw;
     max-width: 100vw;

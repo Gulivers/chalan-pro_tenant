@@ -12,6 +12,9 @@
     :filter="filter"
     :showClear="showClear"
     :inputId="inputId"
+    :aria-describedby="ariaDescribedby || undefined"
+    :aria-invalid="invalid ? 'true' : undefined"
+    :aria-required="required ? 'true' : undefined"
     display="chip"
     fluid
     @update:modelValue="$emit('update:modelValue', $event)"
@@ -30,6 +33,9 @@
     :filter="filter"
     :showClear="showClear"
     :inputId="inputId"
+    :aria-describedby="ariaDescribedby || undefined"
+    :aria-invalid="invalid ? 'true' : undefined"
+    :aria-required="required ? 'true' : undefined"
     fluid
     @update:modelValue="$emit('update:modelValue', $event)"
     @show="$emit('show')"
@@ -86,6 +92,14 @@ export default {
     inputId: {
       type: String,
       default: undefined,
+    },
+    ariaDescribedby: {
+      type: String,
+      default: '',
+    },
+    required: {
+      type: Boolean,
+      default: false,
     },
   },
   emits: ['update:modelValue', 'show'],

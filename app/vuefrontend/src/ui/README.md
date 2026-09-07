@@ -1,104 +1,256 @@
-# JobRhythm UI (Products Pilot)
+# JobRhythm UI — Libro de reglas (frontend upgrade)
 
-Shared primitives for screens migrated off Bootstrap / `skin-modern`.
+**Qué es:** contrato operativo para pantallas migradas del upgrade (`jobrhythm-frontend-upgrade`).  
+**Autoridad:** `PRODUCT.md` → `DESIGN.md` Target State (Pilot) → **este libro** → implementación.  
+**Tokens / CSS:** `app/vuefrontend/src/assets/css/jr-design-system.css`  
+**Preset:** `jr-primevue-preset.js`  
+**Piloto vivo:** Product List + Product Form.
 
-**List Views:** see [LIST_VIEWS.md](./LIST_VIEWS.md) — tokens, badges, toolbar, table, and mobile rules for the Products pilot. Use that contract when migrating another list.
+`app/docs/ai-guidelines.md` es **obsoleto** como guía visual (Bootstrap / `b-table` / `btn-success`). Sigue valiendo para permisos Django, `v-tt`, toasts, `search` y contratos API.
 
-Architecture: `feature → JR primitive → PrimeVue (styled) → Tailwind tokens`.
+Arquitectura:
 
-`app/docs/ai-guidelines.md` is **obsolete** as a visual guide for the frontend upgrade (Bootstrap / `b-table` / `btn-success`). New list work follows this README + [LIST_VIEWS.md](./LIST_VIEWS.md).
+`feature view → JR primitive → PrimeVue (styled) → tokens JR`
 
-## Colors (Products List)
+No mezclar Bootstrap y JR en la misma pantalla.
 
-Source: `ProductListView.vue` + tokens in `jr-design-system.css`. Use `var(--color-jr-*)` — no raw hex in the view.
+| Capítulo | Dónde |
+|---|---|
+| Este libro | Tokens, isolation, primitivos, **formularios** (norma de esta semana), overlays |
+| Listas (detalle) | [LIST_VIEWS.md](./LIST_VIEWS.md) — toolbar, tabla, badges, pager, mobile |
+| Formularios (alias) | [FORMS.md](./FORMS.md) apunta aquí; no duplicar normas |
 
-### Page
+---
 
-| Token | Value | In the list |
+## 1. Isolation
+
+- Envolver **solo** pantallas migradas en `JRPage` (añade `.jr-pilot`).
+- Tailwind utilities viven como `.jr-pilot .utility`. Bootstrap (`p-4`, etc.) sigue ganando **fuera** de `.jr-pilot`.
+- Tailwind Preflight **no** está activo.
+- Navbar / Footer se quedan en Bootstrap / `skin-modern`.
+- Overlays portaleados (drawer, dialog, menú): `.jr-pilot` en el overlay; menús flotantes usan `.jr-overlay`, no el `jr-pilot` de página.
+
+---
+
+## 2. Tokens
+
+Usar `var(--color-jr-*)`. No hex sueltos en la vista.
+
+### Superficie
+
+| Token | Valor | Uso |
 |---|---|---|
-| `--color-jr-page` | `#f3f4f6` | Page background |
-| `--color-jr-surface` | `#ffffff` | Table, inputs, drawer |
-| `--color-jr-surface-muted` | `#f9fafb` | Table header, striped row, thumb placeholder |
-| `--color-jr-border` | `#e5e7eb` | Table outline, row dividers |
-| `--color-jr-hover-border` | `#d1d5db` | Thumbnail hover |
-| `--color-jr-text` | `#111827` | Title, product name, column headers |
-| `--color-jr-muted` | `#4b5563` | SKU, category, loading, Total / Inactive chips |
+| `--color-jr-page` | `#f3f4f6` | Fondo de página |
+| `--color-jr-surface` | `#ffffff` | Paneles, inputs, tablas |
+| `--color-jr-surface-muted` | `#f9fafb` | Header de tabla, wells, hover |
+| `--color-jr-border` | `#e5e7eb` | Divisores, outline |
+| `--color-jr-hover-border` | `#d1d5db` | Hover de control / thumb |
+| `--color-jr-text` | `#111827` | Texto primario |
+| `--color-jr-muted` | `#4b5563` | Hints, meta, secondary |
 
-### Actions
+### Acción y semántica
 
-| Token | Value | In the list |
-|---|---|---|
-| `--color-jr-primary` | `#2563eb` | **+ New Product**, **Edit** |
-| `--color-jr-primary-hover` | `#1d4ed8` | Primary hover / focus ring |
-| `--color-jr-success` | `#16a34a` | **View** (text button) |
-| `--color-jr-danger` | `#dc2626` | **Delete** |
-| Ghost toolbar (Refresh, Bulk Excel) | muted text | Not action blue |
-
-### Badges (light background)
-
-Pastel fill (~14% mix of the fill on white) + dark same-hue text. No border. Radius `--radius-jr-control` (`0.5rem`), not a pill.
-
-| Severity | Chip text | Chip background | Used for |
+| Token | Fill | Texto (badge / hint) | Fondo subtle |
 |---|---|---|---|
-| `success` | `#166534` (`--color-jr-success-text`) | `--color-jr-success-subtle` | Active, “N Active” |
-| `info` | `#1e40af` (`--color-jr-info-text`) | `--color-jr-info-subtle` | Serial |
-| `secondary` | `#4b5563` | `--color-jr-surface-muted` / gray 100 | Inactive, Total, Qty |
-| `danger` | `#991b1b` (`--color-jr-danger-text`) | `--color-jr-danger-subtle` | Error / cancel states |
-| `warn` | `#92400e` (`--color-jr-warning-text`) | `--color-jr-warning-subtle` | Pending / caution |
+| Primary | `#2563eb` / hover `#1d4ed8` | — | — |
+| Success | `#16a34a` | `#166534` | mix 14% + surface |
+| Danger | `#dc2626` | `#991b1b` | mix 14% + surface |
+| Warning | `#d97706` | `#92400e` | mix 14% + surface |
+| Info | `#0284c7` | `#1e40af` | mix 14% primary + surface |
 
-Do not use fill `#16a34a` / `#0284c7` as badge label color (contrast fails at 0.75rem on white). View uses the brighter fill; Active uses the forest-green text.
+**Badges (Light Background):** texto oscuro (~800) sobre pastel del mismo tono. Sin borde. Radio `--radius-jr-control` (`0`), no pastilla. No usar fill `#16a34a` / `#0284c7` como texto de chip (falla AA a 0.75rem).
 
-## Isolation
+### Tipo y radio
 
-- Wrap **only** migrated screens in `JRPage`. That root adds `.jr-pilot`.
-- Tailwind utilities are generated as `.jr-pilot .utility` (utilities nested under `.jr-pilot`). Bootstrap `p-4` etc. keep winning outside `.jr-pilot`.
-- Tailwind Preflight is **not** enabled.
-- Navbar / Footer stay on the incumbent Bootstrap shell.
+| Rol | Tamaño | Peso |
+|---|---|---|
+| Título de página | `1.3125rem` | 600, izquierda |
+| Título de sección | `0.9375rem` | 600 |
+| Cuerpo | `0.9375rem` | 400 |
+| Label | `0.8125rem` | 600 |
+| Hint / error / meta | `0.75rem` | 400 hint; 600 error / badge |
+| Tabla | `0.875rem` | 600 headers |
+
+- Familia: Inter + system-ui.
+- Control: `--radius-jr-control` (`0`, rectangular). Inputs, selects, datepickers, dropdowns, botones y badges. Panel / tabla / drawer: `--radius-jr-panel` (`0.75rem`).
+- Sombra solo en overlays: `--shadow-jr-overlay`.
+- Labels ocultos para a11y: `jr-sr-only`, no `.visually-hidden` de Bootstrap.
+
+---
+
+## 3. Primitivos (`@/ui`)
+
+Presentacionales. Sin axios. Sin reglas de negocio.
+
+| Primitivo | Uso |
+|---|---|
+| `JRPage`, `JRPageHeader`, `JRSection` | Cascarón de pantalla migrada |
+| `JRField` | Label, **hint**, required, error, `aria-describedby` |
+| `JRButton`, `JRInput`, `JRSelect`, `JRSelectAddon`, `JRCheckbox`, `JRDatePicker`, `JRTextarea` | Controles |
+| `JRBadge`, `JRDataTable`, `JRToolbar`, `JREmptyState`, `JRRowActions` | Listas |
+| `JRDrawer`, `JRDialog` | Overlay / confirm (no Swal, no `window.confirm`) |
+| `JRTooltip` | Extra opcional; **nunca** el único canal de una regla operativa |
+
+`JRDataTable` acepta `Column` de PrimeVue en el slot default.
+
+```js
+import { JRPage, JRField, JRInput, JRButton, JRDialog } from '@/ui';
+import Column from 'primevue/column';
+import Message from 'primevue/message';
+```
+
+---
+
+## 4. Formularios (norma — Product Form)
+
+Referencia: `ProductForm.vue`, `ProductPriceUnitTable.vue`.  
+El formulario enseña **en el campo**, no en hover.
+
+### Hint debajo (canal por defecto)
+
+`JRField` `hint` para una regla que cambia **dinero, identidad, stock o compras**.  
+Ese texto entra en `aria-describedby` junto al error.
+
+```vue
+<JRField
+  v-slot="{ describedby, invalid }"
+  label="SKU"
+  required
+  inputId="product-sku"
+  hint="Must be unique. Used in warehouse and purchasing."
+  :error="fieldErrors.sku">
+  <JRInput
+    inputId="product-sku"
+    v-model="sku"
+    :invalid="invalid"
+    :ariaDescribedby="describedby" />
+</JRField>
+```
+
+### No un hint en cada campo
+
+Tope: **3–4 reglas que generan tickets** por pantalla. El label basta para Name, Model, Category y equivalentes.
+
+| Product Form | Hint |
+|---|---|
+| SKU | Unique; warehouse and purchasing |
+| Brands | First selected brand is the default for purchasing |
+| Tracking Mode | Quantity vs Serialized |
+| Reorder Level | In the default warehouse unit |
+| Name, Model #, Category, Default Unit, Active | Sin hint |
+
+### Tooltip: extra, nunca único
+
+- No copies el hint en un `JRTooltip` / `(i)`.
+- No enseñes una regla comercial o de stock solo con hover.
+- Tooltip solo si aporta detalle que no cabe debajo (tabla densa, jerga rara).
+- El `(i)` no puede hacer más alta la fila de label que la de los vecinos.
+
+### Una idea, un sitio
+
+El título de sección no necesita un lede que lo parafrasee.  
+Si Brands ya dice “first selected = default”, el label “Default for purchasing” no repite la frase.
+
+### Consecuencia contextual: PrimeVue `Message`
+
+Cuando una **elección** cambia lo que pasa después (no cómo rellenar el campo):
+
+```vue
+import Message from 'primevue/message';
+
+<Message
+  v-if="product.tracking_mode === 'SERIALIZED'"
+  severity="info"
+  :closable="false">
+  Serialized products create one tracked unit per quantity on purchase.
+</Message>
+```
+
+Tokens: `--color-jr-info-subtle`, `--color-jr-info-text`. Visible solo cuando aplica.  
+El hint explica la opción; el Message explica la consecuencia.  
+No uses un `<p>` suelto ni SweetAlert para esto.
+
+### Errores y confirmaciones
+
+- Atención: banner JR + error de `JRField` + focus al primer fallo.
+- Leave dirty / delete: `JRDialog`, no `window.confirm`.
+- Checkbox + label: `column-gap` ~0.85rem en form y drawers. En tabla de banderas, el header puede ser el nombre.
+
+### Composición
+
+```
+JRPage → JRPageHeader → form
+  banner (si hay errores)
+  JRSection × N
+    grid 1 col → 2 col (≥768) → 3 col (≥1024)
+    JRField + control
+  acciones sticky (Save / Cancel)
+```
+
+- Campos rectangulares: `JRInput` / `JRSelect` / `JRDatePicker` / `JRTextarea` y el overlay del dropdown usan `--radius-jr-control` (`0`). No reintroducir radio en formularios nuevos.
+- Desktop ≥1024: secciones de campos en **tres columnas**.
+- Catálogo add/edit: un `JRDrawer` JR. Sin apilar drawers.
+- Create: sembrar la primera fila vacía si el dominio lo espera (p. ej. precios); las filas vírgenes no bloquean Save.
+- Tablas embebidas (precios, líneas): **Add** en el header de sección. **Duplicate** y **Delete** por fila (`JRRowActions`), no multi-select ni “Duplicate Selected”. Duplicate clona type/unit/precio/flags; `id` vacío y `is_default` false. Delete usa `JRDialog` (las vírgenes se van sin confirm). En compacto: Edit visible + overflow para Duplicate/Delete. Un primary de sección; ghost en la fila; danger solo en Delete.
+- Acciones de fila (lista y tabla embebida): `JRRowActions` con **icono + label**. Familia `@primevue/icons` (Eye, Pencil, Trash). Duplicate usa `CopyIcon` (`ui/CopyIcon.vue`, mismo BaseIcon 14×14; `@primevue/icons` 5 no trae Copy). Nunca icon-only en desktop. No iconos en Save / Cancel / Done ni en `+ Add Row` (el `+` basta). Severity: View `success`, Edit `primary`, Duplicate `secondary`, Delete `danger`. Si la columna no cabe, overflow — no quitar el texto.
+
+---
+
+## 5. Listas
+
+Composición, badges, `JRRowActions`, pager y breakpoints: **[LIST_VIEWS.md](./LIST_VIEWS.md)**.  
+Referencia: `ProductListView.vue`.
+
+Resumen: create en el header; search + stats + Refresh en toolbar; stats no filtran; View / Edit / Delete = icono + label (verde / azul / danger); teléfono = lista de escaneo, no tabla aplastada.
+
+---
+
+## 6. Overlays
+
+Drawers, selects y datepickers portalean a `document.body`. `JRDrawer` / `JRDialog` llevan `.jr-pilot`. Los paneles de Select / DatePicker los pinta el preset Aura, no utilities Tailwind.
+
+---
+
+## 7. Do / Don't
+
+### Do
+
+- `JRPage` / `.jr-pilot` solo en pantallas migradas.
+- Tokens `var(--color-jr-*)`.
+- Hint persistente + `aria-describedby` en las 3–4 reglas de ticket.
+- `Message` info (no closable) para la consecuencia de una elección.
+- `JRDialog` para leave / delete.
+- Acciones de fila: icono PrimeVue + label + severity. Nunca icon-only en desktop.
+- Campos y overlays de select/datepicker rectangulares (`--radius-jr-control: 0`).
+- Mismos endpoints, permisos y payloads que antes de migrar.
+
+### Don't
+
+- Tailwind Preflight, Vite, o restyle de Navbar / Footer en este incremento.
+- `.card` / `.form-control` / `.btn` / `b-table` dentro de `.jr-pilot`.
+- Redondear inputs, selects o paneles de dropdown JR.
+- Muro de hints, o la misma oración en hint y tooltip.
+- Regla operativa solo en `(i)`.
+- Recuadro extra con `<p>` o Swal.
+- Cambiar Django / DRF para “quedar bonito”.
+
+---
+
+## 8. Esqueleto mínimo
 
 ```vue
 <template>
   <JRPage>
-    <JRPageHeader title="Products" description="Catalog and pricing">
+    <JRPageHeader title="…" description="…">
       <template #actions>
-        <JRButton>Add product</JRButton>
+        <JRButton variant="primary">Save</JRButton>
       </template>
     </JRPageHeader>
-    <JRToolbar>
-      <template #start>
-        <JRInput type="search" placeholder="Search…" />
-      </template>
-      <template #stats>24 products</template>
-      <template #actions>
-        <JRButton variant="secondary" size="sm">Export</JRButton>
-      </template>
-    </JRToolbar>
-    <JRSection title="Details">
-      <JRField label="Name" required error="">
-        <JRInput v-model="name" />
+    <JRSection title="Identity">
+      <JRField v-slot="{ describedby }" label="SKU" hint="Must be unique." inputId="sku">
+        <JRInput inputId="sku" v-model="sku" :ariaDescribedby="describedby" />
       </JRField>
     </JRSection>
   </JRPage>
 </template>
-
-<script>
-import { JRPage, JRPageHeader, JRToolbar, JRSection, JRField, JRInput, JRButton } from '@/ui';
-// @ui also resolves to this folder
-
-export default {
-  components: { JRPage, JRPageHeader, JRToolbar, JRSection, JRField, JRInput, JRButton },
-};
-</script>
 ```
-
-## Imports
-
-```js
-import { JRPage, JRSelectAddon, JRDataTable } from '@/ui';
-import Column from 'primevue/column';
-```
-
-`JRDataTable` accepts PrimeVue `Column` (and other column nodes) in the default slot.
-
-## Overlay note
-
-PrimeVue drawers, selects, and datepickers portal to `document.body`. `JRDrawer` adds `.jr-pilot` on the overlay so Tailwind utilities still apply. Select / datepicker panels are styled by the JobRhythm Aura preset, not by Tailwind utilities.

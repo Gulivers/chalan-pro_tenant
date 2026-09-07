@@ -1,15 +1,15 @@
 <template>
-  <div class="container">
-    <h3 class="text-warning pt-3">
+  <div :class="embedded ? 'jr-embedded-form' : 'container'">
+    <h3 v-if="!embedded" class="text-warning pt-3">
       <p>{{ cleanFormTitle }}</p>
     </h3>
 
-    <div class="card shadow mb-4">
-      <div class="card-header">
+    <div :class="embedded ? 'jr-embedded-form__panel' : 'card shadow mb-4'">
+      <div v-if="!embedded" class="card-header">
         <h6 class="ms-1 font-weight-bold text-primary">{{ formTitle }}</h6>
       </div>
 
-      <div class="card-body">
+      <div :class="embedded ? 'jr-embedded-form__body' : 'card-body'">
         <form
           @submit.prevent="handleSubmit"
           v-if="Object.keys(internalSchema).length">
@@ -149,6 +149,8 @@ export default {
     readOnly: { type: Boolean, default: false }, // fuerza modo view
     redirectAfterSave: { type: String, default: null }, // ruta (path) o nombre de ruta
     isModal: { type: Boolean, default: false },
+    /** Skip Bootstrap page/card chrome when hosted inside JRDrawer. */
+    embedded: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -160,7 +162,7 @@ export default {
   },
   computed: {
     isViewMode() {
-      // soporta prop readOnly o query ?mode=view
+      if (this.isModal || this.embedded) return this.readOnly;
       return this.readOnly || this.$route?.query?.mode === "view";
     },
     isEditMode() {
@@ -353,5 +355,13 @@ export default {
 <style scoped>
 .form-check-label {
   margin-left: 0.5rem;
+}
+
+.jr-embedded-form {
+  width: 100%;
+}
+
+.jr-embedded-form__body {
+  padding: 0;
 }
 </style>

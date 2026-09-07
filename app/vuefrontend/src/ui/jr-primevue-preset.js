@@ -41,7 +41,7 @@ export const JobRhythmPreset = definePreset(Aura, {
           hoverBorderColor: '#d1d5db',
           focusBorderColor: '#2563eb',
           invalidBorderColor: '#dc2626',
-          borderRadius: '0.5rem',
+          borderRadius: '0',
         },
         text: {
           color: '#111827',

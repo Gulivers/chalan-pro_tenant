@@ -6,7 +6,7 @@
 **Preset PrimeVue:** `app/vuefrontend/src/ui/jr-primevue-preset.js`  
 **Autoridad:** `PRODUCT.md` → `DESIGN.md` Target State (Pilot) → este documento → implementación.
 
-`app/docs/ai-guidelines.md` es **obsoleto** como guía visual del upgrade (Bootstrap / `b-table`). Las listas nuevas o migradas siguen este documento y la paleta en [README.md](./README.md). No mezclar Bootstrap y JR en la misma pantalla.
+`app/docs/ai-guidelines.md` es **obsoleto** como guía visual del upgrade (Bootstrap / `b-table`). Libro general del upgrade (tokens, isolation, formularios): [README.md](./README.md). Este archivo es el capítulo de **listas**. No mezclar Bootstrap y JR en la misma pantalla.
 
 ---
 
@@ -61,7 +61,7 @@ Usar siempre `var(--color-jr-*)`. No hex sueltos en la vista.
 | Label de campo | `0.8125rem` | 600 |
 
 - Familia: Inter + system-ui.
-- Control radius: `--radius-jr-control` (`0.5rem`).
+- Control radius: `--radius-jr-control` (`0`, rectangular). Search, selects y overlays de dropdown incluidos.
 - Panel / tabla / drawer: `--radius-jr-panel` (`0.75rem`).
 - Overlay shadow solo en drawer / menú: `--shadow-jr-overlay`.
 - Labels de formulario: `jr-sr-only` (no `.visually-hidden` de Bootstrap).
@@ -102,7 +102,7 @@ JRPage                          ← .jr-pilot, text-align left
 
 PrimeVue no tiene `severity="primary"`: `JRRowActions` lo mapea a severity `undefined` (botón default) y clase de menú `--primary`.
 
-Iconos: familia `@primevue/icons` (Search, Refresh, Eye, Pencil, Trash). No mezclar SVG a mano con PrimeIcons en el mismo chrome.
+Iconos: familia `@primevue/icons` (Search, Refresh, Eye, Pencil, Trash). Duplicate (tablas embebidas) usa `CopyIcon` en `ui/CopyIcon.vue` — mismo BaseIcon 14×14; `@primevue/icons` 5 no incluye Copy. No mezclar SVG a mano con PrimeIcons en el mismo chrome. Acciones de fila: **icono + label**. Nunca icon-only en desktop.
 
 ---
 
@@ -128,10 +128,11 @@ No usar PrimeVue `Tag` ni Bootstrap `badge`.
 
 ## 6. Acciones de fila (`JRRowActions`)
 
-- Desktop (`≥1024`): botones de texto View / Edit / Delete.
-- Tablet y teléfono: menú overflow (44px).
+- Desktop (`≥1024`): **icono + label** View / Edit / Delete (o equivalente: Duplicate). El icono no sustituye al texto.
+- Tablet y teléfono: menú overflow (44px) con los **mismos** iconos.
 - `entity-label` para `aria-label` (`View {name}`, `More actions for {name}`).
 - Columna Actions: header y celdas **centradas** sobre el grupo de botones. El `scoped` de la vista no pinta el `<th>` de PrimeVue: usar `:deep(th.jr-col-actions)` desde el wrapper de la tabla.
+- Si la fila no cabe: overflow para Duplicate/Delete. No quitar labels para ganar ancho.
 
 ```css
 .jr-list__table :deep(th.jr-col-actions),
@@ -155,7 +156,7 @@ Delete siempre confirma (flujo existente del proyecto). No borrar en un clic.
 |---|---|---|
 | Teléfono `<768` | Lista: thumb + nombre + meta · status + overflow | No tabla |
 | Tablet `768–1023` | Tabla corta | Name (+ SKU debajo), campos clave, Status, Actions compact |
-| Desktop `≥1024` | Catálogo denso | + columnas de oficina; Actions en texto |
+| Desktop `≥1024` | Catálogo denso | + columnas de oficina; Actions icono + label |
 
 Breakpoints canónicos:
 
@@ -238,7 +239,7 @@ Bulk Excel, exports, imports: `JRButton` ghost → `JRDrawer` a la derecha.
 2. Create en el header; search + stats + Refresh en el toolbar.
 3. Tres breakpoints (lista / tabla corta / tabla densa).
 4. Badges Light Background con tokens JR.
-5. View verde acción, Edit azul New, Delete danger.
+5. View verde acción, Edit azul New, Delete danger; cada una **icono + label**.
 6. Actions header centrado vía `:deep`.
 7. Pager móvil a todo el ancho, 44px.
 8. Cero clases Bootstrap en la vista y en paneles que abra.

@@ -2,8 +2,8 @@
 
 > **Obsoleto como guía visual del frontend upgrade.**  
 > Este archivo documenta el frontend **incumbente Bootstrap 5** (`b-table`, `btn-success`, `badge`, `form-control`, vue-select). **No** usarlo para migrar o diseñar List Views / pantallas JR.  
-> Guía vigente del piloto: [`app/vuefrontend/src/ui/LIST_VIEWS.md`](../vuefrontend/src/ui/LIST_VIEWS.md) y paleta en [`app/vuefrontend/src/ui/README.md`](../vuefrontend/src/ui/README.md).  
-> Referencia: `ProductListView.vue`.  
+> Guía vigente del upgrade: [`app/vuefrontend/src/ui/README.md`](../vuefrontend/src/ui/README.md) (libro general). Listas: [`LIST_VIEWS.md`](../vuefrontend/src/ui/LIST_VIEWS.md).  
+> Referencias: `ProductListView.vue`, `ProductForm.vue`.  
 > Lo que sí permanece de este doc para cualquier pantalla: permisos Django, `v-tt` / `data-title`, toasts, `search` multi-palabra, contratos API y reglas de backend.
 
 Clasificación por tipo de componente.

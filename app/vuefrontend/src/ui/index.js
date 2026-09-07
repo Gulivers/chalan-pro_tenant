@@ -16,3 +16,6 @@ export { default as JRDrawer } from './JRDrawer.vue';
 export { default as JRToolbar } from './JRToolbar.vue';
 export { default as JREmptyState } from './JREmptyState.vue';
 export { default as JRRowActions } from './JRRowActions.vue';
+export { default as JRTooltip } from './JRTooltip.vue';
+export { default as JRDialog } from './JRDialog.vue';
+export { default as JRTextarea } from './JRTextarea.vue';

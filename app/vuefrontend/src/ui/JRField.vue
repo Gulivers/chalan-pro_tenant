@@ -1,11 +1,16 @@
 <template>
   <div class="jr-field">
-    <label v-if="label" class="jr-field__label" :for="resolvedInputId">
-      {{ label }}
-      <span v-if="required" class="jr-field__required" aria-hidden="true">*</span>
-    </label>
-    <p v-if="hint" class="jr-field__hint">{{ hint }}</p>
-    <slot />
+    <div v-if="label || $slots.help" class="jr-field__heading">
+      <label v-if="label" class="jr-field__label" :for="resolvedInputId">
+        <span class="jr-field__label-text">
+          {{ label }}
+          <span v-if="required" class="jr-field__required" aria-hidden="true">*</span>
+        </span>
+      </label>
+      <slot name="help" />
+    </div>
+    <slot :errorId="errorId" :hintId="hintId" :invalid="!!error" :describedby="describedby" />
+    <p v-if="hint" class="jr-field__hint" :id="hintId">{{ hint }}</p>
     <p v-if="error" class="jr-field__error" :id="errorId" role="alert">
       {{ error }}
     </p>
@@ -50,6 +55,14 @@ export default {
     },
     errorId() {
       return `${this.resolvedInputId}-error`;
+    },
+    hintId() {
+      return `${this.resolvedInputId}-hint`;
+    },
+    describedby() {
+      return [this.hint ? this.hintId : '', this.error ? this.errorId : '']
+        .filter(Boolean)
+        .join(' ');
     },
   },
 };

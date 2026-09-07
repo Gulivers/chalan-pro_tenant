@@ -78,7 +78,7 @@ rounded:
   md: "0.7rem"
   lg: "0.8rem"
   xl: "1.25rem"
-  jr-control: "0.5rem"
+  jr-control: "0"
   jr-panel: "0.75rem"
 spacing:
   xs: "0.5rem"
@@ -349,7 +349,7 @@ Page titles are **left-aligned** and must not use the incumbent centered `2rem` 
 
 Restrained. Not the incumbent `1.25rem` mega-cards.
 
-- Controls: `0.5rem`
+- Controls (inputs, selects, dropdown panels, buttons, badges): `0` — rectangular, no corner rounding
 - Panels / tables / drawers: `0.75rem`
 
 ## Elevation (Pilot)
@@ -373,11 +373,33 @@ Consume from `@/ui` (alias `@ui` also resolves). Wrap each migrated screen in `J
 - `JRPageHeader` — title, description, actions
 - `JRSection` — titled block with divider
 - `JRField` — label, hint, required, error
-- `JRButton`, `JRInput`, `JRSelect`, `JRSelectAddon`, `JRCheckbox`, `JRDatePicker`
-- `JRBadge`, `JRDataTable`, `JRDrawer`, `JRToolbar`, `JREmptyState`
-- `JRRowActions` — View/Edit/Delete (or equivalent) as text buttons on desktop; overflow menu on mobile
+- `JRButton`, `JRInput`, `JRSelect`, `JRSelectAddon`, `JRCheckbox`, `JRDatePicker`, `JRTextarea`
+- `JRBadge`, `JRDataTable`, `JRDrawer`, `JRDialog`, `JRToolbar`, `JREmptyState`, `JRTooltip`
+- `JRRowActions` — View/Edit/Delete (or equivalent) as **icon + label** text buttons on desktop; overflow menu on mobile (same icons). Never icon-only on desktop. Duplicate uses `CopyIcon` (`app/vuefrontend/src/ui/CopyIcon.vue`). Page actions (Save, Cancel, Done, `+ Add …`) stay label-only.
 
 Primitives are presentational. No axios. No product business logic.
+
+Implementer rulebook: `app/vuefrontend/src/ui/README.md` (forms in § 4). List detail: `app/vuefrontend/src/ui/LIST_VIEWS.md`. `FORMS.md` is an alias to the README forms chapter.
+
+## Forms (Pilot)
+
+Reference: Product Form (`ProductForm.vue`). Operational forms teach through the field, not through hover.
+
+**Persistent hint under the control** is the default channel for a rule that changes money, identity, stock, or purchasing. Use `JRField` `hint` (0.75rem, muted). Put that hint in `aria-describedby` together with the error id.
+
+**Tooltip is extra, never the only copy.** Do not put a `JRTooltip` that repeats the hint word-for-word. Do not rely on `(i)` hover for Casey (phone) or Sam (screen reader).
+
+**Not every field gets a hint.** Name, Model, Category, and other labels that already state the ask stay silent. Cap hints at the 3–4 ticket-generating rules on the screen (example: SKU uniqueness, default purchasing brand, Quantity vs Serialized, reorder unit).
+
+**Say each idea once.** A section title does not need a lede that restates it. A nested “Default for purchasing” label does not need the same sentence already shown on Brands.
+
+**Contextual consequence** (what happens after a choice, not how to fill the field) uses PrimeVue `Message` (`import Message from 'primevue/message'`), `severity="info"`, `:closable="false"`, JR info tokens — not a raw `<p>` well and not a SweetAlert. Example: Serialized creates one tracked unit per purchased quantity. Keep it collapsed until that choice is active.
+
+**Checkboxes:** visible label with a clear gap (`column-gap` ~0.85rem) in the form and in drawers. Table flag columns may use the header as the name.
+
+Desktop (≥1024px): Identity / Classification / Inventory-style sections use **three columns**. Labels stay on one line with any help icon; a tooltip trigger must not push the input below its neighbors.
+
+**Fields are rectangular.** `JRInput`, `JRSelect`, `JRDatePicker`, `JRTextarea` and their PrimeVue dropdown/datepicker panels use `--radius-jr-control` (`0`). Do not reintroduce `0.5rem` (or any) corner radius on form controls in later modules.
 
 ## Do's and Don'ts (Pilot)
 
@@ -387,6 +409,9 @@ Primitives are presentational. No axios. No product business logic.
 - **Do** use JR primitives instead of one-off PrimeVue markup in features.
 - **Do** keep labels left, 0.8125rem, weight 600.
 - **Do** keep status colors unambiguous.
+- **Do** put operational field help under the control (`JRField` hint + `aria-describedby`), not in a hover-only tooltip.
+- **Do** use PrimeVue `Message` (info, not closable) for a consequence that appears after a choice.
+- **Do** keep form fields and select/datepicker overlays rectangular (`--radius-jr-control: 0`).
 
 ### Don't
 
@@ -394,3 +419,6 @@ Primitives are presentational. No axios. No product business logic.
 - **Don't** restyle Navbar / Footer onto the pilot tokens yet.
 - **Don't** nest Bootstrap `.card` / `.card-modern` inside `JRPage` as an outer chrome.
 - **Don't** use the incumbent centered 2rem title or 1.25rem mega-card radius on pilot screens.
+- **Don't** hint every field or duplicate the same sentence in hint and tooltip.
+- **Don't** teach a commercial or stock rule only with `JRTooltip` / `(i)`.
+- **Don't** round JR inputs, selects, or dropdown panels.
