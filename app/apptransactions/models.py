@@ -90,6 +90,19 @@ class DocumentType(models.Model):
         choices=[(1, "+1 Entrada"), (-1, "-1 Salida"), (0, "0 Neutro")],
         default=0
     )
+    # Level-1 Assistant / analytics intentions (tenant-configured; independent of type_code).
+    counts_as_net_invoiced_spend = models.BooleanField(
+        default=False,
+        help_text="Include this type in JobRhythm Assistant Net invoiced spending (not PO/GRN/returns).",
+    )
+    counts_as_job_material_issue = models.BooleanField(
+        default=False,
+        help_text="Include this type as job/house material issue (e.g. picking to a Work Account).",
+    )
+    counts_as_purchase_return = models.BooleanField(
+        default=False,
+        help_text="Include this type as purchase returns (not mixed into net invoiced spending).",
+    )
     is_active = models.BooleanField(default=True)
     
     class Meta:
@@ -99,6 +112,16 @@ class DocumentType(models.Model):
 
     def __str__(self):
         return f"{self.type_code} - {self.description}"
+
+    def clean(self):
+        super().clean()
+        if self.counts_as_net_invoiced_spend and self.counts_as_purchase_return:
+            raise ValidationError({
+                'counts_as_purchase_return': (
+                    'A document type cannot count as both Net invoiced spending '
+                    'and Purchase return.'
+                ),
+            })
     
     
 JOB_FK = 'ctrctsapp.Job'

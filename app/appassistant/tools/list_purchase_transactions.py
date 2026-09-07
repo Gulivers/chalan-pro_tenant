@@ -1,7 +1,7 @@
 """
-list_purchase_transactions — list Net invoiced spending documents (PINV).
+list_purchase_transactions — list Net invoiced spending documents.
 
-Metric: active PINV only (not gross, PRN, or PO).
+Metric: active docs with DocumentType.counts_as_net_invoiced_spend.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ from appassistant.tools.base import AssistantTool
 class ListPurchaseTransactionsTool(AssistantTool):
     name = 'list_purchase_transactions'
     description = (
-        'List active PINV documents (Net invoiced spending) filtered by vendor(s), '
+        'List active net-invoiced-spend documents filtered by vendor(s), '
         f'min amount, and period. Spend definition: {SPEND_DEFINITION}'
     )
     spend_definition = SPEND_DEFINITION
@@ -94,7 +94,7 @@ class ListPurchaseTransactionsTool(AssistantTool):
             links.append(
                 document_entity_link(
                     document_id=doc.pk,
-                    label=f'PINV #{doc.pk}',
+                    label=f'{doc.document_type.type_code} #{doc.pk}',
                 )
             )
 

@@ -1,7 +1,8 @@
 """
 Spend tools unit tests (Increment B).
 
-Spend = PINV + is_active only; NOT document_type__is_purchase.
+Spend = DocumentType.counts_as_net_invoiced_spend + is_active;
+NOT document_type__is_purchase alone; NOT type_code hard-code.
 
 Uses django-tenants TenantTestCase so Document/Builder tables exist in a
 tenant schema. If shared migrate fails (e.g. historical appbilling.0003),
@@ -73,8 +74,14 @@ class SpendToolsTests(TenantTestCase):
                 'description': 'Purchase Invoice',
                 'is_purchase': True,
                 'is_active': True,
+                'counts_as_net_invoiced_spend': True,
             },
         )
+        if not self.pinv.counts_as_net_invoiced_spend:
+            DocumentType.objects.filter(pk=self.pinv.pk).update(
+                counts_as_net_invoiced_spend=True
+            )
+            self.pinv.refresh_from_db()
         # Purchase-flagged but NOT PINV — must never count as spend.
         self.grn, _ = DocumentType.objects.get_or_create(
             type_code='GRN_ASSIST_TEST',
@@ -468,3 +475,48 @@ class SpendToolsTests(TenantTestCase):
             'meta': {'request_id': 'test-req', 'partial': result['partial']},
         }
         self.assertEqual(validate_response_payload(payload), [])
+
+    def test_po_inv_code_counts_when_intention_set(self):
+        """Tenants may rename PINV → PO-INV; intention flag drives spend, not code."""
+        po_inv, _ = DocumentType.objects.get_or_create(
+            type_code='PO-INV',
+            defaults={
+                'description': 'Purchase Invoice alias',
+                'is_purchase': True,
+                'is_active': True,
+                'counts_as_net_invoiced_spend': True,
+            },
+        )
+        if not po_inv.counts_as_net_invoiced_spend:
+            DocumentType.objects.filter(pk=po_inv.pk).update(
+                counts_as_net_invoiced_spend=True
+            )
+            po_inv.refresh_from_db()
+        doc = Document.objects.create(
+            document_type=po_inv,
+            builder=self.harbor,
+            notes='PO-INV spend',
+            is_active=True,
+            total_amount=Decimal('99.00'),
+            created_by=self.user,
+        )
+        _set_doc_date(doc, date(2026, 7, 10))
+        self.assertTrue(spend_documents_qs().filter(pk=doc.pk).exists())
+        result = execute_tool_strict(
+            'sum_purchase_spending',
+            user=self.user,
+            params={
+                'vendor_id': self.harbor.pk,
+                'date_from': '2026-07-01',
+                'date_to': '2026-07-31',
+            },
+        )
+        # Harbor already has other PINV fixtures in July; just ensure tool succeeds.
+        self.assertFalse(result.get('partial'))
+        self.assertIn('blocks', result)
+
+    def test_grn_without_intention_excluded_from_spend(self):
+        self.assertFalse(self.grn.counts_as_net_invoiced_spend)
+        self.assertFalse(
+            spend_documents_qs().filter(document_type=self.grn).exists()
+        )

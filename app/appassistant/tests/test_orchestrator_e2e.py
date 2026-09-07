@@ -65,8 +65,14 @@ class OrchestratorE2ETests(TenantTestCase):
                 'description': 'Purchase Invoice',
                 'is_purchase': True,
                 'is_active': True,
+                'counts_as_net_invoiced_spend': True,
             },
         )
+        if not self.pinv.counts_as_net_invoiced_spend:
+            DocumentType.objects.filter(pk=self.pinv.pk).update(
+                counts_as_net_invoiced_spend=True
+            )
+            self.pinv.refresh_from_db()
         self.harbor = Builder.objects.create(name='Harbor Freight', supplier_rank=1)
         self.other = Builder.objects.create(name='Other Vendor', supplier_rank=1)
 
@@ -140,7 +146,7 @@ class OrchestratorE2ETests(TenantTestCase):
     def _assert_valid(self, data):
         self.assertEqual(validate_response_payload(data), [])
         self.assertEqual(data['meta']['router'], 'deterministic')
-        self.assertIn('PINV', data['context']['spend_definition'])
+        self.assertIn('counts_as_net_invoiced_spend', data['context']['spend_definition'])
 
     @patch('appassistant.services.periods._today', return_value=date(2026, 7, 15))
     def test_case1_list_via_endpoint(self, _mock):

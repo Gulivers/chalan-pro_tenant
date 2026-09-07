@@ -257,6 +257,67 @@
             </div>
           </div>
 
+          <!-- JobRhythm Assistant (Level 1 intentions) -->
+          <div class="form-section mb-4">
+            <h6 class="section-title">
+              <i class="fas fa-robot me-2"></i>
+              JobRhythm Assistant
+            </h6>
+            <p class="small text-muted px-3 mb-2">
+              Map this type to analytics meanings. Codes like PINV or PO-INV can differ per
+              tenant; these flags tell the Assistant how to classify transactions.
+            </p>
+            <div class="row g-3 switches-row">
+              <div class="col-12 col-md-6 col-lg-4">
+                <div class="form-check form-switch switch-row">
+                  <input
+                    id="counts_as_net_invoiced_spend"
+                    v-model="form.counts_as_net_invoiced_spend"
+                    class="form-check-input"
+                    type="checkbox"
+                    v-tt
+                    data-title="Include in Net invoiced spending (Assistant spend tools). Not PO, GRN, or returns."
+                    :disabled="isViewMode || submitting"
+                    @change="onSpendIntentionChange" />
+                  <label class="form-check-label" for="counts_as_net_invoiced_spend">
+                    Net invoiced spending
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6 col-lg-4">
+                <div class="form-check form-switch switch-row">
+                  <input
+                    id="counts_as_job_material_issue"
+                    v-model="form.counts_as_job_material_issue"
+                    class="form-check-input"
+                    type="checkbox"
+                    v-tt
+                    data-title="Job/house material issue (e.g. picking ticket to a Work Account)."
+                    :disabled="isViewMode || submitting" />
+                  <label class="form-check-label" for="counts_as_job_material_issue">
+                    Job material issue
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-md-6 col-lg-4">
+                <div class="form-check form-switch switch-row">
+                  <input
+                    id="counts_as_purchase_return"
+                    v-model="form.counts_as_purchase_return"
+                    class="form-check-input"
+                    type="checkbox"
+                    v-tt
+                    data-title="Purchase returns. Not mixed into Net invoiced spending."
+                    :disabled="isViewMode || submitting"
+                    @change="onReturnIntentionChange" />
+                  <label class="form-check-label" for="counts_as_purchase_return">
+                    Purchase return
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Status -->
           <div class="form-section mb-4">
             <h6 class="section-title">
@@ -359,8 +420,57 @@ const form = ref({
   is_operational: false,
   allow_negative_sales: false,
   stock_movement: 0,
+  counts_as_net_invoiced_spend: false,
+  counts_as_job_material_issue: false,
+  counts_as_purchase_return: false,
   is_active: true,
 });
+
+function onSpendIntentionChange() {
+  if (form.value.counts_as_net_invoiced_spend) {
+    form.value.counts_as_purchase_return = false;
+  }
+}
+
+function onReturnIntentionChange() {
+  if (form.value.counts_as_purchase_return) {
+    form.value.counts_as_net_invoiced_spend = false;
+  }
+}
+
+/** Suggest Assistant intentions from code/flags for new types only. */
+function applyIntentionSuggestions() {
+  if (id.value) return;
+  const code = (form.value.type_code || "").trim().toUpperCase().replace(/\s+/g, "");
+  const compact = code.replace(/[-_]/g, "");
+  if (compact === "PINV" || compact === "POINV" || code === "PO-INV") {
+    form.value.counts_as_net_invoiced_spend = true;
+    form.value.counts_as_purchase_return = false;
+  } else if (compact === "PK" || compact === "PICK" || compact === "PICKING") {
+    form.value.counts_as_job_material_issue = true;
+  } else if (compact === "PRN" || compact === "PRET" || compact === "PURRET") {
+    form.value.counts_as_purchase_return = true;
+    form.value.counts_as_net_invoiced_spend = false;
+  } else if (
+    form.value.is_purchase &&
+    !form.value.is_sales &&
+    !form.value.is_operational &&
+    form.value.affects_physical &&
+    Number(form.value.stock_movement) === 1 &&
+    compact !== "INIINV"
+  ) {
+    form.value.counts_as_net_invoiced_spend = true;
+  } else if (form.value.is_operational && Number(form.value.stock_movement) === -1) {
+    form.value.counts_as_job_material_issue = true;
+  } else if (
+    form.value.is_purchase &&
+    !form.value.is_sales &&
+    form.value.affects_physical &&
+    Number(form.value.stock_movement) === -1
+  ) {
+    form.value.counts_as_purchase_return = true;
+  }
+}
 
 onMounted(async () => {
   // initialize bootstrap tooltips
@@ -385,6 +495,9 @@ const handleSubmit = async () => {
     submitting.value = true;
 
     // 1) Trim + validación mínima
+    if (!id.value) {
+      applyIntentionSuggestions();
+    }
     const trimmedData = {
       type_code: (form.value.type_code ?? "").trim(),
       description: (form.value.description ?? "").trim(),
@@ -399,6 +512,9 @@ const handleSubmit = async () => {
       is_operational: form.value.is_operational,
       allow_negative_sales: form.value.allow_negative_sales,
       stock_movement: form.value.stock_movement,
+      counts_as_net_invoiced_spend: !!form.value.counts_as_net_invoiced_spend,
+      counts_as_job_material_issue: !!form.value.counts_as_job_material_issue,
+      counts_as_purchase_return: !!form.value.counts_as_purchase_return,
       is_active: form.value.is_active,
     };
 

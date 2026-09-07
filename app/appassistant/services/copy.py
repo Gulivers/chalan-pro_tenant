@@ -1,7 +1,7 @@
 """
 User-facing English copy helpers for Assistant Level-1 spend tools.
 
-Metric in Level 1: Net invoiced spending (active PINV totals).
+Metric in Level 1: Net invoiced spending (DocumentType.counts_as_net_invoiced_spend).
 """
 
 from __future__ import annotations

@@ -64,6 +64,8 @@
   - [9.2 Componentes del Sistema](#92-componentes-del-sistema)
   - [9.3 Flujo de Uso](#93-flujo-de-uso)
   - [9.4 Comandos de Gestión](#94-comandos-de-gestión)
+    - [9.4.1 Configuración DocumentType: creates_serialized_items](#941-configuración-documenttype-creates_serialized_items)
+    - [9.4.2 JobRhythm Assistant: intenciones analíticas en DocumentType](#942-jobrhythm-assistant-intenciones-analíticas-en-documenttype)
   - [9.5 Generar el Fixture JSON de Datos Maestros](#95-generar-el-fixture-json-de-datos-maestros)
   - [9.6 Workflow: Serialized Items e Inventory Transfers](#96-workflow-serialized-items-e-inventory-transfers)
   - [9.7 Cálculo dinámico de precios en líneas de documento](#97-precios-lineas-documento)
@@ -306,9 +308,9 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 
 - **`vuefrontend/src/components/layout/NavbarMessagesDropdown.vue`**: Componente de mensajes. Verifica si debe mostrarse antes de hacer llamadas API para evitar 401 en rutas públicas.
 
-- **Design System piloto (`vuefrontend/src/ui/`, `vuefrontend/src/assets/css/jr-design-system.css`)**: primitivos JR para pantallas migradas a `JRPage` / `.jr-pilot` (hoy Product Form y Product List). No sustituyen Navbar/Footer ni el skin Bootstrap global. Los overlays portaleados (p. ej. menús) usan `.jr-overlay`, no el `jr-pilot` de página.
+- **Design System / frontend upgrade (`vuefrontend/src/ui/README.md`)**: libro de reglas JR para pantallas migradas a `JRPage` / `.jr-pilot` (piloto: Product Form y Product List). Incluye tokens, primitivos, normas de formularios (hint debajo del campo, no tooltip como canal único; PrimeVue `Message` para consecuencias; grid 3 columnas en desktop) y isolation. Detalle de listas: `vuefrontend/src/ui/LIST_VIEWS.md`. `FORMS.md` es alias de la sección de formularios del README. CSS: `vuefrontend/src/assets/css/jr-design-system.css`. No sustituyen Navbar/Footer ni el skin Bootstrap global. Overlays portaleados (p. ej. menús) usan `.jr-overlay`, no el `jr-pilot` de página. `app/docs/ai-guidelines.md` es obsoleto como guía visual del upgrade.
 
-- **`JRRowActions`**: acciones de fila reutilizables. En desktop, botones PrimeVue `text` (View/Edit/Delete o equivalentes). En móvil, kebab + `Menu` popup con los mismos ítems, iconos y color por severity. Es presentacional: el padre decide qué acciones pasar (permisos, confirmación de delete, navegación). Primer consumidor: `vuefrontend/src/views/inventory/ProductListView.vue`.
+- **`JRRowActions`**: acciones de fila reutilizables. En desktop, botones PrimeVue `text` con **icono + label** (View/Edit/Delete o equivalentes; Duplicate usa `CopyIcon`). Nunca icon-only en desktop. En móvil, kebab + `Menu` popup con los mismos ítems, iconos y color por severity. Es presentacional: el padre decide qué acciones pasar (permisos, confirmación de delete, navegación). Primer consumidor: `vuefrontend/src/views/inventory/ProductListView.vue`.
 
 #### Infraestructura
 
@@ -1545,6 +1547,45 @@ El campo incluye **tooltip** (`v-tt` + `data-title`) según las guías del proye
      --indent 2 \
      --output /app/apptransactions/fixtures/masters_document_type.json
    ```
+
+#### 9.4.2 JobRhythm Assistant: intenciones analíticas en DocumentType
+
+**Problema que resuelve:** cada tenant configura sus tipos de transacción con el `type_code` y la descripción que quiera (p. ej. `PINV` vs `PO-INV`). JobRhythm Assistant **no debe depender del string del código** para saber qué es “gasto facturado”, “picking a obra” o “devolución de compra”.
+
+**Solución:** en `DocumentType` existen flags de intención (Nivel 1), independientes del código:
+
+| Campo | Intención | Uso en Assistant |
+|-------|-----------|------------------|
+| `counts_as_net_invoiced_spend` | Net invoiced spending | Tools de spend (list/sum/by vendor/compare/graph). Suma `Document.total_amount` de docs activos de esos tipos. |
+| `counts_as_job_material_issue` | Job / house material issue | Salida a obra (p. ej. picking / PK). Reservado para tools de costo a Work Account. |
+| `counts_as_purchase_return` | Purchase return | Devoluciones a proveedor (p. ej. PRN). **No** se mezcla en el gasto neto facturado. |
+
+Reglas de producto:
+
+- El usuario sigue creando tipos libres (código, nombre, flags de stock/compra/venta/obra).
+- Las intenciones son una capa analítica: el tenant marca qué tipos cuentan para cada significado.
+- `counts_as_net_invoiced_spend` y `counts_as_purchase_return` son **mutuamente excluyentes**.
+- **No** usar solo `is_purchase=True` como criterio de spend (eso incluiría PO, GRN, PR, etc.).
+- PINV e INIINV pueden compartir flags de inventario; se distinguen porque INIINV **no** se marca como net invoiced spend.
+
+**UI:** en **DocTypeForm.vue** (`/document-types/form`) la sección **JobRhythm Assistant** expone los tres switches. Al crear un tipo nuevo, el formulario puede **sugerir** intenciones según código/flags (p. ej. `PINV`/`PO-INV` → spend; `PK` → job material; `PRN` → return); el usuario confirma o corrige.
+
+**Migración / backfill:** `apptransactions.0006_documenttype_assistant_intentions` añade los campos y rellena aliases conocidos (`PINV`/`PO-INV` → spend, `PK` → job material, `PRN` → return). Aplicar en todos los schemas:
+
+```bash
+# Local (ubuntu-house)
+docker compose -f docker-compose.dev.yml exec backend python manage.py migrate
+
+# VPS / todos los tenants
+docker compose exec backend python manage.py migrate_schemas
+```
+
+**Código de referencia:**
+
+- Modelo: `apptransactions.models.DocumentType`
+- Helpers: `apptransactions.assistant_intentions`
+- Spend QS: `appassistant.services.spend.spend_documents_qs` (filtra por `counts_as_net_invoiced_spend`, no por `type_code='PINV'`)
+- Definición canónica del métrico: `appassistant.spend_definition.SPEND_DEFINITION`
 
 ### 9.5 Generar el Fixture JSON de Datos Maestros
 

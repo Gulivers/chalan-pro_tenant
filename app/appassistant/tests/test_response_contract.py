@@ -18,7 +18,7 @@ class ResponseContractTests(SimpleTestCase):
         self.assertEqual(validate_response_payload(payload), [])
         self.assertEqual(payload['schema_version'], SCHEMA_VERSION)
         self.assertEqual(payload['blocks'], [])
-        self.assertIn('PINV', payload['context']['spend_definition'])
+        self.assertIn('counts_as_net_invoiced_spend', payload['context']['spend_definition'])
         self.assertEqual(payload['meta']['router'], 'none')
         self.assertEqual(payload['meta']['tools_executed'], [])
 

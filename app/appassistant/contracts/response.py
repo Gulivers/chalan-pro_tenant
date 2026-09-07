@@ -8,6 +8,8 @@ from uuid import UUID
 
 from django.conf import settings
 
+from appassistant.spend_definition import SPEND_DEFINITION
+
 
 SCHEMA_VERSION = '1'
 
@@ -35,14 +37,6 @@ ROUTE_PATH_TEMPLATES = {
     'transactions-form': '/transactions/form?id={id}&mode=view',
     'builder-view': '/builder/view/{id}',
 }
-
-# Spend definition for Level 1 tools (enforced in services.spend / tools).
-# Keep in sync with appassistant.services.spend.SPEND_DEFINITION.
-SPEND_DEFINITION = (
-    'Net invoiced spending = active PINV Document.total_amount only; '
-    'not gross, not returns (PRN), not PO/committed, '
-    'not the Sales vs Purchases chart (is_purchase) criterion'
-)
 
 # Temporary default until tenant/document currency exists in JobRhythm.
 DEFAULT_CURRENCY = 'USD'

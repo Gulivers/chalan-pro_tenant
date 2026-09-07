@@ -54,8 +54,14 @@ class C3CompareAndMultiVendorTests(TenantTestCase):
                 'description': 'Purchase Invoice',
                 'is_purchase': True,
                 'is_active': True,
+                'counts_as_net_invoiced_spend': True,
             },
         )
+        if not self.pinv.counts_as_net_invoiced_spend:
+            DocumentType.objects.filter(pk=self.pinv.pk).update(
+                counts_as_net_invoiced_spend=True
+            )
+            self.pinv.refresh_from_db()
         self.harbor = Builder.objects.create(name='Harbor Freight', supplier_rank=1)
         self.lowes = Builder.objects.create(name="Lowe's", supplier_rank=1)
         self.user = User.objects.create_user(username='c3_user', password='x')

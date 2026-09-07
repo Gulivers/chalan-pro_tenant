@@ -6,6 +6,8 @@ from .spend import (
     SPEND_METRIC_LABEL,
     SPEND_METRIC_SHORT,
     SPEND_TYPE_CODE,
+    job_material_documents_qs,
+    purchase_return_documents_qs,
     spend_documents_qs,
 )
 
@@ -21,5 +23,7 @@ __all__ = [
     'SPEND_METRIC_LABEL',
     'SPEND_METRIC_SHORT',
     'SPEND_TYPE_CODE',
+    'job_material_documents_qs',
+    'purchase_return_documents_qs',
     'spend_documents_qs',
 ]

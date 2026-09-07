@@ -236,7 +236,7 @@ Temporal contract (hybrid):
 - When using date_from/date_to, omit period/months unless a label clearly also applies.
 
 Rules:
-- Metric is always Net invoiced spending (active PINV only). Spend definition: {SPEND_DEFINITION}
+- Metric is always Net invoiced spending (DocumentType.counts_as_net_invoiced_spend). Spend definition: {SPEND_DEFINITION}
 - User-facing metric label: {SPEND_METRIC_LABEL}
 - Allowed tools: {tool_names}
 - NEVER invent SQL, code, tenant IDs, user IDs, or numeric vendor/document IDs.

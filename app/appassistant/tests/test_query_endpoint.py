@@ -89,7 +89,7 @@ class AssistantQueryEndpointTests(TenantTestCase):
         self.assertEqual(data['meta']['router'], 'deterministic')
         self.assertEqual(data['meta']['tools_executed'], [])
         self.assertTrue(data['meta']['request_id'])
-        self.assertIn('PINV', data['context']['spend_definition'])
+        self.assertIn('counts_as_net_invoiced_spend', data['context']['spend_definition'])
         self.assertTrue(any(b.get('type') == 'text' for b in data['blocks']))
         self.assertIn('not supported', data['message'].lower())
         self.assertEqual(AssistantQueryLog.objects.count(), 1)

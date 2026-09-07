@@ -15,11 +15,11 @@ class AssistantTool(ABC):
     name: str = ''
     description: str = ''
 
-    # Net invoiced spending = PINV + is_active; NOT is_purchase / PRN / PO.
+    # Net invoiced spending = DocumentType.counts_as_net_invoiced_spend + is_active.
     spend_definition: str = (
-        'Net invoiced spending = active PINV Document.total_amount only; '
-        'not gross, not returns (PRN), not PO/committed, '
-        'not the Sales vs Purchases chart (is_purchase) criterion'
+        'Net invoiced spending = active Document.total_amount whose DocumentType has '
+        'counts_as_net_invoiced_spend=True; '
+        'not gross, not purchase returns, not PO/committed, not job material issue'
     )
 
     @abstractmethod

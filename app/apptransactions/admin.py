@@ -40,9 +40,17 @@ class PartyAdmin(admin.ModelAdmin):
 
 @admin.register(DocumentType)
 class DocumentTypeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type_code', 'description', 'creates_serialized_items', 'stock_movement', 'is_active')
+    list_display = (
+        'id', 'type_code', 'description', 'creates_serialized_items',
+        'counts_as_net_invoiced_spend', 'counts_as_job_material_issue',
+        'counts_as_purchase_return', 'stock_movement', 'is_active',
+    )
     search_fields = ('type_code', 'description')
-    list_filter = ('is_active', 'stock_movement')
+    list_filter = (
+        'is_active', 'stock_movement',
+        'counts_as_net_invoiced_spend', 'counts_as_job_material_issue',
+        'counts_as_purchase_return',
+    )
 
 # Validación que aplica a cada línea del inline
 class DocumentLineInlineFormSet(BaseInlineFormSet):

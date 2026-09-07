@@ -209,7 +209,8 @@ def filtered_spend_qs(
     """
     Spend documents after authorize-then-filter.
 
-    Spend = PINV + is_active only (see services.spend). Never is_purchase.
+    Spend = DocumentType.counts_as_net_invoiced_spend + is_active (see services.spend).
+    Never is_purchase alone; never hard-coded type_code.
     """
     qs = spend_documents_qs()
     if date_from is not None:

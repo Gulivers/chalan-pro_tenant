@@ -19,7 +19,25 @@ class DocumentTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentType
         fields = '__all__'
-        
+
+    def validate(self, attrs):
+        spend = attrs.get(
+            'counts_as_net_invoiced_spend',
+            getattr(self.instance, 'counts_as_net_invoiced_spend', False) if self.instance else False,
+        )
+        pret = attrs.get(
+            'counts_as_purchase_return',
+            getattr(self.instance, 'counts_as_purchase_return', False) if self.instance else False,
+        )
+        if spend and pret:
+            raise serializers.ValidationError({
+                'counts_as_purchase_return': (
+                    'A document type cannot count as both Net invoiced spending '
+                    'and Purchase return.'
+                ),
+            })
+        return attrs
+
 class PartyTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartyType
