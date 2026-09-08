@@ -124,7 +124,14 @@
                 <span v-else class="jr-product-cell__ph" aria-hidden="true" />
               </button>
               <span class="jr-product-cell__text">
-                <span class="jr-product-cell__name">{{ item.name }}</span>
+                <router-link
+                  v-if="canViewProduct"
+                  class="jr-product-cell__name jr-product-cell__name--link"
+                  :to="productViewTo(item.id)"
+                  :aria-label="`View ${item.name}`">
+                  {{ item.name }}
+                </router-link>
+                <span v-else class="jr-product-cell__name">{{ item.name }}</span>
               </span>
             </div>
             <p class="jr-product-row__meta">
@@ -197,7 +204,14 @@
                 <span v-else class="jr-product-cell__ph" aria-hidden="true" />
               </button>
               <span class="jr-product-cell__text">
-                <span class="jr-product-cell__name">{{ data.name }}</span>
+                <router-link
+                  v-if="canViewProduct"
+                  class="jr-product-cell__name jr-product-cell__name--link"
+                  :to="productViewTo(data.id)"
+                  :aria-label="`View ${data.name}`">
+                  {{ data.name }}
+                </router-link>
+                <span v-else class="jr-product-cell__name">{{ data.name }}</span>
                 <span v-if="data.sku" class="jr-product-cell__meta">{{ data.sku }}</span>
               </span>
             </div>
@@ -259,14 +273,23 @@
       </JRDataTable>
     </div>
 
-    <ProductImageGallery
-      ref="productImageGallery"
-      :productId="selectedProductId" />
+    <JRDialog
+      :visible="galleryVisible"
+      :header="galleryHeader"
+      size="wide"
+      :showFooter="false"
+      @update:visible="onGalleryVisible">
+      <ProductBrandImages
+        v-if="selectedProductId"
+        :product-id="selectedProductId"
+        :readonly="!canMutateProduct"
+        @changed="onImagesChanged" />
+    </JRDialog>
   </JRPage>
 </template>
 
 <script>
-import ProductImageGallery from "@components/inventory/ProductImageGallery.vue";
+import ProductBrandImages from "@components/inventory/ProductBrandImages.vue";
 import ProductPricesBulkExcelPanel from "@components/inventory/ProductPricesBulkExcelPanel.vue";
 import axios from "axios";
 import {
@@ -276,7 +299,6 @@ import {
   onMounted,
   onUnmounted,
   getCurrentInstance,
-  nextTick,
 } from "vue";
 import { useRouter } from "vue-router";
 import Column from "primevue/column";
@@ -298,6 +320,7 @@ import {
   JRDataTable,
   JREmptyState,
   JRRowActions,
+  JRDialog,
 } from "@ui";
 
 const ENDPOINT = "/api/products-provider/";
@@ -317,7 +340,7 @@ function readViewport() {
 export default {
   name: "ProductListView",
   components: {
-    ProductImageGallery,
+    ProductBrandImages,
     ProductPricesBulkExcelPanel,
     Column,
     Paginator,
@@ -334,6 +357,7 @@ export default {
     JRDataTable,
     JREmptyState,
     JRRowActions,
+    JRDialog,
   },
 
   setup() {
@@ -354,7 +378,7 @@ export default {
     const filter = ref("");
     const totalRows = ref(0);
     const selectedProductId = ref(null);
-    const productImageGallery = ref(null);
+    const galleryVisible = ref(false);
     const showBulkPricesPanel = ref(false);
     const sortField = ref("id");
     const sortOrder = ref(-1);
@@ -394,6 +418,12 @@ export default {
 
     const canViewProduct = computed(() =>
       !!proxy?.hasPermission?.("appinventory.view_product")
+    );
+
+    const canMutateProduct = computed(
+      () =>
+        !!proxy?.hasPermission?.("appinventory.change_product") ||
+        !!proxy?.hasPermission?.("appinventory.add_product")
     );
 
     const hasRowActions = computed(
@@ -536,8 +566,13 @@ export default {
       router.push({ name: "product-form", query: { mode: "create" } });
     };
 
+    const productViewTo = (id) => ({
+      name: "product-form",
+      query: { mode: "view", id },
+    });
+
     const viewItem = (id) => {
-      router.push({ name: "product-form", query: { mode: "view", id: id } });
+      router.push(productViewTo(id));
     };
 
     const editItem = (id) => {
@@ -590,13 +625,33 @@ export default {
       brokenImageIds.value = { ...brokenImageIds.value, [product.id]: true };
     };
 
+    const galleryHeader = computed(() => {
+      const product = products.value.find(
+        (item) => String(item.id) === String(selectedProductId.value)
+      );
+      return product
+        ? `Images · ${product.name}`
+        : "Product images";
+    });
+
     const openImageGallery = (productId) => {
       selectedProductId.value = productId;
-      nextTick(() => {
-        if (productImageGallery.value) {
-          productImageGallery.value.openModal();
-        }
-      });
+      galleryVisible.value = true;
+    };
+
+    const onGalleryVisible = (visible) => {
+      galleryVisible.value = visible;
+      if (!visible) selectedProductId.value = null;
+    };
+
+    const onImagesChanged = () => {
+      const id = selectedProductId.value;
+      if (id && brokenImageIds.value[id]) {
+        const next = { ...brokenImageIds.value };
+        delete next[id];
+        brokenImageIds.value = next;
+      }
+      loadProducts();
     };
 
     onMounted(() => {
@@ -670,13 +725,19 @@ export default {
       onTablePage,
       onTableSort,
       goToCreateForm,
+      canViewProduct,
+      canMutateProduct,
+      productViewTo,
       viewItem,
       editItem,
       deleteItem,
       openImageGallery,
       productImageSrc,
       onProductImageError,
-      productImageGallery,
+      galleryVisible,
+      galleryHeader,
+      onGalleryVisible,
+      onImagesChanged,
       selectedProductId,
       canBulkUpdate,
       showBulkPricesPanel,
@@ -819,6 +880,21 @@ export default {
   font-size: 0.875rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+a.jr-product-cell__name--link {
+  color: var(--color-jr-primary);
+  text-decoration: none;
+}
+
+a.jr-product-cell__name--link:hover {
+  color: var(--color-jr-primary-hover);
+  text-decoration: underline;
+}
+
+a.jr-product-cell__name--link:focus-visible {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: 2px;
 }
 
 .jr-product-cell__meta {

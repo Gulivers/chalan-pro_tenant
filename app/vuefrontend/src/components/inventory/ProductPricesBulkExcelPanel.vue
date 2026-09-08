@@ -29,7 +29,7 @@
         customUpload
         :disabled="busy || optionsLoading"
         chooseLabel="Choose .xlsx"
-        :chooseButtonProps="{ fluid: true }"
+        :chooseButtonProps="{ fluid: true, class: 'p-button p-component jr-button' }"
         @select="onFileSelect" />
     </JRField>
 

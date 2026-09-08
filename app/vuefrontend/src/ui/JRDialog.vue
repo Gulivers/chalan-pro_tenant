@@ -31,7 +31,7 @@
     </template>
     <p v-if="message" class="jr-dialog__message">{{ message }}</p>
     <slot />
-    <template #footer>
+    <template v-if="showFooter" #footer>
       <div class="jr-dialog__footer">
         <JRButton variant="secondary" @click="$emit('update:visible', false)">
           {{ cancelLabel }}
@@ -60,6 +60,7 @@ export default {
       return [
         'jr-pilot',
         'jr-dialog',
+        this.size === 'wide' ? 'jr-dialog--wide' : '',
         this.isDanger ? 'jr-dialog--danger' : '',
       ].filter(Boolean);
     },
@@ -88,6 +89,15 @@ export default {
     confirmVariant: {
       type: String,
       default: 'primary',
+    },
+    showFooter: {
+      type: Boolean,
+      default: true,
+    },
+    size: {
+      type: String,
+      default: 'default',
+      validator: (value) => ['default', 'wide'].includes(value),
     },
   },
   emits: ['update:visible', 'confirm'],

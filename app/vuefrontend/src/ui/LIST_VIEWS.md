@@ -16,7 +16,7 @@ Construction Operations / ERP admin. Operativo, denso, mobile-first.
 
 - Neutrales + **un** azul de acción.
 - Bordes 1px, sin sombras de tarjeta, sin pastillas `999px`.
-- El nombre de la entidad es **texto**, no un enlace azul.
+- El nombre de la entidad abre **View** cuando hay permiso (`router-link` primary). Si no hay `view_*`, queda texto.
 - El create (`+ New …`) es el único botón primary de la página.
 - Sin Bootstrap (`.card`, `.btn`, `.badge`, `.form-control`, `.visually-hidden`, `d-flex`, etc.) dentro de `.jr-pilot`.
 
@@ -128,8 +128,9 @@ No usar PrimeVue `Tag` ni Bootstrap `badge`.
 
 ## 6. Acciones de fila (`JRRowActions`)
 
-- Desktop (`≥1024`): **icono + label** View / Edit / Delete (o equivalente: Duplicate). El icono no sustituye al texto.
-- Tablet y teléfono: menú overflow (44px) con los **mismos** iconos.
+- Desktop (`≥1024`) **en lista / tabla**: **icono + label** View / Edit / Delete (o equivalente: Duplicate). El icono no sustituye al texto.
+- **En `p-drawer`**: botones sólidos `p-button p-component jr-button`, **sin icono**. Delete `danger` rojo. Norma completa: [README.md § 4 Botones](./README.md).
+- Tablet y teléfono: menú overflow (44px) con los **mismos** iconos (lista; el drawer no usa overflow para Duplicate/Delete).
 - `entity-label` para `aria-label` (`View {name}`, `More actions for {name}`).
 - Columna Actions: header y celdas **centradas** sobre el grupo de botones. El `scoped` de la vista no pinta el `<th>` de PrimeVue: usar `:deep(th.jr-col-actions)` desde el wrapper de la tabla.
 - Si la fila no cabe: overflow para Duplicate/Delete. No quitar labels para ganar ancho.
@@ -213,16 +214,17 @@ Bulk Excel, exports, imports: `JRButton` ghost → `JRDrawer` a la derecha.
 ## 11. Accesibilidad mínima
 
 - Labels visibles o `jr-sr-only` en search y page-size.
-- Focus visible: outline 2px `--color-jr-primary`.
+- Focus de campo (search, selects): una línea — borde primary. Sin outline offset.
+- Focus de chrome (icon-btn, pager, kebab): outline 2px `--color-jr-primary`.
 - Stats con `aria-live="polite"` si cambian con el fetch.
-- Thumb: `aria-label` honesto (`View images of {name}`), no fingir que abre el form.
+- Thumb: `aria-label` honesto (`View images of {name}`), no fingir que abre el form. El clic abre `JRDialog` `size="wide"` con `ProductBrandImages`. Subir / primary: `add_product` o `change_product`. Borrar foto: solo `change_product` (+ `delete_productimage`). No `ProductImageGallery` Bootstrap.
 - `prefers-reduced-motion` ya está en el design system.
 
 ---
 
 ## 12. Qué no hacer
 
-- Pintar el nombre de la fila de azul / underline (parece View y no lo es).
+- Pintar el nombre de azul si **no** abre View. Si abre la ficha, el enlace primary es el atajo (View en `JRRowActions` se mantiene).
 - `Tag`, `ToggleButton` o `b-table` en una lista JR.
 - Stats que parecen filtros y no filtran.
 - Ghost / Refresh en azul primary (compiten con New).

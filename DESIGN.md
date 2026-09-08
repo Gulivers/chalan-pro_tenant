@@ -350,6 +350,7 @@ Page titles are **left-aligned** and must not use the incumbent centered `2rem` 
 Restrained. Not the incumbent `1.25rem` mega-cards.
 
 - Controls (inputs, selects, dropdown panels, buttons, badges): `0` — rectangular, no corner rounding
+- Dialogs (`p-dialog` / `JRDialog`): `0` — same rectangular overlay as controls
 - Panels / tables / drawers: `0.75rem`
 
 ## Elevation (Pilot)
@@ -375,7 +376,7 @@ Consume from `@/ui` (alias `@ui` also resolves). Wrap each migrated screen in `J
 - `JRField` — label, hint, required, error
 - `JRButton`, `JRInput`, `JRSelect`, `JRSelectAddon`, `JRCheckbox`, `JRDatePicker`, `JRTextarea`
 - `JRBadge`, `JRDataTable`, `JRDrawer`, `JRDialog`, `JRToolbar`, `JREmptyState`, `JRTooltip`
-- `JRRowActions` — View/Edit/Delete (or equivalent) as **icon + label** text buttons on desktop; overflow menu on mobile (same icons). Never icon-only on desktop. Duplicate uses `CopyIcon` (`app/vuefrontend/src/ui/CopyIcon.vue`). Page actions (Save, Cancel, Done, `+ Add …`) stay label-only.
+- `JRRowActions` — In **lists / embedded tables**: ghost **icon + label** on desktop; overflow menu on mobile (same icons). Never icon-only on desktop. Duplicate uses `CopyIcon` (`app/vuefrontend/src/ui/CopyIcon.vue`). In a **`p-drawer`**: solid `p-button p-component jr-button`, **label only** (no icon); Delete is filled danger. Page, form, drawer and dialog actions (`JRButton`: Save, Cancel, Done, Update, Upload, Delete) stay label-only `jr-button`. FileUpload basic choose buttons get `class: 'p-button p-component jr-button'`.
 
 Primitives are presentational. No axios. No product business logic.
 
@@ -401,6 +402,8 @@ Desktop (≥1024px): Identity / Classification / Inventory-style sections use **
 
 **Fields are rectangular.** `JRInput`, `JRSelect`, `JRDatePicker`, `JRTextarea` and their PrimeVue dropdown/datepicker panels use `--radius-jr-control` (`0`). Do not reintroduce `0.5rem` (or any) corner radius on form controls in later modules.
 
+**Focus is a single line.** On text fields, selects, datepickers and number inputs the focus state is only the 1px primary border (`#2563eb`). No outline ring, no offset halo, no box-shadow. Icon buttons and checkboxes may keep a 2px offset outline (they have no field border to recolor).
+
 ## Do's and Don'ts (Pilot)
 
 ### Do
@@ -412,6 +415,8 @@ Desktop (≥1024px): Identity / Classification / Inventory-style sections use **
 - **Do** put operational field help under the control (`JRField` hint + `aria-describedby`), not in a hover-only tooltip.
 - **Do** use PrimeVue `Message` (info, not closable) for a consequence that appears after a choice.
 - **Do** keep form fields and select/datepicker overlays rectangular (`--radius-jr-control: 0`).
+- **Do** use a single primary border for field focus — never a double ring.
+- **Do** use `JRButton` (`p-button p-component jr-button`) in forms, drawers and dialogs; Delete is filled danger, label-only. `JRRowActions` in a drawer is the same solid treatment, no icons.
 
 ### Don't
 
@@ -422,3 +427,5 @@ Desktop (≥1024px): Identity / Classification / Inventory-style sections use **
 - **Don't** hint every field or duplicate the same sentence in hint and tooltip.
 - **Don't** teach a commercial or stock rule only with `JRTooltip` / `(i)`.
 - **Don't** round JR inputs, selects, or dropdown panels.
+- **Don't** stack outline + border (or a focus shadow) on the same field.
+- **Don't** use ghost icon+label `JRRowActions` inside a drawer, or a text-link Delete.

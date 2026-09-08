@@ -284,6 +284,16 @@
           @refresh-units="loadUnits" />
       </JRSection>
 
+      <JRSection v-if="!productLoading" title="Brand images">
+        <ProductBrandImages
+          ref="brandImages"
+          :product-id="currentProductId"
+          :pending-brands="imageBrandOptions"
+          :readonly="isReadOnly || !canMutateProduct"
+          :busy="submitting"
+          :revision="imagesRevision" />
+      </JRSection>
+
       <div v-if="!productLoading" class="jr-product-form__actions">
         <span v-if="formIsDirty" class="jr-unsaved">Unsaved</span>
         <JRButton
@@ -337,6 +347,7 @@ import axios from "axios";
 import Message from "primevue/message";
 import ProductPriceUnitTable from "@/components/inventory/ProductPriceUnitTable.vue";
 import ProductCatalogForm from "@/components/inventory/ProductCatalogForm.vue";
+import ProductBrandImages from "@/components/inventory/ProductBrandImages.vue";
 import {
   JRPage,
   JRPageHeader,
@@ -399,6 +410,7 @@ export default {
   components: {
     ProductPriceUnitTable,
     ProductCatalogForm,
+    ProductBrandImages,
     Message,
     JRPage,
     JRPageHeader,
@@ -457,6 +469,7 @@ export default {
       pendingRouteNext: null,
       leaveResolved: false,
       productLoading: false,
+      imagesRevision: 0,
     };
   },
   computed: {
@@ -471,6 +484,14 @@ export default {
     selectedBrandOptions() {
       const ids = (this.product.brands || []).map((id) => String(id));
       return (this.brands || []).filter((brand) => ids.includes(String(brand.id)));
+    },
+    imageBrandOptions() {
+      const byId = new Map(
+        (this.brands || []).map((brand) => [String(brand.id), brand])
+      );
+      return (this.product.brands || [])
+        .map((id) => byId.get(String(id)))
+        .filter(Boolean);
     },
     pageTitle() {
       if (this.isReadOnly) return "View Product";
@@ -512,6 +533,12 @@ export default {
         this.objectId ?? this.$route?.params?.id ?? this.$route?.query?.id;
       if (raw === undefined || raw === null || raw === "") return null;
       return String(raw);
+    },
+    canMutateProduct() {
+      return (
+        !!this.hasPermission?.("appinventory.change_product") ||
+        !!this.hasPermission?.("appinventory.add_product")
+      );
     },
   },
   created() {
@@ -712,6 +739,7 @@ export default {
     },
     isDirty() {
       if (this.isReadOnly || !this.dirtySnapshot) return false;
+      if (this.$refs.brandImages?.hasPending?.()) return true;
       return this.serializeFormState() !== this.dirtySnapshot;
     },
     setDefaultBrand(id) {
@@ -1028,13 +1056,33 @@ export default {
         };
         const id =
           this.objectId || this.$route?.params?.id || this.$route?.query?.id;
+        const wasCreate = !id;
         const url = id ? `/api/products/${id}/` : "/api/products/";
         const method = id ? "put" : "post";
         const res = await axios({ method, url, data: payload });
         const savedId =
           id || (res?.data?.id != null ? String(res.data.id) : null);
-        this.notifyToastSuccess?.(id ? "Product updated" : "Product created");
+        let photoResult = { uploaded: 0, failed: 0 };
+        if (wasCreate && savedId && this.$refs.brandImages?.flushPending) {
+          try {
+            photoResult = await this.$refs.brandImages.flushPending(savedId);
+          } catch (photoErr) {
+            console.error("Failed to upload product photos:", photoErr);
+            photoResult = { uploaded: 0, failed: 1 };
+          }
+        }
+        if (wasCreate && photoResult.uploaded && !photoResult.failed) {
+          this.notifyToastSuccess?.("Product created. Photos uploaded.");
+        } else if (wasCreate && photoResult.failed) {
+          this.notifyToastSuccess?.("Product created");
+          this.notifyToastError?.(
+            "Some photos could not be uploaded. Open the product to try again."
+          );
+        } else {
+          this.notifyToastSuccess?.(id ? "Product updated" : "Product created");
+        }
         this.captureDirtySnapshot();
+        this.imagesRevision += 1;
         if (savedId) {
           await this.$router.push({
             path: "/products/form",
@@ -1387,7 +1435,7 @@ export default {
   --p-message-info-background: var(--color-jr-info-subtle);
   --p-message-info-border-color: var(--color-jr-border);
   --p-message-info-color: var(--color-jr-info-text);
-  --p-message-border-radius: var(--radius-jr-control, 0.5rem);
+  --p-message-border-radius: var(--radius-jr-control, 0);
 }
 
 .jr-product-form__actions {

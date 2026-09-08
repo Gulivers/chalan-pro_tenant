@@ -317,6 +317,7 @@
           <JRRowActions
             v-if="!readonly && sheetIndex != null"
             :compact="false"
+            :solid="true"
             :entity-label="rowEntityLabel(sheetRow)"
             :actions="rowMaintenanceActions(sheetIndex)" />
         </div>

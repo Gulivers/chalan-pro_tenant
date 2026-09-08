@@ -1,18 +1,23 @@
 <template>
-  <div v-if="visibleActions.length" class="jr-row-actions">
+  <div
+    v-if="visibleActions.length"
+    class="jr-row-actions"
+    :class="{ 'jr-row-actions--solid': useSolid }">
     <template v-if="!useCompact">
       <Button
         v-for="action in visibleActions"
         :key="action.key"
         type="button"
         class="jr-row-actions__btn"
+        :class="{ 'jr-button': useSolid }"
         :severity="primeSeverity(action)"
         :label="action.label"
-        text
+        :text="!useSolid"
+        :outlined="useSolid && isOutlined(action)"
         size="small"
         :aria-label="actionAriaLabel(action)"
         @click="action.command">
-        <template v-if="action.icon" #icon="{ class: iconClass }">
+        <template v-if="!useSolid && action.icon" #icon="{ class: iconClass }">
           <component
             v-if="isIconComponent(action.icon)"
             :is="action.icon"
@@ -91,6 +96,10 @@ export default {
       type: Boolean,
       default: undefined,
     },
+    solid: {
+      type: Boolean,
+      default: undefined,
+    },
     entityLabel: {
       type: String,
       default: '',
@@ -103,9 +112,13 @@ export default {
       menuTriggerId: `jr-row-actions-trigger-${uid}`,
       menuOpen: false,
       detectedCompact: false,
+      detectedDrawer: false,
     };
   },
   computed: {
+    useSolid() {
+      return this.solid === undefined ? this.detectedDrawer : this.solid;
+    },
     visibleActions() {
       return (this.actions || []).filter(
         (action) => action && action.visible !== false && typeof action.command === 'function'
@@ -133,6 +146,7 @@ export default {
     },
   },
   mounted() {
+    this.detectedDrawer = !!(this.$el && this.$el.closest?.('.p-drawer'));
     if (this.compact !== undefined) return;
     if (typeof window === 'undefined' || !window.matchMedia) return;
     this.mediaQuery = window.matchMedia(COMPACT_MQ);
@@ -162,6 +176,9 @@ export default {
     primeSeverity(action) {
       if (!action?.severity || action.severity === 'primary') return undefined;
       return action.severity;
+    },
+    isOutlined(action) {
+      return action?.severity === 'secondary' || action?.severity === 'info';
     },
     actionAriaLabel(action) {
       return this.entityLabel ? `${action.label} ${this.entityLabel}` : action.label;

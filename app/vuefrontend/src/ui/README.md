@@ -16,7 +16,7 @@ No mezclar Bootstrap y JR en la misma pantalla.
 
 | Capítulo | Dónde |
 |---|---|
-| Este libro | Tokens, isolation, primitivos, **formularios** (norma de esta semana), overlays |
+| Este libro | Tokens, isolation, primitivos, **formularios**, **botones**, overlays |
 | Listas (detalle) | [LIST_VIEWS.md](./LIST_VIEWS.md) — toolbar, tabla, badges, pager, mobile |
 | Formularios (alias) | [FORMS.md](./FORMS.md) apunta aquí; no duplicar normas |
 
@@ -188,11 +188,27 @@ JRPage → JRPageHeader → form
 ```
 
 - Campos rectangulares: `JRInput` / `JRSelect` / `JRDatePicker` / `JRTextarea` y el overlay del dropdown usan `--radius-jr-control` (`0`). No reintroducir radio en formularios nuevos.
+- Focus de campo: **una** línea — el borde pasa a primary (`#2563eb`). Sin outline, sin anillo offset, sin box-shadow. Checkboxes / icon-btns / botones sí pueden llevar outline 2px.
 - Desktop ≥1024: secciones de campos en **tres columnas**.
 - Catálogo add/edit: un `JRDrawer` JR. Sin apilar drawers.
 - Create: sembrar la primera fila vacía si el dominio lo espera (p. ej. precios); las filas vírgenes no bloquean Save.
 - Tablas embebidas (precios, líneas): **Add** en el header de sección. **Duplicate** y **Delete** por fila (`JRRowActions`), no multi-select ni “Duplicate Selected”. Duplicate clona type/unit/precio/flags; `id` vacío y `is_default` false. Delete usa `JRDialog` (las vírgenes se van sin confirm). En compacto: Edit visible + overflow para Duplicate/Delete. Un primary de sección; ghost en la fila; danger solo en Delete.
-- Acciones de fila (lista y tabla embebida): `JRRowActions` con **icono + label**. Familia `@primevue/icons` (Eye, Pencil, Trash). Duplicate usa `CopyIcon` (`ui/CopyIcon.vue`, mismo BaseIcon 14×14; `@primevue/icons` 5 no trae Copy). Nunca icon-only en desktop. No iconos en Save / Cancel / Done ni en `+ Add Row` (el `+` basta). Severity: View `success`, Edit `primary`, Duplicate `secondary`, Delete `danger`. Si la columna no cabe, overflow — no quitar el texto.
+- Imágenes por marca: `ProductBrandImages` (Tabs + `FileUpload` basic + `Image` preview). Ver es libre si hay ficha. Subir / primary: `add_product` o `change_product` **y** el permiso de `productimage`. **Borrar** exige `change_product` (editar producto) **y** `delete_productimage`. En View del form (`readonly`) no hay CRUD. En create, el empty state pide guardar primero. Delete confirma con `JRDialog`. En la lista, el thumb abre el mismo componente en `JRDialog` `size="wide"` sin footer — no modal Bootstrap.
+
+### Botones
+
+Un botón de form, drawer o diálogo es `JRButton` → PrimeVue `Button` con clases **`p-button p-component jr-button`**. Radio `--radius-jr-control` (`0`). No inventar `<button class="btn">` ni un `Button` de PrimeVue suelto en feature.
+
+| Superficie | Tipo | Icono |
+|---|---|---|
+| Form, footer de `JRDrawer`, footer de `JRDialog` | `JRButton` sólido (`primary` / `secondary` outlined) | **No.** Save, Cancel, Done, Update, Upload |
+| Delete en esas superficies | `JRButton` `variant="danger"` (rojo relleno) | **No.** |
+| `FileUpload` basic | `chooseButtonProps.class`: `p-button p-component jr-button` | El `+` nativo del FileUpload |
+| `JRRowActions` en **lista / tabla** | Ghost (`text`) | **Sí.** Icono + label |
+| `JRRowActions` en **`p-drawer`** | Sólido (`jr-button`; auto o `solid`) | **No.** Solo label |
+
+Severities de fila: View `success`, Edit `primary`, Duplicate `secondary`, Delete `danger`.  
+Familia de iconos (solo ghost de lista): `@primevue/icons` + `CopyIcon` para Duplicate. Nunca icon-only en desktop. Si la columna no cabe: overflow, no quitar el texto.
 
 ---
 
@@ -201,13 +217,13 @@ JRPage → JRPageHeader → form
 Composición, badges, `JRRowActions`, pager y breakpoints: **[LIST_VIEWS.md](./LIST_VIEWS.md)**.  
 Referencia: `ProductListView.vue`.
 
-Resumen: create en el header; search + stats + Refresh en toolbar; stats no filtran; View / Edit / Delete = icono + label (verde / azul / danger); teléfono = lista de escaneo, no tabla aplastada.
+Resumen: create en el header; search + stats + Refresh en toolbar; stats no filtran; el nombre es enlace a View; View / Edit / Delete = icono + label (verde / azul / danger); teléfono = lista de escaneo, no tabla aplastada.
 
 ---
 
 ## 6. Overlays
 
-Drawers, selects y datepickers portalean a `document.body`. `JRDrawer` / `JRDialog` llevan `.jr-pilot`. Los paneles de Select / DatePicker los pinta el preset Aura, no utilities Tailwind.
+Drawers, selects y datepickers portalean a `document.body`. `JRDrawer` / `JRDialog` llevan `.jr-pilot`. Los paneles de Select / DatePicker los pinta el preset Aura, no utilities Tailwind. Botones del overlay: **§ 4 Botones**.
 
 ---
 
@@ -220,15 +236,18 @@ Drawers, selects y datepickers portalean a `document.body`. `JRDrawer` / `JRDial
 - Hint persistente + `aria-describedby` en las 3–4 reglas de ticket.
 - `Message` info (no closable) para la consecuencia de una elección.
 - `JRDialog` para leave / delete.
-- Acciones de fila: icono PrimeVue + label + severity. Nunca icon-only en desktop.
+- Acciones de fila en **lista**: icono + label. En **drawer**: `jr-button` sólido, sin icono; Delete danger.
 - Campos y overlays de select/datepicker rectangulares (`--radius-jr-control: 0`).
+- Focus de campo a una sola línea (borde primary).
 - Mismos endpoints, permisos y payloads que antes de migrar.
 
 ### Don't
 
 - Tailwind Preflight, Vite, o restyle de Navbar / Footer en este incremento.
 - `.card` / `.form-control` / `.btn` / `b-table` dentro de `.jr-pilot`.
+- `JRRowActions` ghost (icono + texto) en un `p-drawer`, o Delete como enlace azul.
 - Redondear inputs, selects o paneles de dropdown JR.
+- Focus doble (borde + outline / halo) en el mismo campo.
 - Muro de hints, o la misma oración en hint y tooltip.
 - Regla operativa solo en `(i)`.
 - Recuadro extra con `<p>` o Swal.

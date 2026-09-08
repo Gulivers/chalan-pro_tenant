@@ -344,59 +344,68 @@
     height: 0.875rem;
   }
 
-  .jr-pilot .jr-row-actions__btn.p-button-success,
-  .jr-pilot .jr-row-actions__btn.p-button-success .p-button-label,
-  .jr-pilot .jr-row-actions__btn.p-button-success .p-button-icon,
-  .jr-pilot .jr-row-actions__btn.p-button-success svg {
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-success,
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-success .p-button-label,
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-success .p-button-icon,
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-success svg {
     --p-button-text-success-color: var(--color-jr-success);
     --p-button-text-success-hover-color: var(--color-jr-success);
     color: var(--color-jr-success);
   }
 
-  .jr-pilot .jr-row-actions__btn.p-button-success:hover:not(:disabled) {
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-success:hover:not(:disabled) {
     background: var(--color-jr-success-subtle);
   }
 
-  .jr-pilot .jr-row-actions__btn.p-button-primary,
-  .jr-pilot .jr-row-actions__btn.p-button:not(.p-button-success):not(.p-button-info):not(.p-button-danger):not(.p-button-secondary),
-  .jr-pilot .jr-row-actions__btn.p-button-primary .p-button-label,
-  .jr-pilot .jr-row-actions__btn.p-button-primary .p-button-icon,
-  .jr-pilot .jr-row-actions__btn.p-button-primary svg {
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-primary,
+  .jr-pilot .jr-row-actions__btn.p-button-text:not(.p-button-success):not(.p-button-info):not(.p-button-danger):not(.p-button-secondary),
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-primary .p-button-label,
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-primary .p-button-icon,
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-primary svg {
     --p-button-text-primary-color: var(--color-jr-primary);
     --p-button-text-primary-hover-color: var(--color-jr-primary-hover);
     color: var(--color-jr-primary);
   }
 
-  .jr-pilot .jr-row-actions__btn.p-button-primary:hover:not(:disabled) {
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-primary:hover:not(:disabled) {
     color: var(--color-jr-primary-hover);
     background: color-mix(in srgb, var(--color-jr-primary) 10%, transparent);
   }
 
-  .jr-pilot .jr-row-actions__btn.p-button-info,
-  .jr-pilot .jr-row-actions__btn.p-button-info .p-button-label,
-  .jr-pilot .jr-row-actions__btn.p-button-info .p-button-icon,
-  .jr-pilot .jr-row-actions__btn.p-button-info svg {
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-info,
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-info .p-button-label,
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-info .p-button-icon,
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-info svg {
     --p-button-text-info-color: var(--color-jr-info-text);
     --p-button-text-info-hover-color: var(--color-jr-info-text);
     color: var(--color-jr-info-text);
   }
 
-  .jr-pilot .jr-row-actions__btn.p-button-danger,
-  .jr-pilot .jr-row-actions__btn.p-button-danger .p-button-label,
-  .jr-pilot .jr-row-actions__btn.p-button-danger .p-button-icon,
-  .jr-pilot .jr-row-actions__btn.p-button-danger svg {
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-danger,
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-danger .p-button-label,
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-danger .p-button-icon,
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-danger svg {
     --p-button-text-danger-color: var(--color-jr-danger);
     --p-button-text-danger-hover-color: var(--color-jr-danger);
     color: var(--color-jr-danger);
   }
 
-  .jr-pilot .jr-row-actions__btn.p-button-secondary,
-  .jr-pilot .jr-row-actions__btn.p-button-secondary .p-button-label,
-  .jr-pilot .jr-row-actions__btn.p-button-secondary .p-button-icon,
-  .jr-pilot .jr-row-actions__btn.p-button-secondary svg {
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-secondary,
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-secondary .p-button-label,
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-secondary .p-button-icon,
+  .jr-pilot .jr-row-actions__btn.p-button-text.p-button-secondary svg {
     --p-button-text-secondary-color: var(--color-jr-muted);
     --p-button-text-secondary-hover-color: var(--color-jr-text);
     color: var(--color-jr-muted);
+  }
+
+  .jr-pilot .jr-row-actions--solid {
+    gap: 0.5rem;
+  }
+
+  .jr-pilot .jr-row-actions--solid .jr-row-actions__btn.p-button {
+    min-height: 2.5rem;
+    padding: 0.4rem 0.75rem;
   }
 
   .jr-pilot .jr-row-actions__more {
@@ -567,10 +576,59 @@
     min-height: 2.5rem;
   }
 
-  .jr-pilot .jr-control:focus-visible,
-  .jr-pilot .p-button:focus-visible,
+  .jr-pilot textarea.jr-control,
+  .jr-pilot .p-inputtext,
+  .jr-pilot .p-select,
+  .jr-pilot .p-multiselect,
+  .jr-pilot .p-datepicker,
+  .jr-pilot .p-inputnumber,
+  .jr-pilot .p-inputnumber-input {
+    --p-focus-ring-width: 0;
+    --p-focus-ring-shadow: none;
+    --p-form-field-focus-ring-width: 0;
+    --p-form-field-focus-ring-shadow: none;
+    --p-inputtext-focus-ring-width: 0;
+    --p-select-focus-ring-width: 0;
+    --p-multiselect-focus-ring-width: 0;
+    --p-datepicker-focus-ring-width: 0;
+    --p-inputnumber-focus-ring-width: 0;
+  }
+
+  .jr-pilot textarea.jr-control:focus,
+  .jr-pilot textarea.jr-control:focus-visible,
+  .jr-pilot .p-inputtext:focus,
   .jr-pilot .p-inputtext:focus-visible,
+  .jr-pilot .p-select.p-focus,
+  .jr-pilot .p-select:focus,
   .jr-pilot .p-select:focus-visible,
+  .jr-pilot .p-multiselect.p-focus,
+  .jr-pilot .p-multiselect:focus,
+  .jr-pilot .p-multiselect:focus-visible,
+  .jr-pilot .p-datepicker.p-focus,
+  .jr-pilot .p-datepicker:focus-within,
+  .jr-pilot .p-inputnumber:focus-within,
+  .jr-pilot .p-inputnumber-input:focus,
+  .jr-pilot .p-inputnumber-input:focus-visible {
+    outline: none;
+    box-shadow: none;
+    border-color: var(--color-jr-primary);
+  }
+
+  .jr-pilot textarea.jr-control.p-invalid:focus,
+  .jr-pilot textarea.jr-control.p-invalid:focus-visible,
+  .jr-pilot .p-inputtext.p-invalid:focus,
+  .jr-pilot .p-inputtext.p-invalid:focus-visible,
+  .jr-pilot .p-select.p-invalid.p-focus,
+  .jr-pilot .p-select.p-invalid:focus,
+  .jr-pilot .p-select.p-invalid:focus-visible,
+  .jr-pilot .p-multiselect.p-invalid.p-focus,
+  .jr-pilot .p-datepicker.p-invalid:focus-within,
+  .jr-pilot .p-inputnumber.p-invalid:focus-within,
+  .jr-pilot .p-inputnumber-input.p-invalid:focus {
+    border-color: var(--color-jr-danger);
+  }
+
+  .jr-pilot .p-button:focus-visible,
   .jr-pilot .p-checkbox:focus-visible {
     outline: 2px solid var(--color-jr-primary);
     outline-offset: 2px;
@@ -760,10 +818,30 @@
 }
 
 .p-dialog.jr-dialog {
+  --p-dialog-border-radius: var(--radius-jr-control);
   width: min(28rem, calc(100vw - 2rem));
   border: 1px solid var(--color-jr-border);
-  border-radius: var(--radius-jr-panel);
+  border-radius: var(--radius-jr-control);
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
+}
+
+.p-dialog.jr-dialog .p-dialog-header,
+.p-dialog.jr-dialog .p-dialog-content,
+.p-dialog.jr-dialog .p-dialog-footer {
+  border-radius: 0;
+}
+
+.p-dialog.jr-dialog.jr-dialog--wide {
+  width: min(56rem, calc(100vw - 2rem));
+}
+
+.p-image-preview-mask,
+.p-image-mask {
+  z-index: 2200;
+}
+
+.swal2-container {
+  z-index: 2300;
 }
 
 .jr-dialog .jr-dialog__message {
