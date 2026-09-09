@@ -29,6 +29,7 @@ No mezclar Bootstrap y JR en la misma pantalla.
 - Tailwind Preflight **no** está activo.
 - Navbar / Footer se quedan en Bootstrap / `skin-modern`.
 - Overlays portaleados (drawer, dialog, menú): `.jr-pilot` en el overlay; menús flotantes usan `.jr-overlay`, no el `jr-pilot` de página.
+- Capa CSS: `theme, base, primevue, components, utilities`. Tipografía de `h1`/`h2` del pilot y `text-decoration` de menús overlay van **fuera** de `@layer components` (Bootstrap `h1`/`a` no está en capa).
 
 ---
 
@@ -207,7 +208,7 @@ Un botón de form, drawer o diálogo es `JRButton` → PrimeVue `Button` con cla
 | `JRRowActions` en **lista / tabla** | Ghost (`text`) | **Sí.** Icono + label |
 | `JRRowActions` en **`p-drawer`** | Sólido (`jr-button`; auto o `solid`) | **No.** Solo label |
 
-Severities de fila: View `success`, Edit `primary`, Duplicate `secondary`, Delete `danger`.  
+Severities de fila: View `success` (texto `#166534`, no el fill `#16a34a`), Edit `primary`, Duplicate `secondary`, Delete `danger`.  
 Familia de iconos (solo ghost de lista): `@primevue/icons` + `CopyIcon` para Duplicate. Nunca icon-only en desktop. Si la columna no cabe: overflow, no quitar el texto.
 
 ---
@@ -225,6 +226,8 @@ Resumen: create en el header; search + stats + Refresh en toolbar; stats no filt
 
 Drawers, selects y datepickers portalean a `document.body`. `JRDrawer` / `JRDialog` llevan `.jr-pilot`. Los paneles de Select / DatePicker los pinta el preset Aura, no utilities Tailwind. Botones del overlay: **§ 4 Botones**.
 
+**`JRDialog` / `p-dialog` son rectangulares:** `border-radius: 0` (`--radius-jr-control`). Header, content y footer también cuadrados (`--p-dialog-border-radius: 0`). Referencia canónica: overlay de imágenes de producto (`ProductBrandImages` en `JRDialog` wide). No uses `--radius-jr-panel` (`0.75rem`) en dialogs; ese radio es para paneles, tablas y drawers.
+
 ---
 
 ## 7. Do / Don't
@@ -238,6 +241,7 @@ Drawers, selects y datepickers portalean a `document.body`. `JRDrawer` / `JRDial
 - `JRDialog` para leave / delete.
 - Acciones de fila en **lista**: icono + label. En **drawer**: `jr-button` sólido, sin icono; Delete danger.
 - Campos y overlays de select/datepicker rectangulares (`--radius-jr-control: 0`).
+- `JRDialog` / `p-dialog` rectangulares (`border-radius: 0`), como el de imágenes de producto.
 - Focus de campo a una sola línea (borde primary).
 - Mismos endpoints, permisos y payloads que antes de migrar.
 
@@ -247,6 +251,7 @@ Drawers, selects y datepickers portalean a `document.body`. `JRDrawer` / `JRDial
 - `.card` / `.form-control` / `.btn` / `b-table` dentro de `.jr-pilot`.
 - `JRRowActions` ghost (icono + texto) en un `p-drawer`, o Delete como enlace azul.
 - Redondear inputs, selects o paneles de dropdown JR.
+- Redondear `JRDialog` / `p-dialog` (ni header/content/footer). No aplicar `--radius-jr-panel` a dialogs.
 - Focus doble (borde + outline / halo) en el mismo campo.
 - Muro de hints, o la misma oración en hint y tooltip.
 - Regla operativa solo en `(i)`.

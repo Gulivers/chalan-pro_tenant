@@ -25,6 +25,7 @@
     :invalid="invalid"
     :placeholder="placeholder"
     :id="inputId"
+    v-bind="textInputAttrs"
     :aria-describedby="ariaDescribedby || undefined"
     :aria-invalid="invalid ? 'true' : undefined"
     :aria-required="required ? 'true' : undefined"
@@ -89,9 +90,38 @@ export default {
       type: Boolean,
       default: false,
     },
+    autocomplete: {
+      type: String,
+      default: undefined,
+    },
+    spellcheck: {
+      type: [Boolean, String],
+      default: undefined,
+    },
+    autocapitalize: {
+      type: String,
+      default: undefined,
+    },
+    enterkeyhint: {
+      type: String,
+      default: undefined,
+    },
+    autocorrect: {
+      type: String,
+      default: undefined,
+    },
   },
   emits: ['update:modelValue'],
   computed: {
+    textInputAttrs() {
+      const attrs = {};
+      if (this.autocomplete) attrs.autocomplete = this.autocomplete;
+      if (this.spellcheck !== undefined) attrs.spellcheck = this.spellcheck;
+      if (this.autocapitalize) attrs.autocapitalize = this.autocapitalize;
+      if (this.enterkeyhint) attrs.enterkeyhint = this.enterkeyhint;
+      if (this.autocorrect) attrs.autocorrect = this.autocorrect;
+      return attrs;
+    },
     numberInputProps() {
       const props = {};
       if (this.ariaDescribedby) props['aria-describedby'] = this.ariaDescribedby;

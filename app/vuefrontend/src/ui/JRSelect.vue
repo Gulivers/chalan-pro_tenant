@@ -12,6 +12,8 @@
     :filter="filter"
     :showClear="showClear"
     :inputId="inputId"
+    :ariaLabel="ariaLabel || undefined"
+    :ariaLabelledby="ariaLabelledby || undefined"
     :aria-describedby="ariaDescribedby || undefined"
     :aria-invalid="invalid ? 'true' : undefined"
     :aria-required="required ? 'true' : undefined"
@@ -33,6 +35,8 @@
     :filter="filter"
     :showClear="showClear"
     :inputId="inputId"
+    :ariaLabel="ariaLabel || undefined"
+    :ariaLabelledby="ariaLabelledby || undefined"
     :aria-describedby="ariaDescribedby || undefined"
     :aria-invalid="invalid ? 'true' : undefined"
     :aria-required="required ? 'true' : undefined"
@@ -92,6 +96,14 @@ export default {
     inputId: {
       type: String,
       default: undefined,
+    },
+    ariaLabel: {
+      type: String,
+      default: '',
+    },
+    ariaLabelledby: {
+      type: String,
+      default: '',
     },
     ariaDescribedby: {
       type: String,

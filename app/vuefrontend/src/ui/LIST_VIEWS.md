@@ -84,9 +84,9 @@ JRPage                          ← .jr-pilot, text-align left
 ```
 
 - Sin `.card` / `.card-modern` envolviendo la página.
-- Create en `#actions` del header, no en el toolbar. En teléfono: `:fluid="isMobile"`.
-- Toolbar en **columna hasta 1023px**; en desktop (`≥1024`) fila: search `max-width: 36rem`, stats, actions `margin-left: auto`.
-- Stats **no son filtros**. `pointer-events: none`. Total / Inactive = `secondary`. Active / conteo positivo de estado = `success`.
+- Create en `#actions` del header, no en el toolbar. En teléfono: título y `+ New` en la misma fila; no `fluid`.
+- Toolbar en **columna hasta 1023px**; en desktop (`≥1024`) fila: search `max-width: 36rem`, stats, actions `margin-left: auto`. En teléfono: search + menú de herramientas (Refresh / Bulk Excel) en una sola fila. Stats y page-size se ocultan; el pager sigue mostrando `{first}–{last} of {totalRecords}`.
+- Stats **no son filtros**. `pointer-events: none`. Total / Inactive = `secondary`. Active = `success` solo si el conteo es > 0; `0 Active` es `secondary`.
 
 ---
 
@@ -96,7 +96,7 @@ JRPage                          ← .jr-pilot, text-align left
 |---|---|---|
 | Crear (`+ New …`) | `JRButton` primary | `#2563eb` |
 | Refresh, Bulk, secundarios de toolbar | `ghost` `size="sm"` | muted / secondary text |
-| View | `JRRowActions` `severity: "success"` | fill `#16a34a` (texto de acción, no el 800 del badge) |
+| View | `JRRowActions` `severity: "success"` | texto `#166534` (`--color-jr-success-text`, ≥4.5:1). El fill `#16a34a` queda para botones sólidos / badges pastel. |
 | Edit | `severity: "primary"` | mismo azul que New |
 | Delete | `severity: "danger"` | `#dc2626` |
 
@@ -112,15 +112,16 @@ Iconos: familia `@primevue/icons` (Search, Refresh, Eye, Pencil, Trash). Duplica
 <JRBadge :value="item.is_active ? 'Active' : 'Inactive'"
          :severity="item.is_active ? 'success' : 'secondary'" />
 <JRBadge v-if="serialized" value="Serial" severity="info" />
-<JRBadge v-else value="Qty" severity="secondary" />
 ```
 
 | Severity | Cuándo |
 |---|---|
 | `success` | Active, estados OK |
 | `info` | Distinción operativa (Serial, tipo) — azul profundo, no cian Bootstrap |
-| `secondary` | Inactive, Total, Qty, vacío |
+| `secondary` | Inactive, Total, vacío |
 | `danger` / `warn` | Error / pendiente — misma receta pastel + texto 800 |
+
+En Products: **On hand** sustituye las columnas Tracking y Status. Serial solo aparece como badge junto al SKU si `tracking_mode === 'SERIALIZED'`. Active/Inactive siguen en los stats del toolbar (no son columna).
 
 No usar PrimeVue `Tag` ni Bootstrap `badge`.
 
@@ -155,9 +156,9 @@ Delete siempre confirma (flujo existente del proyecto). No borrar en un clic.
 
 | Viewport | Layout | Columnas típicas |
 |---|---|---|
-| Teléfono `<768` | Lista: thumb + nombre + meta · status + overflow | No tabla |
-| Tablet `768–1023` | Tabla corta | Name (+ SKU debajo), campos clave, Status, Actions compact |
-| Desktop `≥1024` | Catálogo denso | + columnas de oficina; Actions icono + label |
+| Teléfono `<768` | Lista: thumb + nombre + meta · on-hand + overflow | No tabla |
+| Tablet `768–1023` | Tabla corta | Name (+ SKU debajo), Category, Unit, On hand, Actions compact |
+| Desktop `≥1024` | Catálogo denso | + Brand, Reorder; Actions icono + label |
 
 Breakpoints canónicos:
 
@@ -168,7 +169,8 @@ const TABLET_MQ = "(min-width: 768px) and (max-width: 1023.98px)";
 
 - No mostrar Id ni SKU como columna si el SKU ya va bajo el nombre.
 - `tableMinWidth`: ~`36rem` tablet / ~`48rem` desktop. Scroll horizontal controlado, no 10 columnas aplastadas en tablet.
-- Thumb: control que abre galería / detalle visual. **No** es el View del registro.
+- Thumb: control que abre galería / detalle visual. **No** es el View del registro. En teléfono: 44×44 y el nombre se clampa a **dos líneas** (las medidas de pieza no pueden perderse en un ellipsis de una línea). Sin foto: placeholder con borde dashed (no una caja gris idéntica a un recorte). El nombre va primero en el tab order; el thumb se reordena visualmente a la izquierda.
+- Miniaturas de lista: `loading="lazy"` + `decoding="async"` + `width`/`height` fijos. El serializer `image` sigue devolviendo el archivo original; un derivado 80×80 es trabajo de backend (fuera de este incremento).
 
 ---
 
@@ -176,9 +178,9 @@ const TABLET_MQ = "(min-width: 768px) and (max-width: 1023.98px)";
 
 - Superficie blanca, borde 1px, radio panel, filas striped, hover muted.
 - Celdas: `0.875rem`, padding vertical `0.3rem`.
-- Números / reorder: `text-align: right` + `tabular-nums`.
+- Números / reorder / on-hand: `text-align: right` + `tabular-nums`. El `scoped` de la vista no pinta `th`/`td` de PrimeVue: usar `:deep(th.jr-col-num)`.
 - Lazy + sort del servidor: `page`, `per_page`, `search`, `ordering`. No reinventar el contrato del provider.
-- Empty: `JREmptyState` (copy). No meter acciones de recover en el empty salvo que el producto lo pida.
+- Empty: `JREmptyState`. Si hay búsqueda, la descripción cita el término y hay **Clear search**. Si falló la carga, **Refresh**. Sin búsqueda y sin error: “No products yet.”, sin acción inventada.
 
 Estilos de tabla que viven en PrimeVue (thead, td) van con `:deep` desde un wrapper de la vista (p. ej. `.jr-product-list__table`).
 
@@ -217,7 +219,7 @@ Bulk Excel, exports, imports: `JRButton` ghost → `JRDrawer` a la derecha.
 - Focus de campo (search, selects): una línea — borde primary. Sin outline offset.
 - Focus de chrome (icon-btn, pager, kebab): outline 2px `--color-jr-primary`.
 - Stats con `aria-live="polite"` si cambian con el fetch.
-- Thumb: `aria-label` honesto (`View images of {name}`), no fingir que abre el form. El clic abre `JRDialog` `size="wide"` con `ProductBrandImages`. Subir / primary: `add_product` o `change_product`. Borrar foto: solo `change_product` (+ `delete_productimage`). No `ProductImageGallery` Bootstrap.
+- Thumb: `aria-label` honesto (`View images of {name}`), no fingir que abre el form. El clic abre `JRDialog` `size="wide"` con `ProductBrandImages`. Ese modal es rectangular (`border-radius: 0`); el mismo radio aplica a todo `JRDialog` / `p-dialog`. Subir / primary: `add_product` o `change_product`. Borrar foto: solo `change_product` (+ `delete_productimage`). No `ProductImageGallery` Bootstrap.
 - `prefers-reduced-motion` ya está en el design system.
 
 ---
@@ -230,6 +232,7 @@ Bulk Excel, exports, imports: `JRButton` ghost → `JRDrawer` a la derecha.
 - Ghost / Refresh en azul primary (compiten con New).
 - Edit en cian `info`; Edit es primary.
 - `border-radius: 999px` en badges o pager.
+- Redondear `JRDialog` / `p-dialog` (referencia: overlay de imágenes de producto; `border-radius: 0`).
 - Tailwind Preflight, `.jr-pilot` en Navbar/Footer, o migrar el shell en este incremento.
 - Cambiar Django / contratos API para “quedar bonito”.
 
@@ -241,7 +244,7 @@ Bulk Excel, exports, imports: `JRButton` ghost → `JRDrawer` a la derecha.
 2. Create en el header; search + stats + Refresh en el toolbar.
 3. Tres breakpoints (lista / tabla corta / tabla densa).
 4. Badges Light Background con tokens JR.
-5. View verde acción, Edit azul New, Delete danger; cada una **icono + label**.
+5. View verde `#166534`, Edit azul New, Delete danger; cada una **icono + label**.
 6. Actions header centrado vía `:deep`.
 7. Pager móvil a todo el ancho, 44px.
 8. Cero clases Bootstrap en la vista y en paneles que abra.

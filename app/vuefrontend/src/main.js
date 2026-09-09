@@ -175,7 +175,7 @@ app.use(PrimeVue, {
     preset: JobRhythmPreset,
     options: {
       darkModeSelector: "none",
-      cssLayer: { name: "primevue", order: "theme, base, primevue, utilities" },
+      cssLayer: { name: "primevue", order: "theme, base, primevue, components, utilities" },
     },
   },
 });

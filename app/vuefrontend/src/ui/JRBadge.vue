@@ -1,5 +1,5 @@
 <template>
-  <Badge class="jr-badge" :value="value" :severity="severity">
+  <Badge class="jr-badge" :value="value" :severity="primeSeverity">
     <slot />
   </Badge>
 </template>
@@ -18,7 +18,13 @@ export default {
     severity: {
       type: String,
       default: 'secondary',
-      validator: (value) => ['success', 'secondary', 'info', 'danger'].includes(value),
+      validator: (value) =>
+        ['success', 'secondary', 'info', 'danger', 'warn', 'warning'].includes(value),
+    },
+  },
+  computed: {
+    primeSeverity() {
+      return this.severity === 'warning' ? 'warn' : this.severity;
     },
   },
 };

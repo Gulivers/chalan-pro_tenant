@@ -10,7 +10,7 @@
   Preflight is intentionally omitted — it would reset Bootstrap globally.
 */
 
-@layer theme, base, components, utilities;
+@layer theme, base, primevue, components, utilities;
 
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss-primeui";
@@ -112,14 +112,7 @@
     margin-bottom: 0.75rem;
   }
 
-  .jr-pilot .jr-page-header__title {
-    margin: 0;
-    font-size: 1.3125rem;
-    font-weight: 600;
-    line-height: 1.25;
-    color: var(--color-jr-text);
-    text-align: left;
-  }
+  /* Title type is unlayered — see "Bootstrap unlayered selectors" below. */
 
   .jr-pilot .jr-page-header__desc {
     margin: 0.35rem 0 0;
@@ -165,13 +158,7 @@
     border-bottom: 1px solid var(--color-jr-border);
   }
 
-  .jr-pilot .jr-section__title {
-    margin: 0;
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--color-jr-text);
-    text-align: left;
-  }
+  /* Section title type is unlayered — see "Bootstrap unlayered selectors" below. */
 
   .jr-pilot .jr-field {
     display: flex;
@@ -322,6 +309,14 @@
     cursor: not-allowed;
   }
 
+  .jr-pilot .p-button.jr-button {
+    min-height: 2.75rem;
+  }
+
+  .jr-pilot .p-button-fluid {
+    width: 100%;
+  }
+
   .jr-pilot .jr-row-actions {
     display: inline-flex;
     align-items: center;
@@ -348,9 +343,9 @@
   .jr-pilot .jr-row-actions__btn.p-button-text.p-button-success .p-button-label,
   .jr-pilot .jr-row-actions__btn.p-button-text.p-button-success .p-button-icon,
   .jr-pilot .jr-row-actions__btn.p-button-text.p-button-success svg {
-    --p-button-text-success-color: var(--color-jr-success);
-    --p-button-text-success-hover-color: var(--color-jr-success);
-    color: var(--color-jr-success);
+    --p-button-text-success-color: var(--color-jr-success-text);
+    --p-button-text-success-hover-color: var(--color-jr-success-text);
+    color: var(--color-jr-success-text);
   }
 
   .jr-pilot .jr-row-actions__btn.p-button-text.p-button-success:hover:not(:disabled) {
@@ -518,6 +513,10 @@
     .jr-pilot .jr-icon-btn {
       width: 2.5rem;
       min-width: 2.5rem;
+      min-height: 2.5rem;
+    }
+
+    .jr-pilot .p-button.jr-button {
       min-height: 2.5rem;
     }
   }
@@ -712,11 +711,19 @@
   }
 
   .p-drawer.jr-pilot .jr-drawer__close.p-button {
-    width: 2.25rem;
-    min-width: 2.25rem;
-    min-height: 2.25rem;
+    width: 2.75rem;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
     padding: 0;
     color: var(--color-jr-muted);
+  }
+
+  @media (min-width: 768px) {
+    .p-drawer.jr-pilot .jr-drawer__close.p-button {
+      width: 2.25rem;
+      min-width: 2.25rem;
+      min-height: 2.25rem;
+    }
   }
 
   .p-drawer.jr-pilot .jr-drawer__close.p-button:hover {
@@ -817,6 +824,51 @@
   }
 }
 
+/*
+  Bootstrap unlayered selectors.
+
+  Bootstrap ships `h1`–`h6` and `a` outside any cascade layer. Layered JR
+  rules lose to those element selectors no matter how specific they are.
+  Keep heading type and overlay link decoration here so the pilot wins.
+*/
+.jr-pilot h1,
+.jr-pilot h2,
+.jr-pilot h3,
+.jr-pilot h4,
+.jr-pilot h5,
+.jr-pilot h6 {
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+.jr-pilot .jr-page-header__title {
+  margin: 0;
+  font-size: 1.3125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-jr-text);
+  text-align: left;
+}
+
+.jr-pilot .jr-section__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-jr-text);
+  text-align: left;
+}
+
+.jr-overlay a,
+.p-menu.jr-overlay a,
+.p-menu.jr-row-menu a,
+.p-menu.jr-overlay .p-menu-item-link,
+.p-menu.jr-overlay .p-menuitem-link,
+.p-menu.jr-row-menu .p-menu-item-link {
+  text-decoration: none;
+}
+
 .p-dialog.jr-dialog {
   --p-dialog-border-radius: var(--radius-jr-control);
   width: min(28rem, calc(100vw - 2rem));
@@ -859,11 +911,19 @@
 }
 
 .p-dialog.jr-dialog .jr-dialog__close.p-button {
-  width: 2.25rem;
-  min-width: 2.25rem;
-  min-height: 2.25rem;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   padding: 0;
   color: var(--color-jr-muted);
+}
+
+@media (min-width: 768px) {
+  .p-dialog.jr-dialog .jr-dialog__close.p-button {
+    width: 2.25rem;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+  }
 }
 
 .p-dialog.jr-dialog .jr-dialog__close.p-button:hover {
@@ -943,7 +1003,7 @@
 .p-menu.jr-row-menu .jr-row-actions__item--success .p-menu-item-link,
 .p-menu.jr-row-menu .jr-row-actions__item--success .p-menu-item-icon,
 .p-menu.jr-row-menu .jr-row-actions__item--success .p-menu-item-label {
-  color: var(--color-jr-success);
+  color: var(--color-jr-success-text);
 }
 
 .p-menu.jr-row-menu .p-menu-item[data-focused="true"],

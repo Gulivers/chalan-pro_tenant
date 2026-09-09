@@ -1,101 +1,67 @@
 <template>
-  <div class="container-fluid">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between my-2">
-      <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
-    </div>
+  <JRPage>
+    <JRPageHeader title="Dashboard" />
 
-    <!-- Content Row -->
-    <div class="row">
-      <!-- Area Chart -->
-      <div class="col-xl-12 col-lg-12">
-        <div class="card shadow mb-4">
-          <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
-              Weekly Contract Totals
-            </h6>
-          </div>
-          <div class="card-body">
-            <div class="chart-area">
-              <AreaChart />
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Bar Chart -->
-      <div class="col-xl-12 col-lg-12">
-        <div class="card shadow mb-4">
-          <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
-              Monthly Contract Totals
-            </h6>
-          </div>
-          <div class="card-body">
-            <div class="chart-bar">
-              <BarChart />
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Bar Supervisor Chart -->
-      <div
-        v-if="this.hasPermission('apptransactions.add_workaccount')"
-        class="col-xl-12 col-lg-12">
-        <div class="card shadow mb-4">
-          <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
-              Weekly Supervisor Stats
-            </h6>
-          </div>
-          <div class="card-body">
-            <div class="chart-bar">
-              <WeeklySupervisorChart />
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Sales vs Purchases Comparison -->
-      <div
-        v-if="this.hasPermission('apptransactions.add_document')"
-        class="col-xl-12 col-lg-12">
-        <div class="card shadow mb-4">
-          <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
-              Sales vs Purchases (Last 12 Months)
-            </h6>
-          </div>
-          <div class="card-body">
-            <CustomersSuppliersComparison
-              :comparison-data="comparisonData"
-              :loading="loadingComparison"
-              @refresh="loadComparison" />
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+    <p class="jr-dash-intro">
+      Morning console — contract pace, crew load, and sales vs purchases at a glance.
+    </p>
+
+    <JRSection title="Weekly Contract Totals">
+      <AreaChart />
+    </JRSection>
+
+    <JRSection title="Monthly Contract Totals">
+      <BarChart />
+    </JRSection>
+
+    <JRSection
+      v-if="hasPermission('apptransactions.add_workaccount')"
+      title="Weekly Supervisor Stats"
+    >
+      <WeeklySupervisorChart />
+    </JRSection>
+
+    <!-- Title lives inside CustomersSuppliersComparison (shared with Inventory). -->
+    <JRSection v-if="hasPermission('apptransactions.add_document')">
+      <CustomersSuppliersComparison
+        :comparison-data="comparisonData"
+        :loading="loadingComparison"
+        @refresh="loadComparison"
+      />
+    </JRSection>
+  </JRPage>
 </template>
 
 <script>
 import { defineComponent } from "vue";
+import axios from "axios";
+import { JRPage, JRPageHeader, JRSection } from "@ui";
 import AreaChart from "@components/contracts/AreaChart.vue";
 import BarChart from "@components/contracts/BarChart.vue";
 import WeeklySupervisorChart from "@components/schedule/WeeklySupervisorChart.vue";
 import CustomersSuppliersComparison from "@components/inventory/dashboard/components/CustomersSuppliersComparison.vue";
 
-import axios from "axios";
-
 export default defineComponent({
   name: "HomeView",
   components: {
+    JRPage,
+    JRPageHeader,
+    JRSection,
     AreaChart,
     BarChart,
     WeeklySupervisorChart,
     CustomersSuppliersComparison,
   },
 
+  data() {
+    return {
+      comparisonData: [],
+      loadingComparison: false,
+    };
+  },
+
   mounted() {
-    // Llamada a logUserAction solo una vez después de que el usuario haya iniciado sesión y esté en el Home
+    // Log once after login when the user lands on Home
     this.checkUserIdentity().then((userId) => {
       if (userId) {
         this.logUserAction(
@@ -108,14 +74,13 @@ export default defineComponent({
     });
     this.loadComparison();
   },
+
   methods: {
-    // Llamada para obtener la identidad del usuario autenticado
     async checkUserIdentity() {
       const user = await this.getAuthenticatedUser();
-      return user ? user.id : null; // Retorna el ID del usuario o null
+      return user ? user.id : null;
     },
 
-    // Método para registrar la acción del usuario
     logUserAction(action, model_name, object_id, details) {
       const token = localStorage.getItem("authToken");
       if (token) {
@@ -161,47 +126,13 @@ export default defineComponent({
       }
     },
   },
-  data() {
-    return {
-      comparisonData: [],
-      loadingComparison: false,
-    };
-  },
 });
 </script>
 
 <style scoped>
-.chart-area {
-  height: 380px;
-}
-
-@media (max-width: 768px) {
-  .chart-area {
-    height: 300px;
-  }
-}
-
-.chart-container {
-  position: relative;
-  width: 100%;
-  height: 400px;
-  overflow: hidden;
-}
-
-canvas {
-  width: 100% !important;
-  height: 100% !important;
-  max-height: 360px;
-}
-
-/* Móvil: Ajustar mejor en pantallas pequeñas */
-@media (max-width: 768px) {
-  .chart-container {
-    height: 300px; /* Más compacto */
-  }
-
-  canvas {
-    max-height: 280px;
-  }
+.jr-dash-intro {
+  margin: -0.35rem 0 1.1rem;
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted);
 }
 </style>

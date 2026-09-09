@@ -4,30 +4,24 @@
     :visible="visible"
     :header="header"
     modal
+    closable
     :dismissableMask="true"
+    :blockScroll="true"
+    :closeButtonProps="closeButtonProps"
     @update:visible="$emit('update:visible', $event)"
   >
-    <template #closebutton="{ closeCallback }">
-      <Button
-        type="button"
-        class="jr-dialog__close"
-        :class="{ 'jr-dialog__close--danger': isDanger }"
-        text
-        rounded
-        aria-label="Close"
-        @click="closeCallback">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          aria-hidden="true"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.7"
-          stroke-linecap="round">
-          <path d="M4 4l8 8M12 4l-8 8" />
-        </svg>
-      </Button>
+    <template #closeicon>
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        aria-hidden="true"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.7"
+        stroke-linecap="round">
+        <path d="M4 4l8 8M12 4l-8 8" />
+      </svg>
     </template>
     <p v-if="message" class="jr-dialog__message">{{ message }}</p>
     <slot />
@@ -45,13 +39,12 @@
 </template>
 
 <script>
-import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import JRButton from './JRButton.vue';
 
 export default {
   name: 'JRDialog',
-  components: { Button, Dialog, JRButton },
+  components: { Dialog, JRButton },
   computed: {
     isDanger() {
       return this.confirmVariant === 'danger';
@@ -63,6 +56,19 @@ export default {
         this.size === 'wide' ? 'jr-dialog--wide' : '',
         this.isDanger ? 'jr-dialog--danger' : '',
       ].filter(Boolean);
+    },
+    closeButtonProps() {
+      return {
+        type: 'button',
+        class: [
+          'jr-dialog__close',
+          this.isDanger ? 'jr-dialog__close--danger' : '',
+        ],
+        severity: 'secondary',
+        text: true,
+        rounded: false,
+        'aria-label': 'Close',
+      };
     },
   },
   props: {

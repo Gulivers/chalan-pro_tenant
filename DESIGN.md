@@ -350,7 +350,7 @@ Page titles are **left-aligned** and must not use the incumbent centered `2rem` 
 Restrained. Not the incumbent `1.25rem` mega-cards.
 
 - Controls (inputs, selects, dropdown panels, buttons, badges): `0` — rectangular, no corner rounding
-- Dialogs (`p-dialog` / `JRDialog`): `0` — same rectangular overlay as controls
+- Dialogs (`JRDialog` / PrimeVue `p-dialog`): `0` — rectangular, no corner rounding. Canonical: product images overlay (`ProductBrandImages` in `JRDialog`, and the same dialog on Product List). Header, content and footer stay square too (`--p-dialog-border-radius: 0`). Do not use `--radius-jr-panel` (`0.75rem`) on dialogs.
 - Panels / tables / drawers: `0.75rem`
 
 ## Elevation (Pilot)
@@ -363,6 +363,8 @@ Prefer a 1px `#e5e7eb` border. Shadow only for overlays (drawer, dialog, select 
 - Tailwind utilities are nested under `.jr-pilot` (equivalent of selector `important`) so classes such as `p-4` do not override Bootstrap `p-4` outside migrated screens. Tailwind v4 cannot use `@import ".../utilities.css" important(.jr-pilot)` — that is parsed as a media query and emits invalid CSS.
 - Import `jr-design-system.css` after `skin-modern.css`.
 - PrimeVue styled mode uses the JobRhythm Aura preset; dark mode is disabled (`darkModeSelector: 'none'`).
+- Cascade layer order is pinned in one place: `theme, base, primevue, components, utilities` (`jr-design-system.css` and PrimeVue `cssLayer.order`). JR component rules therefore win over PrimeVue; Tailwind utilities win last. Do not declare a second `@layer` list that omits `components` or `primevue`.
+- Bootstrap `h1`–`h6` and `a` are unlayered. Pilot heading type (`.jr-page-header__title`, `.jr-section__title`) and overlay menu `text-decoration` live **outside** `@layer components` so they can beat those element selectors. Do not move them back into the layer.
 - PrimeVue overlays (drawer, select, datepicker) portal to `body`. Put `.jr-pilot` on overlay roots when Tailwind utilities must apply inside them.
 - Do not wrap non-pilot pages in `.jr-pilot`.
 
@@ -415,6 +417,7 @@ Desktop (≥1024px): Identity / Classification / Inventory-style sections use **
 - **Do** put operational field help under the control (`JRField` hint + `aria-describedby`), not in a hover-only tooltip.
 - **Do** use PrimeVue `Message` (info, not closable) for a consequence that appears after a choice.
 - **Do** keep form fields and select/datepicker overlays rectangular (`--radius-jr-control: 0`).
+- **Do** keep `JRDialog` / `p-dialog` rectangular (`border-radius: 0`), like the product images dialog.
 - **Do** use a single primary border for field focus — never a double ring.
 - **Do** use `JRButton` (`p-button p-component jr-button`) in forms, drawers and dialogs; Delete is filled danger, label-only. `JRRowActions` in a drawer is the same solid treatment, no icons.
 
@@ -427,5 +430,6 @@ Desktop (≥1024px): Identity / Classification / Inventory-style sections use **
 - **Don't** hint every field or duplicate the same sentence in hint and tooltip.
 - **Don't** teach a commercial or stock rule only with `JRTooltip` / `(i)`.
 - **Don't** round JR inputs, selects, or dropdown panels.
+- **Don't** round `JRDialog` / `p-dialog` (header, content, or footer). Canonical: product images overlay. Never apply `--radius-jr-panel` to dialogs.
 - **Don't** stack outline + border (or a focus shadow) on the same field.
 - **Don't** use ghost icon+label `JRRowActions` inside a drawer, or a text-link Delete.
