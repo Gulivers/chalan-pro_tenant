@@ -1,386 +1,383 @@
 <template>
-  <TxCard class="shadow-sm mt-0">
-    <!-- Header del card -->
-    <template #header>
-      <div
-        class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-2">
-        <h5 class="text-primary mb-0 fw-semibold listview-title">
-          Serialized Items
-        </h5>
-        <div class="d-flex gap-2">
-          <router-link
-            v-if="
-              features.showNewSerializedItemButton &&
-              hasPermission('appinventory.add_serializeditem')
-            "
-            to="/serialized-items/form"
-            class="btn btn-success btn-sm">
-            + New Serialized Item
-          </router-link>
-        </div>
-      </div>
-    </template>
+  <JRPage>
+    <JRPageHeader title="Serialized Items">
+      <template
+        v-if="
+          features.showNewSerializedItemButton &&
+          hasPermission('appinventory.add_serializeditem')
+        "
+        #actions>
+        <JRButton type="button" :fluid="isMobile" @click="goToCreateForm">
+          + New Serialized Item
+        </JRButton>
+      </template>
+    </JRPageHeader>
 
-    <div class="card-body">
-      <!-- Toolbar: stats + refresh -->
-      <div
-        class="listview-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
-        <span class="badge bg-primary stats-badge">{{ totalRows }} Total</span>
-        <span
-          class="listview-toolbar-divider d-none d-sm-inline"
-          aria-hidden="true"></span>
-        <button
+    <JRToolbar>
+      <template #start>
+        <div class="jr-serialized-list__search">
+          <label class="jr-sr-only" for="serialized-filter-input">
+            Search serialized items
+          </label>
+          <span class="jr-serialized-list__search-icon" aria-hidden="true">
+            <SearchIcon />
+          </span>
+          <JRInput
+            inputId="serialized-filter-input"
+            v-model="filter"
+            type="search"
+            placeholder="Search by serial, product, warehouse, crew, notes…" />
+        </div>
+      </template>
+
+      <template #stats>
+        <div class="jr-serialized-list__summary" aria-live="polite">
+          <JRBadge :value="`${totalRows} Total`" severity="secondary" />
+        </div>
+      </template>
+
+      <template #actions>
+        <label class="jr-sr-only" for="serialized-per-page">
+          Entries per page
+        </label>
+        <JRSelect
+          class="jr-serialized-list__entries"
+          inputId="serialized-per-page"
+          v-model="perPage"
+          :options="pageOptions"
+          optionLabel="label"
+          optionValue="value" />
+        <JRButton
           type="button"
-          class="btn btn-outline-success btn-sm listview-refresh-btn"
+          variant="ghost"
+          size="sm"
+          class="jr-serialized-list__refresh"
           @click="refreshTable">
-          Refresh List
-        </button>
-      </div>
+          <RefreshIcon />
+          Refresh
+        </JRButton>
+      </template>
+    </JRToolbar>
 
-      <!-- Filters: entries per page + search -->
-      <div class="listview-filters row g-2 g-md-3 mb-3 align-items-end">
-        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-          <BFormGroup
-            label="Entries per page:"
-            label-for="per-page-select"
-            label-size="sm"
-            class="small mb-0 listview-filter-group">
-            <BFormSelect
-              id="per-page-select"
-              v-model="perPage"
-              :options="pageOptions"
-              size="sm"
-              class="form-select form-select-sm" />
-          </BFormGroup>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-5 col-xl-4 ms-lg-auto">
-          <BFormGroup
-            label="Search:"
-            label-for="filter-input"
-            label-size="sm"
-            class="mb-0 listview-filter-group">
-            <BFormInput
-              id="filter-input"
-              v-model="filter"
-              type="search"
-              placeholder="Search by serial number, product, warehouse, crew, notes..."
-              size="sm"
-              class="form-control form-control-sm" />
-          </BFormGroup>
-        </div>
-      </div>
-
-      <!-- Tabla con overlay -->
-      <BOverlay :show="loading" rounded="sm" opacity="0.85" variant="light">
-        <template #overlay>
-          <div class="text-center">
-            <BSpinner type="border" variant="secondary" class="mb-3" />
-            <div class="h5 text-primary">Loading Serialized Items...</div>
-            <div class="text-muted">Please wait while we fetch the data</div>
+    <div v-if="isMobile" class="jr-serialized-list__mobile">
+      <JREmptyState
+        v-if="!items.length && !isLoading"
+        :title="emptyTitle"
+        :description="emptyDescription" />
+      <p v-if="isLoading && !items.length" class="jr-serialized-list__loading">
+        Loading serialized items…
+      </p>
+      <p
+        v-else-if="isLoading && items.length"
+        class="jr-serialized-list__loading"
+        aria-live="polite">
+        Updating…
+      </p>
+      <ul
+        v-if="items.length"
+        class="jr-serialized-list__rows"
+        :aria-busy="isLoading ? 'true' : 'false'">
+        <li v-for="item in items" :key="item.id" class="jr-serialized-row">
+          <div class="jr-serialized-row__main">
+            <router-link
+              v-if="canView"
+              class="jr-serialized-row__name jr-serialized-row__name--link"
+              :to="viewTo(item.id)"
+              :aria-label="`View ${primaryLabel(item)}`">
+              {{ primaryLabel(item) }}
+            </router-link>
+            <span v-else class="jr-serialized-row__name">
+              {{ primaryLabel(item) }}
+            </span>
+            <p class="jr-serialized-row__meta">
+              <span>{{ item.product_name || "—" }}</span>
+              <span v-if="item.current_warehouse_name" aria-hidden="true">·</span>
+              <span v-if="item.current_warehouse_name">
+                {{ item.current_warehouse_name }}
+              </span>
+            </p>
           </div>
-        </template>
-
-        <BTable
-          ref="serializedItemTable"
-          :provider="provider"
-          :fields="fields"
-          :filter="filter"
-          :per-page="perPage"
-          :current-page="currentPage"
-          no-provider-sorting
-          bordered
-          hover
-          responsive
-          striped
-          class="table-bordered">
-          <template #cell(id)="row">
-            <strong>{{ row.item.id }}</strong>
-          </template>
-
-          <template #cell(asset_tag)="row">
-            {{ row.item.asset_tag || "—" }}
-          </template>
-
-          <template #cell(product_name)="row">
-            {{ row.item.product_name || "—" }}
-          </template>
-
-          <template #cell(status)="row">
-            <span
-              v-if="row.item.status"
-              class="badge"
-              :class="statusBadgeClass(row.item.status)"
-              style="font-size: 0.75rem">
-              {{ row.item.status }}
-            </span>
-            <span v-else>—</span>
-          </template>
-
-          <template #cell(condition)="row">
-            <span
-              v-if="conditionBadgeClass(row.item.condition)"
-              class="badge"
-              :class="conditionBadgeClass(row.item.condition)"
-              style="font-size: 0.75rem">
-              {{ conditionLabel(row.item.condition) }}
-            </span>
-            <span v-else>—</span>
-          </template>
-
-          <template #cell(current_warehouse_name)="row">
-            {{ row.item.current_warehouse_name || "—" }}
-          </template>
-
-          <template #cell(warehouse_crew_name)="row">
-            {{ row.item.warehouse_crew_name || "—" }}
-          </template>
-
-          <template #cell(purchase_date)="row">
-            {{ formatDate(row.item.purchase_date) }}
-          </template>
-
-          <template #cell(document_id)="row">
-            {{ row.item.document_id || "—" }}
-          </template>
-
-          <template #cell(created_at)="row">
-            {{ formatDateTime(row.item.created_at) }}
-          </template>
-
-          <template #cell(actions)="row">
-            <div class="btn-group btn-group-sm" role="group">
-              <router-link
-                v-if="hasPermission('appinventory.view_serializeditem')"
-                :to="`/serialized-items/view/${row.item.id}`"
-                class="btn btn-outline-success me-1">
-                View
-              </router-link>
-              <router-link
-                v-if="hasPermission('appinventory.change_serializeditem')"
-                :to="`/serialized-items/edit/${row.item.id}`"
-                class="btn btn-outline-primary me-1">
-                Edit
-              </router-link>
-              <button
-                v-if="hasPermission('appinventory.delete_serializeditem')"
-                class="btn btn-outline-danger"
-                @click="deleteItem(row.item.id)">
-                Delete
-              </button>
-            </div>
-          </template>
-        </BTable>
-      </BOverlay>
-
-      <!-- Paginación -->
-      <div class="d-flex justify-content-end mt-3">
-        <BPagination
-          v-model="currentPage"
-          :total-rows="totalRows"
-          :per-page="perPage"
-          @update:model-value="onPageChange" />
-      </div>
+          <div class="jr-serialized-row__aside">
+            <JRBadge
+              v-if="item.status"
+              :value="item.status"
+              :severity="statusSeverity(item.status)" />
+            <JRBadge
+              v-if="conditionLabel(item.condition) !== '—'"
+              :value="conditionLabel(item.condition)"
+              :severity="conditionSeverity(item.condition)" />
+            <JRRowActions
+              v-if="hasRowActions"
+              :actions="getRowActions(item)"
+              :compact="true"
+              :entity-label="primaryLabel(item)" />
+          </div>
+        </li>
+      </ul>
+      <Paginator
+        v-if="totalRows > 0"
+        class="jr-serialized-list__pager"
+        :rows="perPage"
+        :totalRecords="totalRows"
+        :first="tableFirst"
+        template="PrevPageLink CurrentPageReport NextPageLink"
+        currentPageReportTemplate="{first}–{last} of {totalRecords}"
+        @page="onTablePage" />
     </div>
-  </TxCard>
+
+    <div v-else class="jr-serialized-list__table">
+      <JRDataTable
+        :value="items"
+        :loading="isLoading"
+        dataKey="id"
+        lazy
+        paginator
+        :rows="perPage"
+        :totalRecords="totalRows"
+        :first="tableFirst"
+        :sortField="sortField"
+        :sortOrder="sortOrder"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+        currentPageReportTemplate="{first}–{last} of {totalRecords}"
+        scrollable
+        stripedRows
+        :tableStyle="tableMinWidth"
+        :emptyTitle="emptyTitle"
+        :emptyDescription="emptyDescription"
+        @page="onTablePage"
+        @sort="onTableSort">
+        <Column field="asset_tag" header="Serial Number" sortable>
+          <template #body="{ data }">
+            <router-link
+              v-if="canView"
+              class="jr-serialized-row__name jr-serialized-row__name--link"
+              :to="viewTo(data.id)"
+              :aria-label="`View ${primaryLabel(data)}`">
+              {{ primaryLabel(data) }}
+            </router-link>
+            <span v-else>{{ primaryLabel(data) }}</span>
+          </template>
+        </Column>
+        <Column field="product_name" header="Product" sortable>
+          <template #body="{ data }">
+            {{ data.product_name || "—" }}
+          </template>
+        </Column>
+        <Column field="status" header="Status" sortable>
+          <template #body="{ data }">
+            <JRBadge
+              v-if="data.status"
+              :value="data.status"
+              :severity="statusSeverity(data.status)" />
+            <span v-else>—</span>
+          </template>
+        </Column>
+        <Column field="condition" header="Condition" sortable>
+          <template #body="{ data }">
+            <JRBadge
+              v-if="conditionLabel(data.condition) !== '—'"
+              :value="conditionLabel(data.condition)"
+              :severity="conditionSeverity(data.condition)" />
+            <span v-else>—</span>
+          </template>
+        </Column>
+        <Column field="current_warehouse_name" header="Warehouse" :sortable="false">
+          <template #body="{ data }">
+            {{ data.current_warehouse_name || "—" }}
+          </template>
+        </Column>
+        <Column
+          v-if="!isTablet"
+          field="warehouse_crew_name"
+          header="Crew"
+          :sortable="false">
+          <template #body="{ data }">
+            {{ data.warehouse_crew_name || "—" }}
+          </template>
+        </Column>
+        <Column
+          v-if="!isTablet"
+          field="purchase_date"
+          header="Purchase Date"
+          sortable>
+          <template #body="{ data }">
+            {{ formatDate(data.purchase_date) }}
+          </template>
+        </Column>
+        <Column
+          v-if="!isTablet"
+          field="document_id"
+          header="Document"
+          :sortable="false">
+          <template #body="{ data }">
+            {{ data.document_id || "—" }}
+          </template>
+        </Column>
+        <Column v-if="!isTablet" field="created_at" header="Created" sortable>
+          <template #body="{ data }">
+            {{ formatDateTime(data.created_at) }}
+          </template>
+        </Column>
+        <Column
+          v-if="hasRowActions"
+          header="Actions"
+          :sortable="false"
+          :headerClass="
+            isTablet
+              ? 'jr-col-actions jr-col-actions--compact'
+              : 'jr-col-actions'
+          "
+          :bodyClass="
+            isTablet
+              ? 'jr-col-actions jr-col-actions--compact'
+              : 'jr-col-actions'
+          ">
+          <template #body="{ data }">
+            <JRRowActions
+              :actions="getRowActions(data)"
+              :compact="isTablet"
+              :entity-label="primaryLabel(data)" />
+          </template>
+        </Column>
+      </JRDataTable>
+    </div>
+  </JRPage>
 </template>
 
 <script>
-import TxCard from "@/components/layout/TxCard.vue";
-import "@/assets/css/base.css";
-import { features } from "@/config/features";
-
-import { ref, getCurrentInstance } from "vue";
 import axios from "axios";
 import {
-  BTable,
-  BFormGroup,
-  BFormInput,
-  BFormSelect,
-  BPagination,
-  BOverlay,
-  BSpinner,
-} from "bootstrap-vue-next";
+  ref,
+  computed,
+  watch,
+  onMounted,
+  onUnmounted,
+  getCurrentInstance,
+} from "vue";
+import { useRouter } from "vue-router";
+import Column from "primevue/column";
+import Paginator from "primevue/paginator";
+import EyeIcon from "@primevue/icons/eye";
+import PencilIcon from "@primevue/icons/pencil";
+import RefreshIcon from "@primevue/icons/refresh";
+import SearchIcon from "@primevue/icons/search";
+import TrashIcon from "@primevue/icons/trash";
+import { features } from "@/config/features";
+import {
+  JRPage,
+  JRPageHeader,
+  JRToolbar,
+  JRButton,
+  JRSelect,
+  JRInput,
+  JRBadge,
+  JRDataTable,
+  JREmptyState,
+  JRRowActions,
+} from "@ui";
 
 const ENDPOINT = "/api/serialized-items-provider/";
+const PHONE_MQ = "(max-width: 767.98px)";
+const TABLET_MQ = "(min-width: 768px) and (max-width: 1023.98px)";
+
+function readViewport() {
+  if (typeof window === "undefined" || !window.matchMedia) {
+    return { isMobile: false, isTablet: false };
+  }
+  return {
+    isMobile: window.matchMedia(PHONE_MQ).matches,
+    isTablet: window.matchMedia(TABLET_MQ).matches,
+  };
+}
 
 export default {
   name: "SerializedItemListView",
   components: {
-    TxCard,
-    BTable,
-    BFormGroup,
-    BFormInput,
-    BFormSelect,
-    BPagination,
-    BOverlay,
-    BSpinner,
+    Column,
+    Paginator,
+    RefreshIcon,
+    SearchIcon,
+    JRPage,
+    JRPageHeader,
+    JRToolbar,
+    JRButton,
+    JRSelect,
+    JRInput,
+    JRBadge,
+    JRDataTable,
+    JREmptyState,
+    JRRowActions,
   },
 
   setup() {
+    const router = useRouter();
     const { proxy } = getCurrentInstance();
 
-    const loading = ref(true);
+    const items = ref([]);
+    const isLoading = ref(true);
+    const loadError = ref(false);
     const filter = ref("");
     const perPage = ref(25);
     const currentPage = ref(1);
     const totalRows = ref(0);
-    const serializedItemTable = ref(null);
+    const sortField = ref("id");
+    const sortOrder = ref(-1);
+    let searchTimer = null;
+
+    const initialViewport = readViewport();
+    const isMobile = ref(initialViewport.isMobile);
+    const isTablet = ref(initialViewport.isTablet);
+    let phoneQuery = null;
+    let tabletQuery = null;
+    let onViewport = null;
 
     const pageOptions = [
-      { value: 10, text: "10" },
-      { value: 25, text: "25" },
-      { value: 50, text: "50" },
-      { value: 100, text: "100" },
+      { value: 10, label: "10" },
+      { value: 25, label: "25" },
+      { value: 50, label: "50" },
+      { value: 100, label: "100" },
     ];
 
-    const fields = [
-      {
-        key: "id",
-        label: "ID",
-        sortable: true,
-        thClass: "text-center",
-        tdClass: "text-center",
-      },
-      {
-        key: "asset_tag",
-        label: "Serial Number",
-        sortable: true,
-        thClass: "text-start",
-        tdClass: "text-start",
-      },
-      {
-        key: "product_name",
-        label: "Product",
-        sortable: true,
-        thClass: "text-start",
-        tdClass: "text-start",
-      },
-      {
-        key: "status",
-        label: "Status",
-        sortable: true,
-        thClass: "text-center",
-        tdClass: "text-center",
-      },
-      {
-        key: "condition",
-        label: "Condition",
-        sortable: true,
-        thClass: "text-center",
-        tdClass: "text-center",
-      },
-      {
-        key: "current_warehouse_name",
-        label: "Current Warehouse",
-        sortable: true,
-        thClass: "text-start",
-        tdClass: "text-start",
-      },
-      {
-        key: "warehouse_crew_name",
-        label: "Crew",
-        sortable: true,
-        thClass: "text-start",
-        tdClass: "text-start",
-      },
-      {
-        key: "purchase_date",
-        label: "Purchase Date",
-        sortable: true,
-        thClass: "text-center",
-        tdClass: "text-center",
-      },
-      {
-        key: "document_id",
-        label: "Document ID",
-        sortable: true,
-        thClass: "text-center",
-        tdClass: "text-center",
-      },
-      {
-        key: "created_at",
-        label: "Created At",
-        sortable: true,
-        thClass: "text-center",
-        tdClass: "text-center",
-      },
-      {
-        key: "actions",
-        label: "Actions",
-        sortable: false,
-        thClass: "text-center",
-        tdClass: "text-center",
-        thStyle: { width: "12%", whiteSpace: "nowrap" },
-        tdStyle: { whiteSpace: "nowrap" },
-      },
-    ];
+    const tableFirst = computed(() => (currentPage.value - 1) * perPage.value);
+    const tableMinWidth = computed(() =>
+      isTablet.value ? "min-width: 40rem" : "min-width: 56rem"
+    );
+    const emptyTitle = computed(() =>
+      loadError.value ? "Could not load serialized items" : "No serialized items"
+    );
+    const emptyDescription = computed(() =>
+      loadError.value
+        ? "Try Refresh."
+        : "No serialized items match the current search."
+    );
 
-    const getOrderingFromSortBy = (sortBy) => {
-      if (!sortBy) return "-id";
-      const field = Object.keys(sortBy)[0];
-      const desc = sortBy[field] === "desc";
-      return desc ? `-${field}` : field;
-    };
+    const canView = computed(() =>
+      !!proxy?.hasPermission?.("appinventory.view_serializeditem")
+    );
 
-    const provider = async (context) => {
-      try {
-        if (!loading.value) loading.value = true;
+    const hasRowActions = computed(
+      () =>
+        canView.value ||
+        !!proxy?.hasPermission?.("appinventory.change_serializeditem") ||
+        !!proxy?.hasPermission?.("appinventory.delete_serializeditem")
+    );
 
-        const page = context.currentPage || 1;
-        const perPageValue = context.perPage || 25;
-        const params = new URLSearchParams({
-          page,
-          per_page: perPageValue,
-          search: context.filter || "",
-          ordering: context.sortBy
-            ? getOrderingFromSortBy(context.sortBy)
-            : "-id",
-        });
+    const primaryLabel = (item) =>
+      item?.asset_tag || (item?.id != null ? `#${item.id}` : "—");
 
-        const response = await axios.get(`${ENDPOINT}?${params}`);
-
-        if (response.data && response.data.items) {
-          totalRows.value = response.data.totalRows ?? 0;
-          return response.data.items;
-        }
-        throw new Error("Invalid response format");
-      } catch (error) {
-        console.error("SerializedItem provider error:", error);
-        proxy?.notifyError?.("Error loading serialized items.");
-        return [];
-      } finally {
-        setTimeout(() => {
-          loading.value = false;
-        }, 300);
-      }
-    };
-
-    const onPageChange = (page) => {
-      currentPage.value = page;
-    };
-
-    const refreshTable = () => {
-      loading.value = true;
-      if (serializedItemTable.value) {
-        serializedItemTable.value.refresh();
-      }
-    };
-
-    const conditionBadgeClass = (value) => {
-      const v = (value || "").toLowerCase();
-      if (v === "ok") return "bg-success";
-      if (v === "damaged") return "bg-warning text-dark";
-      if (v === "needs_repair") return "bg-danger";
-      return null;
-    };
-
-    const statusBadgeClass = (value) => {
+    const statusSeverity = (value) => {
       const v = (value || "").trim();
-      if (v === "Active") return "bg-success";
-      if (v === "Maintenance") return "bg-warning text-dark";
-      if (v === "Lost") return "bg-danger";
-      if (v === "Retired") return "bg-secondary";
-      return "bg-secondary";
+      if (v === "Active") return "success";
+      if (v === "Maintenance") return "info";
+      if (v === "Lost") return "danger";
+      return "secondary";
+    };
+
+    const conditionSeverity = (value) => {
+      const v = (value || "").toLowerCase();
+      if (v === "ok") return "success";
+      if (v === "damaged" || v === "needs_repair") return "danger";
+      return "secondary";
     };
 
     const conditionLabel = (value) => {
@@ -396,6 +393,7 @@ export default {
     const formatDate = (dateString) => {
       if (!dateString) return "—";
       const date = new Date(dateString);
+      if (Number.isNaN(date.getTime())) return "—";
       return date.toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
@@ -406,6 +404,7 @@ export default {
     const formatDateTime = (dateString) => {
       if (!dateString) return "—";
       const date = new Date(dateString);
+      if (Number.isNaN(date.getTime())) return "—";
       return date.toLocaleString("en-US", {
         year: "numeric",
         month: "short",
@@ -413,6 +412,142 @@ export default {
         hour: "2-digit",
         minute: "2-digit",
       });
+    };
+
+    const getOrderingFromSortBy = (sortBy) => {
+      if (!sortBy) return "-id";
+
+      let field;
+      let desc = false;
+
+      if (sortBy.sortField) {
+        field = sortBy.sortField;
+        desc = sortBy.sortOrder === -1;
+      } else if (typeof sortBy === "object" && !Array.isArray(sortBy)) {
+        field = Object.keys(sortBy)[0];
+        desc = sortBy[field] === "desc";
+      }
+
+      if (!field) return "-id";
+      // Backend allowlist: id, asset_tag, product__name, status, condition,
+      // purchase_date, created_at (see SerializedItemListProviderAPIView).
+      const fieldMap = {
+        id: "id",
+        asset_tag: "asset_tag",
+        product_name: "product__name",
+        status: "status",
+        condition: "condition",
+        purchase_date: "purchase_date",
+        created_at: "created_at",
+      };
+      const djangoField = fieldMap[field];
+      if (!djangoField) return "-id";
+      return desc ? `-${djangoField}` : djangoField;
+    };
+
+    const loadItems = async () => {
+      if (!isLoading.value) isLoading.value = true;
+
+      try {
+        const params = new URLSearchParams({
+          page: currentPage.value,
+          per_page: perPage.value,
+          search: filter.value || "",
+          ordering: getOrderingFromSortBy({
+            sortField: sortField.value,
+            sortOrder: sortOrder.value,
+          }),
+        });
+
+        const response = await axios.get(`${ENDPOINT}?${params}`);
+
+        if (response.data && response.data.items) {
+          totalRows.value = response.data.totalRows ?? 0;
+          items.value = response.data.items;
+          loadError.value = false;
+        } else {
+          throw new Error("Invalid response format");
+        }
+      } catch (error) {
+        console.error("SerializedItem provider error:", error);
+        loadError.value = true;
+        items.value = [];
+        totalRows.value = 0;
+        proxy?.notifyError?.("Error loading serialized items.");
+      } finally {
+        setTimeout(() => {
+          isLoading.value = false;
+        }, 300);
+      }
+    };
+
+    const onTablePage = (event) => {
+      currentPage.value = (event.page ?? 0) + 1;
+      if (event.rows && event.rows !== perPage.value) {
+        perPage.value = event.rows;
+      }
+      loadItems();
+    };
+
+    const onTableSort = (event) => {
+      sortField.value = event.sortField || "id";
+      sortOrder.value = event.sortOrder ?? -1;
+      currentPage.value = 1;
+      loadItems();
+    };
+
+    const refreshTable = () => {
+      isLoading.value = true;
+      loadItems();
+    };
+
+    const viewTo = (id) => ({
+      name: "serialized-item-view",
+      params: { id },
+    });
+
+    const goToCreateForm = () => {
+      router.push("/serialized-items/form");
+    };
+
+    const viewItem = (id) => {
+      router.push(viewTo(id));
+    };
+
+    const editItem = (id) => {
+      router.push({ name: "serialized-item-edit", params: { id } });
+    };
+
+    const getRowActions = (item) => {
+      const actions = [];
+      if (proxy?.hasPermission?.("appinventory.view_serializeditem")) {
+        actions.push({
+          key: "view",
+          label: "View",
+          severity: "success",
+          icon: EyeIcon,
+          command: () => viewItem(item.id),
+        });
+      }
+      if (proxy?.hasPermission?.("appinventory.change_serializeditem")) {
+        actions.push({
+          key: "edit",
+          label: "Edit",
+          severity: "primary",
+          icon: PencilIcon,
+          command: () => editItem(item.id),
+        });
+      }
+      if (proxy?.hasPermission?.("appinventory.delete_serializeditem")) {
+        actions.push({
+          key: "delete",
+          label: "Delete",
+          severity: "danger",
+          icon: TrashIcon,
+          command: () => deleteItem(item.id),
+        });
+      }
+      return actions;
     };
 
     const deleteItem = (id) => {
@@ -441,24 +576,87 @@ export default {
       );
     };
 
+    onMounted(() => {
+      if (typeof window !== "undefined" && window.matchMedia) {
+        phoneQuery = window.matchMedia(PHONE_MQ);
+        tabletQuery = window.matchMedia(TABLET_MQ);
+        onViewport = () => {
+          const viewport = readViewport();
+          isMobile.value = viewport.isMobile;
+          isTablet.value = viewport.isTablet;
+        };
+        onViewport();
+        if (phoneQuery.addEventListener) {
+          phoneQuery.addEventListener("change", onViewport);
+          tabletQuery.addEventListener("change", onViewport);
+        } else {
+          phoneQuery.addListener(onViewport);
+          tabletQuery.addListener(onViewport);
+        }
+      }
+      loadItems();
+    });
+
+    onUnmounted(() => {
+      if (searchTimer) clearTimeout(searchTimer);
+      if (onViewport) {
+        if (phoneQuery?.removeEventListener) {
+          phoneQuery.removeEventListener("change", onViewport);
+          tabletQuery.removeEventListener("change", onViewport);
+        } else {
+          phoneQuery?.removeListener?.(onViewport);
+          tabletQuery?.removeListener?.(onViewport);
+        }
+      }
+    });
+
+    watch(perPage, () => {
+      currentPage.value = 1;
+      loadItems();
+    });
+
+    watch(filter, () => {
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        currentPage.value = 1;
+        loadItems();
+      }, 300);
+    });
+
     return {
       features,
-      loading,
+      items,
+      isLoading,
+      loadError,
       filter,
       perPage,
       currentPage,
       totalRows,
-      serializedItemTable,
+      sortField,
+      sortOrder,
+      tableFirst,
       pageOptions,
-      fields,
-      provider,
-      onPageChange,
-      refreshTable,
-      statusBadgeClass,
-      conditionBadgeClass,
+      emptyTitle,
+      emptyDescription,
+      isMobile,
+      isTablet,
+      tableMinWidth,
+      hasRowActions,
+      canView,
+      primaryLabel,
+      statusSeverity,
+      conditionSeverity,
       conditionLabel,
       formatDate,
       formatDateTime,
+      getRowActions,
+      refreshTable,
+      onTablePage,
+      onTableSort,
+      goToCreateForm,
+      viewTo,
+      viewItem,
+      editItem,
       deleteItem,
     };
   },
@@ -466,40 +664,179 @@ export default {
 </script>
 
 <style scoped>
-.listview-title {
-  font-size: 1.1rem;
-  letter-spacing: -0.01em;
+.jr-serialized-list__search {
+  position: relative;
+  min-width: 0;
+  width: 100%;
 }
-.listview-toolbar {
-  padding: 0.5rem 0.75rem;
-  background-color: rgba(13, 110, 253, 0.06);
-  border: 1px solid rgba(13, 110, 253, 0.12);
-  border-radius: 0.375rem;
+
+.jr-serialized-list__search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  z-index: 1;
+  display: flex;
+  color: var(--color-jr-muted);
+  pointer-events: none;
+  transform: translateY(-50%);
 }
-.listview-toolbar .stats-badge {
-  font-size: 0.7rem;
-  font-weight: 500;
-  padding: 0.25rem 0.5rem;
-  line-height: 1.2;
+
+.jr-serialized-list__search-icon :deep(svg) {
+  width: 1rem;
+  height: 1rem;
 }
-.listview-toolbar-divider {
+
+.jr-serialized-list__search :deep(.p-inputtext) {
+  padding-left: 2.25rem;
+}
+
+.jr-serialized-list__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  pointer-events: none;
+}
+
+:deep(.jr-toolbar__actions .jr-serialized-list__entries.p-select),
+:deep(.jr-toolbar__actions .jr-serialized-list__entries.jr-control) {
+  width: 4.75rem;
+  flex: 0 0 auto;
+}
+
+.jr-serialized-list__loading {
+  margin: 0;
+  padding: 1rem 0;
+  font-size: 0.875rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-serialized-list__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-jr-border);
+}
+
+.jr-serialized-list__rows[aria-busy="true"] {
+  opacity: 0.55;
+}
+
+.jr-serialized-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-jr-border);
+}
+
+.jr-serialized-row__main {
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.jr-serialized-row__name {
+  font-weight: 600;
+  color: var(--color-jr-text);
+}
+
+.jr-serialized-row__name--link {
+  color: var(--color-jr-primary);
+  text-decoration: none;
+}
+
+.jr-serialized-row__name--link:hover {
+  text-decoration: underline;
+}
+
+.jr-serialized-row__name--link:focus-visible {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: 2px;
+}
+
+.jr-serialized-row__meta {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jr-serialized-row__aside {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.jr-serialized-list__pager {
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--color-jr-border);
+}
+
+.jr-serialized-list__pager :deep(.p-paginator),
+.jr-serialized-list__pager :deep(.p-paginator-content) {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.jr-serialized-list__pager :deep(.p-paginator-prev),
+.jr-serialized-list__pager :deep(.p-paginator-next) {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}
+
+.jr-serialized-list__pager :deep(.p-paginator-current) {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-jr-muted);
+}
+
+.jr-sr-only {
+  position: absolute;
   width: 1px;
-  height: 1.25rem;
-  background-color: rgba(0, 0, 0, 0.12);
-  margin: 0 0.15rem;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
-.listview-refresh-btn {
-  padding: 0.2rem 0.6rem;
-  font-size: 0.8rem;
+
+.jr-serialized-list__table :deep(th.jr-col-actions),
+.jr-serialized-list__table :deep(td.jr-col-actions) {
+  width: 16.5rem;
+  text-align: center;
+  white-space: nowrap;
 }
-.listview-filters .listview-filter-group label {
-  font-size: 0.8rem;
-  color: var(--bs-secondary-color);
+
+.jr-serialized-list__table :deep(th.jr-col-actions.jr-col-actions--compact),
+.jr-serialized-list__table :deep(td.jr-col-actions.jr-col-actions--compact) {
+  width: 3.25rem;
 }
-.table td {
-  vertical-align: middle;
+
+.jr-serialized-list__table
+  :deep(th.jr-col-actions .p-datatable-column-header-content) {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
-.badge {
-  font-size: 0.75rem;
+
+.jr-serialized-list__table :deep(td.jr-col-actions .jr-row-actions) {
+  justify-content: center;
+  width: 100%;
 }
 </style>

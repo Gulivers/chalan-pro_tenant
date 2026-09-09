@@ -1,80 +1,57 @@
 <template>
-  <div class="customers-suppliers-comparison">
-    <div v-if="!hasData" class="text-center py-4">
-      <div v-if="loading">
-        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-        </div>
-        <div class="mt-2">
-          <small class="text-muted">Loading ...</small>
-        </div>
-      </div>
-      <div v-else class="alert alert-info">
-        <i class="fas fa-info-circle"></i>
-        No comparison data available
-      </div>
+  <div class="jr-chart-block">
+    <div v-if="!hasData" class="jr-dash-state">
+      <div v-if="loading">Loading…</div>
+      <JREmptyState
+        v-else
+        title="No comparison data available"
+        description="There is no comparison data to chart right now."
+      />
     </div>
-    
+
     <div v-else>
-      <!-- Controles del gráfico -->
-      <div class="chart-controls mb-1">
-        <div class="row align-items-center">
-          <div class="col-md-6">
-            <h6 class="mb-0">Sales vs Purchases Comparison</h6>
-            <small class="text-muted">Last 12 months</small>
-          </div>
-          <div class="col-md-6 text-right">
-            <button class="btn btn-sm btn-outline-success" @click="refreshChart">
-              <i class="fas fa-sync-alt"></i>
-              Refresh
-            </button>
-          </div>
+      <div class="jr-chart-controls">
+        <div>
+          <p class="jr-chart-controls__title">Sales vs Purchases Comparison</p>
+          <span class="jr-chart-controls__hint">Last 12 months</span>
         </div>
+        <JRButton variant="secondary" size="sm" @click="refreshChart">Refresh</JRButton>
       </div>
-      
-      <!-- Canvas del gráfico -->
-      <div class="chart-container mb-3">
-        <canvas ref="chartCanvas"></canvas>
-        <div v-if="loading" class="loading-overlay d-flex flex-column align-items-center justify-content-center">
-          <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
-          <small class="text-muted mt-2">Refreshing data...</small>
+
+      <div class="jr-chart-container">
+        <canvas
+          ref="chartCanvas"
+          role="img"
+          aria-label="Bar chart comparing customer sales and supplier purchases"
+        />
+        <div v-if="loading" class="jr-chart-overlay">
+          <span class="jr-dash-muted">Refreshing data…</span>
         </div>
       </div>
 
-        <!-- Resumen de métricas -->
-        <div class="metrics-summary mb-2">
-        <div class="row">
-          <div class="col-md-3">
-            <div class="metric-summary-card">
-              <div class="metric-value text-success">${{ formatCurrency(totalSales) }}</div>
-              <div class="metric-label">Total Sales</div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="metric-summary-card">
-              <div class="metric-value text-danger">${{ formatCurrency(totalPurchases) }}</div>
-              <div class="metric-label">Total Purchases</div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="metric-summary-card">
-              <div class="metric-value text-info">{{ salesCount }}</div>
-              <div class="metric-label">Sales Transactions</div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="metric-summary-card">
-              <div class="metric-value text-warning">{{ purchasesCount }}</div>
-              <div class="metric-label">Purchase Transactions</div>
-            </div>
-          </div>
+      <div class="jr-metrics-summary">
+        <div class="jr-metric-summary">
+          <div class="jr-metric-summary__value is-success-text">${{ formatCurrency(totalSales) }}</div>
+          <div class="jr-metric-summary__label">Total Sales</div>
+        </div>
+        <div class="jr-metric-summary">
+          <div class="jr-metric-summary__value is-danger-text">${{ formatCurrency(totalPurchases) }}</div>
+          <div class="jr-metric-summary__label">Total Purchases</div>
+        </div>
+        <div class="jr-metric-summary">
+          <div class="jr-metric-summary__value is-info-text">{{ salesCount }}</div>
+          <div class="jr-metric-summary__label">Sales Transactions</div>
+        </div>
+        <div class="jr-metric-summary">
+          <div class="jr-metric-summary__value">{{ purchasesCount }}</div>
+          <div class="jr-metric-summary__label">Purchase Transactions</div>
         </div>
       </div>
-      
-      <!-- Tabla de datos -->
-      <div class="chart-data-table mt-4">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover">
-            <thead class="table-light">
+
+      <div class="jr-chart-data">
+        <div class="jr-dash-table-wrap">
+          <table class="jr-dash-table">
+            <thead>
               <tr>
                 <th>Month</th>
                 <th>Sales</th>
@@ -86,21 +63,18 @@
             <tbody>
               <tr v-for="(month, index) in comparisonData" :key="index" :class="getRowClass(month)">
                 <td><strong>{{ month.month }}</strong></td>
-                <td>
-                  <span class="text-success font-weight-bold">${{ formatCurrency(month.sales) }}</span>
-                </td>
-                <td>
-                  <span class="text-danger font-weight-bold">${{ formatCurrency(month.purchases) }}</span>
-                </td>
+                <td><span class="is-success-text">${{ formatCurrency(month.sales) }}</span></td>
+                <td><span class="is-danger-text">${{ formatCurrency(month.purchases) }}</span></td>
                 <td>
                   <span :class="getMarginClass(month)">
                     ${{ formatCurrency((month.sales || 0) - (month.purchases || 0)) }}
                   </span>
                 </td>
                 <td>
-                  <span :class="'badge ' + getMarginBadgeClass(month)">
-                    {{ getMarginPercentage(month) }}%
-                  </span>
+                  <JRBadge
+                    :value="`${getMarginPercentage(month)}%`"
+                    :severity="getMarginSeverity(month)"
+                  />
                 </td>
               </tr>
             </tbody>
@@ -114,9 +88,11 @@
 <script>
 import { defineComponent, ref, shallowRef, onMounted, onUnmounted, watch, computed, nextTick } from 'vue';
 import { Chart, registerables } from 'chart.js';
+import { JRButton, JRBadge, JREmptyState } from '@ui';
 Chart.register(...registerables);
 
 export default defineComponent({
+  components: { JRButton, JRBadge, JREmptyState },
   name: 'CustomersSuppliersComparison',
   props: {
     comparisonData: {
@@ -157,23 +133,23 @@ export default defineComponent({
 
     const getRowClass = (month) => {
       const margin = getMarginPercentage(month);
-      if (margin > 20) return 'table-success';
-      if (margin < -20) return 'table-danger';
+      if (margin > 20) return 'is-success';
+      if (margin < -20) return 'is-danger';
       return '';
     };
 
     const getMarginClass = (month) => {
       const margin = getMarginPercentage(month);
-      if (margin > 0) return 'text-success';
-      if (margin > -20) return 'text-warning';
-      return 'text-danger';
+      if (margin > 0) return 'is-success-text';
+      if (margin > -20) return 'is-info-text';
+      return 'is-danger-text';
     };
 
-    const getMarginBadgeClass = (month) => {
+    const getMarginSeverity = (month) => {
       const margin = getMarginPercentage(month);
-      if (margin > 0) return 'badge-success';
-      if (margin > -20) return 'badge-warning';
-      return 'badge-danger';
+      if (margin > 0) return 'success';
+      if (margin > -20) return 'info';
+      return 'danger';
     };
 
     const totalSales = computed(() => {
@@ -217,6 +193,14 @@ export default defineComponent({
 
       const canvasEl = chartCanvas.value;
       if (!canvasEl) {
+        return;
+      }
+
+      const container = canvasEl.parentElement;
+      if (container && (container.clientWidth < 2 || container.clientHeight < 2)) {
+        setTimeout(() => {
+          renderChart();
+        }, 100);
         return;
       }
 
@@ -304,6 +288,13 @@ export default defineComponent({
             },
           },
         });
+        requestAnimationFrame(() => {
+          try {
+            chartInstance.value?.resize();
+          } catch (_) {
+            /* ignore */
+          }
+        });
         return;
       }
 
@@ -367,7 +358,7 @@ export default defineComponent({
       getMarginPercentage,
       getRowClass,
       getMarginClass,
-      getMarginBadgeClass,
+      getMarginSeverity,
       totalSales,
       totalPurchases,
       salesCount,
@@ -378,108 +369,177 @@ export default defineComponent({
   }
 });
 </script>
-
 <style scoped>
-.customers-suppliers-comparison {
+.jr-chart-block {
   min-height: 500px;
 }
 
-.chart-controls {
-  background-color: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid #dee2e6;
+.jr-dash-state {
+  padding: 1.25rem 0;
+  font-size: 0.875rem;
+  color: var(--color-jr-muted);
 }
 
-.chart-container {
+.jr-chart-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--color-jr-border);
+  background: var(--color-jr-surface-muted);
+}
+
+.jr-chart-controls__title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-jr-text);
+}
+
+.jr-chart-controls__hint {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-chart-container {
   position: relative;
   height: 400px;
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: var(--color-jr-surface);
+  border: 1px solid var(--color-jr-border);
+  padding: 1rem;
 }
 
-.chart-container canvas {
+.jr-chart-container canvas {
+  display: block;
   max-width: 100%;
-  height: 100%;
 }
 
-.metrics-summary {
-  margin-bottom: 20px;
+.jr-chart-data {
+  margin-top: 1rem;
+  background: var(--color-jr-surface);
+  border: 1px solid var(--color-jr-border);
+  padding: 1rem;
 }
 
-.metric-summary-card {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid #dee2e6;
+.jr-dash-muted {
+  font-size: 0.75rem;
+  color: var(--color-jr-muted);
 }
 
-.metric-value {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 5px;
+.jr-dash-table-wrap {
+  overflow: auto;
 }
 
-.metric-label {
-  font-size: 0.9rem;
-  color: #6c757d;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.jr-dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin: 0;
 }
 
-.chart-data-table {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.table th {
-  border-top: none;
-  font-weight: 600;
-  color: #495057;
-  background-color: #f8f9fa;
-}
-
-.table td {
+.jr-dash-table th,
+.jr-dash-table td {
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid var(--color-jr-border);
+  text-align: left;
   vertical-align: middle;
 }
 
-.badge {
-  font-size: 0.75rem;
-  padding: 0.3rem 0.6rem;
+.jr-dash-table thead th {
+  background: var(--color-jr-surface-muted);
+  font-weight: 600;
+  color: var(--color-jr-text);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .chart-container {
+
+
+.is-success-text {
+  color: var(--color-jr-success-text);
+  font-weight: 600;
+}
+
+.is-danger-text {
+  color: var(--color-jr-danger-text);
+  font-weight: 600;
+}
+
+.is-info-text {
+  color: var(--color-jr-info-text);
+  font-weight: 600;
+}
+
+.is-primary-text {
+  color: var(--color-jr-primary);
+  font-weight: 600;
+}
+
+.jr-chart-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-jr-surface) 88%, transparent);
+  z-index: 2;
+}
+
+.jr-metrics-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.jr-metric-summary {
+  border: 1px solid var(--color-jr-border);
+  background: var(--color-jr-surface);
+  padding: 0.85rem;
+}
+
+.jr-metric-summary__value {
+  font-size: 1.3125rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-jr-text);
+}
+
+.jr-metric-summary__label {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-jr-muted);
+}
+
+@media (max-width: 767.98px) {
+  .jr-chart-container {
     height: 300px;
-    padding: 10px;
+    padding: 0.65rem;
   }
-  
-  .chart-controls {
-    padding: 10px;
+
+  .jr-metrics-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  
-  .chart-data-table {
-    padding: 15px;
+}
+
+@media (max-width: 575.98px) {
+  .jr-metrics-summary {
+    grid-template-columns: 1fr;
   }
-  
-  .table-responsive {
-    font-size: 0.9rem;
-  }
-  
-  .metric-summary-card {
-    padding: 15px;
-    margin-bottom: 10px;
-  }
-  
-  .metric-value {
-    font-size: 1.2rem;
-  }
+}
+
+.jr-dash-table tbody tr.is-success {
+  background: var(--color-jr-success-subtle);
+}
+
+.jr-dash-table tbody tr.is-danger {
+  background: var(--color-jr-danger-subtle);
 }
 </style>

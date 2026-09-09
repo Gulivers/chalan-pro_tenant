@@ -1,59 +1,24 @@
 <template>
-  <div class="metrics-cards">
-    <div class="row">
-      <!-- Total Products -->
-      <div class="col-md-3 col-sm-6 mb-4">
-        <div class="metric-card">
-          <div class="metric-icon">
-            <i class="fas fa-boxes"></i>
-          </div>
-          <div class="metric-content">
-            <h3 class="metric-value">{{ metrics.total_products || 0 }}</h3>
-            <p class="metric-label">Total Products</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Total Warehouses -->
-      <div class="col-md-3 col-sm-6 mb-4">
-        <div class="metric-card">
-          <div class="metric-icon">
-            <i class="fas fa-warehouse"></i>
-          </div>
-          <div class="metric-content">
-            <h3 class="metric-value">{{ metrics.total_warehouses || 0 }}</h3>
-            <p class="metric-label">Total Warehouses</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Total Stock -->
-      <div class="col-md-3 col-sm-6 mb-4">
-        <div class="metric-card">
-          <div class="metric-icon">
-            <i class="fas fa-chart-line"></i>
-          </div>
-          <div class="metric-content">
-            <h3 class="metric-value">{{ formatNumber(metrics.total_stock_units) }}</h3>
-            <p class="metric-label">Total Stock</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Inventory Value -->
-      <div class="col-md-3 col-sm-6 mb-4">
-        <div class="metric-card">
-          <div class="metric-icon">
-            <i class="fas fa-dollar-sign"></i>
-          </div>
-          <div class="metric-content">
-            <h3 class="metric-value">${{ formatCurrency(metrics.total_inventory_value) }}</h3>
-            <p class="metric-label">Inventory Value</p>
-          </div>
-        </div>
-      </div>
+  <div class="jr-metrics" :aria-busy="loading ? 'true' : 'false'">
+    <div class="jr-metric">
+      <p class="jr-metric__value">{{ metrics.total_products || 0 }}</p>
+      <p class="jr-metric__label">Total Products</p>
     </div>
 
+    <div class="jr-metric">
+      <p class="jr-metric__value">{{ metrics.total_warehouses || 0 }}</p>
+      <p class="jr-metric__label">Total Warehouses</p>
+    </div>
+
+    <div class="jr-metric">
+      <p class="jr-metric__value">{{ formatNumber(metrics.total_stock_units) }}</p>
+      <p class="jr-metric__label">Total Stock</p>
+    </div>
+
+    <div class="jr-metric">
+      <p class="jr-metric__value">${{ formatCurrency(metrics.total_inventory_value) }}</p>
+      <p class="jr-metric__label">Inventory Value</p>
+    </div>
   </div>
 </template>
 
@@ -63,144 +28,69 @@ export default {
   props: {
     metrics: {
       type: Object,
-      default: () => ({})
+      default: () => ({}),
     },
     loading: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   methods: {
     formatNumber(value) {
-      if (!value) return '0'
-      return new Intl.NumberFormat('en-US').format(value)
+      if (!value) return '0';
+      return new Intl.NumberFormat('en-US').format(value);
     },
     formatCurrency(value) {
-      if (!value) return '0'
+      if (!value) return '0';
       return new Intl.NumberFormat('en-US', {
         minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }).format(value)
-    }
-  }
-}
+        maximumFractionDigits: 2,
+      }).format(value);
+    },
+  },
+};
 </script>
 
 <style scoped>
-.metrics-cards {
-  margin-bottom: 40px;
+.jr-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 
-.metric-card {
-  background: white;
-  border-radius: 12px;
-  padding: 25px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #3498db;
-  transition: all 0.3s ease;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  gap: 20px;
+.jr-metric {
+  background: var(--color-jr-surface);
+  border: 1px solid var(--color-jr-border);
+  padding: 1rem 1.1rem;
 }
 
-.metric-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
-}
-
-.metric-card.warning {
-  border-left-color: #f39c12;
-}
-
-.metric-card.success {
-  border-left-color: #27ae60;
-}
-
-.metric-card.info {
-  border-left-color: #3498db;
-}
-
-.metric-card.primary {
-  border-left-color: #9b59b6;
-}
-
-.metric-icon {
-  font-size: 2.5rem;
-  color: #3498db;
-  min-width: 60px;
-  text-align: center;
-}
-
-.metric-card.warning .metric-icon {
-  color: #f39c12;
-}
-
-.metric-card.success .metric-icon {
-  color: #27ae60;
-}
-
-.metric-card.info .metric-icon {
-  color: #3498db;
-}
-
-.metric-card.primary .metric-icon {
-  color: #9b59b6;
-}
-
-.metric-content {
-  flex: 1;
-}
-
-.metric-value {
-  font-size: 1.6rem;
+.jr-metric__value {
+  margin: 0 0 0.35rem;
+  font-size: 1.3125rem;
   font-weight: 700;
-  color: #2c3e50;
-  margin: 0 0 5px 0;
-  line-height: 1;
+  line-height: 1.25;
+  color: var(--color-jr-text);
   word-break: break-all;
 }
 
-.metric-label {
-  font-size: 0.9rem;
-  color: #7f8c8d;
+.jr-metric__label {
   margin: 0;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: var(--color-jr-muted);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .metric-card {
-    padding: 20px;
-    gap: 15px;
-  }
-  
-  .metric-icon {
-    font-size: 2rem;
-    min-width: 50px;
-  }
-  
-  .metric-value {
-    font-size: 1.4rem;
+@media (max-width: 1023.98px) {
+  .jr-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 576px) {
-  .metric-card {
-    flex-direction: column;
-    text-align: center;
-    gap: 10px;
-  }
-  
-  .metric-icon {
-    font-size: 1.8rem;
-    min-width: auto;
-  }
-  
-  .metric-value {
-    font-size: 1.6rem;
+@media (max-width: 575.98px) {
+  .jr-metrics {
+    grid-template-columns: 1fr 1fr;
   }
 }
 </style>

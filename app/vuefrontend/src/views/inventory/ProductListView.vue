@@ -5,7 +5,6 @@
         <JRButton
           v-if="hasPermission('appinventory.add_product')"
           type="button"
-          :fluid="isMobile"
           @click="goToCreateForm">
           + New Product
         </JRButton>
@@ -25,14 +24,21 @@
             inputId="filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search products..." />
+            placeholder="Search products..."
+            autocomplete="off"
+            :spellcheck="false"
+            autocapitalize="none"
+            autocorrect="off"
+            enterkeyhint="search" />
         </div>
       </template>
 
-      <template #stats>
+      <template v-if="!isMobile" #stats>
         <div class="jr-product-list__summary" aria-live="polite">
           <JRBadge :value="`${stats.total} Total`" severity="secondary" />
-          <JRBadge :value="`${stats.active} Active`" severity="success" />
+          <JRBadge
+            :value="`${stats.active} Active`"
+            :severity="stats.active > 0 ? 'success' : 'secondary'" />
           <JRBadge
             :value="`${stats.inactive} Inactive`"
             severity="secondary" />
@@ -40,39 +46,70 @@
       </template>
 
       <template #actions>
-        <label class="jr-sr-only" for="per-page-select">
-          Entries per page
-        </label>
-        <JRSelect
-          class="jr-product-list__entries"
-          inputId="per-page-select"
-          v-model="perPage"
-          :options="pageOptions"
-          optionLabel="label"
-          optionValue="value" />
+        <template v-if="!isMobile">
+          <JRSelect
+            class="jr-product-list__entries"
+            inputId="per-page-select"
+            ariaLabel="Entries per page"
+            v-model="perPage"
+            :options="pageOptions"
+            optionLabel="label"
+            optionValue="value" />
 
-        <JRButton
-          v-if="canBulkUpdate"
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-controls="product-bulk-prices-panel"
-          :aria-expanded="showBulkPricesPanel ? 'true' : 'false'"
-          v-tt
-          data-title="Updates product prices and units from Excel. This can overwrite existing values."
-          @click="showBulkPricesPanel = true">
-          Bulk Excel
-        </JRButton>
+          <JRButton
+            v-if="canBulkUpdate"
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-controls="product-bulk-prices-panel"
+            :aria-expanded="showBulkPricesPanel ? 'true' : 'false'"
+            v-tt
+            data-title="Updates product prices and units from Excel. This can overwrite existing values."
+            @click="showBulkPricesPanel = true">
+            Bulk Excel
+          </JRButton>
 
-        <JRButton
-          type="button"
-          variant="ghost"
-          size="sm"
-          class="jr-product-list__refresh"
-          @click="refreshTable">
-          <RefreshIcon />
-          Refresh
-        </JRButton>
+          <JRButton
+            type="button"
+            variant="ghost"
+            size="sm"
+            class="jr-product-list__refresh"
+            @click="refreshTable">
+            <RefreshIcon />
+            Refresh
+          </JRButton>
+        </template>
+        <template v-else>
+          <button
+            id="product-list-tools-trigger"
+            type="button"
+            class="jr-icon-btn"
+            aria-label="List tools"
+            aria-haspopup="menu"
+            :aria-expanded="toolsMenuOpen ? 'true' : 'false'"
+            aria-controls="product-list-tools-menu"
+            @click="toggleToolsMenu">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              aria-hidden="true"
+              fill="currentColor">
+              <circle cx="8" cy="3" r="1.4" />
+              <circle cx="8" cy="8" r="1.4" />
+              <circle cx="8" cy="13" r="1.4" />
+            </svg>
+          </button>
+          <Menu
+            id="product-list-tools-menu"
+            ref="toolsMenu"
+            class="jr-overlay jr-row-menu"
+            :model="toolsMenuModel"
+            :popup="true"
+            ariaLabel="List tools"
+            @show="toolsMenuOpen = true"
+            @hide="toolsMenuOpen = false" />
+        </template>
       </template>
     </JRToolbar>
 
@@ -91,7 +128,24 @@
       <JREmptyState
         v-if="!products.length && !isLoading"
         :title="emptyTitle"
-        :description="emptyDescription" />
+        :description="emptyDescription">
+        <JRButton
+          v-if="loadError"
+          type="button"
+          variant="ghost"
+          size="sm"
+          @click="refreshTable">
+          Refresh
+        </JRButton>
+        <JRButton
+          v-else-if="hasSearch"
+          type="button"
+          variant="ghost"
+          size="sm"
+          @click="clearSearch">
+          Clear search
+        </JRButton>
+      </JREmptyState>
       <p v-if="isLoading && !products.length" class="jr-product-list__loading">
         Loading products…
       </p>
@@ -108,6 +162,16 @@
         <li v-for="item in products" :key="item.id" class="jr-product-row">
           <div class="jr-product-row__main">
             <div class="jr-product-cell">
+              <span class="jr-product-cell__text">
+                <router-link
+                  v-if="canViewProduct"
+                  class="jr-product-cell__name jr-product-cell__name--link"
+                  :to="productViewTo(item.id)"
+                  :aria-label="`View ${item.name}`">
+                  {{ item.name }}
+                </router-link>
+                <span v-else class="jr-product-cell__name">{{ item.name }}</span>
+              </span>
               <button
                 type="button"
                 class="jr-product-cell__thumb"
@@ -120,30 +184,32 @@
                   :src="productImageSrc(item)"
                   alt=""
                   class="jr-product-cell__img"
+                  width="44"
+                  height="44"
+                  loading="lazy"
+                  decoding="async"
                   @error="onProductImageError(item)" />
                 <span v-else class="jr-product-cell__ph" aria-hidden="true" />
               </button>
-              <span class="jr-product-cell__text">
-                <router-link
-                  v-if="canViewProduct"
-                  class="jr-product-cell__name jr-product-cell__name--link"
-                  :to="productViewTo(item.id)"
-                  :aria-label="`View ${item.name}`">
-                  {{ item.name }}
-                </router-link>
-                <span v-else class="jr-product-cell__name">{{ item.name }}</span>
-              </span>
             </div>
             <p class="jr-product-row__meta">
               <span>{{ item.sku }}</span>
-              <span v-if="item.category_name" aria-hidden="true">·</span>
+              <span v-if="item.category_name" aria-hidden="true"> · </span>
               <span v-if="item.category_name">{{ item.category_name }}</span>
+              <JRBadge
+                v-if="item.tracking_mode === 'SERIALIZED'"
+                value="Serial"
+                severity="info" />
             </p>
           </div>
           <div class="jr-product-row__aside">
-            <JRBadge
-              :value="item.is_active ? 'Active' : 'Inactive'"
-              :severity="item.is_active ? 'success' : 'secondary'" />
+            <span
+              class="jr-product-row__stock"
+              :class="{ 'jr-product-row__stock--low': isLowStock(item) }"
+              :title="isLowStock(item) ? 'Below reorder level' : undefined"
+              :aria-label="onHandAriaLabel(item)">
+              {{ formatQuantity(item.total_stock) }}
+            </span>
             <JRRowActions
               v-if="hasRowActions"
               :actions="getRowActions(item)"
@@ -164,13 +230,16 @@
     </div>
 
     <!-- Tablet: short table. Desktop: dense catalog without Id / duplicate SKU -->
-    <div v-else class="jr-product-list__table">
+    <div
+      v-else
+      class="jr-product-list__table"
+      :aria-busy="isLoading ? 'true' : 'false'">
       <JRDataTable
         :value="products"
         :loading="isLoading"
         dataKey="id"
         lazy
-        paginator
+        :paginator="totalRows > 0"
         :rows="perPage"
         :totalRecords="totalRows"
         :first="tableFirst"
@@ -181,13 +250,55 @@
         scrollable
         stripedRows
         :tableStyle="tableMinWidth"
-        :emptyTitle="emptyTitle"
-        :emptyDescription="emptyDescription"
+        :emptyTitle="isLoading ? '' : emptyTitle"
+        :emptyDescription="isLoading ? '' : emptyDescription"
         @page="onTablePage"
         @sort="onTableSort">
+        <template #empty>
+          <JREmptyState
+            v-if="!isLoading"
+            :title="emptyTitle"
+            :description="emptyDescription">
+            <JRButton
+              v-if="loadError"
+              type="button"
+              variant="ghost"
+              size="sm"
+              @click="refreshTable">
+              Refresh
+            </JRButton>
+            <JRButton
+              v-else-if="hasSearch"
+              type="button"
+              variant="ghost"
+              size="sm"
+              @click="clearSearch">
+              Clear search
+            </JRButton>
+          </JREmptyState>
+        </template>
         <Column field="name" header="Name" sortable>
           <template #body="{ data }">
             <div class="jr-product-cell">
+              <span class="jr-product-cell__text">
+                <router-link
+                  v-if="canViewProduct"
+                  class="jr-product-cell__name jr-product-cell__name--link"
+                  :to="productViewTo(data.id)"
+                  :aria-label="`View ${data.name}`">
+                  {{ data.name }}
+                </router-link>
+                <span v-else class="jr-product-cell__name">{{ data.name }}</span>
+                <span
+                  v-if="data.sku || data.tracking_mode === 'SERIALIZED'"
+                  class="jr-product-cell__meta">
+                  <span v-if="data.sku">{{ data.sku }}</span>
+                  <JRBadge
+                    v-if="data.tracking_mode === 'SERIALIZED'"
+                    value="Serial"
+                    severity="info" />
+                </span>
+              </span>
               <button
                 type="button"
                 class="jr-product-cell__thumb"
@@ -200,35 +311,19 @@
                   :src="productImageSrc(data)"
                   alt=""
                   class="jr-product-cell__img"
+                  width="44"
+                  height="44"
+                  loading="lazy"
+                  decoding="async"
                   @error="onProductImageError(data)" />
                 <span v-else class="jr-product-cell__ph" aria-hidden="true" />
               </button>
-              <span class="jr-product-cell__text">
-                <router-link
-                  v-if="canViewProduct"
-                  class="jr-product-cell__name jr-product-cell__name--link"
-                  :to="productViewTo(data.id)"
-                  :aria-label="`View ${data.name}`">
-                  {{ data.name }}
-                </router-link>
-                <span v-else class="jr-product-cell__name">{{ data.name }}</span>
-                <span v-if="data.sku" class="jr-product-cell__meta">{{ data.sku }}</span>
-              </span>
             </div>
           </template>
         </Column>
         <Column field="category_name" header="Category" sortable>
           <template #body="{ data }">
             {{ data.category_name || "—" }}
-          </template>
-        </Column>
-        <Column field="tracking_mode" header="Tracking" sortable>
-          <template #body="{ data }">
-            <JRBadge
-              v-if="data.tracking_mode === 'SERIALIZED'"
-              value="Serial"
-              severity="info" />
-            <JRBadge v-else value="Qty" severity="secondary" />
           </template>
         </Column>
         <Column v-if="!isTablet" field="default_brand" header="Brand">
@@ -248,13 +343,25 @@
           header="Reorder"
           sortable
           headerClass="jr-col-num"
-          bodyClass="jr-col-num" />
-        <Column field="unit_name" header="Unit" sortable />
-        <Column field="is_active" header="Status" sortable>
+          bodyClass="jr-col-num">
           <template #body="{ data }">
-            <JRBadge
-              :value="data.is_active ? 'Active' : 'Inactive'"
-              :severity="data.is_active ? 'success' : 'secondary'" />
+            {{ formatQuantity(data.reorder_level) }}
+          </template>
+        </Column>
+        <Column field="unit_name" header="Unit" sortable />
+        <Column
+          field="total_stock"
+          header="On hand"
+          sortable
+          headerClass="jr-col-num"
+          bodyClass="jr-col-num">
+          <template #body="{ data }">
+            <span
+              :class="{ 'jr-product-list__stock--low': isLowStock(data) }"
+              :title="isLowStock(data) ? 'Below reorder level' : undefined"
+              :aria-label="onHandAriaLabel(data)">
+              {{ formatQuantity(data.total_stock) }}
+            </span>
           </template>
         </Column>
         <Column
@@ -302,6 +409,7 @@ import {
 } from "vue";
 import { useRouter } from "vue-router";
 import Column from "primevue/column";
+import Menu from "primevue/menu";
 import Paginator from "primevue/paginator";
 import EyeIcon from "@primevue/icons/eye";
 import PencilIcon from "@primevue/icons/pencil";
@@ -337,12 +445,41 @@ function readViewport() {
   };
 }
 
+function formatQuantity(value) {
+  if (value === null || value === undefined || value === "") return "—";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "—";
+  if (Math.abs(n - Math.round(n)) < 1e-9) {
+    return String(Math.round(n));
+  }
+  return n.toLocaleString("en-US", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+  });
+}
+
+function isLowStock(product) {
+  const stock = Number(product?.total_stock);
+  const reorder = Number(product?.reorder_level);
+  if (!Number.isFinite(stock) || !Number.isFinite(reorder)) return false;
+  return stock < reorder;
+}
+
+function onHandAriaLabel(product) {
+  const qty = formatQuantity(product?.total_stock);
+  if (isLowStock(product)) {
+    return `On hand ${qty}, below reorder level`;
+  }
+  return `On hand ${qty}`;
+}
+
 export default {
   name: "ProductListView",
   components: {
     ProductBrandImages,
     ProductPricesBulkExcelPanel,
     Column,
+    Menu,
     Paginator,
     RefreshIcon,
     SearchIcon,
@@ -380,6 +517,8 @@ export default {
     const selectedProductId = ref(null);
     const galleryVisible = ref(false);
     const showBulkPricesPanel = ref(false);
+    const toolsMenu = ref(null);
+    const toolsMenuOpen = ref(false);
     const sortField = ref("id");
     const sortOrder = ref(-1);
     let searchTimer = null;
@@ -402,12 +541,25 @@ export default {
     const tableMinWidth = computed(() =>
       isTablet.value ? "min-width: 36rem" : "min-width: 48rem"
     );
-    const emptyTitle = computed(() =>
-      loadError.value ? "Could not load products" : "No products"
-    );
-    const emptyDescription = computed(() =>
-      loadError.value ? "Try Refresh." : "No products match the current search."
-    );
+    const hasSearch = computed(() => Boolean(filter.value && filter.value.trim()));
+    const emptyTitle = computed(() => {
+      if (loadError.value) return "Could not load products";
+      if (hasSearch.value) return "No matching products";
+      return "No products";
+    });
+    const emptyDescription = computed(() => {
+      if (loadError.value) return "Try Refresh.";
+      const query = filter.value.trim();
+      if (query) return `No products match “${query}”.`;
+      return "No products yet.";
+    });
+
+    const clearSearch = () => {
+      filter.value = "";
+      if (typeof document !== "undefined") {
+        document.getElementById("filter-input")?.focus();
+      }
+    };
 
     const canBulkUpdate = computed(
       () =>
@@ -459,7 +611,7 @@ export default {
           label: "Delete",
           severity: "danger",
           icon: TrashIcon,
-          command: () => deleteItem(product.id),
+          command: () => deleteItem(product),
         });
       }
       return actions;
@@ -491,10 +643,9 @@ export default {
         sku: "sku",
         model_number: "model_number",
         category_name: "category__name",
-        tracking_mode: "tracking_mode",
         reorder_level: "reorder_level",
         unit_name: "unit_default__name",
-        is_active: "is_active",
+        total_stock: "total_stock",
       };
       const djangoField = fieldMap[field];
       if (!djangoField) return "-id";
@@ -536,9 +687,7 @@ export default {
         stats.value = { total: 0, active: 0, inactive: 0 };
         proxy?.notifyError?.("Error loading products.");
       } finally {
-        setTimeout(() => {
-          isLoading.value = false;
-        }, 300);
+        isLoading.value = false;
       }
     };
 
@@ -562,6 +711,25 @@ export default {
       loadProducts();
     };
 
+    const toolsMenuModel = computed(() => {
+      const items = [
+        { label: "Refresh", command: () => refreshTable() },
+      ];
+      if (canBulkUpdate.value) {
+        items.unshift({
+          label: "Bulk Excel",
+          command: () => {
+            showBulkPricesPanel.value = true;
+          },
+        });
+      }
+      return items;
+    });
+
+    const toggleToolsMenu = (event) => {
+      toolsMenu.value?.toggle(event);
+    };
+
     const goToCreateForm = () => {
       router.push({ name: "product-form", query: { mode: "create" } });
     };
@@ -582,10 +750,12 @@ export default {
       });
     };
 
-    const deleteItem = (id) => {
+    const deleteItem = (product) => {
+      const id = product?.id;
+      const name = product?.name ? `“${product.name}”` : `#${id}`;
       proxy?.confirmDelete?.(
         "Are you sure?",
-        `Delete product #${id}? This action cannot be undone.`,
+        `Delete ${name}? This action cannot be undone.`,
         async () => {
           try {
             await axios.delete(`/api/products/${id}/`);
@@ -716,6 +886,8 @@ export default {
       pageOptions,
       emptyTitle,
       emptyDescription,
+      hasSearch,
+      clearSearch,
       isMobile,
       isTablet,
       tableMinWidth,
@@ -741,6 +913,13 @@ export default {
       selectedProductId,
       canBulkUpdate,
       showBulkPricesPanel,
+      toolsMenu,
+      toolsMenuOpen,
+      toolsMenuModel,
+      toggleToolsMenu,
+      formatQuantity,
+      isLowStock,
+      onHandAriaLabel,
     };
   },
 };
@@ -771,6 +950,38 @@ export default {
 
 .jr-product-list__search :deep(.p-inputtext) {
   padding-left: 2.25rem;
+}
+
+@media (max-width: 767.98px) {
+  :deep(.jr-page-header) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  :deep(.jr-page-header__actions) {
+    flex-shrink: 0;
+  }
+
+  :deep(.jr-toolbar) {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  :deep(.jr-toolbar__start) {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  :deep(.jr-toolbar__actions) {
+    flex: 0 0 auto;
+  }
 }
 
 .jr-product-list__summary {
@@ -831,7 +1042,9 @@ export default {
 }
 
 .jr-product-cell__thumb {
-  display: block;
+  display: grid;
+  place-items: center;
+  order: -1;
   flex-shrink: 0;
   padding: 0;
   border: 0;
@@ -839,6 +1052,13 @@ export default {
   line-height: 0;
   cursor: pointer;
   border-radius: var(--radius-jr-control);
+}
+
+@media (max-width: 767.98px) {
+  .jr-product-cell__thumb {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
 }
 
 .jr-product-cell__thumb:hover .jr-product-cell__img,
@@ -864,6 +1084,7 @@ export default {
 
 .jr-product-cell__ph {
   display: block;
+  border-style: dashed;
 }
 
 .jr-product-cell__text {
@@ -882,6 +1103,29 @@ export default {
   white-space: nowrap;
 }
 
+@media (max-width: 767.98px) {
+  .jr-product-row {
+    align-items: flex-start;
+  }
+
+  .jr-product-cell {
+    align-items: flex-start;
+  }
+
+  .jr-product-cell__name {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .jr-product-cell__img,
+  .jr-product-cell__ph {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
+
 a.jr-product-cell__name--link {
   color: var(--color-jr-primary);
   text-decoration: none;
@@ -898,6 +1142,9 @@ a.jr-product-cell__name--link:focus-visible {
 }
 
 .jr-product-cell__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   overflow: hidden;
   color: var(--color-jr-muted);
   font-size: 0.75rem;
@@ -906,6 +1153,9 @@ a.jr-product-cell__name--link:focus-visible {
 }
 
 .jr-product-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   margin: 0.2rem 0 0 calc(2.5rem + 0.75rem);
   font-size: 0.75rem;
   color: var(--color-jr-muted);
@@ -914,12 +1164,30 @@ a.jr-product-cell__name--link:focus-visible {
   white-space: nowrap;
 }
 
+@media (max-width: 767.98px) {
+  .jr-product-row__meta {
+    margin-left: calc(2.75rem + 0.75rem);
+  }
+}
+
 .jr-product-row__aside {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 0.35rem;
   flex-shrink: 0;
+}
+
+.jr-product-row__stock {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-jr-text);
+}
+
+.jr-product-row__stock--low,
+.jr-product-list__stock--low {
+  color: var(--color-jr-warning-text);
 }
 
 .jr-product-list__rows[aria-busy="true"] {
@@ -971,7 +1239,13 @@ a.jr-product-cell__name--link:focus-visible {
 .jr-product-list__table :deep(.p-datatable-thead > tr > th) {
   background: var(--color-jr-surface-muted);
   color: var(--color-jr-text);
+  font-size: 0.875rem;
   font-weight: 600;
+}
+
+.jr-product-list__table :deep(.p-datatable-mask),
+.jr-product-list__table :deep(.p-datatable-loading-overlay) {
+  background: color-mix(in srgb, var(--color-jr-surface) 72%, transparent);
 }
 
 .jr-product-list__table :deep(.p-datatable-tbody > tr > td) {
@@ -981,9 +1255,11 @@ a.jr-product-cell__name--link:focus-visible {
   padding-bottom: 0.3rem;
 }
 
-.jr-col-num {
+.jr-product-list__table :deep(th.jr-col-num),
+.jr-product-list__table :deep(td.jr-col-num) {
   text-align: right;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .jr-product-list__table :deep(th.jr-col-actions),

@@ -1,270 +1,325 @@
 <template>
-  <TxCard class="mt-0">
-    <template #header>
-      <div
-        class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-2">
-        <h5 class="text-primary mb-0 fw-semibold listview-title">
-          Warehouse List
-        </h5>
-        <div>
-          <button
-            v-if="hasPermission('appinventory.add_warehouse')"
-            class="btn btn-success btn-sm"
-            @click="goToCreateForm">
-            + New Warehouse
-          </button>
-        </div>
-      </div>
-    </template>
-
-    <div class="card-body">
-      <!-- Toolbar: stats + refresh -->
-      <div
-        class="listview-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
-        <span class="badge bg-primary stats-badge">
-          {{ stats.total }} Total
-        </span>
-        <span class="badge bg-success stats-badge">
-          {{ stats.active }} Active
-        </span>
-        <span class="badge bg-secondary stats-badge">
-          {{ stats.inactive }} Inactive
-        </span>
-        <span
-          class="listview-toolbar-divider d-none d-sm-inline"
-          aria-hidden="true"></span>
-        <button
+  <JRPage>
+    <JRPageHeader title="Warehouses">
+      <template #actions>
+        <JRButton
+          v-if="hasPermission('appinventory.add_warehouse')"
           type="button"
-          class="btn btn-outline-success btn-sm listview-refresh-btn"
+          :fluid="isMobile"
+          @click="goToCreateForm">
+          + New Warehouse
+        </JRButton>
+      </template>
+    </JRPageHeader>
+
+    <JRToolbar>
+      <template #start>
+        <div class="jr-master-list__search">
+          <label class="jr-sr-only" for="warehouse-filter-input">
+            Search warehouses
+          </label>
+          <span class="jr-master-list__search-icon" aria-hidden="true">
+            <SearchIcon />
+          </span>
+          <JRInput
+            inputId="warehouse-filter-input"
+            v-model="filter"
+            type="search"
+            placeholder="Search by name, location..." />
+        </div>
+      </template>
+
+      <template #stats>
+        <div class="jr-master-list__summary" aria-live="polite">
+          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
+          <JRBadge :value="`${stats.active} Active`" severity="success" />
+          <JRBadge
+            :value="`${stats.inactive} Inactive`"
+            severity="secondary" />
+        </div>
+      </template>
+
+      <template #actions>
+        <label class="jr-sr-only" for="warehouse-per-page">
+          Entries per page
+        </label>
+        <JRSelect
+          class="jr-master-list__entries"
+          inputId="warehouse-per-page"
+          v-model="perPage"
+          :options="pageOptions"
+          optionLabel="label"
+          optionValue="value" />
+        <JRButton
+          type="button"
+          variant="ghost"
+          size="sm"
+          class="jr-master-list__refresh"
           @click="refreshTable">
-          Refresh List
-        </button>
-      </div>
+          <RefreshIcon />
+          Refresh
+        </JRButton>
+      </template>
+    </JRToolbar>
 
-      <!-- Filters: entries per page + search -->
-      <div class="listview-filters row g-2 g-md-3 mb-3 align-items-end">
-        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-          <BFormGroup
-            label="Entries per page:"
-            label-for="per-page-select"
-            label-size="sm"
-            class="mb-0 listview-filter-group">
-            <BFormSelect
-              id="per-page-select"
-              v-model="perPage"
-              :options="pageOptions"
-              size="sm"
-              class="form-select form-select-sm" />
-          </BFormGroup>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-5 col-xl-4 ms-lg-auto">
-          <BFormGroup
-            label="Search:"
-            label-for="filter-input"
-            label-size="sm"
-            class="mb-0 listview-filter-group">
-            <BFormInput
-              id="filter-input"
-              v-model="filter"
-              type="search"
-              placeholder="Search by name, location... (multiple words)"
-              size="sm"
-              class="form-control form-control-sm" />
-          </BFormGroup>
-        </div>
-      </div>
-
-      <BOverlay :show="isLoading" rounded="sm" opacity="0.85" variant="light">
-        <template #overlay>
-          <div class="text-center">
-            <BSpinner type="border" variant="secondary" class="mb-3" />
-            <div class="h5 text-primary">Loading Warehouses...</div>
-            <div class="text-muted">Please wait while we fetch the data</div>
+    <div v-if="isMobile" class="jr-master-list__mobile">
+      <JREmptyState
+        v-if="!items.length && !isLoading"
+        :title="emptyTitle"
+        :description="emptyDescription" />
+      <p v-if="isLoading && !items.length" class="jr-master-list__loading">
+        Loading warehouses…
+      </p>
+      <p
+        v-else-if="isLoading && items.length"
+        class="jr-master-list__loading"
+        aria-live="polite">
+        Updating…
+      </p>
+      <ul
+        v-if="items.length"
+        class="jr-master-list__rows"
+        :aria-busy="isLoading ? 'true' : 'false'">
+        <li v-for="item in items" :key="item.id" class="jr-master-row">
+          <div class="jr-master-row__main">
+            <router-link
+              v-if="canView"
+              class="jr-master-row__name jr-master-row__name--link"
+              :to="viewTo(item.id)"
+              :aria-label="`View ${item.name}`">
+              {{ item.name }}
+            </router-link>
+            <span v-else class="jr-master-row__name">{{ item.name }}</span>
+            <p v-if="item.location" class="jr-master-row__meta">
+              {{ item.location }}
+            </p>
+            <p v-if="item.is_default" class="jr-master-row__meta">Default</p>
           </div>
-        </template>
-
-        <BTable
-          ref="tableRef"
-          :provider="provider"
-          :fields="fields"
-          :filter="filter"
-          :per-page="perPage"
-          :current-page="currentPage"
-          no-provider-sorting
-          bordered
-          hover
-          responsive
-          striped
-          class="table-bordered">
-          <template #cell(id)="row">
-            <strong>{{ row.item.id }}</strong>
-          </template>
-
-          <template #cell(name)="row">
-            <div class="text-start">{{ row.item.name }}</div>
-          </template>
-
-          <template #cell(location)="row">
-            <div class="text-start">{{ row.item.location || "—" }}</div>
-          </template>
-
-          <template #cell(is_active)="row">
-            <span
-              class="badge"
-              :class="row.item.is_active ? 'bg-success' : 'bg-secondary'"
-              style="font-size: 0.75rem">
-              {{ row.item.is_active ? "Active" : "Inactive" }}
-            </span>
-          </template>
-
-          <template #cell(is_default)="row">
-            <span
-              v-if="row.item.is_default"
-              class="badge bg-warning text-dark"
-              style="font-size: 0.75rem">
-              <i class="fas fa-star me-1"></i>
-              Default
-            </span>
-            <span v-else class="text-muted">—</span>
-          </template>
-
-          <template #cell(actions)="row">
-            <div class="btn-group btn-group-sm">
-              <button
-                v-if="hasPermission('appinventory.view_warehouse')"
-                class="btn btn-outline-success me-1"
-                @click="viewItem(row.item.id)">
-                View
-              </button>
-              <button
-                v-if="hasPermission('appinventory.change_warehouse')"
-                class="btn btn-outline-primary me-1"
-                @click="editItem(row.item.id)">
-                Edit
-              </button>
-              <button
-                v-if="hasPermission('appinventory.delete_warehouse')"
-                class="btn btn-outline-danger"
-                @click="deleteItem(row.item.id)">
-                Delete
-              </button>
-            </div>
-          </template>
-        </BTable>
-      </BOverlay>
-
-      <div class="d-flex justify-content-end mt-3">
-        <BPagination
-          v-model="currentPage"
-          :total-rows="totalRows"
-          :per-page="perPage"
-          @update:model-value="onPageChange" />
-      </div>
+          <div class="jr-master-row__aside">
+            <JRBadge
+              :value="item.is_active ? 'Active' : 'Inactive'"
+              :severity="item.is_active ? 'success' : 'secondary'" />
+            <JRRowActions
+              v-if="hasRowActions"
+              :actions="getRowActions(item)"
+              :compact="true"
+              :entity-label="item.name" />
+          </div>
+        </li>
+      </ul>
+      <Paginator
+        v-if="totalRows > 0"
+        class="jr-master-list__pager"
+        :rows="perPage"
+        :totalRecords="totalRows"
+        :first="tableFirst"
+        template="PrevPageLink CurrentPageReport NextPageLink"
+        currentPageReportTemplate="{first}–{last} of {totalRecords}"
+        @page="onTablePage" />
     </div>
-  </TxCard>
+
+    <div v-else class="jr-master-list__table">
+      <JRDataTable
+        :value="items"
+        :loading="isLoading"
+        dataKey="id"
+        lazy
+        paginator
+        :rows="perPage"
+        :totalRecords="totalRows"
+        :first="tableFirst"
+        :sortField="sortField"
+        :sortOrder="sortOrder"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+        currentPageReportTemplate="{first}–{last} of {totalRecords}"
+        scrollable
+        stripedRows
+        tableStyle="min-width: 40rem"
+        :emptyTitle="emptyTitle"
+        :emptyDescription="emptyDescription"
+        @page="onTablePage"
+        @sort="onTableSort">
+        <Column field="name" header="Name" sortable>
+          <template #body="{ data }">
+            <router-link
+              v-if="canView"
+              class="jr-master-row__name jr-master-row__name--link"
+              :to="viewTo(data.id)"
+              :aria-label="`View ${data.name}`">
+              {{ data.name }}
+            </router-link>
+            <span v-else>{{ data.name }}</span>
+          </template>
+        </Column>
+        <Column field="location" header="Location" sortable>
+          <template #body="{ data }">
+            {{ data.location || "—" }}
+          </template>
+        </Column>
+        <Column field="is_active" header="Status" sortable>
+          <template #body="{ data }">
+            <JRBadge
+              :value="data.is_active ? 'Active' : 'Inactive'"
+              :severity="data.is_active ? 'success' : 'secondary'" />
+          </template>
+        </Column>
+        <Column field="is_default" header="Default" sortable>
+          <template #body="{ data }">
+            <JRBadge
+              v-if="data.is_default"
+              value="Default"
+              severity="info" />
+            <span v-else class="jr-master-list__muted">—</span>
+          </template>
+        </Column>
+        <Column
+          v-if="hasRowActions"
+          header="Actions"
+          :sortable="false"
+          :headerClass="
+            isTablet
+              ? 'jr-col-actions jr-col-actions--compact'
+              : 'jr-col-actions'
+          "
+          :bodyClass="
+            isTablet
+              ? 'jr-col-actions jr-col-actions--compact'
+              : 'jr-col-actions'
+          ">
+          <template #body="{ data }">
+            <JRRowActions
+              :actions="getRowActions(data)"
+              :compact="isTablet"
+              :entity-label="data.name" />
+          </template>
+        </Column>
+      </JRDataTable>
+    </div>
+  </JRPage>
 </template>
 
 <script>
-import TxCard from "@components/layout/TxCard.vue";
 import axios from "axios";
-import { ref, getCurrentInstance, onMounted } from "vue";
-import { useRouter } from "vue-router";
 import {
-  BTable,
-  BFormGroup,
-  BFormInput,
-  BFormSelect,
-  BPagination,
-  BOverlay,
-  BSpinner,
-} from "bootstrap-vue-next";
+  ref,
+  computed,
+  watch,
+  onMounted,
+  onUnmounted,
+  getCurrentInstance,
+} from "vue";
+import { useRouter } from "vue-router";
+import Column from "primevue/column";
+import Paginator from "primevue/paginator";
+import EyeIcon from "@primevue/icons/eye";
+import PencilIcon from "@primevue/icons/pencil";
+import RefreshIcon from "@primevue/icons/refresh";
+import SearchIcon from "@primevue/icons/search";
+import TrashIcon from "@primevue/icons/trash";
+import {
+  JRPage,
+  JRPageHeader,
+  JRToolbar,
+  JRButton,
+  JRSelect,
+  JRInput,
+  JRBadge,
+  JRDataTable,
+  JREmptyState,
+  JRRowActions,
+} from "@ui";
 
 const ENDPOINT = "/api/warehouses-provider/";
+const PHONE_MQ = "(max-width: 767.98px)";
+const TABLET_MQ = "(min-width: 768px) and (max-width: 1023.98px)";
+
+function readViewport() {
+  if (typeof window === "undefined" || !window.matchMedia) {
+    return { isMobile: false, isTablet: false };
+  }
+  return {
+    isMobile: window.matchMedia(PHONE_MQ).matches,
+    isTablet: window.matchMedia(TABLET_MQ).matches,
+  };
+}
 
 export default {
   name: "WarehouseListView",
   components: {
-    TxCard,
-    BTable,
-    BFormGroup,
-    BFormInput,
-    BFormSelect,
-    BPagination,
-    BOverlay,
-    BSpinner,
+    Column,
+    Paginator,
+    RefreshIcon,
+    SearchIcon,
+    JRPage,
+    JRPageHeader,
+    JRToolbar,
+    JRButton,
+    JRSelect,
+    JRInput,
+    JRBadge,
+    JRDataTable,
+    JREmptyState,
+    JRRowActions,
   },
 
   setup() {
     const router = useRouter();
     const { proxy } = getCurrentInstance();
 
+    const items = ref([]);
     const stats = ref({ total: 0, active: 0, inactive: 0 });
     const isLoading = ref(true);
+    const loadError = ref(false);
     const currentPage = ref(1);
     const perPage = ref(25);
     const filter = ref("");
     const totalRows = ref(0);
-    const tableRef = ref(null);
+    const sortField = ref("id");
+    const sortOrder = ref(-1);
+    let searchTimer = null;
 
-    const fields = [
-      {
-        key: "id",
-        label: "ID",
-        sortable: true,
-        thClass: "text-center",
-        tdClass: "text-center",
-      },
-      {
-        key: "name",
-        label: "Name",
-        sortable: true,
-        thClass: "text-start",
-        tdClass: "text-start",
-      },
-      {
-        key: "location",
-        label: "Location",
-        sortable: true,
-        thClass: "text-start",
-        tdClass: "text-start",
-      },
-      {
-        key: "is_active",
-        label: "Status",
-        sortable: true,
-        thClass: "text-center",
-        tdClass: "text-center",
-      },
-      {
-        key: "is_default",
-        label: "Default",
-        sortable: true,
-        thClass: "text-center",
-        tdClass: "text-center",
-      },
-      {
-        key: "actions",
-        label: "Actions",
-        sortable: false,
-        thClass: "text-center",
-        tdClass: "text-center",
-        thStyle: { width: "12%", whiteSpace: "nowrap" },
-        tdStyle: { whiteSpace: "nowrap" },
-      },
-    ];
+    const initialViewport = readViewport();
+    const isMobile = ref(initialViewport.isMobile);
+    const isTablet = ref(initialViewport.isTablet);
+    let phoneQuery = null;
+    let tabletQuery = null;
+    let onViewport = null;
 
     const pageOptions = [
-      { value: 10, text: "10" },
-      { value: 25, text: "25" },
-      { value: 50, text: "50" },
-      { value: 100, text: "100" },
+      { value: 10, label: "10" },
+      { value: 25, label: "25" },
+      { value: 50, label: "50" },
+      { value: 100, label: "100" },
     ];
+
+    const tableFirst = computed(() => (currentPage.value - 1) * perPage.value);
+    const emptyTitle = computed(() =>
+      loadError.value ? "Could not load warehouses" : "No warehouses"
+    );
+    const emptyDescription = computed(() =>
+      loadError.value
+        ? "Try Refresh."
+        : "No warehouses match the current search."
+    );
+
+    const canView = computed(() =>
+      !!proxy?.hasPermission?.("appinventory.view_warehouse")
+    );
+    const hasRowActions = computed(
+      () =>
+        canView.value ||
+        !!proxy?.hasPermission?.("appinventory.change_warehouse") ||
+        !!proxy?.hasPermission?.("appinventory.delete_warehouse")
+    );
 
     const getOrderingFromSortBy = (sortBy) => {
       if (!sortBy) return "-id";
       let field;
       let desc = false;
-      if (Array.isArray(sortBy) && sortBy.length > 0) {
+      if (sortBy.sortField) {
+        field = sortBy.sortField;
+        desc = sortBy.sortOrder === -1;
+      } else if (Array.isArray(sortBy) && sortBy.length > 0) {
         const first = sortBy[0];
         field = first.key ?? first.field;
         const order = first.order ?? (first.sortDesc ? "desc" : "asc");
@@ -277,30 +332,34 @@ export default {
       return desc ? `-${field}` : field;
     };
 
-    const provider = async (context) => {
+    const loadItems = async () => {
+      if (!isLoading.value) isLoading.value = true;
       try {
-        if (!isLoading.value) isLoading.value = true;
-        const page = context.currentPage || 1;
-        const perPageValue = context.perPage || 25;
         const params = new URLSearchParams({
-          page,
-          per_page: perPageValue,
-          search: context.filter || "",
-          ordering: context.sortBy
-            ? getOrderingFromSortBy(context.sortBy)
-            : "-id",
+          page: currentPage.value,
+          per_page: perPage.value,
+          search: filter.value || "",
+          ordering: getOrderingFromSortBy({
+            sortField: sortField.value,
+            sortOrder: sortOrder.value,
+          }),
         });
         const response = await axios.get(`${ENDPOINT}?${params}`);
         if (response.data?.items) {
           if (response.data.stats) stats.value = response.data.stats;
           totalRows.value = response.data.totalRows ?? 0;
-          return response.data.items;
+          items.value = response.data.items;
+          loadError.value = false;
+        } else {
+          throw new Error("Invalid response format");
         }
-        throw new Error("Invalid response format");
       } catch (error) {
         console.error("Provider error:", error);
+        loadError.value = true;
+        items.value = [];
+        totalRows.value = 0;
+        stats.value = { total: 0, active: 0, inactive: 0 };
         proxy?.notifyError?.("Error loading warehouses.");
-        return [];
       } finally {
         setTimeout(() => {
           isLoading.value = false;
@@ -308,25 +367,62 @@ export default {
       }
     };
 
-    const onPageChange = (page) => {
-      currentPage.value = page;
+    const onTablePage = (event) => {
+      currentPage.value = (event.page ?? 0) + 1;
+      if (event.rows && event.rows !== perPage.value) {
+        perPage.value = event.rows;
+      }
+      loadItems();
+    };
+
+    const onTableSort = (event) => {
+      sortField.value = event.sortField || "id";
+      sortOrder.value = event.sortOrder ?? -1;
+      currentPage.value = 1;
+      loadItems();
     };
 
     const refreshTable = () => {
       isLoading.value = true;
-      if (tableRef.value) tableRef.value.refresh();
+      loadItems();
     };
 
-    const goToCreateForm = () => {
-      router.push({ name: "warehouse-form" });
-    };
-
-    const viewItem = (id) => {
-      router.push({ name: "warehouse-view", params: { id } });
-    };
-
-    const editItem = (id) => {
+    const viewTo = (id) => ({ name: "warehouse-view", params: { id } });
+    const goToCreateForm = () => router.push({ name: "warehouse-form" });
+    const viewItem = (id) => router.push(viewTo(id));
+    const editItem = (id) =>
       router.push({ name: "warehouse-edit", params: { id } });
+
+    const getRowActions = (item) => {
+      const actions = [];
+      if (proxy?.hasPermission?.("appinventory.view_warehouse")) {
+        actions.push({
+          key: "view",
+          label: "View",
+          severity: "success",
+          icon: EyeIcon,
+          command: () => viewItem(item.id),
+        });
+      }
+      if (proxy?.hasPermission?.("appinventory.change_warehouse")) {
+        actions.push({
+          key: "edit",
+          label: "Edit",
+          severity: "primary",
+          icon: PencilIcon,
+          command: () => editItem(item.id),
+        });
+      }
+      if (proxy?.hasPermission?.("appinventory.delete_warehouse")) {
+        actions.push({
+          key: "delete",
+          label: "Delete",
+          severity: "danger",
+          icon: TrashIcon,
+          command: () => deleteItem(item.id),
+        });
+      }
+      return actions;
     };
 
     const deleteItem = (id) => {
@@ -359,22 +455,77 @@ export default {
       );
     };
 
-    onMounted(() => {});
+    onMounted(() => {
+      if (typeof window !== "undefined" && window.matchMedia) {
+        phoneQuery = window.matchMedia(PHONE_MQ);
+        tabletQuery = window.matchMedia(TABLET_MQ);
+        onViewport = () => {
+          const viewport = readViewport();
+          isMobile.value = viewport.isMobile;
+          isTablet.value = viewport.isTablet;
+        };
+        onViewport();
+        if (phoneQuery.addEventListener) {
+          phoneQuery.addEventListener("change", onViewport);
+          tabletQuery.addEventListener("change", onViewport);
+        } else {
+          phoneQuery.addListener(onViewport);
+          tabletQuery.addListener(onViewport);
+        }
+      }
+      loadItems();
+    });
+
+    onUnmounted(() => {
+      if (searchTimer) clearTimeout(searchTimer);
+      if (onViewport) {
+        if (phoneQuery?.removeEventListener) {
+          phoneQuery.removeEventListener("change", onViewport);
+          tabletQuery.removeEventListener("change", onViewport);
+        } else {
+          phoneQuery?.removeListener?.(onViewport);
+          tabletQuery?.removeListener?.(onViewport);
+        }
+      }
+    });
+
+    watch(perPage, () => {
+      currentPage.value = 1;
+      loadItems();
+    });
+
+    watch(filter, () => {
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        currentPage.value = 1;
+        loadItems();
+      }, 300);
+    });
 
     return {
+      items,
       stats,
       isLoading,
       currentPage,
       perPage,
       filter,
       totalRows,
-      tableRef,
-      fields,
+      sortField,
+      sortOrder,
+      tableFirst,
       pageOptions,
-      provider,
-      onPageChange,
+      emptyTitle,
+      emptyDescription,
+      isMobile,
+      isTablet,
+      hasRowActions,
+      canView,
+      getRowActions,
       refreshTable,
+      onTablePage,
+      onTableSort,
       goToCreateForm,
+      viewTo,
       viewItem,
       editItem,
       deleteItem,
@@ -384,47 +535,183 @@ export default {
 </script>
 
 <style scoped>
-.listview-title {
-  font-size: 1.1rem;
-  letter-spacing: -0.01em;
+.jr-master-list__search {
+  position: relative;
+  min-width: 0;
+  width: 100%;
 }
-.listview-toolbar {
-  padding: 0.5rem 0.75rem;
-  background-color: rgba(13, 110, 253, 0.06);
-  border: 1px solid rgba(13, 110, 253, 0.12);
-  border-radius: 0.375rem;
+
+.jr-master-list__search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  z-index: 1;
+  display: flex;
+  color: var(--color-jr-muted);
+  pointer-events: none;
+  transform: translateY(-50%);
 }
-.listview-toolbar .stats-badge {
-  font-size: 0.7rem;
-  font-weight: 500;
-  padding: 0.25rem 0.5rem;
-  line-height: 1.2;
+
+.jr-master-list__search-icon :deep(svg) {
+  width: 1rem;
+  height: 1rem;
 }
-.listview-toolbar-divider {
+
+.jr-master-list__search :deep(.p-inputtext) {
+  padding-left: 2.25rem;
+}
+
+.jr-master-list__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  pointer-events: none;
+}
+
+:deep(.jr-toolbar__actions .jr-master-list__entries.p-select),
+:deep(.jr-toolbar__actions .jr-master-list__entries.jr-control) {
+  width: 4.75rem;
+  flex: 0 0 auto;
+}
+
+.jr-master-list__loading,
+.jr-master-list__muted {
+  color: var(--color-jr-muted);
+}
+
+.jr-master-list__loading {
+  margin: 0;
+  padding: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.jr-master-list__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-jr-border);
+}
+
+.jr-master-list__rows[aria-busy="true"] {
+  opacity: 0.55;
+}
+
+.jr-master-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-jr-border);
+}
+
+.jr-master-row__main {
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.jr-master-row__name {
+  font-weight: 600;
+  color: var(--color-jr-text);
+}
+
+.jr-master-row__name--link {
+  color: var(--color-jr-primary);
+  text-decoration: none;
+}
+
+.jr-master-row__name--link:hover {
+  text-decoration: underline;
+}
+
+.jr-master-row__name--link:focus-visible {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: 2px;
+}
+
+.jr-master-row__meta {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jr-master-row__aside {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.jr-master-list__pager {
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--color-jr-border);
+}
+
+.jr-master-list__pager :deep(.p-paginator),
+.jr-master-list__pager :deep(.p-paginator-content) {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.jr-master-list__pager :deep(.p-paginator-prev),
+.jr-master-list__pager :deep(.p-paginator-next) {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}
+
+.jr-master-list__pager :deep(.p-paginator-current) {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-jr-muted);
+}
+
+.jr-sr-only {
+  position: absolute;
   width: 1px;
-  height: 1.25rem;
-  background-color: rgba(0, 0, 0, 0.12);
-  margin: 0 0.15rem;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
-.listview-refresh-btn {
-  padding: 0.2rem 0.6rem;
-  font-size: 0.8rem;
+
+.jr-master-list__table :deep(th.jr-col-actions),
+.jr-master-list__table :deep(td.jr-col-actions) {
+  width: 16.5rem;
+  text-align: center;
+  white-space: nowrap;
 }
-.listview-filters .listview-filter-group label {
-  font-size: 0.8rem;
-  color: var(--bs-secondary-color);
+
+.jr-master-list__table :deep(th.jr-col-actions.jr-col-actions--compact),
+.jr-master-list__table :deep(td.jr-col-actions.jr-col-actions--compact) {
+  width: 3.25rem;
 }
-.table td {
-  vertical-align: middle;
+
+.jr-master-list__table
+  :deep(th.jr-col-actions .p-datatable-column-header-content) {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
-.badge {
-  font-size: 0.75rem;
-}
-.card {
-  border: none;
-}
-.form-select-sm,
-.form-control-sm {
-  font-size: 0.8rem;
+
+.jr-master-list__table :deep(td.jr-col-actions .jr-row-actions) {
+  justify-content: center;
+  width: 100%;
 }
 </style>

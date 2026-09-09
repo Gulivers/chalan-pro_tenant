@@ -1,8 +1,9 @@
 # Django core
 from django.views.generic import TemplateView
 from django.db import models, transaction
-from django.db.models import F, Sum, OuterRef, Subquery, Count, Max, Q, Prefetch
+from django.db.models import F, Sum, OuterRef, Subquery, Count, Max, Q, Prefetch, Value
 from django.db.models.deletion import ProtectedError
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.db import IntegrityError
 from django.http import HttpResponse
@@ -524,6 +525,20 @@ class ProductDataTableAPIView(APIView):
             search_fields=['name', 'sku', 'model_number']
         )
 
+def product_on_hand_annotation():
+    """Sum of Stock.quantity across warehouses; 0 when there are no stock rows."""
+    return Coalesce(
+        Subquery(
+            Stock.objects.filter(product=OuterRef('pk'))
+            .values('product')
+            .annotate(qty=Sum('quantity'))
+            .values('qty')[:1]
+        ),
+        Value(Decimal('0')),
+        output_field=models.DecimalField(max_digits=12, decimal_places=2),
+    )
+
+
 class ProductListProviderAPIView(APIView):
     """
     Endpoint para provider pattern con server-side pagination, filtering y sorting
@@ -551,7 +566,7 @@ class ProductListProviderAPIView(APIView):
                         'assignment__brand'
                     ).order_by('-is_primary', '-uploaded_at'),
                 ),
-            )
+            ).annotate(total_stock=product_on_hand_annotation())
             
             # Aplicar filtros
             if is_active is not None:

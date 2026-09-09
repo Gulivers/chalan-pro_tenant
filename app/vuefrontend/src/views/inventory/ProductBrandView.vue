@@ -1,355 +1,703 @@
 <template>
-  <TxCard class="shadow-sm mt-0">
-    <template #header>
-      <div
-        class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-2">
-        <h5 class="text-primary mb-0 fw-semibold listview-title">
-          Product Brands
-        </h5>
-        <div>
-          <button
-            v-if="hasPermission('appinventory.add_productbrand')"
-            class="btn btn-success btn-sm"
-            @click="goToCreateForm">
-            + New Brand
-          </button>
-        </div>
-      </div>
-    </template>
-
-    <div class="card-body">
-      <div
-        class="listview-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
-        <span class="badge bg-primary stats-badge">
-          {{ stats.total }} Total
-        </span>
-        <span class="badge bg-success stats-badge">
-          {{ stats.active }} Active
-        </span>
-        <span class="badge bg-secondary stats-badge">
-          {{ stats.inactive }} Inactive
-        </span>
-        <span
-          class="listview-toolbar-divider d-none d-sm-inline"
-          aria-hidden="true"></span>
-        <button
+  <JRPage>
+    <JRPageHeader title="Product Brands">
+      <template #actions>
+        <JRButton
+          v-if="hasPermission('appinventory.add_productbrand')"
           type="button"
-          class="btn btn-outline-success btn-sm listview-refresh-btn"
+          :fluid="isMobile"
+          @click="goToCreateForm">
+          + New Brand
+        </JRButton>
+      </template>
+    </JRPageHeader>
+
+    <JRToolbar>
+      <template #start>
+        <div class="jr-master-list__search">
+          <label class="jr-sr-only" for="brand-filter-input">
+            Search brands
+          </label>
+          <span class="jr-master-list__search-icon" aria-hidden="true">
+            <SearchIcon />
+          </span>
+          <JRInput
+            inputId="brand-filter-input"
+            v-model="filter"
+            type="search"
+            placeholder="Search brands..." />
+        </div>
+      </template>
+
+      <template #stats>
+        <div class="jr-master-list__summary" aria-live="polite">
+          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
+          <JRBadge :value="`${stats.active} Active`" severity="success" />
+          <JRBadge
+            :value="`${stats.inactive} Inactive`"
+            severity="secondary" />
+        </div>
+      </template>
+
+      <template #actions>
+        <label class="jr-sr-only" for="brand-per-page">Entries per page</label>
+        <JRSelect
+          class="jr-master-list__entries"
+          inputId="brand-per-page"
+          v-model="perPage"
+          :options="pageOptions"
+          optionLabel="label"
+          optionValue="value" />
+        <JRButton
+          type="button"
+          variant="ghost"
+          size="sm"
+          class="jr-master-list__refresh"
           @click="refreshList">
-          Refresh List
-        </button>
-      </div>
+          <RefreshIcon />
+          Refresh
+        </JRButton>
+      </template>
+    </JRToolbar>
 
-      <div class="listview-filters row g-2 g-md-3 mb-3 align-items-end">
-        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-          <div class="listview-filter-group">
-            <label for="brand-per-page" class="form-label small mb-1">
-              Entries per page:
-            </label>
-            <select
-              id="brand-per-page"
-              v-model="perPage"
-              class="form-select form-select-sm">
-              <option v-for="n in [5, 10, 25, 50]" :key="n" :value="n">
-                {{ n }}
-              </option>
-            </select>
+    <div v-if="isMobile" class="jr-master-list__mobile">
+      <JREmptyState
+        v-if="!pagedItems.length && !isLoading"
+        :title="emptyTitle"
+        :description="emptyDescription" />
+      <p v-if="isLoading && !brands.length" class="jr-master-list__loading">
+        Loading brands…
+      </p>
+      <p
+        v-else-if="isLoading && brands.length"
+        class="jr-master-list__loading"
+        aria-live="polite">
+        Updating…
+      </p>
+      <ul
+        v-if="pagedItems.length"
+        class="jr-master-list__rows"
+        :aria-busy="isLoading ? 'true' : 'false'">
+        <li v-for="item in pagedItems" :key="item.id" class="jr-master-row">
+          <div class="jr-master-row__main">
+            <router-link
+              v-if="canView"
+              class="jr-master-row__name jr-master-row__name--link"
+              :to="viewTo(item.id)"
+              :aria-label="`View ${item.name}`">
+              {{ item.name }}
+            </router-link>
+            <span v-else class="jr-master-row__name">{{ item.name }}</span>
+            <p v-if="item.is_default" class="jr-master-row__meta">Default</p>
           </div>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-5 col-xl-4 ms-lg-auto">
-          <div class="listview-filter-group">
-            <label for="brand-search" class="form-label small mb-1">
-              Search:
-            </label>
-            <div class="search-wrapper">
-              <input
-                id="brand-search"
-                v-model="search"
-                type="search"
-                class="form-control form-control-sm"
-                placeholder="Search by name..."
-                autocomplete="off" />
-              <button
-                v-show="search && search.length"
-                @mousedown.prevent
-                @click="search = ''"
-                type="button"
-                class="btn-clear-x"
-                title="Clear">
-                ×
-              </button>
-            </div>
+          <div class="jr-master-row__aside">
+            <JRBadge
+              :value="item.is_active ? 'Active' : 'Inactive'"
+              :severity="item.is_active ? 'success' : 'secondary'" />
+            <JRRowActions
+              v-if="hasRowActions"
+              :actions="getRowActions(item)"
+              :compact="true"
+              :entity-label="item.name" />
           </div>
-        </div>
-      </div>
-
-      <BOverlay :show="loading" rounded="sm" opacity="0.85" variant="light">
-        <template #overlay>
-          <div class="text-center">
-            <BSpinner type="border" variant="secondary" class="mb-3" />
-            <div class="h5 text-primary">Loading Brands...</div>
-            <div class="text-muted">Please wait while we fetch the data</div>
-          </div>
-        </template>
-
-        <b-table
-          :items="filteredItems"
-          :fields="fields"
-          :per-page="perPage"
-          :current-page="currentPage"
-          bordered
-          hover
-          responsive
-          striped>
-          <template #cell(is_active)="data">
-            <td class="text-center">
-              <span v-if="data.item.is_active" class="badge bg-success">
-                Active
-              </span>
-              <span v-else class="badge bg-secondary">Inactive</span>
-            </td>
-          </template>
-
-          <template #cell(is_default)="data">
-            <td class="text-center">
-              <span v-if="data.item.is_default" class="badge bg-primary">
-                Default
-              </span>
-              <span v-else class="badge bg-light text-dark">—</span>
-            </td>
-          </template>
-
-          <template #cell(actions)="data">
-            <td class="text-center">
-              <div class="btn-group btn-group-sm" role="group">
-                <button
-                  v-if="hasPermission('appinventory.view_productbrand')"
-                  class="btn btn-outline-success me-1"
-                  @click="viewItem(data.item.id)">
-                  View
-                </button>
-                <button
-                  v-if="hasPermission('appinventory.change_productbrand')"
-                  class="btn btn-outline-primary me-1"
-                  @click="editItem(data.item.id)">
-                  Edit
-                </button>
-                <button
-                  v-if="hasPermission('appinventory.delete_productbrand')"
-                  class="btn btn-outline-danger"
-                  @click="confirmDelete(data.item.id)"
-                  :disabled="deletingId === data.item.id">
-                  <span
-                    v-if="deletingId === data.item.id"
-                    class="spinner-border spinner-border-sm me-1"
-                    role="status"
-                    aria-hidden="true"></span>
-                  Delete
-                </button>
-              </div>
-            </td>
-          </template>
-        </b-table>
-      </BOverlay>
-
-      <div
-        v-if="!loading && filteredItems.length === 0"
-        class="text-muted text-center py-5">
-        <h5>No brands found</h5>
-        <p class="mb-0">
-          {{
-            search
-              ? "Try a different search term."
-              : "Start by creating your first product brand."
-          }}
-        </p>
-      </div>
-
-      <div
-        v-if="!loading && filteredItems.length > 0"
-        class="d-flex justify-content-end mt-3">
-        <b-pagination
-          v-model="currentPage"
-          :total-rows="filteredItems.length"
-          :per-page="perPage" />
-      </div>
+        </li>
+      </ul>
+      <Paginator
+        v-if="totalRows > 0"
+        class="jr-master-list__pager"
+        :rows="perPage"
+        :totalRecords="totalRows"
+        :first="tableFirst"
+        template="PrevPageLink CurrentPageReport NextPageLink"
+        currentPageReportTemplate="{first}–{last} of {totalRecords}"
+        @page="onTablePage" />
     </div>
-  </TxCard>
+
+    <div v-else class="jr-master-list__table">
+      <JRDataTable
+        :value="pagedItems"
+        :loading="isLoading"
+        dataKey="id"
+        lazy
+        paginator
+        :rows="perPage"
+        :totalRecords="totalRows"
+        :first="tableFirst"
+        :sortField="sortField"
+        :sortOrder="sortOrder"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+        currentPageReportTemplate="{first}–{last} of {totalRecords}"
+        scrollable
+        stripedRows
+        :tableStyle="tableMinWidth"
+        :emptyTitle="emptyTitle"
+        :emptyDescription="emptyDescription"
+        @page="onTablePage"
+        @sort="onTableSort">
+        <Column field="name" header="Name" sortable>
+          <template #body="{ data }">
+            <router-link
+              v-if="canView"
+              class="jr-master-row__name jr-master-row__name--link"
+              :to="viewTo(data.id)"
+              :aria-label="`View ${data.name}`">
+              {{ data.name }}
+            </router-link>
+            <span v-else>{{ data.name }}</span>
+          </template>
+        </Column>
+        <Column field="is_active" header="Status" sortable>
+          <template #body="{ data }">
+            <JRBadge
+              :value="data.is_active ? 'Active' : 'Inactive'"
+              :severity="data.is_active ? 'success' : 'secondary'" />
+          </template>
+        </Column>
+        <Column field="is_default" header="Default" sortable>
+          <template #body="{ data }">
+            <JRBadge
+              v-if="data.is_default"
+              value="Default"
+              severity="info" />
+            <span v-else class="jr-master-list__muted">—</span>
+          </template>
+        </Column>
+        <Column
+          v-if="hasRowActions"
+          header="Actions"
+          :sortable="false"
+          :headerClass="isTablet ? 'jr-col-actions jr-col-actions--compact' : 'jr-col-actions'"
+          :bodyClass="isTablet ? 'jr-col-actions jr-col-actions--compact' : 'jr-col-actions'">
+          <template #body="{ data }">
+            <JRRowActions
+              :actions="getRowActions(data)"
+              :compact="isTablet"
+              :entity-label="data.name" />
+          </template>
+        </Column>
+      </JRDataTable>
+    </div>
+  </JRPage>
 </template>
 
-<script setup>
-import TxCard from "@/components/layout/TxCard.vue";
-import { BOverlay, BSpinner } from "bootstrap-vue-next";
-import "@/assets/css/base.css";
-
-import { ref, computed, onMounted, getCurrentInstance } from "vue";
+<script>
 import axios from "axios";
+import {
+  ref,
+  computed,
+  watch,
+  onMounted,
+  onUnmounted,
+  getCurrentInstance,
+} from "vue";
 import { useRouter } from "vue-router";
+import Column from "primevue/column";
+import Paginator from "primevue/paginator";
+import EyeIcon from "@primevue/icons/eye";
+import PencilIcon from "@primevue/icons/pencil";
+import RefreshIcon from "@primevue/icons/refresh";
+import SearchIcon from "@primevue/icons/search";
+import TrashIcon from "@primevue/icons/trash";
+import {
+  JRPage,
+  JRPageHeader,
+  JRToolbar,
+  JRButton,
+  JRSelect,
+  JRInput,
+  JRBadge,
+  JRDataTable,
+  JREmptyState,
+  JRRowActions,
+} from "@ui";
 
-const { proxy } = getCurrentInstance();
-const router = useRouter();
+const PHONE_MQ = "(max-width: 767.98px)";
+const TABLET_MQ = "(min-width: 768px) and (max-width: 1023.98px)";
 
-const brands = ref([]);
-const search = ref("");
-const perPage = ref(25);
-const currentPage = ref(1);
-const loading = ref(false);
-const deletingId = ref(null);
-
-const fields = [
-  {
-    key: "id",
-    label: "ID",
-    sortable: true,
-    thClass: "text-center",
-    tdClass: "text-center",
-  },
-  {
-    key: "name",
-    label: "Name",
-    sortable: true,
-    thClass: "text-start",
-    tdClass: "text-start",
-  },
-  {
-    key: "is_active",
-    label: "Status",
-    thClass: "text-center",
-    tdClass: "text-center",
-    sortable: true,
-  },
-  {
-    key: "is_default",
-    label: "Default",
-    thClass: "text-center",
-    tdClass: "text-center",
-    sortable: true,
-  },
-  {
-    key: "actions",
-    label: "Actions",
-    thClass: "text-center",
-    tdClass: "text-center",
-    thStyle: { width: "12%", whiteSpace: "nowrap" },
-    tdStyle: { whiteSpace: "nowrap" },
-  },
-];
-
-const fetchItems = async () => {
-  loading.value = true;
-  try {
-    const response = await axios.get("/api/productbrand/");
-    brands.value = response.data;
-  } catch (error) {
-    console.error("Error loading brands:", error);
-    proxy?.notifyError?.("Error loading product brands.");
-  } finally {
-    loading.value = false;
+function readViewport() {
+  if (typeof window === "undefined" || !window.matchMedia) {
+    return { isMobile: false, isTablet: false };
   }
-};
+  return {
+    isMobile: window.matchMedia(PHONE_MQ).matches,
+    isTablet: window.matchMedia(TABLET_MQ).matches,
+  };
+}
 
-const refreshList = () => {
-  loading.value = true;
-  fetchItems();
-};
+export default {
+  name: "ProductBrandView",
+  components: {
+    Column,
+    Paginator,
+    RefreshIcon,
+    SearchIcon,
+    JRPage,
+    JRPageHeader,
+    JRToolbar,
+    JRButton,
+    JRSelect,
+    JRInput,
+    JRBadge,
+    JRDataTable,
+    JREmptyState,
+    JRRowActions,
+  },
 
-onMounted(fetchItems);
+  setup() {
+    const router = useRouter();
+    const { proxy } = getCurrentInstance();
 
-const filteredItems = computed(() => {
-  if (!search.value) return brands.value;
-  const q = search.value.toLowerCase();
-  return brands.value.filter((item) => item.name.toLowerCase().includes(q));
-});
+    const brands = ref([]);
+    const filter = ref("");
+    const perPage = ref(25);
+    const currentPage = ref(1);
+    const isLoading = ref(false);
+    const loadError = ref(false);
+    const deletingId = ref(null);
+    const sortField = ref("name");
+    const sortOrder = ref(1);
+    let searchTimer = null;
 
-const stats = computed(() => {
-  const list = filteredItems.value;
-  const active = list.filter((i) => i.is_active).length;
-  return { total: list.length, active, inactive: list.length - active };
-});
+    const initialViewport = readViewport();
+    const isMobile = ref(initialViewport.isMobile);
+    const isTablet = ref(initialViewport.isTablet);
+    let phoneQuery = null;
+    let tabletQuery = null;
+    let onViewport = null;
 
-const goToCreateForm = () => {
-  router.push({ name: "product-brand-form" });
-};
+    const pageOptions = [
+      { value: 10, label: "10" },
+      { value: 25, label: "25" },
+      { value: 50, label: "50" },
+      { value: 100, label: "100" },
+    ];
 
-const viewItem = (id) => {
-  router.push({ name: "product-brand-view", params: { id } });
-};
+    const filteredItems = computed(() => {
+      let list = brands.value.slice();
+      if (filter.value) {
+        const q = filter.value.toLowerCase();
+        list = list.filter((item) =>
+          String(item.name || "")
+            .toLowerCase()
+            .includes(q)
+        );
+      }
 
-const editItem = (id) => {
-  router.push({ name: "product-brand-edit", params: { id } });
-};
+      const field = sortField.value || "name";
+      const dir = sortOrder.value === -1 ? -1 : 1;
+      list.sort((a, b) => {
+        let av = a[field];
+        let bv = b[field];
+        if (typeof av === "boolean") av = av ? 1 : 0;
+        if (typeof bv === "boolean") bv = bv ? 1 : 0;
+        if (av == null) av = "";
+        if (bv == null) bv = "";
+        if (typeof av === "string" && typeof bv === "string") {
+          return av.localeCompare(bv) * dir;
+        }
+        if (av < bv) return -1 * dir;
+        if (av > bv) return 1 * dir;
+        return 0;
+      });
+      return list;
+    });
 
-const confirmDelete = (id) => {
-  proxy?.confirmDelete?.(
-    "Delete?",
-    "This will delete the product brand. This action cannot be undone.",
-    async () => {
-      await deleteItem(id);
-    }
-  );
-};
+    const totalRows = computed(() => filteredItems.value.length);
+    const tableFirst = computed(() => (currentPage.value - 1) * perPage.value);
+    const tableMinWidth = computed(() =>
+      isTablet.value ? "min-width: 36rem" : "min-width: 48rem"
+    );
+    const pagedItems = computed(() => {
+      const start = tableFirst.value;
+      return filteredItems.value.slice(start, start + perPage.value);
+    });
 
-const deleteItem = async (id) => {
-  deletingId.value = id;
-  try {
-    await axios.delete(`/api/productbrand/${id}/`);
-    brands.value = brands.value.filter((b) => b.id !== id);
-    proxy?.notifyToastSuccess?.("The product brand has been deleted.");
-  } catch (error) {
-    console.error("Error deleting product brand:", error);
-    proxy?.notifyError?.("Error deleting the product brand.");
-  } finally {
-    deletingId.value = null;
-  }
+    const clampCurrentPage = () => {
+      const maxPage = Math.max(1, Math.ceil(totalRows.value / perPage.value) || 1);
+      if (currentPage.value > maxPage) currentPage.value = maxPage;
+    };
+
+    const stats = computed(() => {
+      const list = filteredItems.value;
+      const active = list.filter((i) => i.is_active).length;
+      return { total: list.length, active, inactive: list.length - active };
+    });
+
+    const emptyTitle = computed(() =>
+      loadError.value ? "Could not load brands" : "No brands"
+    );
+    const emptyDescription = computed(() => {
+      if (loadError.value) return "Try Refresh.";
+      if (filter.value) return "Try a different search term.";
+      return "Start by creating your first product brand.";
+    });
+
+    const canView = computed(() =>
+      !!proxy?.hasPermission?.("appinventory.view_productbrand")
+    );
+    const hasRowActions = computed(
+      () =>
+        canView.value ||
+        !!proxy?.hasPermission?.("appinventory.change_productbrand") ||
+        !!proxy?.hasPermission?.("appinventory.delete_productbrand")
+    );
+
+    const fetchItems = async () => {
+      isLoading.value = true;
+      try {
+        const response = await axios.get("/api/productbrand/");
+        brands.value = Array.isArray(response.data) ? response.data : [];
+        loadError.value = false;
+      } catch (error) {
+        console.error("Error loading brands:", error);
+        brands.value = [];
+        loadError.value = true;
+        proxy?.notifyError?.("Error loading product brands.");
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    const refreshList = () => {
+      fetchItems();
+    };
+
+    const onTablePage = (event) => {
+      currentPage.value = (event.page ?? 0) + 1;
+      if (event.rows && event.rows !== perPage.value) {
+        perPage.value = event.rows;
+      }
+    };
+
+    const onTableSort = (event) => {
+      sortField.value = event.sortField || "name";
+      sortOrder.value = event.sortOrder ?? 1;
+      currentPage.value = 1;
+    };
+
+    const viewTo = (id) => ({ name: "product-brand-view", params: { id } });
+    const goToCreateForm = () => router.push({ name: "product-brand-form" });
+    const viewItem = (id) => router.push(viewTo(id));
+    const editItem = (id) =>
+      router.push({ name: "product-brand-edit", params: { id } });
+
+    const getRowActions = (item) => {
+      const actions = [];
+      if (proxy?.hasPermission?.("appinventory.view_productbrand")) {
+        actions.push({
+          key: "view",
+          label: "View",
+          severity: "success",
+          icon: EyeIcon,
+          command: () => viewItem(item.id),
+        });
+      }
+      if (proxy?.hasPermission?.("appinventory.change_productbrand")) {
+        actions.push({
+          key: "edit",
+          label: "Edit",
+          severity: "primary",
+          icon: PencilIcon,
+          command: () => editItem(item.id),
+        });
+      }
+      if (proxy?.hasPermission?.("appinventory.delete_productbrand")) {
+        actions.push({
+          key: "delete",
+          label: "Delete",
+          severity: "danger",
+          icon: TrashIcon,
+          disabled: deletingId.value === item.id,
+          command: () => confirmDelete(item.id),
+        });
+      }
+      return actions;
+    };
+
+    const confirmDelete = (id) => {
+      proxy?.confirmDelete?.(
+        "Delete?",
+        "This will delete the product brand. This action cannot be undone.",
+        async () => {
+          await deleteItem(id);
+        }
+      );
+    };
+
+    const deleteItem = async (id) => {
+      deletingId.value = id;
+      try {
+        await axios.delete(`/api/productbrand/${id}/`);
+        brands.value = brands.value.filter((b) => b.id !== id);
+        clampCurrentPage();
+        proxy?.notifyToastSuccess?.("The product brand has been deleted.");
+      } catch (error) {
+        console.error("Error deleting product brand:", error);
+        const status = error?.response?.status;
+        const data = error?.response?.data;
+        if (status === 403) {
+          proxy?.notifyError?.(
+            "You do not have permission for this action."
+          );
+        } else if (status === 409) {
+          proxy?.notifyError?.(
+            data?.detail || "Cannot delete: brand is in use."
+          );
+        } else {
+          proxy?.notifyError?.(
+            data?.detail || "Error deleting the product brand."
+          );
+        }
+      } finally {
+        deletingId.value = null;
+      }
+    };
+
+    onMounted(() => {
+      if (typeof window !== "undefined" && window.matchMedia) {
+        phoneQuery = window.matchMedia(PHONE_MQ);
+        tabletQuery = window.matchMedia(TABLET_MQ);
+        onViewport = () => {
+          const viewport = readViewport();
+          isMobile.value = viewport.isMobile;
+          isTablet.value = viewport.isTablet;
+        };
+        onViewport();
+        if (phoneQuery.addEventListener) {
+          phoneQuery.addEventListener("change", onViewport);
+          tabletQuery.addEventListener("change", onViewport);
+        } else {
+          phoneQuery.addListener(onViewport);
+          tabletQuery.addListener(onViewport);
+        }
+      }
+      fetchItems();
+    });
+
+    onUnmounted(() => {
+      if (searchTimer) clearTimeout(searchTimer);
+      if (onViewport) {
+        if (phoneQuery?.removeEventListener) {
+          phoneQuery.removeEventListener("change", onViewport);
+          tabletQuery.removeEventListener("change", onViewport);
+        } else {
+          phoneQuery?.removeListener?.(onViewport);
+          tabletQuery?.removeListener?.(onViewport);
+        }
+      }
+    });
+
+    watch(perPage, () => {
+      currentPage.value = 1;
+    });
+
+    watch(filter, () => {
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        currentPage.value = 1;
+      }, 300);
+    });
+
+    return {
+      brands,
+      filter,
+      perPage,
+      currentPage,
+      isLoading,
+      sortField,
+      sortOrder,
+      pageOptions,
+      pagedItems,
+      totalRows,
+      tableFirst,
+      tableMinWidth,
+      stats,
+      emptyTitle,
+      emptyDescription,
+      isMobile,
+      isTablet,
+      hasRowActions,
+      canView,
+      getRowActions,
+      refreshList,
+      onTablePage,
+      onTableSort,
+      goToCreateForm,
+      viewTo,
+      viewItem,
+      editItem,
+      confirmDelete,
+      deleteItem,
+    };
+  },
 };
 </script>
 
 <style scoped>
-.listview-title {
-  font-size: 1.1rem;
-  letter-spacing: -0.01em;
-}
-.listview-toolbar {
-  padding: 0.5rem 0.75rem;
-  background-color: rgba(13, 110, 253, 0.06);
-  border: 1px solid rgba(13, 110, 253, 0.12);
-  border-radius: 0.375rem;
-}
-.listview-toolbar .stats-badge {
-  font-size: 0.7rem;
-  font-weight: 500;
-  padding: 0.25rem 0.5rem;
-  line-height: 1.2;
-}
-.listview-toolbar-divider {
-  width: 1px;
-  height: 1.25rem;
-  background-color: rgba(0, 0, 0, 0.12);
-  margin: 0 0.15rem;
-}
-.listview-refresh-btn {
-  padding: 0.2rem 0.6rem;
-  font-size: 0.8rem;
-}
-.listview-filters .listview-filter-group label {
-  font-size: 0.8rem;
-  color: var(--bs-secondary-color);
-}
-.form-select-sm,
-.form-control-sm {
-  font-size: 0.8rem;
-}
-.search-wrapper {
+.jr-master-list__search {
   position: relative;
+  min-width: 0;
+  width: 100%;
 }
-.btn-clear-x {
+
+.jr-master-list__search-icon {
   position: absolute;
-  right: 6px;
+  left: 0.75rem;
   top: 50%;
+  z-index: 1;
+  display: flex;
+  color: var(--color-jr-muted);
+  pointer-events: none;
   transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: #666;
+}
+
+.jr-master-list__search-icon :deep(svg) {
+  width: 1rem;
+  height: 1rem;
+}
+
+.jr-master-list__search :deep(.p-inputtext) {
+  padding-left: 2.25rem;
+}
+
+.jr-master-list__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  pointer-events: none;
+}
+
+:deep(.jr-toolbar__actions .jr-master-list__entries.p-select),
+:deep(.jr-toolbar__actions .jr-master-list__entries.jr-control) {
+  width: 4.75rem;
+  flex: 0 0 auto;
+}
+
+.jr-master-list__loading,
+.jr-master-list__muted {
+  color: var(--color-jr-muted);
+}
+
+.jr-master-list__loading {
+  margin: 0;
+  padding: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.jr-master-list__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-jr-border);
+}
+
+.jr-master-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-jr-border);
+}
+
+.jr-master-row__main {
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.jr-master-row__name {
+  font-weight: 600;
+  color: var(--color-jr-text);
+}
+
+.jr-master-row__name--link {
+  color: var(--color-jr-primary);
+  text-decoration: none;
+}
+
+.jr-master-row__name--link:hover {
+  text-decoration: underline;
+}
+
+.jr-master-row__meta {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-master-row__aside {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.jr-master-list__pager {
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--color-jr-border);
+}
+
+.jr-master-list__pager :deep(.p-paginator),
+.jr-master-list__pager :deep(.p-paginator-content) {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.jr-master-list__pager :deep(.p-paginator-prev),
+.jr-master-list__pager :deep(.p-paginator-next) {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}
+
+.jr-master-list__pager :deep(.p-paginator-current) {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-jr-muted);
+}
+
+.jr-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.jr-master-list__table :deep(th.jr-col-actions),
+.jr-master-list__table :deep(td.jr-col-actions) {
+  width: 16.5rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.jr-master-list__table :deep(th.jr-col-actions.jr-col-actions--compact),
+.jr-master-list__table :deep(td.jr-col-actions.jr-col-actions--compact) {
+  width: 3.25rem;
+}
+
+.jr-master-list__table :deep(th.jr-col-actions .p-datatable-column-header-content) {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.jr-master-list__table :deep(td.jr-col-actions .jr-row-actions) {
+  justify-content: center;
+  width: 100%;
 }
 </style>

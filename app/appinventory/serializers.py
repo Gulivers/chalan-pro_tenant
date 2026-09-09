@@ -212,12 +212,14 @@ class ProductListSerializer(serializers.ModelSerializer):
     unit_name = serializers.CharField(source='unit_default.name', default='', read_only=True)
     unit_default_code = serializers.CharField(source='unit_default.code', default='', read_only=True)
     image = serializers.SerializerMethodField()
+    total_stock = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'sku', 'model_number', 'category_name', 'default_brand', 'brands_count',
-            'reorder_level', 'unit_name', 'unit_default_code', 'tracking_mode', 'is_active', 'image'
+            'reorder_level', 'unit_name', 'unit_default_code', 'tracking_mode', 'is_active',
+            'image', 'total_stock',
         ]
 
     def get_image(self, obj):
@@ -253,6 +255,13 @@ class ProductListSerializer(serializers.ModelSerializer):
                 return url
 
         return None
+
+    def get_total_stock(self, obj):
+        """On-hand quantity across warehouses when the queryset annotates total_stock."""
+        value = getattr(obj, 'total_stock', None)
+        if value is None:
+            return None
+        return float(value)
     
     def get_default_brand(self, obj):
         """Obtiene la marca predeterminada del producto"""

@@ -1,6 +1,8 @@
 """
-Tests for ProductListSerializer.get_image (list thumbnail contract).
+Tests for ProductListSerializer list contracts (thumbnail image and on-hand stock).
 """
+
+from decimal import Decimal
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django_tenants.test.cases import TenantTestCase
@@ -11,10 +13,13 @@ from appinventory.models import (
     ProductBrandAssignment,
     ProductCategory,
     ProductImage,
+    Stock,
     UnitCategory,
     UnitOfMeasure,
+    Warehouse,
 )
 from appinventory.serializers import ProductListSerializer
+from appinventory.views import product_on_hand_annotation
 
 
 def _tiny_png(name='test.png'):
@@ -116,3 +121,68 @@ class ProductListSerializerImageTests(TenantTestCase):
         )
 
         self.assertEqual(self._serialized_image(product), other_img.image.url)
+
+
+class ProductListSerializerStockTests(TenantTestCase):
+    @classmethod
+    def setup_tenant(cls, tenant):
+        tenant.name = 'Product List Serializer Stock Tests'
+
+    @classmethod
+    def get_test_schema_name(cls):
+        return 'test_product_list_stock'
+
+    def setUp(self):
+        super().setUp()
+        unit_category = UnitCategory.objects.create(name='Count Stock')
+        self.unit = UnitOfMeasure.objects.create(
+            name='Each',
+            code='EA',
+            category=unit_category,
+            reference_unit=True,
+        )
+        self.category = ProductCategory.objects.create(name='Electrical Stock')
+
+    def _create_product(self, sku):
+        return Product.objects.create(
+            name=f'Product {sku}',
+            sku=sku,
+            category=self.category,
+            unit_default=self.unit,
+            reorder_level=Decimal('10'),
+        )
+
+    def _annotated(self, product):
+        return Product.objects.filter(pk=product.pk).annotate(
+            total_stock=product_on_hand_annotation()
+        ).get()
+
+    def test_total_stock_none_without_annotation(self):
+        product = self._create_product('STK-NONE-001')
+        self.assertIsNone(ProductListSerializer(product).data['total_stock'])
+
+    def test_total_stock_zero_when_annotated_without_rows(self):
+        product = self._create_product('STK-ZERO-001')
+        self.assertEqual(
+            ProductListSerializer(self._annotated(product)).data['total_stock'],
+            0.0,
+        )
+
+    def test_total_stock_sums_warehouses_when_annotated(self):
+        product = self._create_product('STK-SUM-001')
+        warehouse_a = Warehouse.objects.create(name='Warehouse A Stock Test')
+        warehouse_b = Warehouse.objects.create(name='Warehouse B Stock Test')
+        Stock.objects.create(
+            product=product,
+            warehouse=warehouse_a,
+            quantity=Decimal('10.50'),
+        )
+        Stock.objects.create(
+            product=product,
+            warehouse=warehouse_b,
+            quantity=Decimal('4.50'),
+        )
+        self.assertEqual(
+            ProductListSerializer(self._annotated(product)).data['total_stock'],
+            15.0,
+        )
