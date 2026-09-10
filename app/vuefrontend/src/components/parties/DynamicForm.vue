@@ -1,486 +1,514 @@
 <template>
-  <div class="container">
-    <h3 class="text-warning pt-3">
-      <p>{{ cleanFormTitle }}</p>
-    </h3>
+  <component :is="pageWrapper" v-bind="pageWrapperProps">
+    <JRPageHeader v-if="usePageChrome" :title="pageHeading" />
 
-    <div class="card shadow mb-4">
-      <div class="card-header">
-        <h6 class="ms-1 font-weight-bold text-primary">{{ formTitle }}</h6>
-      </div>
+    <div :class="panelClass">
+      <form
+        v-if="Object.keys(internalSchema).length"
+        class="jr-dynamic-form__form"
+        @submit.prevent="handleSubmit"
+        novalidate>
+        <component
+          :is="fieldsWrapper"
+          v-bind="fieldsWrapperProps">
+          <div class="jr-form-grid">
+            <template v-for="(config, key) in internalSchema" :key="key">
+              <JRField
+                v-if="config.type !== 'boolean'"
+                v-slot="{ describedby, invalid }"
+                :label="config.label"
+                :required="!!config.required"
+                :inputId="`dyn-${key}`"
+                :error="validationErrors[key]">
+                <JRInput
+                  v-if="config.type === 'string' || config.type === 'text'"
+                  :inputId="`dyn-${key}`"
+                  v-model="form[key]"
+                  :placeholder="`Enter ${config.label}...`"
+                  :disabled="isDisabled"
+                  :invalid="invalid"
+                  :required="!!config.required"
+                  :ariaDescribedby="describedby" />
 
-      <div class="card-body">
-        <form @submit.prevent="handleSubmit" v-if="Object.keys(internalSchema).length">
-          <div class="row g-3">
-            <div class="col-md-6" v-for="(config, key) in internalSchema" :key="key">
-              <!-- Layout horizontal para campos normales -->
-              <div v-if="config.type !== 'boolean'" class="row align-items-center g-2">
-                
-                <label class="col-12 col-sm-3 col-form-label text-start text-sm-end">
-                  {{ config.label }}
-                  <span v-if="config.required" class="text-danger">*</span>
-                </label>
-                <div class="col-sm-9">
-                  <!-- Text / String -->
-                  <input
-                    v-if="config.type === 'string' || config.type === 'text'"
-                    v-model.trim="form[key]"
-                    type="text"
-                    class="form-control"
-                    :class="{ 'is-invalid': validationErrors[key] }"
-                    :placeholder="`Enter ${config.label}...`"
-                    :disabled="isDisabled" />
-                  <!-- Error message for string fields -->
-                  <div
-                    v-if="validationErrors[key] && (config.type === 'string' || config.type === 'text')"
-                    class="invalid-feedback d-block">
-                    {{ validationErrors[key] }}
-                  </div>
+                <JRTextarea
+                  v-else-if="
+                    config.type === 'textarea' || config.widget === 'textarea'
+                  "
+                  :inputId="`dyn-${key}`"
+                  v-model="form[key]"
+                  :rows="3"
+                  :placeholder="`Enter ${config.label}...`"
+                  :disabled="isDisabled"
+                  :invalid="invalid"
+                  :ariaDescribedby="describedby" />
 
-                  <!-- Textarea -->
-                  <textarea
-                    v-else-if="config.type === 'textarea' || config.widget === 'textarea'"
-                    v-model.trim="form[key]"
-                    class="form-control"
-                    :placeholder="`Enter ${config.label}...`"
-                    :disabled="isDisabled" />
+                <JRSelect
+                  v-else-if="config.type === 'select'"
+                  :inputId="`dyn-${key}`"
+                  v-model="form[key]"
+                  :options="optionsMap[key] || []"
+                  optionLabel="label"
+                  optionValue="value"
+                  :disabled="isDisabled"
+                  :multiple="config.multiple || false"
+                  :placeholder="`Select ${config.label}...`"
+                  :showClear="true"
+                  :invalid="invalid"
+                  :required="!!config.required"
+                  :ariaDescribedby="describedby" />
+              </JRField>
 
-                  <!-- Select con v-select -->
-                  <v-select
-                    v-else-if="config.type === 'select'"
-                    v-model="form[key]"
-                    :options="optionsMap[key] || []"
-                    :label="'label'"
-                    :reduce="opt => opt.value"
-                    :disabled="isDisabled"
-                    :multiple="config.multiple || false"
-                    :placeholder="`Select ${config.label}...`"
-                    :clearable="true"
-                    :close-on-select="!config.multiple"
-                    :class="{ 'is-invalid': validationErrors[key] }" />
-                  <!-- Error message for select fields -->
-                  <div v-if="validationErrors[key] && config.type === 'select'" class="invalid-feedback d-block">
-                    {{ validationErrors[key] }}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Boolean con layout especial -->
-              <div v-else-if="config.type === 'boolean'" class="row align-items-center g-2">
-                <div class="col-sm-3"></div>
-                <div class="col-sm-9">
-                  <div class="form-check form-switch d-flex align-items-center">
-                    <input
-                      v-model="form[key]"
-                      class="form-check-input"
-                      type="checkbox"
-                      role="switch"
-                      :id="key"
-                      :disabled="isDisabled" />
-                    <label class="form-check-label ms-2 text-primary" :for="key">
-                      {{ config.label }}
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <JRField
+                v-else-if="config.type === 'boolean'"
+                :label="config.label"
+                :inputId="key">
+                <JRCheckbox
+                  :inputId="key"
+                  v-model="form[key]"
+                  :ariaLabel="config.label"
+                  :disabled="isDisabled" />
+              </JRField>
+            </template>
           </div>
+        </component>
 
-          <!-- Botones -->
-          <div class="mt-4" v-if="!isViewMode">
-            <button type="submit" class="btn btn-primary" :disabled="isDisabled">
-              <span
-                v-if="submitting"
-                class="spinner-border spinner-border-sm me-1"
-                role="status"
-                aria-hidden="true"></span>
-              <i v-else class="fas fa-save me-1"></i>
-              {{ submitting ? 'Saving...' : 'Save' }}
-            </button>
-
-            <button type="button" class="btn btn-secondary ms-2" @click="cancelForm" :disabled="submitting">
+        <div
+          :class="[
+            'jr-dynamic-form__actions',
+            { 'jr-dynamic-form__actions--sticky': usePageChrome },
+          ]">
+          <template v-if="!isViewMode">
+            <JRButton type="submit" variant="primary" :disabled="isDisabled">
+              {{ submitting ? "Saving..." : "Save" }}
+            </JRButton>
+            <JRButton
+              type="button"
+              variant="secondary"
+              :disabled="submitting"
+              @click="cancelForm">
               Cancel
-            </button>
-          </div>
-
-          <div v-else>
-            <button type="button" class="btn btn-secondary mt-3" @click="cancelForm" :disabled="submitting">
-              Back
-            </button>
-          </div>
-        </form>
-
-        <div v-else>
-          <p class="text-muted">Loading Schema and checking for fields...</p>
-          <div class="spinner-border"></div>
+            </JRButton>
+          </template>
+          <JRButton
+            v-else
+            type="button"
+            variant="secondary"
+            :disabled="submitting"
+            @click="cancelForm">
+            Back
+          </JRButton>
         </div>
+      </form>
+
+      <div v-else class="jr-dynamic-form__loading" role="status">
+        <p>Loading schema and checking for fields…</p>
       </div>
     </div>
-  </div>
+  </component>
 </template>
 
 <script>
-  import axios from 'axios';
-  import Swal from 'sweetalert2';
-  import vSelect from 'vue-select';
-  import selectMixin from '@/helpers/useSelectOptions'; // debe exportar default { ... } (mixin)
+import axios from "axios";
+import selectMixin from "@/helpers/useSelectOptions";
+import {
+  JRPage,
+  JRPageHeader,
+  JRSection,
+  JRField,
+  JRInput,
+  JRTextarea,
+  JRCheckbox,
+  JRSelect,
+  JRButton,
+} from "@ui";
 
-  export default {
-    name: 'DynamicForm',
-    components: {
-      vSelect,
+export default {
+  name: "DynamicForm",
+  components: {
+    JRPage,
+    JRPageHeader,
+    JRSection,
+    JRField,
+    JRInput,
+    JRTextarea,
+    JRCheckbox,
+    JRSelect,
+    JRButton,
+  },
+  mixins: [selectMixin],
+  props: {
+    schema: Object,
+    schemaEndpoint: String,
+    apiEndpoint: { type: String, required: true },
+    objectId: { type: [String, Number], default: null },
+    formTitle: { type: String, default: "Form" },
+    readOnly: { type: Boolean, default: false },
+    redirectAfterSave: { type: String, default: null },
+    isModal: { type: Boolean, default: false },
+  },
+  emits: ["saved", "cancel"],
+  data() {
+    return {
+      internalSchema: {},
+      form: {},
+      fields: [],
+      submitting: false,
+      validationErrors: {},
+    };
+  },
+  computed: {
+    usePageChrome() {
+      return !this.isModal;
     },
-    mixins: [selectMixin], // sin appMixin
-    props: {
-      schema: Object,
-      schemaEndpoint: String,
-      apiEndpoint: { type: String, required: true }, // e.g. '/api/builder/'
-      objectId: { type: [String, Number], default: null },
-      formTitle: { type: String, default: 'Form' },
-      readOnly: { type: Boolean, default: false }, // fuerza modo view
-      redirectAfterSave: { type: String, default: null }, // ruta (path) o nombre de ruta
-      isModal: { type: Boolean, default: false },
+    pageWrapper() {
+      return this.usePageChrome ? "JRPage" : "div";
     },
-    data() {
-      return {
-        internalSchema: {},
-        form: {},
-        fields: [],
-        submitting: false,
-        validationErrors: {},
-      };
+    pageWrapperProps() {
+      return this.usePageChrome ? {} : { class: "jr-embedded-form" };
     },
-    computed: {
-      isViewMode() {
-        // soporta prop readOnly o query ?mode=view
-        return this.readOnly || this.$route?.query?.mode === 'view';
-      },
-      isEditMode() {
-        return !!this.objectId && !this.isViewMode;
-      },
-      isDisabled() {
-        return this.isViewMode || this.submitting;
-      },
-      cleanFormTitle() {
-        return this.formTitle
-          .replace(/^Create\s+/i, '')
-          .replace(/^Edit\s+/i, '')
-          .replace(/^View\s+/i, '')
-          .trim();
-      },
+    panelClass() {
+      return this.usePageChrome
+        ? "jr-dynamic-form"
+        : "jr-embedded-form__panel jr-dynamic-form";
     },
-    watch: {
-      objectId: {
-        immediate: true,
-        async handler() {
-          if (this.internalSchema && Object.keys(this.internalSchema).length) {
-            await this.loadRecord();
-          }
-        },
-      },
+    fieldsWrapper() {
+      return this.usePageChrome ? "JRSection" : "div";
     },
-    async created() {
-      try {
-        // 1) Cargar esquema
-        if (this.schema && Object.keys(this.schema).length) {
-          this.internalSchema = this.schema;
-        } else if (this.schemaEndpoint) {
-          const response = await axios.get(this.schemaEndpoint);
-          this.internalSchema = response.data || {};
+    fieldsWrapperProps() {
+      return this.usePageChrome ? { title: "Details" } : {};
+    },
+    isViewMode() {
+      if (this.isModal) return this.readOnly;
+      return this.readOnly || this.$route?.query?.mode === "view";
+    },
+    isEditMode() {
+      return !!this.objectId && !this.isViewMode;
+    },
+    isDisabled() {
+      return this.isViewMode || this.submitting;
+    },
+    cleanFormTitle() {
+      return this.formTitle
+        .replace(/^Create\s+/i, "")
+        .replace(/^Edit\s+/i, "")
+        .replace(/^View\s+/i, "")
+        .trim();
+    },
+    pageHeading() {
+      return this.formTitle || this.cleanFormTitle;
+    },
+  },
+  watch: {
+    objectId: {
+      immediate: true,
+      async handler() {
+        if (this.internalSchema && Object.keys(this.internalSchema).length) {
+          await this.loadRecord();
         }
+      },
+    },
+  },
+  async created() {
+    try {
+      if (this.schema && Object.keys(this.schema).length) {
+        this.internalSchema = this.schema;
+      } else if (this.schemaEndpoint) {
+        const response = await axios.get(this.schemaEndpoint);
+        this.internalSchema = response.data || {};
+      }
 
-        this.fields = Object.keys(this.internalSchema);
+      this.fields = Object.keys(this.internalSchema);
 
-        // 2) Cargar opciones de selects (mixin)
-        await this.loadOptionsForSchema(this.internalSchema);
+      await this.loadOptionsForSchema(this.internalSchema);
+      await this.loadRecord();
+    } catch (err) {
+      console.error("❌ Error initializing schema:", err);
+      this.notifyToastError?.("Error initializing the form schema.");
+    }
+  },
+  methods: {
+    _emptySelectDefault(config) {
+      return config?.multiple ? [] : "";
+    },
 
-        // 3) Cargar registro (si objectId)
-        await this.loadRecord();
+    _normalizeSelectValue(value) {
+      if (Array.isArray(value)) {
+        return value.map((item) =>
+          item && typeof item === "object" ? item.id ?? item.value ?? item : item
+        );
+      }
+      if (value && typeof value === "object") {
+        return value.id ?? value.value ?? "";
+      }
+      return value;
+    },
+
+    async loadRecord() {
+      if (!this.internalSchema || !Object.keys(this.internalSchema).length)
+        return;
+      try {
+        if (this.objectId) {
+          const res = await axios.get(`${this.apiEndpoint}${this.objectId}/`);
+          this.form = res.data;
+        } else {
+          this.form = Object.fromEntries(
+            this.fields.map((f) => {
+              const cfg = this.internalSchema[f] || {};
+              const type = cfg.type;
+              const def = cfg.default;
+              if (def !== undefined) return [f, def];
+              if (type === "boolean") return [f, false];
+              if (type === "select") return [f, this._emptySelectDefault(cfg)];
+              return [f, ""];
+            })
+          );
+        }
       } catch (err) {
-        console.error('❌ Error initializing schema:', err);
-        await Swal.fire('Oops!', 'Error initializing the form schema.', 'error');
+        console.error("❌ Error loading record:", err);
+        this.notifyToastError?.("Error loading the record.");
       }
     },
-    methods: {
-      async loadRecord() {
-        if (!this.internalSchema || !Object.keys(this.internalSchema).length) return;
-        try {
-          if (this.objectId) {
-            const res = await axios.get(`${this.apiEndpoint}${this.objectId}/`);
-            this.form = res.data;
-          } else {
-            // inicializa valores (boolean -> false, otros -> '')
-            this.form = Object.fromEntries(
-              this.fields.map(f => {
-                const type = this.internalSchema[f]?.type;
-                const def = this.internalSchema[f]?.default;
-                if (def !== undefined) return [f, def];
-                return [f, type === 'boolean' ? false : ''];
-              })
-            );
-          }
-        } catch (err) {
-          console.error('❌ Error loading record:', err);
-          await Swal.fire('Oops!', 'Error loading the record.', 'error');
-        }
-      },
 
-      _buildCleanPayload() {
-        const cleaned = { ...this.form };
+    _buildCleanPayload() {
+      const cleaned = { ...this.form };
 
-        for (const key of this.fields) {
-          const cfg = this.internalSchema[key] || {};
+      for (const key of this.fields) {
+        const cfg = this.internalSchema[key] || {};
 
-          // Trimming para strings/textarea
-          if (['string', 'text'].includes(cfg.type) || cfg.type === 'textarea' || cfg.widget === 'textarea') {
-            cleaned[key] = (cleaned[key] ?? '').toString().trim();
-          }
-
-          // Selects con optionsEndpoint: si viene objeto, extrae id/value
-          if (cfg.type === 'select' && cfg.optionsEndpoint) {
-            const v = cleaned[key];
-            cleaned[key] = v && typeof v === 'object' ? v.id ?? v.value ?? '' : v;
-          }
-        }
-        return cleaned;
-      },
-
-      // Validaciones del frontend
-      validateForm() {
-        this.validationErrors = {};
-        let hasErrors = false;
-
-        for (const [key, config] of Object.entries(this.internalSchema)) {
-          const value = this.form[key];
-          const label = config.label || key;
-
-          // Validación de campos requeridos
-          if (config.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
-            this.validationErrors[key] = `${label} is required.`;
-            hasErrors = true;
-            continue;
-          }
-
-          // Validaciones específicas por campo
-          if (value && typeof value === 'string') {
-            const trimmedValue = value.trim();
-
-            // Validación de Name (mínimo 2 caracteres)
-            if (key === 'name' && trimmedValue.length > 0 && trimmedValue.length < 2) {
-              this.validationErrors[key] = 'Must be at least 2 characters.';
-              hasErrors = true;
-            }
-
-            // Validación de Email
-            if (key === 'email' && trimmedValue.length > 0) {
-              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-              if (!emailRegex.test(trimmedValue)) {
-                this.validationErrors[key] = 'Enter a valid email address.';
-                hasErrors = true;
-              }
-            }
-
-            // Validación de RFC (máximo 50 caracteres)
-            if (key === 'rfc' && trimmedValue.length > 50) {
-              this.validationErrors[key] = 'Must be 50 characters or fewer.';
-              hasErrors = true;
-            }
-          }
+        if (
+          ["string", "text"].includes(cfg.type) ||
+          cfg.type === "textarea" ||
+          cfg.widget === "textarea"
+        ) {
+          cleaned[key] = (cleaned[key] ?? "").toString().trim();
         }
 
-        return !hasErrors;
-      },
-
-      // Validación de duplicados (Name y RFC)
-      async validateUniqueness() {
-        const name = this.form.name?.trim();
-        const rfc = this.form.rfc?.trim();
-
-        if (!name && !rfc) return true;
-
-        try {
-          // Verificar si ya existe un Builder con el mismo nombre o RFC
-          const params = new URLSearchParams();
-          if (name) params.append('name', name);
-          if (rfc) params.append('rfc', rfc);
-          if (this.objectId) params.append('exclude_id', this.objectId);
-
-          const response = await axios.get(`${this.apiEndpoint}?${params.toString()}`);
-          const existingBuilders = Array.isArray(response.data) ? response.data : response.data.results || [];
-
-          if (existingBuilders.length > 0) {
-            const duplicateBuilder = existingBuilders[0];
-            const errors = [];
-
-            if (name && duplicateBuilder.name?.toLowerCase() === name.toLowerCase()) {
-              errors.push(`Name "${name}" already exists.`);
-            }
-
-            if (rfc && duplicateBuilder.rfc === rfc) {
-              errors.push(`RFC "${rfc}" already exists.`);
-            }
-
-            if (errors.length > 0) {
-              const errorList = errors.map(error => `<li><strong>${error}</strong></li>`).join('');
-              const html = `<div class="text-start"><ul class="mb-0">${errorList}</ul></div>`;
-              await Swal.fire({
-                title: 'Duplicate Data',
-                html: html,
-                icon: 'error',
-                confirmButtonText: 'OK',
-              });
-              return false;
-            }
-          }
-
-          return true;
-        } catch (error) {
-          console.error('Error validating uniqueness:', error);
-          // Si hay error en la validación, permitir continuar
-          return true;
+        if (cfg.type === "select" && cfg.optionsEndpoint) {
+          cleaned[key] = this._normalizeSelectValue(cleaned[key]);
         }
-      },
-
-      async handleSubmit() {
-        if (this.isViewMode) return;
-
-        // Validaciones del frontend
-        if (!this.validateForm()) {
-          return;
-        }
-
-        // Validación de duplicados
-        if (!(await this.validateUniqueness())) {
-          return;
-        }
-
-        this.submitting = true;
-
-        const payload = this._buildCleanPayload();
-        const url = this.objectId ? `${this.apiEndpoint}${this.objectId}/` : this.apiEndpoint;
-        const method = this.objectId ? 'put' : 'post';
-
-        try {
-          const response = await axios[method](url, payload);
-
-          // Éxito silencioso + redirección
-          if (this.redirectAfterSave) {
-            if (this.redirectAfterSave.startsWith('/')) {
-              this.$router.push(this.redirectAfterSave);
-            } else {
-              this.$router.push({ name: this.redirectAfterSave });
-            }
-          } else {
-            // En modo modal, emitir el objeto guardado
-            this.$emit('saved', response.data);
-          }
-        } catch (error) {
-          console.error('❌ Save error:', error);
-          const { status, data } = error?.response || {};
-          
-          if (status === 400 && data) {
-            // Manejar errores de validación del backend
-            const errorList = Object.entries(data)
-              .map(([field, msgs]) => {
-                const label = this.internalSchema[field]?.label || field;
-                const message = Array.isArray(msgs) ? msgs.join(', ') : msgs;
-                return `<li><strong>${label}:</strong> ${message}</li>`;
-              })
-              .join('');
-
-            const html = `<div class="text-start"><ul class="mb-0">${errorList}</ul></div>`;
-            await Swal.fire({
-              title: 'Validation Errors',
-              html: html,
-              icon: 'error',
-              confirmButtonText: 'OK',
-            });
-          } else if (status === 403) {
-            await Swal.fire('Forbidden', 'You do not have permission for this action.', 'error');
-          } else {
-            // Error genérico
-            const errorMessage = data?.detail || data?.message || 'Error saving the record.';
-            await Swal.fire('Oops!', errorMessage, 'error');
-          }
-        } finally {
-          this.submitting = false;
-        }
-      },
-
-      cancelForm() {
-        if (this.isModal) {
-          this.$emit('cancel');
-        } else {
-          if (this.$router && this.$route.name) {
-            this.$router.back();
-          } else {
-            this.$emit('cancel');
-          }
-        }
-      },
+      }
+      return cleaned;
     },
-  };
+
+    validateForm() {
+      this.validationErrors = {};
+      let hasErrors = false;
+
+      for (const [key, config] of Object.entries(this.internalSchema)) {
+        const value = this.form[key];
+        const label = config.label || key;
+
+        const isEmpty =
+          value === null ||
+          value === undefined ||
+          value === "" ||
+          (typeof value === "string" && value.trim() === "") ||
+          (Array.isArray(value) && value.length === 0);
+
+        if (config.required && isEmpty) {
+          this.validationErrors[key] = `${label} is required.`;
+          hasErrors = true;
+          continue;
+        }
+
+        if (value && typeof value === "string") {
+          const trimmedValue = value.trim();
+
+          if (
+            key === "name" &&
+            trimmedValue.length > 0 &&
+            trimmedValue.length < 2
+          ) {
+            this.validationErrors[key] = "Must be at least 2 characters.";
+            hasErrors = true;
+          }
+
+          if (key === "email" && trimmedValue.length > 0) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(trimmedValue)) {
+              this.validationErrors[key] = "Enter a valid email address.";
+              hasErrors = true;
+            }
+          }
+
+          if (key === "rfc" && trimmedValue.length > 50) {
+            this.validationErrors[key] = "Must be 50 characters or fewer.";
+            hasErrors = true;
+          }
+        }
+      }
+
+      return !hasErrors;
+    },
+
+    async validateUniqueness() {
+      const name = this.form.name?.trim();
+      const rfc = this.form.rfc?.trim();
+
+      if (!name && !rfc) return true;
+
+      try {
+        const params = new URLSearchParams();
+        if (name) params.append("name", name);
+        if (rfc) params.append("rfc", rfc);
+        if (this.objectId) params.append("exclude_id", this.objectId);
+
+        const response = await axios.get(
+          `${this.apiEndpoint}?${params.toString()}`
+        );
+        const existingBuilders = Array.isArray(response.data)
+          ? response.data
+          : response.data.results || [];
+
+        if (existingBuilders.length > 0) {
+          const duplicateBuilder = existingBuilders[0];
+          const errors = [];
+
+          if (
+            name &&
+            duplicateBuilder.name?.toLowerCase() === name.toLowerCase()
+          ) {
+            errors.push(`Name "${name}" already exists.`);
+          }
+
+          if (rfc && duplicateBuilder.rfc === rfc) {
+            errors.push(`RFC "${rfc}" already exists.`);
+          }
+
+          if (errors.length > 0) {
+            this.notifyToastError?.(errors.join(" "));
+            return false;
+          }
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Error validating uniqueness:", error);
+        return true;
+      }
+    },
+
+    async handleSubmit() {
+      if (this.isViewMode) return;
+
+      if (!this.validateForm()) {
+        return;
+      }
+
+      if (!(await this.validateUniqueness())) {
+        return;
+      }
+
+      this.submitting = true;
+
+      const payload = this._buildCleanPayload();
+      const url = this.objectId
+        ? `${this.apiEndpoint}${this.objectId}/`
+        : this.apiEndpoint;
+      const method = this.objectId ? "put" : "post";
+
+      try {
+        const response = await axios[method](url, payload);
+
+        this.notifyToastSuccess?.(
+          this.objectId ? "Record updated." : "Record created."
+        );
+
+        if (this.redirectAfterSave) {
+          if (this.redirectAfterSave.startsWith("/")) {
+            this.$router.push(this.redirectAfterSave);
+          } else {
+            this.$router.push({ name: this.redirectAfterSave });
+          }
+        } else {
+          this.$emit("saved", response.data);
+        }
+      } catch (error) {
+        console.error("❌ Save error:", error);
+        const { status, data } = error?.response || {};
+
+        if (status === 400 && data) {
+          const messages = Object.entries(data)
+            .map(([field, msgs]) => {
+              const label = this.internalSchema[field]?.label || field;
+              const message = Array.isArray(msgs) ? msgs.join(", ") : msgs;
+              return `${label}: ${message}`;
+            })
+            .join(" ");
+          this.notifyToastError?.(messages || "Validation errors.");
+        } else if (status === 403) {
+          this.notifyToastError?.(
+            "You do not have permission for this action."
+          );
+        } else {
+          const errorMessage =
+            data?.detail || data?.message || "Error saving the record.";
+          this.notifyToastError?.(errorMessage);
+        }
+      } finally {
+        this.submitting = false;
+      }
+    },
+
+    cancelForm() {
+      if (this.isModal) {
+        this.$emit("cancel");
+      } else {
+        if (this.$router && this.$route.name) {
+          this.$router.back();
+        } else {
+          this.$emit("cancel");
+        }
+      }
+    },
+  },
+};
 </script>
 
 <style scoped>
-  .form-check-label {
-    margin-left: 0.5rem;
-  }
+.jr-dynamic-form__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
 
-  /* Estilos para v-select */
-  .v-select,
-  .v-select .vs__dropdown-toggle {
-    width: 100%;
-  }
+.jr-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
 
-  /* Labels alineadas a la derecha en móviles también */
-  @media (max-width: 576px) {
-    .text-primary.text-end {
-      text-align: right !important;
-    }
-
-    .row.align-items-center .col-sm-3 {
-      margin-bottom: 0.5rem;
-    }
+@media (min-width: 768px) {
+  .jr-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
-  /* Ajustes para formulario horizontal */
-  .row.align-items-center {
-    margin-bottom: 0.5rem;
-  }
+.jr-dynamic-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
 
-  .form-label {
-    font-weight: 500;
-    margin-bottom: 0;
-  }
+.jr-dynamic-form__actions--sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 0.75rem 0 0.25rem;
+  margin-top: 0.5rem;
+  background: var(--color-jr-page, #f3f4f6);
+  border-top: 1px solid var(--color-jr-border, #e5e7eb);
+}
 
-  /* Estilos para campos booleanos */
-  .form-check-input {
-    margin-top: 0;
-  }
+.jr-dynamic-form__loading {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-jr-muted);
+}
 
-  /* Ajustes para v-select en formulario horizontal */
-  .v-select .vs__selected-options {
-    padding: 0.375rem 0.75rem;
-  }
-
-  .v-select .vs__dropdown-toggle {
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    min-height: 38px;
-  }
-
-  .v-select .vs__dropdown-toggle:focus {
-    border-color: #86b7fe;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-  }
-
-  .v-select.is-invalid .vs__dropdown-toggle {
-    border-color: #dc3545;
-  }
-
-  .v-select.is-invalid .vs__dropdown-toggle:focus {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
-  }
+.jr-dynamic-form :deep(.jr-checkbox) {
+  column-gap: 0.85rem;
+  align-items: center;
+}
 </style>

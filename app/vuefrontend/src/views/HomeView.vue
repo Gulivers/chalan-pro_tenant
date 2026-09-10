@@ -2,27 +2,27 @@
   <JRPage>
     <JRPageHeader title="Dashboard" />
 
-    <p class="jr-dash-intro">
-      Morning console — contract pace, crew load, and sales vs purchases at a glance.
-    </p>
-
-    <JRSection title="Weekly Contract Totals">
+    <JRSection title="Weekly Contract Totals" class="jr-home-section">
       <AreaChart />
     </JRSection>
 
-    <JRSection title="Monthly Contract Totals">
+    <JRSection title="Monthly Contract Totals" class="jr-home-section">
       <BarChart />
     </JRSection>
 
     <JRSection
       v-if="hasPermission('apptransactions.add_workaccount')"
       title="Weekly Supervisor Stats"
+      class="jr-home-section"
     >
       <WeeklySupervisorChart />
     </JRSection>
 
     <!-- Title lives inside CustomersSuppliersComparison (shared with Inventory). -->
-    <JRSection v-if="hasPermission('apptransactions.add_document')">
+    <JRSection
+      v-if="hasPermission('apptransactions.add_document')"
+      class="jr-home-section"
+    >
       <CustomersSuppliersComparison
         :comparison-data="comparisonData"
         :loading="loadingComparison"
@@ -130,9 +130,11 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.jr-dash-intro {
-  margin: -0.35rem 0 1.1rem;
-  font-size: 0.8125rem;
-  color: var(--color-jr-muted);
+.jr-home-section {
+  margin-bottom: 2rem;
+}
+
+.jr-home-section:last-child {
+  margin-bottom: 0;
 }
 </style>

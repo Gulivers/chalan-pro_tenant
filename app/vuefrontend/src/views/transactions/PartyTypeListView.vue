@@ -1,303 +1,760 @@
 <template>
-  <TxCard class="shadow-sm mt-0">
-    <template #header>
-      <div
-        class="d-flex flex-wrap justify-content-between align-items-center w-100 gap-2">
-        <h5 class="text-primary mb-0 fw-semibold listview-title">
-          Party Types
-        </h5>
-        <router-link
+  <JRPage>
+    <JRPageHeader title="Party Types">
+      <template #actions>
+        <JRButton
           v-if="hasPermission('apptransactions.add_partytype')"
-          to="/party-types/form"
-          class="btn btn-success btn-sm">
-          + New Party Type
-        </router-link>
-      </div>
-    </template>
-
-    <div class="card-body">
-      <div
-        class="listview-toolbar d-flex flex-wrap align-items-center gap-2 mb-3">
-        <span class="badge bg-primary stats-badge">
-          {{ stats.total }} Total
-        </span>
-        <span class="badge bg-success stats-badge">
-          {{ stats.active }} Active
-        </span>
-        <span class="badge bg-secondary stats-badge">
-          {{ stats.inactive }} Inactive
-        </span>
-        <span
-          class="listview-toolbar-divider d-none d-sm-inline"
-          aria-hidden="true"></span>
-        <button
           type="button"
-          class="btn btn-outline-success btn-sm listview-refresh-btn"
-          @click="refreshList">
-          Refresh List
-        </button>
-      </div>
+          @click="goToCreateForm">
+          + New Party Type
+        </JRButton>
+      </template>
+    </JRPageHeader>
 
-      <div class="listview-filters row g-2 g-md-3 mb-3 align-items-end">
-        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-          <div class="listview-filter-group">
-            <label for="ptype-per-page" class="form-label small mb-1">
-              Entries per page:
-            </label>
-            <select
-              id="ptype-per-page"
-              v-model="perPage"
-              class="form-select form-select-sm">
-              <option v-for="n in [5, 10, 25, 50]" :key="n" :value="n">
-                {{ n }}
-              </option>
-            </select>
-          </div>
+    <JRToolbar>
+      <template #start>
+        <div class="jr-master-list__search">
+          <label class="jr-sr-only" for="ptype-filter-input">
+            Search party types
+          </label>
+          <span class="jr-master-list__search-icon" aria-hidden="true">
+            <SearchIcon />
+          </span>
+          <JRInput
+            inputId="ptype-filter-input"
+            v-model="filter"
+            type="search"
+            placeholder="Search by name or description..." />
         </div>
-        <div class="col-12 col-sm-6 col-lg-5 col-xl-4 ms-lg-auto">
-          <div class="listview-filter-group">
-            <label for="ptype-search" class="form-label small mb-1">
-              Search:
-            </label>
-            <div class="search-wrapper">
-              <input
-                id="ptype-search"
-                v-model="search"
-                type="search"
-                class="form-control form-control-sm"
-                placeholder="Search by name or description..."
-                autocomplete="off" />
-              <button
-                v-show="search && search.length"
-                @mousedown.prevent
-                @click="search = ''"
-                type="button"
-                class="btn-clear-x"
-                title="Clear">
-                ×
-              </button>
-            </div>
-          </div>
+      </template>
+
+      <template #stats>
+        <div class="jr-master-list__summary" aria-live="polite">
+          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
+          <JRBadge
+            :value="`${stats.active} Active`"
+            :severity="stats.active > 0 ? 'success' : 'secondary'" />
+          <JRBadge
+            :value="`${stats.inactive} Inactive`"
+            severity="secondary" />
         </div>
-      </div>
+      </template>
 
-      <BOverlay :show="isLoading" rounded="sm" opacity="0.85" variant="light">
-        <template #overlay>
-          <div class="text-center">
-            <BSpinner type="border" variant="secondary" class="mb-3" />
-            <div class="h5 text-primary">Loading...</div>
-            <div class="text-muted">Please wait while we fetch the data</div>
+      <template #actions>
+        <label class="jr-sr-only" for="ptype-per-page">
+          Entries per page
+        </label>
+        <JRSelect
+          class="jr-master-list__entries"
+          inputId="ptype-per-page"
+          v-model="perPage"
+          :options="pageOptions"
+          optionLabel="label"
+          optionValue="value" />
+        <JRButton
+          type="button"
+          variant="ghost"
+          size="sm"
+          class="jr-master-list__refresh"
+          @click="refreshTable">
+          <RefreshIcon />
+          Refresh
+        </JRButton>
+      </template>
+    </JRToolbar>
+
+    <div v-if="isMobile" class="jr-master-list__mobile">
+      <JREmptyState
+        v-if="!pagedItems.length && !isLoading"
+        :title="emptyTitle"
+        :description="emptyDescription">
+        <JRButton
+          v-if="loadError"
+          type="button"
+          variant="ghost"
+          size="sm"
+          @click="refreshTable">
+          Refresh
+        </JRButton>
+        <JRButton
+          v-else-if="hasSearch"
+          type="button"
+          variant="ghost"
+          size="sm"
+          @click="clearSearch">
+          Clear search
+        </JRButton>
+      </JREmptyState>
+      <p v-if="isLoading && !pagedItems.length" class="jr-master-list__loading">
+        Loading party types…
+      </p>
+      <p
+        v-else-if="isLoading && pagedItems.length"
+        class="jr-master-list__loading"
+        aria-live="polite">
+        Updating…
+      </p>
+      <ul
+        v-if="pagedItems.length"
+        class="jr-master-list__rows"
+        :aria-busy="isLoading ? 'true' : 'false'">
+        <li v-for="item in pagedItems" :key="item.id" class="jr-master-row">
+          <div class="jr-master-row__main">
+            <router-link
+              v-if="canView"
+              class="jr-master-row__name jr-master-row__name--link"
+              :to="viewTo(item.id)"
+              :aria-label="`View ${item.name}`">
+              {{ item.name }}
+            </router-link>
+            <span v-else class="jr-master-row__name">{{ item.name }}</span>
+            <p v-if="item.description" class="jr-master-row__meta">
+              {{ item.description }}
+            </p>
           </div>
-        </template>
-
-        <b-table
-          :items="filteredItems"
-          :fields="fields"
-          :per-page="perPage"
-          :current-page="currentPage"
-          bordered
-          hover
-          responsive
-          striped>
-          <template #cell(is_active)="data">
-            <td class="text-center">
-              <span v-if="data.item.is_active" class="badge bg-success">
-                Active
-              </span>
-              <span v-else class="badge bg-secondary">Inactive</span>
-            </td>
-          </template>
-
-          <template #cell(actions)="data">
-            <td class="text-center">
-              <div class="btn-group btn-group-sm" role="group">
-                <router-link
-                  v-if="hasPermission('apptransactions.view_partytype')"
-                  :to="`/party-types/form?id=${data.item.id}&mode=view`"
-                  class="btn btn-outline-success me-1">
-                  View
-                </router-link>
-                <router-link
-                  v-if="hasPermission('apptransactions.change_partytype')"
-                  :to="`/party-types/form?id=${data.item.id}&mode=edit`"
-                  class="btn btn-outline-primary me-1">
-                  Edit
-                </router-link>
-                <button
-                  v-if="hasPermission('apptransactions.delete_partytype')"
-                  @click="deletePartyType(data.item.id)"
-                  class="btn btn-outline-danger">
-                  Delete
-                </button>
-              </div>
-            </td>
-          </template>
-        </b-table>
-      </BOverlay>
-
-      <div class="d-flex justify-content-end mt-3">
-        <b-pagination
-          v-model="currentPage"
-          :total-rows="filteredItems.length"
-          :per-page="perPage" />
-      </div>
+          <div class="jr-master-row__aside">
+            <JRBadge
+              :value="item.is_active ? 'Active' : 'Inactive'"
+              :severity="item.is_active ? 'success' : 'secondary'" />
+            <JRRowActions
+              v-if="hasRowActions"
+              :actions="getRowActions(item)"
+              :compact="true"
+              :entity-label="item.name" />
+          </div>
+        </li>
+      </ul>
+      <Paginator
+        v-if="totalRows > 0"
+        class="jr-master-list__pager"
+        :rows="perPage"
+        :totalRecords="totalRows"
+        :first="tableFirst"
+        template="PrevPageLink CurrentPageReport NextPageLink"
+        currentPageReportTemplate="{first}–{last} of {totalRecords}"
+        @page="onTablePage" />
     </div>
-  </TxCard>
+
+    <div v-else class="jr-master-list__table">
+      <JRDataTable
+        :value="pagedItems"
+        :loading="isLoading"
+        dataKey="id"
+        lazy
+        paginator
+        :rows="perPage"
+        :totalRecords="totalRows"
+        :first="tableFirst"
+        :sortField="sortField"
+        :sortOrder="sortOrder"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+        currentPageReportTemplate="{first}–{last} of {totalRecords}"
+        scrollable
+        stripedRows
+        tableStyle="min-width: 36rem"
+        :emptyTitle="isLoading ? '' : emptyTitle"
+        :emptyDescription="isLoading ? '' : emptyDescription"
+        @page="onTablePage"
+        @sort="onTableSort">
+        <template #empty>
+          <JREmptyState
+            v-if="!isLoading"
+            :title="emptyTitle"
+            :description="emptyDescription">
+            <JRButton
+              v-if="loadError"
+              type="button"
+              variant="ghost"
+              size="sm"
+              @click="refreshTable">
+              Refresh
+            </JRButton>
+            <JRButton
+              v-else-if="hasSearch"
+              type="button"
+              variant="ghost"
+              size="sm"
+              @click="clearSearch">
+              Clear search
+            </JRButton>
+          </JREmptyState>
+        </template>
+        <Column field="name" header="Name" sortable>
+          <template #body="{ data }">
+            <router-link
+              v-if="canView"
+              class="jr-master-row__name jr-master-row__name--link"
+              :to="viewTo(data.id)"
+              :aria-label="`View ${data.name}`">
+              {{ data.name }}
+            </router-link>
+            <span v-else>{{ data.name }}</span>
+          </template>
+        </Column>
+        <Column field="description" header="Description" sortable>
+          <template #body="{ data }">
+            {{ data.description || "—" }}
+          </template>
+        </Column>
+        <Column field="is_active" header="Status" sortable>
+          <template #body="{ data }">
+            <JRBadge
+              :value="data.is_active ? 'Active' : 'Inactive'"
+              :severity="data.is_active ? 'success' : 'secondary'" />
+          </template>
+        </Column>
+        <Column
+          v-if="hasRowActions"
+          header="Actions"
+          :sortable="false"
+          :headerClass="
+            isTablet
+              ? 'jr-col-actions jr-col-actions--compact'
+              : 'jr-col-actions'
+          "
+          :bodyClass="
+            isTablet
+              ? 'jr-col-actions jr-col-actions--compact'
+              : 'jr-col-actions'
+          ">
+          <template #body="{ data }">
+            <JRRowActions
+              :actions="getRowActions(data)"
+              :compact="isTablet"
+              :entity-label="data.name" />
+          </template>
+        </Column>
+      </JRDataTable>
+    </div>
+  </JRPage>
 </template>
 
-<script setup>
-import TxCard from "@/components/layout/TxCard.vue";
-import { BOverlay, BSpinner } from "bootstrap-vue-next";
-import "@/assets/css/base.css";
-
-import { ref, computed, onMounted, getCurrentInstance } from "vue";
+<script>
 import axios from "axios";
+import {
+  ref,
+  computed,
+  watch,
+  onMounted,
+  onUnmounted,
+  getCurrentInstance,
+} from "vue";
+import { useRouter } from "vue-router";
+import Column from "primevue/column";
+import Paginator from "primevue/paginator";
+import EyeIcon from "@primevue/icons/eye";
+import PencilIcon from "@primevue/icons/pencil";
+import RefreshIcon from "@primevue/icons/refresh";
+import SearchIcon from "@primevue/icons/search";
+import TrashIcon from "@primevue/icons/trash";
+import {
+  JRPage,
+  JRPageHeader,
+  JRToolbar,
+  JRButton,
+  JRSelect,
+  JRInput,
+  JRBadge,
+  JRDataTable,
+  JREmptyState,
+  JRRowActions,
+} from "@ui";
 
-const { proxy } = getCurrentInstance();
+const ENDPOINT = "/api/party-types/";
+const PHONE_MQ = "(max-width: 767.98px)";
+const TABLET_MQ = "(min-width: 768px) and (max-width: 1023.98px)";
 
-const partyTypes = ref([]);
-const search = ref("");
-const perPage = ref(25);
-const currentPage = ref(1);
-const isLoading = ref(false);
-
-const fields = [
-  {
-    key: "id",
-    label: "ID",
-    sortable: true,
-    thClass: "text-center",
-    tdClass: "text-center",
-  },
-  {
-    key: "name",
-    label: "Name",
-    sortable: true,
-    thClass: "text-start",
-    tdClass: "text-start",
-  },
-  {
-    key: "description",
-    label: "Description",
-    sortable: true,
-    thClass: "text-start",
-    tdClass: "text-start",
-  },
-  {
-    key: "is_active",
-    label: "Status",
-    thClass: "text-center",
-    tdClass: "text-center",
-    sortable: true,
-  },
-  {
-    key: "actions",
-    label: "Actions",
-    thClass: "text-center",
-    tdClass: "text-center",
-    thStyle: { width: "12%", whiteSpace: "nowrap" },
-    tdStyle: { whiteSpace: "nowrap" },
-  },
-];
-
-const fetchPartyTypes = async () => {
-  isLoading.value = true;
-  try {
-    const res = await axios.get("/api/party-types/");
-    partyTypes.value = res.data;
-  } catch (err) {
-    console.error("Error fetching party types", err);
-    proxy?.notifyError?.("Error loading party types.");
-  } finally {
-    isLoading.value = false;
+function readViewport() {
+  if (typeof window === "undefined" || !window.matchMedia) {
+    return { isMobile: false, isTablet: false };
   }
-};
+  return {
+    isMobile: window.matchMedia(PHONE_MQ).matches,
+    isTablet: window.matchMedia(TABLET_MQ).matches,
+  };
+}
 
-const refreshList = () => {
-  isLoading.value = true;
-  fetchPartyTypes();
-};
+function compareValues(a, b, field) {
+  const av = a?.[field];
+  const bv = b?.[field];
+  if (typeof av === "boolean" || typeof bv === "boolean") {
+    return Number(!!av) - Number(!!bv);
+  }
+  const as = (av ?? "").toString().toLowerCase();
+  const bs = (bv ?? "").toString().toLowerCase();
+  if (as < bs) return -1;
+  if (as > bs) return 1;
+  return 0;
+}
 
-onMounted(fetchPartyTypes);
+export default {
+  name: "PartyTypeListView",
+  components: {
+    Column,
+    Paginator,
+    RefreshIcon,
+    SearchIcon,
+    JRPage,
+    JRPageHeader,
+    JRToolbar,
+    JRButton,
+    JRSelect,
+    JRInput,
+    JRBadge,
+    JRDataTable,
+    JREmptyState,
+    JRRowActions,
+  },
 
-const filteredItems = computed(() => {
-  if (!search.value) return partyTypes.value;
-  const q = search.value.toLowerCase();
-  return partyTypes.value.filter((item) =>
-    `${item.name} ${item.description || ""}`.toLowerCase().includes(q)
-  );
-});
+  setup() {
+    const router = useRouter();
+    const { proxy } = getCurrentInstance();
 
-const stats = computed(() => {
-  const list = filteredItems.value;
-  const active = list.filter((i) => i.is_active).length;
-  return { total: list.length, active, inactive: list.length - active };
-});
+    const partyTypes = ref([]);
+    const isLoading = ref(true);
+    const loadError = ref(false);
+    const currentPage = ref(1);
+    const perPage = ref(25);
+    const filter = ref("");
+    const sortField = ref("name");
+    const sortOrder = ref(1);
+    let searchTimer = null;
 
-const deletePartyType = (id) => {
-  proxy?.confirmDelete?.(
-    "Are you sure?",
-    "This action cannot be undone.",
-    async () => {
-      try {
-        await axios.delete(`/api/party-types/${id}/`);
-        partyTypes.value = partyTypes.value.filter((p) => p.id !== id);
-        proxy?.notifyToastSuccess?.("The party type has been deleted.");
-      } catch (err) {
-        console.error("Error deleting party type", err);
-        proxy?.notifyError?.("Error deleting the party type.");
+    const initialViewport = readViewport();
+    const isMobile = ref(initialViewport.isMobile);
+    const isTablet = ref(initialViewport.isTablet);
+    let phoneQuery = null;
+    let tabletQuery = null;
+    let onViewport = null;
+
+    const pageOptions = [
+      { value: 10, label: "10" },
+      { value: 25, label: "25" },
+      { value: 50, label: "50" },
+      { value: 100, label: "100" },
+    ];
+
+    const filteredItems = computed(() => {
+      const q = (filter.value || "").toLowerCase().trim();
+      let list = partyTypes.value;
+      if (q) {
+        list = list.filter((item) =>
+          `${item.name} ${item.description || ""}`.toLowerCase().includes(q)
+        );
       }
-    }
-  );
+      const field = sortField.value || "name";
+      const order = sortOrder.value === -1 ? -1 : 1;
+      return [...list].sort(
+        (a, b) => compareValues(a, b, field) * order
+      );
+    });
+
+    const stats = computed(() => {
+      const list = filteredItems.value;
+      const active = list.filter((i) => i.is_active).length;
+      return { total: list.length, active, inactive: list.length - active };
+    });
+
+    const totalRows = computed(() => filteredItems.value.length);
+    const tableFirst = computed(() => (currentPage.value - 1) * perPage.value);
+    const pagedItems = computed(() => {
+      const start = tableFirst.value;
+      return filteredItems.value.slice(start, start + perPage.value);
+    });
+
+    const hasSearch = computed(() =>
+      Boolean(filter.value && filter.value.trim())
+    );
+    const emptyTitle = computed(() => {
+      if (loadError.value) return "Could not load party types";
+      if (hasSearch.value) return "No matching party types";
+      return "No party types";
+    });
+    const emptyDescription = computed(() => {
+      if (loadError.value) return "Try Refresh.";
+      const query = filter.value.trim();
+      if (query) return `No party types match “${query}”.`;
+      return "No party types yet.";
+    });
+
+    const clearSearch = () => {
+      filter.value = "";
+      if (typeof document !== "undefined") {
+        document.getElementById("ptype-filter-input")?.focus();
+      }
+    };
+
+    const canView = computed(() =>
+      !!proxy?.hasPermission?.("apptransactions.view_partytype")
+    );
+    const hasRowActions = computed(
+      () =>
+        canView.value ||
+        !!proxy?.hasPermission?.("apptransactions.change_partytype") ||
+        !!proxy?.hasPermission?.("apptransactions.delete_partytype")
+    );
+
+    const loadItems = async () => {
+      if (!isLoading.value) isLoading.value = true;
+      try {
+        const response = await axios.get(ENDPOINT);
+        partyTypes.value = Array.isArray(response.data) ? response.data : [];
+        loadError.value = false;
+        const maxPage = Math.max(
+          1,
+          Math.ceil(partyTypes.value.length / perPage.value) || 1
+        );
+        if (currentPage.value > maxPage) currentPage.value = maxPage;
+      } catch (error) {
+        console.error("Error fetching party types", error);
+        loadError.value = true;
+        partyTypes.value = [];
+        proxy?.notifyError?.("Error loading party types.");
+      } finally {
+        setTimeout(() => {
+          isLoading.value = false;
+        }, 300);
+      }
+    };
+
+    const onTablePage = (event) => {
+      currentPage.value = (event.page ?? 0) + 1;
+      if (event.rows && event.rows !== perPage.value) {
+        perPage.value = event.rows;
+      }
+    };
+
+    const onTableSort = (event) => {
+      sortField.value = event.sortField || "name";
+      sortOrder.value = event.sortOrder ?? 1;
+      currentPage.value = 1;
+    };
+
+    const refreshTable = () => {
+      isLoading.value = true;
+      loadItems();
+    };
+
+    const viewTo = (id) => ({
+      path: "/party-types/form",
+      query: { id: String(id), mode: "view" },
+    });
+    const editTo = (id) => ({
+      path: "/party-types/form",
+      query: { id: String(id), mode: "edit" },
+    });
+    const goToCreateForm = () => router.push("/party-types/form");
+    const viewItem = (id) => router.push(viewTo(id));
+    const editItem = (id) => router.push(editTo(id));
+
+    const getRowActions = (item) => {
+      const actions = [];
+      if (proxy?.hasPermission?.("apptransactions.view_partytype")) {
+        actions.push({
+          key: "view",
+          label: "View",
+          severity: "success",
+          icon: EyeIcon,
+          command: () => viewItem(item.id),
+        });
+      }
+      if (proxy?.hasPermission?.("apptransactions.change_partytype")) {
+        actions.push({
+          key: "edit",
+          label: "Edit",
+          severity: "primary",
+          icon: PencilIcon,
+          command: () => editItem(item.id),
+        });
+      }
+      if (proxy?.hasPermission?.("apptransactions.delete_partytype")) {
+        actions.push({
+          key: "delete",
+          label: "Delete",
+          severity: "danger",
+          icon: TrashIcon,
+          command: () => deletePartyType(item.id),
+        });
+      }
+      return actions;
+    };
+
+    const deletePartyType = (id) => {
+      proxy?.confirmDelete?.(
+        "Are you sure?",
+        "This action cannot be undone.",
+        async () => {
+          try {
+            await axios.delete(`${ENDPOINT}${id}/`);
+            partyTypes.value = partyTypes.value.filter((p) => p.id !== id);
+            proxy?.notifyToastSuccess?.("The party type has been deleted.");
+          } catch (err) {
+            console.error("Error deleting party type", err);
+            proxy?.notifyError?.("Error deleting the party type.");
+          }
+        }
+      );
+    };
+
+    onMounted(() => {
+      if (typeof window !== "undefined" && window.matchMedia) {
+        phoneQuery = window.matchMedia(PHONE_MQ);
+        tabletQuery = window.matchMedia(TABLET_MQ);
+        onViewport = () => {
+          const viewport = readViewport();
+          isMobile.value = viewport.isMobile;
+          isTablet.value = viewport.isTablet;
+        };
+        onViewport();
+        if (phoneQuery.addEventListener) {
+          phoneQuery.addEventListener("change", onViewport);
+          tabletQuery.addEventListener("change", onViewport);
+        } else {
+          phoneQuery.addListener(onViewport);
+          tabletQuery.addListener(onViewport);
+        }
+      }
+      loadItems();
+    });
+
+    onUnmounted(() => {
+      if (searchTimer) clearTimeout(searchTimer);
+      if (onViewport) {
+        if (phoneQuery?.removeEventListener) {
+          phoneQuery.removeEventListener("change", onViewport);
+          tabletQuery.removeEventListener("change", onViewport);
+        } else {
+          phoneQuery?.removeListener?.(onViewport);
+          tabletQuery?.removeListener?.(onViewport);
+        }
+      }
+    });
+
+    watch(perPage, () => {
+      currentPage.value = 1;
+    });
+
+    watch(filter, () => {
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        currentPage.value = 1;
+      }, 300);
+    });
+
+    watch(filteredItems, (list) => {
+      const maxPage = Math.max(1, Math.ceil(list.length / perPage.value) || 1);
+      if (currentPage.value > maxPage) currentPage.value = maxPage;
+    });
+
+    return {
+      stats,
+      isLoading,
+      loadError,
+      perPage,
+      filter,
+      totalRows,
+      sortField,
+      sortOrder,
+      tableFirst,
+      pagedItems,
+      pageOptions,
+      hasSearch,
+      emptyTitle,
+      emptyDescription,
+      clearSearch,
+      isMobile,
+      isTablet,
+      hasRowActions,
+      canView,
+      getRowActions,
+      refreshTable,
+      onTablePage,
+      onTableSort,
+      goToCreateForm,
+      viewTo,
+    };
+  },
 };
 </script>
 
 <style scoped>
-.listview-title {
-  font-size: 1.1rem;
-  letter-spacing: -0.01em;
-}
-.listview-toolbar {
-  padding: 0.5rem 0.75rem;
-  background-color: rgba(13, 110, 253, 0.06);
-  border: 1px solid rgba(13, 110, 253, 0.12);
-  border-radius: 0.375rem;
-}
-.listview-toolbar .stats-badge {
-  font-size: 0.7rem;
-  font-weight: 500;
-  padding: 0.25rem 0.5rem;
-  line-height: 1.2;
-}
-.listview-toolbar-divider {
-  width: 1px;
-  height: 1.25rem;
-  background-color: rgba(0, 0, 0, 0.12);
-  margin: 0 0.15rem;
-}
-.listview-refresh-btn {
-  padding: 0.2rem 0.6rem;
-  font-size: 0.8rem;
-}
-.listview-filters .listview-filter-group label {
-  font-size: 0.8rem;
-  color: var(--bs-secondary-color);
-}
-.form-select-sm,
-.form-control-sm {
-  font-size: 0.8rem;
-}
-.search-wrapper {
+.jr-master-list__search {
   position: relative;
+  min-width: 0;
+  width: 100%;
 }
-.btn-clear-x {
+
+.jr-master-list__search-icon {
   position: absolute;
-  right: 6px;
+  left: 0.75rem;
   top: 50%;
+  z-index: 1;
+  display: flex;
+  color: var(--color-jr-muted);
+  pointer-events: none;
   transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: #666;
+}
+
+.jr-master-list__search-icon :deep(svg) {
+  width: 1rem;
+  height: 1rem;
+}
+
+.jr-master-list__search :deep(.p-inputtext) {
+  padding-left: 2.25rem;
+}
+
+.jr-master-list__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  pointer-events: none;
+}
+
+:deep(.jr-toolbar__actions .jr-master-list__entries.p-select),
+:deep(.jr-toolbar__actions .jr-master-list__entries.jr-control) {
+  width: 4.75rem;
+  flex: 0 0 auto;
+}
+
+.jr-master-list__loading,
+.jr-master-list__muted {
+  color: var(--color-jr-muted);
+}
+
+.jr-master-list__loading {
+  margin: 0;
+  padding: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.jr-master-list__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-jr-border);
+}
+
+.jr-master-list__rows[aria-busy="true"] {
+  opacity: 0.55;
+}
+
+.jr-master-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-jr-border);
+}
+
+.jr-master-row__main {
+  min-width: 0;
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.jr-master-row__name {
+  font-weight: 600;
+  color: var(--color-jr-text);
+}
+
+.jr-master-row__name--link {
+  color: var(--color-jr-primary);
+  text-decoration: none;
+}
+
+.jr-master-row__name--link:hover {
+  text-decoration: underline;
+}
+
+.jr-master-row__name--link:focus-visible {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: 2px;
+}
+
+.jr-master-row__meta {
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jr-master-row__aside {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.jr-master-list__pager {
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--color-jr-border);
+}
+
+.jr-master-list__pager :deep(.p-paginator),
+.jr-master-list__pager :deep(.p-paginator-content) {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.jr-master-list__pager :deep(.p-paginator-prev),
+.jr-master-list__pager :deep(.p-paginator-next) {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}
+
+.jr-master-list__pager :deep(.p-paginator-current) {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-jr-muted);
+}
+
+.jr-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.jr-master-list__table :deep(th.jr-col-actions),
+.jr-master-list__table :deep(td.jr-col-actions) {
+  width: 16.5rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.jr-master-list__table :deep(th.jr-col-actions.jr-col-actions--compact),
+.jr-master-list__table :deep(td.jr-col-actions.jr-col-actions--compact) {
+  width: 3.25rem;
+}
+
+.jr-master-list__table
+  :deep(th.jr-col-actions .p-datatable-column-header-content) {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.jr-master-list__table :deep(td.jr-col-actions .jr-row-actions) {
+  justify-content: center;
+  width: 100%;
 }
 </style>

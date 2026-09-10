@@ -314,7 +314,7 @@ export default defineComponent({
   height: 360px;
   background: var(--color-jr-surface);
   border: 1px solid var(--color-jr-border);
-  border-radius: var(--radius-jr-panel);
+  border-radius: 0;
   padding: 0.85rem;
 }
 

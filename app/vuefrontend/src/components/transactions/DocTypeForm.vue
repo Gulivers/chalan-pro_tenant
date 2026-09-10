@@ -1,392 +1,273 @@
 <template>
-  <div class="container mt-4">
-    <div class="text-center mb-4">
-      <h3 class="text-warning">Transaction Types</h3>
+  <JRPage :class="{ 'jr-doctype-form--modal': isModal }">
+    <JRPageHeader v-if="!isModal" :title="pageTitle" />
+
+    <div class="jr-doctype-form">
+      <p v-if="loading" class="jr-doctype-form__status" role="status">
+        Loading document type…
+      </p>
+
+      <form
+        v-else
+        class="jr-doctype-form__form"
+        @submit.prevent="handleSubmit"
+        novalidate>
+        <JRSection title="Basic Information">
+          <div class="jr-form-grid">
+            <JRField
+              v-slot="{ describedby, invalid }"
+              label="Type Code"
+              inputId="doctype-type-code"
+              required
+              hint="Unique code to identify the document type"
+              :error="fieldErrors.type_code">
+              <JRInput
+                inputId="doctype-type-code"
+                :modelValue="form.type_code"
+                maxlength="20"
+                placeholder="Ex: INCOME, SUPRET"
+                class="jr-doctype-form__code"
+                :disabled="isDisabled"
+                :invalid="invalid"
+                required
+                :ariaDescribedby="describedby"
+                @update:modelValue="onTypeCodeInput" />
+            </JRField>
+
+            <JRField
+              v-slot="{ describedby, invalid }"
+              label="Description"
+              inputId="doctype-description"
+              required
+              :error="fieldErrors.description">
+              <JRInput
+                inputId="doctype-description"
+                v-model="form.description"
+                maxlength="200"
+                placeholder="Document type description"
+                :disabled="isDisabled"
+                :invalid="invalid"
+                required
+                :ariaDescribedby="describedby"
+                @update:modelValue="clearFieldError('description')" />
+            </JRField>
+          </div>
+        </JRSection>
+
+        <JRSection title="Inventory Configuration">
+          <div class="jr-form-grid">
+            <JRField
+              v-slot="{ describedby }"
+              label="Stock Movement"
+              inputId="doctype-stock-movement"
+              hint="Defines how this document type affects inventory (entry, exit, or neutral)">
+              <JRSelect
+                inputId="doctype-stock-movement"
+                v-model="form.stock_movement"
+                :options="stockMovementOptions"
+                optionLabel="label"
+                optionValue="value"
+                :disabled="isDisabled"
+                :ariaDescribedby="describedby" />
+            </JRField>
+          </div>
+          <div class="jr-form-checks">
+            <JRField label="Physical Inventory" inputId="doctype-affects-physical">
+              <JRCheckbox
+                inputId="doctype-affects-physical"
+                v-model="form.affects_physical"
+                ariaLabel="Physical Inventory"
+                :disabled="isDisabled" />
+            </JRField>
+            <JRField label="Logical Inventory" inputId="doctype-affects-logical">
+              <JRCheckbox
+                inputId="doctype-affects-logical"
+                v-model="form.affects_logical"
+                ariaLabel="Logical Inventory"
+                :disabled="isDisabled" />
+            </JRField>
+            <JRField
+              label="Affects Accounting"
+              inputId="doctype-affects-accounting">
+              <JRCheckbox
+                inputId="doctype-affects-accounting"
+                v-model="form.affects_accounting"
+                ariaLabel="Affects Accounting"
+                :disabled="isDisabled" />
+            </JRField>
+            <JRField
+              label="Warehouse Required"
+              inputId="doctype-warehouse-required">
+              <JRCheckbox
+                inputId="doctype-warehouse-required"
+                v-model="form.warehouse_required"
+                ariaLabel="Warehouse Required"
+                :disabled="isDisabled" />
+            </JRField>
+            <JRField
+              label="Creates Serialized Items"
+              inputId="doctype-creates-serialized"
+              hint="Opens asset tag assignment when the document has serialized items (e.g. GRN)"
+              class="jr-form-checks__full">
+              <JRCheckbox
+                inputId="doctype-creates-serialized"
+                v-model="form.creates_serialized_items"
+                ariaLabel="Creates Serialized Items"
+                :disabled="isDisabled" />
+            </JRField>
+          </div>
+        </JRSection>
+
+        <JRSection title="Business Configuration">
+          <div class="jr-form-checks">
+            <JRField label="Purchase Document" inputId="doctype-is-purchase">
+              <JRCheckbox
+                inputId="doctype-is-purchase"
+                v-model="form.is_purchase"
+                ariaLabel="Purchase Document"
+                :disabled="isDisabled" />
+            </JRField>
+            <JRField label="Sales Document" inputId="doctype-is-sales">
+              <JRCheckbox
+                inputId="doctype-is-sales"
+                v-model="form.is_sales"
+                ariaLabel="Sales Document"
+                :disabled="isDisabled" />
+            </JRField>
+            <JRField label="Subject to Taxes" inputId="doctype-is-taxable">
+              <JRCheckbox
+                inputId="doctype-is-taxable"
+                v-model="form.is_taxable"
+                ariaLabel="Subject to Taxes"
+                :disabled="isDisabled" />
+            </JRField>
+          </div>
+        </JRSection>
+
+        <JRSection title="Operational Configuration">
+          <div class="jr-form-checks">
+            <JRField
+              label="Operational Document"
+              inputId="doctype-is-operational">
+              <JRCheckbox
+                inputId="doctype-is-operational"
+                v-model="form.is_operational"
+                ariaLabel="Operational Document"
+                :disabled="isDisabled" />
+            </JRField>
+            <JRField
+              label="Allow Negative Sales"
+              inputId="doctype-allow-negative-sales"
+              hint="Allow sales even when stock is insufficient">
+              <JRCheckbox
+                inputId="doctype-allow-negative-sales"
+                v-model="form.allow_negative_sales"
+                ariaLabel="Allow Negative Sales"
+                :disabled="isDisabled" />
+            </JRField>
+          </div>
+        </JRSection>
+
+        <JRSection title="JobRhythm Assistant">
+          <p class="jr-doctype-form__note">
+            Map this type to analytics meanings. Codes like PINV or PO-INV can
+            differ per tenant; these flags tell the Assistant how to classify
+            transactions.
+          </p>
+          <div class="jr-form-checks">
+            <JRField
+              label="Net invoiced spending"
+              inputId="doctype-net-invoiced">
+              <JRCheckbox
+                inputId="doctype-net-invoiced"
+                v-model="form.counts_as_net_invoiced_spend"
+                ariaLabel="Net invoiced spending"
+                :disabled="isDisabled"
+                @update:modelValue="onSpendIntentionChange" />
+            </JRField>
+            <JRField label="Job material issue" inputId="doctype-job-material">
+              <JRCheckbox
+                inputId="doctype-job-material"
+                v-model="form.counts_as_job_material_issue"
+                ariaLabel="Job material issue"
+                :disabled="isDisabled" />
+            </JRField>
+            <JRField
+              label="Purchase return"
+              inputId="doctype-purchase-return">
+              <JRCheckbox
+                inputId="doctype-purchase-return"
+                v-model="form.counts_as_purchase_return"
+                ariaLabel="Purchase return"
+                :disabled="isDisabled"
+                @update:modelValue="onReturnIntentionChange" />
+            </JRField>
+          </div>
+        </JRSection>
+
+        <JRSection title="Status">
+          <div class="jr-form-checks">
+            <JRField
+              label="Active Document Type"
+              inputId="doctype-is-active">
+              <JRCheckbox
+                inputId="doctype-is-active"
+                v-model="form.is_active"
+                ariaLabel="Active Document Type"
+                :disabled="isDisabled" />
+            </JRField>
+          </div>
+        </JRSection>
+
+        <div
+          :class="[
+            'jr-doctype-form__actions',
+            { 'jr-doctype-form__actions--sticky': !isModal },
+          ]">
+          <template v-if="!isViewMode">
+            <JRButton type="submit" variant="primary" :disabled="isDisabled">
+              {{ submitting ? "Saving..." : "Save" }}
+            </JRButton>
+            <JRButton
+              type="button"
+              variant="secondary"
+              :disabled="submitting"
+              @click="handleCancel">
+              Cancel
+            </JRButton>
+          </template>
+          <JRButton
+            v-else
+            type="button"
+            variant="secondary"
+            :disabled="submitting"
+            @click="handleCancel">
+            Back
+          </JRButton>
+        </div>
+      </form>
     </div>
-
-    <div class="card shadow" style="height: auto">
-      <div class="card-header d-flex justify-content-center align-items-center">
-        <h6 class="mb-0 w-100 text-center text-primary">
-          {{
-            isViewMode
-              ? "View Document Type"
-              : isEditMode
-              ? "Edit Document Type"
-              : "New Document Type"
-          }}
-        </h6>
-      </div>
-
-      <div class="card-body">
-        <form @submit.prevent="handleSubmit">
-          <!-- Basic Information -->
-          <div class="form-section mb-4">
-            <h6 class="section-title">
-              <i class="fas fa-info-circle me-2"></i>
-              Basic Information
-            </h6>
-            <div class="row g-3 text-start px-3">
-              <div class="col-md-6">
-                <label for="type_code" class="form-label">
-                  Type Code
-                  <span class="text-danger">*</span>
-                </label>
-                <input
-                  id="type_code"
-                  v-model="form.type_code"
-                  type="text"
-                  class="form-control uppercase"
-                  placeholder="Ex: INCOME, SUPRET"
-                  v-tt
-                  data-title="Unique code to identify the document type"
-                  :disabled="isViewMode || submitting" />
-              </div>
-              <div class="col-md-6">
-                <label for="description" class="form-label">
-                  Description
-                  <span class="text-danger">*</span>
-                </label>
-                <input
-                  id="description"
-                  v-model="form.description"
-                  type="text"
-                  class="form-control"
-                  placeholder="Document type description"
-                  v-tt
-                  data-title="Descriptive name for the document type"
-                  :disabled="isViewMode || submitting" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Inventory Configuration -->
-          <div class="form-section mb-4">
-            <h6 class="section-title">
-              <i class="fas fa-boxes me-2"></i>
-              Inventory Configuration
-            </h6>
-            <div class="row g-3 text-start px-3">
-              <div class="col-12 col-md-6 col-lg-4">
-                <label for="stock_movement" class="form-label">
-                  Stock Movement
-                </label>
-                <select
-                  id="stock_movement"
-                  v-model="form.stock_movement"
-                  class="form-select"
-                  v-tt
-                  data-title="Defines how this document type affects inventory (entry, exit, or neutral)"
-                  :disabled="isViewMode || submitting">
-                  <option :value="1">+1 Entry</option>
-                  <option :value="-1">-1 Exit</option>
-                  <option :value="0">0 Neutral</option>
-                </select>
-              </div>
-            </div>
-            <div class="row g-3 mt-2 switches-row">
-              <div class="col-12 col-md-6 col-lg-3">
-                <div class="form-check form-switch switch-row">
-                  <input
-                    id="affects_physical"
-                    v-model="form.affects_physical"
-                    class="form-check-input"
-                    type="checkbox"
-                    v-tt
-                    data-title="Affects physical inventory count"
-                    :disabled="isViewMode || submitting" />
-                  <label class="form-check-label" for="affects_physical">
-                    Physical Inventory
-                  </label>
-                </div>
-              </div>
-              <div class="col-12 col-md-6 col-lg-3">
-                <div class="form-check form-switch switch-row">
-                  <input
-                    id="affects_logical"
-                    v-model="form.affects_logical"
-                    class="form-check-input"
-                    type="checkbox"
-                    v-tt
-                    data-title="Affects logical inventory tracking"
-                    :disabled="isViewMode || submitting" />
-                  <label class="form-check-label" for="affects_logical">
-                    Logical Inventory
-                  </label>
-                </div>
-              </div>
-              <div class="col-12 col-md-6 col-lg-3">
-                <div class="form-check form-switch switch-row">
-                  <input
-                    id="affects_accounting"
-                    v-model="form.affects_accounting"
-                    class="form-check-input"
-                    type="checkbox"
-                    v-tt
-                    data-title="Affects accounting records and financial reports"
-                    :disabled="isViewMode || submitting" />
-                  <label class="form-check-label" for="affects_accounting">
-                    Affects Accounting
-                  </label>
-                </div>
-              </div>
-              <div class="col-12 col-md-6 col-lg-3">
-                <div class="form-check form-switch switch-row">
-                  <input
-                    id="warehouse_required"
-                    v-model="form.warehouse_required"
-                    class="form-check-input"
-                    type="checkbox"
-                    v-tt
-                    data-title="Requires warehouse selection for this document type"
-                    :disabled="isViewMode || submitting" />
-                  <label class="form-check-label" for="warehouse_required">
-                    Warehouse Required
-                  </label>
-                </div>
-              </div>
-              <div class="col-12 col-md-6 col-lg-3">
-                <div class="form-check form-switch switch-row">
-                  <input
-                    id="creates_serialized_items"
-                    v-model="form.creates_serialized_items"
-                    class="form-check-input"
-                    type="checkbox"
-                    v-tt
-                    data-title="Document type that creates/registers serialized items; opens the asset tag assignment modal when the document has serialized items (e.g. GRN)"
-                    :disabled="isViewMode || submitting" />
-                  <label class="form-check-label" for="creates_serialized_items">
-                    Creates Serialized Items
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Business Configuration -->
-          <div class="form-section mb-4">
-            <h6 class="section-title">
-              <i class="fas fa-briefcase me-2"></i>
-              Business Configuration
-            </h6>
-            <div class="row g-3 switches-row">
-              <div class="col-12 col-md-6 col-lg-4">
-                <div class="form-check form-switch switch-row">
-                  <input
-                    id="is_purchase"
-                    v-model="form.is_purchase"
-                    class="form-check-input"
-                    type="checkbox"
-                    v-tt
-                    data-title="For transactions with suppliers"
-                    :disabled="isViewMode || submitting" />
-                  <label class="form-check-label" for="is_purchase">
-                    Purchase Document
-                  </label>
-                </div>
-              </div>
-              <div class="col-12 col-md-6 col-lg-4">
-                <div class="form-check form-switch switch-row">
-                  <input
-                    id="is_sales"
-                    v-model="form.is_sales"
-                    class="form-check-input"
-                    type="checkbox"
-                    v-tt
-                    data-title="For transactions with customers"
-                    :disabled="isViewMode || submitting" />
-                  <label class="form-check-label" for="is_sales">
-                    Sales Document
-                  </label>
-                </div>
-              </div>
-              <div class="col-12 col-md-6 col-lg-4">
-                <div class="form-check form-switch switch-row">
-                  <input
-                    id="is_taxable"
-                    v-model="form.is_taxable"
-                    class="form-check-input"
-                    type="checkbox"
-                    v-tt
-                    data-title="Applies taxes to the document"
-                    :disabled="isViewMode || submitting" />
-                  <label class="form-check-label" for="is_taxable">
-                    Subject to Taxes
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Operational Configuration -->
-          <div class="form-section mb-4">
-            <h6 class="section-title">
-              <i class="fas fa-cogs me-2"></i>
-              Operational Configuration
-            </h6>
-            <div class="row g-3 switches-row">
-              <div class="col-12 col-md-6">
-                <div class="form-check form-switch switch-row">
-                  <input
-                    id="is_operational"
-                    v-model="form.is_operational"
-                    class="form-check-input"
-                    type="checkbox"
-                    v-tt
-                    data-title="Requires Work Account selection instead of Builder/Party"
-                    :disabled="isViewMode || submitting" />
-                  <label class="form-check-label" for="is_operational">
-                    Operational Document
-                  </label>
-                </div>
-              </div>
-              <div class="col-12 col-md-6">
-                <div class="form-check form-switch switch-row">
-                  <input
-                    id="allow_negative_sales"
-                    v-model="form.allow_negative_sales"
-                    class="form-check-input"
-                    type="checkbox"
-                    v-tt
-                    data-title="Allow sales transactions even when stock is insufficient"
-                    :disabled="isViewMode || submitting" />
-                  <label class="form-check-label" for="allow_negative_sales">
-                    Allow Negative Sales
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- JobRhythm Assistant (Level 1 intentions) -->
-          <div class="form-section mb-4">
-            <h6 class="section-title">
-              <i class="fas fa-robot me-2"></i>
-              JobRhythm Assistant
-            </h6>
-            <p class="small text-muted px-3 mb-2">
-              Map this type to analytics meanings. Codes like PINV or PO-INV can differ per
-              tenant; these flags tell the Assistant how to classify transactions.
-            </p>
-            <div class="row g-3 switches-row">
-              <div class="col-12 col-md-6 col-lg-4">
-                <div class="form-check form-switch switch-row">
-                  <input
-                    id="counts_as_net_invoiced_spend"
-                    v-model="form.counts_as_net_invoiced_spend"
-                    class="form-check-input"
-                    type="checkbox"
-                    v-tt
-                    data-title="Include in Net invoiced spending (Assistant spend tools). Not PO, GRN, or returns."
-                    :disabled="isViewMode || submitting"
-                    @change="onSpendIntentionChange" />
-                  <label class="form-check-label" for="counts_as_net_invoiced_spend">
-                    Net invoiced spending
-                  </label>
-                </div>
-              </div>
-              <div class="col-12 col-md-6 col-lg-4">
-                <div class="form-check form-switch switch-row">
-                  <input
-                    id="counts_as_job_material_issue"
-                    v-model="form.counts_as_job_material_issue"
-                    class="form-check-input"
-                    type="checkbox"
-                    v-tt
-                    data-title="Job/house material issue (e.g. picking ticket to a Work Account)."
-                    :disabled="isViewMode || submitting" />
-                  <label class="form-check-label" for="counts_as_job_material_issue">
-                    Job material issue
-                  </label>
-                </div>
-              </div>
-              <div class="col-12 col-md-6 col-lg-4">
-                <div class="form-check form-switch switch-row">
-                  <input
-                    id="counts_as_purchase_return"
-                    v-model="form.counts_as_purchase_return"
-                    class="form-check-input"
-                    type="checkbox"
-                    v-tt
-                    data-title="Purchase returns. Not mixed into Net invoiced spending."
-                    :disabled="isViewMode || submitting"
-                    @change="onReturnIntentionChange" />
-                  <label class="form-check-label" for="counts_as_purchase_return">
-                    Purchase return
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Status -->
-          <div class="form-section mb-4">
-            <h6 class="section-title">
-              <i class="fas fa-toggle-on me-2"></i>
-              Status
-            </h6>
-            <div class="row switches-row">
-              <div class="col-12 col-md-6">
-                <div class="form-check form-switch switch-row">
-                  <input
-                    id="is_active"
-                    v-model="form.is_active"
-                    class="form-check-input"
-                    type="checkbox"
-                    v-tt
-                    data-title="Allows using this type in transactions"
-                    :disabled="isViewMode || submitting" />
-                  <label class="form-check-label" for="is_active">
-                    Active Document Type
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="row mt-4">
-            <div class="col-12">
-              <div class="d-flex gap-3 justify-content-center">
-                <button
-                  type="submit"
-                  class="btn btn-primary btn-rounded"
-                  :disabled="isViewMode || submitting">
-                  <span
-                    v-if="submitting"
-                    class="spinner-border spinner-border-sm me-2"
-                    role="status"
-                    aria-hidden="true"></span>
-                  <i v-else class="fas fa-save me-2"></i>
-                  {{ submitting ? "Saving..." : "Save" }}
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-rounded"
-                  :disabled="submitting"
-                  @click="handleCancel">
-                  <i class="fas fa-arrow-left me-2"></i>
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+  </JRPage>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, computed, onMounted, getCurrentInstance } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
-import Swal from "sweetalert2";
-import * as bootstrap from "bootstrap";
-// import { Tooltip } from 'bootstrap'
-import "@assets/css/base.css";
+import {
+  JRPage,
+  JRPageHeader,
+  JRSection,
+  JRField,
+  JRInput,
+  JRSelect,
+  JRCheckbox,
+  JRButton,
+} from "@ui";
 
 const route = useRoute();
 const router = useRouter();
+const { proxy } = getCurrentInstance();
 
 const emit = defineEmits(["saved", "cancel"]);
 
@@ -402,9 +283,25 @@ const props = defineProps({
 });
 
 const submitting = ref(false);
-const id = computed(() => props.id || route.query.id);
+const loading = ref(false);
+const fieldErrors = ref({});
+
+const id = computed(() => props.id || route.query.id || null);
 const isViewMode = computed(() => route.query.mode === "view");
 const isEditMode = computed(() => !!id.value && !isViewMode.value);
+const isDisabled = computed(() => isViewMode.value || submitting.value);
+
+const pageTitle = computed(() => {
+  if (isViewMode.value) return "View Document Type";
+  if (isEditMode.value) return "Edit Document Type";
+  return "New Document Type";
+});
+
+const stockMovementOptions = [
+  { value: 1, label: "+1 Entry" },
+  { value: -1, label: "-1 Exit" },
+  { value: 0, label: "0 Neutral" },
+];
 
 const form = ref({
   type_code: "",
@@ -426,13 +323,27 @@ const form = ref({
   is_active: true,
 });
 
-function onSpendIntentionChange() {
+function clearFieldError(key) {
+  if (!fieldErrors.value[key]) return;
+  const next = { ...fieldErrors.value };
+  delete next[key];
+  fieldErrors.value = next;
+}
+
+function onTypeCodeInput(value) {
+  form.value.type_code = (value ?? "").toString().toUpperCase();
+  clearFieldError("type_code");
+}
+
+function onSpendIntentionChange(value) {
+  form.value.counts_as_net_invoiced_spend = !!value;
   if (form.value.counts_as_net_invoiced_spend) {
     form.value.counts_as_purchase_return = false;
   }
 }
 
-function onReturnIntentionChange() {
+function onReturnIntentionChange(value) {
+  form.value.counts_as_purchase_return = !!value;
   if (form.value.counts_as_purchase_return) {
     form.value.counts_as_net_invoiced_spend = false;
   }
@@ -441,7 +352,10 @@ function onReturnIntentionChange() {
 /** Suggest Assistant intentions from code/flags for new types only. */
 function applyIntentionSuggestions() {
   if (id.value) return;
-  const code = (form.value.type_code || "").trim().toUpperCase().replace(/\s+/g, "");
+  const code = (form.value.type_code || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
   const compact = code.replace(/[-_]/g, "");
   if (compact === "PINV" || compact === "POINV" || code === "PO-INV") {
     form.value.counts_as_net_invoiced_spend = true;
@@ -460,7 +374,10 @@ function applyIntentionSuggestions() {
     compact !== "INIINV"
   ) {
     form.value.counts_as_net_invoiced_spend = true;
-  } else if (form.value.is_operational && Number(form.value.stock_movement) === -1) {
+  } else if (
+    form.value.is_operational &&
+    Number(form.value.stock_movement) === -1
+  ) {
     form.value.counts_as_job_material_issue = true;
   } else if (
     form.value.is_purchase &&
@@ -472,18 +389,56 @@ function applyIntentionSuggestions() {
   }
 }
 
+function goList() {
+  router.push({ name: "document-types" }).catch(() => {
+    router.push("/document-types");
+  });
+}
+
+function handleCancel() {
+  if (props.isModal) {
+    emit("cancel");
+  } else {
+    goList();
+  }
+}
+
 onMounted(async () => {
-  // initialize bootstrap tooltips
-  //const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-  //tooltipTriggerList.map(el => new Tooltip(el))
+  if (isViewMode.value && !id.value) {
+    proxy?.notifyToastError?.("No record to view.");
+    if (!props.isModal) goList();
+    return;
+  }
 
   if (id.value) {
+    loading.value = true;
     try {
       const { data } = await axios.get(`/api/document-types/${id.value}/`);
-      form.value = data;
+      form.value = {
+        type_code: data.type_code || "",
+        description: data.description || "",
+        affects_physical: !!data.affects_physical,
+        affects_logical: !!data.affects_logical,
+        affects_accounting: !!data.affects_accounting,
+        is_taxable: !!data.is_taxable,
+        is_purchase: !!data.is_purchase,
+        is_sales: !!data.is_sales,
+        warehouse_required: !!data.warehouse_required,
+        creates_serialized_items: !!data.creates_serialized_items,
+        is_operational: !!data.is_operational,
+        allow_negative_sales: !!data.allow_negative_sales,
+        stock_movement: Number(data.stock_movement ?? 0),
+        counts_as_net_invoiced_spend: !!data.counts_as_net_invoiced_spend,
+        counts_as_job_material_issue: !!data.counts_as_job_material_issue,
+        counts_as_purchase_return: !!data.counts_as_purchase_return,
+        is_active: !!data.is_active,
+      };
     } catch (error) {
       console.error("Error loading data:", error);
-      Swal.fire("Oops!", "Error loading the document type.", "error");
+      proxy?.notifyToastError?.("Error loading the document type.");
+      if (!props.isModal) goList();
+    } finally {
+      loading.value = false;
     }
   }
 });
@@ -493,11 +448,12 @@ const handleSubmit = async () => {
 
   try {
     submitting.value = true;
+    fieldErrors.value = {};
 
-    // 1) Trim + validación mínima
     if (!id.value) {
       applyIntentionSuggestions();
     }
+
     const trimmedData = {
       type_code: (form.value.type_code ?? "").trim(),
       description: (form.value.description ?? "").trim(),
@@ -518,35 +474,33 @@ const handleSubmit = async () => {
       is_active: form.value.is_active,
     };
 
-    // Validaciones requeridas
     if (!trimmedData.type_code) {
-      await Swal.fire("Validation", "Type Code is required.", "warning");
+      fieldErrors.value = { type_code: "Type Code is required." };
+      proxy?.notifyToastError?.("Type Code is required.");
       return;
     }
     if (!trimmedData.description) {
-      await Swal.fire("Validation", "Description is required.", "warning");
+      fieldErrors.value = { description: "Description is required." };
+      proxy?.notifyToastError?.("Description is required.");
       return;
     }
-
-    // Validaciones de longitud
-    if (trimmedData.type_code.length > 10) {
-      await Swal.fire(
-        "Validation",
-        "Type Code cannot exceed 10 characters.",
-        "warning"
-      );
+    if (trimmedData.type_code.length > 20) {
+      fieldErrors.value = {
+        type_code: "Type Code cannot exceed 20 characters.",
+      };
+      proxy?.notifyToastError?.("Type Code cannot exceed 20 characters.");
       return;
     }
     if (trimmedData.description.length > 200) {
-      await Swal.fire(
-        "Validation",
-        "Description cannot exceed 200 characters.",
-        "warning"
+      fieldErrors.value = {
+        description: "Description cannot exceed 200 characters.",
+      };
+      proxy?.notifyToastError?.(
+        "Description cannot exceed 200 characters."
       );
       return;
     }
 
-    // 2) Guardar
     let savedData;
     if (isEditMode.value) {
       const response = await axios.put(
@@ -559,10 +513,11 @@ const handleSubmit = async () => {
       savedData = response.data;
     }
 
-    // Emit saved event for modal usage
     emit("saved", savedData);
+    proxy?.notifyToastSuccess?.(
+      isEditMode.value ? "Document type updated." : "Document type created."
+    );
 
-    // Solo redirigir si NO estamos en modal
     if (!props.isModal) {
       goList();
     }
@@ -571,118 +526,124 @@ const handleSubmit = async () => {
     const { status, data } = error?.response || {};
 
     if (status === 400 && data) {
+      const next = {};
+      Object.entries(data).forEach(([field, msgs]) => {
+        if (field === "detail" || field === "non_field_errors") return;
+        next[field] = Array.isArray(msgs) ? msgs.join(", ") : String(msgs);
+      });
+      fieldErrors.value = next;
       const messages = Object.entries(data)
         .map(
           ([field, msgs]) =>
             `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`
         )
         .join("\n");
-      await Swal.fire(
-        "Oops!",
-        messages || "There were validation errors.",
-        "error"
+      proxy?.notifyToastError?.(
+        messages || "There were validation errors."
       );
     } else if (status === 403) {
-      await Swal.fire(
-        "Forbidden",
-        "You do not have permission for this action.",
-        "error"
+      proxy?.notifyToastError?.(
+        "You do not have permission for this action."
       );
     } else if (status === 409) {
-      await Swal.fire(
-        "Protected",
-        "This document type is in use and cannot be modified.",
-        "error"
+      proxy?.notifyToastError?.(
+        "This document type is in use and cannot be modified."
       );
     } else {
-      await Swal.fire("Oops!", "Error saving the document type.", "error");
+      proxy?.notifyToastError?.("Error saving the document type.");
     }
   } finally {
     submitting.value = false;
   }
 };
-
-const goList = () => {
-  // Redirección por NOMBRE 'document-types' (con fallback al path)
-  router.push({ name: "document-types" }).catch(() => {
-    router.push("/document-types");
-  });
-};
-
-const handleCancel = () => {
-  if (props.isModal) {
-    // En modal, emitir evento para cerrar
-    emit("cancel");
-  } else {
-    // En página normal, redirigir a lista
-    goList();
-  }
-};
 </script>
 
 <style scoped>
-/* Espaciado adicional para secciones */
-.form-section {
-  padding: 1.5rem 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+:deep(.jr-page.jr-doctype-form--modal),
+.jr-page.jr-doctype-form--modal {
+  padding: 0;
+  min-height: 0;
 }
 
-.form-section:last-of-type {
-  border-bottom: none;
-}
-
-/* Título de sección: margen inferior para separar del contenido */
-.form-section .section-title {
-  margin-bottom: 1rem;
-}
-
-/* Filas de switches: margen izquierdo para indentar respecto al título */
-.form-section .row.switches-row {
-  margin-left: 0;
-  margin-right: 0;
-  margin-top: 0.5rem;
-  padding-left: 2rem;
-}
-.form-section .row.switches-row > [class*="col"] {
-  padding-left: 0;
-  padding-right: 0.75rem;
-  margin-bottom: 0.5rem;
-}
-
-/* Switch y label pegados: poco espacio entre toggle y texto */
-.switch-row {
+.jr-doctype-form__form {
   display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.jr-doctype-form__status,
+.jr-doctype-form__note {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-doctype-form__note {
+  margin-bottom: 0.75rem;
+}
+
+.jr-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .jr-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.jr-form-checks {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem 1rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .jr-form-checks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .jr-form-checks__full {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .jr-form-checks {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.jr-doctype-form :deep(.jr-checkbox) {
+  column-gap: 0.85rem;
   align-items: center;
-  gap: 0.35rem;
-  flex-wrap: nowrap;
-}
-.switch-row .form-check-input {
-  flex-shrink: 0;
-}
-.switch-row .form-check-label {
-  cursor: pointer;
-  white-space: nowrap;
 }
 
-/* Mejoras de accesibilidad y contraste */
-.text-danger {
-  color: #dc2626 !important;
-  font-weight: 600;
+.jr-doctype-form :deep(.jr-checkbox__label) {
+  margin-inline-start: 0.15rem;
 }
 
-/* Ajustes responsive */
-@media (max-width: 768px) {
-  .card-modern,
-  .card {
-    padding: 1.5rem 1.25rem;
-  }
+.jr-doctype-form__code :deep(.p-inputtext) {
+  text-transform: uppercase;
+}
 
-  .section-title {
-    font-size: 1.1rem;
-  }
+.jr-doctype-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
 
-  .main-title {
-    font-size: 1.75rem;
-  }
+.jr-doctype-form__actions--sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 0.75rem 0 0.25rem;
+  margin-top: 0.5rem;
+  background: var(--color-jr-page, #f3f4f6);
+  border-top: 1px solid var(--color-jr-border, #e5e7eb);
 }
 </style>
