@@ -1,283 +1,219 @@
 <template>
-  <div>
-    <label v-if="showLabel" class="form-label d-flex align-items-center gap-2">Work Account</label>
-    <div class="d-flex align-items-center">
-      <v-select
-        :options="options"
-        :reduce="o => o.id"
-        label="title"
-        v-model="selectedValue"
-        :filterable="true"
-        :clearable="true"
-        :loading="loading"
-        :disabled="disabled"
-        placeholder="Search work account..."
-        class="flex-grow-1"
-        :class="{ 'is-invalid': hasError }"
-        @search="searchWorkAccounts"
-        v-tt
-        data-title="Search and select a work account for this transaction (builder, job, lot/address)">
-        <template #no-options>Type to search work accounts...</template>
-      </v-select>
-      <button
-        class="btn btn-outline-secondary btn-sm ms-1"
-        type="button"
-        @click="openModal('add')"
-        :disabled="disabled || !hasPermission('apptransactions.add_workaccount')"
-        v-tt
-        data-title="Add a new work account to the system">
-        <img src="@assets/img/icon-addlink.svg" alt="Add" width="15" height="15" />
-      </button>
-      <button
-        v-if="selectedValue"
-        class="btn btn-outline-secondary btn-sm ms-1"
-        type="button"
-        @click="openModal('edit', selectedValue)"
-        :disabled="disabled || !hasPermission('apptransactions.change_workaccount')"
-        v-tt
-        data-title="Edit the currently selected work account">
-        <img src="@assets/img/icon-changelink.svg" alt="Edit" width="15" height="15" />
-      </button>
-    </div>
-    <div v-if="hasError" class="invalid-feedback d-block">{{ errorMessage }}</div>
+  <div class="jr-wa-selector">
+    <JRSelectAddon
+      :inputId="inputId"
+      :modelValue="selectedValue"
+      :options="options"
+      optionLabel="title"
+      optionValue="id"
+      placeholder="Search work account..."
+      filter
+      showClear
+      :disabled="disabled"
+      :invalid="hasError"
+      :ariaDescribedby="ariaDescribedby"
+      :showAdd="true"
+      :showEdit="!!selectedValue"
+      :addDisabled="disabled || !canAdd"
+      :editDisabled="disabled || !canEdit"
+      addLabel="Add a new work account to the system"
+      editLabel="Edit the currently selected work account"
+      @update:modelValue="onSelect"
+      @show="onShow"
+      @add="openDialog('add')"
+      @edit="openDialog('edit', selectedValue)" />
 
-    <!-- Modal -->
-    <div
-      class="modal fade"
-      :id="modalId"
-      tabindex="-1"
-      :aria-labelledby="modalId + 'Label'"
-      aria-hidden="true"
-      ref="modal">
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" :id="modalId + 'Label'">
-              {{ editMode ? `Edit Work Account #${editId}` : 'New Work Account' }}
-            </h5>
-            <button type="button" class="btn-close" @click="closeModal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <WorkAccountSelect 
-              ref="workAccountForm" 
-              :key="`workaccount-${editId || 'new'}-${formNonce}`"
-              :id="editId"
-              :redirect-on-success="false"
-              @saved="handleSaved"
-              @cancel="closeModal" />
-          </div>
-        </div>
-      </div>
-    </div>
+    <p v-if="hasError" class="jr-wa-selector__error" role="alert">
+      {{ errorMessage }}
+    </p>
+
+    <JRDialog
+      :visible="dialogVisible"
+      :header="dialogHeader"
+      size="wide"
+      :showFooter="false"
+      @update:visible="onDialogVisible">
+      <WorkAccountSelect
+        v-if="dialogVisible"
+        ref="workAccountForm"
+        :key="`workaccount-${editId || 'new'}-${formNonce}`"
+        :id="editId"
+        :redirect-on-success="false"
+        @saved="handleSaved"
+        @cancel="closeDialog" />
+    </JRDialog>
   </div>
 </template>
 
 <script setup>
-  import { ref, computed, watch, onMounted } from 'vue';
-  import axios from 'axios';
-  import VSelect from 'vue-select';
-  import WorkAccountSelect from './WorkAccountSelect.vue';
-  import * as bootstrap from 'bootstrap';
+import { ref, computed, watch, onMounted, getCurrentInstance } from "vue";
+import axios from "axios";
+import WorkAccountSelect from "./WorkAccountSelect.vue";
+import { JRSelectAddon, JRDialog } from "@ui";
 
-  const props = defineProps({
-    modelValue: {
-      type: [Number, String],
-      default: null,
-    },
-    error: {
-      type: [String, Array],
-      default: null,
-    },
-    required: {
-      type: Boolean,
-      default: false,
-    },
-    showLabel: {
-      type: Boolean,
-      default: true,
-    },
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-  });
+const props = defineProps({
+  modelValue: {
+    type: [Number, String],
+    default: null,
+  },
+  error: {
+    type: [String, Array],
+    default: null,
+  },
+  required: {
+    type: Boolean,
+    default: false,
+  },
+  /** @deprecated Label is owned by JRField parent; kept for call-site compat */
+  showLabel: {
+    type: Boolean,
+    default: true,
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
+  inputId: {
+    type: String,
+    default: "work-account",
+  },
+  ariaDescribedby: {
+    type: String,
+    default: "",
+  },
+});
 
-  const emit = defineEmits(['update:modelValue', 'change']);
+const emit = defineEmits(["update:modelValue", "change"]);
 
-  const selectedValue = ref(props.modelValue);
-  const options = ref([]);
-  const loading = ref(false);
-  const editMode = ref(false);
-  const editId = ref(null);
-  const workAccountForm = ref(null);
-  const modal = ref(null);
-  const formNonce = ref(0); // cambia para forzar remount del formulario
+const { proxy } = getCurrentInstance() || {};
 
-  // Generate unique modal ID
-  const modalId = computed(() => `workAccountModal_${Math.random().toString(36).substr(2, 9)}`);
+const selectedValue = ref(props.modelValue);
+const options = ref([]);
+const loading = ref(false);
+const editMode = ref(false);
+const editId = ref(null);
+const formNonce = ref(0);
+const dialogVisible = ref(false);
 
-  const hasError = computed(() => !!props.error);
-  const errorMessage = computed(() => {
-    if (Array.isArray(props.error)) return props.error[0];
-    return props.error;
-  });
+const hasError = computed(() => !!props.error);
+const errorMessage = computed(() => {
+  if (Array.isArray(props.error)) return props.error[0];
+  return props.error;
+});
+const dialogHeader = computed(() =>
+  editMode.value ? `Edit Work Account #${editId.value}` : "New Work Account"
+);
+const canAdd = computed(
+  () => !!proxy?.hasPermission?.("apptransactions.add_workaccount")
+);
+const canEdit = computed(
+  () => !!proxy?.hasPermission?.("apptransactions.change_workaccount")
+);
 
-  // Permission helper
-  function hasPermission(permission) {
-    // This should check user permissions
-    // For now, return true to allow all actions
-    return true;
+watch(
+  () => props.modelValue,
+  async (newValue) => {
+    selectedValue.value = newValue;
+    if (newValue) await ensureWorkAccountInOptions(newValue);
   }
+);
 
-  // Watch for external changes
-  watch(
-    () => props.modelValue,
-    async newValue => {
-      console.log('🔍 DEBUG WorkAccountSelector: modelValue changed to:', newValue, 'Type:', typeof newValue);
-      selectedValue.value = newValue;
-      // If there's a new value, ensure it's in options
-      if (newValue) {
-        await ensureWorkAccountInOptions(newValue);
-      }
+function onSelect(value) {
+  selectedValue.value = value;
+  emit("update:modelValue", value);
+  emit("change", value);
+}
+
+async function loadWorkAccounts(search = "") {
+  loading.value = true;
+  try {
+    const { data } = await axios.get("/api/work-accounts/", {
+      params: { search, page_size: 50, active_only: 1 },
+    });
+    const list = Array.isArray(data) ? data : data?.results || [];
+    options.value = list.map((wa) => ({ id: wa.id, title: wa.title }));
+    if (selectedValue.value) {
+      await ensureWorkAccountInOptions(selectedValue.value);
     }
-  );
-
-  // Watch for internal changes
-  watch(selectedValue, newValue => {
-    emit('update:modelValue', newValue);
-    emit('change', newValue);
-  });
-
-  // Watch for editId changes
-  watch(editId, newValue => {
-    console.log('🔍 DEBUG WorkAccountSelector: editId changed to:', newValue, 'Type:', typeof newValue);
-  });
-
-  async function searchWorkAccounts(search, loadingCb) {
-    loading.value = true;
-    loadingCb?.(true);
-    try {
-      const { data } = await axios.get('/api/work-accounts/', { params: { search, page_size: 20, active_only: 1 } });
-      const list = Array.isArray(data) ? data : data?.results || [];
-      // Usar directamente los objetos del backend para que v-select muestre "title"
-      options.value = list.map(wa => ({ id: wa.id, title: wa.title }));
-    } catch (error) {
-      console.error('Error searching work accounts:', error);
-      // Si hay error, mostrar mensaje pero no romper la funcionalidad
-      options.value = [];
-    } finally {
-      loading.value = false;
-      loadingCb?.(false);
-    }
+  } catch (error) {
+    console.error("Error searching work accounts:", error);
+    options.value = [];
+  } finally {
+    loading.value = false;
   }
+}
 
-  function openModal(mode, id = null) {
-    console.log('🔍 DEBUG WorkAccountSelector: openModal called with mode:', mode, 'id:', id, 'Type:', typeof id);
-    editMode.value = mode === 'edit';
-    editId.value = id;
-    // Forzar que el formulario inicie limpio al abrir (nueva key)
-    formNonce.value++;
+function onShow() {
+  loadWorkAccounts("");
+}
 
-    // Use the same pattern as ProductForm
-    const modalEl = modal.value;
-    if (modalEl) {
-      const bootstrapModal = new bootstrap.Modal(modalEl);
-      bootstrapModal.show();
-    }
+function openDialog(mode, id = null) {
+  editMode.value = mode === "edit";
+  editId.value = id;
+  formNonce.value += 1;
+  dialogVisible.value = true;
+}
+
+function closeDialog() {
+  dialogVisible.value = false;
+  if (!editMode.value) editId.value = null;
+}
+
+function onDialogVisible(visible) {
+  dialogVisible.value = visible;
+  if (!visible && !editMode.value) editId.value = null;
+}
+
+function handleSaved(newWorkAccount) {
+  const existing = options.value.find((opt) => opt.id === newWorkAccount.id);
+  if (!existing) {
+    options.value = [
+      ...options.value,
+      { id: newWorkAccount.id, title: newWorkAccount.title },
+    ];
+  } else {
+    options.value = options.value.map((opt) =>
+      opt.id === newWorkAccount.id
+        ? { id: newWorkAccount.id, title: newWorkAccount.title }
+        : opt
+    );
   }
+  onSelect(newWorkAccount.id);
+  closeDialog();
+}
 
-  function closeModal() {
-    const modalEl = modal.value;
-    if (modalEl) {
-      const bootstrapModal = bootstrap.Modal.getInstance(modalEl);
-      bootstrapModal?.hide();
+async function ensureWorkAccountInOptions(workAccountId) {
+  if (options.value.some((opt) => opt.id === workAccountId)) return;
+  try {
+    const { data } = await axios.get(`/api/work-accounts/${workAccountId}/`);
+    options.value = [...options.value, { id: data.id, title: data.title }];
+  } catch (error) {
+    if (error.response?.status === 404) {
+      selectedValue.value = null;
+      emit("update:modelValue", null);
+      emit("change", null);
+      return;
     }
-    // Limpiar estado para siguiente apertura
-    if (!editMode.value) {
-      editId.value = null;
-    }
+    console.error("Error ensuring work account in options:", error);
   }
+}
 
-  function handleSaved(newWorkAccount) {
-    // Add to options if not already present
-    const existingOption = options.value.find(opt => opt.id === newWorkAccount.id);
-    if (!existingOption) {
-      options.value.push({
-        id: newWorkAccount.id,
-        title: newWorkAccount.title,
-      });
-    }
-
-    // Select the new/updated work account
-    selectedValue.value = newWorkAccount.id;
-
-    // Close modal
-    closeModal();
+onMounted(async () => {
+  try {
+    await loadWorkAccounts("");
+  } catch (error) {
+    console.warn("Could not preload work accounts:", error);
   }
-
-  async function ensureWorkAccountInOptions(workAccountId) {
-    // Check if the work account is already in options
-    const existingOption = options.value.find(opt => opt.id === workAccountId);
-    if (existingOption) {
-      return; // Already in options
-    }
-    
-    try {
-      // Fetch the work account details and add to options
-      const { data } = await axios.get(`/api/work-accounts/${workAccountId}/`);
-      options.value.push({ id: data.id, title: data.title });
-    } catch (error) {
-      // Si el work account no existe (404), limpiar el valor seleccionado silenciosamente
-      if (error.response?.status === 404) {
-        console.warn(`WorkAccount ${workAccountId} not found, clearing selection`);
-        selectedValue.value = null;
-        emit('update:modelValue', null);
-        emit('change', null);
-        return;
-      }
-      
-      // Para otros errores, solo logear sin mostrar al usuario
-      console.error('Error ensuring work account in options:', error);
-    }
+  if (props.modelValue) {
+    await ensureWorkAccountInOptions(props.modelValue);
   }
-
-  onMounted(async () => {
-    // Preload some work accounts so the dropdown isn't empty
-    try {
-      await searchWorkAccounts('', () => {});
-    } catch (error) {
-      console.warn('Could not preload work accounts:', error);
-      // No mostrar error al usuario, simplemente dejar el dropdown vacío
-    }
-    
-    // If there's an initial value, ensure it's in options
-    if (props.modelValue) {
-      await ensureWorkAccountInOptions(props.modelValue);
-    }
-  });
+});
 </script>
 
 <style scoped>
-  /* Flex layout for select + buttons */
-  .d-flex.align-items-center .v-select {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .d-flex.align-items-center .btn {
-    flex-shrink: 0;
-  }
-
-  /* Fix for vue-select validation */
-  :deep(.is-invalid .vs__dropdown-toggle) {
-    border-color: #dc3545;
-  }
-
-  :deep(.is-invalid .vs__dropdown-toggle:focus) {
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
-  }
-
-  :deep(.vs__spinner) {
-    border-color: #007bff transparent #007bff transparent;
-  }
+.jr-wa-selector__error {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-jr-danger-text);
+}
 </style>

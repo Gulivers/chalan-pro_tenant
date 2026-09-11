@@ -30,6 +30,21 @@
                   :required="!!config.required"
                   :ariaDescribedby="describedby" />
 
+                <InputNumber
+                  v-else-if="isDecimalField(config, key)"
+                  :inputId="`dyn-${key}`"
+                  v-model="form[key]"
+                  mode="decimal"
+                  locale="en-US"
+                  :min="0"
+                  :minFractionDigits="2"
+                  :maxFractionDigits="2"
+                  :disabled="isDisabled"
+                  :invalid="invalid"
+                  :inputProps="decimalInputProps(describedby, invalid, !!config.required)"
+                  fluid
+                  @update:modelValue="(v) => onDecimalUpdate(key, v)" />
+
                 <JRTextarea
                   v-else-if="
                     config.type === 'textarea' || config.widget === 'textarea'
@@ -109,6 +124,7 @@
 
 <script>
 import axios from "axios";
+import InputNumber from "primevue/inputnumber";
 import selectMixin from "@/helpers/useSelectOptions";
 import {
   JRPage,
@@ -122,9 +138,41 @@ import {
   JRButton,
 } from "@ui";
 
+/** Known money amount fields on Party/Builder (schema may still say string). */
+const MONEY_FIELD_KEYS = new Set([
+  "trim_amount",
+  "rough_amount",
+  "travel_price_amount",
+]);
+
+function toMoney(value) {
+  if (value === null || value === undefined || value === "") return 0.0;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0.0;
+  return Number(n.toFixed(2));
+}
+
+function normalizeSchema(schema) {
+  const out = {};
+  for (const [key, cfg] of Object.entries(schema || {})) {
+    const next = { ...(cfg || {}) };
+    if (
+      MONEY_FIELD_KEYS.has(key) ||
+      next.type === "number" ||
+      next.type === "decimal" ||
+      next.widget === "money"
+    ) {
+      next.type = "decimal";
+    }
+    out[key] = next;
+  }
+  return out;
+}
+
 export default {
   name: "DynamicForm",
   components: {
+    InputNumber,
     JRPage,
     JRPageHeader,
     JRSection,
@@ -211,10 +259,10 @@ export default {
   async created() {
     try {
       if (this.schema && Object.keys(this.schema).length) {
-        this.internalSchema = this.schema;
+        this.internalSchema = normalizeSchema(this.schema);
       } else if (this.schemaEndpoint) {
         const response = await axios.get(this.schemaEndpoint);
-        this.internalSchema = response.data || {};
+        this.internalSchema = normalizeSchema(response.data || {});
       }
 
       this.fields = Object.keys(this.internalSchema);
@@ -227,6 +275,23 @@ export default {
     }
   },
   methods: {
+    isDecimalField(config, key) {
+      return (
+        config?.type === "decimal" ||
+        config?.widget === "money" ||
+        MONEY_FIELD_KEYS.has(key)
+      );
+    },
+    decimalInputProps(describedby, invalid, required) {
+      const props = {};
+      if (describedby) props["aria-describedby"] = describedby;
+      if (invalid) props["aria-invalid"] = "true";
+      if (required) props["aria-required"] = "true";
+      return Object.keys(props).length ? props : undefined;
+    },
+    onDecimalUpdate(key, value) {
+      this.form[key] = toMoney(value);
+    },
     _emptySelectDefault(config) {
       return config?.multiple ? [] : "";
     },
@@ -249,7 +314,14 @@ export default {
       try {
         if (this.objectId) {
           const res = await axios.get(`${this.apiEndpoint}${this.objectId}/`);
-          this.form = res.data;
+          const data = { ...(res.data || {}) };
+          for (const key of this.fields) {
+            const cfg = this.internalSchema[key] || {};
+            if (this.isDecimalField(cfg, key)) {
+              data[key] = toMoney(data[key]);
+            }
+          }
+          this.form = data;
         } else {
           this.form = Object.fromEntries(
             this.fields.map((f) => {
@@ -259,6 +331,7 @@ export default {
               if (def !== undefined) return [f, def];
               if (type === "boolean") return [f, false];
               if (type === "select") return [f, this._emptySelectDefault(cfg)];
+              if (this.isDecimalField(cfg, f)) return [f, 0.0];
               return [f, ""];
             })
           );
@@ -281,6 +354,10 @@ export default {
           cfg.widget === "textarea"
         ) {
           cleaned[key] = (cleaned[key] ?? "").toString().trim();
+        }
+
+        if (this.isDecimalField(cfg, key)) {
+          cleaned[key] = toMoney(cleaned[key]);
         }
 
         if (cfg.type === "select" && cfg.optionsEndpoint) {
@@ -510,5 +587,10 @@ export default {
 .jr-dynamic-form :deep(.jr-checkbox) {
   column-gap: 0.85rem;
   align-items: center;
+}
+
+.jr-dynamic-form :deep(.p-inputnumber),
+.jr-dynamic-form :deep(.p-inputnumber .p-inputtext) {
+  width: 100%;
 }
 </style>

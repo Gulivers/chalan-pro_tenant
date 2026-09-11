@@ -404,6 +404,27 @@ Desktop (≥1024px): Identity / Classification / Inventory-style sections use **
 
 **Fields are rectangular.** `JRInput`, `JRSelect`, `JRDatePicker`, `JRTextarea` and their PrimeVue dropdown/datepicker panels use `--radius-jr-control` (`0`). Do not reintroduce `0.5rem` (or any) corner radius on form controls in later modules.
 
+**Money / decimal amounts** (prices, SqFt rates, travel amounts, piece-work Trim/Rough): use PrimeVue `InputNumber` with normal `JRField` labels (not currency/`IftaLabel` unless the brief asks for it):
+
+```vue
+<JRField v-slot="{ describedby, invalid }" label="Trim" inputId="…">
+  <InputNumber
+    v-model="value"
+    inputId="…"
+    mode="decimal"
+    locale="en-US"
+    :minFractionDigits="2"
+    :maxFractionDigits="2"
+    :min="0"
+    fluid
+    :invalid="invalid"
+    :inputProps="describedby ? { 'aria-describedby': describedby } : undefined"
+  />
+</JRField>
+```
+
+Empty / null coerces to **`0.00`** on edit and save (Django `DecimalField` stores `0.00`). Do not use plain `<input type="number">` or `JRInput type="text"` for money.
+
 **Focus is a single line.** On text fields, selects, datepickers and number inputs the focus state is only the 1px primary border (`#2563eb`). No outline ring, no offset halo, no box-shadow. Icon buttons and checkboxes may keep a 2px offset outline (they have no field border to recolor).
 
 ## Do's and Don'ts (Pilot)
@@ -417,6 +438,7 @@ Desktop (≥1024px): Identity / Classification / Inventory-style sections use **
 - **Do** put operational field help under the control (`JRField` hint + `aria-describedby`), not in a hover-only tooltip.
 - **Do** use PrimeVue `Message` (info, not closable) for a consequence that appears after a choice.
 - **Do** keep form fields and select/datepicker overlays rectangular (`--radius-jr-control: 0`).
+- **Do** use `InputNumber` `mode="decimal"` `locale="en-US"` with 2 fraction digits for money/amount fields; coerce empty to `0.00`.
 - **Do** keep `JRDialog` / `p-dialog` rectangular (`border-radius: 0`), like the product images dialog.
 - **Do** use a single primary border for field focus — never a double ring.
 - **Do** use `JRButton` (`p-button p-component jr-button`) in forms, drawers and dialogs; Delete is filled danger, label-only. `JRRowActions` in a drawer is the same solid treatment, no icons.

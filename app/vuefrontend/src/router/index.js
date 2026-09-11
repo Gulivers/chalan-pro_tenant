@@ -269,6 +269,10 @@ const routes = [
     },
   },
   {
+    path: "/work-prices/form",
+    redirect: { name: "work-prices-form" },
+  },
+  {
     path: "/work-prices/edit/:id",
     name: "work-prices-edit",
     component: WorkPriceFormComponent,

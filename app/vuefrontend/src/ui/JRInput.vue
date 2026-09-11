@@ -110,6 +110,10 @@ export default {
       type: String,
       default: undefined,
     },
+    inputmode: {
+      type: String,
+      default: undefined,
+    },
   },
   emits: ['update:modelValue'],
   computed: {
@@ -120,6 +124,7 @@ export default {
       if (this.autocapitalize) attrs.autocapitalize = this.autocapitalize;
       if (this.enterkeyhint) attrs.enterkeyhint = this.enterkeyhint;
       if (this.autocorrect) attrs.autocorrect = this.autocorrect;
+      if (this.inputmode) attrs.inputmode = this.inputmode;
       return attrs;
     },
     numberInputProps() {

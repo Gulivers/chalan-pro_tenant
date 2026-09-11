@@ -9,11 +9,17 @@
         :key="action.key"
         type="button"
         class="jr-row-actions__btn"
-        :class="{ 'jr-button': useSolid }"
+        :class="[
+          action.buttonClass,
+          {
+            'jr-button': useSolid || isOutlinedAction(action),
+            'jr-row-actions__btn--outlined': isOutlinedAction(action) && !useSolid,
+          },
+        ]"
         :severity="primeSeverity(action)"
         :label="action.label"
-        :text="!useSolid"
-        :outlined="useSolid && isOutlined(action)"
+        :text="!useSolid && !isOutlinedAction(action)"
+        :outlined="useSolid ? isOutlined(action) : isOutlinedAction(action)"
         size="small"
         :aria-label="actionAriaLabel(action)"
         @click="action.command">
@@ -179,6 +185,10 @@ export default {
     },
     isOutlined(action) {
       return action?.severity === 'secondary' || action?.severity === 'info';
+    },
+    /** List-row outlined secondary (e.g. Print) for clearer hover on desktop. */
+    isOutlinedAction(action) {
+      return !!(action?.outlined || action?.appearance === 'outlined');
     },
     actionAriaLabel(action) {
       return this.entityLabel ? `${action.label} ${this.entityLabel}` : action.label;

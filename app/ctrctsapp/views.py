@@ -352,11 +352,6 @@ class ContractViewSet(viewsets.ModelViewSet):
         logger.error("Serializer errors: %s", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def to_internal_value(self, data):
-        if 'lot' in data and (data['lot'] is None or (data['lot'] == '' or data['lot'] == "null")):
-            data['lot'] = None
-        return super().to_internal_value(data)
-
     @action(detail=False, methods=['get'], url_path='validate-lot')
     def validate_contract(self, request):
         lot = request.GET.get('lot')
@@ -367,23 +362,46 @@ class ContractViewSet(viewsets.ModelViewSet):
         if not type_:
             return JsonResponse({'error': 'Type is a required parameter.'}, status=400)
 
+        def duplicate_payload(contract):
+            details = []
+            if contract.lot:
+                details.append(f'Lot {contract.lot}')
+            if contract.address:
+                details.append(f'Address {contract.address}')
+            detail_str = (' ' + ' '.join(details)) if details else ''
+            message = (
+                f'There is already a contract with this lot or address in '
+                f'{contract.type},{detail_str}'
+            )
+            return JsonResponse({
+                'exists': True,
+                'message': message,
+                'type': contract.type,
+                'lot': contract.lot,
+                'address': contract.address,
+                'id': contract.id,
+            })
+
         # Validar por lote
         if lot:
             if job_id == 'S/L':
-                lot_exists = Contract.objects.filter(
-                    lot=lot, type=type_, address=address).exists()
+                match = Contract.objects.filter(
+                    lot=lot, type=type_, address=address
+                ).order_by('id').first()
             else:
-                lot_exists = Contract.objects.filter(
-                    lot=lot, type=type_, job_id=job_id).exists()
-            if lot_exists:
-                return JsonResponse({'exists': True})
+                match = Contract.objects.filter(
+                    lot=lot, type=type_, job_id=job_id
+                ).order_by('id').first()
+            if match:
+                return duplicate_payload(match)
 
-        # Validar por dirección cuando no hay lote
+        # Validar por dirección cuando no hay lote (Spot Lot)
         if address and (not lot or lot == ''):
-            address_exists = Contract.objects.filter(
-                address=address, type=type_).exists()
-            if address_exists:
-                return JsonResponse({'exists': True})
+            match = Contract.objects.filter(
+                address=address, type=type_
+            ).order_by('id').first()
+            if match:
+                return duplicate_payload(match)
 
         return JsonResponse({'exists': False})
     

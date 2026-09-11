@@ -394,6 +394,16 @@
     color: var(--color-jr-muted);
   }
 
+  .jr-pilot .jr-row-actions__btn.jr-row-actions__btn--outlined.p-button {
+    min-height: 2rem;
+    padding: 0.25rem 0.55rem;
+    cursor: pointer;
+  }
+
+  .jr-pilot .jr-row-actions__btn.jr-row-actions__btn--outlined.p-button-secondary:hover:not(:disabled) {
+    background: var(--color-jr-surface-muted);
+  }
+
   .jr-pilot .jr-row-actions--solid {
     gap: 0.5rem;
   }

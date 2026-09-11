@@ -1,426 +1,513 @@
 <template>
-  <div class="container position-relative">
+  <JRPage>
+    <JRPageHeader :title="pageTitle" :description="pageDescription">
+      <template #actions>
+        <div
+          v-if="hasPermission('ctrctsapp.add_contract')"
+          class="jr-contract-form__bid">
+          <JRCheckbox
+            inputId="docTypeCheckbox"
+            v-model="isBid"
+            ariaLabel="Bid"
+            :disabled="isReadOnly"
+            @update:modelValue="toggleDocType" />
+          <label class="jr-contract-form__bid-label" for="docTypeCheckbox">Bid</label>
+        </div>
+      </template>
+    </JRPageHeader>
 
-      <p v-if="errorMessage" class="alert alert-danger py-3">
-          {{ errorMessage }}
-      </p>
-      <h3 v-show="!loading && !errorMessage" class="pt-2">
-          <p>{{ newContract.doc_type }}</p>
-      </h3>
-      <div class="card shadow mb-4">
-          <!-- Checkbox para Doc Type en la esquina superior derecha -->
-          <div v-if="this.hasPermission('ctrctsapp.add_contract')" v-show="!loading && !errorMessage"
-              class="position-absolute" style="top: 10px; right: 10px;">
-              <div class="form-check">
-                  <!-- El checkbox se vincula con la propiedad isBid -->
-                  <input type="checkbox" class="form-check-input" id="docTypeCheckbox" v-model="isBid"
-                      @change="toggleDocType" :disabled="isReadOnly">
-                  <label class="form-check-label" for="docTypeCheckbox">
-                      Bid
-                  </label>
-              </div>
-          </div>
-          <div v-show="!loading && !errorMessage" class="card-header">
-              <div v-if="$route.path === '/contract-form'">
-                  <h6 class="m-0 font-weight-bold text-primary">Create {{ newContract.doc_type }}</h6>
-              </div>
-              <div v-else>
-                  <h6 class="m-0 font-weight-bold text-primary">Edit {{ newContract.doc_type }}</h6>
-                  <p class="text-center">
-                      Created: {{ formatDate(newContract.date_created) }}
-                      <strong class="d-block d-md-inline">Updated: {{ formatDate(newContract.last_updated) }}</strong>
-                  </p>
-              </div>
-              <div class="mt-3 text-primary-emphasis small" v-if="event">
-                <strong>Event:</strong> {{ event.title }}
-                <span class="mx-2">|</span>
-                <strong>Crew:</strong> {{ event.crew_title }}
-              </div>
-          </div>
-          <div class="card-body">
-              <div v-if="loading" class="spinner-container my-5">
-                  {{ loading_text }} ...&nbsp;
-                  <div class="spinner-border" style="width: 4rem; height: 4rem;" role="status"></div>
-                  <div class="spinner-grow" style="width: 3rem; height: 3rem;" role="status"></div>
-                  <div class="spinner-grow" style="width: 2rem; height: 2rem;" role="status"></div>
-                  <div class="spinner-grow" style="width: 1rem; height: 1rem;" role="status"></div>
-              </div>
+    <p v-if="errorMessage" class="jr-form-banner" role="alert">
+      {{ errorMessage }}
+    </p>
 
-              <form v-show="!loading && !errorMessage">
-                  <div class="row">
-                      <div class="col-md-6">
-                          <div class="form-group row align-items-center mb-3">
-                              <label for="type" class="col-12 col-sm-4 col-form-label text-start text-sm-end">Job
-                                  Type</label>
-                              <div class="col-sm-8">
-                                  <select class="form-select column-input" id="type" v-model="newContract.type"
-                                      :disabled="isReadOnly" @change="calculatePrice" ref="type"
-                                      @keydown.enter="focusNext($event, 'builder')" required>
-                                      <option value="">Select type</option>
-                                      <option value="Rough">Rough</option>
-                                      <option value="Trim">Trim</option>
-                                  </select>
-                              </div>
-                          </div>
+    <p v-if="loading" class="jr-contract-form__loading" role="status">
+      {{ loading_text }}…
+    </p>
 
-                          <!-- Selector para Builder -->
-                          <!-- Work Account selector -->
-                          <div class="form-group row align-items-center mb-3">
-                              <label class="col-12 col-sm-4 col-form-label text-start text-sm-end">Work Account</label>
-                              <div class="col-sm-8">
-                                  <WorkAccountSelector
-                                      v-model="newContract.work_account"
-                                      @change="onWorkAccountChanged"
-                                      :show-label="false"
-                                  />
-                              </div>
-                          </div>
-
-                          <!-- Selector para Builder (hidden - replaced by WorkAccountSelector) -->
-                          <div class="form-group row align-items-center mb-3" v-if="false">
-                              <label for="builder-select"
-                                  class="col-12 col-sm-4 col-form-label text-start text-sm-end">Builder</label>
-                              <!-- If user has permission to add or edit builder -->
-                              <div v-if="this.hasPermission('ctrctsapp.add_builder') || this.hasPermission('ctrctsapp.change_builder')"
-                                  class="col-sm-8 d-flex align-items-center">
-                                  <!-- Vue-select component -->
-                                  <v-select id="builder-select" :options="builders" v-model="newContract.builder"
-                                      :reduce="builder => builder.id" label="name" placeholder="Select Builder"
-                                      ref="builder" class="flex-grow-1" @input="fetchHouseModels"
-                                      @keydown.enter="focusNext($event, 'job')" @focus="selectText"
-                                      :disabled="isReadOnly">
-                                  </v-select>
-                                  <!-- Add button with permission check -->
-                                  <button class="btn btn-outline-secondary btn-sm ms-1" type="button"
-                                      @click="openBuilderModal('add')" :disabled="isReadOnly">
-                                      <img src="@assets/img/icon-addlink.svg" alt="Add" width="15" height="15">
-                                  </button>
-                                  <!-- Edit button with permission check -->
-                                  <button v-if="newContract.builder" class="btn btn-outline-secondary btn-sm ms-1"
-                                      type="button" @click="editBuilderModal('edit', newContract.builder)"
-                                      :disabled="isReadOnly">
-                                      <img src="@assets/img/icon-changelink.svg" alt="Edit" width="15" height="15">
-                                  </button>
-                              </div>
-                              <!-- If user doesn't have permission, show this simpler layout -->
-                              <div v-else class="col-sm-8">
-                                  <!-- Vue-select component without buttons -->
-                                  <v-select :options="builders" v-model="newContract.builder"
-                                      :reduce="builder => builder.id" label="name" placeholder="Select Builder"
-                                      ref="builder" @input="fetchHouseModels"
-                                      @keydown.enter="focusNext($event, 'job')" @focus="selectText"
-                                      :disabled="isReadOnly">
-                                  </v-select>
-                              </div>
-                          </div>
-
-                          <!-- Selector for Job (hidden - replaced by WorkAccountSelector) -->
-                          <div class="form-group row align-items-center mb-3" v-if="false">
-                              <label for="job-select"
-                                  class="col-12 col-sm-4 col-form-label text-start text-sm-end">Job</label>
-                              <!-- If user has permission to add or edit Job -->
-                              <div v-if="this.hasPermission('ctrctsapp.add_job') || this.hasPermission('ctrctsapp.change_job')"
-                                  class="col-sm-8 d-flex align-items-center">
-                                  <!-- Job selection using vue-select -->
-                                  <v-select id="job-select" :options="jobs" v-model="newContract.job"
-                                      :reduce="job => job.id" label="name" class="flex-grow-1"
-                                      placeholder="Select Job" @input="fetchHouseModels" ref="job"
-                                      @keydown.enter="focusNext($event, 'houseModel')" @focus="selectText"
-                                      :disabled="isReadOnly">
-                                  </v-select>
-                                  <!-- Add button for opening the job modal in add mode -->
-                                  <button type="button" class="btn btn-outline-secondary btn-sm ms-1"
-                                      @click="openJobModal('add')" :disabled="isReadOnly">
-                                      <img src="@assets/img/icon-addlink.svg" alt="Add" width="15" height="15">
-                                  </button>
-                                  <!-- Edit button for opening the job modal in edit mode -->
-                                  <button v-if="newContract.job" type="button"
-                                      class="btn btn-outline-secondary btn-sm ms-1"
-                                      @click="editJobModal('edit', newContract.job)" :disabled="isReadOnly">
-                                      <img src="@assets/img/icon-changelink.svg" alt="Edit" width="15" height="15">
-                                  </button>
-                              </div>
-                              <div v-else class="col-sm-8">
-                                  <!-- Vue-select component without buttons -->
-                                  <v-select :options="jobs" v-model="newContract.job" :reduce="job => job.id"
-                                      label="name" placeholder="Select Job" @input="fetchHouseModels" ref="job"
-                                      @keydown.enter="focusNext($event, 'houseModel')" @focus="selectText"
-                                      :disabled="isReadOnly">
-                                  </v-select>
-                              </div>
-                          </div>
-
-                          <!-- Selector for House Model (hidden - replaced by WorkAccountSelector) -->
-                          <div class="form-group row align-items-center mb-3" v-if="true">
-                              <label for="houseModel"
-                                  class="col-12 col-sm-4 col-form-label text-start text-sm-end">House Model</label>
-                              <!-- If user has permission to add or edit Job -->
-                              <div v-if="this.hasPermission('ctrctsapp.add_housemodel') || this.hasPermission('ctrctsapp.change_housemodel')"
-                                  class="col-sm-8 d-flex align-items-center">
-                                  <v-select :options="houseModels" v-model="newContract.house_model"
-                                      :reduce="houseModel => houseModel.id" label="name"
-                                      placeholder="Select House Model" ref="houseModel" class="flex-grow-1"
-                                      @keydown.enter="focusNext($event, 'address')" @focus="selectText"
-                                      :disabled="isReadOnly">
-                                  </v-select>
-                                  <button type="button" class="btn btn-outline-secondary btn-sm ms-1"
-                                      @click="openModal('add')" :disabled="isReadOnly">
-                                      <img src="@assets/img/icon-addlink.svg" alt="Add" width="15" height="15">
-                                  </button>
-                                  <button v-if="newContract.house_model" type="button"
-                                      class="btn btn-outline-secondary btn-sm ms-1"
-                                      @click="openModal('edit', newContract.house_model)" :disabled="isReadOnly">
-                                      <img src="@assets/img/icon-changelink.svg" alt="Edit" width="15" height="15">
-                                  </button>
-                              </div>
-                              <div v-else class="col-sm-8">
-                                  <v-select :options="houseModels" v-model="newContract.house_model"
-                                      :reduce="houseModel => houseModel.id" label="name"
-                                      placeholder="Select House Model" ref="houseModel"
-                                      @keydown.enter="focusNext($event, 'address')" @focus="selectText"
-                                      :disabled="isReadOnly">
-                                  </v-select>
-                              </div>
-                          </div>
-
-                          <div class="form-group row align-items-center mb-3">
-                              <label for="address"
-                                  class="col-12 col-sm-4 col-form-label text-start text-sm-end">Address</label>
-                              <div class="col-sm-8">
-                                  <input type="text" class="form-control column-input" id="address" ref="address"
-                                      v-model="newContract.address" @keydown.enter="focusNext($event, 'lot')"
-                                      @focus="selectText" :disabled="isReadOnly">
-                              </div>
-                          </div>
-                          <div class="form-group row align-items-center mb-3">
-                              <label for="lot"
-                                  class="col-12 col-sm-4 col-form-label text-start text-sm-end">Lot</label>
-                              <div class="col-sm-8">
-                                  <input type="text" class="form-control column-input" id="lot"
-                                      v-model="newContract.lot" ref="lot" @keydown.enter="focusNext($event, 'sqft')"
-                                      @focus="selectText" :disabled="isReadOnly">
-                              </div>
-                          </div>
-                          <div class="form-group row align-items-center mb-3">
-                              <label for="lot" class="col-12 col-sm-4 col-form-label text-start text-sm-end">Lighting
-                                  Circuits:</label>
-                              <h5 class="col-sm-4 col-form-label text-start"><strong>{{ lightingCircuits() }}
-                                  </strong></h5>
-                          </div>
-                          <div class="form-group row align-items-center mb-3">
-                              <div class="col-sm-4"></div>
-                              <div class="col-sm-8">
-                                  <input class="form-control" hidden type="file" id="file" @change="onFileChange"
-                                      @focus="selectText">
-                              </div>
-                          </div>
-                      </div>
-                      <div class="col-md-6">
-                          <div class="form-group row align-items-center mb-3">
-                              <label for="sqft"
-                                  class="col-12 col-sm-4 col-form-label text-start text-sm-end">SqFt</label>
-                              <div class="col-sm-8">
-                                  <input type="number" class="form-control column-input" id="sqft" ref="sqft"
-                                      v-model="newContract.sqft" @input="calculatePrice"
-                                      @keydown.enter="focusNext($event, 'travelPrice')" @focus="selectText"
-                                      :disabled="isReadOnly">
-                              </div>
-                          </div>
-                          <div class="form-group row align-items-center mb-3">
-                              <label for="jobPrice" class="col-12 col-sm-4 col-form-label text-start text-sm-end">Job
-                                  Price</label>
-                              <div class="col-sm-8">
-                                  <input type="number" step="0.01" class="form-control column-input" id="jobPrice"
-                                      ref="jobPrice" v-model.number="newContract.job_price" @input="calculateTotal"
-                                      @blur.enter="focusNext($event, 'travelPrice')" @focus="selectText"
-                                      :disabled="isReadOnly">
-                              </div>
-                          </div>
-                          <div class="form-group row align-items-center mb-3">
-                              <label for="travelPrice"
-                                  class="col-12 col-sm-4 col-form-label text-start text-sm-end">Travel Price</label>
-                              <div class="col-sm-8">
-                                  <input type="number" step="0.01" class="form-control column-input" id="travelPrice"
-                                      ref="travelPrice" v-model.number="newContract.travel_price"
-                                      @input="calculateTotal" @keydown.enter="focusNext($event, 'comment')"
-                                      @focus="selectText" :disabled="isReadOnly">
-                              </div>
-                          </div>
-                          <div class="form-group row align-items-center mb-3">
-                              <label for="totalOptions"
-                                  class="col-12 col-sm-4 col-form-label text-start text-sm-end">Total Options</label>
-                              <div class="col-sm-8">
-                                  <input type="number" step="0.01" class="form-control column-input" id="totalOptions"
-                                      ref="totalOptions" v-model.number="newContract.total_options"
-                                      @input="calculateTotal" @keydown.enter="focusNext($event, 'comment')"
-                                      @focus="selectText" :disabled="isReadOnly">
-                              </div>
-                          </div>
-                          <div class="form-group row align-items-center mb-3">
-                              <label for="total"
-                                  class="col-12 col-sm-4 col-form-label text-start text-sm-end">Total</label>
-                              <div class="col-sm-8">
-                                  <input type="number" step="0.01" class="form-control column-input" id="total"
-                                      ref="total" v-model.number="newContract.total"
-                                      @keydown.enter="focusNext($event, 'comment')" @focus="selectText"
-                                      :disabled="isReadOnly">
-                              </div>
-                          </div>
-                          <div class="form-group row align-items-center mb-3">
-                              <label for="comment"
-                                  class="col-12 col-sm-4 col-form-label text-start text-sm-end column-input"
-                                  @keydown.enter="focusNext($event)">Comment</label>
-                              <div class="col-sm-8">
-                                  <textarea class="form-control" id="comment" ref="comment" rows="3"
-                                      v-model="newContract.comment" @keydown.enter="focusNextDetail($event)"
-                                      @focus="selectText" :disabled="isReadOnly"></textarea>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="row justify-content-center align-items-center">
-                      <div class="col-12 col-sm-auto">
-                          <div class="mb-6" v-if="$route.path == '/contract-form'">
-                              <div class="form-group row align-items-center" v-if="newContract.work_account || newContract.builder">
-                                  <div class="col col-sm-2">
-                                      <label>Qty</label>
-                                  </div>
-                                  <div class="col-6 col-sm-6">
-                                      <label>Options: {{ newContract.type }}</label>
-                                  </div>
-                                  <div class="col col-sm-4">
-                                      <label>Amount</label>
-                                  </div>
-                              </div>
-                              <div v-if="newContract.work_account || newContract.builder">
-                                  <div v-for="(price, index) in workPrices" :key="index">
-                                      <div class="form-group row align-items-center">
-                                          <div class="col col-sm-2"
-                                              v-if="newContract.type === 'Trim' && ((price.trim > 0 && price.isEditedTrim) || price.trim_qty >= 0)">
-                                              <input type="number" min="0" :id="'trim_qty' + index"
-                                                  class="form-control form-control-sm column-input"
-                                                  v-model.number="price.trim_qty" @keydown.enter="focusNextDetail($event)"
-                                                  @focus="selectText" @input="updateAmount(index)">
-                                          </div>
-                                          <div class="col col-sm-2"
-                                              v-if="newContract.type === 'Rough' && ((price.rough > 0 && price.isEditedRough) || price.rough_qty >= 0)">
-                                              <input type="number" min="0" :id="'rough_qty' + index"
-                                                  class="form-control form-control-sm column-input"
-                                                  v-model.number="price.rough_qty"
-                                                  @keydown.enter="focusNextDetail($event)" @focus="selectText"
-                                                  @input="updateAmount(index)">
-                                          </div>
-                                          <div class="col-6 col-sm-6">
-                                              <input type="text" class="form-control form-control-sm"
-                                                  v-if="(newContract.type === 'Trim' && ((price.trim > 0 && price.isEditedTrim) || price.trim_qty >= 0)) ||
-                                                      (newContract.type === 'Rough' && ((price.rough > 0 && price.isEditedRough) || price.rough_qty >= 0))"
-                                                  v-model="price.name" v-bind:placeholder="price.name">
-                                          </div>
-                                          <input type="hidden" class="form-control" v-model="price.id">
-                                          <div class="col col-sm-4"
-                                              v-if="newContract.type === 'Trim' && ((price.trim > 0 && price.isEditedTrim) || price.trim_qty >= 0)">
-                                              <label hidden class="form-label">Trim {{ index }}</label>
-                                              <input type="number" class="form-control form-control-sm"
-                                                  v-model.number="price.trim" @input="updateTotalOptions"
-                                                  @focus="selectText" :disabled="!price.trim_qty">
-                                          </div>
-                                          <div class="col col-sm-4"
-                                              v-if="newContract.type === 'Rough' && ((price.rough > 0 && price.isEditedRough) || price.rough_qty >= 0)">
-                                              <label hidden class="form-label">Rough {{ index }}</label>
-                                              <input type="number" class="form-control form-control-sm"
-                                                  v-model.number="price.rough" @input="updateTotalOptions"
-                                                  @focus="selectText" :disabled="!price.rough_qty">
-                                          </div>
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-
-                          <div class="mb-6" v-if="$route.path !== '/contract-form'">
-                              <div class="form-group row align-items-center">
-                                  <div class="col col-sm-2">
-                                      <label>Qty</label>
-                                  </div>
-                                  <div class="col-6 col-sm-6">
-                                      <label>Opciones: {{ newContract.type }}</label>
-                                  </div>
-                                  <div class="col col-sm-4">
-                                      <label>Amount</label>
-                                  </div>
-                              </div>
-                              <div v-for="(detail, index) in newContract.contract_details" :key="index">
-                                  <div class="form-group row align-items-center">
-                                      <div class="col col-sm-2"
-                                          v-if="newContract.type === 'Trim' && detail.isEditedTrim && !detail.isEditedRough">
-                                          <input type="number" min="0" :id="'detail_qty' + index"
-                                              ref="'detail_qty' + index"
-                                              class="form-control form-control-sm column-input"
-                                              v-model="detail.cdtrim_qty" @keydown.enter="focusNextDetail($event)"
-                                              @focus="selectText" @input="updateDetailAmount(index)"
-                                              :disabled="isReadOnly">
-                                      </div>
-                                      <div class="col col-sm-2"
-                                          v-if="newContract.type === 'Rough' && detail.isEditedRough && !detail.isEditedTrim">
-                                          <input type="number" min="0" :id="'detail_qty' + index"
-                                              class="form-control form-control-sm column-input"
-                                              v-model="detail.cdrough_qty" @keydown.enter="focusNextDetail($event)"
-                                              @focus="selectText" @input="updateDetailAmount(index)"
-                                              :disabled="isReadOnly">
-                                      </div>
-                                      <div class="col-6 col-sm-6">
-                                          <input type="text" class="form-control form-control-sm"
-                                              v-if="(newContract.type === 'Trim' && detail.isEditedTrim && !detail.isEditedRough) ||
-                                                  (newContract.type === 'Rough' && detail.isEditedRough && !detail.isEditedTrim)" v-model="detail.cdname"
-                                              v-bind:placeholder="detail.cdname" :disabled="isReadOnly">
-                                      </div>
-                                      <div class="col col-sm-4"
-                                          v-if="newContract.type === 'Trim' && detail.isEditedTrim && !detail.isEditedRough">
-                                          <label hidden class="form-label">Trim {{ index }}</label>
-                                          <input type="number" class="form-control form-control-sm"
-                                              v-model.number="detail.cdtrim" @input="updateTotalOptions"
-                                              @focus="selectText" :disabled="detail.cdtrim_qty <= 0.00 || isReadOnly">
-                                      </div>
-                                      <div class="col col-sm-4"
-                                          v-if="newContract.type === 'Rough' && detail.isEditedRough && !detail.isEditedTrim">
-                                          <label hidden class="form-label">Rough {{ index }}</label>
-                                          <input type="number" class="form-control form-control-sm"
-                                              v-model.number="detail.cdrough" @input="updateTotalOptions"
-                                              @focus="selectText"
-                                              :disabled="detail.cdrough_qty <= 0.00 || isReadOnly">
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-                  <div class="container p-2" v-if="!isReadOnly">
-                      <button class="btn btn-primary column-input" @click.prevent="createOrUpdateContract">Save
-                          Contract</button>
-                  </div>
-              </form>
-          </div>
+    <form
+      v-show="!loading && !errorMessage"
+      class="jr-contract-form"
+      @submit.prevent="createOrUpdateContract"
+      @keydown.enter.capture="onEnterAdvance"
+      novalidate>
+      <div
+        v-if="event"
+        class="jr-contract-form__event"
+        role="note">
+        <strong>Event:</strong> {{ event.title }}
+        <span aria-hidden="true"> · </span>
+        <strong>Crew:</strong> {{ event.crew_title }}
       </div>
-      <!-- Modals for CRUD (Builder, Job, and HouseModel) -->
-      <BuilderModal ref="builderModal" :action="action" :builder="selectedBuilders" @saved="fetchBuilders"
-          @close="closeModal" @clearBuilderSelect="clearBuilderSelection" />
-      <JobModal ref="jobModal" :action="action" :job="selectedJob" :builders="builders" @refresh="fetchJobs"
-          @close="closeModal" @clearJobSelect="clearJobSelection" />
-      <HouseModelModal ref="houseModelModal" :action="action" :houseModelId="houseModelId" :jobs="jobs"
-          @refresh="fetchHouseModels" @close="closeModal" />
-  </div>
+
+      <div class="jr-contract-form__split">
+        <JRSection title="Job details">
+          <div class="jr-form-grid jr-contract-form__grid--identity">
+            <!-- Row: Job Type | Lighting Circuits -->
+            <JRField
+              v-slot="{ describedby, invalid }"
+              label="Job Type"
+              required
+              inputId="type"
+              :error="validationErrors.type">
+              <!-- Backend Contract.type is CharField max_length=5 with choices Rough|Trim only — not a Category FK. Submit the name string, never category id. -->
+              <div data-jr-focus="type">
+                <JRSelect
+                  inputId="type"
+                  v-model="newContract.type"
+                  :options="jobTypeOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Select type"
+                  :disabled="isReadOnly"
+                  :invalid="invalid"
+                  :ariaDescribedby="describedby"
+                  @update:modelValue="onJobTypeChange" />
+              </div>
+            </JRField>
+
+            <JRField label="Lighting Circuits" inputId="lighting-circuits">
+              <p class="jr-contract-form__readout" id="lighting-circuits">
+                {{ lightingCircuits() }}
+              </p>
+            </JRField>
+
+            <!-- Row: Work Account | House Model -->
+            <JRField
+              v-slot="{ describedby, invalid }"
+              label="Work Account"
+              inputId="work-account"
+              :error="validationErrors.work_account">
+              <div data-jr-focus="work_account" class="jr-contract-form__wa">
+                <WorkAccountSelector
+                  inputId="work-account"
+                  v-model="newContract.work_account"
+                  :showLabel="false"
+                  :disabled="isReadOnly"
+                  :error="validationErrors.work_account"
+                  :ariaDescribedby="describedby"
+                  @change="onWorkAccountChanged" />
+              </div>
+            </JRField>
+
+            <JRField
+              v-slot="{ describedby, invalid }"
+              label="House Model"
+              required
+              inputId="houseModel"
+              :error="validationErrors.house_model">
+              <div data-jr-focus="house_model">
+                <JRSelectAddon
+                  inputId="houseModel"
+                  v-model="newContract.house_model"
+                  :options="houseModels"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="Select House Model"
+                  filter
+                  showClear
+                  :disabled="isReadOnly"
+                  :invalid="invalid"
+                  :required="true"
+                  :ariaDescribedby="describedby"
+                  :showAdd="true"
+                  :showEdit="!!newContract.house_model"
+                  :addDisabled="
+                    isReadOnly ||
+                    !hasPermission('ctrctsapp.add_housemodel')
+                  "
+                  :editDisabled="
+                    isReadOnly ||
+                    !hasPermission('ctrctsapp.change_housemodel')
+                  "
+                  addLabel="Add a new house model to the system"
+                  editLabel="Edit the currently selected house model"
+                  @add="openModal('add')"
+                  @edit="openModal('edit', newContract.house_model)" />
+              </div>
+            </JRField>
+
+            <!-- Row: Address | Lot -->
+            <JRField
+              v-slot="{ describedby, invalid }"
+              label="Address"
+              required
+              inputId="address"
+              :error="validationErrors.address"
+              hint="Required for Spot Lot (empty lot + address).">
+              <div data-jr-focus="address">
+                <JRInput
+                  inputId="address"
+                  v-model="newContract.address"
+                  :disabled="isReadOnly"
+                  :invalid="invalid"
+                  :ariaDescribedby="describedby"
+                  @focus="selectText" />
+              </div>
+            </JRField>
+
+            <JRField
+              v-slot="{ describedby, invalid }"
+              label="Lot"
+              inputId="lot"
+              :error="validationErrors.lot"
+              hint="Optional for Spot Lot. Whole numbers only (max 10 digits).">
+              <div data-jr-focus="lot">
+                <JRInput
+                  inputId="lot"
+                  :modelValue="lotDisplay"
+                  :disabled="isReadOnly"
+                  :invalid="invalid"
+                  :ariaDescribedby="describedby"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  @update:modelValue="onLotInput"
+                  @focus="selectText" />
+              </div>
+            </JRField>
+          </div>
+        </JRSection>
+
+        <JRSection title="Pricing">
+          <div class="jr-form-grid jr-contract-form__grid--pricing">
+            <JRField
+              v-slot="{ describedby, invalid }"
+              label="SqFt"
+              required
+              inputId="sqft"
+              :error="validationErrors.sqft">
+              <div data-jr-focus="sqft">
+                <JRInput
+                  inputId="sqft"
+                  v-model="newContract.sqft"
+                  type="number"
+                  :min="0"
+                  :disabled="isReadOnly"
+                  :invalid="invalid"
+                  :ariaDescribedby="describedby"
+                  @update:modelValue="calculatePrice"
+                  @focus="selectText" />
+              </div>
+            </JRField>
+
+            <JRField
+              v-slot="{ describedby, invalid }"
+              label="Travel Price"
+              required
+              inputId="travelPrice"
+              :error="validationErrors.travel_price">
+              <div data-jr-focus="travel_price">
+                <JRInput
+                  inputId="travelPrice"
+                  v-model="newContract.travel_price"
+                  type="number"
+                  :min="0"
+                  :minFractionDigits="2"
+                  :maxFractionDigits="2"
+                  :disabled="isReadOnly"
+                  :invalid="invalid"
+                  :ariaDescribedby="describedby"
+                  @update:modelValue="onTravelPriceInput"
+                  @focus="selectText" />
+              </div>
+            </JRField>
+
+            <JRField
+              v-slot="{ describedby, invalid }"
+              label="Job Price"
+              required
+              inputId="jobPrice"
+              :error="validationErrors.job_price">
+              <JRInput
+                inputId="jobPrice"
+                v-model="newContract.job_price"
+                type="number"
+                :minFractionDigits="2"
+                :maxFractionDigits="2"
+                :disabled="isReadOnly"
+                :invalid="invalid"
+                :ariaDescribedby="describedby"
+                @update:modelValue="calculateTotal"
+                @focus="selectText" />
+            </JRField>
+
+            <JRField
+              v-slot="{ describedby, invalid }"
+              label="Total Options"
+              required
+              inputId="totalOptions"
+              :error="validationErrors.total_options">
+              <JRInput
+                inputId="totalOptions"
+                v-model="newContract.total_options"
+                type="number"
+                :minFractionDigits="2"
+                :maxFractionDigits="2"
+                :disabled="isReadOnly"
+                :invalid="invalid"
+                :ariaDescribedby="describedby"
+                @update:modelValue="calculateTotal"
+                @focus="selectText" />
+            </JRField>
+
+            <JRField
+              v-slot="{ describedby, invalid }"
+              label="Total"
+              required
+              inputId="total"
+              :error="validationErrors.total">
+              <JRInput
+                inputId="total"
+                v-model="newContract.total"
+                type="number"
+                :minFractionDigits="2"
+                :maxFractionDigits="2"
+                :disabled="isReadOnly"
+                :invalid="invalid"
+                :ariaDescribedby="describedby"
+                @focus="selectText" />
+            </JRField>
+
+            <JRField
+              v-slot="{ describedby }"
+              label="Comment"
+              inputId="comment"
+              class="jr-contract-form__comment-field">
+              <JRTextarea
+                inputId="comment"
+                v-model="newContract.comment"
+                :rows="2"
+                :disabled="isReadOnly"
+                :ariaDescribedby="describedby" />
+            </JRField>
+          </div>
+        </JRSection>
+      </div>
+
+      <JRSection
+        v-if="($route.path == '/contract-form' && (newContract.work_account || newContract.builder)) || $route.path !== '/contract-form'"
+        title="Options">
+        <!-- Create: work price qty grid — two columns -->
+        <div v-if="$route.path == '/contract-form'" class="jr-contract-form__options-split">
+          <div
+            v-for="(col, colIdx) in createOptionColumns"
+            :key="'wp-col-' + colIdx"
+            class="jr-contract-form__options">
+            <div class="jr-contract-form__options-head">
+              <span>Qty</span>
+              <span class="jr-contract-form__options-title">Options: {{ newContract.type }}</span>
+              <span>Amount</span>
+            </div>
+            <div
+              v-for="row in col"
+              :key="'wp-' + row.index"
+              class="jr-contract-form__options-row">
+              <template v-if="newContract.type === 'Trim'">
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  :id="'trim_qty' + row.index"
+                  class="jr-contract-form__opt-input jr-contract-form__opt-qty"
+                  :aria-label="`Quantity for ${row.price.name || 'option'}`"
+                  v-model.number="row.price.trim_qty"
+                  @focus="selectText"
+                  @input="updateAmount(row.index)" />
+                <input
+                  type="text"
+                  class="jr-contract-form__opt-input jr-contract-form__opt-name"
+                  :aria-label="`Option name ${row.price.name || row.index + 1}`"
+                  v-model="row.price.name"
+                  :placeholder="row.price.name"
+                  tabindex="-1" />
+                <input
+                  type="number"
+                  class="jr-contract-form__opt-input jr-contract-form__opt-amount"
+                  :aria-label="`Amount for ${row.price.name || 'option'}`"
+                  v-model.number="row.price.trim"
+                  @input="updateTotalOptions"
+                  @focus="selectText"
+                  :disabled="!row.price.trim_qty" />
+              </template>
+              <template v-else-if="newContract.type === 'Rough'">
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  :id="'rough_qty' + row.index"
+                  class="jr-contract-form__opt-input jr-contract-form__opt-qty"
+                  :aria-label="`Quantity for ${row.price.name || 'option'}`"
+                  v-model.number="row.price.rough_qty"
+                  @focus="selectText"
+                  @input="updateAmount(row.index)" />
+                <input
+                  type="text"
+                  class="jr-contract-form__opt-input jr-contract-form__opt-name"
+                  :aria-label="`Option name ${row.price.name || row.index + 1}`"
+                  v-model="row.price.name"
+                  :placeholder="row.price.name"
+                  tabindex="-1" />
+                <input
+                  type="number"
+                  class="jr-contract-form__opt-input jr-contract-form__opt-amount"
+                  :aria-label="`Amount for ${row.price.name || 'option'}`"
+                  v-model.number="row.price.rough"
+                  @input="updateTotalOptions"
+                  @focus="selectText"
+                  :disabled="!row.price.rough_qty" />
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit/View: contract_details qty grid — two columns -->
+        <div v-else class="jr-contract-form__options-split">
+          <div
+            v-for="(col, colIdx) in editOptionColumns"
+            :key="'cd-col-' + colIdx"
+            class="jr-contract-form__options">
+            <div class="jr-contract-form__options-head">
+              <span>Qty</span>
+              <span class="jr-contract-form__options-title">Options: {{ newContract.type }}</span>
+              <span>Amount</span>
+            </div>
+            <div
+              v-for="row in col"
+              :key="'cd-' + row.index"
+              class="jr-contract-form__options-row">
+              <template v-if="newContract.type === 'Trim'">
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  :id="'detail_qty' + row.index"
+                  class="jr-contract-form__opt-input jr-contract-form__opt-qty"
+                  :aria-label="`Quantity for ${row.detail.cdname || 'option'}`"
+                  v-model="row.detail.cdtrim_qty"
+                  @focus="selectText"
+                  @input="updateDetailAmount(row.index)"
+                  :disabled="isReadOnly" />
+                <input
+                  type="text"
+                  class="jr-contract-form__opt-input jr-contract-form__opt-name"
+                  :aria-label="`Option name ${row.detail.cdname || row.index + 1}`"
+                  v-model="row.detail.cdname"
+                  :placeholder="row.detail.cdname"
+                  :disabled="isReadOnly"
+                  tabindex="-1" />
+                <input
+                  type="number"
+                  class="jr-contract-form__opt-input jr-contract-form__opt-amount"
+                  :aria-label="`Amount for ${row.detail.cdname || 'option'}`"
+                  v-model.number="row.detail.cdtrim"
+                  @input="updateTotalOptions"
+                  @focus="selectText"
+                  :disabled="row.detail.cdtrim_qty <= 0.00 || isReadOnly" />
+              </template>
+              <template v-else-if="newContract.type === 'Rough'">
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  :id="'detail_qty' + row.index"
+                  class="jr-contract-form__opt-input jr-contract-form__opt-qty"
+                  :aria-label="`Quantity for ${row.detail.cdname || 'option'}`"
+                  v-model="row.detail.cdrough_qty"
+                  @focus="selectText"
+                  @input="updateDetailAmount(row.index)"
+                  :disabled="isReadOnly" />
+                <input
+                  type="text"
+                  class="jr-contract-form__opt-input jr-contract-form__opt-name"
+                  :aria-label="`Option name ${row.detail.cdname || row.index + 1}`"
+                  v-model="row.detail.cdname"
+                  :placeholder="row.detail.cdname"
+                  :disabled="isReadOnly"
+                  tabindex="-1" />
+                <input
+                  type="number"
+                  class="jr-contract-form__opt-input jr-contract-form__opt-amount"
+                  :aria-label="`Amount for ${row.detail.cdname || 'option'}`"
+                  v-model.number="row.detail.cdrough"
+                  @input="updateTotalOptions"
+                  @focus="selectText"
+                  :disabled="row.detail.cdrough_qty <= 0.00 || isReadOnly" />
+              </template>
+            </div>
+          </div>
+        </div>
+      </JRSection>
+
+      <div class="jr-contract-form__actions">
+        <template v-if="!isReadOnly">
+          <JRButton type="submit" variant="primary">
+            Save Contract
+          </JRButton>
+          <JRButton type="button" variant="secondary" @click="$router.push('/contracts')">
+            Cancel
+          </JRButton>
+        </template>
+        <JRButton v-else type="button" variant="secondary" @click="$router.push('/contracts')">
+          Back to list
+        </JRButton>
+      </div>
+    </form>
+
+    <BuilderModal
+      ref="builderModal"
+      :action="action"
+      :builder="selectedBuilders"
+      @saved="fetchBuilders"
+      @close="closeModal"
+      @clearBuilderSelect="clearBuilderSelection" />
+    <JobModal
+      ref="jobModal"
+      :action="action"
+      :job="selectedJob"
+      :builders="builders"
+      @refresh="fetchJobs"
+      @close="closeModal"
+      @clearJobSelect="clearJobSelection" />
+    <HouseModelModal
+      ref="houseModelModal"
+      :action="action"
+      :houseModelId="houseModelId"
+      :jobs="jobs"
+      @refresh="fetchHouseModels"
+      @close="closeModal" />
+
+    <JRDialog
+      :visible="sqftConfirmVisible"
+      header="Confirm large SqFt"
+      :message="sqftConfirmMessage"
+      confirmLabel="Continue"
+      cancelLabel="Cancel"
+      @update:visible="onSqftConfirmVisible"
+      @confirm="confirmLargeSqft" />
+  </JRPage>
 </template>
 
 <script>
 import axios from 'axios';
-import VSelect from 'vue-select';
-import Swal from 'sweetalert2'
 import { Modal } from 'bootstrap';
 import '@assets/css/base.css';
 import BuilderModal from './BuilderModalComponent.vue';
 import JobModal from './JobModalComponent.vue';
 import HouseModelModal from './HouseModelModalComponent.vue';
 import { openPdf } from "@helpers";
-import WorkAccountSelector from '@/components/transactions/WorkAccountSelector.vue'
+import WorkAccountSelector from '@/components/transactions/WorkAccountSelector.vue';
+import {
+  JRPage,
+  JRPageHeader,
+  JRSection,
+  JRField,
+  JRInput,
+  JRSelect,
+  JRSelectAddon,
+  JRTextarea,
+  JRCheckbox,
+  JRButton,
+  JRDialog,
+} from '@ui';
 
 
 export default {
@@ -429,9 +516,18 @@ export default {
       BuilderModal,
       JobModal,
       HouseModelModal,
-      VSelect,
-      WorkAccountSelector
-
+      WorkAccountSelector,
+      JRPage,
+      JRPageHeader,
+      JRSection,
+      JRField,
+      JRInput,
+      JRSelect,
+      JRSelectAddon,
+      JRTextarea,
+      JRCheckbox,
+      JRButton,
+      JRDialog,
   },
 
   data() {
@@ -443,6 +539,9 @@ export default {
           loading_text: 'Loading contracts',
           savedContractId: null,
           savedNeedsReprint: false,
+          sqftConfirmVisible: false,
+          sqftConfirmMessage: '',
+          sqftConfirmAccepted: false,
           // Initial state of newContract and other data properties
           // Estado inicial de newContract y otras propiedades de datos
           newContract: {
@@ -481,6 +580,13 @@ export default {
           action: 'add',
           isBid: false, // Por defecto, el checkbox no está marcado, lo que significa "Contract"
           event: null,
+          // Backend Contract.type choices are Rough|Trim strings only (not Category FK).
+          jobTypeOptions: [
+              { label: 'Rough', value: 'Rough' },
+              { label: 'Trim', value: 'Trim' },
+          ],
+          validationErrors: {},
+          _syncingFromWorkAccount: false,
       };
   },
 
@@ -497,8 +603,59 @@ export default {
               return false;
           });
       },
+      visibleCreateOptionRows() {
+          if (!this.newContract.type || !Array.isArray(this.workPrices)) return [];
+          return this.workPrices
+              .map((price, index) => ({ price, index }))
+              .filter(({ price }) => {
+                  if (this.newContract.type === 'Trim') {
+                      return (price.trim > 0 && price.isEditedTrim) || price.trim_qty >= 0;
+                  }
+                  if (this.newContract.type === 'Rough') {
+                      return (price.rough > 0 && price.isEditedRough) || price.rough_qty >= 0;
+                  }
+                  return false;
+              });
+      },
+      createOptionColumns() {
+          return this.splitOptionColumns(this.visibleCreateOptionRows);
+      },
+      visibleEditOptionRows() {
+          if (!this.newContract.type || !Array.isArray(this.newContract.contract_details)) {
+              return [];
+          }
+          return this.newContract.contract_details
+              .map((detail, index) => ({ detail, index }))
+              .filter(({ detail }) => {
+                  if (this.newContract.type === 'Trim') {
+                      return detail.isEditedTrim && !detail.isEditedRough;
+                  }
+                  if (this.newContract.type === 'Rough') {
+                      return detail.isEditedRough && !detail.isEditedTrim;
+                  }
+                  return false;
+              });
+      },
+      editOptionColumns() {
+          return this.splitOptionColumns(this.visibleEditOptionRows);
+      },
       isReadOnly() {
           return this.$route.name === 'contract-view';
+      },
+      pageTitle() {
+          const doc = this.newContract.doc_type || 'Contract';
+          if (this.$route.path === '/contract-form') return `New ${doc}`;
+          if (this.isReadOnly) return `View ${doc}`;
+          return `Edit ${doc}`;
+      },
+      pageDescription() {
+          if (this.$route.path === '/contract-form' || !this.newContract.date_created) {
+              return '';
+          }
+          return `Created: ${this.formatDate(this.newContract.date_created)} · Updated: ${this.formatDate(this.newContract.last_updated)}`;
+      },
+      lotDisplay() {
+          return this.newContract.lot == null ? '' : String(this.newContract.lot);
       },
   },
   watch: {
@@ -536,6 +693,17 @@ export default {
       },
       'newContract.builder': function (newVal, oldVal) {
           if (newVal !== oldVal) {
+              // When syncing from Work Account, onWorkAccountChanged owns job/house_model
+              if (this._syncingFromWorkAccount) {
+                  if (newVal) {
+                      this.fetchWorkPrices(newVal);
+                      this.updateTravelPrice();
+                  }
+                  if (this.builders.length > 0) {
+                      this.calculatePrice();
+                  }
+                  return;
+              }
               this.newContract.job = ''; // Reset job selection
               this.newContract.house_model = ''; // Reset house model selection
               if (!newVal) {
@@ -564,6 +732,10 @@ export default {
       },
       'newContract.job': function (newVal, oldVal) {
           if (newVal !== oldVal) {
+              if (this._syncingFromWorkAccount) {
+                  // Keep house_model_id; options load happens in onWorkAccountChanged
+                  return;
+              }
               this.newContract.house_model = ''; // Reset house model selection
 
               this.fetchHouseModels(() => {
@@ -575,7 +747,7 @@ export default {
           }
       },
       'newContract.house_model': function (newVal, oldVal) {
-          if (newVal !== oldVal) {
+          if (newVal !== oldVal && !this._syncingFromWorkAccount) {
               this.fetchHouseModels();
           }
       },
@@ -599,6 +771,7 @@ export default {
           this.fetchJobs(),
           this.fetchHouseModels(),
           this.loadEventFromContract(),
+          this.loadJobTypeOptions(),
       ]).then(() => {
           this.loading = false; // Solo si todo carga bien, mostramos el formulario
       }).catch(error => {
@@ -609,8 +782,10 @@ export default {
   },
 
   methods: {
-      toggleDocType() {
-          // Si el checkbox está marcado, se asigna "Bid", de lo contrario "Contract"
+      toggleDocType(value) {
+          if (typeof value === 'boolean') {
+              this.isBid = value;
+          }
           this.newContract.doc_type = this.isBid ? 'Bid' : 'Contract';
       },
 
@@ -667,83 +842,372 @@ export default {
           }
       },
 
-      // Select all text in the input field
-      // Seleccionar todo el texto en el campo de entrada
+      // Select all text in the input field (safe for non-input targets)
       selectText(event) {
-          const input = event.target;
-          input.select();
+          try {
+              const input = event?.target;
+              if (input && typeof input.select === 'function') {
+                  input.select();
+              }
+          } catch (e) {
+              /* ignore — focus target may not support select() */
+          }
       },
 
       async onWorkAccountChanged(workAccountId) {
           try {
-              if (!workAccountId) return
-              const { data } = await axios.get(`/api/work-accounts/${workAccountId}/`)
+              if (!workAccountId) {
+                  return;
+              }
+              const { data } = await axios.get(`/api/work-accounts/${workAccountId}/`);
+              const hmId = this.normalizeHouseModelId(data.house_model);
+              const hmName = data.house_model_name
+                  || (data.house_model && typeof data.house_model === 'object'
+                      ? data.house_model.name
+                      : null);
 
-              // 1) Builder primero (limpia dependencias por watchers)
-              this.newContract.builder = data.builder || null
+              // Remember for edit-style restore paths
+              this.newContract.house_model_id = hmId;
 
-              // 2) Cargar jobs y setear job
-              await this.fetchJobs(() => {
-                  this.newContract.job = data.job || null
-              })
+              this._syncingFromWorkAccount = true;
+              try {
+                  // 1) Builder (watchers skipped while syncing)
+                  this.newContract.builder = data.builder || null;
 
-              // 3) Cargar house models y setear house_model
-              await this.fetchHouseModels(async () => {
-                  // Si el house_model viene en el WA, asegúralo en opciones
-                  if (data.house_model) {
-                      // Confirmar que el house_model pertenece al job actual
-                      const hmId = data.house_model
-                      const exists = this.houseModels.some(h => h.id === hmId)
-                      if (!exists) {
-                          // fallback: recargar por si no estaba la relación aún en memoria
-                          await this.fetchHouseModels()
-                      }
-                      this.newContract.house_model = hmId
+                  // 2) Jobs for builder, then set job from WA
+                  await this.fetchJobs();
+                  this.newContract.job = data.job || null;
+
+                  // 3) House models for job, then set HM from WA when present
+                  await this.fetchHouseModels();
+                  if (hmId) {
+                      await this.ensureHouseModelOption(hmId, hmName);
+                      this.newContract.house_model = hmId;
                   } else {
-                      this.newContract.house_model = null
+                      this.newContract.house_model = null;
                   }
-              })
 
-              // 4) Lote y Dirección
-              this.newContract.lot = data.lot || ''
-              this.newContract.address = data.address || ''
+                  // 4) Lot + Address (Spot Lot: empty lot → null)
+                  this.newContract.lot = data.lot ? String(data.lot) : null;
+                  this.newContract.address = data.address || '';
 
-              // 5) Recalcular precios (travel desde builder)
-              this.updateTravelPrice()
-              this.calculatePrice()
-
-              // 6) Cargar precios de opciones según builder
-              if (data.builder) {
-                  await this.fetchWorkPrices(data.builder)
+                  // 5) Pricing + options
+                  this.updateTravelPrice();
+                  this.calculatePrice();
+                  if (data.builder) {
+                      await this.fetchWorkPrices(data.builder);
+                  }
+              } finally {
+                  this._syncingFromWorkAccount = false;
               }
-              return data
+              return data;
           } catch (e) {
-              console.error('Error syncing WorkAccount into contract:', e)
+              this._syncingFromWorkAccount = false;
+              console.error('Error syncing WorkAccount into contract:', e);
           }
       },
 
-      // Move to the next input field when Enter is pressed
-      // Moverse al siguiente campo de entrada cuando se presiona Enter
-      focusNext(event, nextField) {
-          event.preventDefault();
-          if (this.$refs[nextField]) {
-              if (this.$refs[nextField].$el) {
-                  this.$refs[nextField].$el.querySelector('input, select').focus();
-              } else {
-                  this.$refs[nextField].focus();
+      normalizeHouseModelId(houseModel) {
+          if (houseModel == null || houseModel === '') return null;
+          if (typeof houseModel === 'object') {
+              return houseModel.id != null ? houseModel.id : null;
+          }
+          return houseModel;
+      },
+
+      async ensureHouseModelOption(hmId, hmName) {
+          if (!hmId) return;
+          if (this.houseModels.some((h) => h.id === hmId)) return;
+
+          let name = hmName;
+          if (!name) {
+              try {
+                  const { data } = await axios.get(`/api/house_model/${hmId}/`);
+                  name = data?.name || `House Model #${hmId}`;
+              } catch (e) {
+                  name = `House Model #${hmId}`;
               }
           }
+          this.houseModels = [
+              ...this.houseModels,
+              { id: hmId, name, jobs: this.newContract.job ? [this.newContract.job] : [] },
+          ];
       },
-      // Move to the next input Detail field when Enter is pressed
-      // Moverse al siguiente campo de Detail de entrada cuando se presiona Enter
-      focusNextDetail(event) {
-          if (event.key === 'Enter') {
-              event.preventDefault();
-              const inputs = Array.from(document.querySelectorAll('.column-input'));
-              const index = inputs.indexOf(event.target);
-              if (index > -1 && index < inputs.length - 1) {
-                  inputs[index + 1].focus();
+
+      // Operational Enter focus chain (skips Lighting Circuits, calculated money, Comment, option name/amount)
+      splitOptionColumns(rows) {
+          const list = Array.isArray(rows) ? rows : [];
+          if (!list.length) return [[]];
+          const mid = Math.ceil(list.length / 2);
+          const left = list.slice(0, mid);
+          const right = list.slice(mid);
+          return right.length ? [left, right] : [left];
+      },
+
+      getQtyFocusables() {
+          const root = this.$el;
+          if (!root) return [];
+          return Array.from(root.querySelectorAll('.jr-contract-form__opt-qty')).filter((el) => {
+              if (el.disabled || el.getAttribute('disabled') != null) return false;
+              if (el.offsetParent === null && getComputedStyle(el).visibility === 'hidden') return false;
+              return true;
+          });
+      },
+
+      getFocusChainKeys() {
+          return ['type', 'work_account', 'house_model', 'address', 'lot', 'sqft', 'travel_price'];
+      },
+
+      resolveFocusTarget(key) {
+          const root = this.$el;
+          if (!root) return null;
+          const wrap = root.querySelector(`[data-jr-focus="${key}"]`);
+          if (!wrap) return null;
+
+          if (key === 'type') {
+              return (
+                  wrap.querySelector('.p-select') ||
+                  wrap.querySelector('[data-pc-name="select"]') ||
+                  wrap.querySelector('input') ||
+                  wrap
+              );
+          }
+          if (key === 'work_account' || key === 'house_model') {
+              return (
+                  wrap.querySelector('input.vs__search') ||
+                  wrap.querySelector('.vs__search') ||
+                  wrap.querySelector('input') ||
+                  wrap
+              );
+          }
+          const idMap = {
+              address: 'address',
+              lot: 'lot',
+              sqft: 'sqft',
+              travel_price: 'travelPrice',
+          };
+          const id = idMap[key];
+          if (id) {
+              const byId = document.getElementById(id);
+              if (byId) return byId;
+          }
+          return wrap.querySelector('input') || wrap;
+      },
+
+      buildFocusChain() {
+          const chain = [];
+          this.getFocusChainKeys().forEach((key) => {
+              const el = this.resolveFocusTarget(key);
+              if (el) chain.push({ key, el });
+          });
+          this.getQtyFocusables().forEach((el, i) => {
+              chain.push({ key: `qty:${i}`, el });
+          });
+          return chain;
+      },
+
+      findFocusChainIndex(target) {
+          if (!target) return -1;
+          const chain = this.buildFocusChain();
+          for (let i = 0; i < chain.length; i += 1) {
+              const el = chain[i].el;
+              if (el === target || (el.contains && el.contains(target))) {
+                  return i;
               }
+          }
+          return -1;
+      },
+
+      focusChainElement(entry) {
+          if (!entry?.el) return;
+          const el = entry.el;
+          try {
+              el.focus?.();
+              if (typeof el.select === 'function') {
+                  el.select();
+              }
+          } catch (e) {
+              /* ignore */
+          }
+      },
+
+      focusSaveButton() {
+          const btn = this.$el?.querySelector?.('.jr-contract-form__actions button[type="submit"]');
+          try {
+              btn?.focus?.();
+          } catch (e) {
+              /* ignore */
+          }
+      },
+
+      isOpenDropdownTarget(target) {
+          if (!target) return false;
+          if (target.closest?.('.vs--open')) return true;
+          if (target.closest?.('.p-select-overlay')) return true;
+          // PrimeVue select open panel is often portaled; leave Enter to the widget when expanded
+          const openPanel = document.querySelector('.p-select-overlay:not([style*="display: none"])');
+          if (openPanel && openPanel.offsetParent !== null) {
+              const wrap = target.closest?.('[data-jr-focus="type"]');
+              if (wrap) return true;
+          }
+          return false;
+      },
+
+      onEnterAdvance(event) {
+          if (event.key !== 'Enter' || this.isReadOnly) return;
+
+          const target = event.target;
+          // Comment keeps native Enter for newlines — not in operational chain
+          if (target?.id === 'comment' || target?.closest?.('#comment')) {
+              return;
+          }
+
+          // Option name/amount: block accidental submit, do not advance
+          if (target?.closest?.('.jr-contract-form__opt-name, .jr-contract-form__opt-amount')) {
+              event.preventDefault();
+              return;
+          }
+
+          // Let open dropdowns handle Enter for selection
+          if (this.isOpenDropdownTarget(target)) {
+              return;
+          }
+
+          const chain = this.buildFocusChain();
+          const index = this.findFocusChainIndex(target);
+          if (index === -1) {
+              // Calculated fields / other controls: prevent surprise submit
+              if (target?.closest?.('form.jr-contract-form')) {
+                  const tag = (target.tagName || '').toLowerCase();
+                  if (tag === 'input' || tag === 'textarea' || target.getAttribute?.('contenteditable')) {
+                      event.preventDefault();
+                  }
+              }
+              return;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          if (index >= chain.length - 1) {
+              this.focusSaveButton();
+              return;
+          }
+          this.focusChainElement(chain[index + 1]);
+      },
+
+      focusFirstInvalidField() {
+          const order = [
+              'type',
+              'work_account',
+              'house_model',
+              'address',
+              'lot',
+              'sqft',
+              'travel_price',
+              'job_price',
+              'total_options',
+              'total',
+          ];
+          const firstKey = order.find((key) => this.validationErrors[key]);
+          if (!firstKey) return;
+
+          this.$nextTick(() => {
+              const fromChain = this.resolveFocusTarget(firstKey);
+              if (fromChain) {
+                  this.focusChainElement({ key: firstKey, el: fromChain });
+                  return;
+              }
+              const idMap = {
+                  job_price: 'jobPrice',
+                  total_options: 'totalOptions',
+                  total: 'total',
+              };
+              const el = document.getElementById(idMap[firstKey] || firstKey);
+              try {
+                  el?.focus?.();
+              } catch (e) {
+                  /* ignore */
+              }
+          });
+      },
+
+      onTravelPriceInput(value) {
+          this.newContract.travel_price = value;
+          this.calculateTotal();
+      },
+
+      normalizeTravelPrice() {
+          const raw = this.newContract.travel_price;
+          if (raw === null || raw === undefined || raw === '') {
+              this.newContract.travel_price = 0;
+              return 0;
+          }
+          const n = Number(raw);
+          if (!Number.isFinite(n)) {
+              this.newContract.travel_price = 0;
+              return 0;
+          }
+          const fixed = Number(n.toFixed(2));
+          this.newContract.travel_price = fixed;
+          return fixed;
+      },
+
+      trimContractStrings() {
+          if (this.newContract.address != null) {
+              this.newContract.address = String(this.newContract.address).trim();
+          }
+          if (this.newContract.comment != null) {
+              this.newContract.comment = String(this.newContract.comment).trim();
+          }
+          // Spot Lot: empty lot → null (never send "")
+          if (this.newContract.lot == null || this.newContract.lot === '') {
+              this.newContract.lot = null;
+          } else {
+              const digits = String(this.newContract.lot).replace(/\D/g, '').slice(0, 10);
+              this.newContract.lot = digits === '' ? null : digits;
+          }
+      },
+
+      onJobTypeChange() {
+          this.calculatePrice();
+          this.updateTotalOptions();
+      },
+      onLotInput(value) {
+          const raw = value == null ? '' : String(value);
+          const digits = raw.replace(/\D/g, '').slice(0, 10);
+          this.newContract.lot = digits === '' ? null : digits;
+          if (this.validationErrors.lot) {
+              delete this.validationErrors.lot;
+          }
+      },
+      async loadJobTypeOptions() {
+          // Contract.type is CharField choices Rough|Trim only — load matching category names for the select, submit name not id.
+          const fallback = [
+              { label: 'Rough', value: 'Rough' },
+              { label: 'Trim', value: 'Trim' },
+          ];
+          try {
+              const catRes = await axios.get('/api/categories/');
+              const cats = catRes.data.results ?? catRes.data;
+              const list = Array.isArray(cats) ? cats : [];
+              const matched = list
+                  .filter((c) => {
+                      const name = (c.name || '').trim().toLowerCase();
+                      return name === 'rough' || name === 'trim';
+                  })
+                  .map((c) => {
+                      const name = (c.name || '').trim();
+                      const canonical = name.toLowerCase() === 'rough' ? 'Rough' : 'Trim';
+                      return { label: canonical, value: canonical };
+                  });
+              // Deduplicate Rough/Trim
+              const byValue = new Map();
+              matched.forEach((o) => byValue.set(o.value, o));
+              this.jobTypeOptions = byValue.size ? Array.from(byValue.values()) : fallback;
+          } catch (e) {
+              console.error('Error loading categories for Job Type:', e);
+              this.jobTypeOptions = fallback;
           }
       },
 
@@ -941,24 +1405,38 @@ export default {
           this.newContract.job_price = jobPrice.toFixed(2);
 
           if (sqft >= 3000 && !idToUpdate) {
-              const confirmContinue = Swal.fire({
-                  title: 'Confirm?',
-                  text: 'Do you want to continue with a SqFt of ' + sqft + '? The value is greater than or equal to 3000.',
-                  icon: 'warning',
-                  showCancelButton: true,
-                  confirmButtonText: 'Yes',
-                  cancelButtonText: 'No'
-              });
-              confirmContinue.then(result => {
-                  if (!result.isConfirmed) {
-                      // Si el usuario cancela, restablecer el valor a 0
-                      this.newContract.sqft = 0;
-                  } else {
-                      this.newContract.sqft = sqft;
-                  }
-              });
+              this.sqftConfirmMessage =
+                  'SqFt is ' +
+                  sqft +
+                  ' (≥ 3000). Continue with this square footage? Cancel resets SqFt to 0.';
+              this.sqftConfirmVisible = true;
               return;
           }
+      },
+
+      onSqftConfirmVisible(visible) {
+          this.sqftConfirmVisible = visible;
+          if (!visible) {
+              if (this.sqftConfirmAccepted) {
+                  this.sqftConfirmAccepted = false;
+                  return;
+              }
+              if (Number(this.newContract.sqft) >= 3000) {
+                  this.newContract.sqft = 0;
+                  // After dialog teardown, return focus to SqFt (now 0)
+                  this.$nextTick(() => {
+                      this.$nextTick(() => {
+                          const el = this.resolveFocusTarget('sqft');
+                          this.focusChainElement({ key: 'sqft', el });
+                      });
+                  });
+              }
+          }
+      },
+
+      confirmLargeSqft() {
+          this.sqftConfirmAccepted = true;
+          this.sqftConfirmVisible = false;
       },
 
       formatDate(dateString) {
@@ -1047,21 +1525,23 @@ export default {
 
       fetchWorkPrices(builderId) {
           const idToUpdate = this.$route.params.id;
-          if (!idToUpdate) {
-              axios.get(`/api/workprice/?builder=${builderId}`)
-                  .then(response => {
-                      this.workPrices = response.data.map(price => ({
-                          ...price,
-                          isEditedTrim: false,  // Properly initializing flags for each price
-                          isEditedRough: false
-                      }));
-                      this.initializePrices();  // Call after setting initial values
-                      // console.log('fetchWorkPrices: ', JSON.stringify(this.workPrices, null, 2));
-                  })
-                  .catch(error => {
-                      console.error('Error fetching work prices:', error);
-                  });
+          if (idToUpdate || !builderId) {
+              return Promise.resolve([]);
           }
+          return axios.get(`/api/workprice/?builder=${builderId}`)
+              .then(response => {
+                  this.workPrices = response.data.map(price => ({
+                      ...price,
+                      isEditedTrim: false,  // Properly initializing flags for each price
+                      isEditedRough: false
+                  }));
+                  this.initializePrices();  // Call after setting initial values
+                  return this.workPrices;
+              })
+              .catch(error => {
+                  console.error('Error fetching work prices:', error);
+                  throw error;
+              });
       },
 
       // Method to open the builder modal in edit mode with selected builder data
@@ -1146,26 +1626,28 @@ export default {
           }
       },
 
-      // Fetch available Jod from the server
+      // Fetch available Job from the server
       // Obtener Job de casas disponibles del servidor
       fetchJobs(callback = null) {
           const builderId = this.newContract.builder;
-          if (!builderId) return; // Exit if no builder is selected
+          if (!builderId) {
+              if (callback) callback();
+              return Promise.resolve([]);
+          }
 
-          axios.get(`/api/job/jobs_by_builder/`, { params: { builder_id: builderId } })
+          return axios.get(`/api/job/jobs_by_builder/`, { params: { builder_id: builderId } })
               .then(response => {
                   this.jobs = response.data.map(job => ({
                       id: job.id,
                       name: job.name,
                       builder: job.builder // Ensure the builder property is included
                   }));
-                  // console.log("Jobs fetched and updated:", this.jobs);
-
-                  // Execute callback if provided
                   if (callback) callback();
+                  return this.jobs;
               })
               .catch(error => {
                   console.error("Error fetching jobs:", error);
+                  throw error;
               });
       },
 
@@ -1189,22 +1671,24 @@ export default {
       // Fetch available house models from the server
       fetchHouseModels(callback = null) {
           const jobId = this.newContract.job;
-          if (!jobId) return; // Exit if no job is selected
+          if (!jobId) {
+              if (callback) callback();
+              return Promise.resolve([]);
+          }
 
-          axios.get('/api/house_models_by_job/', { params: { job_id: jobId } })
+          return axios.get('/api/house_models_by_job/', { params: { job_id: jobId } })
               .then(response => {
                   this.houseModels = response.data.map(houseModel => ({
                       id: houseModel.id,
                       name: houseModel.name,
                       jobs: houseModel.jobs
                   }));
-                  // console.log("House models fetched and updated:", this.houseModels);
-
-                  // Execute callback if provided
                   if (callback) callback();
+                  return this.houseModels;
               })
               .catch(error => {
                   console.error('Error fetching house models:', error);
+                  throw error;
               });
       },
 
@@ -1240,14 +1724,12 @@ export default {
               const { lot, type, job, address } = this.newContract;
               let lotValue = lot ? lot : null; // Convertir a null si está vacío
               let jobValue = String(job).startsWith('S/L') ? null : job;
-              /*    
-                  if (lot !== NULL || lot !== '') {
-                      if (!/^[0-9]{1,10}$/.test(lot)) {
-                          reject('The LOT field must be a valid number of up to 10 digits or empty');
-                          return;
-                      }
+              if (lotValue !== null && lotValue !== '') {
+                  if (!/^[0-9]{1,10}$/.test(String(lotValue))) {
+                      reject('Lot must be digits only (up to 10) or empty for Spot Lot.');
+                      return;
                   }
-              */
+              }
               if ((lotValue !== null || address) && type) {
                   axios.get('/api/contract/validate-lot/', {
                       params: {
@@ -1260,15 +1742,12 @@ export default {
                       .then(response => {
                           if (response.data.exists && !idToUpdate) {
                               this.lotValid = false;
-                              // Show alert with SweetAlert but don't reject the promise immediately
-                              Swal.fire({
-                                  icon: 'warning',
-                                  title: 'Alert',
-                                  text: 'There is already a contract with this lot or address in ' + this.newContract.type,
-                              }).then(() => {
-                                  // Continue the rejection after the alert is closed
-                                  reject('Lot ' + this.newContract.lot + ' Address ' + this.newContract.address + ' ☺');
-                              });
+                              const message =
+                                  response.data.message ||
+                                  ('There is already a contract with this lot or address in ' +
+                                      this.newContract.type);
+                              this.notifyError?.(message);
+                              reject(message);
                           } else {
                               this.lotValid = true;
                               resolve();
@@ -1280,7 +1759,7 @@ export default {
                           reject('Error validating lot.');
                       });
               } else {
-                  resolve(); // Si no hay lot o type, consideramos que la validación pasó.
+                  resolve();
               }
           });
       },
@@ -1300,6 +1779,9 @@ export default {
           });
           const url = idToUpdate ? `/api/contract/${idToUpdate}/` : '/api/contract/';
           const method = idToUpdate ? 'put' : 'post';
+
+          this.trimContractStrings();
+          this.normalizeTravelPrice();
 
           this.newContract.builder_id = this.newContract.builder;
           this.newContract.house_model_id = this.newContract.house_model;
@@ -1356,23 +1838,12 @@ export default {
               this.newContract.contract_details = contractDetails;
           }
           if (this.newContract.contract_details.length === 0) {
-              alert("Please enter at least one contract detail.");
+              this.notifyError?.("Please enter at least one contract detail.");
               return;
           }
-          // Log para debugging
-          console.log('Saving contract with data:', {
-              work_account: this.newContract.work_account,
-              work_account_id: this.newContract.work_account_id,
-              schedule_id: this.newContract.schedule_id,
-              builder: this.newContract.builder,
-              job: this.newContract.job,
-              house_model: this.newContract.house_model,
-          });
-          
           this.loading = true;
           this.validateLot()
               .then(() => {
-                  // console.log("this.newContract.contract_details: ", this.newContract.contract_details);
                   axios({
                       method: method,
                       url: url,
@@ -1396,15 +1867,10 @@ export default {
                               this.downloadContract(this.savedContractId)
                           } else {
                               // Mostrar alerta informativa de que el contrato necesita revisión
-                              Swal.fire({
-                                  title: 'Transaction Pending Review',
-                                  text: `This transaction ${this.savedContractId} will be shown in the contract list in red for review and printing.`,
-                                  icon: 'info',
-                                  confirmButtonText: 'OK',
-                              }).then(() => {
-                                  // Redirigir a ContractView.vue después de aceptar la alerta
-                                  this.$router.push('/contracts');
-                              });
+                              this.notifyToastSuccess?.(
+                                  `Contract ${this.savedContractId} needs review before printing.`
+                              );
+                              this.$router.push('/contracts');
                           }
                       })
                       .catch(error => {
@@ -1424,33 +1890,18 @@ export default {
                                       errorMessage += JSON.stringify(error.response.data);
                                   }
                               }
-                              Swal.fire({
-                                  title: 'Error',
-                                  text: errorMessage,
-                                  icon: 'error',
-                                  confirmButtonText: 'OK'
-                              });
+                              this.notifyError?.(errorMessage);
                           } else if (error.request) {
                               console.error('Error de solicitud:', error.request);
-                              Swal.fire({
-                                  title: 'Network Error',
-                                  text: 'Could not connect to the server. Please check your connection.',
-                                  icon: 'error',
-                                  confirmButtonText: 'OK'
-                              });
+                              this.notifyError?.('Could not connect to the server. Please check your connection.');
                           } else {
                               console.error('Error:', error.message);
-                              Swal.fire({
-                                  title: 'Error',
-                                  text: error.message,
-                                  icon: 'error',
-                                  confirmButtonText: 'OK'
-                              });
+                              this.notifyError?.(error.message);
                           }
                       });
               })
               .catch(errorMessage => {
-                  alert(errorMessage);
+                  this.notifyError?.(String(errorMessage));
                   this.loading = false;
               });
 
@@ -1490,54 +1941,90 @@ export default {
       },
 
       validateContractFields() {
-          this.validationErrors = {}; // Reset previous errors
+          this.validationErrors = {};
+          this.trimContractStrings();
+          this.normalizeTravelPrice();
 
           const requiredFields = {
-              builder: "Builder is required",
-              job: "Community is required",
+              type: "Job Type is required",
+              builder: "Builder is required (select a Work Account or builder)",
+              job: "Community (Job) is required",
               house_model: "House Model is required",
-              lot: "LOT is required",
               address: "Address is required",
-              sqft: "Square Feet is required",
+              sqft: "SqFt is required and must be greater than 0",
               job_price: "Job Price is required",
               travel_price: "Travel Price is required",
               total_options: "Total Options is required",
               total: "Total is required and must be greater than 1",
           };
 
-          // Si hay work_account, validar que esté presente
+          // Spot Lot: lot may be empty when address is present (backend lot null=True; validate-lot uses address).
+          // Require at least address; do not block solely for empty lot.
+
           if (this.$route.query.event_id || this.newContract.work_account) {
               if (!this.newContract.work_account) {
-                  this.validationErrors.work_account = "Work Account is required";
+                  this.validationErrors.work_account = "Work Account is required for this flow";
               }
           }
 
           let isValid = true;
 
+          // When work_account is set, builder/job may be derived — still validate house_model/address/etc.
+          const skipWhenWorkAccount = new Set(['builder', 'job']);
+          const hasWorkAccount = Boolean(this.newContract.work_account);
+
           Object.keys(requiredFields).forEach(field => {
+              if (hasWorkAccount && skipWhenWorkAccount.has(field)) {
+                  return;
+              }
               let value = this.newContract[field];
 
-              // Validar si está vacío, nulo o indefinido
               if (value === null || value === undefined || value === "") {
                   this.validationErrors[field] = requiredFields[field];
                   isValid = false;
+                  return;
               }
 
-              // Validaciones adicionales para valores numéricos
-              if (["total"].includes(field) && parseFloat(value) <= 1) {
+              if (field === "total" && parseFloat(value) <= 1) {
                   this.validationErrors[field] = requiredFields[field];
                   isValid = false;
               }
           });
 
-          // Mostrar errores en una alerta si hay alguno
+          // SqFt must be a sensible number > 0
+          const sqftNum = parseFloat(this.newContract.sqft);
+          if (!Number.isFinite(sqftNum) || sqftNum <= 0) {
+              this.validationErrors.sqft = "SqFt is required and must be greater than 0";
+              isValid = false;
+          }
+
+          // Travel Price: allow 0; reject negative / non-numeric
+          const travelNum = Number(this.newContract.travel_price);
+          if (!Number.isFinite(travelNum)) {
+              this.validationErrors.travel_price = "Travel Price must be a valid amount (use 0.00 if none)";
+              isValid = false;
+          } else if (travelNum < 0) {
+              this.validationErrors.travel_price = "Travel Price cannot be negative";
+              isValid = false;
+          }
+
+          // Lot: whole numbers (digits) only when provided
+          const lot = this.newContract.lot;
+          if (lot !== null && lot !== undefined && String(lot).trim() !== "") {
+              if (!/^[0-9]{1,10}$/.test(String(lot).trim())) {
+                  this.validationErrors.lot = "Lot must be a whole number (digits only, max 10)";
+                  isValid = false;
+              }
+          } else if (!this.newContract.address || String(this.newContract.address).trim() === "") {
+              // Spot Lot / standard: address is required when lot is empty
+              this.validationErrors.address = "Address is required when Lot is empty (Spot Lot)";
+              isValid = false;
+          }
+
           if (!isValid) {
-              Swal.fire({
-                  title: "Missing Required Fields",
-                  html: `<ul>${Object.values(this.validationErrors).map(error => `<li>${error}</li>`).join('')}</ul>`,
-                  icon: "error",
-                  confirmButtonText: "OK"
-              });
+              const messages = Object.values(this.validationErrors).join('; ');
+              this.notifyError?.(messages || "Please fix the highlighted fields before saving.");
+              this.focusFirstInvalidField();
           }
 
           return isValid;
@@ -1564,19 +2051,14 @@ export default {
                   this.loading = false; // Asegúrate de que el spinner se desactive si hay un error
                   
                   // Mostrar mensaje al usuario pero no bloquear - el contrato ya se guardó
-                  Swal.fire({
-                      title: 'PDF Not Available',
-                      text: `Contract ${id} was saved successfully, but the PDF could not be generated. You can view it from the contracts list.`,
-                      icon: 'warning',
-                      confirmButtonText: 'OK',
-                  }).then(() => {
-                      // Resetear formulario después del error también
-                      const idToUpdate = this.$route.params.id;
-                      if (!idToUpdate) {
-                          this.resetForm();
-                      }
-                      this.$router.push('/contracts');
-                  });
+                  this.notifyError?.(
+                      `Contract ${id} was saved, but the PDF could not be generated. Open it from the contracts list.`
+                  );
+                  const idToUpdate = this.$route.params.id;
+                  if (!idToUpdate) {
+                      this.resetForm();
+                  }
+                  this.$router.push('/contracts');
               });
       }
   }
@@ -1584,23 +2066,236 @@ export default {
 </script>
 
 <style scoped>
-.valid-feedback {
-  display: block;
+.jr-contract-form__loading {
+  margin: 0.5rem 0;
+  color: var(--color-jr-muted);
+  font-size: 0.8125rem;
 }
 
-.invalid-feedback {
-  display: block;
+.jr-contract-form__event {
+  margin: 0 0 0.5rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--color-jr-border);
+  background: var(--color-jr-surface-muted);
+  font-size: 0.75rem;
+  color: var(--color-jr-text);
 }
 
-input::placeholder {
-  color: #d9dde2;
+.jr-form-banner {
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--color-jr-border);
+  background: var(--color-jr-danger-subtle);
+  color: var(--color-jr-danger-text);
+  font-size: 0.8125rem;
 }
 
-label {
-  color: rgb(var(--bs-primary-rgb));
+.jr-contract-form__split {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-p {
-  color: orange;
+@media (min-width: 1024px) {
+  .jr-contract-form__split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.65rem 1rem;
+    align-items: start;
+  }
+}
+
+.jr-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem 0.75rem;
+}
+
+.jr-contract-form__grid--identity,
+.jr-contract-form__grid--pricing {
+  gap: 0.45rem 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .jr-contract-form__grid--identity,
+  .jr-contract-form__grid--pricing {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.jr-contract-form__comment-field {
+  grid-column: 1 / -1;
+}
+
+/* Override global `.jr-pilot textarea.jr-control { min-height: 5.5rem }` for this Comment only */
+.jr-contract-form__comment-field :deep(textarea.jr-control) {
+  min-height: 2.75rem;
+}
+
+.jr-contract-form__wa {
+  min-width: 0;
+}
+
+.jr-contract-form__readout {
+  margin: 0;
+  min-height: 2rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-jr-text);
+}
+
+.jr-contract-form__options-split {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem 1.25rem;
+  margin-top: 0.15rem;
+}
+
+@media (min-width: 900px) {
+  .jr-contract-form__options-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.jr-contract-form__options {
+  margin-top: 0;
+  max-width: none;
+  min-width: 0;
+}
+
+.jr-contract-form__options-head,
+.jr-contract-form__options-row {
+  display: grid;
+  grid-template-columns: 3.75rem minmax(0, 1fr) 5.5rem;
+  gap: 0.35rem;
+  align-items: center;
+  margin-bottom: 0.2rem;
+}
+
+.jr-contract-form__options-head {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-jr-muted);
+  margin-bottom: 0.3rem;
+}
+
+.jr-contract-form__options-title {
+  font-size: 0.75rem;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+
+.jr-contract-form__opt-input {
+  width: 100%;
+  min-height: 1.85rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-control);
+  background: var(--color-jr-surface);
+  color: var(--color-jr-text);
+  font-size: 0.8125rem;
+}
+
+.jr-contract-form__opt-name {
+  font-size: 0.75rem;
+  color: var(--color-jr-muted);
+  background: var(--color-jr-surface-muted, var(--color-jr-surface));
+  border-color: transparent;
+  min-height: 1.7rem;
+  padding: 0.15rem 0.35rem;
+}
+
+.jr-contract-form__opt-qty,
+.jr-contract-form__opt-amount {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-jr-text);
+}
+
+/* Match JR form focus contract: primary border only (no ring) */
+.jr-contract-form__opt-qty:focus,
+.jr-contract-form__opt-qty:focus-visible,
+.jr-contract-form__opt-amount:focus,
+.jr-contract-form__opt-amount:focus-visible {
+  border-color: var(--color-jr-primary);
+  outline: none;
+  box-shadow: none;
+}
+
+.jr-contract-form__opt-input:disabled {
+  opacity: 0.55;
+}
+
+@media (max-width: 390px) {
+  .jr-contract-form__options-head,
+  .jr-contract-form__options-row {
+    grid-template-columns: 3.5rem minmax(0, 1fr) 5rem;
+    gap: 0.25rem;
+  }
+
+  .jr-contract-form__opt-qty,
+  .jr-contract-form__opt-amount {
+    min-height: 2rem;
+  }
+}
+
+.jr-contract-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 0.55rem 0 0.2rem;
+  margin-top: 0.55rem;
+  background: var(--color-jr-page);
+  border-top: 1px solid var(--color-jr-border);
+}
+
+.jr-contract-form__bid {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.jr-contract-form__bid-label {
+  margin: 0;
+  line-height: 1.2;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-jr-text);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Keep Bid checkbox + label optically centered in the header actions */
+.jr-contract-form__bid :deep(.p-checkbox),
+.jr-contract-form__bid :deep(.jr-checkbox) {
+  display: inline-flex;
+  align-items: center;
+}
+
+.jr-contract-form :deep(.jr-section) {
+  margin-bottom: 0.35rem;
+}
+
+.jr-contract-form :deep(.jr-field) {
+  margin-bottom: 0;
+}
+
+.jr-contract-form :deep(.jr-field__hint) {
+  font-size: 0.75rem;
+  margin-top: 0.15rem;
 }
 </style>

@@ -189,6 +189,7 @@ JRPage → JRPageHeader → form
 ```
 
 - Campos rectangulares: `JRInput` / `JRSelect` / `JRDatePicker` / `JRTextarea` y el overlay del dropdown usan `--radius-jr-control` (`0`). No reintroducir radio en formularios nuevos.
+- **Campos de moneda / importe:** PrimeVue `InputNumber` con `mode="decimal"`, `locale="en-US"`, `:minFractionDigits="2"`, `:maxFractionDigits="2"`, label normal vía `JRField` (no `IftaLabel` / `mode="currency"` salvo brief explícito). Vacío → `0.00` al guardar. Referencia: Trim/Rough en Piece Work Price; Trim/Rough/Travel en `/builder/form` vía `DynamicForm` (`type: "decimal"`).
 - Focus de campo: **una** línea — el borde pasa a primary (`#2563eb`). Sin outline, sin anillo offset, sin box-shadow. Checkboxes / icon-btns / botones sí pueden llevar outline 2px.
 - Desktop ≥1024: secciones de campos en **tres columnas**.
 - Catálogo add/edit: un `JRDrawer` JR. Sin apilar drawers.
@@ -241,6 +242,7 @@ Drawers, selects y datepickers portalean a `document.body`. `JRDrawer` / `JRDial
 - `JRDialog` para leave / delete.
 - Acciones de fila en **lista**: icono + label. En **drawer**: `jr-button` sólido, sin icono; Delete danger.
 - Campos y overlays de select/datepicker rectangulares (`--radius-jr-control: 0`).
+- `InputNumber` decimal (en-US, 2 decimales) para importes; vacío = `0.00`.
 - `JRDialog` / `p-dialog` rectangulares (`border-radius: 0`), como el de imágenes de producto.
 - Focus de campo a una sola línea (borde primary).
 - Mismos endpoints, permisos y payloads que antes de migrar.

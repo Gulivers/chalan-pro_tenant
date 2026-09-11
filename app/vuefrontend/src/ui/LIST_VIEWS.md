@@ -177,7 +177,7 @@ const TABLET_MQ = "(min-width: 768px) and (max-width: 1023.98px)";
 ## 8. Tabla (`JRDataTable`)
 
 - Superficie blanca, borde 1px, radio panel, filas striped, hover muted.
-- Celdas: `0.875rem`, padding vertical `0.3rem`.
+- Celdas: `0.875rem`, padding vertical `0.3rem` (y horizontal contenido; evita el padding Aura por defecto que roba ancho a Address y columnas densas). Preferir `--p-datatable-body-cell-padding` / header, o `padding-top/bottom: 0.3rem` en `:deep(td)`.
 - Números / reorder / on-hand: `text-align: right` + `tabular-nums`. El `scoped` de la vista no pinta `th`/`td` de PrimeVue: usar `:deep(th.jr-col-num)`.
 - Lazy + sort del servidor: `page`, `per_page`, `search`, `ordering`. No reinventar el contrato del provider.
 - Empty: `JREmptyState`. Si hay búsqueda, la descripción cita el término y hay **Clear search**. Si falló la carga, **Refresh**. Sin búsqueda y sin error: “No products yet.”, sin acción inventada.

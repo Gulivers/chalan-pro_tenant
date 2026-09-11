@@ -137,7 +137,7 @@ class Contract(models.Model):
     builder = models.ForeignKey(Builder, on_delete=models.CASCADE, verbose_name='Builder')
     house_model = models.ForeignKey(HouseModel, on_delete=models.CASCADE, verbose_name='House Model')
     job = models.ForeignKey(Job, on_delete=models.CASCADE, verbose_name='Job')
-    lot = models.CharField(null=True, max_length=10, verbose_name='Lot')
+    lot = models.CharField(null=True, blank=True, max_length=10, verbose_name='Lot')
     sqft = models.IntegerField(verbose_name='SqFt')
     address = models.CharField(max_length=255, verbose_name='Address')
     job_price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Job Price', default=0)
