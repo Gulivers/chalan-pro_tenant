@@ -94,12 +94,12 @@ class BuilderSchemaView(APIView):
             "customer_rank": {
                 "type": "boolean",
                 "label": "Is Customer",
-                "required": False
+                "required": True
             },
             "supplier_rank": {
                 "type": "boolean",
                 "label": "Is Supplier",
-                "required": False
+                "required": True
             },
             "is_active": {
                 "type": "boolean",

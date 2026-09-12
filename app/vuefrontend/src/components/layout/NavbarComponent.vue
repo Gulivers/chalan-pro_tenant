@@ -284,6 +284,16 @@ export default {
               permission: "ctrctsapp.view_builder",
             },
             {
+              text: "Communities",
+              route: "/jobs",
+              permission: "ctrctsapp.view_job",
+            },
+            {
+              text: "House Models",
+              route: "/house-models",
+              permission: "ctrctsapp.view_housemodel",
+            },
+            {
               text: "Party Types",
               route: "/party-types",
               permission: "apptransactions.view_partytype",

@@ -41,129 +41,148 @@
 
       <div class="jr-contract-form__split">
         <JRSection title="Job details">
-          <div class="jr-form-grid jr-contract-form__grid--identity">
-            <!-- Row: Job Type | Lighting Circuits -->
-            <JRField
-              v-slot="{ describedby, invalid }"
-              label="Job Type"
-              required
-              inputId="type"
-              :error="validationErrors.type">
-              <!-- Backend Contract.type is CharField max_length=5 with choices Rough|Trim only — not a Category FK. Submit the name string, never category id. -->
-              <div data-jr-focus="type">
-                <JRSelect
-                  inputId="type"
-                  v-model="newContract.type"
-                  :options="jobTypeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Select type"
-                  :disabled="isReadOnly"
-                  :invalid="invalid"
-                  :ariaDescribedby="describedby"
-                  @update:modelValue="onJobTypeChange" />
-              </div>
-            </JRField>
+          <div class="jr-contract-form__identity">
+            <div class="jr-form-grid jr-contract-form__grid--identity">
+              <!-- 1. Job Type -->
+              <JRField
+                class="jr-contract-form__field--type"
+                v-slot="{ describedby, invalid }"
+                label="Job Type"
+                required
+                inputId="type"
+                :error="validationErrors.type">
+                <!-- Backend Contract.type is CharField max_length=5 with choices Rough|Trim only — not a Category FK. Submit the name string, never category id. -->
+                <div data-jr-focus="type">
+                  <JRSelect
+                    inputId="type"
+                    v-model="newContract.type"
+                    :options="jobTypeOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select type"
+                    :disabled="isReadOnly"
+                    :invalid="invalid"
+                    :ariaDescribedby="describedby"
+                    @update:modelValue="onJobTypeChange" />
+                </div>
+              </JRField>
 
-            <JRField label="Lighting Circuits" inputId="lighting-circuits">
-              <p class="jr-contract-form__readout" id="lighting-circuits">
-                {{ lightingCircuits() }}
-              </p>
-            </JRField>
+              <!-- 2. Work Account -->
+              <JRField
+                class="jr-contract-form__field--wa"
+                v-slot="{ describedby, invalid }"
+                label="Work Account"
+                required
+                inputId="work-account"
+                :error="validationErrors.work_account">
+                <div data-jr-focus="work_account" class="jr-contract-form__wa">
+                  <WorkAccountSelector
+                    inputId="work-account"
+                    v-model="newContract.work_account"
+                    :showLabel="false"
+                    :disabled="isReadOnly"
+                    :error="validationErrors.work_account"
+                    :ariaDescribedby="describedby"
+                    @change="onWorkAccountChanged" />
+                </div>
+              </JRField>
 
-            <!-- Row: Work Account | House Model -->
-            <JRField
-              v-slot="{ describedby, invalid }"
-              label="Work Account"
-              inputId="work-account"
-              :error="validationErrors.work_account">
-              <div data-jr-focus="work_account" class="jr-contract-form__wa">
-                <WorkAccountSelector
-                  inputId="work-account"
-                  v-model="newContract.work_account"
-                  :showLabel="false"
-                  :disabled="isReadOnly"
-                  :error="validationErrors.work_account"
-                  :ariaDescribedby="describedby"
-                  @change="onWorkAccountChanged" />
-              </div>
-            </JRField>
+              <!-- 3. House Model -->
+              <JRField
+                class="jr-contract-form__field--hm"
+                v-slot="{ describedby, invalid }"
+                label="House Model"
+                required
+                inputId="houseModel"
+                :error="validationErrors.house_model">
+                <div data-jr-focus="house_model">
+                  <JRSelectAddon
+                    inputId="houseModel"
+                    v-model="newContract.house_model"
+                    :options="houseModels"
+                    optionLabel="name"
+                    optionValue="id"
+                    placeholder="Select House Model"
+                    filter
+                    showClear
+                    :disabled="isReadOnly"
+                    :invalid="invalid"
+                    :required="true"
+                    :ariaDescribedby="describedby"
+                    :showAdd="true"
+                    :showEdit="!!newContract.house_model"
+                    :addDisabled="
+                      isReadOnly ||
+                      !hasPermission('ctrctsapp.add_housemodel')
+                    "
+                    :editDisabled="
+                      isReadOnly ||
+                      !hasPermission('ctrctsapp.change_housemodel')
+                    "
+                    addLabel="Add a new house model to the system"
+                    editLabel="Edit the currently selected house model"
+                    @add="openModal('add')"
+                    @edit="openModal('edit', newContract.house_model)" />
+                </div>
+              </JRField>
 
-            <JRField
-              v-slot="{ describedby, invalid }"
-              label="House Model"
-              required
-              inputId="houseModel"
-              :error="validationErrors.house_model">
-              <div data-jr-focus="house_model">
-                <JRSelectAddon
-                  inputId="houseModel"
-                  v-model="newContract.house_model"
-                  :options="houseModels"
-                  optionLabel="name"
-                  optionValue="id"
-                  placeholder="Select House Model"
-                  filter
-                  showClear
-                  :disabled="isReadOnly"
-                  :invalid="invalid"
-                  :required="true"
-                  :ariaDescribedby="describedby"
-                  :showAdd="true"
-                  :showEdit="!!newContract.house_model"
-                  :addDisabled="
-                    isReadOnly ||
-                    !hasPermission('ctrctsapp.add_housemodel')
-                  "
-                  :editDisabled="
-                    isReadOnly ||
-                    !hasPermission('ctrctsapp.change_housemodel')
-                  "
-                  addLabel="Add a new house model to the system"
-                  editLabel="Edit the currently selected house model"
-                  @add="openModal('add')"
-                  @edit="openModal('edit', newContract.house_model)" />
-              </div>
-            </JRField>
-
-            <!-- Row: Address | Lot -->
-            <JRField
-              v-slot="{ describedby, invalid }"
-              label="Address"
-              required
-              inputId="address"
-              :error="validationErrors.address"
-              hint="Required for Spot Lot (empty lot + address).">
-              <div data-jr-focus="address">
-                <JRInput
+              <!-- 4. Address or Lot -->
+              <div class="jr-contract-form__location" role="group" aria-label="Address or Lot">
+                <JRField
+                  v-slot="{ describedby, invalid }"
+                  label="Address"
+                  required
                   inputId="address"
-                  v-model="newContract.address"
-                  :disabled="isReadOnly"
-                  :invalid="invalid"
-                  :ariaDescribedby="describedby"
-                  @focus="selectText" />
-              </div>
-            </JRField>
+                  :error="validationErrors.address"
+                  hint="Required for Spot Lot (empty lot + address).">
+                  <div data-jr-focus="address">
+                    <JRInput
+                      inputId="address"
+                      v-model="newContract.address"
+                      :disabled="isReadOnly"
+                      :invalid="invalid"
+                      :ariaDescribedby="describedby"
+                      @focus="selectText" />
+                  </div>
+                </JRField>
 
-            <JRField
-              v-slot="{ describedby, invalid }"
-              label="Lot"
-              inputId="lot"
-              :error="validationErrors.lot"
-              hint="Optional for Spot Lot. Whole numbers only (max 10 digits).">
-              <div data-jr-focus="lot">
-                <JRInput
+                <JRField
+                  v-slot="{ describedby, invalid }"
+                  label="Lot"
                   inputId="lot"
-                  :modelValue="lotDisplay"
-                  :disabled="isReadOnly"
-                  :invalid="invalid"
-                  :ariaDescribedby="describedby"
-                  inputmode="numeric"
-                  autocomplete="off"
-                  @update:modelValue="onLotInput"
-                  @focus="selectText" />
+                  :error="validationErrors.lot"
+                  hint="Optional for Spot Lot. Whole numbers only (max 10 digits).">
+                  <div data-jr-focus="lot">
+                    <JRInput
+                      inputId="lot"
+                      :modelValue="lotDisplay"
+                      :disabled="isReadOnly"
+                      :invalid="invalid"
+                      :ariaDescribedby="describedby"
+                      inputmode="numeric"
+                      autocomplete="off"
+                      @update:modelValue="onLotInput"
+                      @focus="selectText" />
+                  </div>
+                </JRField>
               </div>
-            </JRField>
+            </div>
+
+            <!-- Informational readout — outside fill path -->
+            <aside
+              v-if="showLightingCircuits"
+              class="jr-contract-form__lighting"
+              aria-live="polite">
+              <span class="jr-contract-form__lighting-label" id="lighting-circuits-label">
+                Lighting Circuits
+              </span>
+              <span
+                class="jr-contract-form__lighting-value"
+                id="lighting-circuits"
+                aria-labelledby="lighting-circuits-label">
+                {{ lightingCircuits() }}
+              </span>
+            </aside>
           </div>
         </JRSection>
 
@@ -452,28 +471,23 @@
       </div>
     </form>
 
-    <BuilderModal
-      ref="builderModal"
-      :action="action"
-      :builder="selectedBuilders"
-      @saved="fetchBuilders"
-      @close="closeModal"
-      @clearBuilderSelect="clearBuilderSelection" />
-    <JobModal
-      ref="jobModal"
-      :action="action"
-      :job="selectedJob"
-      :builders="builders"
-      @refresh="fetchJobs"
-      @close="closeModal"
-      @clearJobSelect="clearJobSelection" />
-    <HouseModelModal
-      ref="houseModelModal"
-      :action="action"
-      :houseModelId="houseModelId"
-      :jobs="jobs"
-      @refresh="fetchHouseModels"
-      @close="closeModal" />
+    <JRDrawer
+      class="jr-catalog-drawer"
+      :visible="houseModelDrawerVisible"
+      :header="houseModelDrawerHeader"
+      position="right"
+      @update:visible="onHouseModelDrawerVisible">
+      <DynamicForm
+        v-if="houseModelDrawerVisible"
+        :key="houseModelFormKey"
+        schema-endpoint="/api/schema/house-model/"
+        api-endpoint="/api/house_model/"
+        :object-id="houseModelEditId"
+        :form-title="houseModelFormTitle"
+        :is-modal="true"
+        @saved="onHouseModelSaved"
+        @cancel="closeHouseModelDrawer" />
+    </JRDrawer>
 
     <JRDialog
       :visible="sqftConfirmVisible"
@@ -488,11 +502,8 @@
 
 <script>
 import axios from 'axios';
-import { Modal } from 'bootstrap';
 import '@assets/css/base.css';
-import BuilderModal from './BuilderModalComponent.vue';
-import JobModal from './JobModalComponent.vue';
-import HouseModelModal from './HouseModelModalComponent.vue';
+import DynamicForm from '@/components/parties/DynamicForm.vue';
 import { openPdf } from "@helpers";
 import WorkAccountSelector from '@/components/transactions/WorkAccountSelector.vue';
 import {
@@ -507,15 +518,14 @@ import {
   JRCheckbox,
   JRButton,
   JRDialog,
+  JRDrawer,
 } from '@ui';
 
 
 export default {
   name: 'ContractFormComponent',
   components: {
-      BuilderModal,
-      JobModal,
-      HouseModelModal,
+      DynamicForm,
       WorkAccountSelector,
       JRPage,
       JRPageHeader,
@@ -528,6 +538,7 @@ export default {
       JRCheckbox,
       JRButton,
       JRDialog,
+      JRDrawer,
   },
 
   data() {
@@ -576,7 +587,9 @@ export default {
           lotValid: null,
           selectedBuilders: {},
           selectedJob: {},
-          houseModelId: null,
+          houseModelDrawerVisible: false,
+          houseModelEditId: null,
+          houseModelFormNonce: 0,
           action: 'add',
           isBid: false, // Por defecto, el checkbox no está marcado, lo que significa "Contract"
           event: null,
@@ -587,10 +600,15 @@ export default {
           ],
           validationErrors: {},
           _syncingFromWorkAccount: false,
+          /** From public.tenants_tenant.client_type via /api/user_detail/ */
+          tenantClientType: null,
       };
   },
 
   computed: {
+      showLightingCircuits() {
+          return this.tenantClientType === 'electric';
+      },
       filteredContractDetails() {
           if (!this.newContract.type) return [];
 
@@ -656,6 +674,19 @@ export default {
       },
       lotDisplay() {
           return this.newContract.lot == null ? '' : String(this.newContract.lot);
+      },
+      houseModelDrawerHeader() {
+          if (this.houseModelEditId) {
+              return `Edit House Model #${this.houseModelEditId}`;
+          }
+          return 'Add House Model';
+      },
+      houseModelFormTitle() {
+          return this.houseModelEditId ? 'Edit House Model' : 'Create House Model';
+      },
+      houseModelFormKey() {
+          const id = this.houseModelEditId || 'new';
+          return `contract-hm-${id}-${this.houseModelFormNonce}`;
       },
   },
   watch: {
@@ -772,6 +803,7 @@ export default {
           this.fetchHouseModels(),
           this.loadEventFromContract(),
           this.loadJobTypeOptions(),
+          this.loadTenantClientType(),
       ]).then(() => {
           this.loading = false; // Solo si todo carga bien, mostramos el formulario
       }).catch(error => {
@@ -782,6 +814,16 @@ export default {
   },
 
   methods: {
+      async loadTenantClientType() {
+          try {
+              const user = await this.getAuthenticatedUser();
+              this.tenantClientType = user?.client_type || null;
+          } catch (e) {
+              console.error('Error loading tenant client_type:', e);
+              this.tenantClientType = null;
+          }
+      },
+
       toggleDocType(value) {
           if (typeof value === 'boolean') {
               this.isBid = value;
@@ -1098,8 +1140,8 @@ export default {
 
       focusFirstInvalidField() {
           const order = [
-              'type',
               'work_account',
+              'type',
               'house_model',
               'address',
               'lot',
@@ -1652,20 +1694,28 @@ export default {
       },
 
       openModal(action, houseIdModel) {
-          this.action = action;
           if (action === 'edit' && houseIdModel) {
-              // Pasar el ID y los datos del modelo de casa seleccionado
-              this.houseModelId = houseIdModel;
+              this.houseModelEditId = houseIdModel;
           } else {
-              // Para agregar un nuevo modelo de casa
-              this.houseModelId = null;
-              if (this.newContract.job) {
-                  this.houseModelId = [this.newContract.job]; // Asegura que sea un array
-              }
+              this.houseModelEditId = null;
           }
-          // Open the modal
-          const modalInstance = Modal.getOrCreateInstance(this.$refs.houseModelModal.$el);
-          modalInstance.show();
+          this.houseModelFormNonce += 1;
+          this.houseModelDrawerVisible = true;
+      },
+
+      onHouseModelDrawerVisible(visible) {
+          this.houseModelDrawerVisible = visible;
+          if (!visible) this.houseModelEditId = null;
+      },
+
+      closeHouseModelDrawer() {
+          this.houseModelDrawerVisible = false;
+          this.houseModelEditId = null;
+      },
+
+      async onHouseModelSaved() {
+          await this.fetchHouseModels();
+          this.closeHouseModelDrawer();
       },
 
       // Fetch available house models from the server
@@ -1693,12 +1743,7 @@ export default {
       },
 
       closeModal() {
-          ['builderModal', 'jobModal', 'houseModelModal'].forEach(refName => {
-              const modalRef = this.$refs[refName];
-              modalRef?.hideModal?.(); // Llama al método elegante del hijo
-          });
-          // Limpiar los backdrop por si acaso
-          document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
+          this.closeHouseModelDrawer();
       },
 
       // Update travel price based on builder and job location
@@ -1947,7 +1992,7 @@ export default {
 
           const requiredFields = {
               type: "Job Type is required",
-              builder: "Builder is required (select a Work Account or builder)",
+              builder: "Builder is required",
               job: "Community (Job) is required",
               house_model: "House Model is required",
               address: "Address is required",
@@ -1961,20 +2006,20 @@ export default {
           // Spot Lot: lot may be empty when address is present (backend lot null=True; validate-lot uses address).
           // Require at least address; do not block solely for empty lot.
 
-          if (this.$route.query.event_id || this.newContract.work_account) {
-              if (!this.newContract.work_account) {
-                  this.validationErrors.work_account = "Work Account is required for this flow";
-              }
-          }
-
           let isValid = true;
 
-          // When work_account is set, builder/job may be derived — still validate house_model/address/etc.
-          const skipWhenWorkAccount = new Set(['builder', 'job']);
+          // Form identity is Work Account–first; Builder/Job are derived and not shown as separate fields.
           const hasWorkAccount = Boolean(this.newContract.work_account);
+          if (!hasWorkAccount) {
+              this.validationErrors.work_account = "Work Account is required";
+              isValid = false;
+          }
+
+          // Skip Builder/Job messages when WA is missing (covered above) or present (derived from WA).
+          const skipBuilderJob = new Set(['builder', 'job']);
 
           Object.keys(requiredFields).forEach(field => {
-              if (hasWorkAccount && skipWhenWorkAccount.has(field)) {
+              if (skipBuilderJob.has(field)) {
                   return;
               }
               let value = this.newContract[field];
@@ -2022,12 +2067,46 @@ export default {
           }
 
           if (!isValid) {
-              const messages = Object.values(this.validationErrors).join('; ');
-              this.notifyError?.(messages || "Please fix the highlighted fields before saving.");
+              this.notifyValidationErrors(this.validationErrors);
               this.focusFirstInvalidField();
           }
 
           return isValid;
+      },
+
+      notifyValidationErrors(errors = {}) {
+          const messages = Object.values(errors).filter(Boolean);
+          if (!messages.length) {
+              this.notifyError?.("Please fix the highlighted fields before saving.");
+              return;
+          }
+          if (messages.length === 1) {
+              this.notifyError?.(messages[0]);
+              return;
+          }
+          const html =
+              '<p style="margin:0 0 0.5rem;text-align:left">Please fix the following:</p>' +
+              '<ul style="text-align:left;margin:0;padding-left:1.25rem;line-height:1.45">' +
+              messages.map((m) => `<li>${this.escapeHtml(m)}</li>`).join('') +
+              '</ul>';
+          import('sweetalert2').then((Swal) => {
+              Swal.default.fire({
+                  icon: 'error',
+                  title: 'Validation Error',
+                  html,
+                  confirmButtonText: 'OK',
+              });
+          }).catch(() => {
+              this.notifyError?.(messages.join('\n'));
+          });
+      },
+
+      escapeHtml(text) {
+          return String(text)
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;');
       },
 
       downloadContract(id) {
@@ -2111,15 +2190,56 @@ export default {
   gap: 0.5rem 0.75rem;
 }
 
-.jr-contract-form__grid--identity,
+.jr-contract-form__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+/* Fill path: Job Type → Work Account → House Model → Address|Lot */
+.jr-contract-form__grid--identity {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.45rem 0.75rem;
+}
+
 .jr-contract-form__grid--pricing {
   gap: 0.45rem 0.75rem;
 }
 
 @media (min-width: 640px) {
-  .jr-contract-form__grid--identity,
+  .jr-contract-form__grid--identity {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .jr-contract-form__field--type {
+    grid-column: 1 / 2;
+    max-width: 100%;
+  }
+
+  .jr-contract-form__field--wa,
+  .jr-contract-form__field--hm {
+    grid-column: 1 / -1;
+  }
+
   .jr-contract-form__grid--pricing {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.jr-contract-form__location {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.45rem 0.75rem;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .jr-contract-form__location {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    align-items: start;
   }
 }
 
@@ -2134,6 +2254,36 @@ export default {
 
 .jr-contract-form__wa {
   min-width: 0;
+}
+
+/* Informational metric — not part of the Enter fill chain */
+.jr-contract-form__lighting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-control);
+  background: var(--color-jr-surface-muted);
+}
+
+.jr-contract-form__lighting-label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-jr-muted);
+}
+
+.jr-contract-form__lighting-value {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-jr-text);
 }
 
 .jr-contract-form__readout {

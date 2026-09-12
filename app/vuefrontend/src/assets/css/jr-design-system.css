@@ -166,6 +166,7 @@
     align-items: stretch;
     gap: 0.35rem;
     text-align: left;
+    min-width: 0;
   }
 
   .jr-pilot .jr-field__heading {
@@ -257,19 +258,33 @@
   }
 
   .jr-pilot .jr-select-addon {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: stretch;
     gap: 0.35rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .jr-pilot .jr-select-addon__select {
-    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: 100%;
+  }
+
+  /* jr-control defaults to width:100% of the parent; constrain to the grid track */
+  .jr-pilot .jr-select-addon__select.jr-control,
+  .jr-pilot .jr-select-addon .p-select {
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
   }
 
   .jr-pilot .jr-select-addon__actions {
     display: flex;
     align-items: stretch;
+    flex-shrink: 0;
     gap: 0.35rem;
   }
 
@@ -1073,4 +1088,59 @@
   --p-datepicker-panel-border-radius: var(--radius-jr-control);
   --p-overlay-popover-border-radius: var(--radius-jr-control);
   border-radius: var(--radius-jr-control);
+}
+
+/* Catalog / entity drawers (ProductForm, Work Account, parties) */
+.p-drawer.jr-catalog-drawer {
+  width: min(28rem, 100vw);
+}
+
+.p-drawer.jr-catalog-drawer--wide {
+  width: min(56rem, calc(100vw - 2rem));
+}
+
+.p-drawer.jr-catalog-drawer--stack {
+  z-index: 1200;
+}
+
+.p-drawer-mask:has(+ .p-drawer.jr-catalog-drawer--stack) {
+  z-index: 1199;
+}
+
+@media (max-width: 767.98px) {
+  .p-drawer.jr-catalog-drawer,
+  .p-drawer.jr-catalog-drawer--wide {
+    width: 100vw;
+    max-width: 100vw;
+  }
+}
+
+/* Catalog drawers: single-column field stack (ProductCatalogForm pattern) */
+.p-drawer.jr-catalog-drawer .jr-form-grid,
+.p-drawer.jr-catalog-drawer .jr-form-grid--identity,
+.p-drawer.jr-catalog-drawer .jr-form-grid--details,
+.p-drawer.jr-catalog-drawer .jr-form-grid--default,
+.p-drawer.jr-catalog-drawer .jr-form-grid--pricing,
+.p-drawer.jr-catalog-drawer .jr-form-grid--address,
+.p-drawer.jr-catalog-drawer .jr-form-grid--contact,
+.p-drawer.jr-catalog-drawer .jr-form-grid--flags,
+.p-drawer.jr-catalog-drawer .jr-bjh-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0.85rem;
+}
+
+.p-drawer.jr-catalog-drawer .jr-form-grid__full,
+.p-drawer.jr-catalog-drawer .jr-form-grid__price {
+  grid-column: auto;
+  max-width: none;
+}
+
+.p-drawer.jr-catalog-drawer .jr-form-grid--contact {
+  max-width: none;
+}
+
+.p-drawer.jr-catalog-drawer .jr-dynamic-form__actions--sticky,
+.p-drawer.jr-catalog-drawer .jr-wa-form__actions--sticky {
+  margin-top: auto;
+  padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px));
 }

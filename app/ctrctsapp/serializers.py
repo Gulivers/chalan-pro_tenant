@@ -140,6 +140,45 @@ class BuilderSerializer(serializers.ModelSerializer):
             return value.strip().lower()
         return value
 
+    def validate(self, attrs):
+        """At least one pricing amount must be greater than zero."""
+        instance = getattr(self, "instance", None)
+        trim = attrs.get(
+            "trim_amount",
+            getattr(instance, "trim_amount", 0) if instance else 0,
+        ) or 0
+        rough = attrs.get(
+            "rough_amount",
+            getattr(instance, "rough_amount", 0) if instance else 0,
+        ) or 0
+        travel = attrs.get(
+            "travel_price_amount",
+            getattr(instance, "travel_price_amount", 0) if instance else 0,
+        ) or 0
+
+        if not any(amount > 0 for amount in (trim, rough, travel)):
+            raise serializers.ValidationError({
+                "trim_amount": (
+                    "Enter at least one amount greater than 0 for Trim, Rough, or Travel."
+                ),
+            })
+
+        customer = attrs.get(
+            "customer_rank",
+            getattr(instance, "customer_rank", 0) if instance else 0,
+        ) or 0
+        supplier = attrs.get(
+            "supplier_rank",
+            getattr(instance, "supplier_rank", 0) if instance else 0,
+        ) or 0
+        if not customer and not supplier:
+            raise serializers.ValidationError({
+                "customer_rank": "Is Customer is required.",
+                "supplier_rank": "Is Supplier is required.",
+            })
+
+        return attrs
+
 # Mini serializer de lectura (opcional, para debug/UX)
 class CrewMiniSerializer(serializers.ModelSerializer):
     class Meta:

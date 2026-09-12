@@ -17,6 +17,7 @@
             :object-id="action === 'edit' ? builder?.id : null"
             :form-title="action === 'edit' ? 'Edit Party' : 'Create Party'"
             :is-modal="true"
+            :sections="sections"
             @saved="handleSaved" 
             @cancel="closeModal" />
         </div>
@@ -28,6 +29,7 @@
 <script>
 import { Modal } from "bootstrap";
 import DynamicForm from '@/components/parties/DynamicForm.vue';
+import { BUILDER_FORM_SECTIONS } from '@/components/parties/builderFormSections';
 
 export default {
   components: {
@@ -36,7 +38,8 @@ export default {
   props: ["id", "action", "builder"],
   data() {
     return {
-      modalInstance: null, // Store the Bootstrap modal instance
+      modalInstance: null,
+      sections: BUILDER_FORM_SECTIONS,
     };
   },
   mounted() {

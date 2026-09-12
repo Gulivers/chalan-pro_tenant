@@ -14,7 +14,8 @@ logger = logging.getLogger('ctrctsapp')
 # === Opcional: mapea nombres de constraints a errores por campo ===
 # Recomendado si defines UniqueConstraint(name="uq_party_name_ci") u otros.
 UNIQUE_CONSTRAINT_MAP = {
-    # "uq_party_name_ci": {"name": ["A party with this name already exists."]},
+    "uniq_builder_name_ci": {"name": ["A party with this name already exists."]},
+    "uniq_builder_rfc": {"rfc": ["A party with this RFC already exists."]},
 }
 
 # === Heurísticas por campo si no hay constraint name fiable ===
@@ -23,6 +24,10 @@ UNIQUE_FIELD_GUESSES = [
     (" name ", {"name": ["A party with this name already exists."]}),
     ("'name'", {"name": ["A party with this name already exists."]}),
     ('"name"', {"name": ["A party with this name already exists."]}),
+    ("lower(name)", {"name": ["A party with this name already exists."]}),
+    (" rfc ", {"rfc": ["A party with this RFC already exists."]}),
+    ("'rfc'", {"rfc": ["A party with this RFC already exists."]}),
+    ('"rfc"', {"rfc": ["A party with this RFC already exists."]}),
     (" email ", {"email": ["A party with this email already exists."]}),
     ("'email'", {"email": ["A party with this email already exists."]}),
     ('"email"', {"email": ["A party with this email already exists."]}),
@@ -112,8 +117,24 @@ def custom_exception_handler(exc, context):
         msg = (str(exc) or "")
         msg_lower = msg.lower()
 
-        # a) FK / constraint de "in use" (no es UNIQUE) → 409
-        if ("foreign key" in msg_lower) or ("constraint" in msg_lower and "unique" not in msg_lower):
+        # a) Primary key / sequence out of sync (not a duplicate name/rfc)
+        if "pkey" in msg_lower or "primary key" in msg_lower:
+            logger.error("IntegrityError(PK/sequence) handled: %s", msg)
+            return Response(
+                {
+                    "detail": (
+                        "Could not save this record. The database ID sequence "
+                        "is out of sync. Run fix_builder_sequences and try again."
+                    ),
+                    "code": "sequence_out_of_sync",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        # b) FK / constraint de "in use" (no es UNIQUE) → 409
+        if ("foreign key" in msg_lower) or (
+            "constraint" in msg_lower and "unique" not in msg_lower
+        ):
             logger.info("IntegrityError(FK/constraint) handled as 409 Conflict: %s", msg)
             return Response(
                 {
@@ -123,7 +144,7 @@ def custom_exception_handler(exc, context):
                 status=status.HTTP_409_CONFLICT,
             )
 
-        # b) UNIQUE → 400 con errores por campo
+        # c) UNIQUE → 400 con errores por campo
         if "unique" in msg_lower or "duplicate entry" in msg_lower:
             # MySQL suele traer "Duplicate entry '... for key '...'"
             payload = _payload_unique_from_message(msg_lower)

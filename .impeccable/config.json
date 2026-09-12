@@ -139,6 +139,21 @@
         "value": "1.75rem",
         "createdAt": "2026-08-31T02:25:40.403Z",
         "reason": "Pre-existing DocTypeForm.vue h3 size (legacy form)"
+      },
+      {
+        "rule": "overused-font",
+        "value": "roboto",
+        "createdAt": "2026-09-11T22:37:04.291Z",
+        "reason": "Contract WeasyPrint PDF template: intentional legacy print typography, not JR app UI"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "app/ctrctsapp/templates/contract_pdf.html"
+        ],
+        "createdAt": "2026-09-11T22:37:04.341Z",
+        "reason": "Contract pay sheet PDF: compact print layout with intentional dense type scale"
       }
     ]
   }

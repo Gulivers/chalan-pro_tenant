@@ -27,11 +27,11 @@
       {{ errorMessage }}
     </p>
 
-    <JRDialog
+    <JRDrawer
+      class="jr-catalog-drawer jr-catalog-drawer--wide"
       :visible="dialogVisible"
       :header="dialogHeader"
-      size="wide"
-      :showFooter="false"
+      position="right"
       @update:visible="onDialogVisible">
       <WorkAccountSelect
         v-if="dialogVisible"
@@ -41,7 +41,7 @@
         :redirect-on-success="false"
         @saved="handleSaved"
         @cancel="closeDialog" />
-    </JRDialog>
+    </JRDrawer>
   </div>
 </template>
 
@@ -49,7 +49,7 @@
 import { ref, computed, watch, onMounted, getCurrentInstance } from "vue";
 import axios from "axios";
 import WorkAccountSelect from "./WorkAccountSelect.vue";
-import { JRSelectAddon, JRDialog } from "@ui";
+import { JRSelectAddon, JRDrawer } from "@ui";
 
 const props = defineProps({
   modelValue: {

@@ -95,6 +95,7 @@ class UserDetailView(APIView):
         tenant = _resolve_request_tenant(request)
         if tenant is not None:
             data['tenant_name'] = tenant.name
+            data['client_type'] = getattr(tenant, 'client_type', None) or 'general'
             logo_url = tenant.get_logo_url()
             if logo_url:
                 # Preferir URL relativa /media/... para mismo origen que la SPA (proxy /media en dev).
@@ -107,6 +108,7 @@ class UserDetailView(APIView):
         else:
             data['tenant_name'] = None
             data['tenant_logo_url'] = None
+            data['client_type'] = None
         data['is_tenant_owner'] = (
             user.is_authenticated
             and user.is_staff
@@ -707,13 +709,21 @@ def download_contract_pdf(request, contract_id):
         right_details = details[mid_index:]
         
         logo_url = get_tenant_logo_url(request)
+        tenant = _resolve_request_tenant(request)
+        show_lighting_circuits = (
+            tenant is not None
+            and getattr(tenant, 'client_type', None) == 'electric'
+        )
 
         # Prepare the data to return
         context = {
             'contract': contract,
             'left_details': left_details,
             'right_details': right_details,
-            'lighting_circuits': lighting_circuits(contract.sqft),
+            'lighting_circuits': (
+                lighting_circuits(contract.sqft) if show_lighting_circuits else None
+            ),
+            'show_lighting_circuits': show_lighting_circuits,
             'logo_url': logo_url,
         }
         font_config = FontConfiguration()
