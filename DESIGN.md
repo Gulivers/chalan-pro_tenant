@@ -269,26 +269,35 @@ Hybrid system:
 
 # Target State (Pilot)
 
-> **Status:** Target design contract for the Products Pilot and later migrated modules.
-> **Does not describe the live global UI.** Everything above this heading remains the **CURRENT STATE** (Bootstrap 5 + `skin-modern.css`). Until a screen is wrapped in `JRPage` / `.jr-pilot` and consumes JR primitives, the current-state rules still apply.
+> **Status:** Target design contract for migrated modules **and** the App Shell (Navbar / Footer).
+> Everything above this heading remains the **CURRENT STATE** (Bootstrap 5 + `skin-modern.css`) for screens not yet migrated. Until a screen or shell surface is on JR / PrimeVue, those current-state rules still describe what ships today.
 >
-> App shell (Navbar / Footer) stays on the incumbent Bootstrap / skin-modern system for this increment.
+> **App shell is in scope for the frontend upgrade.** Navbar and Footer must leave Bootstrap / `skin-modern` chrome and adopt JR tokens + PrimeVue (same authority as list/form pilots). Do not preserve Bootstrap traces in the shell as a permanent coexistence strategy.
 
 ## Scope of this increment
 
-Pilot increment:
+Frontend-upgrade increment (branch / harness `jobrhythm-frontend-upgrade`, e.g. `dev_local_primevue`):
 
 - Vue CLI 5 (Webpack) + Tailwind CSS 4 + PrimeVue styled mode
 - JobRhythm semantic tokens and JR primitives under `app/vuefrontend/src/ui/`
-- Coexistence: Bootstrap + skin-modern remain the default everywhere outside `.jr-pilot`
-- **In this increment:** Product Form + Product List wrapped in `JRPage` / `.jr-pilot`
-- **Not in this increment:** App Shell redesign, Vite, Tailwind Preflight, remaining inventory modules
+- Coexistence: Bootstrap + skin-modern remain **only** on unmigrated feature screens until each is wrapped in `JRPage` / `.jr-pilot`
+- **In this increment (and follow-ons):** migrated feature modules **plus App Shell** — `NavbarComponent`, `FooterComponent`, and related layout chrome in `App.vue` as needed
+- **Already landed (reference):** Product Form / Product List and other modules already on JR
+- **Not in this increment:** Vite migration, Tailwind Preflight (would reset Bootstrap globally while remnants remain)
 
 Architecture:
 
-`feature view → JR primitive → PrimeVue (styled) → Tailwind tokens`
+`feature view | App Shell → JR primitive → PrimeVue (styled) → Tailwind / JR tokens`
 
 Volt is the pattern (thin adapters), not a dumped unprefixed catalog.
+
+### App Shell (Navbar / Footer)
+
+- Restyle onto **pilot tokens** (`--color-jr-*`, Inter ramp, restrained radius, 1px borders). Prefer deep blueprint primary for the bar if brand continuity is required, but implement with JR / PrimeVue — not `.navbar-modern`, Bootstrap `navbar`, or `#2c3e50` footer as the long-term contract.
+- Replace Bootstrap collapse / dropdown / buttons with PrimeVue (or thin JR wrappers): `Menubar` / `Menu` / `Button` / `Avatar` as appropriate; no `.btn`, `.dropdown-menu`, `.navbar-toggler` as the authored surface.
+- Footer: same JR surface / muted / border vocabulary as `.jr-pilot` pages; no incumbent slate card that diverges from the pilot neutrals unless product explicitly keeps a dark marketing strip (document that exception if kept).
+- Shell may use a root class such as `.jr-shell` (or wrap chrome in `.jr-pilot`-compatible tokens) so Tailwind utilities and JR CSS apply without waiting for a full Preflight cutover.
+- Impeccable / design-reviewer **must** critique Navbar and Footer against this Target State — do not ignore shell files as “out of pilot scope.”
 
 ## Product character (Pilot)
 
@@ -302,21 +311,21 @@ Construction Operations / ERP Admin. Operational, technical, fast, professional.
 
 ## Colors (Pilot)
 
-| Token | Value | Use |
-|---|---|---|
-| Page (`jr-page`) | `#f3f4f6` | Cool gray work surface. Replaces the incumbent card-in-card mist gradient **inside** `.jr-pilot` only. |
-| Surface (`jr-surface`) | `#ffffff` | Panels, inputs, tables |
-| Surface muted | `#f9fafb` | Subtle well / hover wash |
-| Border | `#e5e7eb` | Dividers, field borders, table outline |
-| Hover border | `#d1d5db` | Field hover |
-| Text (`jr-text`) | `#111827` | Primary copy |
-| Muted | `#4b5563` | Hints, secondary copy |
-| Primary | `#2563eb` | Actions, focus |
-| Primary hover | `#1d4ed8` | Action hover |
-| Success | `#16a34a` | Confirm / valid |
-| Danger | `#dc2626` | Errors / destructive |
-| Warning | `#d97706` | Caution (unambiguous; not the Bootstrap amber token) |
-| Info | `#0284c7` | Informational (unambiguous; not Bootstrap cyan) |
+| Token                  | Value     | Use                                                                                                    |
+| ---------------------- | --------- | ------------------------------------------------------------------------------------------------------ |
+| Page (`jr-page`)       | `#f3f4f6` | Cool gray work surface. Replaces the incumbent card-in-card mist gradient **inside** `.jr-pilot` only. |
+| Surface (`jr-surface`) | `#ffffff` | Panels, inputs, tables                                                                                 |
+| Surface muted          | `#f9fafb` | Subtle well / hover wash                                                                               |
+| Border                 | `#e5e7eb` | Dividers, field borders, table outline                                                                 |
+| Hover border           | `#d1d5db` | Field hover                                                                                            |
+| Text (`jr-text`)       | `#111827` | Primary copy                                                                                           |
+| Muted                  | `#4b5563` | Hints, secondary copy                                                                                  |
+| Primary                | `#2563eb` | Actions, focus                                                                                         |
+| Primary hover          | `#1d4ed8` | Action hover                                                                                           |
+| Success                | `#16a34a` | Confirm / valid                                                                                        |
+| Danger                 | `#dc2626` | Errors / destructive                                                                                   |
+| Warning                | `#d97706` | Caution (unambiguous; not the Bootstrap amber token)                                                   |
+| Info                   | `#0284c7` | Informational (unambiguous; not Bootstrap cyan)                                                        |
 
 **The Status Semantics Rule still applies.** Do not mute success / danger / warning / info to match branding.
 
@@ -324,14 +333,14 @@ Construction Operations / ERP Admin. Operational, technical, fast, professional.
 
 Same family as the incumbent: Inter with system-ui fallback. Denser operational ramp:
 
-| Role | Size | Weight |
-|---|---|---|
-| Page title | `1.25–1.375rem` (canonical `1.3125rem`) | 600 |
-| Section title | `0.9375rem` | 600 |
-| Body | `0.9375rem` | 400 |
-| Label | `0.8125rem` | 600, left-aligned |
-| Hint / error | `0.75rem` | 400 / 600 |
-| Table | `0.875rem` | 600 headers |
+| Role          | Size                                    | Weight            |
+| ------------- | --------------------------------------- | ----------------- |
+| Page title    | `1.25–1.375rem` (canonical `1.3125rem`) | 600               |
+| Section title | `0.9375rem`                             | 600               |
+| Body          | `0.9375rem`                             | 400               |
+| Label         | `0.8125rem`                             | 600, left-aligned |
+| Hint / error  | `0.75rem`                               | 400 / 600         |
+| Table         | `0.875rem`                              | 600 headers       |
 
 Page titles are **left-aligned** and must not use the incumbent centered `2rem` marketing-scale `.main-title`.
 
@@ -359,14 +368,14 @@ Prefer a 1px `#e5e7eb` border. Shadow only for overlays (drawer, dialog, select 
 
 ## Coexistence rules
 
-- **Do not** enable Tailwind Preflight. It would reset Bootstrap globally.
-- Tailwind utilities are nested under `.jr-pilot` (equivalent of selector `important`) so classes such as `p-4` do not override Bootstrap `p-4` outside migrated screens. Tailwind v4 cannot use `@import ".../utilities.css" important(.jr-pilot)` — that is parsed as a media query and emits invalid CSS.
-- Import `jr-design-system.css` after `skin-modern.css`.
+- **Do not** enable Tailwind Preflight until Bootstrap remnants are gone from the shell and remaining features (or Preflight is scoped safely). It would reset Bootstrap globally.
+- Tailwind utilities are nested under `.jr-pilot` (and shell equivalents such as `.jr-shell` when introduced) so classes such as `p-4` do not override Bootstrap `p-4` on **unmigrated** screens. Tailwind v4 cannot use `@import ".../utilities.css" important(.jr-pilot)` — that is parsed as a media query and emits invalid CSS.
+- Import `jr-design-system.css` after `skin-modern.css` while skin-modern still loads; as Navbar / Footer migrate, **stop depending on** `.navbar-modern` / skin-modern shell rules for those surfaces.
 - PrimeVue styled mode uses the JobRhythm Aura preset; dark mode is disabled (`darkModeSelector: 'none'`).
 - Cascade layer order is pinned in one place: `theme, base, primevue, components, utilities` (`jr-design-system.css` and PrimeVue `cssLayer.order`). JR component rules therefore win over PrimeVue; Tailwind utilities win last. Do not declare a second `@layer` list that omits `components` or `primevue`.
 - Bootstrap `h1`–`h6` and `a` are unlayered. Pilot heading type (`.jr-page-header__title`, `.jr-section__title`) and overlay menu `text-decoration` live **outside** `@layer components` so they can beat those element selectors. Do not move them back into the layer.
-- PrimeVue overlays (drawer, select, datepicker) portal to `body`. Put `.jr-pilot` on overlay roots when Tailwind utilities must apply inside them.
-- Do not wrap non-pilot pages in `.jr-pilot`.
+- PrimeVue overlays (drawer, select, datepicker, menus) portal to `body`. Put `.jr-pilot` / `.jr-shell` / `.jr-overlay` on overlay roots when Tailwind utilities must apply inside them.
+- Do not wrap **unmigrated** feature pages in `.jr-pilot`. Do migrate App Shell onto JR / PrimeVue; leaving Bootstrap navbar/footer “forever” is out of contract.
 
 ## Shared primitives (Pilot)
 
@@ -431,8 +440,9 @@ Empty / null coerces to **`0.00`** on edit and save (Django `DecimalField` store
 
 ### Do
 
-- **Do** wrap only migrated screens in `JRPage` / `.jr-pilot`.
-- **Do** use JR primitives instead of one-off PrimeVue markup in features.
+- **Do** wrap migrated feature screens in `JRPage` / `.jr-pilot`.
+- **Do** migrate Navbar / Footer onto pilot tokens and PrimeVue (JR shell / thin adapters); treat App Shell as part of the frontend upgrade, not a permanent Bootstrap island.
+- **Do** use JR primitives instead of one-off PrimeVue markup in features; for shell menus/buttons, prefer JR wrappers or a documented PrimeVue pattern over Bootstrap classes.
 - **Do** keep labels left, 0.8125rem, weight 600.
 - **Do** keep status colors unambiguous.
 - **Do** put operational field help under the control (`JRField` hint + `aria-describedby`), not in a hover-only tooltip.
@@ -442,11 +452,12 @@ Empty / null coerces to **`0.00`** on edit and save (Django `DecimalField` store
 - **Do** keep `JRDialog` / `p-dialog` rectangular (`border-radius: 0`), like the product images dialog.
 - **Do** use a single primary border for field focus — never a double ring.
 - **Do** use `JRButton` (`p-button p-component jr-button`) in forms, drawers and dialogs; Delete is filled danger, label-only. `JRRowActions` in a drawer is the same solid treatment, no icons.
+- **Do** let Impeccable and `jobrhythm-design-reviewer` score Navbar / Footer against this Target State (no “shell is out of scope” waiver).
 
 ### Don't
 
-- **Don't** enable Tailwind Preflight or migrate the build to Vite in this increment.
-- **Don't** restyle Navbar / Footer onto the pilot tokens yet.
+- **Don't** enable Tailwind Preflight or migrate the build to Vite while Bootstrap still owns unmigrated screens — unless Preflight is proven safe.
+- **Don't** keep Navbar / Footer on Bootstrap / `skin-modern` as the target; do not leave Bootstrap collapse/dropdown/btn chrome as intentional long-term shell.
 - **Don't** nest Bootstrap `.card` / `.card-modern` inside `JRPage` as an outer chrome.
 - **Don't** use the incumbent centered 2rem title or 1.25rem mega-card radius on pilot screens.
 - **Don't** hint every field or duplicate the same sentence in hint and tooltip.
@@ -455,3 +466,4 @@ Empty / null coerces to **`0.00`** on edit and save (Django `DecimalField` store
 - **Don't** round `JRDialog` / `p-dialog` (header, content, or footer). Canonical: product images overlay. Never apply `--radius-jr-panel` to dialogs.
 - **Don't** stack outline + border (or a focus shadow) on the same field.
 - **Don't** use ghost icon+label `JRRowActions` inside a drawer, or a text-link Delete.
+- **Don't** add detector ignores that exempt Navbar / Footer from pilot color/type/radius rules “because shell is Bootstrap.”

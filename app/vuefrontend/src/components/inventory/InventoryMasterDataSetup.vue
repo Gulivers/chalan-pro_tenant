@@ -1,105 +1,124 @@
 <template>
-  <div class="container">
-    <h3 class="text-warning pt-3">
-      <p>Inventory Master Data Setup</p>
-    </h3>
+  <JRPage>
+    <JRPageHeader
+      title="Inventory Master Data Setup"
+      description="Import products, brands, categories, units, price types, warehouses, and product prices into your tenant." />
 
-    <div class="card shadow mb-4">
-      <div class="card-header py-2">
-        <h6 class="ms-1 font-weight-bold text-primary">
-          <i class="fas fa-cog mr-2"></i>Inventory Master Data Configuration
-        </h6>
-      </div>
+    <div class="jr-master-data-setup">
+      <p v-if="loading" class="jr-master-data-setup__status" role="status">
+        Verifying status…
+      </p>
 
-      <div class="card-body text-start">
-        <div v-if="loading" class="text-center py-5">
-          <div class="spinner-border text-warning mb-3" role="status"
-            style="width: 3rem; height: 3rem; border-width: 0.25em;">
-            <span class="sr-only">Loading...</span>
+      <Message
+        v-else-if="error"
+        class="jr-master-data-setup__message jr-master-data-setup__message--error"
+        severity="error"
+        :closable="false">
+        {{ error }}
+      </Message>
+
+      <template v-else-if="!seedDone">
+        <Message
+          class="jr-master-data-setup__message jr-master-data-setup__message--info"
+          severity="info"
+          :closable="false">
+          <strong>Important:</strong> You can download an Excel file with
+          inventory master data (products, brands, categories, units, price
+          types, warehouses, product prices). Review and adjust the data if
+          necessary before importing it to your tenant.
+        </Message>
+
+        <JRSection title="Download Excel file">
+          <p class="jr-master-data-setup__copy">
+            Download a real Excel file (.xlsx) containing the inventory master
+            data from the
+            <code class="jr-master-data-setup__code">masters_inventory.json</code>
+            fixture file. The file is organized in tabs by model for easy review
+            offline.
+          </p>
+          <JRButton
+            type="button"
+            variant="secondary"
+            :disabled="downloading"
+            @click="downloadExcel">
+            {{ downloading ? "Downloading…" : "Download Master Data Excel" }}
+          </JRButton>
+        </JRSection>
+
+        <JRSection title="Import data">
+          <p class="jr-master-data-setup__copy">
+            After reviewing the Excel file offline, you can import the master
+            data to your tenant (including product images when available in the
+            fixture media).
+            <strong>Note:</strong> The import runs from the system JSON fixture
+            (<code class="jr-master-data-setup__code">masters_inventory.json</code>),
+            not from the downloaded Excel file. The Excel file is for review only.
+          </p>
+
+          <JRCheckbox
+            v-model="confirmCheck"
+            inputId="confirm-import-masters"
+            class="jr-master-data-setup__confirm"
+            :disabled="importing">
+            I confirm: import masters into my tenant
+          </JRCheckbox>
+
+          <div class="jr-master-data-setup__actions">
+            <JRButton
+              type="button"
+              variant="primary"
+              :disabled="!confirmCheck || importing"
+              @click="importMasterData">
+              {{ importing ? "Importing…" : "Import Master Data" }}
+            </JRButton>
+            <JRButton
+              type="button"
+              variant="secondary"
+              :disabled="importing"
+              @click="goBack">
+              Cancel
+            </JRButton>
           </div>
-          <p class="text-muted mb-0">Verifying status...</p>
-        </div>
+        </JRSection>
+      </template>
 
-        <div v-else-if="error" class="alert alert-danger">
-          <i class="fas fa-exclamation-triangle mr-2"></i>{{ error }}
-        </div>
-
-        <div v-else-if="!seedDone">
-          <div class="alert alert-info mb-4">
-            <i class="fas fa-info-circle mr-2"></i>
-            <strong>Important:</strong> You can download an Excel file with inventory master data (Products, Brands,
-            Categories, Units, Price Types, Warehouses, Product Prices).
-            Review and adjust the data if necessary before importing it to your tenant.
-          </div>
-
-          <div class="mb-4">
-            <h6 class="font-weight-bold text-primary mb-3">
-              <i class="fas fa-file-excel mr-2 text-success"></i>Step 1: Download Excel File (.xlsx)
-            </h6>
-            <p class="text-muted small mb-3">
-              Download a real Excel file (.xlsx) containing the inventory master data (Products, Brands, Categories,
-              Units, Price Types, Warehouses, Product Prices) from the <code>masters_inventory.json</code> fixture file.
-              The Excel file is organized in tabs by model for easy review offline.
-            </p>
-            <button class="btn btn-success" @click="downloadExcel" :disabled="downloading">
-              <span v-if="downloading" class="spinner-border spinner-border-sm me-1" role="status"
-                aria-hidden="true"></span>
-              <i v-else class="fas fa-download mr-1"></i>
-              <span v-if="downloading">Downloading...</span>
-              <span v-else>Download Master Data Excel</span>
-            </button>
-          </div>
-
-          <div class="border-top pt-4">
-            <h6 class="font-weight-bold text-primary mb-3">
-              <i class="fas fa-upload mr-2 text-primary"></i>Step 2: Import Data
-            </h6>
-            <p class="text-muted small mb-3">
-              After reviewing the Excel file offline (using Microsoft Excel or similar), you can import the master data
-              to your tenant (including product images when available in the fixture media).
-              <strong>Note:</strong> The import will be performed from the system's JSON fixture file
-              (<code>masters_inventory.json</code>), not from the downloaded Excel file. The Excel file is provided for
-              your review only.
-            </p>
-
-            <div class="form-check form-switch mb-3 d-flex align-items-center gap-2">
-              <input class="form-check-input" type="checkbox" id="confirmImport" v-model="confirmCheck" role="switch" />
-              <label class="form-check-label mb-0" for="confirmImport">
-                <strong>I confirm: Import masters into my tenant</strong>
-              </label>
-            </div>
-
-            <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center gap-2">
-              <button class="btn btn-primary" @click="importMasterData" :disabled="!confirmCheck || importing">
-                <span v-if="importing" class="spinner-border spinner-border-sm me-1" role="status"
-                  aria-hidden="true"></span>
-                <i v-else class="fas fa-upload mr-1"></i>
-                <span v-if="importing">Importing...</span>
-                <span v-else>Import Master Data</span>
-              </button>
-
-              <button type="button" class="btn btn-secondary" @click="goBack" :disabled="importing">Cancel</button>
-            </div>
-          </div>
-        </div>
-
-        <div v-else class="alert alert-success mb-0">
-          <i class="fas fa-check-circle mr-2"></i>
-          <strong>Inventory masters imported.</strong>
-          <p class="mb-0 mt-2">The inventory master data (products, brands, categories, prices, and product images when available) has been successfully imported to this tenant. Import cannot be performed more than once.</p>
-        </div>
-      </div>
+      <Message
+        v-else
+        class="jr-master-data-setup__message jr-master-data-setup__message--success"
+        severity="success"
+        :closable="false">
+        <strong>Inventory masters imported.</strong>
+        The inventory master data (products, brands, categories, prices, and
+        product images when available) has been successfully imported to this
+        tenant. Import cannot be performed more than once.
+      </Message>
     </div>
-  </div>
+  </JRPage>
 </template>
 
 <script>
-import { defineComponent } from 'vue';
-import axios from 'axios';
-import Swal from 'sweetalert2';
+import { defineComponent } from "vue";
+import axios from "axios";
+import Swal from "sweetalert2";
+import Message from "primevue/message";
+import {
+  JRPage,
+  JRPageHeader,
+  JRSection,
+  JRButton,
+  JRCheckbox,
+} from "@ui";
 
 export default defineComponent({
-  name: 'InventoryMasterDataSetup',
+  name: "InventoryMasterDataSetup",
+  components: {
+    Message,
+    JRPage,
+    JRPageHeader,
+    JRSection,
+    JRButton,
+    JRCheckbox,
+  },
   data() {
     return {
       loading: true,
@@ -118,19 +137,21 @@ export default defineComponent({
       try {
         this.loading = true;
         this.error = null;
-        const token = localStorage.getItem('authToken');
-        const response = await axios.get('/api/master-data/preview/', {
+        const token = localStorage.getItem("authToken");
+        const response = await axios.get("/api/master-data/preview/", {
           headers: {
             Authorization: `Token ${token}`,
           },
         });
         this.seedDone = response.data.seed_done || false;
       } catch (error) {
-        console.error('Error loading preview:', error);
+        console.error("Error loading preview:", error);
         if (error.response?.status === 403) {
           this.seedDone = true;
         } else {
-          this.error = error.response?.data?.error || 'Error verifying master data status.';
+          this.error =
+            error.response?.data?.error ||
+            "Error verifying master data status.";
         }
       } finally {
         this.loading = false;
@@ -139,43 +160,44 @@ export default defineComponent({
     async downloadExcel() {
       try {
         this.downloading = true;
-        const token = localStorage.getItem('authToken');
-        const response = await axios.get('/api/master-data/download-excel/', {
+        const token = localStorage.getItem("authToken");
+        const response = await axios.get("/api/master-data/download-excel/", {
           headers: {
             Authorization: `Token ${token}`,
           },
-          responseType: 'blob',
+          responseType: "blob",
         });
 
-        // Create temporary link to download file
         const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        const contentDisposition = response.headers['content-disposition'];
-        let filename = 'masters_inventory.xlsx';
+        const contentDisposition = response.headers["content-disposition"];
+        let filename = "masters_inventory.xlsx";
         if (contentDisposition) {
           const filenameMatch = contentDisposition.match(/filename="(.+)"/);
           if (filenameMatch) {
             filename = filenameMatch[1];
           }
         }
-        link.setAttribute('download', filename);
+        link.setAttribute("download", filename);
         document.body.appendChild(link);
         link.click();
         link.remove();
         window.URL.revokeObjectURL(url);
 
         Swal.fire({
-          icon: 'success',
-          title: 'Download Successful',
-          text: 'The Excel file has been downloaded successfully.',
+          icon: "success",
+          title: "Download Successful",
+          text: "The Excel file has been downloaded successfully.",
         });
       } catch (error) {
-        console.error('Error downloading Excel:', error);
+        console.error("Error downloading Excel:", error);
         Swal.fire({
-          icon: 'error',
-          title: 'Download Error',
-          text: error.response?.data?.error || 'An error occurred while downloading the Excel file.',
+          icon: "error",
+          title: "Download Error",
+          text:
+            error.response?.data?.error ||
+            "An error occurred while downloading the Excel file.",
         });
       } finally {
         this.downloading = false;
@@ -184,18 +206,18 @@ export default defineComponent({
     async importMasterData() {
       if (!this.confirmCheck) {
         Swal.fire({
-          icon: 'warning',
-          title: 'Confirmation Required',
-          text: 'You must confirm the import before continuing.',
+          icon: "warning",
+          title: "Confirmation Required",
+          text: "You must confirm the import before continuing.",
         });
         return;
       }
 
       try {
         this.importing = true;
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem("authToken");
         const response = await axios.post(
-          '/api/master-data/import/',
+          "/api/master-data/import/",
           { confirm: true },
           {
             headers: {
@@ -206,19 +228,23 @@ export default defineComponent({
 
         if (response.data.success) {
           Swal.fire({
-            icon: 'success',
-            title: 'Import Successful!',
-            text: response.data.message || 'The inventory master data has been imported successfully.',
+            icon: "success",
+            title: "Import Successful!",
+            text:
+              response.data.message ||
+              "The inventory master data has been imported successfully.",
           });
           this.seedDone = true;
           this.confirmCheck = false;
         }
       } catch (error) {
-        console.error('Error importing master data:', error);
+        console.error("Error importing master data:", error);
         Swal.fire({
-          icon: 'error',
-          title: 'Import Error',
-          text: error.response?.data?.error || 'An error occurred while importing the master data.',
+          icon: "error",
+          title: "Import Error",
+          text:
+            error.response?.data?.error ||
+            "An error occurred while importing the master data.",
         });
       } finally {
         this.importing = false;
@@ -228,7 +254,7 @@ export default defineComponent({
       if (this.$router && this.$route.name) {
         this.$router.back();
       } else {
-        this.$router.push('/');
+        this.$router.push("/");
       }
     },
   },
@@ -236,18 +262,75 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.form-check-input:checked {
-  background-color: #ffc107;
-  border-color: #ffc107;
+.jr-master-data-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.form-check-input:checked:focus {
-  background-color: #ffc107;
-  border-color: #ffc107;
-  box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.25);
+.jr-master-data-setup__status {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted);
 }
 
-.text-warning {
-  color: #ffc107 !important;
+.jr-master-data-setup__copy {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-jr-muted);
+}
+
+.jr-master-data-setup__code {
+  padding: 0.1rem 0.35rem;
+  font-size: 0.75rem;
+  background: var(--color-jr-surface-muted);
+  border: 1px solid var(--color-jr-border);
+  color: var(--color-jr-text);
+}
+
+.jr-master-data-setup__confirm {
+  margin-bottom: 0.75rem;
+}
+
+.jr-master-data-setup :deep(.jr-checkbox) {
+  column-gap: 0.85rem;
+  align-items: flex-start;
+}
+
+.jr-master-data-setup :deep(.jr-checkbox__label) {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-jr-text);
+}
+
+.jr-master-data-setup__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.jr-master-data-setup__message {
+  margin: 0;
+  --p-message-border-radius: var(--radius-jr-control, 0);
+}
+
+.jr-master-data-setup__message--info {
+  --p-message-info-background: var(--color-jr-info-subtle);
+  --p-message-info-border-color: var(--color-jr-border);
+  --p-message-info-color: var(--color-jr-info-text);
+}
+
+.jr-master-data-setup__message--success {
+  --p-message-success-background: var(--color-jr-success-subtle);
+  --p-message-success-border-color: var(--color-jr-border);
+  --p-message-success-color: var(--color-jr-success-text);
+}
+
+.jr-master-data-setup__message--error {
+  --p-message-error-background: var(--color-jr-danger-subtle);
+  --p-message-error-border-color: var(--color-jr-border);
+  --p-message-error-color: var(--color-jr-danger-text);
 }
 </style>

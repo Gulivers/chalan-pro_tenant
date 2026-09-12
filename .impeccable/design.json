@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-29T17:58:00.000Z",
+  "generatedAt": "2026-09-12T19:55:00.000Z",
   "title": "Design System: JobRhythm Admin",
   "extensions": {
     "colorMeta": {
@@ -10,124 +10,180 @@
         "canonical": "#2563eb",
         "tonalRamp": ["#0f172a", "#1e3a8a", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe", "#eff6ff"]
       },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Action Blue Hover",
+        "canonical": "#1d4ed8",
+        "tonalRamp": ["#0b1220", "#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe"]
+      },
       "primary-deep": {
         "role": "primary",
         "displayName": "Deep Blueprint",
         "canonical": "#1e3a8a",
         "tonalRamp": ["#0b1220", "#111827", "#1e3a8a", "#1e40af", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe"]
       },
-      "section-accent": {
-        "role": "accent",
-        "displayName": "Section Amber",
-        "canonical": "#c08500",
-        "tonalRamp": ["#2a1f00", "#553f00", "#805f00", "#ab7f00", "#c08500", "#d4a017", "#e6b82e", "#f0cc5c", "#f7df8a", "#fdf2c2"]
-      },
-      "neutral-surface": {
+      "jr-page": {
         "role": "neutral",
-        "displayName": "Surface Gray",
-        "canonical": "#f1f3f5",
-        "tonalRamp": ["#343a40", "#495057", "#6c757d", "#868e96", "#adb5bd", "#ced4da", "#dee2e6", "#e9ecef", "#f1f3f5", "#f8f9fa"]
+        "displayName": "JR Page Mist",
+        "canonical": "#f3f4f6",
+        "tonalRamp": ["#111827", "#374151", "#6b7280", "#9ca3af", "#d1d5db", "#e5e7eb", "#f3f4f6", "#f9fafb", "#ffffff", "#ffffff"]
+      },
+      "jr-surface": {
+        "role": "neutral",
+        "displayName": "JR Surface",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#111827", "#4b5563", "#9ca3af", "#d1d5db", "#e5e7eb", "#f3f4f6", "#f9fafb", "#ffffff", "#ffffff", "#ffffff"]
+      },
+      "success": {
+        "role": "semantic",
+        "displayName": "Success",
+        "canonical": "#16a34a",
+        "tonalRamp": ["#052e16", "#14532d", "#166534", "#15803d", "#16a34a", "#22c55e", "#4ade80", "#86efac", "#bbf7d0", "#dcfce7"]
+      },
+      "danger": {
+        "role": "semantic",
+        "displayName": "Danger",
+        "canonical": "#dc2626",
+        "tonalRamp": ["#450a0a", "#7f1d1d", "#991b1b", "#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5", "#fecaca", "#fee2e2"]
+      },
+      "jr-warning": {
+        "role": "semantic",
+        "displayName": "JR Warning",
+        "canonical": "#d97706",
+        "tonalRamp": ["#451a03", "#78350f", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fbbf24", "#fcd34d", "#fde68a", "#fef3c7"]
+      },
+      "jr-info": {
+        "role": "semantic",
+        "displayName": "JR Info",
+        "canonical": "#0284c7",
+        "tonalRamp": ["#082f49", "#0c4a6e", "#075985", "#0369a1", "#0284c7", "#0ea5e9", "#38bdf8", "#7dd3fc", "#bae6fd", "#e0f2fe"]
       }
     },
     "typographyMeta": {
       "body": {
-        "displayName": "Body UI",
-        "purpose": "Default copy and controls; Inter-forward in skin-modern.css."
+        "displayName": "Body UI (incumbent)",
+        "purpose": "Default copy outside .jr-pilot; Inter via skin-modern."
       },
       "label": {
-        "displayName": "Form Label",
-        "purpose": "Field labels at 600 weight, gray-600 tone."
+        "displayName": "Form Label (incumbent)",
+        "purpose": "Field labels at 600 / 0.95rem on unmigrated screens."
       },
       "title": {
-        "displayName": "Page Title",
-        "purpose": "Module/page headings such as .main-title."
+        "displayName": "Page Title (incumbent)",
+        "purpose": "Legacy .main-title 2rem; do not use on JR screens."
+      },
+      "jr-body": {
+        "displayName": "JR Body",
+        "purpose": "Pilot body copy at 0.9375rem inside .jr-pilot / .jr-shell."
+      },
+      "jr-label": {
+        "displayName": "JR Label",
+        "purpose": "Pilot field labels 0.8125rem weight 600, left-aligned."
+      },
+      "jr-title": {
+        "displayName": "JR Page Title",
+        "purpose": "Canonical page title 1.3125rem weight 600, left-aligned."
       }
     },
     "shadows": [
       {
-        "name": "card-rest",
+        "name": "card-rest-incumbent",
         "value": "0 12px 35px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.05)",
-        "purpose": "Default card elevation in skin-modern.css."
+        "purpose": "Legacy skin-modern card elevation; not the JR pilot default."
       },
       {
-        "name": "focus-ring-blue",
+        "name": "jr-overlay",
+        "value": "0 16px 40px rgba(15, 23, 42, 0.16)",
+        "purpose": "Pilot overlays: drawer, dialog, select panel."
+      },
+      {
+        "name": "focus-ring-incumbent",
         "value": "0 0 0 3px rgba(59, 130, 246, 0.25)",
-        "purpose": "Input and switch focus halo."
+        "purpose": "Legacy input/switch halo; JR fields use 1px primary border only."
       }
     ],
     "motion": [
       {
         "name": "ease-standard",
         "value": "cubic-bezier(0.4, 0, 0.2, 1)",
-        "purpose": "Default transition for controls and switches."
+        "purpose": "Default easing for control state transitions."
       }
     ],
     "breakpoints": [
       { "name": "md", "value": "768px" },
-      { "name": "lg", "value": "992px" },
+      { "name": "lg", "value": "1024px" },
       { "name": "xl", "value": "1200px" }
     ]
   },
   "components": [
     {
-      "name": "Primary Button",
+      "name": "JR Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Default affirmative action in admin forms and toolbars.",
-      "html": "<button class=\"ds-btn-primary\">Save changes</button>",
-      "css": ".ds-btn-primary { background-color: #2563eb; color: #ffffff; border: 1px solid #1e4fd3; border-radius: 0.7rem; padding: 0.6rem 1.4rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease; } .ds-btn-primary:hover { background-color: #1d4ed8; border-color: #1c46bb; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); }"
+      "description": "Pilot affirmative action: rectangular jr-button / JRButton on forms, drawers, dialogs.",
+      "html": "<button class=\"ds-jr-btn-primary\" type=\"button\">+ New Product</button>",
+      "css": ".ds-jr-btn-primary { background-color: #2563eb; color: #ffffff; border: 1px solid #2563eb; border-radius: 0; padding: 0.5rem 1rem; min-height: 2.5rem; font-family: Inter, system-ui, sans-serif; font-size: 0.9375rem; font-weight: 600; cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease; } .ds-jr-btn-primary:hover { background-color: #1d4ed8; border-color: #1d4ed8; } .ds-jr-btn-primary:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }"
     },
     {
-      "name": "Modern Navbar",
+      "name": "JR Shell Navbar",
       "kind": "nav",
       "refersTo": "navbar",
-      "description": "Global shell navigation with deep blue gradient and white links.",
-      "html": "<nav class=\"ds-navbar\"><span class=\"ds-navbar-brand\">JobRhythm</span><a class=\"ds-nav-link ds-nav-link-active\" href=\"#\">Schedule</a><a class=\"ds-nav-link\" href=\"#\">Inventory</a></nav>",
-      "css": ".ds-navbar { display: flex; align-items: center; gap: 1rem; padding: 0.5rem 1rem; background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: #ffffff; } .ds-navbar-brand { font-weight: 700; margin-right: 1rem; color: #ffffff; } .ds-nav-link { color: rgba(255,255,255,0.92); text-decoration: none; padding: 0.35rem 0.65rem; border-radius: 0.5rem; font-weight: 500; } .ds-nav-link-active, .ds-nav-link:hover { color: #ffffff; background: rgba(255,255,255,0.08); }"
+      "description": "Target App Shell: deep blueprint bar with JR tokens + PrimeVue menus — not Bootstrap .navbar-modern.",
+      "html": "<nav class=\"ds-jr-shell-nav\"><span class=\"ds-jr-shell-brand\">JobRhythm</span><a class=\"ds-jr-shell-link ds-jr-shell-link-active\" href=\"#\">Inventory</a><a class=\"ds-jr-shell-link\" href=\"#\">Contracts</a></nav>",
+      "css": ".ds-jr-shell-nav { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 1rem; background: #1e3a8a; color: #ffffff; border-bottom: 1px solid #172554; font-family: Inter, system-ui, sans-serif; } .ds-jr-shell-brand { font-weight: 700; margin-right: 0.75rem; color: #ffffff; } .ds-jr-shell-link { color: rgba(255,255,255,0.92); text-decoration: none; padding: 0.4rem 0.65rem; border-radius: 0; font-size: 0.875rem; font-weight: 500; } .ds-jr-shell-link-active, .ds-jr-shell-link:hover { color: #ffffff; background: rgba(255,255,255,0.1); } .ds-jr-shell-link:focus-visible { outline: 2px solid #93c5fd; outline-offset: 2px; }"
     },
     {
-      "name": "Modern Card",
+      "name": "JR Work Surface",
       "kind": "card",
-      "refersTo": "card-modern",
-      "description": "Primary content container for forms, filters, and tables.",
-      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\">Inventory</div><div class=\"ds-card-body\">Content</div></div>",
-      "css": ".ds-card { background: #f1f3f5; border-radius: 1.25rem; padding: 2rem 2.5rem; box-shadow: 0 12px 35px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.05); border: none; text-align: left; } .ds-card-header { background: transparent; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 0.75rem; margin-bottom: 1rem; font-weight: 600; color: #212529; } .ds-card-body { color: #212529; }"
+      "refersTo": "jr-page",
+      "description": "Pilot page chrome: cool gray page + white panel, 1px border, no mega-card shadow.",
+      "html": "<div class=\"ds-jr-page\"><div class=\"ds-jr-panel\"><h1 class=\"ds-jr-title\">Products</h1><p class=\"ds-jr-muted\">Operational list</p></div></div>",
+      "css": ".ds-jr-page { background: #f3f4f6; padding: 1rem 1.5rem; text-align: left; font-family: Inter, system-ui, sans-serif; } .ds-jr-panel { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1rem 1.25rem; box-shadow: none; } .ds-jr-title { margin: 0 0 0.25rem; font-size: 1.3125rem; font-weight: 600; color: #111827; line-height: 1.25; } .ds-jr-muted { margin: 0; font-size: 0.75rem; color: #4b5563; }"
     },
     {
-      "name": "Text Input",
+      "name": "JR Text Input",
       "kind": "input",
       "refersTo": "input-default",
-      "description": "Standard Bootstrap-style field used across modules.",
-      "html": "<label class=\"ds-field-label\">Search</label><input class=\"ds-input\" type=\"text\" placeholder=\"Filter records\" />",
-      "css": ".ds-field-label { display: block; margin-bottom: 0.5rem; font-size: 0.95rem; font-weight: 600; color: #4b5563; } .ds-input { width: 100%; max-width: 320px; display: block; padding: 0.65rem 0.9rem; font-size: 1rem; color: #212529; background-color: #ffffff; border: 1px solid #cbd0d6; border-radius: 0.65rem; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); transition: border-color 0.2s ease, box-shadow 0.2s ease; } .ds-input:focus-visible { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); }"
+      "description": "Pilot field: rectangular control, single primary border on focus — no halo ring.",
+      "html": "<label class=\"ds-jr-label\" for=\"ds-search\">Search</label><input id=\"ds-search\" class=\"ds-jr-input\" type=\"search\" placeholder=\"Search products…\" />",
+      "css": ".ds-jr-label { display: block; margin-bottom: 0.35rem; font-size: 0.8125rem; font-weight: 600; color: #111827; font-family: Inter, system-ui, sans-serif; text-align: left; } .ds-jr-input { width: 100%; max-width: 320px; display: block; padding: 0.5rem 0.75rem; min-height: 2.5rem; font-size: 0.9375rem; color: #111827; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 0; box-shadow: none; font-family: Inter, system-ui, sans-serif; } .ds-jr-input:hover { border-color: #d1d5db; } .ds-jr-input:focus-visible { outline: none; border-color: #2563eb; box-shadow: none; }"
     },
     {
-      "name": "Modern Table Wrapper",
+      "name": "JR Data Table",
       "kind": "custom",
-      "refersTo": "table-modern",
-      "description": "Rounded white table container with gray header band.",
-      "html": "<table class=\"ds-table\"><thead><tr><th>Item</th><th>Qty</th></tr></thead><tbody><tr><td>Cable</td><td>24</td></tr></tbody></table>",
-      "css": ".ds-table { width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.8rem; overflow: hidden; } .ds-table thead th { background: #f3f4f6; font-weight: 600; text-align: left; padding: 0.75rem 1rem; color: #212529; } .ds-table tbody td { padding: 0.75rem 1rem; border-top: 1px solid #e5e7eb; color: #212529; } .ds-table tbody tr:hover { background: #f1f5f9; }"
+      "refersTo": "jr-datatable",
+      "description": "Pilot table: white surface, muted header, 1px borders, dense cells.",
+      "html": "<table class=\"ds-jr-table\"><thead><tr><th>Name</th><th>Status</th></tr></thead><tbody><tr><td>Breaker 20A</td><td>Active</td></tr></tbody></table>",
+      "css": ".ds-jr-table { width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 0.75rem; overflow: hidden; font-family: Inter, system-ui, sans-serif; font-size: 0.875rem; } .ds-jr-table thead th { background: #f9fafb; font-weight: 600; text-align: left; padding: 0.3rem 0.75rem; color: #111827; border-bottom: 1px solid #e5e7eb; } .ds-jr-table tbody td { padding: 0.3rem 0.75rem; border-top: 1px solid #e5e7eb; color: #111827; } .ds-jr-table tbody tr:hover { background: #f9fafb; }"
+    },
+    {
+      "name": "JR Badge",
+      "kind": "chip",
+      "refersTo": "jr-badge",
+      "description": "Rectangular status chip; light background + strong text (e.g. Active).",
+      "html": "<span class=\"ds-jr-badge ds-jr-badge-success\">Active</span>",
+      "css": ".ds-jr-badge { display: inline-flex; align-items: center; padding: 0.15rem 0.45rem; border-radius: 0; font-size: 0.75rem; font-weight: 600; font-family: Inter, system-ui, sans-serif; border: 1px solid transparent; } .ds-jr-badge-success { background: #DEF2E6; color: #166534; border-color: #bbf7d0; }"
     }
   ],
   "narrative": {
     "northStar": "Modern Field Console",
-    "overview": "The incumbent JobRhythm admin UI is a Vue 3 + Bootstrap 5 operational console with an active skin-modern.css overlay on top of custom-bootstrap.scss. Users see soft gray backgrounds, rounded cards, Inter-forward typography, a deep-blue gradient navbar, and Tailwind-inspired primary blues.",
+    "overview": "JobRhythm admin is a Construction Operations / ERP console. CURRENT STATE still ships Vue 3 + Bootstrap 5 with a skin-modern.css overlay on unmigrated screens. TARGET STATE (Pilot) is the frontend-upgrade contract: JR tokens, JRPage/.jr-pilot features, PrimeVue styled mode, and App Shell (Navbar/Footer) migrated off Bootstrap onto the same JR/PrimeVue authority — not a permanent Bootstrap island.",
     "keyCharacteristics": [
-      "Data-dense tables, filters, and forms for daily contractor operations",
-      "Active visual layer: skin-modern.css with rounded cards and modern navbar",
-      "Bootstrap primitives plus AG Grid, vue-select, and module-local SCSS",
-      "Legacy chalanpro-theme.scss exists but is not imported in main.js"
+      "Operate mode: data-dense tables, filters, and forms for residential trade contractors",
+      "Target: feature view | App Shell → JR primitive → PrimeVue → JR tokens",
+      "Pilot palette: neutrals + one action blue; 1px borders over heavy card shadows",
+      "App Shell in scope: Navbar/Footer leave .navbar-modern / Bootstrap collapse for JR + PrimeVue",
+      "Coexistence: Bootstrap remains only on unmigrated feature screens until each wraps in JRPage"
     ],
     "rules": [
       {
         "name": "Layered Source Rule",
-        "body": "Treat skin-modern.css + NavbarComponent classes as the visible incumbent for shell/navigation; do not assume custom-bootstrap.scss alone describes the UI.",
+        "body": "Treat skin-modern.css + NavbarComponent as the visible incumbent until those surfaces migrate; do not assume custom-bootstrap.scss alone describes the UI. Target State still requires shell migration off Bootstrap.",
         "section": "colors"
       },
       {
         "name": "Status Semantics Rule",
-        "body": "Success, warning, danger, and info colors must remain unambiguous for operational states.",
+        "body": "Success, warning, danger, and info colors must remain unambiguous for operational states. Pilot warning/info use JR tokens (#d97706 / #0284c7), not Bootstrap amber/cyan.",
         "section": "colors"
       },
       {
@@ -139,19 +195,40 @@
         "name": "Single Global Layer Rule",
         "body": "During upgrade, consolidate to one global style authority; avoid adding a fourth parallel global skin.",
         "section": "elevation"
+      },
+      {
+        "name": "App Shell In Scope Rule",
+        "body": "Navbar and Footer must adopt JR tokens + PrimeVue. Impeccable and design-reviewer must score the shell against Target State; do not ignore shell files as out of pilot scope.",
+        "section": "layout"
       }
     ],
     "dos": [
-      "Do treat skin-modern.css as the primary visual reference for the current global shell.",
-      "Do preserve Bootstrap semantic colors for validation and operational feedback.",
-      "Do maintain scannable table/form density and clear filter toolbars.",
-      "Do consolidate overlapping global styles during frontend upgrade."
+      "Do wrap migrated feature screens in JRPage / .jr-pilot.",
+      "Do migrate Navbar / Footer onto pilot tokens and PrimeVue (JR shell / thin adapters); treat App Shell as part of the frontend upgrade, not a permanent Bootstrap island.",
+      "Do use JR primitives instead of one-off PrimeVue markup in features; for shell menus/buttons, prefer JR wrappers or a documented PrimeVue pattern over Bootstrap classes.",
+      "Do keep labels left, 0.8125rem, weight 600.",
+      "Do keep status colors unambiguous.",
+      "Do put operational field help under the control (JRField hint + aria-describedby), not in a hover-only tooltip.",
+      "Do use PrimeVue Message (info, not closable) for a consequence that appears after a choice.",
+      "Do keep form fields and select/datepicker overlays rectangular (--radius-jr-control: 0).",
+      "Do use InputNumber mode=decimal locale=en-US with 2 fraction digits for money/amount fields; coerce empty to 0.00.",
+      "Do keep JRDialog / p-dialog rectangular (border-radius: 0), like the product images dialog.",
+      "Do use a single primary border for field focus — never a double ring.",
+      "Do use JRButton in forms, drawers and dialogs; Delete is filled danger, label-only.",
+      "Do let Impeccable and jobrhythm-design-reviewer score Navbar / Footer against this Target State (no shell is out of scope waiver)."
     ],
     "donts": [
-      "Don't assume custom-bootstrap.scss alone describes what users see.",
-      "Don't activate chalanpro-theme.scss without an explicit product decision.",
-      "Don't replace operational tables with decorative card layouts without a responsive strategy.",
-      "Don't use gradient text, glow shadows, or decorative motion in core workflows."
+      "Don't enable Tailwind Preflight or migrate the build to Vite while Bootstrap still owns unmigrated screens — unless Preflight is proven safe.",
+      "Don't keep Navbar / Footer on Bootstrap / skin-modern as the target; do not leave Bootstrap collapse/dropdown/btn chrome as intentional long-term shell.",
+      "Don't nest Bootstrap .card / .card-modern inside JRPage as an outer chrome.",
+      "Don't use the incumbent centered 2rem title or 1.25rem mega-card radius on pilot screens.",
+      "Don't hint every field or duplicate the same sentence in hint and tooltip.",
+      "Don't teach a commercial or stock rule only with JRTooltip / (i).",
+      "Don't round JR inputs, selects, or dropdown panels.",
+      "Don't round JRDialog / p-dialog (header, content, or footer). Never apply --radius-jr-panel to dialogs.",
+      "Don't stack outline + border (or a focus shadow) on the same field.",
+      "Don't use ghost icon+label JRRowActions inside a drawer, or a text-link Delete.",
+      "Don't add detector ignores that exempt Navbar / Footer from pilot color/type/radius rules because shell is Bootstrap."
     ]
   }
 }

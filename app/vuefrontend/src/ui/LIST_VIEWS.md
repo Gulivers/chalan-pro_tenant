@@ -233,7 +233,8 @@ Bulk Excel, exports, imports: `JRButton` ghost → `JRDrawer` a la derecha.
 - Edit en cian `info`; Edit es primary.
 - `border-radius: 999px` en badges o pager.
 - Redondear `JRDialog` / `p-dialog` (referencia: overlay de imágenes de producto; `border-radius: 0`).
-- Tailwind Preflight, `.jr-pilot` en Navbar/Footer, o migrar el shell en este incremento.
+- Tailwind Preflight mientras Bootstrap aún sea global en pantallas no migradas.
+- Eximir Navbar / Footer del Target State: el App Shell se migra a JR / PrimeVue (ver `DESIGN.md`); no dejar Bootstrap como contrato del shell.
 - Cambiar Django / contratos API para “quedar bonito”.
 
 ---

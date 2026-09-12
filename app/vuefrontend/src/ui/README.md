@@ -10,9 +10,9 @@
 
 Arquitectura:
 
-`feature view → JR primitive → PrimeVue (styled) → tokens JR`
+`feature view | App Shell → JR primitive → PrimeVue (styled) → tokens JR`
 
-No mezclar Bootstrap y JR en la misma pantalla.
+No mezclar Bootstrap y JR en la misma pantalla (ni en Navbar / Footer).
 
 | Capítulo | Dónde |
 |---|---|
@@ -24,12 +24,13 @@ No mezclar Bootstrap y JR en la misma pantalla.
 
 ## 1. Isolation
 
-- Envolver **solo** pantallas migradas en `JRPage` (añade `.jr-pilot`).
-- Tailwind utilities viven como `.jr-pilot .utility`. Bootstrap (`p-4`, etc.) sigue ganando **fuera** de `.jr-pilot`.
-- Tailwind Preflight **no** está activo.
-- Navbar / Footer se quedan en Bootstrap / `skin-modern`.
-- Overlays portaleados (drawer, dialog, menú): `.jr-pilot` en el overlay; menús flotantes usan `.jr-overlay`, no el `jr-pilot` de página.
+- Envolver **solo** pantallas de feature migradas en `JRPage` (añade `.jr-pilot`).
+- Tailwind utilities viven como `.jr-pilot .utility` (y `.jr-shell` cuando exista en el App Shell). Bootstrap (`p-4`, etc.) sigue ganando **solo** en pantallas aún no migradas.
+- Tailwind Preflight **no** está activo mientras queden restos Bootstrap globales.
+- **Navbar / Footer están en el alcance del upgrade:** migrar a tokens JR + PrimeVue (ver `DESIGN.md` Target State → App Shell). No dejar Bootstrap / `skin-modern` como contrato permanente del shell.
+- Overlays portaleados (drawer, dialog, menú): `.jr-pilot` / `.jr-shell` / `.jr-overlay` en el overlay; menús flotantes usan `.jr-overlay`, no el `jr-pilot` de página.
 - Capa CSS: `theme, base, primevue, components, utilities`. Tipografía de `h1`/`h2` del pilot y `text-decoration` de menús overlay van **fuera** de `@layer components` (Bootstrap `h1`/`a` no está en capa).
+- Impeccable / design-reviewer deben evaluar Navbar y Footer contra el Target State (sin waiver “shell = Bootstrap”).
 
 ---
 
@@ -249,7 +250,8 @@ Drawers, selects y datepickers portalean a `document.body`. `JRDrawer` / `JRDial
 
 ### Don't
 
-- Tailwind Preflight, Vite, o restyle de Navbar / Footer en este incremento.
+- Tailwind Preflight o Vite mientras Bootstrap aún domine pantallas no migradas (salvo prueba segura).
+- Dejar Navbar / Footer en Bootstrap / `skin-modern` como objetivo; no chrome `.navbar-*` / `.btn` / `.dropdown-*` a largo plazo en el shell.
 - `.card` / `.form-control` / `.btn` / `b-table` dentro de `.jr-pilot`.
 - `JRRowActions` ghost (icono + texto) en un `p-drawer`, o Delete como enlace azul.
 - Redondear inputs, selects o paneles de dropdown JR.
@@ -259,6 +261,7 @@ Drawers, selects y datepickers portalean a `document.body`. `JRDrawer` / `JRDial
 - Regla operativa solo en `(i)`.
 - Recuadro extra con `<p>` o Swal.
 - Cambiar Django / DRF para “quedar bonito”.
+- Ignores de detector que eximan Navbar / Footer “porque el shell es Bootstrap”.
 
 ---
 

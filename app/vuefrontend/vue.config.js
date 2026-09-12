@@ -3,6 +3,9 @@ const path = require('path');
 const { defineConfig } = require('@vue/cli-service')
 const webpack = require('webpack')
 
+const apiProxyTarget =
+  process.env.VUE_APP_API_PROXY_TARGET || 'http://localhost:8000';
+
 module.exports = defineConfig({
   transpileDependencies: true,
   configureWebpack: {
@@ -94,7 +97,7 @@ module.exports = defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: apiProxyTarget,
         changeOrigin: true,
         secure: false,
         ws: true, // Habilitar WebSockets
@@ -108,7 +111,7 @@ module.exports = defineConfig({
       },
       // /crews NO se proxea: son rutas del Vue Router (SPA), no del backend.
       '/admin': {
-        target: 'http://localhost:8000',
+        target: apiProxyTarget,
         changeOrigin: true,
         secure: false,
         onProxyReq: (proxyReq, req, res) => {
@@ -120,7 +123,7 @@ module.exports = defineConfig({
         },
       },
       '/ws': {
-        target: 'http://localhost:8000', // Usar http:// porque webpack-proxy maneja el upgrade a WebSocket automáticamente
+        target: apiProxyTarget, // Usar http:// porque webpack-proxy maneja el upgrade a WebSocket automáticamente
         ws: true, // Habilitar WebSockets
         changeOrigin: true,
         secure: false,
@@ -137,7 +140,7 @@ module.exports = defineConfig({
         },
       },
       '/static': {
-        target: 'http://localhost:8000',
+        target: apiProxyTarget,
         changeOrigin: true,
         secure: false,
         onProxyReq: (proxyReq, req, res) => {
@@ -149,7 +152,7 @@ module.exports = defineConfig({
         },
       },
       '/media': {
-        target: 'http://localhost:8000',
+        target: apiProxyTarget,
         changeOrigin: true,
         secure: false,
         onProxyReq: (proxyReq, req, res) => {

@@ -1,124 +1,184 @@
 <template>
-  <footer class="app-footer border-top">
-    <div class="container py-4 py-md-4">
-      <div class="row align-items-start gy-4 text-center text-lg-start">
-        <!-- Marca: logo tenant o JobRhythm por defecto -->
-        <div class="col-12 col-lg-3">
-          <div
-            class="d-flex flex-column align-items-center align-items-lg-start gap-2">
-            <router-link
-              to="/"
-              class="footer-brand-link d-inline-block"
-              :aria-label="footerLogoAlt">
-              <img
-                :src="footerLogoSrc"
-                :alt="footerLogoAlt"
-                class="footer-brand-logo"
-                height="44"
-                width="180"
-                loading="lazy"
-                @error="onTenantLogoError" />
-            </router-link>
-            <span
-              v-if="tenantName && tenantLogoUrl && !tenantLogoFailed"
-              class="small text-muted text-truncate"
-              style="max-width: 280px">
-              {{ tenantName }}
-            </span>
-          </div>
+  <footer class="jr-footer">
+    <div class="jr-footer__inner">
+      <div class="jr-footer__main">
+        <div class="jr-footer__brand">
+          <router-link
+            to="/"
+            class="jr-footer__brand-link"
+            :aria-label="footerLogoAlt">
+            <img
+              :src="footerLogoSrc"
+              :alt="footerLogoAlt"
+              class="jr-footer__brand-logo"
+              height="36"
+              width="148"
+              loading="lazy"
+              @error="onTenantLogoError" />
+          </router-link>
+          <p
+            v-if="tenantName && tenantLogoUrl && !tenantLogoFailed"
+            class="jr-footer__tenant-name">
+            {{ tenantName }}
+          </p>
         </div>
 
-        <!-- Operational Flow: tarjetas con hover (solo con barra de navegación) -->
-        <div class="col-12 col-lg-9">
+        <div class="jr-footer__content">
           <nav
             v-if="!$route.meta.hideNavbar"
-            class="footer-operational-flow"
+            class="jr-footer__flow"
             aria-label="Operational flow">
-            <h2 class="footer-flow-title text-uppercase">Operational Flow</h2>
-            <div
-              class="d-flex flex-column flex-lg-row align-items-center justify-content-center flex-wrap gap-2 gap-lg-1">
-              <template
-                v-for="(step, idx) in operationalFlowSteps"
-                :key="step.route">
+            <header class="jr-footer__flow-header">
+              <h2 class="jr-footer__flow-title">Operational flow</h2>
+              <p class="jr-footer__flow-lead">
+                Follow these steps in order.
+              </p>
+            </header>
+
+            <ol class="jr-footer__steps">
+              <li
+                v-for="(step, index) in operationalFlowSteps"
+                :key="step.route"
+                class="jr-footer__step">
                 <router-link
                   :to="step.route"
-                  class="footer-flow-card"
-                  active-class="footer-flow-card--active">
-                  <div class="footer-flow-card-inner">
-                    <i
-                      class="bi footer-flow-icon"
-                      :class="step.icon"
-                      aria-hidden="true" />
-                    <span class="footer-flow-label">{{ step.label }}</span>
-                  </div>
+                  class="jr-footer__step-link"
+                  active-class="jr-footer__step-link--active"
+                  :aria-label="`Step ${index + 1}: ${step.label}`"
+                  :aria-current="
+                    isActiveRoute(step.route) ? 'page' : undefined
+                  ">
+                  <span class="jr-footer__step-index" aria-hidden="true">
+                    {{ index + 1 }}
+                  </span>
+                  <span class="jr-footer__step-icon-wrap" aria-hidden="true">
+                    <component :is="step.icon" class="jr-footer__step-icon" />
+                  </span>
+                  <span class="jr-footer__step-label">{{ step.label }}</span>
                 </router-link>
                 <span
-                  v-if="idx < operationalFlowSteps.length - 1"
-                  class="footer-flow-sep text-muted flex-shrink-0"
+                  v-if="index < operationalFlowSteps.length - 1"
+                  class="jr-footer__step-connector"
                   aria-hidden="true">
-                  <i class="bi bi-chevron-right d-none d-lg-inline fs-5" />
-                  <i class="bi bi-chevron-down d-lg-none fs-6" />
+                  <svg
+                    class="jr-footer__connector-icon"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M3 8h10M9 4l4 4-4 4"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round" />
+                  </svg>
                 </span>
-              </template>
-            </div>
+              </li>
+            </ol>
           </nav>
-          <p
-            v-else
-            class="my-3 small text-muted mb-0 mx-auto mx-lg-5"
-            style="max-width: auto">
+
+          <p v-else class="jr-footer__guest-copy">
             Operations platform for residential trade contractors. Sign in to
             access your workspace.
           </p>
         </div>
       </div>
 
-      <div
-        class="row mt-4 pt-3 border-top border-secondary-subtle footer-meta text-center text-muted small">
-        <div
-          class="col-12 d-flex flex-column flex-sm-row flex-wrap align-items-center justify-content-center gap-2 gap-sm-3">
+      <div class="jr-footer__meta">
+        <p class="jr-footer__meta-line">
           <span>
             © {{ currentYear }}
-            <strong class="text-body-secondary">JobRhythm</strong>
+            <strong class="jr-footer__meta-brand">JobRhythm</strong>
             . All rights reserved.
           </span>
-          <span
-            class="footer-meta-sep d-none d-sm-inline opacity-50"
-            aria-hidden="true">
-            ·
-          </span>
-          <span class="font-monospace">v{{ appVersion }}</span>
-          <span
-            class="footer-meta-sep d-none d-sm-inline opacity-50"
-            aria-hidden="true">
-            ·
-          </span>
+          <span class="jr-footer__meta-dot" aria-hidden="true">·</span>
+          <span class="jr-footer__meta-version">v{{ appVersion }}</span>
+        </p>
+        <p class="jr-footer__meta-line">
           <span>
-            <span class="text-muted">Support:</span>
-            <a
-              href="mailto:team@jobrhythm.net"
-              class="footer-support-email ms-1">
+            <span class="jr-footer__meta-label">Support:</span>
+            <a href="mailto:team@jobrhythm.net" class="jr-footer__support-link">
               team@jobrhythm.net
             </a>
           </span>
-          <span
-            class="footer-meta-sep d-none d-sm-inline opacity-50"
-            aria-hidden="true">
-            ·
+          <span class="jr-footer__meta-dot" aria-hidden="true">·</span>
+          <span class="jr-footer__meta-phone">
+            <svg
+              class="jr-footer__phone-icon"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              aria-hidden="true">
+              <path
+                d="M3.654 1.328a.678.678 0 0 1 .737-.061l2.79 1.395c.329.165.445.534.246.86l-1.12 1.933a.678.678 0 0 0 .178.884l1.12 1.12a.678.678 0 0 0 .884.178l1.933-1.12c.326-.199.695-.083.86.246l1.395 2.79a.678.678 0 0 1-.061.737l-1.385 1.385a1.75 1.75 0 0 1-1.85.41 12.84 12.84 0 0 1-5.52-3.37 12.84 12.84 0 0 1-3.37-5.52 1.75 1.75 0 0 1 .41-1.85L3.654 1.328z" />
+            </svg>
+            <a href="tel:+12392400016" class="jr-footer__phone-link"
+              >+1 (239) 240-0016</a
+            >
           </span>
-          <span
-            class="d-inline-flex align-items-center gap-1 justify-content-center">
-            <i
-              class="bi bi-telephone-fill footer-contact-icon"
-              aria-hidden="true" />
-            <span>+1 (239) 240-0016</span>
-          </span>
-        </div>
+        </p>
       </div>
     </div>
   </footer>
 </template>
 
 <script>
+import { h } from "vue";
+
+const stroke = {
+  stroke: "currentColor",
+  "stroke-width": "1.5",
+  "stroke-linecap": "round",
+  "stroke-linejoin": "round",
+};
+
+function createFlowIcon(nodes) {
+  return {
+    render() {
+      return h(
+        "svg",
+        {
+          class: "jr-footer__step-icon",
+          viewBox: "0 0 24 24",
+          fill: "none",
+          xmlns: "http://www.w3.org/2000/svg",
+          "aria-hidden": "true",
+        },
+        nodes
+      );
+    },
+  };
+}
+
+const FlowIconCalendar = createFlowIcon([
+  h("rect", { x: 3, y: 4, width: 18, height: 18, rx: 2, ...stroke }),
+  h("path", { d: "M16 2v4M8 2v4M3 10h18", ...stroke }),
+]);
+
+const FlowIconBox = createFlowIcon([
+  h("path", { d: "M21 8.5 12 3 3 8.5v7L12 21l9-5.5v-7z", ...stroke }),
+  h("path", { d: "M3.5 8.5 12 14l8.5-5.5M12 14v7", ...stroke }),
+]);
+
+const FlowIconContract = createFlowIcon([
+  h("path", {
+    d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z",
+    ...stroke,
+  }),
+  h("path", { d: "M14 2v6h6M8 13h8M8 17h5", ...stroke }),
+]);
+
+const FlowIconChat = createFlowIcon([
+  h("path", {
+    d: "M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z",
+    ...stroke,
+  }),
+  h("path", { d: "M8 10h8M8 14h5", ...stroke }),
+]);
+
+const FlowIconDashboard = createFlowIcon([
+  h("path", { d: "M4 19V5M4 19h16M8 19v-6M12 19V9M16 19v-3", ...stroke }),
+]);
+
 export default {
   name: "FooterComponent",
   data() {
@@ -128,32 +188,31 @@ export default {
       tenantLogoUrl: null,
       tenantName: null,
       tenantLogoFailed: false,
-      /** Secuencia del flujo operativo (orden de uso) */
       operationalFlowSteps: [
         {
           label: "Schedule",
           route: "/schedule",
-          icon: "bi-calendar-week",
+          icon: FlowIconCalendar,
         },
         {
           label: "Prepare Material Packing",
           route: "/transactions",
-          icon: "bi-box-seam",
+          icon: FlowIconBox,
         },
         {
           label: "Piece Work Contract",
           route: "/contracts",
-          icon: "bi-file-earmark-richtext",
+          icon: FlowIconContract,
         },
         {
-          label: "Track Job Communication",
+          label: "Track Job",
           route: "/chat-general",
-          icon: "bi-chat-left-text",
+          icon: FlowIconChat,
         },
         {
           label: "Measure the Operation",
           route: "/inventory-dashboard",
-          icon: "bi-speedometer2",
+          icon: FlowIconDashboard,
         },
       ],
     };
@@ -182,6 +241,11 @@ export default {
     },
   },
   methods: {
+    isActiveRoute(route) {
+      return (
+        this.$route.path === route || this.$route.path.startsWith(`${route}/`)
+      );
+    },
     loadFooterBranding() {
       const token = localStorage.getItem("authToken");
       if (!token) {
@@ -208,207 +272,449 @@ export default {
 </script>
 
 <style scoped>
-.app-footer {
-  background: linear-gradient(180deg, #f8f9fb 0%, #eef1f5 100%);
-  color: #374151;
+.jr-footer {
+  --jr-footer-max: 72rem;
+  --jr-footer-pad-x: 1rem;
+  --jr-footer-pad-y: 0.875rem;
+
+  border-top: 1px solid var(--color-jr-border);
+  background: linear-gradient(
+    180deg,
+    var(--color-jr-surface) 0%,
+    var(--color-jr-surface-muted) 100%
+  );
+  color: var(--color-jr-text);
+  font-family: var(--font-jr-sans);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  text-align: left;
 }
 
-.footer-brand-link {
-  text-decoration: none;
-  line-height: 0;
+.jr-footer ::selection {
+  background: color-mix(in srgb, var(--color-jr-primary) 22%, transparent);
+  color: var(--color-jr-text);
 }
 
-.footer-brand-logo {
-  height: auto;
-  max-height: 44px;
-  width: auto;
-  max-width: min(200px, 70vw);
-  display: block;
-  object-fit: contain;
+.jr-footer__inner {
+  max-width: var(--jr-footer-max);
+  margin-inline: auto;
+  padding: var(--jr-footer-pad-y) var(--jr-footer-pad-x);
 }
 
-.footer-support-email {
-  color: #c08500;
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.15s ease, text-decoration 0.15s ease;
+.jr-footer__main {
+  display: grid;
+  gap: 1rem;
 }
 
-.footer-support-email:hover {
-  color: #92400e;
-  text-decoration: underline;
-}
-
-.footer-operational-flow {
-  width: 100%;
-}
-
-.footer-flow-title {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: #c08500;
-  margin-bottom: 0.875rem;
-  text-align: center;
-}
-
-.footer-flow-card {
-  flex: 1 1 118px;
-  max-width: 220px;
-  min-width: min(118px, 100%);
-  text-decoration: none;
-  color: inherit;
-  border-radius: 0.65rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.footer-flow-card:focus-visible {
-  outline: 2px solid #1e40af;
-  outline-offset: 2px;
-}
-
-.footer-flow-card-inner {
-  height: 100%;
+.jr-footer__brand {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
   gap: 0.5rem;
-  padding: 0.65rem 0.6rem;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.65rem;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
-  min-height: 5.5rem;
-}
-
-.footer-flow-card:hover .footer-flow-card-inner {
-  border-color: #93c5fd;
-  box-shadow: 0 8px 20px rgba(30, 64, 175, 0.12),
-    0 2px 6px rgba(15, 23, 42, 0.08);
-  transform: translateY(-3px);
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-}
-
-.footer-flow-card--active .footer-flow-card-inner {
-  border-color: #c08500;
-  background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
-  box-shadow: 0 2px 8px rgba(180, 83, 9, 0.15);
-}
-
-.footer-flow-icon {
-  font-size: 1.35rem;
-  color: #1e40af;
-}
-
-.footer-flow-card--active .footer-flow-icon {
-  color: #b45309;
-}
-
-.footer-flow-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  line-height: 1.25;
   text-align: center;
-  color: #334155;
 }
 
-.footer-flow-card:hover .footer-flow-label {
-  color: #1e3a8a;
+.jr-footer__brand-link {
+  display: inline-block;
+  line-height: 0;
+  text-decoration: none;
 }
 
-.footer-flow-sep {
-  opacity: 0.45;
-  padding: 0.15rem 0;
+.jr-footer__brand-link:focus-visible {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: 3px;
+}
+
+.jr-footer__brand-logo {
+  display: block;
+  width: auto;
+  max-width: min(168px, 60vw);
+  height: auto;
+  max-height: 36px;
+  object-fit: contain;
+}
+
+.jr-footer__tenant-name {
+  margin: 0;
+  max-width: 17.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-footer__content {
+  min-width: 0;
+}
+
+.jr-footer__flow-header {
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.jr-footer__flow-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-jr-text);
+}
+
+.jr-footer__flow-lead {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--color-jr-muted);
+}
+
+.jr-footer__steps {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0 0 0.1rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  list-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-jr-hover-border) transparent;
+}
+
+.jr-footer__steps:focus-within {
+  scrollbar-color: var(--color-jr-primary) transparent;
+}
+
+.jr-footer__step {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+}
+
+.jr-footer__step-link {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.875rem;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
+  background: var(--color-jr-surface);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.jr-footer__step-link:hover {
+  background: var(--color-jr-info-subtle);
+  border-color: color-mix(in srgb, var(--color-jr-primary) 18%, transparent);
+}
+
+.jr-footer__step-link:focus-visible {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: 2px;
+}
+
+.jr-footer__step-link--active {
+  background: var(--color-jr-warning-subtle);
+  border-color: color-mix(in srgb, var(--color-jr-warning) 35%, transparent);
+  box-shadow: 0 1px 3px
+    color-mix(in srgb, var(--color-jr-warning) 12%, transparent);
+}
+
+.jr-footer__step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: var(--radius-jr-control);
+  background: var(--color-jr-primary);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.jr-footer__step-link--active .jr-footer__step-index {
+  background: var(--color-jr-warning);
+}
+
+.jr-footer__step-icon-wrap {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-jr-info-text);
+}
+
+.jr-footer__step-link--active .jr-footer__step-icon-wrap {
+  color: var(--color-jr-warning-text);
+}
+
+.jr-footer__step-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.jr-footer__step-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--color-jr-text);
+  white-space: nowrap;
+}
+
+.jr-footer__step-link--active .jr-footer__step-label {
+  font-weight: 600;
+  color: var(--color-jr-warning-text);
+}
+
+.jr-footer__step-connector {
+  display: none;
+  justify-content: center;
+  padding: 0.1rem 0;
+  color: var(--color-jr-hover-border);
+}
+
+.jr-footer__connector-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+  transform: none;
+}
+
+.jr-footer__guest-copy {
+  margin: 0 auto;
+  max-width: 36rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-jr-muted);
+  text-align: center;
+  text-wrap: pretty;
+}
+
+.jr-footer__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-jr-border);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-jr-muted);
+  text-align: center;
+}
+
+.jr-footer__meta-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.jr-footer__meta-dot {
+  display: none;
+}
+
+.jr-footer__meta-brand {
+  color: var(--color-jr-text);
+  font-weight: 600;
+}
+
+.jr-footer__meta-version {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.jr-footer__meta-label {
+  color: var(--color-jr-muted);
+}
+
+.jr-footer__support-link {
+  margin-left: 0.25rem;
+  color: var(--color-jr-warning);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.jr-footer__support-link:hover {
+  color: var(--color-jr-warning-text);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.jr-footer__support-link:focus-visible {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: 2px;
+}
+
+.jr-footer__meta-phone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  color: var(--color-jr-text);
+}
+
+.jr-footer__phone-link {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.jr-footer__phone-link:hover {
+  color: var(--color-jr-warning-text);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.jr-footer__phone-link:focus-visible {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: 2px;
+}
+
+.jr-footer__phone-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--color-jr-warning);
+}
+
+@media (min-width: 576px) {
+  .jr-footer__meta-line {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .jr-footer__meta-dot {
+    display: inline;
+    opacity: 0.5;
+  }
+}
+
+@media (min-width: 768px) {
+  .jr-footer__inner {
+    padding-inline: 1.5rem;
+  }
 }
 
 @media (min-width: 992px) {
-  .footer-flow-sep {
-    padding: 0 0.15rem;
+  .jr-footer__main {
+    grid-template-columns: minmax(9rem, 11rem) minmax(0, 1fr);
+    align-items: start;
+    gap: 1.25rem;
   }
-}
 
-/* Móvil: flujo como lista de enlaces de texto (sin tarjeta ni iconos) */
-@media (max-width: 767.98px) {
-  .footer-flow-title {
+  .jr-footer__brand {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .jr-footer__flow-header {
     margin-bottom: 0.5rem;
-    font-size: 0.625rem;
+    text-align: left;
   }
 
-  .footer-flow-card {
-    flex: 1 1 auto !important;
-    max-width: none !important;
-    min-width: 0 !important;
-    width: 100%;
+  .jr-footer__steps {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.15rem;
+    overflow-x: auto;
   }
 
-  .footer-flow-card-inner {
-    flex-direction: row !important;
-    justify-content: center !important;
-    align-items: center !important;
-    min-height: 0 !important;
-    padding: 0.2rem 0.25rem !important;
-    background: transparent !important;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    gap: 0 !important;
+  .jr-footer__step {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    max-width: none;
   }
 
-  .footer-flow-icon {
-    display: none !important;
+  .jr-footer__step-icon-wrap {
+    display: inline-flex;
   }
 
-  .footer-flow-label {
-    font-size: 0.68rem !important;
-    font-weight: 500 !important;
-    text-align: center !important;
-    line-height: 1.3 !important;
+  .jr-footer__step-link {
+    flex: 0 0 auto;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    grid-template-rows: auto;
+    justify-items: start;
+    gap: 0.3rem;
+    min-height: 1.875rem;
+    max-width: none;
+    padding: 0.2rem 0.45rem;
+    background: var(--color-jr-surface);
+    border-color: var(--color-jr-border);
+    box-shadow: none;
+    text-align: left;
   }
 
-  .footer-flow-card:hover .footer-flow-card-inner {
-    transform: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
+  .jr-footer__step-link:hover {
+    border-color: var(--color-jr-hover-border);
+    box-shadow: 0 2px 6px
+      color-mix(in srgb, var(--color-jr-primary) 8%, transparent);
+    transform: none;
   }
 
-  .footer-flow-card:hover .footer-flow-label {
-    color: #1e40af !important;
-    text-decoration: underline;
+  .jr-footer__step-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: nowrap;
   }
 
-  .footer-flow-card--active .footer-flow-card-inner {
-    background: transparent !important;
-    box-shadow: none !important;
+  .jr-footer__step-connector {
+    display: flex;
+    align-self: center;
+    flex-shrink: 0;
+    padding-inline: 0.05rem;
   }
 
-  .footer-flow-card--active .footer-flow-label {
-    color: #b45309 !important;
-    font-weight: 700 !important;
+  .jr-footer__connector-icon {
+    width: 0.65rem;
+    height: 0.65rem;
+    transform: none;
   }
 
-  .footer-flow-sep {
-    padding: 0.05rem 0 !important;
-    opacity: 0.35;
+  .jr-footer__guest-copy {
+    margin-inline: 0;
+    text-align: left;
   }
 
-  .footer-meta {
-    font-size: 0.75rem !important;
-    line-height: 1.45;
+  .jr-footer__meta {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0 0.75rem;
   }
 
-  .footer-meta .footer-meta-sep {
-    display: none !important;
+  .jr-footer__meta-line {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: auto;
+    gap: 0.5rem;
   }
-}
 
-.footer-contact-icon {
-  color: #c08500;
-  font-size: 1rem;
-}
-
-.footer-meta {
-  font-size: 0.8125rem;
+  .jr-footer__meta-line + .jr-footer__meta-line::before {
+    content: "·";
+    margin-right: 0.75rem;
+    opacity: 0.5;
+  }
 }
 </style>
