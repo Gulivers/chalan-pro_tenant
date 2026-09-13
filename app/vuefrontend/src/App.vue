@@ -1,47 +1,34 @@
 <script setup>
-import * as Layout from '@components/layout';
-import AssistantPanel from '@/components/assistant/AssistantPanel.vue';
+import { computed } from "vue";
+import { useRoute } from "vue-router";
+import * as Layout from "@components/layout";
+import AssistantPanel from "@/components/assistant/AssistantPanel.vue";
+
+const route = useRoute();
+const showShellNav = computed(() => !route.meta.hideNavbar);
 </script>
 
 <template>
-  <div class="app-container">
-    <Layout.NavbarComponent v-if="!$route.meta.hideNavbar" />
-    <main class="content">
-      <router-view />
-    </main>
+  <Layout.NavbarComponent v-if="showShellNav">
+    <router-view />
+  </Layout.NavbarComponent>
+  <div v-else class="jr-app-shell--no-nav">
+    <router-view />
     <Layout.FooterComponent />
-    <AssistantPanel />
   </div>
+  <AssistantPanel />
 </template>
 
-
 <style>
-/* Hace que el contenedor principal ocupe toda la pantalla */
-.app-container {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh; /* 100% del viewport height */
-  text-align: center;
-}
-
-/* Hace que el contenido principal crezca y empuje el footer hacia abajo */
-.content {
-  flex: 1;
+.jr-app-shell--no-nav {
+  min-height: 100vh;
+  text-align: left;
+  font-family: var(--font-jr-sans);
+  color: var(--color-jr-text);
+  background: var(--color-jr-page);
 }
 
 label {
-    color: rgba(var(--bs-primary-rgb), 1);
-    /* Aplica el color primary de Bootstrap */
-  }
-  
-/* Asegura que el footer se mantenga abajo */
-.footer {
-  background-color: #2c3e50; /* Ajusta el color del fondo */
-  color: white;
-  padding: 10px 0;
-  text-align: center;
+  color: var(--color-jr-text, #111827);
 }
 </style>

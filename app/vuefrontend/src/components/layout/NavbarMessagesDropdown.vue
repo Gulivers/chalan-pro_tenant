@@ -1,194 +1,291 @@
 <template>
-  <li v-if="shouldShow" class="nav-item mx-1">
-    <router-link to="/chat-general" class="nav-link p-0">
-      <button type="button" class="btn btn-sm btn-primary position-relative">
-        <img :src="envelopeIcon" alt="Messages" width="24" height="24" />
-        <span
-          v-if="chatStore.unreadTotal > 0"
-          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning">
-          {{ chatStore.unreadTotal }}
-          <span class="visually-hidden">unread messages</span>
-        </span>
-      </button>
-    </router-link>
-  </li>
+  <SidebarMenuItem v-if="shouldShow && variant === 'sidebar'">
+    <SidebarMenuButton :is-active="isMessagesActive" @click="goToMessages">
+      <Comments />
+      <span>Messages</span>
+    </SidebarMenuButton>
+    <SidebarMenuBadge v-if="chatStore.unreadTotal > 0">
+      {{ chatStore.unreadTotal }}
+      <span class="jr-shell-sidebar__sr-only">unread messages</span>
+    </SidebarMenuBadge>
+  </SidebarMenuItem>
+
+  <router-link
+    v-else-if="shouldShow && variant === 'topbar'"
+    to="/chat-general"
+    class="jr-shell-topbar__nav-link jr-shell-topbar__nav-link--messages"
+    :class="{ 'jr-shell-topbar__nav-link--active': isMessagesActive }"
+    aria-label="Messages">
+    <Comments class="jr-shell-topbar__nav-icon" aria-hidden="true" />
+    <span>Messages</span>
+    <span
+      v-if="chatStore.unreadTotal > 0"
+      class="jr-shell-topbar__nav-badge">
+      {{ chatStore.unreadTotal }}
+      <span class="jr-shell-sidebar__sr-only">unread messages</span>
+    </span>
+  </router-link>
+
+  <router-link
+    v-else-if="shouldShow"
+    to="/chat-general"
+    class="jr-shell-messages"
+    :class="variantClass"
+    aria-label="Messages"
+    @click="closeMobileNav">
+    <Comments />
+    <span
+      v-if="chatStore.unreadTotal > 0"
+      class="jr-shell-sidebar__badge"
+      :class="{ 'jr-shell-sidebar__badge--rail': variant === 'rail' }">
+      {{ chatStore.unreadTotal }}
+      <span class="jr-shell-sidebar__sr-only">unread messages</span>
+    </span>
+  </router-link>
 </template>
 
 <script>
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
-import { useRoute } from 'vue-router'
-import { useChatStore } from '@/stores/chatStore'
-import envelopeIcon from '@/assets/img/envelope-arrow-up.svg'
-import axios from 'axios'
-import messageSound from '@/assets/sounds/mixkit-sci-fi-confirmation-914.wav'
+import Comments from "@primeicons/vue/comments";
+import SidebarMenuBadge from "primevue/sidebarmenubadge";
+import SidebarMenuButton from "primevue/sidebarmenubutton";
+import SidebarMenuItem from "primevue/sidebarmenuitem";
+import { ref, onMounted, onBeforeUnmount, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useChatStore } from "@/stores/chatStore";
+import axios from "axios";
+import messageSound from "@/assets/sounds/mixkit-sci-fi-confirmation-914.wav";
 
-const ensureTrailingSlash = (url = '') => (url.endsWith('/') ? url : `${url}/`); // Añade slash final.
-const stripTrailingSlash = (url = '') => url.replace(/\/+$/, ''); // Quita slashes extra.
-const stripLeadingSlash = (path = '') => path.replace(/^\/+/, ''); // Quita slashes al inicio.
+const ensureTrailingSlash = (url = "") => (url.endsWith("/") ? url : `${url}/`);
+const stripTrailingSlash = (url = "") => url.replace(/\/+$/, "");
+const stripLeadingSlash = (path = "") => path.replace(/^\/+/, "");
 
 const getWsBaseUrl = () => {
-  const explicit = window.__WS_BASE_URL || '';
+  const explicit = window.__WS_BASE_URL || "";
   if (explicit) return ensureTrailingSlash(explicit);
-  const api = window.__API_BASE_URL || '';
-  if (api.startsWith('https://')) return ensureTrailingSlash(`wss://${api.slice(8)}`);
-  if (api.startsWith('http://')) return ensureTrailingSlash(`ws://${api.slice(7)}`);
+  const api = window.__API_BASE_URL || "";
+  if (api.startsWith("https://")) return ensureTrailingSlash(`wss://${api.slice(8)}`);
+  if (api.startsWith("http://")) return ensureTrailingSlash(`ws://${api.slice(7)}`);
   return ensureTrailingSlash(api);
 };
 
-const buildWsUrl = (path = '') => {
+const buildWsUrl = (path = "") => {
   const base = stripTrailingSlash(getWsBaseUrl());
   const cleanPath = stripLeadingSlash(path);
   return `${base}/${cleanPath}`;
 };
 
 export default {
-  setup() {
-    const route = useRoute()
-    const chatStore = useChatStore()
-    const ws = ref(null)
-    const userId = ref(null)
-    const lastUnreadTotal = ref(0)
-    const audio = new Audio(messageSound)
-    
-    // Verificar reactivamente si debemos mostrar el componente
+  components: {
+    Comments,
+    SidebarMenuBadge,
+    SidebarMenuButton,
+    SidebarMenuItem,
+  },
+  props: {
+    variant: {
+      type: String,
+      default: "sidebar",
+    },
+  },
+  setup(props) {
+    const route = useRoute();
+    const router = useRouter();
+    const chatStore = useChatStore();
+    const ws = ref(null);
+    const userId = ref(null);
+    const lastUnreadTotal = ref(0);
+    const audio = new Audio(messageSound);
+
+    const variantClass = computed(() =>
+      props.variant === "rail" ? "jr-shell-messages--rail" : "jr-shell-messages--full"
+    );
+
     const shouldShow = computed(() => {
-      // Si la ruta tiene hideNavbar, no mostrar
       if (route.meta.hideNavbar) {
-        return false
+        return false;
       }
-      
-      const token = localStorage.getItem('authToken')
+
+      const token = localStorage.getItem("authToken");
       if (!token) {
-        return false
+        return false;
       }
-      
-      // Verificar también por pathname como fallback
-      const currentPath = window.location.pathname || route.path || ''
-      const publicPaths = ['/onboarding', '/login', '/reset_password', '/reset-password-confirm']
-      const isPublicRoute = publicPaths.some(path => currentPath.startsWith(path))
-      
-      return !isPublicRoute
-    })
+
+      const currentPath = window.location.pathname || route.path || "";
+      const publicPaths = [
+        "/onboarding",
+        "/login",
+        "/reset_password",
+        "/reset-password-confirm",
+      ];
+      const isPublicRoute = publicPaths.some((path) =>
+        currentPath.startsWith(path)
+      );
+
+      return !isPublicRoute;
+    });
+
+    const isMessagesActive = computed(() => {
+      const path = route.path || "";
+      return path === "/chat-general" || path.startsWith("/chat-general/");
+    });
 
     const connectWebSocket = async () => {
-      // Verificar PRIMERO si el componente debería mostrarse
       if (!shouldShow.value) {
-        console.log('[NavbarMessagesDropdown] connectWebSocket: Component should not show, skipping.')
-        return
+        return;
       }
-      
-      // Verificar que hay un token antes de intentar conectar
-      const token = localStorage.getItem('authToken')
+
+      const token = localStorage.getItem("authToken");
       if (!token) {
-        console.log('[NavbarMessagesDropdown] No token, skipping WebSocket connection')
-        return
+        return;
       }
-      
-      // Verificar si estamos en una ruta pública
-      const currentPath = window.location.pathname || route.path || ''
-      const publicPaths = ['/onboarding', '/login', '/reset_password', '/reset-password-confirm', '/about']
-      const isPublicRoute = publicPaths.some(path => currentPath.startsWith(path))
-      
+
+      const currentPath = window.location.pathname || route.path || "";
+      const publicPaths = [
+        "/onboarding",
+        "/login",
+        "/reset_password",
+        "/reset-password-confirm",
+        "/about",
+      ];
+      const isPublicRoute = publicPaths.some((path) =>
+        currentPath.startsWith(path)
+      );
+
       if (isPublicRoute) {
-        console.log('[NavbarMessagesDropdown] connectWebSocket: Public route, skipping.')
-        return
+        return;
       }
-      
+
       try {
-        const res = await axios.get('/api/user_detail/')
-        userId.value = res.data.id
+        const res = await axios.get("/api/user_detail/");
+        userId.value = res.data.id;
 
-        if (!userId.value) throw new Error('User ID not found.')
+        if (!userId.value) throw new Error("User ID not found.");
 
-        ws.value = new WebSocket(buildWsUrl(`ws/schedule/unread/user/${userId.value}/`))
-
-        ws.value.onopen = () => console.log('[WS] Connected to unread chat count.')
+        ws.value = new WebSocket(
+          buildWsUrl(`ws/schedule/unread/user/${userId.value}/`)
+        );
 
         ws.value.onmessage = async (event) => {
-          const data = JSON.parse(event.data)
+          const data = JSON.parse(event.data);
 
-          if (data.type === 'unread.updated') {
-            const { event_id, count, user_id: sender } = data
+          if (data.type === "unread.updated") {
+            const { user_id: sender } = data;
 
             if (sender !== userId.value) {
-              await chatStore.fetchUnreadEvents()
+              await chatStore.fetchUnreadEvents();
               if (chatStore.unreadTotal > lastUnreadTotal.value) {
-                audio.play().catch(err => console.warn('Audio playback failed:', err))
+                audio.play().catch(() => {});
               }
-              lastUnreadTotal.value = chatStore.unreadTotal
+              lastUnreadTotal.value = chatStore.unreadTotal;
             }
           }
-        }
-
-        ws.value.onclose = () => console.warn('[WS] Chat unread WebSocket closed.')
-        ws.value.onerror = (err) => console.error('[WS] Error:', err)
+        };
       } catch (err) {
-        // Silenciar errores 401 ya que son esperados cuando no hay autenticación
         if (err.response?.status !== 401) {
-          console.error('Failed to connect WebSocket:', err)
+          console.error("Failed to connect WebSocket:", err);
         }
       }
-    }
+    };
+
+    const goToMessages = () => {
+      router.push("/chat-general");
+    };
+
+    const closeMobileNav = () => {
+      document.body.style.overflow = "";
+    };
 
     onMounted(async () => {
-      // Verificar PRIMERO si el componente debería mostrarse
-      // Si no debería mostrarse, no hacer NINGUNA llamada
       if (!shouldShow.value) {
-        console.log('[NavbarMessagesDropdown] Component should not show, skipping ALL operations', {
-          hideNavbar: route.meta.hideNavbar,
-          path: route.path,
-          currentPath: window.location.pathname,
-          hasToken: !!localStorage.getItem('authToken')
-        })
-        return
+        return;
       }
-      
-      // Verificar si estamos en una ruta pública ANTES de cualquier otra cosa
-      const currentPath = window.location.pathname || route.path || ''
-      const publicPaths = ['/onboarding', '/login', '/reset_password', '/reset-password-confirm', '/about']
-      const isPublicRoute = publicPaths.some(path => currentPath.startsWith(path))
-      
+
+      const currentPath = window.location.pathname || route.path || "";
+      const publicPaths = [
+        "/onboarding",
+        "/login",
+        "/reset_password",
+        "/reset-password-confirm",
+        "/about",
+      ];
+      const isPublicRoute = publicPaths.some((path) =>
+        currentPath.startsWith(path)
+      );
+
       if (isPublicRoute) {
-        console.log('[NavbarMessagesDropdown] Public route detected, skipping ALL API calls', { currentPath })
-        return
+        return;
       }
-      
-      // Solo hacer llamadas a la API si el usuario está autenticado
-      const token = localStorage.getItem('authToken')
+
+      const token = localStorage.getItem("authToken");
       if (!token) {
-        console.log('[NavbarMessagesDropdown] No token, skipping API calls')
-        return
+        return;
       }
-      
-      // Si llegamos aquí, el usuario está autenticado y no es una ruta pública
+
       try {
-        await chatStore.fetchUnreadEvents()
-        lastUnreadTotal.value = chatStore.unreadTotal
-        connectWebSocket()
+        await chatStore.fetchUnreadEvents();
+        lastUnreadTotal.value = chatStore.unreadTotal;
+        connectWebSocket();
       } catch (err) {
-        // Silenciar errores 401 ya que son esperados cuando no hay autenticación
         if (err.response?.status !== 401) {
-          console.warn('[NavbarMessagesDropdown] Error fetching unread events:', err)
+          console.warn("[NavbarMessagesDropdown] Error fetching unread events:", err);
         }
       }
-    })
+    });
 
     onBeforeUnmount(() => {
-      if (ws.value) ws.value.close()
-    })
+      if (ws.value) ws.value.close();
+    });
 
     return {
       chatStore,
-      envelopeIcon,
       shouldShow,
-    }
-  }
-}
+      variantClass,
+      isMessagesActive,
+      goToMessages,
+      closeMobileNav,
+    };
+  },
+};
 </script>
 
 <style scoped>
-.badge {
+.jr-shell-messages {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--color-jr-border);
+  background: var(--color-jr-surface);
+  color: var(--color-jr-text);
+  text-decoration: none;
+}
+
+.jr-shell-messages svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.jr-shell-sidebar__badge--rail {
+  position: absolute;
+  top: 0.1rem;
+  right: 0.1rem;
+  min-width: 1rem;
+  padding: 0.05rem 0.25rem;
   font-size: 0.75rem;
-  padding: 0.35em 0.6em;
+  margin-left: 0;
+}
+
+.jr-shell-sidebar__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>

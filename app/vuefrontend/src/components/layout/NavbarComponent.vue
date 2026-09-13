@@ -1,199 +1,229 @@
 <template>
-  <nav
-    v-if="shouldShowNavbar"
-    class="navbar navbar-expand-xl navbar-dark bg-dark border-bottom border-body py-1 navbar-modern"
-    :class="{ 'navbar-modern--menu-open': isNavbarOpen }">
-    <!-- Móvil/tablet: atenúa el contenido detrás; no empuja el layout (ver skin-modern.css) -->
-    <div
-      v-show="isNavbarOpen"
-      class="navbar-modern-backdrop"
-      aria-hidden="true"
-      @click="closeNavbar" />
-    <div
-      class="container-fluid navbar-modern-inner d-flex align-items-center ps-2 pe-3">
-      <!-- Marca (JobRhythm logo — mismo asset que la landing en public/img) -->
-      <router-link
-        class="navbar-brand py-0 d-flex align-items-center"
-        to="/"
-        @click="closeNavbar">
-        <img
-          :src="brandLogoSrc"
-          :alt="brandLogoAlt"
-          class="navbar-brand-logo"
-          width="200"
-          height="50"
-          @error="onTenantLogoError" />
-      </router-link>
-      <!-- Botones globales (fuera del collapsible) -->
-      <ul v-if="shouldShowNavbar" class="navbar-nav me-2 align-items-center flex-row gap-1">
-        <li v-if="showAssistantButton" class="nav-item d-flex align-items-center">
+  <SidebarLayout v-if="shouldShowNavbar" class="jr-app-shell">
+    <SidebarBackdrop v-if="isMobile && sidebarOpen" class="jr-shell-sidebar__backdrop" />
+
+    <Sidebar
+      id="jr-main-sidebar"
+      class="jr-shell-sidebar"
+      variant="sidebar"
+      side="left"
+      :collapsible="isMobile ? 'offcanvas' : 'icon'"
+      :overlay="true"
+      :open-on-hover="!isMobile"
+      v-model:open="sidebarOpen"
+      width="17rem"
+      icon-width="3.25rem">
+      <SidebarSpacer />
+      <SidebarAside>
+        <SidebarPanel>
+          <SidebarHeader class="jr-shell-sidebar__header">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  as-child
+                  v-slot="{ class: btnClass, a11yAttrs }">
+                  <router-link
+                    to="/"
+                    v-bind="a11yAttrs"
+                    :class="[btnClass, 'jr-shell-sidebar__brand-btn']"
+                    :aria-label="brandLogoAlt"
+                    @click="closeSidebar">
+                    <img
+                      :src="brandLogoSrc"
+                      alt=""
+                      class="jr-shell-sidebar__brand-logo"
+                      @error="onTenantLogoError" />
+                  </router-link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarHeader>
+
+          <SidebarContent class="jr-shell-sidebar__content">
+            <SidebarGroup>
+              <SidebarGroupLabel>Modules</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem
+                    v-for="item in moduleMenuItems"
+                    :key="item.text"
+                    :collapsible="true"
+                    :open="openModuleKey === item.text"
+                    @update:open="(value) => onModuleOpenChange(item.text, value)">
+                    <SidebarMenuButton :is-active="isDropdownActive(item)">
+                      <component :is="iconFor(item.icon)" />
+                      <span>{{ item.text }}</span>
+                      <ChevronDown class="jr-shell-sidebar__chevron" />
+                    </SidebarMenuButton>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem
+                        v-for="subItem in item.children"
+                        :key="subItem.route">
+                        <SidebarMenuSubButton
+                          :is-active="isRouteActive(subItem.route)"
+                          @click="navigateTo(subItem.route)">
+                          <span>{{ subItem.text }}</span>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+
+          <SidebarRail />
+        </SidebarPanel>
+      </SidebarAside>
+    </Sidebar>
+
+    <SidebarMain class="jr-app-shell__main">
+      <AppShellTopbar
+        :dashboard-active="isRouteActive('/')"
+        :show-assistant="showAssistantButton"
+        :is-logged-in="isLoggedIn"
+        :user-name="userName"
+        :user-initials="userInitials"
+        :is-tenant-owner="isTenantOwner"
+        @navigate="navigateTo"
+        @logout="logout"
+        @open-assistant="openAssistant" />
+
+      <header class="jr-shell-mobile-bar" aria-label="App navigation">
+        <SidebarTrigger
+          class="jr-shell-mobile-bar__menu"
+          target="jr-main-sidebar"
+          aria-label="Open navigation menu">
+          <Bars />
+        </SidebarTrigger>
+
+        <router-link
+          class="jr-shell-mobile-bar__brand"
+          to="/"
+          @click="closeSidebar">
+          <img
+            :src="brandLogoSrc"
+            :alt="brandLogoAlt"
+            class="jr-shell-mobile-bar__logo"
+            @error="onTenantLogoError" />
+        </router-link>
+
+        <div class="jr-shell-mobile-bar__actions">
           <button
+            v-if="showAssistantButton"
             type="button"
-            class="btn btn-sm btn-outline-light assistant-nav-btn"
-            title="JobRhythm Assistant"
+            class="jr-shell-mobile-bar__action"
             aria-label="Open JobRhythm Assistant"
             @click="openAssistant">
-            <i class="bi bi-magic me-1" aria-hidden="true" />
-            <span class="assistant-nav-btn__label">Assistant</span>
+            <Sparkles />
           </button>
-        </li>
-        <li class="nav-item d-flex align-items-center">
-          <NavbarMessagesDropdown v-if="shouldShowNavbar" />
-        </li>
-      </ul>
-      <button
-        class="navbar-toggler"
-        type="button"
-        @click="toggleNavbar"
-        aria-controls="navbarNav"
-        :aria-expanded="isNavbarOpen"
-        aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div
-        :class="['collapse', 'navbar-collapse', { show: isNavbarOpen }]"
-        id="navbarNav">
-        <!-- Menú izquierdo -->
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li
-            v-for="(item, index) in menuItems"
-            :key="index"
-            :class="['nav-item', { dropdown: item.children }]">
-            <template v-if="item.children">
-              <a
-                class="nav-link dropdown-toggle"
-                href="#"
-                role="button"
-                :class="{ 'text-orange': isDropdownActive(item) }"
-                @click.prevent="toggleDropdown(index)">
-                {{ item.text }}
-              </a>
-              <ul class="dropdown-menu" :class="{ show: item.isOpen }">
-                <li
-                  v-for="(subItem, subIndex) in item.children"
-                  :key="subIndex">
-                  <router-link
-                    :to="subItem.route"
-                    class="dropdown-item"
-                    @click="closeNavbar">
-                    {{ subItem.text }}
-                  </router-link>
-                </li>
-              </ul>
-            </template>
-            <template v-else>
-              <router-link
-                :to="item.route"
-                class="nav-link"
-                @click="closeNavbar">
-                {{ item.text }}
-              </router-link>
-            </template>
-          </li>
-        </ul>
+          <NavbarMessagesDropdown variant="rail" />
+        </div>
+      </header>
 
-        <!-- Menú derecho -->
-        <ul class="navbar-nav ms-auto d-flex align-items-center">
-          <!-- Dynamic Messages Dropdown Component -->
-          <li class="nav-item" v-if="isLoggedIn">
-            <div class="nav-item dropdown user-dropdown">
-              <a
-                class="nav-link dropdown-toggle user-dropdown-toggle d-flex align-items-center"
-                href="#"
-                role="button"
-                @click.prevent="toggleUserDropdown"
-                aria-expanded="false">
-                <img
-                  src="@/assets/img/user.svg"
-                  alt="User"
-                  class="user-icon me-2" />
-              </a>
-              <ul
-                class="dropdown-menu dropdown-menu-end user-dropdown-menu"
-                :class="{ show: isUserDropdownOpen }">
-                <li class="user-dropdown-header">
-                  <strong>Welcome</strong>
-                  <div class="user-name">{{ userName }}</div>
-                </li>
-                <li>
-                  <router-link
-                    to="/about"
-                    class="dropdown-item"
-                    @click="closeNavbar">
-                    About
-                  </router-link>
-                </li>
-                <li v-if="isTenantOwner">
-                  <router-link
-                    to="/billing"
-                    class="dropdown-item"
-                    @click="closeNavbar">
-                    Billing
-                  </router-link>
-                </li>
-                <li>
-                  <h6
-                    class="dropdown-header text-muted mb-0 mt-1 px-3 py-1 small">
-                    Configuration
-                  </h6>
-                </li>
-                <li class="mx-1">
-                  <router-link
-                    to="/document-types"
-                    class="dropdown-item"
-                    @click="closeNavbar">
-                    Transactions Types
-                  </router-link>
-                </li>
-                <li class="mx-1">
-                  <router-link
-                    to="/inventory-master-data-setup"
-                    class="dropdown-item"
-                    @click="closeNavbar">
-                    Inventory Master Data Setup
-                  </router-link>
-                </li>
-                <li><hr class="dropdown-divider" /></li>
-                <li>
-                  <router-link
-                    to="/logout"
-                    class="dropdown-item"
-                    @click="logout">
-                    Log Out
-                  </router-link>
-                </li>
-              </ul>
-            </div>
-          </li>
-          <li class="nav-item" v-if="!isLoggedIn">
-            <router-link to="/login" class="nav-link" @click="closeNavbar">
-              Log In
-            </router-link>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+      <main class="jr-app-shell__content">
+        <slot />
+      </main>
+      <FooterComponent />
+    </SidebarMain>
+  </SidebarLayout>
 </template>
 
 <script>
+import Box from "@primeicons/vue/box";
+import Building from "@primeicons/vue/building";
+import Bars from "@primeicons/vue/bars";
+import ChevronDown from "@primeicons/vue/chevron-down";
+import File from "@primeicons/vue/file";
+import Home from "@primeicons/vue/home";
+import List from "@primeicons/vue/list";
+import MapMarker from "@primeicons/vue/map-marker";
+import Sparkles from "@primeicons/vue/sparkles";
+import Users from "@primeicons/vue/users";
+import AppShellTopbar from "./AppShellTopbar.vue";
+import Sidebar from "primevue/sidebar";
+import SidebarAside from "primevue/sidebaraside";
+import SidebarBackdrop from "primevue/sidebarbackdrop";
+import SidebarContent from "primevue/sidebarcontent";
+import SidebarGroup from "primevue/sidebargroup";
+import SidebarGroupContent from "primevue/sidebargroupcontent";
+import SidebarGroupLabel from "primevue/sidebargrouplabel";
+import SidebarHeader from "primevue/sidebarheader";
+import SidebarLayout from "primevue/sidebarlayout";
+import SidebarMain from "primevue/sidebarmain";
+import SidebarMenu from "primevue/sidebarmenu";
+import SidebarMenuButton from "primevue/sidebarmenubutton";
+import SidebarMenuItem from "primevue/sidebarmenuitem";
+import SidebarMenuSub from "primevue/sidebarmenusub";
+import SidebarMenuSubButton from "primevue/sidebarmenusubbutton";
+import SidebarMenuSubItem from "primevue/sidebarmenusubitem";
+import SidebarPanel from "primevue/sidebarpanel";
+import SidebarRail from "primevue/sidebarrail";
+import SidebarSpacer from "primevue/sidebarspacer";
+import SidebarTrigger from "primevue/sidebartrigger";
+import FooterComponent from "./FooterComponent.vue";
 import NavbarMessagesDropdown from "./NavbarMessagesDropdown.vue";
 import { openAssistant } from "@/utils/assistantBus";
 
+const NAV_ICONS = {
+  home: Home,
+  operations: List,
+  inventory: Box,
+  contracts: File,
+  entities: Building,
+  crews: Users,
+  communities: MapMarker,
+};
+
+const MOBILE_BREAKPOINT = 1024;
+
 export default {
+  name: "NavbarComponent",
   components: {
+    Bars,
+    Box,
+    Building,
+    ChevronDown,
+    File,
+    AppShellTopbar,
+    FooterComponent,
+    Home,
+    List,
+    MapMarker,
     NavbarMessagesDropdown,
+    Sidebar,
+    SidebarAside,
+    SidebarBackdrop,
+    SidebarContent,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarLayout,
+    SidebarMain,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
+    SidebarPanel,
+    SidebarRail,
+    SidebarSpacer,
+    SidebarTrigger,
+    Sparkles,
+    Users,
   },
   data() {
     return {
       isLoggedIn: false,
-      isNavbarOpen: false,
-      isUserDropdownOpen: false,
+      isMobile: false,
+      sidebarOpen: false,
       menuItems: [
-        { text: "Dashboard", route: "/" },
+        { text: "Dashboard", route: "/", icon: "home" },
         {
           text: "Operations",
-          isOpen: false,
+          icon: "operations",
           children: [
             { text: "Schedule", route: "/schedule" },
             { text: "Work Order Viewer", route: "/chat-general" },
@@ -211,7 +241,7 @@ export default {
         },
         {
           text: "Inventory",
-          isOpen: false,
+          icon: "inventory",
           children: [
             {
               text: "Dashboard",
@@ -267,7 +297,7 @@ export default {
         },
         {
           text: "Contracts & Pricing",
-          isOpen: false,
+          icon: "contracts",
           children: [
             { text: "Contracts", route: "/contracts" },
             { text: "Piece Work Prices", route: "/work-prices" },
@@ -276,7 +306,7 @@ export default {
         },
         {
           text: "Entities",
-          isOpen: false,
+          icon: "entities",
           children: [
             {
               text: "Builders & Parties",
@@ -307,7 +337,7 @@ export default {
         },
         {
           text: "Crews and Fleet",
-          isOpen: false,
+          icon: "crews",
           children: [
             {
               text: "Categories",
@@ -333,7 +363,7 @@ export default {
         },
         {
           text: "Communities",
-          isOpen: false,
+          icon: "communities",
           children: [
             { text: "Communities Map", route: "/map" },
             {
@@ -342,15 +372,13 @@ export default {
             },
           ],
         },
-        /* About y Configuration solo en el menú de usuario (evita desborde en pantallas medianas) */
       ],
       userName: "",
       isTenantOwner: false,
-      /** URL absoluta del logo del tenant (desde /api/user_detail/) */
       tenantLogoUrl: null,
       tenantName: null,
-      /** Si falla la carga del logo del tenant, usar JobRhythm */
       tenantLogoFailed: false,
+      openModuleKey: null,
     };
   },
   computed: {
@@ -368,18 +396,20 @@ export default {
       return this.tenantName || "JobRhythm";
     },
     shouldShowNavbar() {
-      // Verificar si la ruta actual tiene hideNavbar en su meta
       return !this.$route.meta.hideNavbar;
     },
-    isDropdownActive() {
-      return (item) => {
-        return (
-          item.children &&
-          item.children.some((subItem) => this.$route.path === subItem.route)
-        );
-      };
+    moduleMenuItems() {
+      return this.menuItems.filter((item) => item.children);
     },
-    /** Authenticated users; prefer view_document when permissions are cached. */
+    userInitials() {
+      const name = (this.userName || "JR").trim();
+      if (!name) return "JR";
+      const parts = name.split(/\s+/).filter(Boolean);
+      if (parts.length === 1) {
+        return parts[0].slice(0, 2).toUpperCase();
+      }
+      return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
+    },
     showAssistantButton() {
       if (!this.isLoggedIn) return false;
       try {
@@ -395,23 +425,34 @@ export default {
     },
   },
   mounted() {
+    this.syncViewport();
     this.checkUserIdentity();
-    this._onResizeNavbar = () => {
-      if (window.innerWidth >= 1200) {
-        this.closeNavbar();
-      } else {
-        this.syncMobileMenuBodyScroll();
-      }
-    };
-    window.addEventListener("resize", this._onResizeNavbar, { passive: true });
+    this.syncOpenModule();
+    this._onResize = () => this.syncViewport();
+    window.addEventListener("resize", this._onResize, { passive: true });
   },
   beforeUnmount() {
-    if (this._onResizeNavbar) {
-      window.removeEventListener("resize", this._onResizeNavbar);
+    if (this._onResize) {
+      window.removeEventListener("resize", this._onResize);
     }
     document.body.style.overflow = "";
   },
   methods: {
+    iconFor(name) {
+      return NAV_ICONS[name] || Home;
+    },
+    syncViewport() {
+      const mobile = window.innerWidth < MOBILE_BREAKPOINT;
+      if (!mobile && this.isMobile) {
+        this.sidebarOpen = false;
+      }
+      if (mobile && !this.isMobile) {
+        this.sidebarOpen = false;
+      }
+      this.isMobile = mobile;
+      document.body.style.overflow =
+        mobile && this.sidebarOpen ? "hidden" : "";
+    },
     checkUserIdentity() {
       const token = localStorage.getItem("authToken");
       this.isLoggedIn = !!token;
@@ -438,88 +479,60 @@ export default {
         this.tenantLogoFailed = true;
       }
     },
-    toggleDropdown(index) {
-      this.menuItems.forEach((item, i) => {
-        if (i === index) {
-          item.isOpen = !item.isOpen;
-        } else {
-          item.isOpen = false;
-        }
-      });
-      this.isUserDropdownOpen = false;
+    isRouteActive(route) {
+      if (!route) return false;
+      if (route === "/") {
+        return this.$route.path === "/";
+      }
+      return this.$route.path === route || this.$route.path.startsWith(`${route}/`);
     },
-    toggleUserDropdown() {
-      this.isUserDropdownOpen = !this.isUserDropdownOpen;
-      this.menuItems.forEach((item) => {
-        if (item.children) {
-          item.isOpen = false;
-        }
-      });
+    isDropdownActive(item) {
+      return (
+        item.children &&
+        item.children.some((subItem) => this.isRouteActive(subItem.route))
+      );
+    },
+    syncOpenModule() {
+      const active = this.moduleMenuItems.find((item) => this.isDropdownActive(item));
+      this.openModuleKey = active ? active.text : null;
+    },
+    onModuleOpenChange(text, isOpen) {
+      this.openModuleKey = isOpen ? text : null;
+    },
+    navigateTo(route) {
+      if (!route) return;
+      this.$router.push(route);
+      this.closeSidebar();
+    },
+    closeSidebar() {
+      if (this.isMobile) {
+        this.sidebarOpen = false;
+        document.body.style.overflow = "";
+      }
     },
     logout() {
       localStorage.removeItem("authToken");
       localStorage.removeItem("userPermissions");
       this.isLoggedIn = false;
       this.$router.push("/login");
-      this.closeNavbar();
-    },
-    syncMobileMenuBodyScroll() {
-      if (typeof document === "undefined") return;
-      const mobile = window.innerWidth < 1200;
-      if (mobile && this.isNavbarOpen) {
-        document.body.style.overflow = "hidden";
-      } else {
-        document.body.style.overflow = "";
-      }
-    },
-    toggleNavbar() {
-      this.isNavbarOpen = !this.isNavbarOpen;
-      // Al abrir o cerrar el menú móvil, ningún submenú desplegado (solo se abren con un toque)
-      this.isUserDropdownOpen = false;
-      this.menuItems.forEach((item) => {
-        if (item.children) {
-          item.isOpen = false;
-        }
-      });
-      this.syncMobileMenuBodyScroll();
-    },
-    closeNavbar() {
-      this.isNavbarOpen = false;
-      this.isUserDropdownOpen = false;
-      this.menuItems.forEach((item) => {
-        if (item.children) {
-          item.isOpen = false;
-        }
-      });
-      this.syncMobileMenuBodyScroll();
+      this.closeSidebar();
     },
     openAssistant() {
-      this.closeNavbar();
+      this.closeSidebar();
       openAssistant();
     },
   },
   watch: {
+    sidebarOpen(open) {
+      if (this.isMobile) {
+        document.body.style.overflow = open ? "hidden" : "";
+      }
+    },
     $route() {
       this.checkUserIdentity();
-      this.closeNavbar();
+      this.syncOpenModule();
+      this.closeSidebar();
     },
   },
 };
 </script>
-
-<style scoped>
-/* Los estilos del navbar se manejan completamente en skin-modern.css */
-.assistant-nav-btn {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  font-size: 0.8rem;
-  padding: 0.25rem 0.55rem;
-}
-
-@media (max-width: 575.98px) {
-  .assistant-nav-btn__label {
-    display: none;
-  }
-}
-</style>

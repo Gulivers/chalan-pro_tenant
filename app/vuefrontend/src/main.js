@@ -38,6 +38,7 @@ import "@/assets/css/skin-modern.css";
 
 // JobRhythm Design System (Pilot): after skin-modern; scoped to .jr-pilot
 import "@/assets/css/jr-design-system.css";
+import "@/assets/css/jr-shell-nav.css";
 import PrimeVue from "primevue/config";
 import { JobRhythmPreset } from "@/ui/jr-primevue-preset";
 

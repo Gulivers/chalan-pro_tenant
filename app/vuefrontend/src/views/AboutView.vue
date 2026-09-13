@@ -1,117 +1,111 @@
 <template>
-  <section class="about-page py-">
-    <div class="container">
-      <div class="d-flex justify-content-end p-3">
+  <JRPage>
+    <div class="jr-about">
+      <div class="jr-about__toolbar">
         <div
-          class="lang-toggle"
+          class="jr-about__lang"
           role="group"
           :aria-label="copy[currentLang].langToggleLabel">
           <button
             type="button"
-            class="lang-btn"
-            :class="{ active: currentLang === 'es' }"
+            class="jr-about__lang-btn"
+            :class="{ 'jr-about__lang-btn--active': currentLang === 'es' }"
+            :aria-pressed="currentLang === 'es'"
             @click="currentLang = 'es'">
             ES
           </button>
           <button
             type="button"
-            class="lang-btn"
-            :class="{ active: currentLang === 'en' }"
+            class="jr-about__lang-btn"
+            :class="{ 'jr-about__lang-btn--active': currentLang === 'en' }"
+            :aria-pressed="currentLang === 'en'"
             @click="currentLang = 'en'">
             EN
           </button>
         </div>
       </div>
 
-      <div class="hero-card p-4 p-md-5 mb-5">
-        <div class="row align-items-center g-4">
-          <div class="col-lg-8">
-            <img
-              :src="jobrhythmLogoUrl"
-              alt="JobRhythm"
-              class="about-logo mb-2 mb-md-4"
-              width="240"
-              height="60" />
-            <span class="kicker">{{ copy[currentLang].kicker }}</span>
-            <h1 class="display-5 fw-bold mt-2 mb-3">
-              {{ copy[currentLang].heroTitle }}
-            </h1>
-            <p class="lead mb-0">
-              {{ copy[currentLang].heroText }}
-            </p>
-          </div>
-          <div class="col-lg-4">
-            <div class="hero-meta p-3 p-md-4">
-              <h2 class="h5 fw-semibold mb-3">
-                {{ copy[currentLang].metaTitle }}
-              </h2>
-              <ul class="meta-list mb-0">
-                <li v-for="item in copy[currentLang].metaItems" :key="item">
-                  {{ item }}
-                </li>
-              </ul>
-            </div>
-          </div>
+      <section class="jr-about__hero" aria-labelledby="about-hero-title">
+        <div class="jr-about__hero-main">
+          <img
+            :src="jobrhythmLogoUrl"
+            alt="JobRhythm"
+            class="jr-about__logo"
+            width="240"
+            height="60" />
+          <span class="jr-about__kicker">{{ copy[currentLang].kicker }}</span>
+          <h1 id="about-hero-title" class="jr-about__title">
+            {{ copy[currentLang].heroTitle }}
+          </h1>
+          <p class="jr-about__lead">
+            {{ copy[currentLang].heroText }}
+          </p>
         </div>
-      </div>
+        <aside class="jr-about__hero-meta" aria-labelledby="about-meta-title">
+          <h2 id="about-meta-title" class="jr-about__meta-title">
+            {{ copy[currentLang].metaTitle }}
+          </h2>
+          <ul class="jr-about__meta-list">
+            <li v-for="item in copy[currentLang].metaItems" :key="item">
+              {{ item }}
+            </li>
+          </ul>
+        </aside>
+      </section>
 
-      <div class="content-block mb-5">
-        <h2 class="section-title mb-3">{{ copy[currentLang].modulesTitle }}</h2>
-        <p class="section-text mb-4">
+      <JRSection :title="copy[currentLang].modulesTitle">
+        <p class="jr-about__intro">
           {{ copy[currentLang].modulesIntro }}
         </p>
-        <div class="row g-3 g-md-4">
-          <div
-            class="col-md-6 col-xl-4"
-            v-for="module in copy[currentLang].modules"
-            :key="module.title">
-            <article class="module-card h-100 p-4">
-              <h3 class="h5 fw-semibold mb-2">{{ module.title }}</h3>
-              <p class="mb-0">{{ module.description }}</p>
-            </article>
-          </div>
-        </div>
-      </div>
-
-      <div class="content-block mb-5">
-        <h2 class="section-title mb-3">{{ copy[currentLang].flowTitle }}</h2>
-        <p class="section-text mb-4">
-          {{ copy[currentLang].flowIntro }}
-        </p>
-        <div class="flow-grid">
+        <div class="jr-about__module-grid">
           <article
-            class="flow-step"
-            v-for="(step, index) in copy[currentLang].operationalFlow"
-            :key="step.title">
-            <div class="flow-index">{{ index + 1 }}</div>
-            <div>
-              <h3 class="h6 fw-semibold mb-1">{{ step.title }}</h3>
-              <p class="mb-0">{{ step.description }}</p>
-            </div>
+            v-for="module in copy[currentLang].modules"
+            :key="module.title"
+            class="jr-about__module-card">
+            <h3 class="jr-about__card-title">{{ module.title }}</h3>
+            <p class="jr-about__card-copy">{{ module.description }}</p>
           </article>
         </div>
-      </div>
+      </JRSection>
 
-      <div class="content-block">
-        <h2 class="section-title mb-3">{{ copy[currentLang].valueTitle }}</h2>
-        <div class="row g-3">
-          <div
-            class="col-md-4 p-3"
+      <JRSection :title="copy[currentLang].flowTitle">
+        <p class="jr-about__intro">
+          {{ copy[currentLang].flowIntro }}
+        </p>
+        <ol class="jr-about__flow">
+          <li
+            v-for="(step, index) in copy[currentLang].operationalFlow"
+            :key="step.title"
+            class="jr-about__flow-step">
+            <span class="jr-about__flow-index" aria-hidden="true">
+              {{ index + 1 }}
+            </span>
+            <div class="jr-about__flow-body">
+              <h3 class="jr-about__card-title">{{ step.title }}</h3>
+              <p class="jr-about__card-copy">{{ step.description }}</p>
+            </div>
+          </li>
+        </ol>
+      </JRSection>
+
+      <JRSection :title="copy[currentLang].valueTitle">
+        <div class="jr-about__value-grid">
+          <article
             v-for="point in copy[currentLang].valuePoints"
-            :key="point.title">
-            <article class="value-card h-100 p-4">
-              <h3 class="h6 fw-semibold mb-2">{{ point.title }}</h3>
-              <p class="mb-0">{{ point.description }}</p>
-            </article>
-          </div>
+            :key="point.title"
+            class="jr-about__value-card">
+            <h3 class="jr-about__card-title">{{ point.title }}</h3>
+            <p class="jr-about__card-copy">{{ point.description }}</p>
+          </article>
         </div>
-      </div>
+      </JRSection>
     </div>
-  </section>
+  </JRPage>
 </template>
 
 <script setup>
 import { ref } from "vue";
+import { JRPage, JRSection } from "@ui";
 
 const currentLang = ref("en");
 const base = process.env.BASE_URL || "/";
@@ -338,152 +332,245 @@ const copy = {
 </script>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
-
-.about-page {
-  font-family: "Montserrat", sans-serif;
-  background: #f8fafc;
+.jr-about {
+  max-width: 71.25rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: left;
 }
 
-.container {
-  max-width: 1140px;
+.jr-about__toolbar {
+  display: flex;
+  justify-content: flex-end;
 }
 
-.about-logo {
-  display: block;
-  width: min(100%, 240px);
-  max-width: 240px;
-  height: auto;
-  object-fit: contain;
-  margin-left: 0;
-  margin-right: 0;
-}
-
-.lang-toggle {
+.jr-about__lang {
   display: inline-flex;
-  border: 1px solid #dbe5ff;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #ffffff;
+  border: 1px solid var(--color-jr-border);
+  background: var(--color-jr-surface);
 }
 
-.lang-btn {
+.jr-about__lang-btn {
   border: 0;
   background: transparent;
-  color: #395ecb;
+  color: var(--color-jr-primary);
+  font-size: 0.8125rem;
   font-weight: 600;
-  font-size: 0.85rem;
+  line-height: 1.3;
   padding: 0.4rem 0.7rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.lang-btn.active {
-  background: #395ecb;
+.jr-about__lang-btn:hover {
+  background: var(--color-jr-surface-muted);
+}
+
+.jr-about__lang-btn:focus-visible {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+.jr-about__lang-btn--active {
+  background: var(--color-jr-primary);
   color: #ffffff;
 }
 
-.kicker {
+.jr-about__lang-btn--active:hover {
+  background: var(--color-jr-primary-hover);
+}
+
+.jr-about__hero {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--color-jr-surface);
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel, 0.75rem);
+}
+
+@media (min-width: 1024px) {
+  .jr-about__hero {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 1.5rem;
+    padding: 1.5rem 1.75rem;
+  }
+}
+
+.jr-about__logo {
   display: block;
-  margin-top: 0.35rem;
-  font-size: 0.78rem;
+  width: min(100%, 15rem);
+  max-width: 15rem;
+  height: auto;
+  object-fit: contain;
+}
+
+.jr-about__kicker {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
   letter-spacing: 0.08em;
-  font-weight: 700;
-  color: #395ecb;
+  font-weight: 600;
+  color: var(--color-jr-primary);
 }
 
-.hero-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f4f7ff 100%);
-  border: 1px solid #dbe5ff;
-  border-radius: 16px;
+.jr-about__title {
+  margin: 0.5rem 0 0.75rem;
+  font-size: 1.3125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-jr-text);
 }
 
-h1,
-.section-title {
-  color: #395ecb;
+@media (min-width: 768px) {
+  .jr-about__title {
+    font-size: 1.75rem;
+  }
 }
 
-.lead,
-.section-text {
-  color: #495057;
-  font-weight: 500;
-}
-
-.hero-meta {
-  background: #ffffff;
-  border: 1px solid #e6ecff;
-  border-radius: 12px;
-}
-
-.meta-list {
-  list-style: none;
-  padding-left: 0;
+.jr-about__lead {
   margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--color-jr-muted);
 }
 
-.meta-list li {
-  padding: 0.3rem 0;
-  color: #4a4a4a;
-  font-size: 0.95rem;
+.jr-about__hero-meta {
+  padding: 1rem 1.25rem;
+  background: var(--color-jr-surface-muted);
+  border: 1px solid var(--color-jr-border);
 }
 
-.module-card,
-.value-card {
-  background: #ffffff;
-  border: 1px solid #e7ebf5;
-  border-radius: 12px;
+.jr-about__meta-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-jr-text);
 }
 
-.module-card h3,
-.value-card h3,
-.flow-step h3 {
-  color: #2f4fb2;
+.jr-about__meta-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
-.module-card p,
-.value-card p,
-.flow-step p {
-  color: #4a4a4a;
-  font-size: 0.95rem;
+.jr-about__meta-list li {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--color-jr-muted);
 }
 
-.flow-grid {
+.jr-about__intro {
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-jr-muted);
+}
+
+.jr-about__module-grid {
   display: grid;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
-.flow-step {
+@media (min-width: 768px) {
+  .jr-about__module-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .jr-about__module-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.jr-about__module-card,
+.jr-about__value-card {
+  padding: 1rem 1.25rem;
+  background: var(--color-jr-surface-muted);
+  border: 1px solid var(--color-jr-border);
+}
+
+.jr-about__card-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-jr-text);
+}
+
+.jr-about__card-copy {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-jr-muted);
+}
+
+.jr-about__flow {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: grid;
-  grid-template-columns: 40px 1fr;
+  gap: 0.75rem;
+}
+
+.jr-about__flow-step {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
   align-items: start;
-  gap: 12px;
-  background: #ffffff;
-  border: 1px solid #e7ebf5;
-  border-radius: 12px;
-  padding: 14px 16px;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: var(--color-jr-surface-muted);
+  border: 1px solid var(--color-jr-border);
 }
 
-.flow-index {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #395ecb;
-  color: #ffffff;
+.jr-about__flow-index {
+  width: 2rem;
+  height: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
-  font-weight: 700;
+  background: var(--color-jr-primary);
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1;
 }
 
-@media (max-width: 768px) {
-  h1 {
-    font-size: 1.9rem;
+.jr-about__flow-body {
+  min-width: 0;
+}
+
+.jr-about__value-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .jr-about__value-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .jr-about__logo {
+    margin-inline: auto;
   }
 
-  .about-logo {
-    width: min(78vw, 220px);
-    max-width: 220px;
-    margin-left: auto;
-    margin-right: auto;
+  .jr-about__kicker,
+  .jr-about__title,
+  .jr-about__lead {
+    text-align: center;
   }
 }
 </style>
