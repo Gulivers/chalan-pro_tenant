@@ -84,6 +84,10 @@ class WorkAccountViewSet(viewsets.ModelViewSet):
         """Asigna automáticamente el usuario actual al campo created_by"""
         serializer.save(created_by=self.request.user)
 
+    def perform_destroy(self, instance):
+        instance.raise_if_deletion_blocked()
+        super().perform_destroy(instance)
+
     @action(detail=True, methods=["post"], url_path="sync-schedule-titles")
     def sync_schedule_titles(self, request, pk=None):
         """

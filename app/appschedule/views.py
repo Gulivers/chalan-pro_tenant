@@ -176,11 +176,14 @@ class EventViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         deleted = request.query_params.get('deleted', False)
         if deleted:
-            event = Event.objects.get(pk=kwargs['pk'])
+            event = get_object_or_404(Event, pk=kwargs['pk'])
+            event.raise_if_deletion_blocked()
             event.deleted = True
             event.save()
             return Response({'message': f'Event with ID {event.id} has been deleted'}, status=status.HTTP_200_OK)
         instance = self.get_object()
+        if hasattr(instance, 'raise_if_deletion_blocked'):
+            instance.raise_if_deletion_blocked()
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 

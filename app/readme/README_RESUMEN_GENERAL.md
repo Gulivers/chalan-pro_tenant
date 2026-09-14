@@ -13,6 +13,7 @@
     - [Backend (Django)](#backend-django)
     - [Frontend (Vue.js)](#frontend-vuejs)
     - [Infraestructura](#infraestructura)
+  - [2.3 Backend - Exception Handler y Protección de Datos Relacionales](#23-backend---exception-handler-y-protección-de-datos-relacionales)
 - [2.1 Flujo del Proceso de Creación de Tenant](#21-flujo-del-proceso-de-creación-de-tenant)
   - [2.1.1 Diagrama de Flujo](#211-diagrama-de-flujo)
   - [2.1.2 Puntos Clave del Flujo](#212-puntos-clave-del-flujo)
@@ -203,6 +204,9 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 │   │   ├── wsgi.py                        # WSGI application (legacy, no usado)
 │   │   ├── asgi.py                        # ASGI application para Daphne (WebSocket)
 │   │   │
+│   │   ├── api/                           # Utilidades y configuración API REST
+│   │   │   └── exception_handler.py       # Manejador global de excepciones DRF (409 in_use, 400 unique)
+│   │   │
 │   │   └── middleware/                    # Middlewares personalizados
 │   │       ├── tenant_hostname.py         # Normaliza hostname (remueve puerto)
 │   │       ├── dynamic_allowed_hosts.py   # Actualiza ALLOWED_HOSTS dinámicamente
@@ -295,6 +299,8 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 
 - **`tenants/apps.py`**: `TenantsConfig.ready()` se ejecuta al iniciar Django y carga todos los dominios activos en `CSRF_TRUSTED_ORIGINS` (carga inicial).
 
+- **`project/api/exception_handler.py`**: Manejador global personalizado de excepciones para DRF (`REST_FRAMEWORK['EXCEPTION_HANDLER']`). Intercepta `ProtectedError` e `IntegrityError` retornando HTTP 409 (`in_use`), errores de unicidad como HTTP 400 mapeados por campo, y desincronizaciones de secuencia como HTTP 500 (ver [2.3 Backend - Exception Handler y Protección de Datos Relacionales](#23-backend---exception-handler-y-protección-de-datos-relacionales)).
+
 #### Frontend (Vue.js)
 
 - **`vuefrontend/src/router/index.js`**: Configuración de rutas Vue Router. Define rutas públicas (`/onboarding`, `/login`) con `meta: { hideNavbar: true }` y rutas protegidas que requieren autenticación.
@@ -329,6 +335,44 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
   - `ALLOWED_HOSTS` (incluye wildcard `*.chalanpro.net`)
   - `CSRF_TRUSTED_ORIGINS` (incluye wildcard `https://*.chalanpro.net`)
   - `TENANT_BASE_DOMAIN=chalanpro.net`
+
+### 2.3 Backend - Exception Handler y Protección de Datos Relacionales
+
+El sistema incluye un manejador personalizado de excepciones (`project/api/exception_handler.py`) configurado en `REST_FRAMEWORK['EXCEPTION_HANDLER']` que garantiza una respuesta uniforme y segura ante intentos de eliminación de entidades con datos relacionados:
+
+- **ProtectedError**: Captura intentos de eliminar registros que están en uso por otros modelos (`on_delete=models.PROTECT`), devolviendo HTTP 409 Conflict con ejemplos de registros bloqueantes.
+- **IntegrityError**: Maneja violaciones de restricciones de base de datos (foreign keys, constraints) con el mismo patrón (409 para FK/in-use; 400 para constraints UNIQUE con mapeo amigable por campo).
+- **Respuesta consistente**: Siempre devuelve la estructura:
+  ```json
+  {
+    "detail": "This record is in use and cannot be deleted. Inactivate it instead.",
+    "code": "in_use",
+    "examples": ["..."]
+  }
+  ```
+- **Frontend**: El cliente HTTP global (`utils/axiosConfig.js`) intercepta automáticamente las respuestas `409` con `code: "in_use"` en peticiones `DELETE` y muestra una alerta visual con SweetAlert (`"This record is in use and cannot be deleted. Inactivate it instead."`).
+
+#### Regla de Protección para Cuentas de Trabajo (`WorkAccount`)
+
+Una cuenta de obra (`WorkAccount`) no puede ser eliminada si tiene alguno de los siguientes datos relacionados:
+- **Chat**: Mensajes globales de chat vinculados a la obra (`EventChatMessage.work_account`, `on_delete=models.PROTECT`).
+- **Notes**: Notas de obra (`EventNote.work_account`) si contienen texto o apuntes registrados.
+- **Folder**: Imágenes o planos subidos en el folder de la obra (`EventImage.work_account`, `on_delete=models.PROTECT`).
+- **Contracts**: Contratos asociados (`Contract.work_account`, `on_delete=models.PROTECT`).
+- **Transactions**: Transacciones y documentos contables u operacionales (`Document.work_account`, `on_delete=models.PROTECT`).
+- **Schedule (Eventos y Borradores)**: Citas programadas en el calendario (`Event.work_account`, `on_delete=models.PROTECT`) o borradores pendientes (`EventDraft.work_account`, `on_delete=models.PROTECT`).
+
+La validación se ejecuta tanto en cascada relacional de PostgreSQL (`PROTECT`) como en validación de aplicación previa (`WorkAccount.raise_if_deletion_blocked()`) invocada en `WorkAccountViewSet.perform_destroy()`.
+
+#### Regla de Protección para Eventos del Calendario (`Event`)
+
+Un evento del calendario (`Event`) no puede ser eliminado (ni mediante borrado físico ni mediante soft-delete `?deleted=true` desde `/api/schedule/{id}/`) si tiene alguno de los siguientes datos relacionados:
+- **Chat**: Mensajes de chat asociados al evento (`EventChatMessage.event`, `on_delete=models.PROTECT`).
+- **Notes**: Notas del evento (`EventNote.event`) cuando contienen anotaciones.
+- **Folder**: Imágenes o fotografías asociadas al evento (`EventImage.event`, `on_delete=models.PROTECT`).
+- **Contracts**: Contratos vinculados al evento (`Contract.schedule`, `on_delete=models.PROTECT`, `related_name='contracts'`).
+
+La validación se efectúa mediante `Event.raise_if_deletion_blocked()` en `EventViewSet.destroy()` y mediante restricciones de integridad en clave foránea (`PROTECT`), retornando HTTP 409 con el detalle de las dependencias encontradas.
 
 ---
 

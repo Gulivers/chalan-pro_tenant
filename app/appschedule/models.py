@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q
+from django.db.models import ProtectedError, Q
 from django.contrib.auth.models import User
 from crewsapp.models import Crew
 from ctrctsapp.models import Builder, HouseModel, Job
@@ -31,7 +31,7 @@ class Event(models.Model):
     end_dt = models.DateField()
     crew = models.ForeignKey(Crew, on_delete=models.CASCADE, verbose_name='Crew')
     # WorkAccount es el nuevo campo principal para identificar la obra
-    work_account = models.ForeignKey('apptransactions.WorkAccount', on_delete=models.SET_NULL, null=True, blank=True, related_name='events')
+    work_account = models.ForeignKey('apptransactions.WorkAccount', on_delete=models.PROTECT, null=True, blank=True, related_name='events')
     # Campos legacy mantenidos por compatibilidad (se sincronizan desde work_account)
     builder = models.ForeignKey(Builder, on_delete=models.CASCADE, related_query_name='events', blank=True, null=True)
     job = models.ForeignKey(Job, on_delete=models.SET_NULL, related_query_name='events', blank=True, null=True)
@@ -50,7 +50,45 @@ class Event(models.Model):
     deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.title
+        return self.title or f"Event #{self.id}"
+
+    def get_deletion_blockers(self):
+        """
+        Return related records that prevent deleting this event.
+        Covers chat, notes, folder (images), and contracts.
+        """
+        blockers = []
+
+        note = getattr(self, 'note', None)
+        if note and (note.notes or "").strip():
+            blockers.append(note)
+
+        chat = self.chat_messages.first()
+        if chat:
+            blockers.append(chat)
+
+        image = self.images.first()
+        if image:
+            blockers.append(image)
+
+        contracts = getattr(self, 'contracts', None)
+        contract = contracts.first() if contracts is not None else None
+        if contract:
+            blockers.append(contract)
+
+        return blockers
+
+    def raise_if_deletion_blocked(self):
+        blockers = self.get_deletion_blockers()
+        if blockers:
+            raise ProtectedError(
+                "Cannot delete event while related records exist.",
+                set(blockers),
+            )
+
+    def delete(self, *args, **kwargs):
+        self.raise_if_deletion_blocked()
+        return super().delete(*args, **kwargs)
     
     def clean(self):
         if self.is_absence:
@@ -134,7 +172,7 @@ class EventDraft(models.Model):
     end_dt = models.DateField()
     crew = models.ForeignKey(Crew, on_delete=models.CASCADE, related_query_name='drafts')
     # WorkAccount es el nuevo campo principal para identificar la obra
-    work_account = models.ForeignKey('apptransactions.WorkAccount', on_delete=models.SET_NULL, null=True, blank=True, related_name='event_drafts')
+    work_account = models.ForeignKey('apptransactions.WorkAccount', on_delete=models.PROTECT, null=True, blank=True, related_name='event_drafts')
     # Campos legacy mantenidos por compatibilidad (se sincronizan desde work_account)
     builder = models.ForeignKey(Builder, on_delete=models.CASCADE, related_query_name='drafts', blank=True, null=True)
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_query_name='drafts', blank=True, null=True)
@@ -230,7 +268,10 @@ class EventNote(models.Model):
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
-        return self.notes
+        if self.notes:
+            clean = self.notes.replace('<p>', '').replace('</p>', ' ').strip()
+            return f"Note: {clean[:40]}" if clean else "Note"
+        return "Note"
     
     class Meta:
         # Asegurar que solo haya una nota por work_account
@@ -244,9 +285,9 @@ class EventNote(models.Model):
 
 
 class EventChatMessage(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='chat_messages', null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.PROTECT, related_name='chat_messages', null=True, blank=True)
     # WorkAccount es el campo principal para identificar los mensajes de chat globales por obra
-    work_account = models.ForeignKey('apptransactions.WorkAccount', on_delete=models.CASCADE, related_name='work_account_chat_messages', null=True, blank=True)
+    work_account = models.ForeignKey('apptransactions.WorkAccount', on_delete=models.PROTECT, related_name='work_account_chat_messages', null=True, blank=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     message = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -302,9 +343,9 @@ class EventImageUploadTo:
         return f'{subdir}/{base}{ext}'
 
 class EventImage(models.Model):
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='images', null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.PROTECT, related_name='images', null=True, blank=True)
     # WorkAccount es el campo principal para identificar las imágenes globales por obra
-    work_account = models.ForeignKey('apptransactions.WorkAccount', on_delete=models.CASCADE, related_name='images', null=True, blank=True)
+    work_account = models.ForeignKey('apptransactions.WorkAccount', on_delete=models.PROTECT, related_name='images', null=True, blank=True)
     image = models.ImageField(upload_to=EventImageUploadTo())
     uploaded_at = models.DateTimeField(auto_now_add=True)
     uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)

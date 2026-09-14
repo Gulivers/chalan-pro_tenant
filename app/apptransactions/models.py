@@ -1,7 +1,7 @@
 # App: transactions (documentos, detalles, clientes, proveedores)
 
 from django.db import models
-from django.db.models import UniqueConstraint, Q
+from django.db.models import ProtectedError, UniqueConstraint, Q
 from django.db.models.functions import Lower
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -219,8 +219,52 @@ class WorkAccount(models.Model):
             if self.pk:
                 existing = existing.exclude(pk=self.pk)
             if existing.exists():
-                from django.core.exceptions import ValidationError
                 raise ValidationError({"title": "A WorkAccount with this title already exists (case-insensitive)."})
+
+    def get_deletion_blockers(self):
+        """
+        Return related records that prevent deleting this work account.
+        Covers schedule chat/notes/folder plus contracts and transactions.
+        """
+        blockers = []
+
+        note = self.event_notes.first()
+        if note and (note.notes or "").strip():
+            blockers.append(note)
+
+        chat = self.work_account_chat_messages.first()
+        if chat:
+            blockers.append(chat)
+
+        image = self.images.first()
+        if image:
+            blockers.append(image)
+
+        contract = self.contracts.first()
+        if contract:
+            blockers.append(contract)
+
+        document = self.documents.first()
+        if document:
+            blockers.append(document)
+
+        event = self.events.first()
+        if event:
+            blockers.append(event)
+
+        draft = self.event_drafts.first()
+        if draft:
+            blockers.append(draft)
+
+        return blockers
+
+    def raise_if_deletion_blocked(self):
+        blockers = self.get_deletion_blockers()
+        if blockers:
+            raise ProtectedError(
+                "Cannot delete work account while related records exist.",
+                set(blockers),
+            )
 
 class Document(models.Model):
     document_type = models.ForeignKey(DocumentType, on_delete=models.CASCADE)
@@ -229,7 +273,7 @@ class Document(models.Model):
     # Contraparte comercial (para reglas de venta/compra y cobranza)
     builder = models.ForeignKey(Builder, on_delete=models.PROTECT, null=True, blank=True)
     # Identidad de la obra (builder+job+house_model+lot/address encapsulados)
-    work_account = models.ForeignKey('apptransactions.WorkAccount', on_delete=models.SET_NULL, null=True, blank=True)
+    work_account = models.ForeignKey('apptransactions.WorkAccount', on_delete=models.PROTECT, null=True, blank=True, related_name='documents')
     notes = models.TextField(null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     total_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
