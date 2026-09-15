@@ -1,331 +1,440 @@
 <template>
-  <div class="house-transactions-container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">💰 Transactions</h5>
-      <button
-        @click="() => goToTransactionForm()"
-        class="btn btn-success btn-sm">
+  <div class="jr-pilot jr-house-transactions">
+    <div class="jr-house-transactions__header">
+      <h3 class="jr-house-transactions__title">Transactions</h3>
+      <JRButton
+        v-if="canAdd"
+        type="button"
+        size="sm"
+        @click="() => goToTransactionForm()">
         + New Transaction
-      </button>
+      </JRButton>
     </div>
 
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="mt-2 text-muted">Loading transactions...</p>
-    </div>
+    <JRToolbar>
+      <template #start>
+        <div class="jr-house-transactions__search">
+          <label class="jr-sr-only" for="house-transactions-search">
+            Search transactions
+          </label>
+          <span class="jr-house-transactions__search-icon" aria-hidden="true">
+            <SearchIcon />
+          </span>
+          <JRInput
+            inputId="house-transactions-search"
+            v-model="search"
+            type="search"
+            placeholder="Search by type, notes, ID…"
+            autocomplete="off"
+            :spellcheck="false"
+            enterkeyhint="search" />
+        </div>
+      </template>
+
+      <template #stats>
+        <div class="jr-house-transactions__summary" aria-live="polite">
+          <JRBadge
+            :value="`${filteredTransactions.length} Total`"
+            severity="secondary" />
+          <JRBadge
+            :value="`${activeCount} Active`"
+            :severity="activeCount > 0 ? 'success' : 'secondary'" />
+          <JRBadge
+            :value="`${voidedCount} Voided`"
+            severity="secondary" />
+        </div>
+      </template>
+
+      <template #actions>
+        <JRButton
+          type="button"
+          variant="ghost"
+          size="sm"
+          class="jr-house-transactions__refresh"
+          @click="refreshTable">
+          <RefreshIcon />
+          Refresh
+        </JRButton>
+      </template>
+    </JRToolbar>
 
     <div
-      v-else-if="transactions.length === 0"
-      class="text-center py-5 text-muted">
-      <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3"></i>
-      <p class="mt-3">No transactions found for this work account.</p>
-      <button
-        @click="() => goToTransactionForm()"
-        class="btn btn-primary btn-sm mt-2">
-        Create First Transaction
-      </button>
-    </div>
-
-    <div v-else>
-      <!-- Search -->
-      <div class="mb-3">
-        <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-search"></i></span>
-          <input
-            v-model="search"
-            type="text"
-            class="form-control"
-            placeholder="Search by type, notes..."
-            autocomplete="off" />
-          <button
-            v-if="search"
-            @click="search = ''"
-            class="btn btn-outline-secondary"
-            type="button">
-            Clear
-          </button>
-        </div>
-      </div>
-
-      <!-- Transactions Table -->
-      <BTable
-        :items="filteredTransactions"
-        :fields="fields"
-        :per-page="perPage"
-        :current-page="currentPage"
-        bordered
-        hover
-        responsive
-        striped
-        small>
-        <template #cell(document_type_code)="data">
-          <span
-            class="badge bg-info"
-            v-tt
-            :data-title="
-              documentTypeDescriptionsMap[data.item.document_type] || ''
-            ">
-            {{ documentTypeNamesMap[data.item.document_type] || "—" }}
-          </span>
+      class="jr-house-transactions__table"
+      :aria-busy="loading ? 'true' : 'false'">
+      <JRDataTable
+        :value="filteredTransactions"
+        :loading="loading"
+        dataKey="id"
+        :paginator="filteredTransactions.length > perPage"
+        :rows="perPage"
+        :first="tableFirst"
+        sortField="id"
+        :sortOrder="-1"
+        paginatorTemplate="PrevPageLink CurrentPageReport NextPageLink"
+        currentPageReportTemplate="{first}–{last} of {totalRecords}"
+        scrollable
+        stripedRows
+        tableStyle="min-width: 40rem"
+        :emptyTitle="loading ? '' : emptyTitle"
+        :emptyDescription="loading ? '' : emptyDescription"
+        @page="onTablePage">
+        <template #empty>
+          <JREmptyState
+            v-if="!loading"
+            :title="emptyTitle"
+            :description="emptyDescription">
+            <JRButton
+              v-if="loadError"
+              type="button"
+              variant="ghost"
+              size="sm"
+              @click="refreshTable">
+              Refresh
+            </JRButton>
+            <JRButton
+              v-else-if="search.trim()"
+              type="button"
+              variant="ghost"
+              size="sm"
+              @click="search = ''">
+              Clear search
+            </JRButton>
+            <JRButton
+              v-else-if="canAdd"
+              type="button"
+              size="sm"
+              @click="() => goToTransactionForm()">
+              + New Transaction
+            </JRButton>
+          </JREmptyState>
         </template>
 
-        <template #cell(date)="data">
-          {{ formatDate(data.item.date) }}
-        </template>
+        <Column field="id" header="ID" sortable style="width: 4rem">
+          <template #body="{ data }">
+            {{ data.id }}
+          </template>
+        </Column>
 
-        <template #cell(total_amount)="data">
-          <span class="text-end fw-bold">
-            {{ currency(data.item.total_amount) }}
-          </span>
-        </template>
+        <Column
+          field="document_type"
+          header="Type"
+          sortable
+          style="width: 7rem">
+          <template #body="{ data }">
+            <span
+              v-tt
+              :data-title="
+                documentTypeDescriptionsMap[data.document_type] || ''
+              ">
+              <JRBadge
+                :value="documentTypeNamesMap[data.document_type] || '—'"
+                severity="info" />
+            </span>
+          </template>
+        </Column>
 
-        <template #cell(is_active)="data">
-          <span v-if="data.item.is_active" class="badge bg-success">
-            Active
-          </span>
-          <span v-else class="badge bg-secondary">Voided</span>
-        </template>
+        <Column field="date" header="Date" sortable style="width: 8rem">
+          <template #body="{ data }">
+            {{ formatDate(data.date) }}
+          </template>
+        </Column>
 
-        <template #cell(notes)="data">
-          <span
-            class="text-truncate d-inline-block"
-            style="max-width: 200px"
-            :title="data.item.notes">
-            {{ data.item.notes || "—" }}
-          </span>
-        </template>
+        <Column
+          field="total_amount"
+          header="Total"
+          sortable
+          headerClass="jr-col-num"
+          bodyClass="jr-col-num">
+          <template #body="{ data }">
+            <strong>{{ currency(data.total_amount) }}</strong>
+          </template>
+        </Column>
 
-        <template #cell(actions)="data">
-          <div class="btn-group btn-group-sm" role="group">
-            <button
-              @click="() => goToTransactionForm(data.item.id, 'view')"
-              class="btn btn-outline-success me-1"
-              title="View">
-              View
-            </button>
-            <button
-              @click="() => printTransaction(data.item.id)"
-              class="btn btn-outline-dark me-1"
-              title="Print PDF">
-              Print
-            </button>
-            <button
-              @click="() => goToTransactionForm(data.item.id)"
-              class="btn btn-outline-primary me-1"
-              title="Edit">
-              Edit
-            </button>
-          </div>
-        </template>
-      </BTable>
+        <Column field="notes" header="Notes">
+          <template #body="{ data }">
+            <span
+              class="jr-house-transactions__notes"
+              :title="data.notes || undefined">
+              {{ data.notes || "—" }}
+            </span>
+          </template>
+        </Column>
 
-      <!-- Pagination -->
-      <div
-        v-if="filteredTransactions.length > perPage"
-        class="d-flex justify-content-end mt-3">
-        <BPagination
-          v-model="currentPage"
-          :total-rows="filteredTransactions.length"
-          :per-page="perPage"
-          size="sm" />
-      </div>
+        <Column
+          field="is_active"
+          header="Status"
+          sortable
+          style="width: 6rem">
+          <template #body="{ data }">
+            <JRBadge
+              :value="data.is_active ? 'Active' : 'Voided'"
+              :severity="data.is_active ? 'success' : 'secondary'" />
+          </template>
+        </Column>
+
+        <Column
+          v-if="hasRowActions"
+          header="Actions"
+          :sortable="false"
+          headerClass="jr-col-actions"
+          bodyClass="jr-col-actions">
+          <template #body="{ data }">
+            <JRRowActions
+              :actions="getRowActions(data)"
+              :entity-label="`Transaction ${data.id}`" />
+          </template>
+        </Column>
+      </JRDataTable>
     </div>
   </div>
 </template>
 
 <script>
-import { BTable, BPagination } from "bootstrap-vue-next";
 import axios from "axios";
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
+import Column from "primevue/column";
+import EyeIcon from "@primevue/icons/eye";
+import PencilIcon from "@primevue/icons/pencil";
+import RefreshIcon from "@primevue/icons/refresh";
+import SearchIcon from "@primevue/icons/search";
+import {
+  JRBadge,
+  JRButton,
+  JRDataTable,
+  JREmptyState,
+  JRInput,
+  JRRowActions,
+  JRToolbar,
+} from "@ui";
 
 export default {
   name: "ScheduleHouseTransactionsComponent",
   components: {
-    BTable,
-    BPagination,
+    Column,
+    EyeIcon,
+    PencilIcon,
+    RefreshIcon,
+    SearchIcon,
+    JRBadge,
+    JRButton,
+    JRDataTable,
+    JREmptyState,
+    JRInput,
+    JRRowActions,
+    JRToolbar,
   },
   props: {
     eventId: {
       type: Number,
-      required: true,
+      default: null,
+    },
+    workAccountId: {
+      type: Number,
+      default: null,
     },
   },
   data() {
     return {
       transactions: [],
-      documentTypesMap: {}, // id -> type_code (p.ej. INV, PAY)
-      documentTypeNamesMap: {}, // id -> nombre (name o type_code)
-      documentTypeDescriptionsMap: {}, // id -> description (campo del modelo DocumentType)
+      documentTypesMap: {},
+      documentTypeNamesMap: {},
+      documentTypeDescriptionsMap: {},
       loading: false,
+      loadError: false,
       search: "",
       perPage: 10,
-      currentPage: 1,
-      workAccountId: null,
-      fields: [
-        {
-          key: "id",
-          label: "ID",
-          sortable: true,
-          thClass: "text-center",
-          tdClass: "text-center",
-          thStyle: { width: "60px" },
-        },
-        {
-          key: "document_type_code",
-          label: "Type",
-          sortable: true,
-          thStyle: { width: "100px" },
-        },
-        {
-          key: "date",
-          label: "Date",
-          sortable: true,
-          thClass: "text-center",
-          tdClass: "text-center",
-          thStyle: { width: "200px" },
-        },
-        {
-          key: "total_amount",
-          label: "Total",
-          sortable: true,
-          thClass: "text-end",
-          tdClass: "text-end",
-          thStyle: { width: "120px" },
-        },
-        { key: "notes", label: "Notes", thStyle: { width: "200px" } },
-        {
-          key: "is_active",
-          label: "Status",
-          thClass: "text-center",
-          tdClass: "text-center",
-          thStyle: { width: "80px" },
-        },
-        {
-          key: "actions",
-          label: "Actions",
-          thClass: "text-center",
-          tdClass: "text-center",
-          thStyle: { width: "140px" },
-        },
-      ],
+      tableFirst: 0,
+      resolvedWorkAccountId: null,
     };
   },
   computed: {
+    canAdd() {
+      return this.hasPermission("apptransactions.add_document");
+    },
+    canView() {
+      return this.hasPermission("apptransactions.view_document");
+    },
+    canChange() {
+      return this.hasPermission("apptransactions.change_document");
+    },
+    hasRowActions() {
+      return this.canView || this.canChange;
+    },
     filteredTransactions() {
       if (!this.search) return this.transactions;
       const q = this.search.toLowerCase();
       return this.transactions.filter((item) => {
         const typeCode = this.documentTypesMap[item.document_type] || "";
+        const typeName = this.documentTypeNamesMap[item.document_type] || "";
         const notes = item.notes || "";
         return (
           typeCode.toLowerCase().includes(q) ||
+          typeName.toLowerCase().includes(q) ||
           notes.toLowerCase().includes(q) ||
           item.id.toString().includes(q)
         );
       });
     },
+    activeCount() {
+      return this.filteredTransactions.filter((t) => t.is_active).length;
+    },
+    voidedCount() {
+      return this.filteredTransactions.filter((t) => !t.is_active).length;
+    },
+    emptyTitle() {
+      if (this.loadError) return "Could not load transactions";
+      if (this.search.trim()) return "No matching transactions";
+      return "No transactions yet";
+    },
+    emptyDescription() {
+      if (this.loadError) return "Check your connection and try Refresh.";
+      if (this.search.trim()) return "Try a different search term.";
+      return "No transactions found for this work account.";
+    },
   },
   watch: {
     eventId: {
       immediate: true,
-      async handler(newVal) {
-        if (newVal) {
-          await this.loadWorkAccountId();
-          if (this.workAccountId) {
-            await Promise.all([
-              this.fetchTransactions(),
-              this.fetchDocumentTypes(),
-            ]);
-          } else {
-            console.warn("No work_account found for event:", newVal);
-            this.transactions = [];
-            this.loading = false;
-          }
-        }
+      handler() {
+        this.initializeData();
       },
     },
+    workAccountId: {
+      immediate: true,
+      handler() {
+        this.initializeData();
+      },
+    },
+    search() {
+      this.tableFirst = 0;
+    },
   },
-  async mounted() {
-    // La carga inicial se maneja en el watch de eventId
-    if (this.eventId) {
-      await this.loadWorkAccountId();
+  methods: {
+    hasPermission(permission) {
+      try {
+        const userPermissions = JSON.parse(
+          localStorage.getItem("userPermissions")
+        );
+        return (
+          !!userPermissions &&
+          Array.isArray(userPermissions.permissions) &&
+          userPermissions.permissions.includes(permission)
+        );
+      } catch {
+        return false;
+      }
+    },
+    getRowActions(item) {
+      const actions = [];
+      if (this.canView) {
+        actions.push({
+          key: "view",
+          label: "View",
+          severity: "success",
+          icon: EyeIcon,
+          command: () => this.goToTransactionForm(item.id, "view"),
+        });
+        actions.push({
+          key: "print",
+          label: "Print",
+          severity: "secondary",
+          command: () => this.printTransaction(item.id),
+        });
+      }
+      if (this.canChange) {
+        actions.push({
+          key: "edit",
+          label: "Edit",
+          severity: "primary",
+          icon: PencilIcon,
+          command: () => this.goToTransactionForm(item.id),
+        });
+      }
+      return actions;
+    },
+    onTablePage(event) {
+      this.tableFirst = event.first ?? 0;
+      if (event.rows) this.perPage = event.rows;
+    },
+    refreshTable() {
+      this.initializeData();
+    },
+    async initializeData() {
+      this.tableFirst = 0;
       if (this.workAccountId) {
+        this.resolvedWorkAccountId = this.workAccountId;
         await Promise.all([
           this.fetchTransactions(),
           this.fetchDocumentTypes(),
         ]);
+        return;
       }
-    }
-  },
-  methods: {
+
+      if (!this.eventId) {
+        this.resolvedWorkAccountId = null;
+        this.transactions = [];
+        this.loading = false;
+        this.loadError = false;
+        return;
+      }
+
+      await this.loadWorkAccountId();
+      if (this.resolvedWorkAccountId) {
+        await Promise.all([
+          this.fetchTransactions(),
+          this.fetchDocumentTypes(),
+        ]);
+      } else {
+        this.transactions = [];
+        this.loading = false;
+        this.loadError = false;
+      }
+    },
     async loadWorkAccountId() {
       try {
         const { data } = await axios.get(`/api/event/${this.eventId}/`);
-        console.log("🔍 Event data loaded:", {
-          eventId: this.eventId,
-          work_account: data?.work_account,
-          fullData: data,
-        });
-
         if (data && data.work_account) {
-          // Manejar tanto ID numérico como objeto con id
           if (typeof data.work_account === "number") {
-            this.workAccountId = data.work_account;
+            this.resolvedWorkAccountId = data.work_account;
           } else if (
             typeof data.work_account === "object" &&
             data.work_account !== null &&
             data.work_account.id
           ) {
-            this.workAccountId = data.work_account.id;
+            this.resolvedWorkAccountId = data.work_account.id;
           } else {
-            this.workAccountId = data.work_account;
+            this.resolvedWorkAccountId = data.work_account;
           }
-          console.log(
-            "✅ WorkAccount ID set to:",
-            this.workAccountId,
-            "(type:",
-            typeof this.workAccountId,
-            ")"
-          );
         } else {
-          console.warn("⚠️ Event does not have a work_account. Data:", data);
-          this.workAccountId = null;
+          this.resolvedWorkAccountId = null;
         }
       } catch (e) {
-        console.error("❌ Error fetching event data:", e);
-        console.error("Error details:", e.response?.data || e.message);
-        this.workAccountId = null;
+        console.error("Error fetching event data:", e);
+        this.resolvedWorkAccountId = null;
       }
     },
     async fetchTransactions() {
-      if (!this.workAccountId) {
-        console.warn("Cannot fetch transactions: workAccountId is not set");
+      if (!this.resolvedWorkAccountId) {
         this.transactions = [];
         this.loading = false;
+        this.loadError = false;
         return;
       }
 
       this.loading = true;
+      this.loadError = false;
       try {
-        // Filtrar por work_account directamente en el query param
-        const url = `/api/documents/?work_account=${this.workAccountId}&ordering=-id`;
-        console.log("Fetching transactions from:", url);
+        const url = `/api/documents/?work_account=${this.resolvedWorkAccountId}&ordering=-id`;
         const response = await axios.get(url);
         const normalizeList = (data) =>
           Array.isArray(data) ? data : data?.results ?? [];
-        const transactionsList = normalizeList(response.data);
-        console.log(
-          `Found ${transactionsList.length} transactions for work_account ${this.workAccountId}`
-        );
-        this.transactions = transactionsList;
+        this.transactions = normalizeList(response.data);
       } catch (error) {
         console.error("Error fetching transactions:", error);
-        console.error("Error details:", error.response?.data || error.message);
         this.notifyError?.("Error loading transactions.");
         this.transactions = [];
+        this.loadError = true;
       } finally {
         this.loading = false;
       }
@@ -338,7 +447,6 @@ export default {
         const normalizeList = (data) =>
           Array.isArray(data) ? data : data?.results ?? [];
         const arr = normalizeList(response.data);
-        // type_code, name (si existe) y description (campo del modelo DocumentType)
         this.documentTypesMap = Object.fromEntries(
           arr.map((dt) => [dt.id, dt.type_code])
         );
@@ -364,13 +472,8 @@ export default {
       });
     },
     async goToTransactionForm(transactionId = null, mode = null) {
-      // Validar que transactionId sea un número válido y no un objeto PointerEvent
       if (transactionId !== null && transactionId !== undefined) {
         if (typeof transactionId === "object" || isNaN(Number(transactionId))) {
-          console.warn(
-            "⚠️ transactionId inválido (probablemente un PointerEvent):",
-            transactionId
-          );
           transactionId = null;
           mode = null;
         } else {
@@ -378,14 +481,10 @@ export default {
         }
       }
 
-      // Asegurar que workAccountId esté cargado antes de navegar
-      if (!this.workAccountId && this.eventId) {
-        console.log("🔍 workAccountId no disponible, cargando...");
+      if (!this.resolvedWorkAccountId && this.eventId) {
         await this.loadWorkAccountId();
       }
 
-      // Limpia backdrops y clases CSS residuales antes de navegar
-      // La navegación con window.location.href cerrará automáticamente el ScheduleEventModal
       try {
         const modalEl = document.querySelector(".modal.show");
         if (modalEl) {
@@ -401,15 +500,12 @@ export default {
         // no-op
       }
 
-      // Construir query params (similar a contracts)
       const queryParams = new URLSearchParams();
 
-      // Siempre incluir event_id si está disponible
       if (this.eventId) {
         queryParams.append("event_id", String(this.eventId));
       }
 
-      // Agregar id y mode solo si transactionId es un número válido
       if (
         transactionId !== null &&
         transactionId !== undefined &&
@@ -421,30 +517,23 @@ export default {
         }
       }
 
-      // Agregar work_account_id solo si está disponible y es válido
-      if (this.workAccountId !== null && this.workAccountId !== undefined) {
-        const workAccountIdStr = String(this.workAccountId);
+      if (
+        this.resolvedWorkAccountId !== null &&
+        this.resolvedWorkAccountId !== undefined
+      ) {
+        const workAccountIdStr = String(this.resolvedWorkAccountId);
         if (
           workAccountIdStr &&
           workAccountIdStr !== "null" &&
           workAccountIdStr !== "undefined"
         ) {
           queryParams.append("work_account_id", workAccountIdStr);
-          console.log("✅ Navegando con work_account_id:", this.workAccountId);
         }
-      } else {
-        console.warn(
-          "⚠️ No work_account_id disponible para el evento:",
-          this.eventId
-        );
       }
 
       const queryString = queryParams.toString();
       const url = `/transactions/form${queryString ? `?${queryString}` : ""}`;
 
-      console.log("🚀 Navegando a:", url);
-
-      // Navegación
       this.$nextTick(() => {
         window.location.href = url;
       });
@@ -462,7 +551,6 @@ export default {
           throw new Error("No PDF file received");
         }
 
-        // Decodificar base64 y crear blob
         const byteCharacters = atob(response.data.file);
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
@@ -478,7 +566,6 @@ export default {
           ) || window.innerWidth <= 768;
 
         if (isMobile) {
-          // En móvil: descargar directamente
           const link = document.createElement("a");
           link.href = url;
           link.download =
@@ -488,10 +575,8 @@ export default {
           document.body.removeChild(link);
           this.notifyToastSuccess?.("PDF downloaded successfully.");
         } else {
-          // En desktop: abrir en nueva ventana
           const newWindow = window.open(url, "_blank");
           if (!newWindow) {
-            // Si no se puede abrir, descargar
             const link = document.createElement("a");
             link.href = url;
             link.download =
@@ -505,7 +590,6 @@ export default {
           }
         }
 
-        // Limpiar la URL después de un tiempo
         setTimeout(() => {
           window.URL.revokeObjectURL(url);
         }, 1000);
@@ -524,51 +608,116 @@ export default {
 </script>
 
 <style scoped>
-.house-transactions-container {
-  padding: 0.5rem;
-  min-height: 300px;
+.jr-house-transactions {
+  min-height: 16rem;
 }
 
-:deep(.table) {
-  font-size: 0.875rem;
-  margin-bottom: 0;
+.jr-house-transactions__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
-:deep(.table thead th) {
-  background-color: #f8f9fa;
+.jr-house-transactions__title {
+  margin: 0;
+  font-size: 0.9375rem;
   font-weight: 600;
-  border-bottom: 2px solid #dee2e6;
-  vertical-align: middle;
+  color: var(--color-jr-text, #111827);
+  text-align: left;
 }
 
-:deep(.table tbody tr:hover) {
-  background-color: #f8f9fa;
+.jr-house-transactions__search {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  max-width: 22rem;
 }
 
-:deep(.table-responsive) {
-  border-radius: 0.375rem;
-  border: 1px solid #dee2e6;
+.jr-house-transactions__search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  z-index: 1;
+  display: flex;
+  color: var(--color-jr-muted, #4b5563);
+  pointer-events: none;
+  transform: translateY(-50%);
 }
 
-/* Badge styles */
-.badge {
+.jr-house-transactions__search-icon :deep(svg) {
+  width: 1rem;
+  height: 1rem;
+}
+
+.jr-house-transactions__search :deep(.p-inputtext) {
+  padding-left: 2.25rem;
+}
+
+.jr-house-transactions__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  pointer-events: none;
+}
+
+.jr-house-transactions__notes {
+  display: inline-block;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-jr-muted, #4b5563);
   font-size: 0.75rem;
-  padding: 0.35em 0.65em;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .house-transactions-container {
-    padding: 0.25rem;
+.jr-house-transactions__table :deep(th.jr-col-num),
+.jr-house-transactions__table :deep(td.jr-col-num) {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.jr-house-transactions__table :deep(th.jr-col-num .p-datatable-column-header-content) {
+  justify-content: flex-end;
+}
+
+.jr-house-transactions__table :deep(.jr-empty-state) {
+  padding: 2.5rem 1rem;
+}
+
+.jr-house-transactions__table :deep(th.jr-col-actions),
+.jr-house-transactions__table :deep(td.jr-col-actions) {
+  width: 14rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.jr-house-transactions__table
+  :deep(th.jr-col-actions .p-datatable-column-header-content) {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.jr-house-transactions__table :deep(td.jr-col-actions .jr-row-actions) {
+  justify-content: center;
+  width: 100%;
+}
+
+@media (max-width: 767.98px) {
+  .jr-house-transactions__search {
+    max-width: none;
   }
 
-  :deep(.table) {
-    font-size: 0.8rem;
+  .jr-house-transactions__summary {
+    display: none;
   }
 
-  :deep(.btn-group-sm .btn) {
-    padding: 0.2rem 0.4rem;
-    font-size: 0.8rem;
+  .jr-house-transactions__table :deep(th.jr-col-actions),
+  .jr-house-transactions__table :deep(td.jr-col-actions) {
+    width: 3.25rem;
   }
 }
 </style>

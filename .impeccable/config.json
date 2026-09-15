@@ -154,6 +154,54 @@
         ],
         "createdAt": "2026-09-11T22:37:04.341Z",
         "reason": "Contract pay sheet PDF: compact print layout with intentional dense type scale"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#ccc",
+        "createdAt": "2026-09-13T22:18:53.060Z",
+        "reason": "pre-existing legacy schedule notes editor border; minimal prop refactor only"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "5px",
+        "createdAt": "2026-09-13T22:18:53.118Z",
+        "reason": "pre-existing legacy schedule notes editor; minimal prop refactor only"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "3rem",
+        "files": [
+          "app/vuefrontend/src/components/schedule/ScheduleHouseContractsComponent.vue"
+        ],
+        "createdAt": "2026-09-13T22:18:53.167Z",
+        "reason": "pre-existing legacy empty-state icon sizing; minimal prop refactor only"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "0.2rem",
+        "files": [
+          "app/vuefrontend/src/components/schedule/ScheduleHouseContractsComponent.vue"
+        ],
+        "createdAt": "2026-09-13T22:18:53.219Z",
+        "reason": "pre-existing legacy bootstrap button group radius; minimal prop refactor only"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "3rem",
+        "files": [
+          "app/vuefrontend/src/components/schedule/ScheduleHouseTransactionsComponent.vue"
+        ],
+        "createdAt": "2026-09-13T22:19:05.183Z",
+        "reason": "pre-existing legacy empty-state icon sizing; minimal prop refactor only"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "0.375rem",
+        "files": [
+          "app/vuefrontend/src/components/schedule/ScheduleHouseTransactionsComponent.vue"
+        ],
+        "createdAt": "2026-09-13T22:19:16.066Z",
+        "reason": "pre-existing legacy bootstrap badge radius; minimal prop refactor only"
       }
     ]
   }

@@ -561,8 +561,8 @@ export default {
     };
 
     const waViewTo = (id) => ({
-      name: "work-accounts-form",
-      query: { id, mode: "view" },
+      name: "work-order-viewer",
+      params: { id },
     });
 
     const viewItem = (id) => {

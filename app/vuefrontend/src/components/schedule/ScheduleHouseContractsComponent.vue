@@ -1,236 +1,380 @@
 <template>
-  <div class="house-contracts-container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">📜 Contracts</h5>
-      <button
-        v-if="this.hasPermission('ctrctsapp.add_contract')"
-        class="btn btn-success btn-sm"
+  <div class="jr-pilot jr-house-contracts">
+    <div class="jr-house-contracts__header">
+      <h3 class="jr-house-contracts__title">Contracts</h3>
+      <JRButton
+        v-if="canAdd"
+        type="button"
+        size="sm"
         @click="goToContractForm">
         + New Contract
-      </button>
+      </JRButton>
     </div>
 
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="mt-2 text-muted">Loading contracts...</p>
-    </div>
-
-    <div v-else-if="contracts.length === 0" class="text-center py-5 text-muted">
-      <i
-        class="bi bi-file-earmark-text"
-        style="font-size: 3rem; opacity: 0.3"></i>
-      <p class="mt-3">No contracts found for this work account.</p>
-    </div>
-
-    <div v-else>
-      <!-- Contracts Table -->
-      <BTable
-        :items="contracts"
-        :fields="fields"
-        bordered
-        hover
-        responsive
-        striped
-        small>
-        <template #cell(type)="data">
-          <span class="badge bg-secondary">{{ data.item.type }}</span>
-        </template>
-
-        <template #cell(date_created)="data">
-          {{ formatDate(data.item.date_created) }}
-        </template>
-
-        <template #cell(house_model)="data">
-          {{ data.item.house_model?.name || "—" }}
-        </template>
-
-        <template #cell(sqft)="data">
-          <span class="text-end">
-            {{ data.item.sqft ? data.item.sqft.toLocaleString() : "—" }}
+    <JRToolbar>
+      <template #start>
+        <div class="jr-house-contracts__search">
+          <label class="jr-sr-only" for="house-contracts-search">
+            Search contracts
+          </label>
+          <span class="jr-house-contracts__search-icon" aria-hidden="true">
+            <SearchIcon />
           </span>
+          <JRInput
+            inputId="house-contracts-search"
+            v-model="search"
+            type="search"
+            placeholder="Search by type, model, ID…"
+            autocomplete="off"
+            :spellcheck="false"
+            enterkeyhint="search" />
+        </div>
+      </template>
+
+      <template #stats>
+        <JRBadge
+          :value="`${filteredContracts.length} Total`"
+          severity="secondary" />
+      </template>
+
+      <template #actions>
+        <JRButton
+          type="button"
+          variant="ghost"
+          size="sm"
+          class="jr-house-contracts__refresh"
+          @click="refreshTable">
+          <RefreshIcon />
+          Refresh
+        </JRButton>
+      </template>
+    </JRToolbar>
+
+    <div
+      class="jr-house-contracts__table"
+      :aria-busy="loading ? 'true' : 'false'">
+      <JRDataTable
+        :value="filteredContracts"
+        :loading="loading"
+        dataKey="id"
+        :paginator="filteredContracts.length > perPage"
+        :rows="perPage"
+        :first="tableFirst"
+        sortField="id"
+        :sortOrder="-1"
+        paginatorTemplate="PrevPageLink CurrentPageReport NextPageLink"
+        currentPageReportTemplate="{first}–{last} of {totalRecords}"
+        scrollable
+        stripedRows
+        tableStyle="min-width: 36rem"
+        :emptyTitle="loading ? '' : emptyTitle"
+        :emptyDescription="loading ? '' : emptyDescription"
+        @page="onTablePage">
+        <template #empty>
+          <JREmptyState
+            v-if="!loading"
+            :title="emptyTitle"
+            :description="emptyDescription">
+            <JRButton
+              v-if="canAdd && !search.trim()"
+              type="button"
+              size="sm"
+              @click="goToContractForm">
+              + New Contract
+            </JRButton>
+            <JRButton
+              v-else-if="search.trim()"
+              type="button"
+              variant="ghost"
+              size="sm"
+              @click="search = ''">
+              Clear search
+            </JRButton>
+          </JREmptyState>
         </template>
 
-        <template #cell(total)="data">
-          <span class="text-end fw-bold">{{ currency(data.item.total) }}</span>
-        </template>
+        <Column field="id" header="ID" sortable style="width: 4rem">
+          <template #body="{ data }">
+            {{ data.id }}
+          </template>
+        </Column>
 
-        <template #cell(actions)="data">
-          <div class="btn-group btn-group-sm" role="group">
-            <button
-              v-if="this.hasPermission('ctrctsapp.view_contract')"
-              @click="viewContract(data.item.id)"
-              class="btn btn-outline-success me-1"
-              title="View">
-              View
-            </button>
-            <button
-              v-if="this.hasPermission('ctrctsapp.view_contract')"
-              @click="printContract(data.item.id)"
-              class="btn btn-outline-dark me-1"
-              title="Print PDF">
-              Print
-            </button>
-            <button
-              v-if="this.hasPermission('ctrctsapp.change_contract')"
-              @click="editContract(data.item.id)"
-              class="btn btn-outline-primary me-1"
-              title="Edit">
-              Edit
-            </button>
-          </div>
-        </template>
-      </BTable>
+        <Column field="type" header="Type" sortable style="width: 6rem">
+          <template #body="{ data }">
+            <JRBadge :value="data.type || '—'" severity="info" />
+          </template>
+        </Column>
+
+        <Column field="date_created" header="Date" sortable style="width: 8rem">
+          <template #body="{ data }">
+            {{ formatDate(data.date_created) }}
+          </template>
+        </Column>
+
+        <Column field="house_model" header="Model" sortable>
+          <template #body="{ data }">
+            {{ data.house_model?.name || "—" }}
+          </template>
+        </Column>
+
+        <Column
+          field="sqft"
+          header="SqFt"
+          sortable
+          headerClass="jr-col-num"
+          bodyClass="jr-col-num">
+          <template #body="{ data }">
+            {{ data.sqft ? data.sqft.toLocaleString() : "—" }}
+          </template>
+        </Column>
+
+        <Column
+          field="total"
+          header="Total"
+          sortable
+          headerClass="jr-col-num"
+          bodyClass="jr-col-num">
+          <template #body="{ data }">
+            <strong>{{ currency(data.total) }}</strong>
+          </template>
+        </Column>
+
+        <Column
+          v-if="hasRowActions"
+          header="Actions"
+          :sortable="false"
+          headerClass="jr-col-actions"
+          bodyClass="jr-col-actions">
+          <template #body="{ data }">
+            <JRRowActions
+              :actions="getRowActions(data)"
+              :entity-label="`Contract ${data.id}`" />
+          </template>
+        </Column>
+      </JRDataTable>
     </div>
   </div>
 </template>
 
 <script>
-import { BTable } from "bootstrap-vue-next";
 import axios from "axios";
 import dayjs from "dayjs";
 import Swal from "sweetalert2";
+import Column from "primevue/column";
+import EyeIcon from "@primevue/icons/eye";
+import PencilIcon from "@primevue/icons/pencil";
+import RefreshIcon from "@primevue/icons/refresh";
+import SearchIcon from "@primevue/icons/search";
+import {
+  JRBadge,
+  JRButton,
+  JRDataTable,
+  JREmptyState,
+  JRInput,
+  JRRowActions,
+  JRToolbar,
+} from "@ui";
 
 export default {
   name: "ScheduleHouseContractsComponent",
   components: {
-    BTable,
+    Column,
+    EyeIcon,
+    PencilIcon,
+    RefreshIcon,
+    SearchIcon,
+    JRBadge,
+    JRButton,
+    JRDataTable,
+    JREmptyState,
+    JRInput,
+    JRRowActions,
+    JRToolbar,
   },
   props: {
     eventId: {
       type: Number,
-      required: true,
+      default: null,
+    },
+    workAccountId: {
+      type: Number,
+      default: null,
     },
   },
   data() {
     return {
       contracts: [],
       loading: false,
-      workAccountId: null,
-      fields: [
-        {
-          key: "id",
-          label: "ID",
-          sortable: true,
-          thClass: "text-center",
-          tdClass: "text-center",
-          thStyle: { width: "60px" },
-        },
-        {
-          key: "type",
-          label: "Type",
-          sortable: true,
-          thClass: "text-center",
-          tdClass: "text-center",
-          thStyle: { width: "80px" },
-        },
-        {
-          key: "date_created",
-          label: "Date",
-          sortable: true,
-          thClass: "text-center",
-          tdClass: "text-center",
-          thStyle: { width: "120px" },
-        },
-        {
-          key: "house_model",
-          label: "Model",
-          sortable: true,
-          thClass: "text-center",
-          tdClass: "text-center",
-          thStyle: { width: "100px" },
-        },
-        {
-          key: "sqft",
-          label: "SqFt",
-          sortable: true,
-          thClass: "text-end",
-          tdClass: "text-end",
-          thStyle: { width: "100px" },
-        },
-        {
-          key: "total",
-          label: "Total",
-          sortable: true,
-          thClass: "text-end",
-          tdClass: "text-end",
-          thStyle: { width: "120px" },
-        },
-        {
-          key: "actions",
-          label: "Actions",
-          thClass: "text-center",
-          tdClass: "text-center",
-          thStyle: { width: "200px" },
-        },
-      ],
+      loadError: false,
+      search: "",
+      perPage: 10,
+      tableFirst: 0,
+      resolvedWorkAccountId: null,
     };
+  },
+  computed: {
+    canAdd() {
+      return this.hasPermission("ctrctsapp.add_contract");
+    },
+    canView() {
+      return this.hasPermission("ctrctsapp.view_contract");
+    },
+    canChange() {
+      return this.hasPermission("ctrctsapp.change_contract");
+    },
+    hasRowActions() {
+      return this.canView || this.canChange;
+    },
+    filteredContracts() {
+      const q = this.search.trim().toLowerCase();
+      if (!q) return this.contracts;
+      return this.contracts.filter((item) => {
+        const type = String(item.type || "").toLowerCase();
+        const model = String(item.house_model?.name || "").toLowerCase();
+        const id = String(item.id || "");
+        return type.includes(q) || model.includes(q) || id.includes(q);
+      });
+    },
+    emptyTitle() {
+      if (this.loadError) return "Could not load contracts";
+      if (this.search.trim()) return "No matching contracts";
+      return "No contracts yet";
+    },
+    emptyDescription() {
+      if (this.loadError) return "Check your connection and try Refresh.";
+      if (this.search.trim()) return "Try a different search term.";
+      return "No contracts found for this work account.";
+    },
   },
   watch: {
     eventId: {
       immediate: true,
-      async handler(newVal) {
-        if (newVal) {
-          await this.loadWorkAccountId();
-          this.getContracts();
-        }
+      handler() {
+        this.initializeData();
       },
+    },
+    workAccountId: {
+      immediate: true,
+      handler() {
+        this.initializeData();
+      },
+    },
+    search() {
+      this.tableFirst = 0;
     },
   },
   methods: {
     hasPermission(permission) {
-      const userPermissions = JSON.parse(
-        localStorage.getItem("userPermissions")
-      );
-      return (
-        userPermissions && userPermissions.permissions.includes(permission)
-      );
+      try {
+        const userPermissions = JSON.parse(
+          localStorage.getItem("userPermissions")
+        );
+        return (
+          !!userPermissions &&
+          Array.isArray(userPermissions.permissions) &&
+          userPermissions.permissions.includes(permission)
+        );
+      } catch {
+        return false;
+      }
+    },
+    getRowActions(contract) {
+      const actions = [];
+      if (this.canView) {
+        actions.push({
+          key: "view",
+          label: "View",
+          severity: "success",
+          icon: EyeIcon,
+          command: () => this.viewContract(contract.id),
+        });
+        actions.push({
+          key: "print",
+          label: "Print",
+          severity: "secondary",
+          command: () => this.printContract(contract.id),
+        });
+      }
+      if (this.canChange) {
+        actions.push({
+          key: "edit",
+          label: "Edit",
+          severity: "primary",
+          icon: PencilIcon,
+          command: () => this.editContract(contract.id),
+        });
+      }
+      return actions;
+    },
+    onTablePage(event) {
+      this.tableFirst = event.first ?? 0;
+      if (event.rows) this.perPage = event.rows;
+    },
+    refreshTable() {
+      this.initializeData();
+    },
+    async initializeData() {
+      this.tableFirst = 0;
+      if (this.workAccountId) {
+        this.resolvedWorkAccountId = this.workAccountId;
+        await this.getContracts();
+        return;
+      }
+
+      if (!this.eventId) {
+        this.resolvedWorkAccountId = null;
+        this.contracts = [];
+        this.loading = false;
+        this.loadError = false;
+        return;
+      }
+
+      await this.loadWorkAccountId();
+      await this.getContracts();
     },
     async loadWorkAccountId() {
       try {
         const { data } = await axios.get(`/api/event/${this.eventId}/`);
         if (data && data.work_account) {
-          // Manejar tanto ID numérico como objeto con id (mismo patrón que Transactions)
           if (typeof data.work_account === "number") {
-            this.workAccountId = data.work_account;
+            this.resolvedWorkAccountId = data.work_account;
           } else if (
             typeof data.work_account === "object" &&
             data.work_account !== null &&
             data.work_account.id
           ) {
-            this.workAccountId = data.work_account.id;
+            this.resolvedWorkAccountId = data.work_account.id;
           } else {
-            this.workAccountId = data.work_account;
+            this.resolvedWorkAccountId = data.work_account;
           }
         } else {
-          this.workAccountId = null;
+          this.resolvedWorkAccountId = null;
         }
       } catch (e) {
         console.error("Error fetching event data for contracts:", e);
-        this.workAccountId = null;
+        this.resolvedWorkAccountId = null;
       }
     },
     async getContracts() {
-      if (!this.workAccountId) {
-        console.warn("Cannot fetch contracts: workAccountId is not set");
+      if (!this.resolvedWorkAccountId) {
         this.contracts = [];
         this.loading = false;
+        this.loadError = false;
         return;
       }
 
       this.loading = true;
+      this.loadError = false;
       try {
-        // Filtrar por work_account directamente en el query param (como ScheduleHouseTransactionsComponent)
-        const url = `/api/contract/?work_account=${this.workAccountId}&ordering=-id`;
+        const url = `/api/contract/?work_account=${this.resolvedWorkAccountId}&ordering=-id`;
         const response = await axios.get(url);
         const normalizeList = (data) =>
           Array.isArray(data) ? data : data?.results ?? [];
-        const contractsList = normalizeList(response.data);
-        this.contracts = contractsList;
+        this.contracts = normalizeList(response.data);
       } catch (error) {
         console.error("Error fetching contracts:", error);
         this.contracts = [];
+        this.loadError = true;
       } finally {
         this.loading = false;
       }
@@ -269,7 +413,6 @@ export default {
           throw new Error("No PDF file received");
         }
 
-        // Decodificar base64 y crear blob
         const byteCharacters = atob(response.data.file);
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
@@ -285,7 +428,6 @@ export default {
           ) || window.innerWidth <= 768;
 
         if (isMobile) {
-          // En móvil: descargar directamente
           const link = document.createElement("a");
           link.href = url;
           link.download =
@@ -295,10 +437,8 @@ export default {
           document.body.removeChild(link);
           this.notifyToastSuccess?.("PDF downloaded successfully.");
         } else {
-          // En desktop: abrir en nueva ventana
           const newWindow = window.open(url, "_blank");
           if (!newWindow) {
-            // Si no se puede abrir, descargar
             const link = document.createElement("a");
             link.href = url;
             link.download =
@@ -312,7 +452,6 @@ export default {
           }
         }
 
-        // Limpiar la URL después de un tiempo
         setTimeout(() => {
           window.URL.revokeObjectURL(url);
         }, 1000);
@@ -327,7 +466,6 @@ export default {
       }
     },
     goToContractForm() {
-      // Cierra el modal (si existe) y navega luego de un tick para evitar backdrop
       try {
         const modalEl = document.querySelector(".modal.show");
         if (modalEl) {
@@ -342,12 +480,12 @@ export default {
       } catch (e) {
         // no-op
       }
-      // Navegación
       this.$nextTick(() => {
         try {
-          const query = { event_id: this.eventId };
-          if (this.workAccountId) {
-            query.work_account_id = this.workAccountId;
+          const query = {};
+          if (this.eventId) query.event_id = this.eventId;
+          if (this.resolvedWorkAccountId) {
+            query.work_account_id = this.resolvedWorkAccountId;
           }
           const resolved = this.$router.resolve({
             name: "contract-form",
@@ -359,8 +497,10 @@ export default {
           window.location.href = href;
         } catch (_) {
           const queryString = new URLSearchParams({
-            event_id: this.eventId,
-            ...(this.workAccountId && { work_account_id: this.workAccountId }),
+            ...(this.eventId && { event_id: this.eventId }),
+            ...(this.resolvedWorkAccountId && {
+              work_account_id: this.resolvedWorkAccountId,
+            }),
           }).toString();
           window.location.href = `/contract-form?${queryString}`;
         }
@@ -371,34 +511,95 @@ export default {
 </script>
 
 <style scoped>
-.house-contracts-container {
-  padding: 0.5rem;
-  min-height: 300px;
+.jr-house-contracts {
+  min-height: 16rem;
 }
 
-:deep(.table) {
-  font-size: 0.875rem;
-  margin-bottom: 0;
+.jr-house-contracts__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
-:deep(.table thead th) {
-  background-color: #f8f9fa;
+.jr-house-contracts__title {
+  margin: 0;
+  font-size: 0.9375rem;
   font-weight: 600;
-  border-bottom: 2px solid #dee2e6;
-  vertical-align: middle;
+  color: var(--color-jr-text, #111827);
+  text-align: left;
 }
 
-:deep(.table tbody tr:hover) {
-  background-color: #f8f9fa;
+.jr-house-contracts__search {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  max-width: 22rem;
 }
 
-.btn-group-sm > .btn {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-  border-radius: 0.2rem;
+.jr-house-contracts__search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  z-index: 1;
+  display: flex;
+  color: var(--color-jr-muted, #4b5563);
+  pointer-events: none;
+  transform: translateY(-50%);
 }
 
-.btn-group-sm > .btn + .btn {
-  margin-left: 0.25rem;
+.jr-house-contracts__search-icon :deep(svg) {
+  width: 1rem;
+  height: 1rem;
+}
+
+.jr-house-contracts__search :deep(.p-inputtext) {
+  padding-left: 2.25rem;
+}
+
+.jr-house-contracts__table :deep(th.jr-col-num),
+.jr-house-contracts__table :deep(td.jr-col-num) {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.jr-house-contracts__table :deep(th.jr-col-num .p-datatable-column-header-content) {
+  justify-content: flex-end;
+}
+
+.jr-house-contracts__table :deep(.jr-empty-state) {
+  padding: 2.5rem 1rem;
+}
+
+.jr-house-contracts__table :deep(th.jr-col-actions),
+.jr-house-contracts__table :deep(td.jr-col-actions) {
+  width: 14rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.jr-house-contracts__table
+  :deep(th.jr-col-actions .p-datatable-column-header-content) {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.jr-house-contracts__table :deep(td.jr-col-actions .jr-row-actions) {
+  justify-content: center;
+  width: 100%;
+}
+
+@media (max-width: 767.98px) {
+  .jr-house-contracts__search {
+    max-width: none;
+  }
+
+  .jr-house-contracts__table :deep(th.jr-col-actions),
+  .jr-house-contracts__table :deep(td.jr-col-actions) {
+    width: 3.25rem;
+  }
 }
 </style>

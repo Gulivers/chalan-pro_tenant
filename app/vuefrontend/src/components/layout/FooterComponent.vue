@@ -30,9 +30,7 @@
             aria-label="Operational flow">
             <header class="jr-footer__flow-header">
               <h2 class="jr-footer__flow-title">Operational flow</h2>
-              <p class="jr-footer__flow-lead">
-                Follow these steps in order.
-              </p>
+              <p class="jr-footer__flow-lead">Follow these steps in order.</p>
             </header>
 
             <ol class="jr-footer__steps">
@@ -111,9 +109,9 @@
               <path
                 d="M3.654 1.328a.678.678 0 0 1 .737-.061l2.79 1.395c.329.165.445.534.246.86l-1.12 1.933a.678.678 0 0 0 .178.884l1.12 1.12a.678.678 0 0 0 .884.178l1.933-1.12c.326-.199.695-.083.86.246l1.395 2.79a.678.678 0 0 1-.061.737l-1.385 1.385a1.75 1.75 0 0 1-1.85.41 12.84 12.84 0 0 1-5.52-3.37 12.84 12.84 0 0 1-3.37-5.52 1.75 1.75 0 0 1 .41-1.85L3.654 1.328z" />
             </svg>
-            <a href="tel:+12392400016" class="jr-footer__phone-link"
-              >+1 (239) 240-0016</a
-            >
+            <a href="tel:+12392400016" class="jr-footer__phone-link">
+              +1 (239) 240-0016
+            </a>
           </span>
         </p>
       </div>
@@ -205,8 +203,8 @@ export default {
           icon: FlowIconContract,
         },
         {
-          label: "Track Job",
-          route: "/chat-general",
+          label: "Track Work Order",
+          route: "/work-accounts",
           icon: FlowIconChat,
         },
         {

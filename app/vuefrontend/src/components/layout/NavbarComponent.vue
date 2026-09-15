@@ -226,7 +226,6 @@ export default {
           icon: "operations",
           children: [
             { text: "Schedule", route: "/schedule" },
-            { text: "Work Order Viewer", route: "/chat-general" },
             {
               text: "Transactions",
               route: "/transactions",

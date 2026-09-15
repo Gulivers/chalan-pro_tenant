@@ -34,8 +34,8 @@ const WeeklySummaryListComponent = () =>
 // Schedule & Chat
 const ScheduleComponent = () =>
   import("@components/schedule/ScheduleComponent.vue");
-const ScheduleHouseChatsGeneralComponent = () =>
-  import("@components/schedule/ScheduleHouseChatsGeneralComponent.vue");
+const WorkOrderViewerView = () =>
+  import("@views/transactions/WorkOrderViewerView.vue");
 
 // Inventory
 const ProductForm = () => import("@components/inventory/ProductForm.vue");
@@ -320,12 +320,7 @@ const routes = [
   },
   {
     path: "/chat-general",
-    name: "chat-general",
-    component: ScheduleHouseChatsGeneralComponent,
-    meta: {
-      requiresAuth: true,
-      requiredPermissions: ["appschedule.view_event"],
-    },
+    redirect: { name: "work-accounts" },
   },
 
   // ───────────────────────────────────────────────────────────
@@ -1126,6 +1121,15 @@ const routes = [
     path: "/work-accounts",
     name: "work-accounts",
     component: WorkAccountListView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.view_workaccount"],
+    },
+  },
+  {
+    path: "/work-accounts/:id/view",
+    name: "work-order-viewer",
+    component: WorkOrderViewerView,
     meta: {
       requiresAuth: true,
       requiredPermissions: ["apptransactions.view_workaccount"],
