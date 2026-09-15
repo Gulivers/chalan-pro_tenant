@@ -110,15 +110,9 @@ export default {
 
     await this.loadWorkAccountId();
 
-    if (this.resolvedWorkAccountId) {
-      this.wsUrl = this.buildWsUrl(
-        `ws/schedule/work-account/${this.resolvedWorkAccountId}/chat/`
-      );
-    } else {
-      this.wsUrl = this.buildWsUrl(
-        `ws/schedule/event/${this.$props.eventId}/chat/`
-      );
-    }
+    this.wsUrl = this.buildWsUrl(
+      `ws/schedule/event/${this.$props.eventId}/chat/`
+    );
     this.connectWebSocket();
     this.getMessages();
     this.$nextTick(() => {

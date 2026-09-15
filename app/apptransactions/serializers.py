@@ -1,6 +1,7 @@
 
 from decimal import Decimal
 import logging
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.db import transaction
@@ -53,11 +54,39 @@ class WorkAccountSerializer(serializers.ModelSerializer):
     builder_name = serializers.CharField(source="builder.name", read_only=True)
     job_name = serializers.CharField(source="job.name", read_only=True)
     house_model_name = serializers.CharField(source="house_model.name", read_only=True)
+    default_price_type_name = serializers.SerializerMethodField()
+    supervisor = serializers.SerializerMethodField()
+    area_manager = serializers.SerializerMethodField()
     display = serializers.SerializerMethodField()
 
     class Meta:
         model = WorkAccount
         fields = "__all__"
+
+    def get_default_price_type_name(self, obj):
+        if obj.default_price_type_id:
+            return obj.default_price_type.name
+        return None
+
+    def get_supervisor(self, obj):
+        """
+        Supervisor = miembros (Crew Members) de las cuadrillas (Crews) que tienen
+        esta comunidad (Job) en sus Assigned Jobs.
+        Misma relación que SupervisorCommunitiesView (crewsapp).
+        """
+        if not obj.job_id:
+            return None
+        usernames = (
+            User.objects.filter(crews__jobs=obj.job, is_active=True)
+            .order_by("username")
+            .distinct()
+            .values_list("username", flat=True)
+        )
+        names = list(usernames)
+        return ", ".join(names) if names else None
+
+    def get_area_manager(self, obj):
+        return self.get_supervisor(obj)
 
     def get_display(self, obj):
         # Etiqueta compacta para el v-select

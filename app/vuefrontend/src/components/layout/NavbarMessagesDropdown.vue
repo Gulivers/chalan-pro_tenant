@@ -476,10 +476,13 @@ export default {
       if (workAccountId) {
         router.push({
           path: `/work-accounts/${workAccountId}/view`,
-          query: { tab: "chat" },
+          query: { tab: "chat", event: item.id },
         });
       } else {
-        router.push("/work-accounts");
+        router.push({
+          path: "/work-accounts/viewer",
+          query: { tab: "chat", event: item.id },
+        });
       }
     };
 

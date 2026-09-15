@@ -74,6 +74,7 @@
         <TabPanel value="chat">
           <ScheduleHouseChatComponent
             v-if="eventId"
+            :key="eventId"
             :event-id="eventId"
             :work-account-id="workAccountId" />
           <JREmptyState
@@ -85,6 +86,7 @@
         <TabPanel value="notes">
           <ScheduleHouseNotesComponent
             v-if="eventId"
+            :key="eventId"
             :event-id="eventId"
             :work-account-id="workAccountId" />
           <JREmptyState
@@ -96,6 +98,7 @@
         <TabPanel value="folder">
           <EventImageAdmin
             v-if="eventId"
+            :key="eventId"
             :event-id="eventId" />
           <JREmptyState
             v-else
@@ -156,7 +159,7 @@ export default {
   props: {
     workAccountId: {
       type: Number,
-      required: true,
+      default: null,
     },
     eventId: {
       type: Number,

@@ -320,7 +320,7 @@ const routes = [
   },
   {
     path: "/chat-general",
-    redirect: { name: "work-accounts" },
+    redirect: { name: "work-order-viewer-general" },
   },
 
   // ───────────────────────────────────────────────────────────
@@ -1121,6 +1121,15 @@ const routes = [
     path: "/work-accounts",
     name: "work-accounts",
     component: WorkAccountListView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.view_workaccount"],
+    },
+  },
+  {
+    path: "/work-accounts/viewer",
+    name: "work-order-viewer-general",
+    component: WorkOrderViewerView,
     meta: {
       requiresAuth: true,
       requiredPermissions: ["apptransactions.view_workaccount"],

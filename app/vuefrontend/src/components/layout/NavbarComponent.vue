@@ -227,6 +227,11 @@ export default {
           children: [
             { text: "Schedule", route: "/schedule" },
             {
+              text: "Work Order Viewer",
+              route: "/work-accounts/viewer",
+              permission: "apptransactions.view_workaccount",
+            },
+            {
               text: "Transactions",
               route: "/transactions",
               permission: "apptransactions.view_transaction",

@@ -97,11 +97,19 @@ def event_note_saved(sender, instance, **kwargs):
     serializer = EventNoteSerializer(instance)
 
     event_data = serializer.data
-    # Usar work_account_id para el grupo de WebSocket
+    # Usar work_account_id y event_id para el grupo de WebSocket
     work_account_id = instance.work_account_id if instance.work_account_id else None
     if work_account_id:
         _notify_group(
             f"work_account_{work_account_id}_notes",
+            {
+                'type': 'note.updated',
+                'event_data': event_data,
+            }
+        )
+    if instance.event_id:
+        _notify_group(
+            f"event_{instance.event_id}_notes",
             {
                 'type': 'note.updated',
                 'event_data': event_data,
@@ -124,7 +132,7 @@ def event_chatmessage_saved(sender, instance, created, **kwargs):
     serializer = EventChatMessageSerializer(instance)
     event_data = serializer.data
 
-    # Usar work_account_id para el grupo de WebSocket si está disponible
+    # Notificar al grupo de work_account y al grupo del evento
     work_account_id = instance.work_account_id if instance.work_account_id else None
     if work_account_id:
         _notify_group(
@@ -135,8 +143,7 @@ def event_chatmessage_saved(sender, instance, created, **kwargs):
                 'author_id': instance.author.id
             }
         )
-    # Fallback a event_id para compatibilidad
-    elif instance.event_id:
+    if instance.event_id:
         _notify_group(
             f"schedule_{instance.event_id}_chat",
             {

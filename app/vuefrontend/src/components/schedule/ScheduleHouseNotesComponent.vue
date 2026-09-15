@@ -91,15 +91,9 @@ export default {
 
     await this.loadWorkAccountId();
 
-    if (this.resolvedWorkAccountId) {
-      this.wsUrl = this.buildWsUrl(
-        `ws/schedule/work-account/${this.resolvedWorkAccountId}/notes/`
-      );
-    } else {
-      this.wsUrl = this.buildWsUrl(
-        `ws/schedule/event/${this.$props.eventId}/`
-      );
-    }
+    this.wsUrl = this.buildWsUrl(
+      `ws/schedule/event/${this.$props.eventId}/`
+    );
     this.connectWebSocket();
     this.getNote();
 

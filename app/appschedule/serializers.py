@@ -19,6 +19,11 @@ class EventSerializer(serializers.ModelSerializer):
     crew_category = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     work_account_title = serializers.SerializerMethodField()
+    supervisor = serializers.SerializerMethodField()
+    builder_name = serializers.SerializerMethodField()
+    job_name = serializers.SerializerMethodField()
+    house_model_name = serializers.SerializerMethodField()
+    default_price_type_name = serializers.SerializerMethodField()
 
     def get_crew_title(self, obj):
         return obj.crew.name
@@ -31,6 +36,45 @@ class EventSerializer(serializers.ModelSerializer):
     def get_work_account_title(self, obj):
         if obj.work_account:
             return obj.work_account.title
+        return None
+
+    def get_supervisor(self, obj):
+        job = obj.job or (obj.work_account.job if obj.work_account else None)
+        if not job:
+            return None
+        usernames = (
+            User.objects.filter(crews__jobs=job, is_active=True)
+            .order_by("username")
+            .distinct()
+            .values_list("username", flat=True)
+        )
+        names = list(usernames)
+        return ", ".join(names) if names else None
+
+    def get_builder_name(self, obj):
+        if obj.builder:
+            return obj.builder.name
+        if obj.work_account and obj.work_account.builder:
+            return obj.work_account.builder.name
+        return None
+
+    def get_job_name(self, obj):
+        if obj.job:
+            return obj.job.name
+        if obj.work_account and obj.work_account.job:
+            return obj.work_account.job.name
+        return None
+
+    def get_house_model_name(self, obj):
+        if obj.house_model:
+            return obj.house_model.name
+        if obj.work_account and obj.work_account.house_model:
+            return obj.work_account.house_model.name
+        return None
+
+    def get_default_price_type_name(self, obj):
+        if obj.work_account and obj.work_account.default_price_type:
+            return obj.work_account.default_price_type.name
         return None
 
     def get_images(self, obj):
