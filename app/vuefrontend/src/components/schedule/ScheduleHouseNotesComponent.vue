@@ -287,7 +287,7 @@ export default {
 .jr-house-notes__editor {
   min-height: max(18rem, 40vh);
   border: 1px solid var(--color-jr-border, #e5e7eb);
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
   background-color: var(--color-jr-surface, #fff);
   overflow: hidden;
 }

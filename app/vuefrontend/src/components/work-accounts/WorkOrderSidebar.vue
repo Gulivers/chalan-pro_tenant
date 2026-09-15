@@ -293,7 +293,7 @@ export default {
   flex-direction: column;
   background: var(--color-jr-surface, #ffffff);
   border: 1px solid var(--color-jr-border, #e5e7eb);
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
   overflow: hidden;
 }
 
@@ -340,7 +340,7 @@ export default {
   font-weight: 600;
   color: var(--color-jr-primary, #2563eb);
   background: color-mix(in srgb, var(--color-jr-primary, #2563eb) 10%, var(--color-jr-surface, #fff));
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
 }
 
 .jr-wov-sidebar__search {
@@ -451,7 +451,7 @@ export default {
   height: 1.25rem;
   border: 2px solid var(--color-jr-border, #e5e7eb);
   border-top-color: var(--color-jr-primary, #2563eb);
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: 50%;
   animation: jr-spin 0.7s linear infinite;
 }
 
@@ -519,7 +519,7 @@ export default {
   color: var(--color-jr-warning, #d97706);
   background: color-mix(in srgb, var(--color-jr-warning, #d97706) 12%, var(--color-jr-surface, #fff));
   border: 1px solid color-mix(in srgb, var(--color-jr-warning, #d97706) 25%, transparent);
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
   flex-shrink: 0;
 }
 
@@ -629,7 +629,7 @@ export default {
   font-weight: 700;
   color: var(--color-jr-warning, #d97706);
   background: color-mix(in srgb, var(--color-jr-warning, #d97706) 20%, var(--color-jr-surface, #fff));
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
 }
 
 /* Pagination bar */

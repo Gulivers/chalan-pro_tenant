@@ -258,7 +258,7 @@ export default {
   flex: 1;
   min-height: 18rem;
   border: 1px solid var(--color-jr-border, #e5e7eb);
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
   background: var(--color-jr-surface, #fff);
   overflow: hidden;
 }

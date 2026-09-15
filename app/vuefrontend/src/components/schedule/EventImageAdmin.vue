@@ -399,7 +399,7 @@ export default {
   justify-content: center;
   padding: 1rem 1.25rem;
   border: 1px dashed var(--color-jr-border, #e5e7eb);
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
   background: var(--color-jr-surface-muted, #f9fafb);
   cursor: pointer;
   transition: border-color 0.15s ease, background-color 0.15s ease;
@@ -468,7 +468,7 @@ export default {
   flex-direction: column-reverse;
   padding: 0.25rem;
   border: 1px solid var(--color-jr-border, #e5e7eb);
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
   background: var(--color-jr-surface, #fff);
   scrollbar-width: thin;
   scrollbar-color: var(--color-jr-hover-border, #d1d5db) var(--color-jr-surface-muted, #f9fafb);

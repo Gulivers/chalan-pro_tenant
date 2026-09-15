@@ -1,15 +1,31 @@
 <template>
   <JRPage>
-    <div v-if="isLoading" class="jr-wov__loading" role="status" aria-live="polite">
-      <p>Loading work account…</p>
+    <div
+      v-if="isLoading"
+      class="jr-wov__loading"
+      role="status"
+      aria-live="polite">
+      <div class="jr-wov__loading-spinner" aria-hidden="true"></div>
+      <p class="jr-wov__loading-text">Loading work account…</p>
     </div>
 
     <template v-else-if="loadError">
       <JRPageHeader title="Work Order Viewer" />
-      <JREmptyState
-        title="Work account not found"
-        :description="loadError">
+      <JREmptyState title="Work account not found" :description="loadError">
         <JRButton type="button" variant="ghost" size="sm" @click="goToList">
+          <svg
+            class="jr-wov__btn-icon"
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true">
+            <path d="M10 12L6 8l4-4" />
+          </svg>
           Back to Work Accounts
         </JRButton>
       </JREmptyState>
@@ -17,57 +33,109 @@
 
     <template v-else>
       <!-- Page Header (reactive to selected Work Order) -->
-      <header class="jr-wov__header jr-page-header">
-        <div class="jr-wov__header-text">
-          <p class="jr-wov__eyebrow">
-            {{ isGeneralMode && !workAccount ? 'Operations' : 'Work Account' }}
-          </p>
-          <h1 class="jr-page-header__title">{{ displayHeaderTitle }}</h1>
-          <dl v-if="headerMetaItems.length" class="jr-wov__meta">
-            <div
-              v-for="item in headerMetaItems"
-              :key="item.label"
-              class="jr-wov__meta-item">
-              <dt class="jr-wov__meta-label">{{ item.label }}</dt>
-              <dd class="jr-wov__meta-value" :title="item.value">{{ item.value }}</dd>
-            </div>
-          </dl>
-          <p v-else-if="displayHeaderSubtitle" class="jr-page-header__desc">
-            {{ displayHeaderSubtitle }}
-          </p>
+      <header class="jr-wov__header">
+        <div class="jr-wov__header-main">
+          <div class="jr-wov__header-text">
+            <span class="jr-wov__label">
+              {{
+                isGeneralMode && !workAccount ? "Operations" : "Work Account"
+              }}
+            </span>
+            <h1 class="jr-wov__title">{{ displayHeaderTitle }}</h1>
+            <p
+              v-if="!headerMetaItems.length && displayHeaderSubtitle"
+              class="jr-wov__desc">
+              {{ displayHeaderSubtitle }}
+            </p>
+          </div>
+
+          <div class="jr-wov__header-actions">
+            <JRButton
+              type="button"
+              variant="ghost"
+              size="sm"
+              class="jr-wov__back-btn"
+              @click="goToList">
+              <svg
+                class="jr-wov__btn-icon"
+                width="20"
+                height="20"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true">
+                <path d="M10 12L6 8l4-4" />
+              </svg>
+              Back to list
+            </JRButton>
+            <JRButton
+              type="button"
+              :variant="sidebarOpen ? 'primary' : 'secondary'"
+              size="sm"
+              :aria-expanded="sidebarOpen ? 'true' : 'false'"
+              :aria-controls="
+                isMobile ? 'jr-wov-orders-drawer' : 'jr-wov-orders-sidebar'
+              "
+              @click="toggleSidebar">
+              <svg
+                class="jr-wov__btn-icon jr-wov__btn-icon--sidebar"
+                width="20"
+                height="20"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true">
+                <rect x="1.75" y="2" width="12.5" height="12" rx="0" />
+                <line x1="10.5" y1="2" x2="10.5" y2="14" />
+                <path
+                  d="M10.5 2H14.25V14H10.5Z"
+                  :fill="sidebarOpen ? 'currentColor' : 'transparent'"
+                  :opacity="sidebarOpen ? '0.35' : '0'"
+                  stroke="none" />
+              </svg>
+              Work Orders
+              <JRBadge
+                v-if="ordersBadgeCount"
+                class="jr-wov__orders-badge"
+                :value="ordersBadgeCount"
+                :severity="sidebarOpen ? 'secondary' : 'info'" />
+            </JRButton>
+            <JRButton
+              v-if="canEdit && effectiveWorkAccountId"
+              type="button"
+              variant="secondary"
+              size="sm"
+              @click="goToEdit">
+              Edit
+            </JRButton>
+          </div>
         </div>
-        <div class="jr-page-header__actions jr-wov__header-actions">
-          <JRButton
-            type="button"
-            :variant="sidebarOpen ? 'primary' : 'secondary'"
-            size="sm"
-            :aria-expanded="sidebarOpen ? 'true' : 'false'"
-            :aria-controls="isMobile ? 'jr-wov-orders-drawer' : 'jr-wov-orders-sidebar'"
-            @click="toggleSidebar">
-            Work Orders
-            <JRBadge
-              v-if="ordersBadgeCount"
-              class="jr-wov__orders-badge"
-              :value="ordersBadgeCount"
-              :severity="sidebarOpen ? 'contrast' : 'info'" />
-          </JRButton>
-          <JRButton type="button" variant="ghost" size="sm" @click="goToList">
-            Back to list
-          </JRButton>
-          <JRButton
-            v-if="canEdit && effectiveWorkAccountId"
-            type="button"
-            size="sm"
-            @click="goToEdit">
-            Edit
-          </JRButton>
-        </div>
+
+        <dl v-if="headerMetaItems.length" class="jr-wov__meta">
+          <div
+            v-for="item in headerMetaItems"
+            :key="item.label"
+            class="jr-wov__meta-item">
+            <dt class="jr-wov__meta-label">{{ item.label }}</dt>
+            <dd class="jr-wov__meta-value" :title="item.value">
+              {{ item.value }}
+            </dd>
+          </div>
+        </dl>
       </header>
 
       <!-- 2-Column Responsive Layout (desktop: tabs left, sidebar right; mobile: tabs full width) -->
       <div
         class="jr-wov__layout"
-        :class="{ 'jr-wov__layout--sidebar-collapsed': !sidebarOpen || isMobile }">
+        :class="{
+          'jr-wov__layout--sidebar-collapsed': !sidebarOpen || isMobile,
+        }">
         <div class="jr-wov__main-col">
           <WorkOrderViewerTabs
             :work-account-id="effectiveWorkAccountId"
@@ -109,7 +177,7 @@
         :modal="true"
         :dismissable="true"
         :block-scroll="true"
-        header=" "
+        header="Work Orders"
         @update:visible="onSidebarVisible">
         <WorkOrderSidebar
           :work-account="workAccount"
@@ -132,7 +200,14 @@
 </template>
 
 <script>
-import { computed, getCurrentInstance, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import {
+  computed,
+  getCurrentInstance,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import WorkOrderSidebar from "@components/work-accounts/WorkOrderSidebar.vue";
@@ -152,13 +227,17 @@ import {
 } from "@/ui";
 
 const ensureTrailingSlash = (url) => (url.endsWith("/") ? url : `${url}/`);
-const stripTrailingSlash = (url) => (url.endsWith("/") ? url.slice(0, -1) : url);
-const stripLeadingSlash = (path) => (path.startsWith("/") ? path.slice(1) : path);
+const stripTrailingSlash = (url) =>
+  url.endsWith("/") ? url.slice(0, -1) : url;
+const stripLeadingSlash = (path) =>
+  path.startsWith("/") ? path.slice(1) : path;
 
 const getWsBaseUrl = () => {
   const envUrl = process.env.VUE_APP_WS_URL || process.env.VUE_APP_API_URL;
   if (envUrl) {
-    const withoutProtocol = envUrl.replace(/^https?:\/\//i, "").replace(/^wss?:\/\//i, "");
+    const withoutProtocol = envUrl
+      .replace(/^https?:\/\//i, "")
+      .replace(/^wss?:\/\//i, "");
     const base = stripTrailingSlash(withoutProtocol);
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     return `${protocol}//${base}`;
@@ -175,7 +254,8 @@ const buildWsUrl = (path) => {
 };
 
 const isNarrowViewport = () =>
-  typeof window !== "undefined" && window.matchMedia("(max-width: 1024px)").matches;
+  typeof window !== "undefined" &&
+  window.matchMedia("(max-width: 1024px)").matches;
 
 export default {
   name: "WorkOrderViewerView",
@@ -231,7 +311,8 @@ export default {
     const effectiveWorkAccountId = computed(() => {
       if (workAccountId.value) return workAccountId.value;
       if (workAccount.value?.id) return workAccount.value.id;
-      if (selectedEvent.value?.work_account) return selectedEvent.value.work_account;
+      if (selectedEvent.value?.work_account)
+        return selectedEvent.value.work_account;
       return null;
     });
 
@@ -289,15 +370,25 @@ export default {
     const headerMetaItems = computed(() => {
       const wa = workAccount.value;
       const ev = selectedEvent.value;
+      const addr = (wa?.address || ev?.address || "").trim();
+      const title = displayHeaderTitle.value?.trim() || "";
+      const isAddrRedundant =
+        addr && title && addr.toLowerCase() === title.toLowerCase();
+
       const items = [
         { label: "Supervisor", value: supervisorLabel.value },
         { label: "Builder", value: wa?.builder_name || ev?.builder_name },
-        { label: "House Model", value: wa?.house_model_name || ev?.house_model_name },
         { label: "Community", value: wa?.job_name || ev?.job_name },
-        { label: "Address", value: wa?.address || ev?.address },
+        { label: "Lot", value: wa?.lot ? `Lot ${wa.lot}` : null },
+        {
+          label: "House Model",
+          value: wa?.house_model_name || ev?.house_model_name,
+        },
+        { label: "Address", value: isAddrRedundant ? null : addr },
         {
           label: "Default Price Type",
-          value: wa?.default_price_type_name || ev?.default_price_type_name || null,
+          value:
+            wa?.default_price_type_name || ev?.default_price_type_name || null,
         },
       ];
       return items.filter((item) => item.value);
@@ -353,11 +444,14 @@ export default {
         console.error("Failed to load work account", err);
         workAccount.value = null;
         if (err?.response?.status === 404) {
-          loadError.value = "The requested work account does not exist or you do not have access.";
+          loadError.value =
+            "The requested work account does not exist or you do not have access.";
         } else if (err?.response?.status === 403) {
-          loadError.value = "You do not have permission to view this work account.";
+          loadError.value =
+            "You do not have permission to view this work account.";
         } else {
-          loadError.value = "Could not load this work account. Please try again.";
+          loadError.value =
+            "Could not load this work account. Please try again.";
         }
       }
     };
@@ -375,7 +469,11 @@ export default {
 
         const res = await axios.get(url);
         const data = res.data;
-        const list = Array.isArray(data?.results) ? data.results : Array.isArray(data) ? data : [];
+        const list = Array.isArray(data?.results)
+          ? data.results
+          : Array.isArray(data)
+          ? data
+          : [];
         events.value = list;
         totalEventsCount.value = data?.count || list.length;
         hasPrevious.value = Boolean(data?.previous);
@@ -481,7 +579,9 @@ export default {
         const userId = res.data?.id;
         if (!userId) return;
 
-        ws.value = new WebSocket(buildWsUrl(`ws/schedule/unread/user/${userId}/`));
+        ws.value = new WebSocket(
+          buildWsUrl(`ws/schedule/unread/user/${userId}/`)
+        );
 
         ws.value.onmessage = (msgEvent) => {
           try {
@@ -590,24 +690,88 @@ export default {
 
 <style scoped>
 .jr-wov__loading {
-  padding: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 4rem 1rem;
+  text-align: center;
+}
+
+.jr-wov__loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2.5px solid var(--color-jr-border, #e5e7eb);
+  border-top-color: var(--color-jr-primary, #2563eb);
+  border-radius: 50%;
+  animation: jr-wov-spin 0.7s linear infinite;
+}
+
+.jr-wov__loading-text {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--color-jr-muted, #4b5563);
+}
+
+@keyframes jr-wov-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .jr-wov__header {
   margin-bottom: 1rem;
-  padding: 1rem 1.25rem;
+  padding: 1.125rem 1.25rem;
   border: 1px solid var(--color-jr-border, #e5e7eb);
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
   background: var(--color-jr-surface, #ffffff);
 }
 
-.jr-wov__eyebrow {
-  margin: 0 0 0.25rem;
-  font-size: 0.75rem;
+.jr-wov__header-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .jr-wov__header-main {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.25rem;
+  }
+}
+
+.jr-wov__header-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.jr-wov__label {
+  display: block;
+  font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  line-height: 1.3;
+  color: var(--color-jr-label, #4b5563);
+  margin-bottom: 0.25rem;
+}
+
+.jr-wov__title {
+  margin: 0;
+  font-size: 1.3125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-jr-text, #111827);
+  letter-spacing: -0.01em;
+  word-break: break-word;
+}
+
+.jr-wov__desc {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 400;
   color: var(--color-jr-muted, #4b5563);
 }
 
@@ -619,38 +783,54 @@ export default {
   gap: 0.5rem;
 }
 
+.jr-wov__btn-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.35rem;
+  flex-shrink: 0;
+}
+
 .jr-wov__orders-badge {
-  margin-left: 0.35rem;
+  margin-left: 0.375rem;
+}
+
+.jr-wov__header-actions :deep(.p-button-primary) .jr-wov__orders-badge {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
 }
 
 .jr-wov__meta {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
-  gap: 0.625rem 1rem;
-  margin: 0.75rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem 1.75rem;
+  margin: 0.875rem 0 0;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--color-jr-border, #e5e7eb);
 }
 
 .jr-wov__meta-item {
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 7.5rem;
 }
 
 .jr-wov__meta-label {
   margin: 0;
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--color-jr-muted, #4b5563);
 }
 
 .jr-wov__meta-value {
-  margin: 0.125rem 0 0;
+  margin: 0.15rem 0 0;
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-jr-text, #111827);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .jr-wov__layout {
@@ -671,7 +851,14 @@ export default {
 .jr-wov__sidebar-col {
   min-width: 0;
   position: sticky;
-  top: 1rem;
+  top: calc(var(--jr-shell-topbar, 3rem) + 1rem);
+  max-height: calc(100vh - var(--jr-shell-topbar, 3rem) - 2rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.jr-wov__sidebar-col :deep(.jr-wov-sidebar) {
+  height: 100%;
 }
 
 @media (max-width: 1024px) {
@@ -679,12 +866,8 @@ export default {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .jr-wov__header {
-    align-items: stretch;
-  }
-
   .jr-wov__meta {
-    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+    gap: 0.625rem 1.25rem;
   }
 }
 </style>
@@ -714,7 +897,13 @@ export default {
 }
 
 .p-drawer.jr-wov__drawer .p-drawer-header {
-  padding-bottom: 0;
-  min-height: 2.5rem;
+  padding: 0.75rem 1rem 0.25rem;
+  min-height: 2.75rem;
+}
+
+.p-drawer.jr-wov__drawer .p-drawer-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-jr-text, #111827);
 }
 </style>

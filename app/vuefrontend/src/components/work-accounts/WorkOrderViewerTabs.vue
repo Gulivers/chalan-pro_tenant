@@ -230,7 +230,7 @@ export default {
 .jr-wov-tabs {
   border: 1px solid var(--color-jr-border, #e5e7eb);
   background: var(--color-jr-surface, #fff);
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
   overflow: hidden;
 }
 
