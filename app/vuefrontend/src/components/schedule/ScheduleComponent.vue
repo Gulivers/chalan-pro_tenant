@@ -1,6 +1,8 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Schedule" />
+    <JRPageHeader
+      title="Schedule"
+      description="Plan crew work by day or week. Search, jump to a date, or publish drafts in view." />
 
     <JRToolbar>
       <template #start>
@@ -38,6 +40,7 @@
             inputId="schedule-jump-date"
             :model-value="jumpDate"
             placeholder="Go to date"
+            :show-button-bar="true"
             @update:model-value="onJumpDate" />
         </div>
 
@@ -47,12 +50,9 @@
           variant="ghost"
           size="sm"
           @click="downloadScheduleExcel">
-          <img
+          <FileExcel
             class="jr-schedule__excel-icon"
-            src="@/assets/img/microsoft-excel-icon.svg"
-            alt=""
-            width="16"
-            height="16" />
+            aria-hidden="true" />
           Excel
         </JRButton>
 
@@ -62,13 +62,16 @@
           variant="ghost"
           size="sm"
           @click="generateSchedulePDF">
+          <FilePdf
+            class="jr-schedule__pdf-icon"
+            aria-hidden="true" />
           Print PDF
         </JRButton>
 
         <JRButton
           v-if="hasPermission('appschedule.add_event')"
           type="button"
-          variant="secondary"
+          :variant="showBntPublishAll ? 'primary' : 'secondary'"
           size="sm"
           :disabled="publishing || !showBntPublishAll"
           :aria-busy="publishing ? 'true' : 'false'"
@@ -93,11 +96,16 @@
         aria-live="polite">
         Loading schedule…
       </p>
-      <FullCalendar
-        v-else
-        ref="calendarRef"
-        class="jr-schedule__calendar"
-        :options="calendarOptions" />
+      <JREmptyState
+        v-else-if="!allResources.length"
+        title="No crews to schedule"
+        description="Active crews with a category appear here as rows. Add or activate a crew, then refresh." />
+      <div v-else class="jr-schedule__pane">
+        <FullCalendar
+          ref="calendarRef"
+          class="jr-schedule__calendar"
+          :options="calendarOptions" />
+      </div>
     </div>
 
     <EventModal
@@ -122,6 +130,8 @@ import { useAuthStore } from "@stores/auth";
 import { openPdf } from "@helpers";
 import SearchIcon from "@components/icons/searchIcon.vue";
 import { appMixin } from "@mixins/appMixin";
+import FileExcel from "@primeicons/vue/file-excel";
+import FilePdf from "@primeicons/vue/file-pdf";
 import {
   JRPage,
   JRPageHeader,
@@ -130,11 +140,22 @@ import {
   JRButton,
   JRBadge,
   JRDatePicker,
+  JREmptyState,
 } from "@ui";
+
+function escapeScheduleHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
 export default {
   components: {
     SearchIcon,
+    FileExcel,
+    FilePdf,
     FullCalendar,
     EventModal,
     JRPage,
@@ -144,6 +165,7 @@ export default {
     JRButton,
     JRBadge,
     JRDatePicker,
+    JREmptyState,
   },
   mixins: [appMixin],
   data() {
@@ -192,7 +214,8 @@ export default {
         droppable: false,
         resourceAreaHeaderContent: "Crew",
         eventMinHeight: 90,
-        height: "auto",
+        height: "100%",
+        stickyHeaderDates: true,
         slotLabelInterval: { days: 1 },
         slotDuration: { days: 1 },
         slotLabelFormat: { weekday: "long", month: "short", day: "numeric" },
@@ -225,23 +248,23 @@ export default {
             cardClass =
               "jr-schedule-event-card jr-schedule-event-card--absence";
           }
+          const title = escapeScheduleHtml(arg.event.title || "");
+          const description = escapeScheduleHtml(
+            arg.event.extendedProps.description || ""
+          );
           const extService = arg.event.extendedProps?.extended_service
             ? `<div class="jr-schedule-event-card__flags"><span class="jr-schedule-event-card__badge">Ext. Service</span></div>`
             : "";
           const absencePrefix = isAbsence
-            ? `<span class="jr-schedule-event-card__absence-mark" aria-hidden="true">●</span> `
+            ? `<span class="jr-schedule-event-card__absence-mark" aria-hidden="true"></span>`
             : "";
           return {
             html: `<div class="${cardClass}">
-                     <span class="jr-schedule-event-card__title">${absencePrefix}${
-                       arg.event.title || ""
-                     }</span>
-                     <div class="jr-schedule-event-card__desc">${
-                       arg.event.extendedProps.description || ""
-                     }</div>
+                     <span class="jr-schedule-event-card__title">${absencePrefix}${title}</span>
+                     <div class="jr-schedule-event-card__desc">${description}</div>
                      ${extService}
-                     <div class="jr-schedule-event-card__meta">${event_date.format(
-                       "lll"
+                     <div class="jr-schedule-event-card__meta">${escapeScheduleHtml(
+                       event_date.format("lll")
                      )}</div>
                    </div>`,
           };
@@ -332,6 +355,16 @@ export default {
       if (typeof window === "undefined") return;
       const wide = window.matchMedia("(min-width: 992px)").matches;
       this.resourceAreaWidthCurrent = wide ? "15%" : "25%";
+      this.$nextTick(() => {
+        const api = this.$refs.calendarRef?.getApi?.();
+        if (api) {
+          try {
+            api.updateSize();
+          } catch (e) {
+            // Calendar not ready
+          }
+        }
+      });
     },
     reSizeCalendar() {
       const resourceRows = document.querySelectorAll(".fc-resource-cell");
@@ -814,12 +847,25 @@ export default {
 .jr-schedule__jump {
   min-width: 10.5rem;
   max-width: 12.5rem;
+  flex: 1 1 10.5rem;
+}
+
+.jr-schedule__excel-icon,
+.jr-schedule__pdf-icon {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  margin-right: 0.35rem;
+  vertical-align: -0.15em;
 }
 
 .jr-schedule__excel-icon {
-  display: inline-block;
-  vertical-align: -0.15em;
-  margin-right: 0.35rem;
+  color: var(--color-jr-success, #16a34a);
+}
+
+.jr-schedule__pdf-icon {
+  color: var(--color-jr-danger, #dc2626);
 }
 
 .jr-schedule {
@@ -835,10 +881,52 @@ export default {
   color: var(--color-jr-muted, #4b5563);
 }
 
-.jr-schedule__calendar {
+.jr-schedule__pane {
+  display: flex;
+  flex-direction: column;
   background: var(--color-jr-surface, #ffffff);
   border: 1px solid var(--color-jr-border, #e5e7eb);
   border-radius: var(--radius-jr-panel, 0.75rem);
+  height: calc(100vh - var(--jr-shell-topbar, 3.5rem) - 10.5rem);
+  max-height: calc(100vh - var(--jr-shell-topbar, 3.5rem) - 10.5rem);
+  min-height: 22rem;
   overflow: hidden;
+}
+
+.jr-schedule__calendar {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.jr-schedule__pane :deep(.fc),
+.jr-schedule__pane :deep(.fc-view-harness) {
+  height: 100% !important;
+}
+
+.jr-schedule__pane ::selection {
+  background: color-mix(
+    in srgb,
+    var(--color-jr-primary, #2563eb) 22%,
+    var(--color-jr-surface, #ffffff)
+  );
+  color: var(--color-jr-text, #111827);
+}
+
+@media (max-width: 1023.98px) {
+  .jr-schedule__search {
+    max-width: none;
+  }
+
+  .jr-schedule__jump {
+    max-width: none;
+    flex: 1 1 100%;
+  }
+
+  .jr-schedule__pane {
+    height: calc(100dvh - var(--jr-shell-mobile-bar, 3rem) - 13.5rem);
+    max-height: calc(100dvh - var(--jr-shell-mobile-bar, 3rem) - 13.5rem);
+    min-height: 18rem;
+  }
 }
 </style>

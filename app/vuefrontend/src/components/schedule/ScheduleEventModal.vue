@@ -38,8 +38,9 @@
           @submit.prevent="submitEvent(false)">
           <JRField
             v-if="isEditing && hasPermission('appschedule.add_absencereason')"
-            label="Absences scheduled"
-            inputId="jr-schedule-absence-switch">
+            label="Absence"
+            inputId="jr-schedule-absence-switch"
+            hint="Marks this slot as an absence instead of a work account.">
             <JRCheckbox
               inputId="jr-schedule-absence-switch"
               v-model="isAbsence"
@@ -53,6 +54,7 @@
               :model-value="isoToDate(localFormData.date)"
               :disabled="!isEditing"
               placeholder="Select a date"
+              :show-button-bar="true"
               @update:model-value="onDateChange" />
           </JRField>
 
@@ -69,6 +71,7 @@
               option-value="id"
               :disabled="!isEditing"
               placeholder="Select absence reason"
+              filter
               show-clear />
           </JRField>
 
@@ -90,11 +93,12 @@
           </JRField>
 
           <JRField label="Description" inputId="jr-schedule-event-description">
-            <JRInput
+            <JRTextarea
               inputId="jr-schedule-event-description"
               v-model="localFormData.description"
+              :rows="3"
               :disabled="!isEditing"
-              placeholder="Enter event description" />
+              placeholder="Optional notes for this work order" />
           </JRField>
 
           <JRField
@@ -170,7 +174,7 @@
             v-if="isEditing && offLine"
             class="jr-schedule-event__offline"
             role="alert">
-            No internet connection.
+            No internet connection. Reconnect to save changes.
           </p>
         </form>
 
@@ -184,6 +188,7 @@
             initial-tab="chat" />
           <JREmptyState
             v-else
+            class="jr-schedule-event__discussion-empty"
             title="Discussion unavailable"
             description="Save and post this work order to open chat, notes, folder, contracts, and transactions for this event." />
         </div>
@@ -202,6 +207,7 @@ import {
   JRDialog,
   JRField,
   JRInput,
+  JRTextarea,
   JRSelect,
   JRDatePicker,
   JRCheckbox,
@@ -220,6 +226,7 @@ export default {
     JRDialog,
     JRField,
     JRInput,
+    JRTextarea,
     JRSelect,
     JRDatePicker,
     JRCheckbox,
@@ -678,18 +685,21 @@ export default {
 </script>
 
 <style scoped>
+/* Mobile-first: stacked layout, natural height, modal scrolls */
 .jr-schedule-event {
+  --jr-wov-body-height: min(16rem, calc(100dvh - 20rem));
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.875rem;
+  min-height: 0;
 }
 
 .jr-schedule-event__header {
   margin: 0;
-  padding: 0.85rem 1rem;
+  padding: 0.75rem 0.875rem;
   border: 1px solid var(--color-jr-border, #e5e7eb);
-  border-radius: var(--radius-jr-panel, 0.75rem);
   background: var(--color-jr-surface, #ffffff);
+  flex: 0 0 auto;
 }
 
 .jr-schedule-event__header-main {
@@ -697,18 +707,18 @@ export default {
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem 1rem;
+  gap: 0.625rem 0.875rem;
 }
 
 .jr-schedule-event__header-text {
   min-width: 0;
-  flex: 1 1 12rem;
+  flex: 1 1 10rem;
 }
 
 .jr-schedule-event__label {
   display: block;
-  margin-bottom: 0.25rem;
-  font-size: 0.8125rem;
+  margin-bottom: 0.2rem;
+  font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.3;
   color: var(--color-jr-muted, #4b5563);
@@ -725,19 +735,19 @@ export default {
 }
 
 .jr-schedule-event__meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 0.75rem 1.75rem;
-  margin: 0.875rem 0 0;
-  padding-top: 0.875rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem 1rem;
+  margin: 0.75rem 0 0;
+  padding-top: 0.75rem;
   border-top: 1px solid var(--color-jr-border, #e5e7eb);
 }
 
 .jr-schedule-event__meta-item {
   display: flex;
   flex-direction: column;
-  min-width: 7.5rem;
+  min-width: 0;
+  max-width: none;
 }
 
 .jr-schedule-event__meta-label {
@@ -760,19 +770,24 @@ export default {
 
 .jr-schedule-event__layout {
   display: grid;
-  grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
-  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.875rem;
   align-items: start;
+  height: auto;
+  max-height: none;
+  min-height: 0;
 }
 
 .jr-schedule-event__form {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.75rem;
   min-width: 0;
-  padding: 0.85rem;
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
+  padding: 0.75rem;
   border: 1px solid var(--color-jr-border, #e5e7eb);
-  border-radius: var(--radius-jr-panel, 0.75rem);
   background: var(--color-jr-surface, #ffffff);
 }
 
@@ -787,12 +802,20 @@ export default {
 
 .jr-schedule-event__actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.5rem;
-  justify-content: flex-end;
   margin-top: 0.25rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--color-jr-border, #e5e7eb);
+  position: static;
+  background: var(--color-jr-surface, #ffffff);
+}
+
+.jr-schedule-event__actions :deep(.jr-button),
+.jr-schedule-event__actions :deep(.p-button) {
+  width: 100%;
+  min-height: 2.75rem;
+  justify-content: center;
 }
 
 .jr-schedule-event__offline {
@@ -810,12 +833,101 @@ export default {
 }
 
 .jr-schedule-event__discussion {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  min-height: calc(var(--jr-wov-body-height, 16rem) + 7rem);
+  height: auto;
+  max-height: none;
+  border: 1px solid var(--color-jr-border, #e5e7eb);
+  background: var(--color-jr-surface, #ffffff);
+  overflow: hidden;
 }
 
-@media (max-width: 991.98px) {
+.jr-schedule-event__discussion :deep(.jr-wov-tabs) {
+  border: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.jr-schedule-event__discussion :deep(.jr-scroll-area),
+.jr-schedule-event__discussion :deep(.p-scrollarea.jr-scroll-area) {
+  height: var(--jr-wov-body-height, 16rem) !important;
+  min-height: 12rem;
+}
+
+.jr-schedule-event__discussion-empty {
+  padding: 1.25rem 1rem;
+}
+
+@media (min-width: 992px) {
+  .jr-schedule-event {
+    --jr-wov-body-height: min(26rem, calc(100dvh - 18rem));
+    gap: 1rem;
+  }
+
+  .jr-schedule-event__header {
+    padding: 0.85rem 1rem;
+  }
+
+  .jr-schedule-event__label {
+    font-size: 0.8125rem;
+  }
+
+  .jr-schedule-event__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.75rem;
+  }
+
+  .jr-schedule-event__meta-item {
+    min-width: 7.5rem;
+    max-width: 14rem;
+  }
+
   .jr-schedule-event__layout {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: stretch;
+    height: min(36rem, calc(100dvh - 12rem));
+    max-height: min(36rem, calc(100dvh - 12rem));
+  }
+
+  .jr-schedule-event__form {
+    gap: 0.85rem;
+    padding: 0.85rem;
+    max-height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .jr-schedule-event__actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    margin-top: auto;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+  }
+
+  .jr-schedule-event__actions :deep(.jr-button),
+  .jr-schedule-event__actions :deep(.p-button) {
+    width: auto;
+    min-height: 0;
+  }
+
+  .jr-schedule-event__discussion {
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+  }
+
+  .jr-schedule-event__discussion :deep(.jr-scroll-area),
+  .jr-schedule-event__discussion :deep(.p-scrollarea.jr-scroll-area) {
+    height: 100% !important;
+    min-height: 14rem;
   }
 }
 </style>

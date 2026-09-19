@@ -233,18 +233,36 @@ export default {
 </script>
 
 <style scoped>
+/* Mobile-first tabs */
 .jr-wov-tabs {
+  --jr-wov-body-height: 16rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
   border: 1px solid var(--color-jr-border, #e5e7eb);
   background: var(--color-jr-surface, #fff);
   border-radius: var(--radius-jr-control, 0);
   overflow: hidden;
 }
 
+.jr-wov-tabs__prime {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.jr-wov-tabs__prime :deep(.p-tablist) {
+  flex: 0 0 auto;
+}
+
 .jr-wov-tabs__prime :deep(.p-tablist-tab-list) {
   background: var(--color-jr-surface-muted, #f9fafb);
   border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
-  gap: 0.25rem;
-  padding: 0 0.5rem;
+  gap: 0.125rem;
+  padding: 0 0.25rem;
 }
 
 .jr-wov-tabs__prime :deep(.p-tab) {
@@ -253,9 +271,10 @@ export default {
   background: transparent;
   color: var(--color-jr-muted, #4b5563);
   font-family: var(--font-jr-sans, sans-serif);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 500;
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 0.65rem;
+  min-height: 2.75rem;
   transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
   cursor: pointer;
 }
@@ -289,7 +308,7 @@ export default {
 .jr-wov-tab__inner {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .jr-wov-tab__icon {
@@ -304,28 +323,65 @@ export default {
 }
 
 .jr-wov-tabs__prime :deep(.p-tabpanels) {
-  padding: 1.25rem;
-  min-height: 28rem;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: auto;
+  padding: 0.65rem;
   background: var(--color-jr-surface, #fff);
+  overflow: hidden;
 }
 
 .jr-wov-tabs__prime :deep(.p-tabpanel) {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
   outline: none;
+  overflow: hidden;
+}
+
+.jr-wov-tabs__prime :deep(.p-tabpanel > *) {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
 }
 
 .jr-wov-tabs__prime :deep(.jr-toolbar) {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.65rem;
+  flex: 0 0 auto;
 }
 
-@media (max-width: 768px) {
+.jr-wov-tabs__prime :deep(.jr-scroll-area),
+.jr-wov-tabs__prime :deep(.p-scrollarea.jr-scroll-area) {
+  flex: 1 1 auto;
+  min-height: 12rem;
+  height: var(--jr-wov-body-height, 16rem) !important;
+}
+
+@media (min-width: 769px) {
+  .jr-wov-tabs {
+    --jr-wov-body-height: 22rem;
+  }
+
+  .jr-wov-tabs__prime :deep(.p-tablist-tab-list) {
+    gap: 0.25rem;
+    padding: 0 0.5rem;
+  }
+
   .jr-wov-tabs__prime :deep(.p-tab) {
-    padding: 0.75rem 0.75rem;
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
+    padding: 0.75rem 0.875rem;
   }
 
   .jr-wov-tabs__prime :deep(.p-tabpanels) {
     padding: 0.75rem;
-    min-height: 22rem;
+  }
+
+  .jr-wov-tab__inner {
+    gap: 0.5rem;
   }
 }
 </style>

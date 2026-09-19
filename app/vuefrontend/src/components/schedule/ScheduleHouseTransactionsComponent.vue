@@ -58,66 +58,69 @@
       </template>
     </JRToolbar>
 
-    <div
-      class="jr-house-transactions__table"
-      :aria-busy="loading ? 'true' : 'false'">
-      <JRDataTable
-        :value="filteredTransactions"
-        :loading="loading"
-        dataKey="id"
-        :paginator="filteredTransactions.length > perPage"
-        :rows="perPage"
-        :first="tableFirst"
-        sortField="id"
-        :sortOrder="-1"
-        paginatorTemplate="PrevPageLink CurrentPageReport NextPageLink"
-        currentPageReportTemplate="{first}–{last} of {totalRecords}"
-        scrollable
-        stripedRows
-        tableStyle="min-width: 40rem"
-        :emptyTitle="loading ? '' : emptyTitle"
-        :emptyDescription="loading ? '' : emptyDescription"
-        @page="onTablePage">
-        <template #empty>
-          <JREmptyState
-            v-if="!loading"
-            :title="emptyTitle"
-            :description="emptyDescription">
-            <JRButton
-              v-if="loadError"
-              type="button"
-              variant="ghost"
-              size="sm"
-              @click="refreshTable">
-              Refresh
-            </JRButton>
-            <JRButton
-              v-else-if="search.trim()"
-              type="button"
-              variant="ghost"
-              size="sm"
-              @click="search = ''">
-              Clear search
-            </JRButton>
-            <JRButton
-              v-else-if="canAdd"
-              type="button"
-              size="sm"
-              @click="() => goToTransactionForm()">
-              + New Transaction
-            </JRButton>
-          </JREmptyState>
-        </template>
-
-        <Column field="id" header="ID" sortable style="width: 4rem">
-          <template #body="{ data }">
-            {{ data.id }}
+    <JRScrollArea
+      class="jr-house-transactions__scroll"
+      height="var(--jr-wov-body-height, 22rem)">
+      <div
+        class="jr-house-transactions__table"
+        :aria-busy="loading ? 'true' : 'false'">
+        <JRDataTable
+          :value="filteredTransactions"
+          :loading="loading"
+          dataKey="id"
+          :paginator="filteredTransactions.length > perPage"
+          :rows="perPage"
+          :first="tableFirst"
+          sortField="id"
+          :sortOrder="-1"
+          paginatorTemplate="PrevPageLink CurrentPageReport NextPageLink"
+          currentPageReportTemplate="{first}–{last} of {totalRecords}"
+          scrollable
+          stripedRows
+          tableStyle="min-width: 40rem"
+          :emptyTitle="loading ? '' : emptyTitle"
+          :emptyDescription="loading ? '' : emptyDescription"
+          @page="onTablePage">
+          <template #empty>
+            <JREmptyState
+              v-if="!loading"
+              :title="emptyTitle"
+              :description="emptyDescription">
+              <JRButton
+                v-if="loadError"
+                type="button"
+                variant="ghost"
+                size="sm"
+                @click="refreshTable">
+                Refresh
+              </JRButton>
+              <JRButton
+                v-else-if="search.trim()"
+                type="button"
+                variant="ghost"
+                size="sm"
+                @click="search = ''">
+                Clear search
+              </JRButton>
+              <JRButton
+                v-else-if="canAdd"
+                type="button"
+                size="sm"
+                @click="() => goToTransactionForm()">
+                + New Transaction
+              </JRButton>
+            </JREmptyState>
           </template>
-        </Column>
 
-        <Column
-          field="document_type"
-          header="Type"
+          <Column field="id" header="ID" sortable style="width: 4rem">
+            <template #body="{ data }">
+              {{ data.id }}
+            </template>
+          </Column>
+
+          <Column
+            field="document_type"
+            header="Type"
           sortable
           style="width: 7rem">
           <template #body="{ data }">
@@ -185,7 +188,8 @@
           </template>
         </Column>
       </JRDataTable>
-    </div>
+      </div>
+    </JRScrollArea>
   </div>
 </template>
 
@@ -205,6 +209,7 @@ import {
   JREmptyState,
   JRInput,
   JRRowActions,
+  JRScrollArea,
   JRToolbar,
 } from "@ui";
 
@@ -222,6 +227,7 @@ export default {
     JREmptyState,
     JRInput,
     JRRowActions,
+    JRScrollArea,
     JRToolbar,
   },
   props: {
@@ -609,7 +615,11 @@ export default {
 
 <style scoped>
 .jr-house-transactions {
-  min-height: 16rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  height: 100%;
 }
 
 .jr-house-transactions__header {
@@ -618,6 +628,12 @@ export default {
   justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
+  flex: 0 0 auto;
+}
+
+.jr-house-transactions__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .jr-house-transactions__title {

@@ -5,7 +5,9 @@
       <span class="jr-house-notes__hint">Shared notes for crews and supervisors</span>
     </div>
 
-    <div ref="quillEditor" class="jr-house-notes__editor"></div>
+    <JRScrollArea class="jr-house-notes__scroll" height="var(--jr-wov-body-height, 22rem)">
+      <div ref="quillEditor" class="jr-house-notes__editor"></div>
+    </JRScrollArea>
 
     <div class="jr-house-notes__footer">
       <div v-if="showEditor" class="jr-house-notes__status">
@@ -58,12 +60,13 @@
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import axios from "axios";
-import { JRButton } from "@ui";
+import { JRButton, JRScrollArea } from "@ui";
 
 export default {
   name: "ScheduleHouseNotesComponent",
   components: {
     JRButton,
+    JRScrollArea,
   },
   props: {
     eventId: Number,
@@ -280,7 +283,8 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  min-height: 18rem;
+  min-height: 0;
+  height: 100%;
 }
 
 .jr-house-notes__header {
@@ -289,6 +293,7 @@ export default {
   justify-content: space-between;
   gap: 0.5rem;
   flex-wrap: wrap;
+  flex: 0 0 auto;
 }
 
 .jr-house-notes__title {
@@ -304,12 +309,20 @@ export default {
   color: var(--color-jr-muted, #4b5563);
 }
 
+.jr-house-notes__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.jr-house-notes__scroll :deep(.jr-scroll-area) {
+  border-color: var(--color-jr-border, #e5e7eb);
+}
+
 .jr-house-notes__editor {
-  min-height: max(18rem, 40vh);
-  border: 1px solid var(--color-jr-border, #e5e7eb);
-  border-radius: var(--radius-jr-control, 0);
+  min-height: 100%;
+  border: none;
   background-color: var(--color-jr-surface, #fff);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .jr-house-notes__editor :deep(.ql-toolbar.ql-snow) {
@@ -318,6 +331,9 @@ export default {
   background: var(--color-jr-surface-muted, #f9fafb);
   padding: 0.5rem 0.75rem;
   font-family: var(--font-jr-sans, sans-serif);
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .jr-house-notes__editor :deep(.ql-container.ql-snow) {
@@ -328,11 +344,9 @@ export default {
 }
 
 .jr-house-notes__editor :deep(.ql-editor) {
-  min-height: max(14rem, 32vh);
+  min-height: 16rem;
   padding: 1rem 1.125rem;
   line-height: 1.55;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-jr-hover-border, #d1d5db) var(--color-jr-surface-muted, #f9fafb);
 }
 
 .jr-house-notes__editor :deep(.note-stamp) {
@@ -348,31 +362,29 @@ export default {
 
 .jr-house-notes__footer {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: 0.75rem;
+  flex: 0 0 auto;
 }
 
-.jr-house-notes__status {
+.jr-house-notes__actions {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.375rem;
+  justify-content: stretch;
 }
 
-.jr-house-notes__status-label {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--color-jr-muted, #4b5563);
-  margin-right: 0.125rem;
+.jr-house-notes__actions :deep(.jr-button),
+.jr-house-notes__actions :deep(.p-button) {
+  width: 100%;
+  min-height: 2.75rem;
 }
 
 .jr-house-notes__tag {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
+  min-height: 2.25rem;
+  padding: 0.375rem 0.625rem;
   border: 1px solid var(--color-jr-border, #e5e7eb);
   border-radius: var(--radius-jr-control, 0);
   background: var(--color-jr-surface, #fff);
@@ -394,10 +406,40 @@ export default {
   outline-offset: 1px;
 }
 
-.jr-house-notes__actions {
+.jr-house-notes__status {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
-  margin-left: auto;
+  gap: 0.375rem;
+}
+
+.jr-house-notes__status-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-jr-muted, #4b5563);
+  margin-right: 0.125rem;
+}
+
+@media (min-width: 769px) {
+  .jr-house-notes__footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .jr-house-notes__actions {
+    justify-content: flex-end;
+  }
+
+  .jr-house-notes__actions :deep(.jr-button),
+  .jr-house-notes__actions :deep(.p-button) {
+    width: auto;
+    min-height: 0;
+  }
+
+  .jr-house-notes__tag {
+    min-height: 0;
+    padding: 0.25rem 0.5rem;
+  }
 }
 </style>

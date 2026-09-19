@@ -14,15 +14,26 @@
   --fc-button-active-border-color: var(--color-jr-primary-hover, #1d4ed8);
   --fc-today-bg-color: color-mix(
     in srgb,
-    var(--color-jr-primary, #2563eb) 8%,
+    var(--color-jr-primary, #2563eb) 6%,
     var(--color-jr-surface, #ffffff)
+  );
+  --jr-schedule-today-accent: var(--color-jr-primary, #2563eb);
+  --jr-schedule-today-bg: color-mix(
+    in srgb,
+    var(--color-jr-primary, #2563eb) 4%,
+    var(--color-jr-surface, #ffffff)
+  );
+  --jr-schedule-today-header-bg: color-mix(
+    in srgb,
+    var(--color-jr-primary, #2563eb) 10%,
+    var(--color-jr-surface-muted, #f9fafb)
   );
   --fc-event-text-color: var(--color-jr-text, #111827);
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, sans-serif;
   font-size: 0.875rem;
   color: var(--color-jr-text, #111827);
-  overflow: visible !important;
+  height: 100%;
 }
 
 .jr-schedule .fc .fc-toolbar {
@@ -34,6 +45,7 @@
   padding: 0.75rem 1rem;
   background: var(--color-jr-surface-muted, #f9fafb);
   border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
+  flex: 0 0 auto;
 }
 
 .jr-schedule .fc .fc-toolbar-title {
@@ -49,6 +61,13 @@
   gap: 0;
 }
 
+.jr-schedule .fc .fc-toolbar-chunk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .jr-schedule .fc .fc-button {
   border-radius: var(--radius-jr-control, 0) !important;
   font-size: 0.8125rem !important;
@@ -57,6 +76,11 @@
   line-height: 1.25 !important;
   box-shadow: none !important;
   text-transform: none !important;
+  transition: background-color 160ms ease-out, border-color 160ms ease-out;
+}
+
+.jr-schedule .fc .fc-today-button:disabled {
+  opacity: 0.55;
 }
 
 .jr-schedule .fc .fc-button:focus {
@@ -75,17 +99,28 @@
   border-color: var(--color-jr-border, #e5e7eb);
 }
 
-.jr-schedule .fc .fc-scrollgrid-section-header {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 0;
-  z-index: 3;
+/* Crew + day header row stays visible while the body timeline scrolls */
+.jr-schedule .fc .fc-scrollgrid-section-header,
+.jr-schedule .fc .fc-scrollgrid-section-header > * {
+  background-color: var(--color-jr-surface-muted, #f9fafb);
+}
+
+.jr-schedule
+  .fc
+  .fc-scrollgrid-section-header.fc-scrollgrid-section-sticky
+  > * {
   background-color: var(--color-jr-surface-muted, #f9fafb);
 }
 
 .jr-schedule .fc .fc-col-header-cell,
-.jr-schedule .fc .fc-datagrid-header {
+.jr-schedule .fc .fc-datagrid-header,
+.jr-schedule .fc .fc-timeline-header {
   background: var(--color-jr-surface-muted, #f9fafb);
+}
+
+.jr-schedule .fc .fc-datagrid-header,
+.jr-schedule .fc .fc-timeline-header {
+  box-shadow: 0 1px 0 var(--color-jr-border, #e5e7eb);
 }
 
 .jr-schedule .fc .fc-col-header-cell-cushion,
@@ -112,13 +147,33 @@
   text-decoration: none;
 }
 
+/* Distinctive “today” — soft column wash, accent on header only */
+.jr-schedule .fc .fc-timeline-slots {
+  z-index: 0;
+}
+.jr-schedule .fc .fc-timeline-body > .fc-scrollgrid-sync-table {
+  position: relative;
+  z-index: 1;
+}
+.jr-schedule .fc .fc-timeline-slot.fc-day-today {
+  background-color: var(--jr-schedule-today-bg) !important;
+}
+
 .jr-schedule .fc .fc-day-today .fc-timeline-slot-cushion {
-  color: var(--color-jr-primary, #2563eb);
+  color: var(--jr-schedule-today-accent);
   font-weight: 700;
 }
 
-.jr-schedule .fc-scroller {
-  overflow-y: visible !important;
+.jr-schedule .fc .fc-timeline-slot-lane.fc-day-today {
+  box-shadow: none;
+}
+
+/*
+ * Do NOT force overflow-y:visible on all .fc-scroller nodes.
+ * Resource timeline keeps day/Crew headers outside the body scroller;
+ * the body must scroll vertically so the timeline-header stays fixed.
+ */
+.jr-schedule .fc-scroller-harness > .fc-scroller {
   overflow-x: auto;
 }
 
@@ -137,7 +192,7 @@
   background: transparent !important;
   border-radius: 0 !important;
   font-weight: 500;
-  overflow: hidden;
+  overflow: visible;
   white-space: normal;
   box-shadow: none;
 }
@@ -167,64 +222,80 @@
   height: auto;
 }
 
-/* Event cards (rendered via eventContent) */
+/* Event cards — left accent + soft lift (user brief + reference) */
 .jr-schedule-event-card {
+  --jr-schedule-accent: var(--color-jr-primary, #2563eb);
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
   width: 100%;
   min-height: 100%;
-  padding: 0.4rem 0.5rem;
+  padding: 0.45rem 0.55rem 0.45rem 0.65rem;
   border: 1px solid var(--color-jr-border, #e5e7eb);
-  background: var(--color-jr-surface, #ffffff);
+  border-left: 4px solid var(--jr-schedule-accent);
+  background: color-mix(
+    in srgb,
+    var(--jr-schedule-accent) 10%,
+    var(--color-jr-surface, #ffffff)
+  );
   color: var(--color-jr-text, #111827);
-  border-radius: 0;
+  border-radius: var(--radius-jr-panel, 0.75rem);
   box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.06),
+    0 4px 10px rgba(17, 24, 39, 0.05);
 }
 
 .jr-schedule-event-card--posted {
+  --jr-schedule-accent: var(--color-jr-success, #16a34a);
   background: color-mix(
     in srgb,
-    var(--color-jr-success, #16a34a) 14%,
+    var(--color-jr-success, #16a34a) 12%,
     var(--color-jr-surface, #ffffff)
   );
   border-color: color-mix(
     in srgb,
-    var(--color-jr-success, #16a34a) 35%,
+    var(--color-jr-success, #16a34a) 28%,
     var(--color-jr-border, #e5e7eb)
   );
+  border-left-color: var(--jr-schedule-accent);
 }
 
 .jr-schedule-event-card--draft {
+  --jr-schedule-accent: var(--color-jr-muted, #4b5563);
   background: var(--color-jr-surface-muted, #f9fafb);
   border-color: var(--color-jr-hover-border, #d1d5db);
+  border-left-color: var(--jr-schedule-accent);
 }
 
 .jr-schedule-event-card--deleted {
+  --jr-schedule-accent: var(--color-jr-danger, #dc2626);
   background: color-mix(
     in srgb,
-    var(--color-jr-danger, #dc2626) 14%,
+    var(--color-jr-danger, #dc2626) 12%,
     var(--color-jr-surface, #ffffff)
   );
   border-color: color-mix(
     in srgb,
-    var(--color-jr-danger, #dc2626) 35%,
+    var(--color-jr-danger, #dc2626) 28%,
     var(--color-jr-border, #e5e7eb)
   );
+  border-left-color: var(--jr-schedule-accent);
 }
 
 .jr-schedule-event-card--absence {
+  --jr-schedule-accent: var(--color-jr-info, #0284c7);
   background: color-mix(
     in srgb,
-    var(--color-jr-info, #0284c7) 14%,
+    var(--color-jr-info, #0284c7) 12%,
     var(--color-jr-surface, #ffffff)
   );
   border-color: color-mix(
     in srgb,
-    var(--color-jr-info, #0284c7) 35%,
+    var(--color-jr-info, #0284c7) 28%,
     var(--color-jr-border, #e5e7eb)
   );
-  opacity: 0.95;
+  border-left-color: var(--jr-schedule-accent);
+  opacity: 0.98;
 }
 
 .jr-schedule-event-card__title {
@@ -237,8 +308,13 @@
 }
 
 .jr-schedule-event-card__absence-mark {
-  color: var(--color-jr-info, #0284c7);
-  margin-right: 0.15rem;
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-right: 0.35rem;
+  vertical-align: 0.1em;
+  border-radius: 50%;
+  background: var(--color-jr-info, #0284c7);
 }
 
 .jr-schedule-event-card__desc {

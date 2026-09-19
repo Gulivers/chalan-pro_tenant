@@ -50,74 +50,77 @@
       </template>
     </JRToolbar>
 
-    <div
-      class="jr-house-contracts__table"
-      :aria-busy="loading ? 'true' : 'false'">
-      <JRDataTable
-        :value="filteredContracts"
-        :loading="loading"
-        dataKey="id"
-        :paginator="filteredContracts.length > perPage"
-        :rows="perPage"
-        :first="tableFirst"
-        sortField="id"
-        :sortOrder="-1"
-        paginatorTemplate="PrevPageLink CurrentPageReport NextPageLink"
-        currentPageReportTemplate="{first}–{last} of {totalRecords}"
-        scrollable
-        stripedRows
-        tableStyle="min-width: 36rem"
-        :emptyTitle="loading ? '' : emptyTitle"
-        :emptyDescription="loading ? '' : emptyDescription"
-        @page="onTablePage">
-        <template #empty>
-          <JREmptyState
-            v-if="!loading"
-            :title="emptyTitle"
-            :description="emptyDescription">
-            <JRButton
-              v-if="canAdd && !search.trim()"
-              type="button"
-              size="sm"
-              @click="goToContractForm">
-              + New Contract
-            </JRButton>
-            <JRButton
-              v-else-if="search.trim()"
-              type="button"
-              variant="ghost"
-              size="sm"
-              @click="search = ''">
-              Clear search
-            </JRButton>
-          </JREmptyState>
-        </template>
-
-        <Column field="id" header="ID" sortable style="width: 4rem">
-          <template #body="{ data }">
-            {{ data.id }}
+    <JRScrollArea
+      class="jr-house-contracts__scroll"
+      height="var(--jr-wov-body-height, 22rem)">
+      <div
+        class="jr-house-contracts__table"
+        :aria-busy="loading ? 'true' : 'false'">
+        <JRDataTable
+          :value="filteredContracts"
+          :loading="loading"
+          dataKey="id"
+          :paginator="filteredContracts.length > perPage"
+          :rows="perPage"
+          :first="tableFirst"
+          sortField="id"
+          :sortOrder="-1"
+          paginatorTemplate="PrevPageLink CurrentPageReport NextPageLink"
+          currentPageReportTemplate="{first}–{last} of {totalRecords}"
+          scrollable
+          stripedRows
+          tableStyle="min-width: 36rem"
+          :emptyTitle="loading ? '' : emptyTitle"
+          :emptyDescription="loading ? '' : emptyDescription"
+          @page="onTablePage">
+          <template #empty>
+            <JREmptyState
+              v-if="!loading"
+              :title="emptyTitle"
+              :description="emptyDescription">
+              <JRButton
+                v-if="canAdd && !search.trim()"
+                type="button"
+                size="sm"
+                @click="goToContractForm">
+                + New Contract
+              </JRButton>
+              <JRButton
+                v-else-if="search.trim()"
+                type="button"
+                variant="ghost"
+                size="sm"
+                @click="search = ''">
+                Clear search
+              </JRButton>
+            </JREmptyState>
           </template>
-        </Column>
 
-        <Column field="type" header="Type" sortable style="width: 6rem">
-          <template #body="{ data }">
-            <JRBadge :value="data.type || '—'" severity="info" />
-          </template>
-        </Column>
+          <Column field="id" header="ID" sortable style="width: 4rem">
+            <template #body="{ data }">
+              {{ data.id }}
+            </template>
+          </Column>
 
-        <Column field="date_created" header="Date" sortable style="width: 8rem">
-          <template #body="{ data }">
-            {{ formatDate(data.date_created) }}
-          </template>
-        </Column>
+          <Column field="type" header="Type" sortable style="width: 6rem">
+            <template #body="{ data }">
+              <JRBadge :value="data.type || '—'" severity="info" />
+            </template>
+          </Column>
 
-        <Column field="house_model" header="Model" sortable>
-          <template #body="{ data }">
-            {{ data.house_model?.name || "—" }}
-          </template>
-        </Column>
+          <Column field="date_created" header="Date" sortable style="width: 8rem">
+            <template #body="{ data }">
+              {{ formatDate(data.date_created) }}
+            </template>
+          </Column>
 
-        <Column
+          <Column field="house_model" header="Model" sortable>
+            <template #body="{ data }">
+              {{ data.house_model?.name || "—" }}
+            </template>
+          </Column>
+
+          <Column
           field="sqft"
           header="SqFt"
           sortable
@@ -152,7 +155,8 @@
           </template>
         </Column>
       </JRDataTable>
-    </div>
+      </div>
+    </JRScrollArea>
   </div>
 </template>
 
@@ -172,6 +176,7 @@ import {
   JREmptyState,
   JRInput,
   JRRowActions,
+  JRScrollArea,
   JRToolbar,
 } from "@ui";
 
@@ -189,6 +194,7 @@ export default {
     JREmptyState,
     JRInput,
     JRRowActions,
+    JRScrollArea,
     JRToolbar,
   },
   props: {
@@ -512,7 +518,10 @@ export default {
 
 <style scoped>
 .jr-house-contracts {
-  min-height: 16rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
 }
 
 .jr-house-contracts__header {
@@ -521,6 +530,12 @@ export default {
   justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
+  flex: 0 0 auto;
+}
+
+.jr-house-contracts__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .jr-house-contracts__title {

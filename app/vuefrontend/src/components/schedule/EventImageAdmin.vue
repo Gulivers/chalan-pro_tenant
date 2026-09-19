@@ -35,120 +35,122 @@
       title="No project files yet"
       description="Upload drawings, photos or PDFs for this schedule event." />
 
-    <div
+    <JRScrollArea
       v-show="!selectedImageUrl && images.length"
-      ref="galleryWrapper"
-      class="jr-event-folder__gallery">
-      <div class="jr-event-folder__grid">
-        <div
-          v-for="img in images"
-          :key="img.id"
-          class="jr-event-folder__box">
-          <div class="jr-event-folder__tile">
-            <template v-if="isAutoCAD(img.image_url)">
-              <button
-                type="button"
-                class="jr-event-folder__thumb jr-event-folder__thumb--file"
-                :title="getFileName(img.image_url)"
-                @click="openAutoCADViewer(img.image_url)">
-                <img
-                  :src="getFileIcon(img.image_url)"
-                  alt=""
-                  class="jr-event-folder__icon" />
-                <span class="jr-event-folder__name">
-                  {{ getFileName(img.image_url) }}
-                </span>
-                <JRBadge
-                  :value="getFileExt(img.image_url)"
-                  severity="info"
-                  class="jr-event-folder__badge" />
-              </button>
-              <button
-                type="button"
-                class="jr-event-folder__delete"
-                aria-label="Delete file"
-                title="Delete file"
-                @click.stop="deleteImage(img.id)">
-                <TrashIcon aria-hidden="true" />
-              </button>
-            </template>
+      class="jr-event-folder__scroll"
+      height="var(--jr-wov-body-height, 22rem)">
+      <div ref="galleryWrapper" class="jr-event-folder__gallery">
+        <div class="jr-event-folder__grid">
+          <div
+            v-for="img in images"
+            :key="img.id"
+            class="jr-event-folder__box">
+            <div class="jr-event-folder__tile">
+              <template v-if="isAutoCAD(img.image_url)">
+                <button
+                  type="button"
+                  class="jr-event-folder__thumb jr-event-folder__thumb--file"
+                  :title="getFileName(img.image_url)"
+                  @click="openAutoCADViewer(img.image_url)">
+                  <img
+                    :src="getFileIcon(img.image_url)"
+                    alt=""
+                    class="jr-event-folder__icon" />
+                  <span class="jr-event-folder__name">
+                    {{ getFileName(img.image_url) }}
+                  </span>
+                  <JRBadge
+                    :value="getFileExt(img.image_url)"
+                    severity="info"
+                    class="jr-event-folder__badge" />
+                </button>
+                <button
+                  type="button"
+                  class="jr-event-folder__delete"
+                  aria-label="Delete file"
+                  title="Delete file"
+                  @click.stop="deleteImage(img.id)">
+                  <TrashIcon aria-hidden="true" />
+                </button>
+              </template>
 
-            <template v-else-if="isDocument(img.image_url)">
-              <button
-                type="button"
-                class="jr-event-folder__thumb jr-event-folder__thumb--file"
-                :title="`Click to open/download ${getFileName(img.image_url)}`"
-                @click.prevent="downloadDocument(img.image_url)">
-                <img
-                  :src="getFileIcon(img.image_url)"
-                  alt=""
-                  class="jr-event-folder__icon" />
-                <span class="jr-event-folder__name">
-                  {{ getFileName(img.image_url) }}
-                </span>
-                <JRBadge
-                  value="PDF"
-                  severity="secondary"
-                  class="jr-event-folder__badge" />
-              </button>
-              <button
-                type="button"
-                class="jr-event-folder__delete"
-                aria-label="Delete file"
-                title="Delete file"
-                @click.stop="deleteImage(img.id)">
-                <TrashIcon aria-hidden="true" />
-              </button>
-            </template>
+              <template v-else-if="isDocument(img.image_url)">
+                <button
+                  type="button"
+                  class="jr-event-folder__thumb jr-event-folder__thumb--file"
+                  :title="`Click to open/download ${getFileName(img.image_url)}`"
+                  @click.prevent="downloadDocument(img.image_url)">
+                  <img
+                    :src="getFileIcon(img.image_url)"
+                    alt=""
+                    class="jr-event-folder__icon" />
+                  <span class="jr-event-folder__name">
+                    {{ getFileName(img.image_url) }}
+                  </span>
+                  <JRBadge
+                    value="PDF"
+                    severity="secondary"
+                    class="jr-event-folder__badge" />
+                </button>
+                <button
+                  type="button"
+                  class="jr-event-folder__delete"
+                  aria-label="Delete file"
+                  title="Delete file"
+                  @click.stop="deleteImage(img.id)">
+                  <TrashIcon aria-hidden="true" />
+                </button>
+              </template>
 
-            <template
-              v-else-if="
-                !img.image_url.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i)
-              ">
-              <div class="jr-event-folder__thumb jr-event-folder__thumb--file">
-                <img
-                  :src="getFileIcon(img.image_url)"
-                  alt=""
-                  class="jr-event-folder__icon" />
-                <span class="jr-event-folder__name">
-                  {{ getFileName(img.image_url) }}
-                </span>
-                <JRBadge
-                  :value="getFileExt(img.image_url)"
-                  severity="secondary"
-                  class="jr-event-folder__badge" />
-              </div>
-              <button
-                type="button"
-                class="jr-event-folder__delete"
-                aria-label="Delete file"
-                title="Delete file"
-                @click.stop="deleteImage(img.id)">
-                <TrashIcon aria-hidden="true" />
-              </button>
-            </template>
+              <template
+                v-else-if="
+                  !img.image_url.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i)
+                ">
+                <div class="jr-event-folder__thumb jr-event-folder__thumb--file">
+                  <img
+                    :src="getFileIcon(img.image_url)"
+                    alt=""
+                    class="jr-event-folder__icon" />
+                  <span class="jr-event-folder__name">
+                    {{ getFileName(img.image_url) }}
+                  </span>
+                  <JRBadge
+                    :value="getFileExt(img.image_url)"
+                    severity="secondary"
+                    class="jr-event-folder__badge" />
+                </div>
+                <button
+                  type="button"
+                  class="jr-event-folder__delete"
+                  aria-label="Delete file"
+                  title="Delete file"
+                  @click.stop="deleteImage(img.id)">
+                  <TrashIcon aria-hidden="true" />
+                </button>
+              </template>
 
-            <template v-else>
-              <button
-                type="button"
-                class="jr-event-folder__thumb jr-event-folder__thumb--image"
-                :aria-label="`View ${getFileName(img.image_url)}`"
-                @click="openImageViewer(img.image_url)">
-                <img :src="img.image_url" alt="" class="jr-event-folder__img" />
-              </button>
-              <button
-                type="button"
-                class="jr-event-folder__delete"
-                aria-label="Delete image"
-                title="Delete image"
-                @click.stop="deleteImage(img.id)">
-                <TrashIcon aria-hidden="true" />
-              </button>
-            </template>
+              <template v-else>
+                <button
+                  type="button"
+                  class="jr-event-folder__thumb jr-event-folder__thumb--image"
+                  :aria-label="`View ${getFileName(img.image_url)}`"
+                  @click="openImageViewer(img.image_url)">
+                  <img :src="img.image_url" alt="" class="jr-event-folder__img" />
+                </button>
+                <button
+                  type="button"
+                  class="jr-event-folder__delete"
+                  aria-label="Delete image"
+                  title="Delete image"
+                  @click.stop="deleteImage(img.id)">
+                  <TrashIcon aria-hidden="true" />
+                </button>
+              </template>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </JRScrollArea>
 
     <div
       v-if="selectedImageUrl"
@@ -174,13 +176,14 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import UploadIcon from "@primevue/icons/upload";
 import TrashIcon from "@primevue/icons/trash";
-import { JRBadge, JREmptyState } from "@ui";
+import { JRBadge, JREmptyState, JRScrollArea } from "@ui";
 
 export default {
   name: "EventImageAdmin",
   components: {
     JRBadge,
     JREmptyState,
+    JRScrollArea,
     TrashIcon,
     UploadIcon,
   },
@@ -390,7 +393,15 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  min-height: 18rem;
+  min-height: 0;
+  height: 100%;
+}
+
+.jr-event-folder :deep(.jr-empty-state) {
+  min-height: var(--jr-wov-body-height, 22rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .jr-event-folder__upload-card {
@@ -462,16 +473,13 @@ export default {
 }
 
 .jr-event-folder__gallery {
-  max-height: 60vh;
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
   display: flex;
   flex-direction: column-reverse;
   padding: 0.25rem;
-  border: 1px solid var(--color-jr-border, #e5e7eb);
-  border-radius: var(--radius-jr-control, 0);
-  background: var(--color-jr-surface, #fff);
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-jr-hover-border, #d1d5db) var(--color-jr-surface-muted, #f9fafb);
+  border: none;
+  background: transparent;
 }
 
 .jr-event-folder__grid {
