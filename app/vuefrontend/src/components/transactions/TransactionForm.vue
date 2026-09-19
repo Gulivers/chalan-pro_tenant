@@ -1,395 +1,311 @@
 <template>
-  <div class="container-fluid position-relative my-2">
-    <h3 class="text-center text-warning mb-2">Transaction</h3>
-    <div class="card shadow mb-2 mx-3">
-      <div class="card-header">
-        <!-- Desktop Layout -->
-        <div
-          class="d-none d-md-flex align-items-center justify-content-between">
-          <h6 class="mb-0 text-primary">
-            {{ pageTitle }}
-          </h6>
-          <div class="d-flex align-items-center gap-3">
-            <!-- is_active switch -->
-            <div
-              class="form-check form-switch m-0"
-              v-tt="
-                form.is_active
-                  ? 'Active transaction'
-                  : 'Voided (inactive) – it will be ignored in reports.'
-              ">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="isActiveSwitch"
-                v-model="form.is_active"
-                :disabled="isReadOnly" />
-              <label
-                class="form-check-label"
-                :class="{ 'text-danger': !form.is_active }"
-                for="isActiveSwitch">
-                {{ form.is_active ? "Active" : "Voided" }}
-              </label>
-            </div>
-            <div class="d-flex gap-2">
-              <button
-                class="btn btn-outline-secondary"
-                type="button"
-                @click="goBack">
-                Back
-              </button>
-              <button
-                v-if="!isEditMode"
-                class="btn btn-success"
-                type="button"
-                :disabled="formBusy"
-                @click="handleSaveAndAddAnother">
-                <span v-if="!formBusy">+</span>
-                <span
-                  v-else
-                  class="spinner-border spinner-border-sm me-2"
-                  role="status"
-                  aria-hidden="true"></span>
-                {{ saveButtonLabel }}
-              </button>
-              <button
-                v-if="!isViewMode"
-                class="btn btn-primary"
-                type="button"
-                :disabled="formBusy"
-                @click="handleSubmit">
-                <span v-if="!formBusy">💾</span>
-                <span
-                  v-else
-                  class="spinner-border spinner-border-sm me-2"
-                  role="status"
-                  aria-hidden="true"></span>
-                {{ saveButtonLabel }}
-              </button>
-            </div>
-          </div>
-        </div>
+  <JRPage>
+    <JRPageHeader :title="pageTitle" :description="pageDescription">
+      <template #actions>
+        <JRButton
+          v-if="
+            isViewMode &&
+            idParam &&
+            hasPermission('apptransactions.change_document')
+          "
+          variant="primary"
+          size="sm"
+          @click="goToEdit">
+          Edit transaction
+        </JRButton>
+      </template>
+    </JRPageHeader>
 
-        <!-- Mobile Layout -->
-        <div class="d-md-none">
-          <!-- Title Row -->
-          <div class="d-flex align-items-center justify-content-between mb-2">
-            <h6 class="mb-0 text-primary">
-              {{ pageTitle }}
-            </h6>
-            <!-- is_active switch -->
-            <div
-              class="form-check form-switch m-0"
-              v-tt="
-                form.is_active
-                  ? 'Active transaction'
-                  : 'Voided (inactive) – it will be ignored in reports.'
-              ">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="isActiveSwitchMobile"
-                v-model="form.is_active"
-                :disabled="isReadOnly" />
-              <label
-                class="form-check-label small"
-                :class="{ 'text-danger': !form.is_active }"
-                for="isActiveSwitchMobile">
-                {{ form.is_active ? "Active" : "Voided" }}
-              </label>
-            </div>
-          </div>
-
-          <!-- Button Row -->
-          <div class="d-flex gap-1 flex-wrap">
-            <button
-              class="btn btn-outline-secondary btn-sm flex-fill"
-              type="button"
-              @click="goBack">
-              Back
-            </button>
-            <button
-              v-if="!isEditMode"
-              class="btn btn-success btn-sm flex-fill"
-              type="button"
-              :disabled="formBusy"
-              @click="handleSaveAndAddAnother">
-              <span v-if="!formBusy">+</span>
-              <span
-                v-else
-                class="spinner-border spinner-border-sm me-1"
-                role="status"
-                aria-hidden="true"></span>
-              <span class="d-none d-sm-inline">{{ saveButtonLabelMobile }}</span>
-              <span class="d-sm-none">{{ saveButtonLabelMobileShort }}</span>
-            </button>
-            <button
-              v-if="!isViewMode"
-              class="btn btn-primary btn-sm flex-fill"
-              type="button"
-              :disabled="formBusy"
-              @click="handleSubmit">
-              <span v-if="!formBusy">💾</span>
-              <span
-                v-else
-                class="spinner-border spinner-border-sm me-1"
-                role="status"
-                aria-hidden="true"></span>
-              {{ saveButtonLabel }}
-            </button>
-          </div>
-        </div>
+    <form class="jr-tx-form" @submit.prevent="handleSubmit" novalidate>
+      <div
+        v-if="formBannerMessage"
+        ref="formBanner"
+        class="jr-form-banner"
+        role="alert"
+        tabindex="-1">
+        {{ formBannerMessage }}
       </div>
 
-      <div class="card-body">
-        <!-- Header: Document fields -->
-        <div class="row g-3">
-          <!-- Left Column: Document Type, Party, Work Account -->
-          <div class="col-12 col-md-6">
-            <div class="row g-3">
-              <div class="col-12">
-                <DocumentTypeSelector
-                  v-model="form.document_type"
-                  :error="errors.document_type"
-                  :required="true"
-                  :disabled="isReadOnly" />
-              </div>
+      <p v-if="loadingDocument" class="jr-tx-form__loading" role="status">
+        Loading transaction…
+      </p>
 
-              <div class="col-12">
-                <!-- From schedule: show work account title (independent of document type) -->
-                <div v-if="isFromSchedule && workAccountTitle" class="mb-3">
-                  <label class="form-label">Work Account</label>
-                  <div
-                    class="form-control bg-light"
-                    style="
-                      padding: 0.375rem 0.75rem;
-                      border: 1px solid #ced4da;
-                      border-radius: 0.375rem;
-                      min-height: 38px;
-                      display: flex;
-                      align-items: center;
-                    ">
-                    <strong>{{ workAccountTitle }}</strong>
-                  </div>
-                  <small class="form-text text-muted">
-                    Work account selected from the schedule
-                  </small>
-                </div>
+      <JRSection v-if="!loadingDocument" title="Document">
+        <div class="jr-form-grid jr-form-grid--document">
+          <JRField
+            v-slot="{ describedby }"
+            label="Document Type"
+            required
+            inputId="tx-document-type"
+            :error="fieldError('document_type')">
+            <DocumentTypeSelector
+              inputId="tx-document-type"
+              v-model="form.document_type"
+              :error="errors.document_type"
+              :required="true"
+              :disabled="isReadOnly"
+              :ariaDescribedby="describedby" />
+          </JRField>
 
-                <!-- Builder selector when document is not operational and not from schedule -->
-                <BuilderSelector
-                  v-else-if="!isOperationalDocument && !isFromSchedule"
-                  v-model="form.builder"
-                  :error="errors.builder"
-                  :disabled="isReadOnly" />
+          <JRField
+            v-if="isFromSchedule && workAccountTitle"
+            label="Work Account"
+            inputId="tx-work-account-ro"
+            hint="Work account selected from the schedule">
+            <p class="jr-tx-form__readonly" id="tx-work-account-ro">
+              {{ workAccountTitle }}
+            </p>
+          </JRField>
 
-                <!-- Work account selector when document is operational and not from schedule -->
-                <WorkAccountSelector
-                  v-else-if="isOperationalDocument && !isFromSchedule"
-                  v-model="form.work_account"
-                  :error="errors.work_account"
-                  :disabled="isReadOnly" />
-              </div>
+          <JRField
+            v-else-if="!isOperationalDocument && !isFromSchedule"
+            v-slot="{ describedby }"
+            label="Party"
+            inputId="tx-party"
+            :error="fieldError('builder')">
+            <BuilderSelector
+              inputId="tx-party"
+              v-model="form.builder"
+              :error="errors.builder"
+              :disabled="isReadOnly"
+              :ariaDescribedby="describedby" />
+          </JRField>
 
-              <div v-if="!isViewMode" class="col-12 mt-1">
-                <div
-                  class="form-check form-switch mb-2 my-1 ms-2 d-flex align-items-center flex-wrap gap-2"
-                  v-tt
-                  :data-title="excelImportSwitchTooltip">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    id="excelImportSwitch"
-                    :disabled="
-                      inventoryProductsLoading || !hasInventoryProducts
-                    "
-                    v-model="showExcelImportPanel" />
-                  <label class="form-check-label mb-0" for="excelImportSwitch">
-                    Import from Excel
-                  </label>
-                  <span
-                    v-if="inventoryProductsLoading"
-                    class="spinner-border spinner-border-sm text-secondary"
-                    role="status"
-                    aria-label="Loading"></span>
-                </div>
-                <TransactionLinesExcelPanel
-                  v-if="hasInventoryProducts && showExcelImportPanel"
-                  :units-options="unitsOptions"
-                  :warehouses-options="warehousesOptions"
-                  :price-types-options="priceTypesOptions"
-                  :brands-options="brandsOptions"
-                  @import-lines="onTransactionLinesImported" />
-              </div>
-            </div>
-          </div>
+          <JRField
+            v-else-if="isOperationalDocument && !isFromSchedule"
+            v-slot="{ describedby }"
+            label="Work Account"
+            inputId="tx-work-account"
+            :error="fieldError('work_account')">
+            <WorkAccountSelector
+              inputId="tx-work-account"
+              v-model="form.work_account"
+              :showLabel="false"
+              :error="errors.work_account"
+              :disabled="isReadOnly"
+              :ariaDescribedby="describedby" />
+          </JRField>
 
-          <!-- Right Column: Date and Notes -->
-          <div class="col-12 col-md-6">
-            <div class="row g-2">
-              <!-- Mobile: stack favorites and date; desktop: side by side -->
-              <div v-if="!isViewMode" class="col-12 col-sm-6">
-                <label class="form-label d-flex gap-1">Add to favorites</label>
-                <div class="d-flex flex-column align-items-start">
-                  <button
-                    class="btn btn-outline-secondary btn-sm mt-0"
-                    type="button"
-                    @click="openFavoriteModal"
-                    :disabled="!canSaveAsFavorite"
-                    v-tt
-                    data-title="Add to favorites (requires at least 2 lines with a product — single-line kits are not saved as favorites).">
-                    <img
-                      src="@assets/img/star-svgrepo-com.svg"
-                      alt="Favorite"
-                      width="25"
-                      height="25" />
-                  </button>
-                </div>
-              </div>
-              <div class="col-12 col-sm-6">
-                <label
-                  class="form-label d-flex align-items-center gap-2"
-                  for="dateInput">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  class="form-control"
-                  v-model="form.date"
-                  id="dateInput"
-                  :disabled="isReadOnly" />
-                <div class="text-danger small" v-if="errors.date">
-                  {{ errors.date[0] }}
-                </div>
-              </div>
+          <JRField
+            v-slot="{ describedby, invalid }"
+            label="Date"
+            required
+            inputId="tx-date"
+            :error="fieldError('date')">
+            <JRDatePicker
+              inputId="tx-date"
+              :modelValue="isoToDate(form.date)"
+              :disabled="isReadOnly"
+              :invalid="invalid"
+              placeholder="Select date"
+              @update:modelValue="onDateChange" />
+          </JRField>
 
-              <div v-if="!isViewMode" class="col-12">
+          <JRField
+            :label="form.is_active ? 'Active' : 'Voided'"
+            inputId="tx-is-active">
+            <JRCheckbox
+              v-model="form.is_active"
+              inputId="tx-is-active"
+              :ariaLabel="form.is_active ? 'Active' : 'Voided'"
+              :disabled="isReadOnly" />
+            <Message
+              v-if="!form.is_active"
+              class="jr-tx-form__info"
+              severity="warn"
+              :closable="false">
+              This transaction is voided and will be ignored in reports.
+            </Message>
+          </JRField>
+
+          <JRField
+            class="jr-tx-form__notes"
+            v-slot="{ describedby, invalid }"
+            label="Notes"
+            inputId="tx-notes"
+            :error="fieldError('notes')">
+            <JRTextarea
+              inputId="tx-notes"
+              :modelValue="form.notes"
+              :rows="2"
+              placeholder="Additional notes…"
+              :disabled="isReadOnly"
+              :invalid="invalid"
+              :ariaDescribedby="describedby"
+              @update:modelValue="form.notes = ($event || '').trim()" />
+          </JRField>
+        </div>
+      </JRSection>
+
+      <JRSection v-if="!loadingDocument && !isViewMode" title="Import & favorites">
+        <div class="jr-form-grid jr-form-grid--import">
+          <div class="jr-tx-form__import-col jr-tx-form__import-col--favorites">
+            <JRField
+              label="Add to favorites"
+              inputId="tx-add-favorite"
+              hint="Requires at least 2 lines with a product.">
+              <JRButton
+                type="button"
+                variant="secondary"
+                size="sm"
+                class="jr-tx-form__fav-btn"
+                :disabled="!canSaveAsFavorite"
+                @click="openFavoriteModal">
+                <Star class="jr-tx-form__fav-star" aria-hidden="true" />
+                Save as favorite
+              </JRButton>
+            </JRField>
+
+            <div class="jr-tx-form__favorites">
+              <JRField
+                label="Import favorite"
+                inputId="favorite-transaction-select">
                 <FavoriteTransactionSelector
                   ref="favoriteSelectorRef"
+                  inputId="favorite-transaction-select"
                   v-model="selectedFavoriteId"
                   :is-edit-mode="isEditMode"
                   @favorite-selected="onFavoriteSelected"
                   @edit-favorite="onEditFavorite" />
-              </div>
-
-              <!-- Update favorite when one is imported -->
-              <div class="col-12" v-if="selectedFavoriteId && !isEditMode">
-                <div class="d-flex justify-content-end">
-                  <button
-                    class="btn btn-outline-warning btn-sm"
-                    type="button"
-                    @click="updateFavoriteFromCurrentTransaction"
-                    :disabled="!canUpdateFavorite"
-                    v-tt
-                    data-title="Update the selected favorite">
-                    Update Favorite
-                  </button>
-                </div>
-              </div>
-
-              <div class="col-12">
-                <label
-                  class="form-label d-flex align-items-center gap-2"
-                  for="notesInput">
-                  Notes
-                </label>
-                <textarea
-                  rows="2"
-                  class="form-control"
-                  v-model.trim="form.notes"
-                  placeholder="Additional notes..."
-                  id="notesInput"
-                  :disabled="isReadOnly"
-                  :readonly="isViewMode"></textarea>
-                <div class="text-danger small" v-if="errors.notes">
-                  {{ errors.notes[0] }}
-                </div>
-              </div>
+              </JRField>
+              <JRButton
+                v-if="selectedFavoriteId && !isEditMode"
+                type="button"
+                variant="secondary"
+                size="sm"
+                class="jr-tx-form__update-fav"
+                :disabled="!canUpdateFavorite"
+                @click="updateFavoriteFromCurrentTransaction">
+                Update favorite
+              </JRButton>
             </div>
           </div>
+
+          <div class="jr-tx-form__import-col jr-tx-form__import-col--excel">
+            <JRField
+              label="Import from Excel"
+              inputId="tx-excel-import"
+              :hint="
+                hasInventoryProducts
+                  ? 'Download the template and import lines from Excel.'
+                  : ''
+              ">
+              <JRCheckbox
+                v-model="showExcelImportPanel"
+                inputId="tx-excel-import"
+                ariaLabel="Import from Excel"
+                :disabled="inventoryProductsLoading || !hasInventoryProducts" />
+              <Message
+                v-if="!inventoryProductsLoading && !hasInventoryProducts"
+                class="jr-tx-form__info"
+                severity="info"
+                :closable="false">
+                Import requires at least one active product in inventory.
+              </Message>
+            </JRField>
+
+            <TransactionLinesExcelPanel
+              v-if="hasInventoryProducts && showExcelImportPanel"
+              class="jr-tx-form__excel"
+              :units-options="unitsOptions"
+              :warehouses-options="warehousesOptions"
+              :price-types-options="priceTypesOptions"
+              :brands-options="brandsOptions"
+              @import-lines="onTransactionLinesImported" />
+          </div>
         </div>
+      </JRSection>
 
-        <hr class="my-4" />
-
-        <p v-if="loadingDocument" class="text-muted small mb-2">
-          Loading transaction...
-        </p>
-        <p
-          v-else-if="linesGridDisabled && !isViewMode"
-          class="text-muted small mb-2">
+      <JRSection v-if="!loadingDocument" title="Lines">
+        <Message
+          v-if="linesGridDisabled && !isViewMode"
+          class="jr-tx-form__info"
+          severity="info"
+          :closable="false">
           Select a document type or import a favorite to edit lines.
-        </p>
-
-        <!-- Lines Grid -->
-        <LinesGrid
-          ref="linesGridRef"
-          :disabled="linesGridDisabled"
-          :lines="lines"
-          @update:lines="lines = $event"
-          :document-id="idParam"
-          :document-type-creates-serialized-items="
-            currentDocumentTypeCreatesSerializedItems
-          "
-          :documentTypeId="form.document_type"
-          :document-type-is-sales="currentDocumentTypeIsSales"
-          :workAccountId="form.work_account"
-          :unitsOptions="unitsOptions || []"
-          :warehousesOptions="warehousesOptions || []"
-          :priceTypesOptions="priceTypesOptions || []"
-          :brandsOptions="brandsOptions || []"
-          :merge-duplicates="true"
-          @recalc="syncTotals"
-          @open-asset-tags="openAssetTagModalFromGrid" />
-
-        <!-- Totals -->
-        <div class="row mt-3">
-          <div class="col-12 col-md-6 d-none d-md-block">&nbsp;</div>
-          <div class="col-12 col-md-6">
-            <div class="card bg-light">
-              <div class="card-body p-3">
-                <div class="d-flex justify-content-between">
-                  <span class="fw-semibold">Subtotal</span>
-                  <span>{{ currency(subtotal_gross) }}</span>
-                </div>
-                <div class="d-flex justify-content-between mt-1">
-                  <span class="fw-semibold">Total discount</span>
-                  <span class="text-danger">
-                    -{{ currency(total_discount) }}
-                  </span>
-                </div>
-                <div
-                  class="d-flex justify-content-between fs-5 mt-2 pt-2 border-top">
-                  <span class="fw-bold">Grand total</span>
-                  <span class="fw-bold">{{ currency(grand_total) }}</span>
-                </div>
-                <div
-                  v-if="currentDocumentTypeIsSales"
-                  class="d-flex justify-content-between mt-2 pt-2 border-top">
-                  <div>
-                    <span class="fw-semibold text-success">Estimated profit</span>
-                    <div class="small text-muted">
-                      Based on purchase cost per line (informational)
-                    </div>
-                  </div>
-                  <span
-                    class="fw-semibold align-self-start"
-                    :class="
-                      estimated_sale_profit >= 0 ? 'text-success' : 'text-danger'
-                    ">
-                    {{ currency(estimated_sale_profit) }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+        </Message>
+        <div class="jr-tx-form__lines">
+          <LinesGrid
+            ref="linesGridRef"
+            :disabled="linesGridDisabled"
+            :lines="lines"
+            @update:lines="lines = $event"
+            :document-id="idParam"
+            :document-type-creates-serialized-items="
+              currentDocumentTypeCreatesSerializedItems
+            "
+            :documentTypeId="form.document_type"
+            :document-type-is-sales="currentDocumentTypeIsSales"
+            :workAccountId="form.work_account"
+            :unitsOptions="unitsOptions || []"
+            :warehousesOptions="warehousesOptions || []"
+            :priceTypesOptions="priceTypesOptions || []"
+            :brandsOptions="brandsOptions || []"
+            :merge-duplicates="true"
+            @recalc="syncTotals"
+            @open-asset-tags="openAssetTagModalFromGrid" />
         </div>
-      </div>
-    </div>
+      </JRSection>
 
-    <!-- Serial number assignment modal (after save when serialized items exist) -->
+      <JRSection v-if="!loadingDocument" title="Totals">
+        <dl class="jr-tx-form__totals">
+          <div class="jr-tx-form__totals-row">
+            <dt>Subtotal</dt>
+            <dd>{{ currency(subtotal_gross) }}</dd>
+          </div>
+          <div class="jr-tx-form__totals-row">
+            <dt>Total discount</dt>
+            <dd class="jr-tx-form__totals-discount">
+              −{{ currency(total_discount) }}
+            </dd>
+          </div>
+          <div class="jr-tx-form__totals-row jr-tx-form__totals-row--grand">
+            <dt>Grand total</dt>
+            <dd>{{ currency(grand_total) }}</dd>
+          </div>
+          <div
+            v-if="currentDocumentTypeIsSales"
+            class="jr-tx-form__totals-row jr-tx-form__totals-row--profit">
+            <dt>
+              Estimated profit
+              <span class="jr-tx-form__totals-hint">
+                Based on purchase cost per line (informational)
+              </span>
+            </dt>
+            <dd
+              :class="
+                estimated_sale_profit >= 0
+                  ? 'jr-tx-form__totals-ok'
+                  : 'jr-tx-form__totals-bad'
+              ">
+              {{ currency(estimated_sale_profit) }}
+            </dd>
+          </div>
+        </dl>
+      </JRSection>
+
+      <div v-if="!loadingDocument" class="jr-tx-form__actions">
+        <JRButton
+          v-if="!isViewMode"
+          type="submit"
+          variant="primary"
+          :disabled="formBusy">
+          {{ saveButtonLabel }}
+        </JRButton>
+        <JRButton
+          v-if="!isEditMode && !isViewMode"
+          type="button"
+          variant="secondary"
+          :disabled="formBusy"
+          @click="handleSaveAndAddAnother">
+          {{ saveAndAddLabel }}
+        </JRButton>
+        <JRButton type="button" variant="secondary" @click="goBack">
+          {{ isViewMode ? "Back to list" : "Cancel" }}
+        </JRButton>
+      </div>
+    </form>
+
     <AssetTagAssignmentModal
       :show="showAssetTagModal"
       :document-id="documentIdForAssetTagModal"
@@ -397,8 +313,8 @@
       @close="onAssetTagModalClose"
       @saved="onAssetTagModalSaved" />
 
-    <!-- Transaction favorites modal -->
     <TransactionFavoriteModal
+      :visible="favoriteModalVisible"
       :transaction-data="currentTransactionData"
       :document-types-options="documentTypesOptions"
       :builders-options="buildersOptions"
@@ -407,8 +323,9 @@
       :favorite-to-edit="favoriteToEdit"
       @saved="onFavoriteSaved"
       @updated="onFavoriteUpdated"
-      @deleted="onFavoriteDeleted" />
-  </div>
+      @deleted="onFavoriteDeleted"
+      @update:visible="favoriteModalVisible = $event" />
+  </JRPage>
 </template>
 
 <script setup>
@@ -428,6 +345,8 @@ import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import Swal from "sweetalert2";
 
+import Message from "primevue/message";
+import Star from "@primeicons/vue/star";
 import LinesGrid from "@/components/transactions/LinesGrid.vue";
 import DocumentTypeSelector from "@/components/transactions/DocumentTypeSelector.vue";
 import BuilderSelector from "@/components/parties/BuilderSelector.vue";
@@ -435,25 +354,28 @@ import WorkAccountSelector from "@/components/transactions/WorkAccountSelector.v
 import TransactionFavoriteModal from "@/components/transactions/TransactionFavoriteModal.vue";
 import AssetTagAssignmentModal from "@/components/transactions/AssetTagAssignmentModal.vue";
 import FavoriteTransactionSelector from "@/components/transactions/FavoriteTransactionSelector.vue";
+import {
+  JRPage,
+  JRPageHeader,
+  JRSection,
+  JRField,
+  JRButton,
+  JRCheckbox,
+  JRDatePicker,
+  JRTextarea,
+} from "@ui";
 
 const ExcelPanelLoading = defineComponent({
   name: "ExcelPanelLoading",
   setup() {
     return () =>
       h(
-        "div",
+        "p",
         {
-          class:
-            "d-flex align-items-center gap-2 py-2 text-muted small border rounded-3 px-3 bg-light",
+          class: "jr-tx-form__loading",
+          role: "status",
         },
-        [
-          h("span", {
-            class: "spinner-border spinner-border-sm",
-            role: "status",
-            "aria-hidden": "true",
-          }),
-          h("span", "Loading Excel import…"),
-        ]
+        "Loading Excel import…"
       );
   },
 });
@@ -509,23 +431,72 @@ const pageTitle = computed(() => {
   return "New Transaction";
 });
 
+const pageDescription = computed(() => {
+  if (isViewMode.value) return "Review this transaction. Switch to Edit to make changes.";
+  if (isEditMode.value) return "Update document header, lines, and totals.";
+  return "Create a document with lines, parties or work account, and totals.";
+});
+
 const saveButtonLabel = computed(() => {
   if (loadingDocument.value) return "Loading...";
   if (submitting.value) return "Saving...";
-  return "Save";
+  return isEditMode.value ? "Update" : "Save";
 });
 
-const saveButtonLabelMobile = computed(() => {
+const saveAndAddLabel = computed(() => {
   if (loadingDocument.value) return "Loading...";
   if (submitting.value) return "Saving...";
-  return "Save & Add";
+  return "Save & add another";
 });
 
-const saveButtonLabelMobileShort = computed(() => {
-  if (loadingDocument.value) return "Loading...";
-  if (submitting.value) return "Saving...";
-  return "Add";
+const formBannerMessage = computed(() => {
+  const nf = errors.non_field_errors;
+  if (!nf) return "";
+  return Array.isArray(nf) ? nf.filter(Boolean).join(" ") : String(nf);
 });
+
+function hasPermission(permission) {
+  return !!proxy?.hasPermission?.(permission);
+}
+
+function fieldError(key) {
+  const value = errors[key];
+  if (!value) return "";
+  return Array.isArray(value) ? value[0] || "" : String(value);
+}
+
+function isoToDate(value) {
+  if (!value) return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  const text = String(value).slice(0, 10);
+  const parts = text.split("-").map(Number);
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
+  const [year, month, day] = parts;
+  const date = new Date(year, month - 1, day);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function dateToIso(value) {
+  if (!value) return todayLocalISO();
+  if (typeof value === "string") {
+    const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (match) return match[1];
+  }
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) return todayLocalISO();
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function onDateChange(value) {
+  form.date = dateToIso(value);
+}
+
+function goToEdit() {
+  if (!idParam) return;
+  router.push({ name: "transactions-form", query: { id: idParam } }).catch(() => {});
+}
 /** Muestra el panel de importación Excel solo si el usuario lo activa (carga diferida del chunk) */
 const showExcelImportPanel = ref(false);
 const loading = reactive({
@@ -542,9 +513,6 @@ const documentContextForAssetTagModal = ref({});
 const assetTagModalOpenedFromSave = ref(false);
 // Computed para saber si viene desde el schedule (tiene workAccountParam en query)
 const isFromSchedule = computed(() => !!workAccountParam);
-console.log("🔑 Soy isEditMode", isEditMode);
-console.log("🔑 Work Account ID from query:", workAccountParam);
-console.log("🔑 Viene desde schedule:", isFromSchedule.value);
 // Header form
 const form = reactive({
   document_type: null,
@@ -720,6 +688,7 @@ const excelImportSwitchTooltip = computed(() => {
 
 // Variables para favoritos
 const selectedFavoriteId = ref(null);
+const favoriteModalVisible = ref(false);
 const favoriteModalEditMode = ref(false);
 const favoriteToEdit = ref(null);
 const favoriteSelectorRef = ref(null);
@@ -830,39 +799,11 @@ const currentTransactionData = computed(() => {
   };
 });
 
-// Funciones helper para manejar modales
-function showModal(modalId) {
-  const modalElement = document.getElementById(modalId);
-  if (modalElement) {
-    if (typeof bootstrap !== "undefined" && bootstrap.Modal) {
-      const modal = new bootstrap.Modal(modalElement);
-      modal.show();
-    } else if (typeof $ !== "undefined" && $.fn.modal) {
-      $(modalElement).modal("show");
-    } else {
-      // Fallback: mostrar modal usando clases CSS
-      modalElement.classList.add("show");
-      modalElement.style.display = "block";
-      modalElement.setAttribute("aria-modal", "true");
-      modalElement.setAttribute("role", "dialog");
-
-      // Agregar backdrop
-      const backdrop = document.createElement("div");
-      backdrop.className = "modal-backdrop fade show";
-      backdrop.id = "modal-backdrop";
-      document.body.appendChild(backdrop);
-
-      // Agregar clase al body
-      document.body.classList.add("modal-open");
-    }
-  }
-}
-
 // Funciones para manejar favoritos
 function openFavoriteModal() {
   favoriteModalEditMode.value = false;
   favoriteToEdit.value = null;
-  showModal("transactionFavoriteModal");
+  favoriteModalVisible.value = true;
 }
 
 async function onFavoriteSelected(favoriteData) {
@@ -992,7 +933,7 @@ async function onFavoriteSelected(favoriteData) {
 function onEditFavorite(favoriteData) {
   favoriteModalEditMode.value = true;
   favoriteToEdit.value = favoriteData;
-  showModal("transactionFavoriteModal");
+  favoriteModalVisible.value = true;
 }
 
 function onFavoriteSaved(favorite) {
@@ -2154,150 +2095,197 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.card-header {
-  background-color: #f3f3f3;
-}
-.v-select {
-  --vs-border-color: #ced4da;
-}
-.table-sticky thead th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: #f8f9fa;
+.jr-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
 }
 
-/* Ensure form controls are visible */
-.form-control,
-.v-select {
-  min-height: 38px;
+@media (min-width: 768px) {
+  .jr-form-grid--document {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .jr-form-grid--import {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .jr-tx-form__notes {
+    grid-column: 1 / -1;
+  }
 }
 
-/* Ensure buttons are visible and properly styled */
-.btn {
-  display: inline-block;
-  padding: 0.375rem 0.75rem;
-  font-size: 1rem;
-  line-height: 1.5;
-  border-radius: 0.25rem;
-  border: 1px solid transparent;
+@media (min-width: 1024px) {
+  .jr-form-grid--document {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
-.btn-outline-secondary {
-  color: #6c757d;
-  border-color: #6c757d;
+.jr-form-banner {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-jr-danger-text);
+  background: var(--color-jr-danger-subtle);
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
 }
 
-.btn-outline-secondary:hover {
-  color: #fff;
-  background-color: #869099;
-  border-color: #869099;
+.jr-form-banner:focus {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: 2px;
 }
 
-.btn-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-  border-radius: 0.2rem;
+.jr-tx-form__loading {
+  margin: 0 0 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--color-jr-text);
 }
 
-/* Flex layout for select + buttons */
-.d-flex.align-items-center .v-select {
-  flex: 1;
-  min-width: 0;
+.jr-tx-form__readonly {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-jr-text);
+  background: var(--color-jr-surface-muted, var(--color-jr-page));
+  border: 1px solid var(--color-jr-border);
 }
 
-.d-flex.align-items-center .btn {
+.jr-tx-form__info {
+  margin: 0.5rem 0 0;
+  --p-message-info-background: var(--color-jr-info-subtle);
+  --p-message-info-border-color: var(--color-jr-border);
+  --p-message-info-color: var(--color-jr-info-text);
+  --p-message-warn-background: var(--color-jr-warning-subtle);
+  --p-message-warn-border-color: var(--color-jr-border);
+  --p-message-warn-color: var(--color-jr-warning-text);
+  --p-message-border-radius: var(--radius-jr-control, 0);
+}
+
+.jr-tx-form__fav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.jr-tx-form__fav-star {
+  /* Favorite affordance: clear yellow (DESIGN.md warning token). */
+  color: #ffc107;
+  width: 1.125rem;
+  height: 1.125rem;
   flex-shrink: 0;
 }
 
-/* Fix for vue-select validation */
-:deep(.is-invalid .vs__dropdown-toggle) {
-  border-color: #dc3545;
+.jr-tx-form__import-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
 }
 
-:deep(.is-invalid .vs__dropdown-toggle:focus) {
-  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+.jr-tx-form__favorites {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
 }
 
-/* Debug styles */
-.debug-info {
-  background: #f8f9fa;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 4px;
-  font-size: 12px;
+.jr-tx-form__update-fav {
+  align-self: flex-start;
 }
 
-/* Mobile Responsive Styles */
-@media (max-width: 768px) {
-  .container-fluid {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-
-  .card {
-    margin-left: 0.25rem !important;
-    margin-right: 0.25rem !important;
-  }
-
-  .card-header {
-    padding: 0.75rem;
-  }
-
-  .card-body {
-    padding: 1rem;
-  }
-
-  /* Ensure buttons don't overflow on mobile */
-  .btn-sm {
-    font-size: 0.8rem;
-    padding: 0.375rem 0.5rem;
-  }
-
-  /* Make form labels more compact */
-  .form-label {
-    font-size: 0.9rem;
-    margin-bottom: 0.25rem;
-  }
-
-  /* Adjust input sizes for mobile */
-  .form-control {
-    font-size: 0.9rem;
-  }
-
-  /* Ensure proper spacing for mobile */
-  .row.g-3 {
-    --bs-gutter-x: 1rem;
-    --bs-gutter-y: 0.75rem;
-  }
-
-  /* Adjust gaps for mobile */
-  .d-flex.gap-1 > * + * {
-    margin-left: 0.25rem;
-  }
-
-  .d-flex.gap-2 > * + * {
-    margin-left: 0.5rem;
-  }
-
-  /* Make textarea more compact */
-  textarea.form-control {
-    resize: vertical;
-    min-height: 60px;
-  }
+.jr-tx-form__excel {
+  margin: 0;
 }
 
-/* Tablet responsive adjustments */
-@media (max-width: 992px) and (min-width: 769px) {
-  .card {
-    margin-left: 1rem !important;
-    margin-right: 1rem !important;
-  }
+.jr-tx-form__lines {
+  margin-top: 0.5rem;
 }
 
-/* Ensure spinner is properly sized */
-.spinner-border-sm {
-  width: 1rem;
-  height: 1rem;
+.jr-tx-form__totals {
+  margin: 0;
+  max-width: 24rem;
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.jr-tx-form__totals-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin: 0;
+}
+
+.jr-tx-form__totals-row dt,
+.jr-tx-form__totals-row dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--color-jr-text);
+}
+
+.jr-tx-form__totals-row dt {
+  font-weight: 600;
+}
+
+.jr-tx-form__totals-row dd {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.jr-tx-form__totals-discount {
+  color: var(--color-jr-danger-text);
+}
+
+.jr-tx-form__totals-row--grand {
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--color-jr-border);
+}
+
+.jr-tx-form__totals-row--grand dt,
+.jr-tx-form__totals-row--grand dd {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.jr-tx-form__totals-row--profit {
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--color-jr-border);
+}
+
+.jr-tx-form__totals-hint {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-jr-muted);
+}
+
+.jr-tx-form__totals-ok {
+  color: var(--color-jr-success-text, var(--color-jr-text));
+  font-weight: 600;
+}
+
+.jr-tx-form__totals-bad {
+  color: var(--color-jr-danger-text);
+  font-weight: 600;
+}
+
+.jr-tx-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 0.75rem 0 0.25rem;
+  margin-top: 0.5rem;
+  background: var(--color-jr-page);
+  border-top: 1px solid var(--color-jr-border);
 }
 </style>

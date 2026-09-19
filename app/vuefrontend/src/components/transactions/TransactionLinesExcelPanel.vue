@@ -1,37 +1,28 @@
 <template>
-  <div class="transaction-lines-excel-panel border rounded-3 p-2">
-    <div class="d-flex flex-wrap align-items-center gap-3">
-      <div class="d-flex align-items-center gap-2 mx-2">
-        <i
-          class="bi bi-file-earmark-arrow-up text-success fs-5 mt-4"
-          aria-hidden="true" />
-        <div>
-          <label class="form-label small fw-semibold mb-0">Import items</label>
-          <input
-            ref="fileInput"
-            type="file"
-            class="form-control form-control-sm mx-2"
-            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-            :disabled="busy"
-            @change="onFile" />
-        </div>
+  <div class="jr-transaction-lines-excel-panel">
+    <div class="jr-excel-toolbar">
+      <div class="jr-excel-upload">
+        <div class="jr-excel-upload__label">Import items</div>
+        <input
+          ref="fileInput"
+          type="file"
+          class="jr-excel-file"
+          accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+          :disabled="busy"
+          @change="onFile" />
       </div>
-
-      <button
+      <JRButton
         type="button"
-        class="btn btn-outline-success btn-sm d-inline-flex align-items-center gap-2 mt-4 mx-auto"
+        variant="secondary"
+        size="sm"
+        class="jr-excel-download-btn"
         :disabled="busy"
         @click="downloadTemplate">
-        <img
-          :src="excelIconUrl"
-          alt=""
-          width="20"
-          height="20"
-          class="excel-template-icon flex-shrink-0" />
+        <FileExcel class="jr-excel-download-icon" aria-hidden="true" />
         Download Excel template
-      </button>
+      </JRButton>
     </div>
-    <p class="small text-muted mb-0 mt-2">
+    <p class="jr-excel-hint">
       Template includes all active products; edit
       <strong>quantity</strong>
       and
@@ -48,7 +39,8 @@
 import { ref } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
-import excelIconUrl from "@/assets/img/microsoft-excel-icon.svg";
+import FileExcel from "@primeicons/vue/file-excel";
+import { JRButton } from "@ui";
 
 /** SheetJS es pesado: se carga en un chunk aparte solo al importar Excel o descargar plantilla */
 let xlsxModulePromise = null;
@@ -633,7 +625,49 @@ async function downloadTemplate() {
 </script>
 
 <style scoped>
-.transaction-lines-excel-panel {
-  border-color: rgba(13, 110, 253, 0.35) !important;
+.jr-transaction-lines-excel-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-jr-border);
+}
+.jr-excel-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 1rem;
+}
+.jr-excel-upload {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.jr-excel-upload__label {
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+
+.jr-excel-file {
+  max-width: 24rem;
+}
+
+.jr-excel-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.jr-excel-download-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  color: var(--color-jr-success, #16a34a);
+}
+
+.jr-excel-hint {
+  margin: 0;
+  color: var(--color-jr-muted);
+  font-size: 0.8125rem;
 }
 </style>

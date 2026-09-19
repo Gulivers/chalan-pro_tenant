@@ -320,8 +320,8 @@ export default {
     const perPage = ref(25);
     const currentPage = ref(1);
     const totalRows = ref(0);
-    const sortField = ref("id");
-    const sortOrder = ref(-1);
+    const sortField = ref("asset_tag");
+    const sortOrder = ref(1);
     let searchTimer = null;
 
     const initialViewport = readViewport();
@@ -362,8 +362,10 @@ export default {
         !!proxy?.hasPermission?.("appinventory.delete_serializeditem")
     );
 
-    const primaryLabel = (item) =>
-      item?.asset_tag || (item?.id != null ? `#${item.id}` : "—");
+    const primaryLabel = (item) => {
+      const tag = (item?.asset_tag || "").toString().trim();
+      return tag || "—";
+    };
 
     const statusSeverity = (value) => {
       const v = (value || "").trim();
@@ -415,7 +417,7 @@ export default {
     };
 
     const getOrderingFromSortBy = (sortBy) => {
-      if (!sortBy) return "-id";
+      if (!sortBy) return "asset_tag";
 
       let field;
       let desc = false;
@@ -428,7 +430,7 @@ export default {
         desc = sortBy[field] === "desc";
       }
 
-      if (!field) return "-id";
+      if (!field) return "asset_tag";
       // Backend allowlist: id, asset_tag, product__name, status, condition,
       // purchase_date, created_at (see SerializedItemListProviderAPIView).
       const fieldMap = {
@@ -441,7 +443,7 @@ export default {
         created_at: "created_at",
       };
       const djangoField = fieldMap[field];
-      if (!djangoField) return "-id";
+      if (!djangoField) return "asset_tag";
       return desc ? `-${djangoField}` : djangoField;
     };
 
@@ -490,8 +492,8 @@ export default {
     };
 
     const onTableSort = (event) => {
-      sortField.value = event.sortField || "id";
-      sortOrder.value = event.sortOrder ?? -1;
+      sortField.value = event.sortField || "asset_tag";
+      sortOrder.value = event.sortOrder ?? 1;
       currentPage.value = 1;
       loadItems();
     };

@@ -215,6 +215,12 @@
         "rule": "design-system-font-size",
         "value": "0.8125rem",
         "createdAt": "2026-09-19T05:30:27.486Z"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "#eab308",
+        "createdAt": "2026-09-19T17:07:56.486Z",
+        "reason": "Favorite star: clear yellow for Save as favorite button"
       }
     ]
   }
