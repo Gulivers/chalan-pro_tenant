@@ -3,6 +3,17 @@
     <nav class="jr-shell-topbar__nav" aria-label="Primary navigation">
       <router-link
         to="/"
+        class="jr-shell-topbar__brand"
+        :aria-label="brandLogoAlt">
+        <img
+          :src="brandLogoSrc"
+          alt=""
+          class="jr-shell-topbar__brand-logo"
+          @error="$emit('brand-logo-error')" />
+      </router-link>
+
+      <router-link
+        to="/"
         class="jr-shell-topbar__nav-link"
         :class="{ 'jr-shell-topbar__nav-link--active': dashboardActive }">
         <Home class="jr-shell-topbar__nav-icon" aria-hidden="true" />
@@ -94,8 +105,16 @@ export default {
       type: Boolean,
       default: false,
     },
+    brandLogoSrc: {
+      type: String,
+      default: "",
+    },
+    brandLogoAlt: {
+      type: String,
+      default: "JobRhythm",
+    },
   },
-  emits: ["navigate", "logout", "open-assistant"],
+  emits: ["navigate", "logout", "open-assistant", "brand-logo-error"],
   data() {
     return {
       userMenuOpen: false,

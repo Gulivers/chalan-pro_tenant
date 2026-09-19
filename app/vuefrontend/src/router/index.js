@@ -47,6 +47,8 @@ const DynamicForm = () => import("@components/inventory/DynamicForm.vue");
 const ProductCategoryView = () =>
   import("@views/inventory/ProductCategoryView.vue");
 const ProductBrandView = () => import("@views/inventory/ProductBrandView.vue");
+const ReportsExportsView = () =>
+  import("@views/reports/ReportsExportsView.vue");
 // const ProductUnitView = () => import('@views/inventory/ProductUnitView.vue');
 const UnitOfMeasureView = () =>
   import("@views/inventory/UnitOfMeasureView.vue");
@@ -333,6 +335,15 @@ const routes = [
     meta: {
       requiresAuth: true,
       requiredPermissions: ["appinventory.view_product"],
+    },
+  },
+  {
+    path: "/reports-exports",
+    name: "reports-exports",
+    component: ReportsExportsView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.change_workaccount"],
     },
   },
   {

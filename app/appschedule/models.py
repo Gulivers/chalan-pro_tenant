@@ -260,7 +260,7 @@ class EventDraft(models.Model):
 
 class EventNote(models.Model):
     event = models.OneToOneField(Event, on_delete=models.CASCADE, verbose_name='event_note', related_name='note', null=True, blank=True)
-    # WorkAccount es el campo principal para identificar las notas globales por obra
+    # Denormalized reference to the work account (same pattern as chat). Notes are scoped by event.
     work_account = models.ForeignKey('apptransactions.WorkAccount', on_delete=models.CASCADE, verbose_name='work_account_note', related_name='event_notes', null=True, blank=True)
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -272,16 +272,6 @@ class EventNote(models.Model):
             clean = self.notes.replace('<p>', '').replace('</p>', ' ').strip()
             return f"Note: {clean[:40]}" if clean else "Note"
         return "Note"
-    
-    class Meta:
-        # Asegurar que solo haya una nota por work_account
-        constraints = [
-            models.UniqueConstraint(
-                fields=['work_account'],
-                condition=Q(work_account__isnull=False),
-                name='unique_work_account_note'
-            )
-        ]
 
 
 class EventChatMessage(models.Model):

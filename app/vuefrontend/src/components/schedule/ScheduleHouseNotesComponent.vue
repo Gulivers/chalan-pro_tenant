@@ -171,11 +171,22 @@ export default {
         return;
       }
 
+      if (!this.resolvedWorkAccountId) {
+        await this.loadWorkAccountId();
+      }
+      if (!this.resolvedWorkAccountId) {
+        this.notifyError?.(
+          "Could not save note: this work order has no work account."
+        );
+        return;
+      }
+
       this.insertSignature();
       const notesContent = this.quill.root.innerHTML.trim();
 
       const ok = await this.postNote({
         notes: notesContent,
+        work_account: this.resolvedWorkAccountId,
       });
       if (!ok) {
         this.notifyError?.("Could not save message");
@@ -236,7 +247,16 @@ export default {
         );
         return [200, 201].includes(resp.status);
       } catch (e) {
-        console.error("Error saving note:", e);
+        const apiError =
+          e?.response?.data?.error ||
+          e?.response?.data?.work_account?.[0] ||
+          e?.response?.data?.detail;
+        console.error("Error saving note:", e?.response?.data || e);
+        if (apiError) {
+          this.notifyError?.(
+            typeof apiError === "string" ? apiError : "Could not save note."
+          );
+        }
         return false;
       }
     },

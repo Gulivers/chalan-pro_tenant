@@ -72,6 +72,30 @@
               Back to list
             </JRButton>
             <JRButton
+              v-if="canEdit && effectiveWorkAccountId"
+              type="button"
+              variant="secondary"
+              size="sm"
+              @click="goToEdit">
+              Edit
+            </JRButton>
+          </div>
+        </div>
+
+        <div class="jr-wov__meta-row">
+          <dl v-if="headerMetaItems.length" class="jr-wov__meta">
+            <div
+              v-for="item in headerMetaItems"
+              :key="item.label"
+              class="jr-wov__meta-item">
+              <dt class="jr-wov__meta-label">{{ item.label }}</dt>
+              <dd class="jr-wov__meta-value" :title="item.value">
+                {{ item.value }}
+              </dd>
+            </div>
+          </dl>
+          <div class="jr-wov__meta-actions">
+            <JRButton
               type="button"
               :variant="sidebarOpen ? 'primary' : 'secondary'"
               size="sm"
@@ -106,28 +130,8 @@
                 :value="ordersBadgeCount"
                 :severity="sidebarOpen ? 'secondary' : 'info'" />
             </JRButton>
-            <JRButton
-              v-if="canEdit && effectiveWorkAccountId"
-              type="button"
-              variant="secondary"
-              size="sm"
-              @click="goToEdit">
-              Edit
-            </JRButton>
           </div>
         </div>
-
-        <dl v-if="headerMetaItems.length" class="jr-wov__meta">
-          <div
-            v-for="item in headerMetaItems"
-            :key="item.label"
-            class="jr-wov__meta-item">
-            <dt class="jr-wov__meta-label">{{ item.label }}</dt>
-            <dd class="jr-wov__meta-value" :title="item.value">
-              {{ item.value }}
-            </dd>
-          </div>
-        </dl>
       </header>
 
       <!-- 2-Column Responsive Layout (desktop: tabs left, sidebar right; mobile: tabs full width) -->
@@ -158,12 +162,14 @@
             :has-previous="hasPrevious"
             :has-next="hasNext"
             :current-page="currentPage"
-            :is-general-mode="isGeneralMode"
+            :is-general-mode="browseAllWorkOrders"
+            :work-account-filter-active="workAccountFilterActive"
             :unread-map="unreadMap"
             @select-event="handleSelectEvent"
             @search="handleSearch"
             @prev-page="handlePrevPage"
-            @next-page="handleNextPage" />
+            @next-page="handleNextPage"
+            @clear-work-account-filter="clearWorkAccountFilter" />
         </aside>
       </div>
 
@@ -188,12 +194,14 @@
           :has-previous="hasPrevious"
           :has-next="hasNext"
           :current-page="currentPage"
-          :is-general-mode="isGeneralMode"
+          :is-general-mode="browseAllWorkOrders"
+          :work-account-filter-active="workAccountFilterActive"
           :unread-map="unreadMap"
           @select-event="handleSelectEvent"
           @search="handleSearch"
           @prev-page="handlePrevPage"
-          @next-page="handleNextPage" />
+          @next-page="handleNextPage"
+          @clear-work-account-filter="clearWorkAccountFilter" />
       </JRDrawer>
     </template>
   </JRPage>
@@ -291,6 +299,8 @@ export default {
     const ws = ref(null);
     const isMobile = ref(isNarrowViewport());
     const sidebarOpen = ref(!isNarrowViewport());
+    /** When true on a WA route, list all work orders (like /viewer). */
+    const listAllWorkOrders = ref(false);
 
     const handleResize = () => {
       const narrow = isNarrowViewport();
@@ -307,6 +317,14 @@ export default {
       const parsed = Number(raw);
       return Number.isFinite(parsed) ? parsed : null;
     });
+
+    const workAccountFilterActive = computed(
+      () => Boolean(workAccountId.value) && !listAllWorkOrders.value
+    );
+
+    const browseAllWorkOrders = computed(
+      () => isGeneralMode.value || listAllWorkOrders.value
+    );
 
     const effectiveWorkAccountId = computed(() => {
       if (workAccountId.value) return workAccountId.value;
@@ -395,7 +413,7 @@ export default {
     });
 
     const ordersBadgeCount = computed(() => {
-      if (isGeneralMode.value && totalEventsCount.value > 0) {
+      if (browseAllWorkOrders.value && totalEventsCount.value > 0) {
         return totalEventsCount.value;
       }
       return events.value.length || 0;
@@ -460,7 +478,7 @@ export default {
       isEventsLoading.value = true;
       try {
         let url = `/api/my-events/?page=${page}`;
-        if (workAccountId.value) {
+        if (workAccountFilterActive.value) {
           url += `&work_account=${workAccountId.value}`;
         }
         if (searchQuery.value.trim()) {
@@ -494,7 +512,7 @@ export default {
         } else if (list.length > 0) {
           selectedEvent.value = list[0];
           scheduleEventId.value = list[0].id;
-        } else if (workAccountId.value) {
+        } else if (workAccountId.value && workAccountFilterActive.value) {
           // Fallback to resolver
           scheduleEventId.value = await resolveScheduleEventForWorkAccount(
             workAccountId.value,
@@ -502,8 +520,8 @@ export default {
           );
         }
 
-        // If in general mode and we selected an event with work_account, load WA details
-        if (isGeneralMode.value && selectedEvent.value?.work_account) {
+        // When browsing all orders, load WA details for the selected event
+        if (browseAllWorkOrders.value && selectedEvent.value?.work_account) {
           loadAccountForEvent(selectedEvent.value.work_account);
         }
       } catch (err) {
@@ -543,7 +561,7 @@ export default {
         },
       });
 
-      if (isGeneralMode.value && event.work_account) {
+      if (browseAllWorkOrders.value && event.work_account) {
         loadAccountForEvent(event.work_account);
       }
 
@@ -555,6 +573,12 @@ export default {
 
     const handleSearch = (term) => {
       searchQuery.value = term;
+      loadEvents(1);
+    };
+
+    const clearWorkAccountFilter = () => {
+      if (!workAccountId.value) return;
+      listAllWorkOrders.value = true;
       loadEvents(1);
     };
 
@@ -647,6 +671,7 @@ export default {
     });
 
     watch(workAccountId, () => {
+      listAllWorkOrders.value = false;
       initView();
     });
 
@@ -660,6 +685,8 @@ export default {
       loadError,
       initialTab,
       isGeneralMode,
+      browseAllWorkOrders,
+      workAccountFilterActive,
       effectiveWorkAccountId,
       workAccountId,
       workAccountSubtitle,
@@ -683,6 +710,7 @@ export default {
       handleSearch,
       handlePrevPage,
       handleNextPage,
+      clearWorkAccountFilter,
     };
   },
 };
@@ -794,9 +822,20 @@ export default {
   margin-left: 0.375rem;
 }
 
-.jr-wov__header-actions :deep(.p-button-primary) .jr-wov__orders-badge {
+.jr-wov__meta-actions :deep(.p-button-primary) .jr-wov__orders-badge {
   background: rgba(255, 255, 255, 0.22);
   color: #ffffff;
+}
+
+.jr-wov__meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-top: 0.875rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--color-jr-border, #e5e7eb);
 }
 
 .jr-wov__meta {
@@ -804,9 +843,17 @@ export default {
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 0.75rem 1.75rem;
-  margin: 0.875rem 0 0;
-  padding-top: 0.875rem;
-  border-top: 1px solid var(--color-jr-border, #e5e7eb);
+  margin: 0;
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.jr-wov__meta-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .jr-wov__meta-item {

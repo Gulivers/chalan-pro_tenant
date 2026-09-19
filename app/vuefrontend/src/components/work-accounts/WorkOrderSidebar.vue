@@ -4,7 +4,7 @@
     <div class="jr-wov-sidebar__header">
       <div class="jr-wov-sidebar__header-text">
         <span class="jr-wov-sidebar__eyebrow">
-          {{ workAccount ? 'Work Account' : 'Operations' }}
+          {{ workAccountFilterActive ? 'Work Account' : (workAccount && !isGeneralMode ? 'Work Account' : 'Operations') }}
         </span>
         <h2 class="jr-wov-sidebar__title" :title="headerTitle">
           {{ headerTitle }}
@@ -13,6 +13,22 @@
       <span v-if="eventsCountLabel" class="jr-wov-sidebar__count-badge">
         {{ eventsCountLabel }}
       </span>
+    </div>
+
+    <!-- Active work-account filter (from /work-accounts/:id/view) -->
+    <div
+      v-if="workAccountFilterActive"
+      class="jr-wov-sidebar__filter"
+      role="status">
+      <span class="jr-wov-sidebar__filter-text">
+        Filtered by this work account
+      </span>
+      <button
+        type="button"
+        class="jr-wov-sidebar__filter-clear"
+        @click="$emit('clear-work-account-filter')">
+        Show all
+      </button>
     </div>
 
     <!-- Search bar -->
@@ -193,17 +209,33 @@ export default {
       type: Boolean,
       default: false,
     },
+    workAccountFilterActive: {
+      type: Boolean,
+      default: false,
+    },
     unreadMap: {
       type: Object,
       default: () => ({}),
     },
   },
-  emits: ["select-event", "search", "prev-page", "next-page"],
+  emits: [
+    "select-event",
+    "search",
+    "prev-page",
+    "next-page",
+    "clear-work-account-filter",
+  ],
   setup(props, { emit }) {
     const chatStore = useChatStore();
     const searchQuery = ref("");
 
     const headerTitle = computed(() => {
+      if (props.workAccountFilterActive && props.workAccount) {
+        return `WO ${props.workAccount.id} – ${props.workAccount.title}`;
+      }
+      if (props.isGeneralMode) {
+        return "Work Orders";
+      }
       if (props.workAccount) {
         return `WO ${props.workAccount.id} – ${props.workAccount.title}`;
       }
@@ -305,6 +337,47 @@ export default {
   padding: 0.75rem 1rem;
   background: var(--color-jr-surface-muted, #f9fafb);
   border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
+}
+
+.jr-wov-sidebar__filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
+  background: color-mix(in srgb, var(--color-jr-primary, #2563eb) 8%, var(--color-jr-surface, #ffffff));
+}
+
+.jr-wov-sidebar__filter-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-jr-text, #111827);
+  line-height: 1.3;
+}
+
+.jr-wov-sidebar__filter-clear {
+  flex-shrink: 0;
+  border: 0;
+  padding: 0.2rem 0.45rem;
+  border-radius: var(--radius-jr-panel, 0.75rem);
+  background: transparent;
+  color: var(--color-jr-primary, #2563eb);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.jr-wov-sidebar__filter-clear:hover {
+  color: var(--color-jr-primary-hover, #1d4ed8);
+}
+
+.jr-wov-sidebar__filter-clear:focus-visible {
+  outline: 2px solid var(--color-jr-primary, #2563eb);
+  outline-offset: 2px;
 }
 
 .jr-wov-sidebar__header-text {
