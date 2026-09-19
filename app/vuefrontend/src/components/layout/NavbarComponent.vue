@@ -52,7 +52,8 @@
             </SidebarMenu>
           </SidebarHeader>
 
-          <SidebarContent class="jr-shell-sidebar__content">
+          <!-- Desktop: native sidebar groups -->
+          <SidebarContent v-if="!isMobile" class="jr-shell-sidebar__content">
             <SidebarGroup v-if="workflowMenuItems.length">
               <SidebarGroupLabel>Workflow</SidebarGroupLabel>
               <SidebarGroupContent>
@@ -116,6 +117,98 @@
             </SidebarGroup>
           </SidebarContent>
 
+          <!-- Mobile: VirtualScroller + account footer -->
+          <SidebarContent
+            v-else
+            class="jr-shell-sidebar__content jr-shell-sidebar__content--virtual">
+            <VirtualScroller
+              :items="mobileNavRows"
+              :item-size="MOBILE_NAV_ITEM_SIZE"
+              class="jr-shell-sidebar__virtual"
+              :pt="{ root: { class: 'jr-shell-sidebar__virtual-root' } }">
+              <template #item="{ item, options }">
+                <div
+                  :key="item.key"
+                  :class="[
+                    'jr-shell-sidebar__vs-row',
+                    `jr-shell-sidebar__vs-row--${item.type}`,
+                  ]"
+                  :style="options.style">
+                  <div
+                    v-if="item.type === 'label'"
+                    class="jr-shell-sidebar__vs-label"
+                    role="presentation">
+                    {{ item.text }}
+                  </div>
+                  <button
+                    v-else-if="item.type === 'link'"
+                    type="button"
+                    class="jr-shell-sidebar__vs-btn"
+                    :data-active="item.active ? 'true' : null"
+                    :aria-current="item.active ? 'page' : null"
+                    @click="navigateTo(item.route)">
+                    <component :is="iconFor(item.icon)" aria-hidden="true" />
+                    <span>{{ item.text }}</span>
+                  </button>
+                  <button
+                    v-else-if="item.type === 'module'"
+                    type="button"
+                    class="jr-shell-sidebar__vs-btn"
+                    :data-active="item.active ? 'true' : null"
+                    :aria-expanded="item.open"
+                    @click="onModuleButtonClick(item.source)">
+                    <component :is="iconFor(item.icon)" aria-hidden="true" />
+                    <span>{{ item.text }}</span>
+                    <ChevronDown
+                      class="jr-shell-sidebar__chevron"
+                      :class="{
+                        'jr-shell-sidebar__chevron--open': item.open,
+                      }"
+                      aria-hidden="true" />
+                  </button>
+                  <button
+                    v-else-if="item.type === 'sub'"
+                    type="button"
+                    class="jr-shell-sidebar__vs-btn jr-shell-sidebar__vs-btn--sub"
+                    :data-active="item.active ? 'true' : null"
+                    :aria-current="item.active ? 'page' : null"
+                    @click="navigateTo(item.route)">
+                    <span>{{ item.text }}</span>
+                  </button>
+                </div>
+              </template>
+            </VirtualScroller>
+          </SidebarContent>
+
+          <SidebarFooter
+            v-if="isMobile"
+            class="jr-shell-sidebar__footer">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <AppShellUserMenu
+                  v-if="isLoggedIn"
+                  surface="sidebar"
+                  :user-name="userName"
+                  :user-initials="userInitials"
+                  :is-tenant-owner="isTenantOwner"
+                  @navigate="navigateTo"
+                  @logout="logout" />
+                <SidebarMenuButton
+                  v-else
+                  as-child
+                  v-slot="{ class: btnClass, a11yAttrs }">
+                  <router-link
+                    to="/login"
+                    v-bind="a11yAttrs"
+                    :class="[btnClass, 'jr-shell-topbar__login--sidebar']"
+                    @click="closeSidebar">
+                    Log In
+                  </router-link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
+
           <SidebarRail />
         </SidebarPanel>
       </SidebarAside>
@@ -136,11 +229,14 @@
         @open-assistant="openAssistant"
         @brand-logo-error="onTenantLogoError" />
 
-      <header class="jr-shell-mobile-bar" aria-label="App navigation">
+          <header class="jr-shell-mobile-bar" aria-label="App navigation">
         <SidebarTrigger
           class="jr-shell-mobile-bar__menu"
           target="jr-main-sidebar"
-          aria-label="Open navigation menu">
+          :aria-label="
+            sidebarOpen ? 'Close navigation menu' : 'Open navigation menu'
+          "
+          :aria-expanded="sidebarOpen">
           <Bars />
           <span class="jr-shell-mobile-bar__menu-label">MENU</span>
         </SidebarTrigger>
@@ -193,10 +289,12 @@ import MapMarker from "@primeicons/vue/map-marker";
 import Sparkles from "@primeicons/vue/sparkles";
 import Users from "@primeicons/vue/users";
 import AppShellTopbar from "./AppShellTopbar.vue";
+import AppShellUserMenu from "./AppShellUserMenu.vue";
 import Sidebar from "primevue/sidebar";
 import SidebarAside from "primevue/sidebaraside";
 import SidebarBackdrop from "primevue/sidebarbackdrop";
 import SidebarContent from "primevue/sidebarcontent";
+import SidebarFooter from "primevue/sidebarfooter";
 import SidebarGroup from "primevue/sidebargroup";
 import SidebarGroupContent from "primevue/sidebargroupcontent";
 import SidebarGroupLabel from "primevue/sidebargrouplabel";
@@ -213,6 +311,7 @@ import SidebarPanel from "primevue/sidebarpanel";
 import SidebarRail from "primevue/sidebarrail";
 import SidebarSpacer from "primevue/sidebarspacer";
 import SidebarTrigger from "primevue/sidebartrigger";
+import VirtualScroller from "primevue/virtualscroller";
 import FooterComponent from "./FooterComponent.vue";
 import NavbarMessagesDropdown from "./NavbarMessagesDropdown.vue";
 import { openAssistant } from "@/utils/assistantBus";
@@ -233,10 +332,13 @@ const NAV_ICONS = {
 };
 
 const MOBILE_BREAKPOINT = 1024;
+/** Match .jr-shell-sidebar__vs-row / vs-btn height (2.75rem). */
+const MOBILE_NAV_ITEM_SIZE = 44;
 
 export default {
   name: "NavbarComponent",
   components: {
+    AppShellUserMenu,
     Bars,
     Box,
     Building,
@@ -256,6 +358,7 @@ export default {
     SidebarAside,
     SidebarBackdrop,
     SidebarContent,
+    SidebarFooter,
     SidebarGroup,
     SidebarGroupContent,
     SidebarGroupLabel,
@@ -274,9 +377,11 @@ export default {
     SidebarTrigger,
     Sparkles,
     Users,
+    VirtualScroller,
   },
   data() {
     return {
+      MOBILE_NAV_ITEM_SIZE,
       isLoggedIn: false,
       isMobile: false,
       sidebarOpen: false,
@@ -528,6 +633,62 @@ export default {
       } catch {
         return true;
       }
+    },
+    /** Flattened nav rows for mobile VirtualScroller. */
+    mobileNavRows() {
+      const rows = [];
+
+      if (this.workflowMenuItems.length) {
+        rows.push({
+          type: "label",
+          key: "label-workflow",
+          text: "Workflow",
+        });
+        for (const item of this.workflowMenuItems) {
+          rows.push({
+            type: "link",
+            key: `wf-${item.route}`,
+            text: item.text,
+            route: item.route,
+            icon: item.icon,
+            active: this.isSubRouteActive(item, this.workflowMenuItems),
+          });
+        }
+      }
+
+      if (this.moduleMenuItems.length) {
+        rows.push({
+          type: "label",
+          key: "label-modules",
+          text: "Modules",
+        });
+        for (const item of this.moduleMenuItems) {
+          const children = this.visibleChildren(item);
+          const open = this.openModuleKey === item.text;
+          rows.push({
+            type: "module",
+            key: `mod-${item.text}`,
+            text: item.text,
+            icon: item.icon,
+            open,
+            active: this.isDropdownActive(item),
+            source: item,
+          });
+          if (open) {
+            for (const sub of children) {
+              rows.push({
+                type: "sub",
+                key: `sub-${sub.route}`,
+                text: sub.text,
+                route: sub.route,
+                active: this.isSubRouteActive(sub, children),
+              });
+            }
+          }
+        }
+      }
+
+      return rows;
     },
   },
   mounted() {
