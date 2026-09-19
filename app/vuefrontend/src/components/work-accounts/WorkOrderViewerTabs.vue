@@ -169,6 +169,11 @@ export default {
       type: String,
       default: "chat",
     },
+    /** When false (e.g. schedule modal), do not write ?tab= into the route. */
+    syncRoute: {
+      type: Boolean,
+      default: true,
+    },
   },
   setup(props) {
     const route = useRoute();
@@ -182,6 +187,7 @@ export default {
     const visibleTabs = computed(() => WORK_ORDER_VIEWER_TABS);
 
     const syncTabToRoute = (tab) => {
+      if (!props.syncRoute) return;
       const nextTab = normalizeTab(tab);
       if (route.query.tab === nextTab) return;
       router.replace({
@@ -198,7 +204,7 @@ export default {
     watch(
       () => route.query.tab,
       (tab) => {
-        if (!tab) return;
+        if (!props.syncRoute || !tab) return;
         const normalized = normalizeTab(tab);
         if (normalized !== activeTab.value) {
           activeTab.value = normalized;

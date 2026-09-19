@@ -394,7 +394,7 @@ export default {
         addr && title && addr.toLowerCase() === title.toLowerCase();
 
       const items = [
-        { label: "Supervisor", value: supervisorLabel.value },
+        { label: "Area Supervisor", value: supervisorLabel.value },
         { label: "Builder", value: wa?.builder_name || ev?.builder_name },
         { label: "Community", value: wa?.job_name || ev?.job_name },
         { label: "Lot", value: wa?.lot ? `Lot ${wa.lot}` : null },

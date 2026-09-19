@@ -54,6 +54,7 @@ export default {
         'jr-pilot',
         'jr-dialog',
         this.size === 'wide' ? 'jr-dialog--wide' : '',
+        this.size === 'xl' ? 'jr-dialog--xl' : '',
         this.isDanger ? 'jr-dialog--danger' : '',
       ].filter(Boolean);
     },
@@ -103,7 +104,7 @@ export default {
     size: {
       type: String,
       default: 'default',
-      validator: (value) => ['default', 'wide'].includes(value),
+      validator: (value) => ['default', 'wide', 'xl'].includes(value),
     },
   },
   emits: ['update:visible', 'confirm'],

@@ -101,6 +101,7 @@
                   optionValue="value"
                   :disabled="isDisabled"
                   :multiple="internalSchema[key].multiple || false"
+                  filter
                   :placeholder="`Select ${fieldLabel(key)}`"
                   :showClear="true"
                   :invalid="invalid"
@@ -202,6 +203,7 @@ const HINT_OVERRIDES = {
   name: "Must be unique within this organization.",
   trim_amount:
     "At least one of Trim, Rough, or Travel Amount must be greater than 0.",
+  crews: "Assign supervisor crews that own this community.",
 };
 
 const PARTY_ROLE_KEYS = ["customer_rank", "supplier_rank"];
@@ -437,6 +439,9 @@ export default {
     },
     fieldClass(key, section) {
       if (section.gridClass?.includes("address") && key === "street") {
+        return "jr-form-grid__full";
+      }
+      if (key === "crews" && this.internalSchema[key]?.multiple) {
         return "jr-form-grid__full";
       }
       return undefined;

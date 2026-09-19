@@ -912,6 +912,10 @@
   width: min(56rem, calc(100vw - 2rem));
 }
 
+.p-dialog.jr-dialog.jr-dialog--xl {
+  width: min(75rem, calc(100vw - 1.5rem));
+}
+
 .p-image-preview-mask,
 .p-image-mask {
   z-index: 2200;
