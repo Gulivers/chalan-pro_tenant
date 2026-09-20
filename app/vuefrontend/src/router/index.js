@@ -126,13 +126,13 @@ const routes = [
     path: "/onboarding",
     name: "onboarding",
     component: OnboardingView,
-    meta: { hideNavbar: true, requiresAuth: false },
+    meta: { hideNavbar: true, hideFooter: true, requiresAuth: false },
   },
   {
     path: "/onboarding/verify",
     name: "onboarding-verify",
     component: () => import("@/views/OnboardingVerifyView.vue"),
-    meta: { hideNavbar: true, requiresAuth: false },
+    meta: { hideNavbar: true, hideFooter: true, requiresAuth: false },
   },
   {
     path: "/logout",
