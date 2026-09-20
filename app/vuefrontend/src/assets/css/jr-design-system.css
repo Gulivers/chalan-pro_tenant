@@ -912,6 +912,48 @@
   width: min(56rem, calc(100vw - 2rem));
 }
 
+.p-dialog.jr-dialog.jr-dialog--xl {
+  width: min(75rem, calc(100vw - 1.5rem));
+  max-height: calc(100dvh - 2rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.p-dialog.jr-dialog.jr-dialog--xl .p-dialog-content {
+  overflow-y: auto;
+  max-height: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 991.98px) {
+  .p-dialog.jr-dialog.jr-dialog--xl {
+    width: calc(100vw - 0.75rem);
+    max-width: calc(100vw - 0.75rem);
+    max-height: calc(100dvh - 0.75rem);
+    margin: 0.375rem;
+  }
+
+  .p-dialog.jr-dialog.jr-dialog--xl .p-dialog-header {
+    padding: 0.75rem 0.875rem;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: var(--color-jr-surface, #ffffff);
+  }
+
+  .p-dialog.jr-dialog.jr-dialog--xl .p-dialog-content {
+    padding: 0.75rem;
+  }
+
+  .p-dialog.jr-dialog.jr-dialog--xl .jr-dialog__close.p-button {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+}
+
 .p-image-preview-mask,
 .p-image-mask {
   z-index: 2200;

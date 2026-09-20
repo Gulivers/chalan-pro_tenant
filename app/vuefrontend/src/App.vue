@@ -6,15 +6,19 @@ import AssistantPanel from "@/components/assistant/AssistantPanel.vue";
 
 const route = useRoute();
 const showShellNav = computed(() => !route.meta.hideNavbar);
+const showShellFooter = computed(() => !route.meta.hideFooter);
 </script>
 
 <template>
   <Layout.NavbarComponent v-if="showShellNav">
     <router-view />
   </Layout.NavbarComponent>
-  <div v-else class="jr-app-shell--no-nav">
+  <div
+    v-else
+    class="jr-app-shell--no-nav"
+    :class="{ 'jr-app-shell--onboard': route.meta.hideFooter }">
     <router-view />
-    <Layout.FooterComponent />
+    <Layout.FooterComponent v-if="showShellFooter" />
   </div>
   <AssistantPanel />
 </template>
@@ -26,6 +30,10 @@ const showShellNav = computed(() => !route.meta.hideNavbar);
   font-family: var(--font-jr-sans);
   color: var(--color-jr-text);
   background: var(--color-jr-page);
+}
+
+.jr-app-shell--onboard {
+  background: var(--color-jr-surface, #fff);
 }
 
 label {

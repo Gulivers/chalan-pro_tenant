@@ -8,6 +8,10 @@
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard.vue'
 </script>
 
-<style lang="scss">
-@import '@/assets/scss/onboarding.scss';
+<style scoped>
+.onboarding-view {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-jr-surface, #fff);
+}
 </style>

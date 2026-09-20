@@ -1,497 +1,586 @@
 <template>
-  <div class="card">
-    <div class="card-header">
-      <!-- Desktop Layout -->
-      <div class="d-none d-md-flex align-items-center justify-content-between">
-        <div class="d-flex gap-2">
-            <button
-              class="btn btn-outline-primary"
-              type="button"
-              :disabled="disabled"
-              @click="addLine"
-              v-tt
-              data-title="Add a new line to the document">
-              <i class="bi bi-plus-lg me-1"></i>
-              Add Row
-            </button>
-            <button
-              class="btn btn-outline-info"
-              type="button"
-              :disabled="disabled || !hasSelection"
-              @click="duplicateSelected"
-              v-tt
-              data-title="Duplicate the selected lines">
-              <i class="bi bi-files me-1"></i>
-              Duplicate Selected
-            </button>
-            <button
-              class="btn btn-outline-danger"
-              type="button"
-              :disabled="disabled || !hasSelection"
-              @click="removeSelected"
-              v-tt
-              data-title="Remove the selected lines">
-              <i class="bi bi-trash me-1"></i>
-              Delete Selected
-            </button>
-            <button
-              v-if="documentId && documentTypeCreatesSerializedItems"
-              class="btn btn-outline-secondary"
-              type="button"
-              :disabled="disabled"
-              @click="$emit('open-asset-tags')"
-              v-tt
-              data-title="Assign serial numbers for serialized items of this document (only for document types that create serialized items, e.g. GRN)">
-              <i class="bi bi-tag me-1"></i>
-              Assign Serial Numbers
-            </button>
-        </div>
-        <div class="small text-muted">Rows: {{ linesLocal?.length || 0 }}</div>
-      </div>
-      
-      <!-- Mobile Layout -->
-      <div class="d-md-none">
-        <!-- Title Row -->
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <div class="small text-muted">Rows: {{ linesLocal?.length || 0 }}</div>
-        </div>
-        
-        <!-- Button Row - Responsive -->
-        <div class="d-flex gap-1 flex-wrap">
-          <button
-            class="btn btn-outline-primary btn-sm flex-fill"
-            type="button"
-            :disabled="disabled"
-            @click="addLine"
-            v-tt
-            data-title="Add a new line to the document">
-            <i class="bi bi-plus-lg"></i>
-            <span class="d-none d-sm-inline ms-1">Add Row</span>
-            <span class="d-sm-none ms-1">Add</span>
-          </button>
-          <button
-            class="btn btn-outline-info btn-sm flex-fill"
-            type="button"
-            :disabled="disabled || !hasSelection"
-            @click="duplicateSelected"
-            v-tt
-            data-title="Duplicate the selected lines">
-            <i class="bi bi-files"></i>
-            <span class="d-none d-sm-inline ms-1">Duplicate</span>
-            <span class="d-sm-none ms-1">Copy</span>
-          </button>
-          <button
-            class="btn btn-outline-danger btn-sm flex-fill"
-            type="button"
-            :disabled="disabled || !hasSelection"
-            @click="removeSelected"
-            v-tt
-            data-title="Remove the selected lines">
-            <i class="bi bi-trash"></i>
-            <span class="d-none d-sm-inline ms-1">Delete</span>
-            <span class="d-sm-none ms-1">Del</span>
-          </button>
-<button
+  <div class="jr-lines">
+    <div v-if="!hideToolbar" class="jr-lines__toolbar">
+      <div class="jr-lines__toolbar-actions">
+        <Button
+          type="button"
+          class="jr-button jr-lines__maint"
+          severity="primary"
+          outlined
+          size="small"
+          :disabled="disabled"
+          title="Add a new line to the document"
+          @click="addLineFromToolbar">
+          <Plus class="jr-lines__maint-icon" aria-hidden="true" />
+          <span class="p-button-label">Add Row</span>
+        </Button>
+        <Button
+          type="button"
+          class="jr-button jr-lines__maint"
+          severity="info"
+          outlined
+          size="small"
+          :disabled="disabled || !hasSelection"
+          title="Duplicate the selected lines"
+          @click="duplicateSelected">
+          <Copy class="jr-lines__maint-icon" aria-hidden="true" />
+          <span class="p-button-label">Duplicate Selected</span>
+        </Button>
+        <Button
+          type="button"
+          class="jr-button jr-lines__maint"
+          severity="danger"
+          outlined
+          size="small"
+          :disabled="disabled || !hasSelection"
+          title="Remove the selected lines"
+          @click="removeSelected">
+          <Trash class="jr-lines__maint-icon" aria-hidden="true" />
+          <span class="p-button-label">Delete Selected</span>
+        </Button>
+        <JRButton
           v-if="documentId && documentTypeCreatesSerializedItems"
-          class="btn btn-outline-secondary btn-sm flex-fill"
           type="button"
+          variant="secondary"
+          size="sm"
           :disabled="disabled"
-          @click="$emit('open-asset-tags')"
-          v-tt
-          data-title="Assign serial numbers for serialized items of this document (only for document types that create serialized items, e.g. GRN)">
-            <i class="bi bi-tag"></i>
-            <span class="d-none d-sm-inline ms-1">Serial Numbers</span>
-          </button>
-        </div>
+          title="Assign serial numbers for serialized items of this document"
+          @click="$emit('open-asset-tags')">
+          Assign Serial Numbers
+        </JRButton>
       </div>
+      <span class="jr-lines__count">Rows: {{ linesLocal?.length || 0 }}</span>
     </div>
 
-    <div class="table-responsive" style="max-height: 70vh; min-height: 400px">
-      <table class="table table-sm align-middle table-hover table-sticky">
-        <thead>
-          <tr>
-            <th style="width: 30px" class="text-center">
-              <input type="checkbox" class="form-check-input" v-model="selectAll" />
-            </th>
-            <th style="min-width: 300px" v-tt data-title="Product or service for this line">Product</th>
-            <th style="min-width: 100px" v-tt data-title="Quantity">Qty</th>
-            <th style="min-width: 200px" v-tt data-title="Unit of measure">Unit</th>
-            <th style="min-width: 120px" v-tt data-title="Price per unit">Unit Price</th>
-            <th style="min-width: 100px" v-tt data-title="Discount percentage applied to this line">Disc %</th>
-            <th style="min-width: 180px" v-tt data-title="Warehouse for stock movement (required when document type requires it)">Warehouse</th>
-            <th style="min-width: 190px" v-tt data-title="Price type (e.g. Contractor, Retail) and margin/markup rule used for the line">Price Type</th>
-            <th
-              v-if="documentTypeIsSales"
-              style="min-width: 130px"
-              v-tt
-              data-title="Margin / Markup % used with purchase cost for sale pricing (Markup/Margin price types only).">
-              Margin %
-            </th>
-            <th style="min-width: 150px" v-tt data-title="Product brand when applicable">Brand</th>
-            <th
-              style="min-width: 120px"
-              class="text-end"
-              v-tt
-              data-title="Net amount for this line after Disc. % (qty × unit price × (1 − disc/100)). Footer Subtotal is the sum of qty × unit price before discounts.">
-              Line total
-            </th>
-            <th style="width: 80px"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(row, idx) in linesLocal"
-            :key="row.__key"
-            :class="{ 'table-warning': Object.keys(row._errors || {}).length > 0 }">
-            <td class="text-center">
-              <input type="checkbox" class="form-check-input" v-model="row.selected" />
-            </td>
-
-            <!-- Product (remote search) -->
-            <td>
-              <v-select
-                append-to-body
-                :id="`product-${idx}`"
-                :options="productOptions"
-                label="label"
-                :reduce="o => o.value"
-                :filterable="true"
-                :loading="loading.products[idx]"
-                :disabled="disabled"
-                v-model="row.product"
-                @search="q => searchProducts(idx, q)"
-                @option:selected="opt => onProductSelected(idx, opt)"
-                @clear="onProductCleared(idx)"
-                @update:modelValue="val => onProductChanged(idx, val)"
-                @keydown.enter="focusNextField(idx, 'quantity')"
-                placeholder="Search product..."
-                :class="{ 'is-invalid': row._errors?.product }">
-                <template #selected-option="{ label, product }">
-                  <div class="d-flex align-items-center gap-2" style="max-width: 280px">
-                    <span class="text-truncate">{{ row.product_label || product?.name || label || 'No name' }}</span>
-                    <span
-                      v-if="product?.tracking_mode === 'SERIALIZED'"
-                      class="badge bg-info flex-shrink-0"
-                      style="font-size: 0.65rem"
-                    >
-                      SERIALIZED
-                    </span>
-                  </div>
-                </template>
-                <template #option="{ label, product }">
-                  <div class="d-flex align-items-center gap-2" style="max-width: 280px">
-                    <span class="text-truncate">{{ product?.name || label || 'No name' }}</span>
-                    <span
-                      v-if="product?.tracking_mode === 'SERIALIZED'"
-                      class="badge bg-info flex-shrink-0"
-                      style="font-size: 0.65rem"
-                    >
-                      SERIALIZED
-                    </span>
-                  </div>
-                </template>
-                <template #no-options>
-                  <div class="text-muted small">Type at least 2 characters to search...</div>
-                </template>
-              </v-select>
-              <div class="text-danger small" v-if="row._errors?.product">{{ row._errors.product[0] }}</div>
-            </td>
-
-            <!-- Qty -->
-            <td>
-              <input
-                :id="`quantity-${idx}`"
-                ref="quantityInputs"
-                type="number"
-                min="0"
-                step="0.01"
-                class="form-control form-control-sm"
-                :class="{ 'is-invalid': row._errors?.quantity }"
-                :disabled="disabled"
-                v-model.number="row.quantity"
-                @input="onQuantityInput(idx)"
-                @blur="onQuantityBlurMerge(idx)"
-                @keydown.enter="onQuantityEnterMerge(idx, $event)"
-                @focus="$event.target.select()"
-                placeholder="0.00" />
-              <div class="text-danger small" v-if="row._errors?.quantity">{{ row._errors.quantity[0] }}</div>
-            </td>
-
-            <!-- Unit -->
-            <td>
-               <v-select
-                 append-to-body
-                 :id="`unit-${idx}`"
-                 :options="unitsOptions"
-                 :reduce="o => o.value"
-                 label="label"
-                 :disabled="disabled"
-                 v-model="row.unit"
-                 @update:modelValue="onUnitUpdated(idx)"
-                 @keydown.enter="focusNextField(idx, 'unit_price')"
-                 :class="{ 'is-invalid': row._errors?.unit }"
-                 placeholder="Select unit...">
-                 <template #selected-option="{ label }">
-                   <div class="text-truncate" style="max-width: 180px">{{ label }}</div>
-                 </template>
-                 <template #option="{ label }">
-                   <div class="text-truncate" style="max-width: 180px">{{ label }}</div>
-                 </template>
-               </v-select>
-              <div class="text-danger small" v-if="row._errors?.unit">{{ row._errors.unit[0] }}</div>
-            </td>
-
-            <!-- Unit Price -->
-            <td>
-              <input
-                :id="`unit_price-${idx}`"
-                ref="unitPriceInputs"
-                type="number"
-                min="0"
-                step="0.01"
-                class="form-control form-control-sm"
-                :class="{ 'is-invalid': row._errors?.unit_price }"
-                :disabled="disabled"
-                v-model.number="row.unit_price"
-                @input="onUnitPriceInput(idx)"
-                @keydown.enter="focusNextField(idx, 'discount_percentage')"
-                @focus="$event.target.select()"
-                placeholder="0.00" />
-              <div class="text-danger small" v-if="row._errors?.unit_price">{{ row._errors.unit_price[0] }}</div>
-            </td>
-
-            <!-- Discount % -->
-            <td>
-              <input
-                :id="`discount_percentage-${idx}`"
-                ref="discountInputs"
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                class="form-control form-control-sm"
-                :class="{ 'is-invalid': row._errors?.discount_percentage }"
-                :disabled="disabled"
-                v-model.number="row.discount_percentage"
-                @input="onDiscountPercentageInput(idx)"
-                @keydown.enter="focusNextField(idx, 'warehouse')"
-                @focus="$event.target.select()"
-                placeholder="0.00" />
-              <div class="text-danger small" v-if="row._errors?.discount_percentage">
-                {{ row._errors.discount_percentage[0] }}
-              </div>
-            </td>
-
-            <!-- Warehouse (required per line when doc type requires it) -->
-            <td>
-               <v-select
-                 append-to-body
-                 :id="`warehouse-${idx}`"
-                 :options="warehousesOptions"
-                 :reduce="o => o.value"
-                 label="label"
-                 :disabled="disabled"
-                 v-model="row.warehouse"
-                 @keydown.enter="focusNextField(idx, 'price_type')"
-                 :class="{ 'is-invalid': row._errors?.warehouse }"
-                 placeholder="Select warehouse...">
-                 <template #selected-option="{ label }">
-                   <div class="text-truncate" style="max-width: 160px">{{ label }}</div>
-                 </template>
-                 <template #option="{ label }">
-                   <div class="text-truncate" style="max-width: 160px">{{ label }}</div>
-                 </template>
-               </v-select>
-              <div class="text-danger small" v-if="row._errors?.warehouse">{{ row._errors.warehouse[0] }}</div>
-            </td>
-
-            <!-- Price Type -->
-            <td>
-               <v-select
-                 append-to-body
-                 :id="`price_type-${idx}`"
-                 :options="priceTypesOptions"
-                 :reduce="o => o.value"
-                 label="label"
-                 :disabled="disabled"
-                 v-model="row.price_type"
-                 @update:modelValue="onPriceTypeUpdated(idx)"
-                 @keydown.enter="focusNextField(idx, documentTypeIsSales ? 'margin_percent' : 'brand')"
-                 placeholder="Price type...">
-                 <template #selected-option="{ label }">
-                   <div class="text-truncate" style="max-width: 130px">{{ label }}</div>
-                 </template>
-                 <template #option="{ label }">
-                   <div class="text-truncate" style="max-width: 130px">{{ label }}</div>
-                 </template>
-               </v-select>
-               <div
-                v-if="documentTypeIsSales && pricingHint(row)"
-                class="small text-muted mt-1 text-truncate"
-                style="max-width: 180px"
-                v-tt
-                :data-title="pricingHint(row)">
-                {{ pricingHint(row) }}
-              </div>
-            </td>
-
-            <!-- Margin % (solo documentos de venta: is_sales) -->
-            <td v-if="documentTypeIsSales">
-              <input
-                :id="`margin_percent-${idx}`"
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                class="form-control form-control-sm"
-                :class="{ 'is-invalid': row._errors?.margin_percent }"
-                v-model.number="row.margin_percent"
-                :disabled="disabled || !canEditLineMargin"
-                @input="onMarginPercentInput(idx)"
-                @keydown.enter="focusNextField(idx, 'brand')"
-                @focus="$event.target.select()"
-                placeholder="0.00" />
-              <div class="text-danger small" v-if="row._errors?.margin_percent">
-                {{ row._errors.margin_percent[0] }}
-              </div>
-            </td>
-
-            <!-- Brand -->
-            <td>
-               <v-select
-                 append-to-body
-                 :id="`brand-${idx}`"
-                 :options="(row.brands && row.brands.length > 0) ? row.brands : brandsOptions"
-                 :reduce="o => o.value"
-                 label="label"
-                 v-model="row.brand"
-                 @keydown.enter="focusNextRow(idx)"
-                 :placeholder="(row.brands && row.brands.length > 0) ? 'Brand...' : 'Load brands from product...'"
-                 :disabled="disabled || !row.product">
-                 <template #selected-option="{ label }">
-                   <div class="text-truncate" style="max-width: 130px">{{ label }}</div>
-                 </template>
-                 <template #option="{ label }">
-                   <div class="text-truncate" style="max-width: 130px">{{ label }}</div>
-                 </template>
-                 <template #no-options>
-                   <div class="text-muted small">
-                     {{ row.product ? 'No brands available' : 'Select a product first' }}
-                   </div>
-                 </template>
-               </v-select>
-            </td>
-
-            <!-- Line total (siempre neto: qty × unit_price × (1 − disc%); ver lineTotalAfterDiscount) -->
-            <td class="text-end">
-              {{ currency(lineTotalAfterDiscount(row)) }}
-            </td>
-
-            <td class="text-end">
-              <div class="d-flex gap-1 justify-content-end">
-                <button
-                  class="btn btn-sm btn-outline-info"
-                  type="button"
-                  @click="duplicateRow(idx)"
-                  title="Duplicate line">
-                  <i class="bi bi-copy"></i>
-                  <img src="@/assets/img/duplicate-alt.svg" alt="Duplicate" style="width: 18px; height: 18px; margin-left: 2px;" />
-                </button>
-                <button class="btn btn-sm btn-outline-danger" type="button" @click="removeRow(idx)" title="Remove line">
-                  <i class="bi bi-x-lg"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div v-if="isCompact" class="jr-lines__compact">
+      <JREmptyState
+        v-if="!linesLocal.length"
+        title="No lines"
+        description="Add a row to enter products for this transaction.">
+        <Button
+          v-if="!disabled && !hideToolbar"
+          type="button"
+          class="jr-button"
+          severity="primary"
+          outlined
+          size="small"
+          @click="addLineFromToolbar">
+          <Plus class="jr-lines__maint-icon" aria-hidden="true" />
+          <span class="p-button-label">Add Row</span>
+        </Button>
+      </JREmptyState>
+      <ul v-else class="jr-lines-list">
+        <li
+          v-for="(row, idx) in linesLocal"
+          :key="row.__key"
+          class="jr-lines-item"
+          :class="{ 'jr-lines-item--error': rowHasErrors(row) }">
+          <div class="jr-lines-item__main">
+            <span class="jr-lines-item__title">
+              {{ row.product_label || (row.product ? `Product #${row.product}` : 'Product') }}
+            </span>
+            <span class="jr-lines-item__meta">
+              <span>{{ row.quantity ?? 0 }} {{ unitLabel(row) }}</span>
+              <span class="jr-lines-item__sep" aria-hidden="true">·</span>
+              <span class="jr-lines-item__total">{{ currency(lineTotalAfterDiscount(row)) }}</span>
+              <JRBadge
+                v-if="isSerializedRow(row)"
+                value="SERIALIZED"
+                severity="info" />
+            </span>
+            <p
+              v-if="rowErrorText(row._errors?.product) || rowErrorText(row._errors?.quantity)"
+              class="jr-lines-item__error"
+              role="alert">
+              {{
+                rowErrorText(row._errors?.product) ||
+                rowErrorText(row._errors?.quantity)
+              }}
+            </p>
+          </div>
+          <div class="jr-lines-item__actions">
+            <JRCheckbox
+              v-if="!disabled"
+              class="jr-lines-item__check"
+              :modelValue="!!row.selected"
+              :inputId="`line-select-m-${row.__key}`"
+              ariaLabel="Select line"
+              :disabled="disabled"
+              @update:modelValue="(v) => (row.selected = !!v)" />
+            <JRRowActions
+              :compact="false"
+              :entity-label="lineEntityLabel(row)"
+              :actions="rowPrimaryActions(idx)" />
+            <JRRowActions
+              v-if="!disabled"
+              :compact="true"
+              :entity-label="lineEntityLabel(row)"
+              :actions="rowMaintenanceActions(idx)" />
+          </div>
+        </li>
+      </ul>
     </div>
 
-    <!-- Bottom toolbar: same actions as header when the grid has many rows -->
-    <div class="card-footer bg-light border-top py-2 px-3 lines-grid-footer-actions">
-      <div class="d-none d-md-flex align-items-center justify-content-between flex-wrap gap-2">
-        <div class="d-flex gap-2 flex-wrap">
-          <button
-            class="btn btn-outline-primary btn-sm"
-            type="button"
+    <div v-else class="jr-lines__table-wrap">
+      <JREmptyState
+        v-if="!linesLocal.length"
+        title="No lines"
+        description="Add a row to enter products for this transaction.">
+        <Button
+          v-if="!disabled && !hideToolbar"
+          type="button"
+          class="jr-button"
+          severity="primary"
+          outlined
+          size="small"
+          @click="addLineFromToolbar">
+          <Plus class="jr-lines__maint-icon" aria-hidden="true" />
+          <span class="p-button-label">Add Row</span>
+        </Button>
+      </JREmptyState>
+      <div v-else class="jr-lines-table-scroll">
+        <table class="jr-lines-table">
+          <thead>
+            <tr>
+              <th v-if="!disabled" class="jr-lines-table__check">
+                <JRCheckbox
+                  :modelValue="selectAll"
+                  inputId="lines-select-all"
+                  ariaLabel="Select all lines"
+                  :disabled="disabled || !linesLocal.length"
+                  @update:modelValue="onSelectAll" />
+              </th>
+              <th>Product</th>
+              <th>Qty</th>
+              <th>Unit</th>
+              <th class="jr-lines-table__price">Unit Price</th>
+              <th>Disc %</th>
+              <th>Warehouse</th>
+              <th>Price Type</th>
+              <th v-if="documentTypeIsSales">Margin %</th>
+              <th>Brand</th>
+              <th class="jr-lines-table__end">Line total</th>
+              <th class="jr-lines-table__actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="(row, idx) in linesLocal" :key="row.__key">
+              <tr
+                :class="{
+                  'jr-lines-table__row--error': rowHasErrors(row),
+                  'jr-lines-table__row--selected': !!row.selected,
+                }">
+                <td v-if="!disabled" class="jr-lines-table__check">
+                  <JRCheckbox
+                    :modelValue="!!row.selected"
+                    :inputId="`line-select-${row.__key}`"
+                    ariaLabel="Select line"
+                    :disabled="disabled"
+                    @update:modelValue="(v) => (row.selected = !!v)" />
+                </td>
+                <td class="jr-lines-table__product">
+                  <Select
+                    class="jr-control"
+                    :inputId="`product-${idx}`"
+                    :modelValue="row.product"
+                    :options="optionsForProduct(row)"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Search product…"
+                    filter
+                    filterPlaceholder="Type at least 2 characters…"
+                    emptyFilterMessage="Type at least 2 characters to search…"
+                    :loading="!!loading.products[idx]"
+                    :disabled="disabled"
+                    :invalid="!!row._errors?.product"
+                    showClear
+                    fluid
+                    @filter="(e) => onProductFilter(idx, e)"
+                    @show="() => onProductShow(idx, row)"
+                    @update:modelValue="(val) => onProductModel(idx, val)" />
+                  <JRBadge
+                    v-if="isSerializedRow(row)"
+                    class="jr-lines-table__serial"
+                    value="SERIALIZED"
+                    severity="info" />
+                  <p
+                    v-if="rowErrorText(row._errors?.product)"
+                    class="jr-lines-field-error"
+                    role="alert">
+                    {{ rowErrorText(row._errors.product) }}
+                  </p>
+                </td>
+                <td>
+                  <div @focusout="onQuantityBlurMerge(idx)">
+                    <JRInput
+                      :inputId="`quantity-${idx}`"
+                      type="number"
+                      :modelValue="emptyToNull(row.quantity)"
+                      :min="0"
+                      :minFractionDigits="0"
+                      :maxFractionDigits="2"
+                      placeholder="0.00"
+                      :disabled="disabled"
+                      :invalid="!!row._errors?.quantity"
+                      @update:modelValue="(v) => { setNumeric(row, 'quantity', v); onQuantityInput(idx); }" />
+                  </div>
+                  <p
+                    v-if="rowErrorText(row._errors?.quantity)"
+                    class="jr-lines-field-error"
+                    role="alert">
+                    {{ rowErrorText(row._errors.quantity) }}
+                  </p>
+                </td>
+                <td>
+                  <JRSelect
+                    :inputId="`unit-${idx}`"
+                    v-model="row.unit"
+                    :options="unitsOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Unit…"
+                    filter
+                    :disabled="disabled"
+                    :invalid="!!row._errors?.unit"
+                    @update:modelValue="onUnitUpdated(idx)" />
+                  <p
+                    v-if="rowErrorText(row._errors?.unit)"
+                    class="jr-lines-field-error"
+                    role="alert">
+                    {{ rowErrorText(row._errors.unit) }}
+                  </p>
+                </td>
+                <td class="jr-lines-table__price">
+                  <JRInput
+                    :inputId="`unit_price-${idx}`"
+                    type="number"
+                    :modelValue="emptyToNull(row.unit_price)"
+                    :min="0"
+                    :minFractionDigits="0"
+                    :maxFractionDigits="2"
+                    placeholder="0.00"
+                    :disabled="disabled"
+                    :invalid="!!row._errors?.unit_price"
+                    @update:modelValue="(v) => { setNumeric(row, 'unit_price', v); onUnitPriceInput(idx); }" />
+                  <p
+                    v-if="rowErrorText(row._errors?.unit_price)"
+                    class="jr-lines-field-error"
+                    role="alert">
+                    {{ rowErrorText(row._errors.unit_price) }}
+                  </p>
+                </td>
+                <td>
+                  <JRInput
+                    :inputId="`discount_percentage-${idx}`"
+                    type="number"
+                    :modelValue="emptyToNull(row.discount_percentage)"
+                    :min="0"
+                    :max="100"
+                    :minFractionDigits="0"
+                    :maxFractionDigits="2"
+                    placeholder="0"
+                    :disabled="disabled"
+                    :invalid="!!row._errors?.discount_percentage"
+                    @update:modelValue="(v) => { setNumeric(row, 'discount_percentage', v); onDiscountPercentageInput(idx); }" />
+                </td>
+                <td>
+                  <JRSelect
+                    :inputId="`warehouse-${idx}`"
+                    v-model="row.warehouse"
+                    :options="warehousesOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Warehouse…"
+                    filter
+                    showClear
+                    :disabled="disabled"
+                    :invalid="!!row._errors?.warehouse" />
+                  <p
+                    v-if="rowErrorText(row._errors?.warehouse)"
+                    class="jr-lines-field-error"
+                    role="alert">
+                    {{ rowErrorText(row._errors.warehouse) }}
+                  </p>
+                </td>
+                <td>
+                  <JRSelect
+                    :inputId="`price_type-${idx}`"
+                    v-model="row.price_type"
+                    :options="priceTypesOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Price type…"
+                    filter
+                    showClear
+                    :disabled="disabled"
+                    @update:modelValue="onPriceTypeUpdated(idx)" />
+                  <p
+                    v-if="documentTypeIsSales && pricingHint(row)"
+                    class="jr-lines-hint">
+                    {{ pricingHint(row) }}
+                  </p>
+                </td>
+                <td v-if="documentTypeIsSales">
+                  <JRInput
+                    :inputId="`margin_percent-${idx}`"
+                    type="number"
+                    :modelValue="emptyToNull(row.margin_percent)"
+                    :min="0"
+                    :max="100"
+                    :minFractionDigits="0"
+                    :maxFractionDigits="2"
+                    placeholder="0"
+                    :disabled="disabled || !canEditLineMargin"
+                    :invalid="!!row._errors?.margin_percent"
+                    @update:modelValue="(v) => { row.margin_percent = v == null || v === '' ? null : Number(v); onMarginPercentInput(idx); }" />
+                </td>
+                <td>
+                  <JRSelect
+                    :inputId="`brand-${idx}`"
+                    v-model="row.brand"
+                    :options="brandOptionsForRow(row)"
+                    optionLabel="label"
+                    optionValue="value"
+                    :placeholder="row.product ? 'Brand…' : 'Select product first'"
+                    filter
+                    showClear
+                    :disabled="disabled || !row.product" />
+                </td>
+                <td class="jr-lines-table__end jr-lines-table__total">
+                  {{ currency(lineTotalAfterDiscount(row)) }}
+                </td>
+                <td class="jr-lines-table__actions">
+                  <JRRowActions
+                    :compact="false"
+                    :entity-label="lineEntityLabel(row)"
+                    :actions="rowLineActions(idx)" />
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+      <p v-if="hideToolbar && linesLocal.length" class="jr-lines__count jr-lines__count--footer">
+        Rows: {{ linesLocal.length }}
+      </p>
+    </div>
+
+    <JRDrawer
+      class="jr-lines-drawer"
+      :visible="sheetOpen"
+      :header="disabled ? 'Line' : 'Edit line'"
+      position="right"
+      @update:visible="onSheetVisible">
+      <div v-if="sheetRow" class="jr-lines-sheet">
+        <JRField
+          label="Product"
+          :inputId="`sheet-product`"
+          required
+          :error="rowErrorText(sheetRow._errors?.product)">
+          <Select
+            class="jr-control"
+            inputId="sheet-product"
+            :modelValue="sheetRow.product"
+            :options="optionsForProduct(sheetRow)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Search product…"
+            filter
+            filterPlaceholder="Type at least 2 characters…"
+            emptyFilterMessage="Type at least 2 characters to search…"
+            :loading="sheetIndex != null && !!loading.products[sheetIndex]"
             :disabled="disabled"
-            @click="addLine"
-            v-tt
-            data-title="Add a new line to the document">
-            <i class="bi bi-plus-lg me-1"></i>
-            Add Row
-          </button>
-          <button
-            class="btn btn-outline-info btn-sm"
-            type="button"
-            :disabled="disabled || !hasSelection"
-            @click="duplicateSelected"
-            v-tt
-            data-title="Duplicate the selected lines">
-            <i class="bi bi-files me-1"></i>
-            Duplicate Selected
-          </button>
-          <button
-            class="btn btn-outline-danger btn-sm"
-            type="button"
-            :disabled="disabled || !hasSelection"
-            @click="removeSelected"
-            v-tt
-            data-title="Remove the selected lines">
-            <i class="bi bi-trash me-1"></i>
-            Delete Selected
-          </button>
-        </div>
-        <div class="small text-muted">Rows: {{ linesLocal?.length || 0 }}</div>
-      </div>
+            :invalid="!!sheetRow._errors?.product"
+            showClear
+            fluid
+            @filter="(e) => sheetIndex != null && onProductFilter(sheetIndex, e)"
+            @show="() => sheetIndex != null && onProductShow(sheetIndex, sheetRow)"
+            @update:modelValue="(val) => sheetIndex != null && onProductModel(sheetIndex, val)" />
+          <JRBadge
+            v-if="isSerializedRow(sheetRow)"
+            class="jr-lines-sheet__badge"
+            value="SERIALIZED"
+            severity="info" />
+        </JRField>
 
-      <div class="d-md-none d-flex gap-1 flex-wrap">
-        <button
-          class="btn btn-outline-primary btn-sm flex-fill"
-          type="button"
-          :disabled="disabled"
-          @click="addLine"
-          v-tt
-          data-title="Add a new line to the document">
-          <i class="bi bi-plus-lg"></i>
-          <span class="d-none d-sm-inline ms-1">Add Row</span>
-          <span class="d-sm-none ms-1">Add</span>
-        </button>
-        <button
-          class="btn btn-outline-info btn-sm flex-fill"
-          type="button"
-          :disabled="disabled || !hasSelection"
-          @click="duplicateSelected"
-          v-tt
-          data-title="Duplicate the selected lines">
-          <i class="bi bi-files"></i>
-          <span class="d-none d-sm-inline ms-1">Duplicate</span>
-          <span class="d-sm-none ms-1">Copy</span>
-        </button>
-        <button
-          class="btn btn-outline-danger btn-sm flex-fill"
-          type="button"
-          :disabled="disabled || !hasSelection"
-          @click="removeSelected"
-          v-tt
-          data-title="Remove the selected lines">
-          <i class="bi bi-trash"></i>
-          <span class="d-none d-sm-inline ms-1">Delete</span>
-          <span class="d-sm-none ms-1">Del</span>
-        </button>
+        <div class="jr-lines-sheet__grid">
+            <JRField
+            label="Qty"
+            inputId="sheet-qty"
+            :error="rowErrorText(sheetRow._errors?.quantity)">
+            <div @focusout="sheetIndex != null && onQuantityBlurMerge(sheetIndex)">
+              <JRInput
+                inputId="sheet-qty"
+                type="number"
+                :modelValue="emptyToNull(sheetRow.quantity)"
+                :min="0"
+                :minFractionDigits="0"
+                :maxFractionDigits="2"
+                :disabled="disabled"
+                @update:modelValue="(v) => { setNumeric(sheetRow, 'quantity', v); if (sheetIndex != null) onQuantityInput(sheetIndex); }" />
+            </div>
+          </JRField>
+          <JRField
+            label="Unit"
+            inputId="sheet-unit"
+            :error="rowErrorText(sheetRow._errors?.unit)">
+            <JRSelect
+              inputId="sheet-unit"
+              v-model="sheetRow.unit"
+              :options="unitsOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Unit…"
+              filter
+              :disabled="disabled"
+              @update:modelValue="sheetIndex != null && onUnitUpdated(sheetIndex)" />
+          </JRField>
+          <JRField
+            label="Unit Price"
+            inputId="sheet-unit-price"
+            :error="rowErrorText(sheetRow._errors?.unit_price)">
+            <JRInput
+              inputId="sheet-unit-price"
+              type="number"
+              :modelValue="emptyToNull(sheetRow.unit_price)"
+              :min="0"
+              :minFractionDigits="0"
+              :maxFractionDigits="2"
+              :disabled="disabled"
+              @update:modelValue="(v) => { setNumeric(sheetRow, 'unit_price', v); if (sheetIndex != null) onUnitPriceInput(sheetIndex); }" />
+          </JRField>
+          <JRField label="Disc %" inputId="sheet-disc">
+            <JRInput
+              inputId="sheet-disc"
+              type="number"
+              :modelValue="emptyToNull(sheetRow.discount_percentage)"
+              :min="0"
+              :max="100"
+              :minFractionDigits="0"
+              :maxFractionDigits="2"
+              :disabled="disabled"
+              @update:modelValue="(v) => { setNumeric(sheetRow, 'discount_percentage', v); if (sheetIndex != null) onDiscountPercentageInput(sheetIndex); }" />
+          </JRField>
+        </div>
+
+        <JRField
+          label="Warehouse"
+          inputId="sheet-warehouse"
+          :error="rowErrorText(sheetRow._errors?.warehouse)">
+          <JRSelect
+            inputId="sheet-warehouse"
+            v-model="sheetRow.warehouse"
+            :options="warehousesOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Warehouse…"
+            filter
+            showClear
+            :disabled="disabled" />
+        </JRField>
+
+        <JRField label="Price Type" inputId="sheet-price-type">
+          <JRSelect
+            inputId="sheet-price-type"
+            v-model="sheetRow.price_type"
+            :options="priceTypesOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Price type…"
+            filter
+            showClear
+            :disabled="disabled"
+            @update:modelValue="sheetIndex != null && onPriceTypeUpdated(sheetIndex)" />
+          <p
+            v-if="documentTypeIsSales && pricingHint(sheetRow)"
+            class="jr-lines-hint">
+            {{ pricingHint(sheetRow) }}
+          </p>
+        </JRField>
+
+        <JRField
+          v-if="documentTypeIsSales"
+          label="Margin %"
+          inputId="sheet-margin">
+          <JRInput
+            inputId="sheet-margin"
+            type="number"
+            :modelValue="emptyToNull(sheetRow.margin_percent)"
+            :min="0"
+            :max="100"
+            :minFractionDigits="0"
+            :maxFractionDigits="2"
+            :disabled="disabled || !canEditLineMargin"
+            @update:modelValue="(v) => { sheetRow.margin_percent = v == null || v === '' ? null : Number(v); if (sheetIndex != null) onMarginPercentInput(sheetIndex); }" />
+        </JRField>
+
+        <JRField label="Brand" inputId="sheet-brand">
+          <JRSelect
+            inputId="sheet-brand"
+            v-model="sheetRow.brand"
+            :options="brandOptionsForRow(sheetRow)"
+            optionLabel="label"
+            optionValue="value"
+            :placeholder="sheetRow.product ? 'Brand…' : 'Select product first'"
+            filter
+            showClear
+            :disabled="disabled || !sheetRow.product" />
+        </JRField>
+
+        <p class="jr-lines-sheet__total">
+          Line total:
+          <strong>{{ currency(lineTotalAfterDiscount(sheetRow)) }}</strong>
+        </p>
       </div>
-      <div class="d-md-none small text-muted mt-2 text-end">
-        Rows: {{ linesLocal?.length || 0 }}
-      </div>
-    </div>
+      <template #footer>
+        <div class="jr-lines-sheet__footer">
+          <JRButton type="button" variant="primary" @click="closeSheet">Done</JRButton>
+          <JRRowActions
+            v-if="!disabled && sheetIndex != null"
+            :compact="false"
+            :solid="true"
+            :entity-label="lineEntityLabel(sheetRow)"
+            :actions="rowMaintenanceActions(sheetIndex)" />
+        </div>
+      </template>
+    </JRDrawer>
+
+    <JRDialog
+      :visible="deleteDialogVisible"
+      header="Delete line"
+      message="Delete this line?"
+      confirmLabel="Delete"
+      confirmVariant="danger"
+      @update:visible="onDeleteVisible"
+      @confirm="confirmPendingDelete" />
   </div>
 </template>
 
 <script setup>
-  import { ref, watch, computed, nextTick, onMounted } from 'vue';
+  import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
   import axios from 'axios';
-  import VSelect from 'vue-select';
-  import 'vue-select/dist/vue-select.css';
+  import Select from 'primevue/select';
+  import Button from 'primevue/button';
+  import PencilIcon from '@primevue/icons/pencil';
+  import TrashIcon from '@primevue/icons/trash';
+  import Plus from '@primeicons/vue/plus';
+  import Copy from '@primeicons/vue/copy';
+  import Trash from '@primeicons/vue/trash';
+  import {
+    JRButton,
+    JRSelect,
+    JRInput,
+    JRField,
+    JRBadge,
+    JREmptyState,
+    JRDialog,
+    JRDrawer,
+    JRRowActions,
+    JRCheckbox,
+  } from '@ui';
+
+  const PHONE_MQ = '(max-width: 767.98px)';
+  const TABLET_MQ = '(min-width: 768px) and (max-width: 1023.98px)';
 
   const props = defineProps({
     modelValue: { type: Array, default: () => [] }, // not used (legacy)
@@ -509,6 +598,8 @@
     documentTypeIsSales: { type: Boolean, default: false },
     /** When true, disables Add Row and line inputs only (no full overlay). */
     disabled: { type: Boolean, default: false },
+    /** When true, parent JRSection owns Add / Serial actions. */
+    hideToolbar: { type: Boolean, default: false },
   });
   const emit = defineEmits(['update:lines', 'recalc', 'open-asset-tags']);
 
@@ -518,6 +609,84 @@
   const loading = ref({ products: {} });
   const isUpdatingFromProps = ref(false);
   const defaultWarehouse = ref(null);
+  const productFilterTimers = {};
+  const isPhone = ref(false);
+  const isTablet = ref(false);
+  const sheetOpen = ref(false);
+  const sheetIndex = ref(null);
+  const deleteDialogVisible = ref(false);
+  const pendingDeleteIndex = ref(null);
+  const deleteResolved = ref(false);
+
+  const isCompact = computed(() => isPhone.value || isTablet.value);
+  const sheetRow = computed(() =>
+    sheetIndex.value == null ? null : linesLocal.value[sheetIndex.value] || null
+  );
+
+  function syncViewport() {
+    if (typeof window === 'undefined' || !window.matchMedia) {
+      isPhone.value = false;
+      isTablet.value = false;
+      return;
+    }
+    isPhone.value = window.matchMedia(PHONE_MQ).matches;
+    isTablet.value = window.matchMedia(TABLET_MQ).matches;
+  }
+
+  function rowErrorText(err) {
+    if (!err) return '';
+    return Array.isArray(err) ? err[0] : String(err);
+  }
+
+  function rowHasErrors(row) {
+    return Object.keys(row?._errors || {}).length > 0;
+  }
+
+  function isSerializedRow(row) {
+    if (!row?.product) return false;
+    const opt = optionsForProduct(row).find(o => o.value === row.product);
+    return opt?.product?.tracking_mode === 'SERIALIZED';
+  }
+
+  function unitLabel(row) {
+    const opt = props.unitsOptions.find(o => o.value === row?.unit);
+    return opt?.label || '';
+  }
+
+  function optionsForProduct(row) {
+    const opts = [...(productOptions.value || [])];
+    if (row?.product != null) {
+      const exists = opts.some(o => o.value === row.product);
+      if (!exists) {
+        opts.unshift({
+          value: row.product,
+          label: row.product_label || `Product #${row.product}`,
+          product: {
+            id: row.product,
+            name: row.product_label,
+            tracking_mode: row._tracking_mode,
+          },
+        });
+      }
+    }
+    return opts;
+  }
+
+  function brandOptionsForRow(row) {
+    return row?.brands?.length ? row.brands : props.brandsOptions;
+  }
+
+  function lineEntityLabel(row) {
+    return row?.product_label || (row?.product ? `Product #${row.product}` : 'Line');
+  }
+
+  function emptyToNull(value) {
+    return value === '' || value === undefined ? null : value;
+  }
+
+  function setNumeric(row, field, value) {
+    row[field] = value === null || value === undefined || value === '' ? 0 : Number(value);
+  }
 
   function hasPermission(permission) {
     try {
@@ -552,21 +721,17 @@
   watch(
     () => props.lines,
     async val => {
-      console.log('LinesGrid: lines prop changed:', val);
       isUpdatingFromProps.value = true;
 
       const newLines = (val || []).map(x => ({
         ...x,
         __key: x.__key || x.id || cryptoRandom(),
+        selected: !!x.selected,
         brands: x.brands || [],
         price_manually_edited: x.price_manually_edited ?? x.pricing_rule === 'MANUAL',
         _purchase_unit_cost: x._purchase_unit_cost ?? null,
         _suppressPriceEvent: false,
       }));
-      console.log('🔍 New lines with product_label:', newLines.map(l => ({ 
-        product: l.product, 
-        product_label: l.product_label 
-      })));
 
       // Comparar también contenido cuando todos los ids son null (importar favoritos, etc.)
       const currentLength = linesLocal.value.length;
@@ -602,8 +767,6 @@
   watch(
     linesLocal,
     val => {
-      console.log('LinesGrid: linesLocal changed:', val.length, 'lines');
-
       // Don't emit if we're updating from props to avoid infinite loops
       if (!isUpdatingFromProps.value) {
         nextTick(() => {
@@ -614,10 +777,6 @@
     },
     { deep: true }
   );
-
-  watch(selectAll, checked => {
-    linesLocal.value.forEach(r => (r.selected = checked));
-  });
 
   // Watcher para asignar warehouse por defecto cuando esté disponible
   watch(defaultWarehouse, (newWarehouse) => {
@@ -634,10 +793,8 @@
   watch(
     () => props.documentTypeId,
     async newDocTypeId => {
-      console.log('🔍 LinesGrid: documentTypeId changed to:', newDocTypeId, typeof newDocTypeId)
       if (newDocTypeId) {
         try {
-          console.log('🔍 LinesGrid: Making request to:', `/api/document-types/${newDocTypeId}/`)
           const { data } = await axios.get(`/api/document-types/${newDocTypeId}/`);
           const requiresWarehouse = data.warehouse_required;
 
@@ -934,7 +1091,6 @@
       const { data } = await axios.get('/api/default-warehouse/');
       if (data.id) {
         defaultWarehouse.value = data.id;
-        console.log('🔍 Default warehouse loaded:', data.name);
       }
     } catch (error) {
       console.warn('Could not fetch default warehouse:', error);
@@ -965,55 +1121,206 @@
       _errors: {},
     };
 
-    console.log('Adding new line with default warehouse:', newLine);
     linesLocal.value.push(newLine);
   }
 
-  function removeRow(idx) {
-    linesLocal.value.splice(idx, 1);
+  const hasSelection = computed(() =>
+    linesLocal.value.some((r) => !!r.selected)
+  );
+
+  function onSelectAll(checked) {
+    selectAll.value = !!checked;
+    linesLocal.value.forEach((r) => {
+      r.selected = !!checked;
+    });
   }
 
-  function duplicateRow(idx) {
-    const originalLine = linesLocal.value[idx];
-    const duplicatedLine = {
-      ...originalLine,
-      __key: cryptoRandom(),
-      selected: false,
-      id: null, // Reset ID for new line
-      quantity: 1, // Reset quantity to 1
-      final_price: 0, // Reset final price
-      _errors: {},
-    };
-    const newIdx = idx + 1;
-    linesLocal.value.splice(newIdx, 0, duplicatedLine);
-    recalcRow(newIdx);
-  }
-
-  const hasSelection = computed(() => linesLocal.value.some(r => r.selected));
   function removeSelected() {
-    linesLocal.value = linesLocal.value.filter(r => !r.selected);
+    if (props.disabled || !hasSelection.value) return;
+    linesLocal.value = linesLocal.value.filter((r) => !r.selected);
     selectAll.value = false;
+    if (sheetOpen.value) closeSheet();
   }
 
   function duplicateSelected() {
-    const selectedLines = linesLocal.value.filter(r => r.selected);
+    if (props.disabled || !hasSelection.value) return;
+    const selectedLines = linesLocal.value.filter((r) => r.selected);
     const start = linesLocal.value.length;
-    selectedLines.forEach(line => {
-      const duplicatedLine = {
+    selectedLines.forEach((line) => {
+      linesLocal.value.push({
         ...line,
         __key: cryptoRandom(),
         selected: false,
-        id: null, // Reset ID for new line
-        quantity: 1, // Reset quantity to 1
-        final_price: 0, // se recalcula abajo
+        id: null,
+        quantity: 1,
+        final_price: 0,
         _errors: {},
-      };
-      linesLocal.value.push(duplicatedLine);
+      });
     });
     for (let i = start; i < linesLocal.value.length; i++) {
       recalcRow(i);
     }
     selectAll.value = false;
+    linesLocal.value.forEach((r) => {
+      r.selected = false;
+    });
+  }
+
+  function removeRowAt(idx) {
+    linesLocal.value.splice(idx, 1);
+    if (sheetIndex.value === idx) closeSheet();
+    else if (sheetIndex.value != null && sheetIndex.value > idx) {
+      sheetIndex.value -= 1;
+    }
+  }
+
+  function rowNeedsDeleteConfirm(row) {
+    if (!row) return false;
+    return !!(
+      row.id ||
+      row.product ||
+      (row.quantity != null && Number(row.quantity) !== 1) ||
+      (row.unit_price != null && Number(row.unit_price) !== 0) ||
+      row.unit ||
+      row.brand
+    );
+  }
+
+  function requestDelete(idx) {
+    if (props.disabled) return;
+    const row = linesLocal.value[idx];
+    if (!rowNeedsDeleteConfirm(row)) {
+      removeRowAt(idx);
+      return;
+    }
+    pendingDeleteIndex.value = idx;
+    deleteResolved.value = false;
+    deleteDialogVisible.value = true;
+  }
+
+  function confirmPendingDelete() {
+    const index = pendingDeleteIndex.value;
+    deleteResolved.value = true;
+    pendingDeleteIndex.value = null;
+    deleteDialogVisible.value = false;
+    if (index == null) return;
+    removeRowAt(index);
+  }
+
+  function onDeleteVisible(visible) {
+    deleteDialogVisible.value = visible;
+    if (visible) return;
+    if (deleteResolved.value) {
+      deleteResolved.value = false;
+      return;
+    }
+    pendingDeleteIndex.value = null;
+  }
+
+  function removeRow(idx) {
+    requestDelete(idx);
+  }
+
+  function duplicateRow(idx) {
+    if (props.disabled) return;
+    const originalLine = linesLocal.value[idx];
+    const duplicatedLine = {
+      ...originalLine,
+      __key: cryptoRandom(),
+      selected: false,
+      id: null,
+      quantity: 1,
+      final_price: 0,
+      _errors: {},
+    };
+    const newIdx = idx + 1;
+    linesLocal.value.splice(newIdx, 0, duplicatedLine);
+    recalcRow(newIdx);
+    if (isCompact.value) openSheet(newIdx);
+  }
+
+  function openSheet(idx) {
+    sheetIndex.value = idx;
+    sheetOpen.value = true;
+  }
+
+  function closeSheet() {
+    sheetOpen.value = false;
+    sheetIndex.value = null;
+  }
+
+  function onSheetVisible(visible) {
+    sheetOpen.value = visible;
+    if (!visible) sheetIndex.value = null;
+  }
+
+  function addLineFromToolbar() {
+    addLine();
+    if (isCompact.value && !props.disabled) {
+      nextTick(() => openSheet(linesLocal.value.length - 1));
+    }
+  }
+
+  function rowPrimaryActions(idx) {
+    return [
+      {
+        key: 'edit',
+        label: 'Edit',
+        severity: 'secondary',
+        icon: PencilIcon,
+        command: () => openSheet(idx),
+      },
+    ];
+  }
+
+  function rowMaintenanceActions(idx) {
+    if (props.disabled) return [];
+    return [
+      {
+        key: 'delete',
+        label: 'Delete',
+        severity: 'danger',
+        icon: TrashIcon,
+        command: () => requestDelete(idx),
+      },
+    ];
+  }
+
+  function rowLineActions(idx) {
+    return rowMaintenanceActions(idx);
+  }
+
+  function onProductFilter(idx, event) {
+    const query = event?.value ?? '';
+    if (productFilterTimers[idx]) clearTimeout(productFilterTimers[idx]);
+    productFilterTimers[idx] = setTimeout(() => {
+      searchProducts(idx, query);
+    }, 250);
+  }
+
+  function onProductShow(idx, row) {
+    if (row?.product_label && (!productOptions.value || !productOptions.value.length)) {
+      productOptions.value = optionsForProduct(row);
+    }
+  }
+
+  async function onProductModel(idx, val) {
+    const r = linesLocal.value[idx];
+    if (!r) return;
+    r.product = val;
+    if (!val) {
+      onProductCleared(idx);
+      return;
+    }
+    const option =
+      optionsForProduct(r).find(o => o.value === val) ||
+      productOptions.value.find(o => o.value === val);
+    if (option) {
+      if (option.product?.tracking_mode) r._tracking_mode = option.product.tracking_mode;
+      await onProductSelected(idx, option);
+    } else {
+      await onProductChanged(idx);
+    }
   }
 
   async function searchProducts(idx, query) {
@@ -1032,20 +1339,15 @@
         },
       });
       const list = Array.isArray(data) ? data : data?.results || [];
-      console.log('🔍 Products API response:', data);
-      console.log('🔍 Products list:', list);
-      
       productOptions.value = list.map(p => {
         const option = {
           value: p.id,
           label: `${p.name} (${p.sku})`,
           product: p,
         };
-        console.log('🔍 Mapped product option:', option);
         return option;
       });
       
-      console.log('🔍 Mapped productOptions:', productOptions.value);
     } catch (error) {
       console.error('Error searching products:', error);
       productOptions.value = [];
@@ -1083,11 +1385,6 @@
           r.brand = defaultBrand.id;
         }
         
-        console.log('🔍 Updated brands for product:', {
-          productId,
-          brands: r.brands,
-          selectedBrand: r.brand
-        });
       }
     } catch (error) {
       console.warn('Error updating brands for product:', error);
@@ -1106,10 +1403,8 @@
   }
 
   async function onProductSelected(idx, option) {
-    console.log('🔍 onProductSelected called with:', option);
     const r = linesLocal.value[idx];
     r.product_label = option?.product?.name || option?.label || '';
-    console.log('🔍 Set product_label to:', r.product_label);
     r.price_manually_edited = false;
 
     // Auto-fill fields from ProductPrice predeterminado
@@ -1119,12 +1414,9 @@
         const params = {};
         if (props.documentTypeId) {
           params.document_type_id = props.documentTypeId;
-          console.log('🔍 Fetching price with document_type_id:', props.documentTypeId);
         }
         
         const { data } = await axios.get(`/api/products/${option.value}/default-price/`, { params });
-        
-        console.log('🔍 Received price data:', data);
         
         // Auto-fill Unit desde ProductPrice predeterminado
         if (data.unit) {
@@ -1150,15 +1442,6 @@
           }
         }
         
-        console.log('🔍 Auto-filled fields from ProductPrice:', {
-          unit: data.unit,
-          unit_price: data.unit_price,
-          price_type: data.price_type,
-          brand: data.default_brand,
-          brands: r.brands,
-          document_type_used: props.documentTypeId
-        });
-
         if (data.purchase_unit_cost != null) {
           r._purchase_unit_cost = Number(data.purchase_unit_cost);
         }
@@ -1179,7 +1462,6 @@
 
     // Auto-fill default price type from work account if available (fallback)
     if (props.workAccountId && props.workAccountId !== null && !r.price_type) {
-      console.log('🔍 DEBUG LinesGrid: workAccountId prop:', props.workAccountId, 'Type:', typeof props.workAccountId);
       try {
         const { data } = await axios.get(`/api/work-accounts/${props.workAccountId}/`);
         if (data.default_price_type) {
@@ -1386,79 +1668,78 @@
   function focusNextField(rowIndex, fieldName) {
     nextTick(() => {
       const fieldMap = {
-        'quantity': 'quantity',
-        'unit_price': 'unit_price',
-        'discount_percentage': 'discount_percentage',
-        'unit': 'unit',
-        'warehouse': 'warehouse',
-        'price_type': 'price_type',
-        'margin_percent': 'margin_percent',
-        'brand': 'brand'
+        quantity: 'quantity',
+        unit_price: 'unit_price',
+        discount_percentage: 'discount_percentage',
+        unit: 'unit',
+        warehouse: 'warehouse',
+        price_type: 'price_type',
+        margin_percent: 'margin_percent',
+        brand: 'brand',
       };
-
       const fieldId = fieldMap[fieldName];
-      if (fieldId) {
-        const elementId = `${fieldId}-${rowIndex}`;
-        const element = document.getElementById(elementId);
-        
-        if (element) {
-          // Para inputs normales, enfocar directamente y seleccionar contenido
-          if (element.tagName === 'INPUT') {
-            element.focus();
-            element.select();
-          } else {
-            // Para vue-select, enfocar el campo de búsqueda interno
-            const searchInput = element.querySelector('.vs__search');
-            if (searchInput) {
-              searchInput.focus();
-              searchInput.select();
-            }
-          }
-        }
+      if (!fieldId) return;
+      const element = document.getElementById(`${fieldId}-${rowIndex}`);
+      if (!element) return;
+      if (element.tagName === 'INPUT') {
+        element.focus();
+        element.select?.();
+        return;
+      }
+      const inner =
+        element.querySelector('input') ||
+        element.closest('.p-select')?.querySelector('input');
+      if (inner) {
+        inner.focus();
+        inner.select?.();
+      } else {
+        element.focus?.();
       }
     });
   }
 
-  // Función para navegar a la siguiente fila
   function focusNextRow(currentRowIndex) {
     nextTick(() => {
       const nextRowIndex = currentRowIndex + 1;
-      
-      // Si existe la siguiente fila, enfocar el primer campo (Product)
+      const focusProduct = (idx) => {
+        const el = document.getElementById(`product-${idx}`);
+        const inner =
+          el?.querySelector?.('input') ||
+          el?.closest?.('.p-select')?.querySelector('input');
+        if (inner) inner.focus();
+        else if (isCompact.value) openSheet(idx);
+      };
       if (nextRowIndex < linesLocal.value.length) {
-        const productElementId = `product-${nextRowIndex}`;
-        const productElement = document.getElementById(productElementId);
-        if (productElement) {
-          const searchInput = productElement.querySelector('.vs__search');
-          if (searchInput) {
-            searchInput.focus();
-            searchInput.select();
-          }
-        }
-      } else {
-        // Si no hay más filas, agregar una nueva
+        focusProduct(nextRowIndex);
+      } else if (!props.disabled) {
         addLine();
         nextTick(() => {
-          const newRowIndex = linesLocal.value.length - 1;
-          const productElementId = `product-${newRowIndex}`;
-          const productElement = document.getElementById(productElementId);
-          if (productElement) {
-            const searchInput = productElement.querySelector('.vs__search');
-            if (searchInput) {
-              searchInput.focus();
-              searchInput.select();
-            }
-          }
+          if (isCompact.value) openSheet(linesLocal.value.length - 1);
+          else focusProduct(linesLocal.value.length - 1);
         });
       }
     });
   }
 
+  let _phoneMq = null;
+  let _tabletMq = null;
+  let _onMedia = null;
+
   // Cargar warehouse predeterminado al montar el componente
   onMounted(async () => {
+    syncViewport();
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      _phoneMq = window.matchMedia(PHONE_MQ);
+      _tabletMq = window.matchMedia(TABLET_MQ);
+      _onMedia = () => syncViewport();
+      [_phoneMq, _tabletMq].forEach(mq => {
+        if (mq.addEventListener) mq.addEventListener('change', _onMedia);
+        else mq.addListener(_onMedia);
+      });
+    }
+
     await loadDefaultWarehouse();
-    
-    // Si hay líneas pero no tienen warehouse, asignar el por defecto
+
     if (linesLocal.value.length > 0 && defaultWarehouse.value) {
       linesLocal.value.forEach(line => {
         if (!line.warehouse) {
@@ -1468,275 +1749,301 @@
     }
   });
 
+  onBeforeUnmount(() => {
+    [_phoneMq, _tabletMq].forEach(mq => {
+      if (!mq || !_onMedia) return;
+      if (mq.removeEventListener) mq.removeEventListener('change', _onMedia);
+      else mq.removeListener(_onMedia);
+    });
+    Object.values(productFilterTimers).forEach(t => clearTimeout(t));
+  });
+
   defineExpose({
     validateLines,
     rehydratePricingAfterFavoriteImport,
     rehydratePricingForRow,
+    addLine,
+    addLineFromToolbar,
   });
 </script>
 
 <style scoped>
-  .table tbody tr:hover {
-    background-color: #fafafa;
+.jr-lines {
+  caret-color: var(--color-jr-primary);
+}
+
+.jr-lines ::selection {
+  background: color-mix(in srgb, var(--color-jr-primary) 28%, transparent);
+  color: var(--color-jr-text);
+}
+
+.jr-lines__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--color-jr-border);
+}
+
+.jr-lines__toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.jr-lines__maint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+}
+
+.jr-lines__maint-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.jr-lines__count {
+  font-size: 0.75rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-lines__count--footer {
+  margin: 0.5rem 0 0;
+  text-align: right;
+}
+
+.jr-lines-table__check {
+  width: 2.25rem;
+  text-align: center;
+  vertical-align: top;
+}
+
+.jr-lines-table__row--selected {
+  background: color-mix(in srgb, var(--color-jr-primary) 6%, var(--color-jr-surface));
+}
+
+.jr-lines-item__check {
+  align-self: center;
+  margin-right: 0.15rem;
+}
+
+.jr-lines-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.jr-lines-item {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
+  background: var(--color-jr-surface);
+}
+
+.jr-lines-item--error {
+  border-color: var(--color-jr-danger);
+}
+
+.jr-lines-item__main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.jr-lines-item__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-jr-text);
+}
+
+.jr-lines-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-lines-item__sep {
+  color: var(--color-jr-muted);
+}
+
+.jr-lines-item__total {
+  font-weight: 600;
+  color: var(--color-jr-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.jr-lines-item__error,
+.jr-lines-field-error {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-jr-danger-text);
+}
+
+.jr-lines-item__actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.jr-lines-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
+  background: var(--color-jr-surface);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-jr-hover-border) transparent;
+}
+
+.jr-lines-table {
+  width: 100%;
+  min-width: 70rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.jr-lines-table th,
+.jr-lines-table td {
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--color-jr-border);
+  vertical-align: top;
+  text-align: left;
+}
+
+.jr-lines-table thead th {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-jr-text);
+  background: var(--color-jr-surface-muted, var(--color-jr-page));
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.jr-lines-table__row--error td {
+  background: var(--color-jr-danger-subtle);
+}
+
+.jr-lines-table__end {
+  text-align: right;
+}
+
+.jr-lines-table__total {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.jr-lines-table__actions {
+  width: 5.25rem;
+  white-space: nowrap;
+}
+
+.jr-lines-table__product {
+  min-width: 20rem;
+  width: 24%;
+}
+
+.jr-lines-table__price {
+  min-width: 9.5rem;
+  width: 9.5rem;
+}
+
+.jr-lines-table__price :deep(.p-inputnumber),
+.jr-lines-table__price :deep(.p-inputtext) {
+  min-width: 8rem;
+  width: 100%;
+}
+
+.jr-lines-table__product :deep(.p-select) {
+  min-width: 0;
+  width: 100%;
+}
+
+@media (min-width: 1024px) and (max-width: 1199.98px) {
+  /* iPad Pro portrait (~1032) and small laptops: favor Product + Unit Price. */
+  .jr-lines-table {
+    min-width: 66rem;
   }
 
-  /* Estilos para campos con errores */
-  .is-invalid {
-    border-color: #dc3545;
+  .jr-lines-table__product {
+    min-width: 18rem;
+    width: 28%;
   }
 
-  .is-invalid:focus {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+  .jr-lines-table__price {
+    min-width: 9rem;
+    width: 10rem;
   }
+}
 
-  /* Estilos para vue-select con errores */
-  :deep(.is-invalid .vs__dropdown-toggle) {
-    border-color: #dc3545;
+.jr-lines-table__serial,
+.jr-lines-sheet__badge {
+  margin-top: 0.35rem;
+}
+
+.jr-lines-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-lines-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.jr-lines-sheet__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.jr-lines-sheet__total {
+  margin: 0.25rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--color-jr-text);
+}
+
+.jr-lines-sheet__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+</style>
+
+<style>
+.p-drawer.jr-lines-drawer {
+  width: min(28rem, 100vw);
+}
+
+@media (max-width: 767.98px) {
+  .p-drawer.jr-lines-drawer {
+    width: 100vw;
+    max-width: 100vw;
   }
-
-  :deep(.is-invalid .vs__dropdown-toggle:focus) {
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
-  }
-
-  /*
-   * Deshabilitado: mismo aspecto que .form-control:disabled (Bootstrap),
-   * vue-select por defecto usa gris casi blanco (--vs-state-disabled-bg).
-   */
-  :deep(.vs--disabled) {
-    --vs-disabled-bg: var(--bs-secondary-bg, #e9ecef);
-    --vs-state-disabled-bg: var(--bs-secondary-bg, #e9ecef);
-  }
-
-  :deep(.vs--disabled .vs__dropdown-toggle) {
-    background-color: var(--bs-secondary-bg, #e9ecef) !important;
-    border-color: var(--bs-border-color, #ced4da);
-  }
-
-  :deep(.vs--disabled .vs__search) {
-    background-color: transparent !important;
-    color: var(--bs-secondary-color, #6c757d);
-  }
-
-  :deep(.vs--disabled.vs--single .vs__selected) {
-    color: var(--bs-secondary-color, #6c757d);
-  }
-
-  :deep(.vs--disabled .vs__open-indicator) {
-    fill: var(--bs-secondary-color, #6c757d);
-    opacity: 0.65;
-  }
-
-  .card-header .btn.btn-outline-primary:disabled,
-  .card-header .btn.btn-outline-primary.disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
-  }
-
-  /* Mejorar la apariencia de los inputs */
-  .form-control-sm {
-    font-size: 0.8rem;
-    padding: 0.225rem 0.45rem;
-  }
-
-  /* Estilos para la tabla */
-  .table-sticky thead th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-  }
-
-  /* Mejorar el z-index de los dropdowns */
-  :deep(.vs__dropdown-menu) {
-    z-index: 1050 !important;
-  }
-
-  :deep(.vs__dropdown-toggle) {
-    z-index: 1049 !important;
-  }
-
-  /* Estilos para los botones de acción */
-  .btn-sm {
-    padding: 0.225rem 0.45rem;
-    font-size: 0.8rem;
-  }
-
-   /* Estilos para el contenedor de la tabla */
-   .table-responsive {
-     border-radius: 0.375rem;
-     overflow-x: auto; /* Scroll horizontal en pantallas pequeñas */
-     overflow-y: visible; /* Permitir que los dropdowns se vean fuera del contenedor */
-   }
-
-   /* Asegurar que la tabla tenga suficiente espacio */
-   .table {
-     min-width: 1100px; /* Ancho mínimo para mostrar todas las columnas */
-   }
-
-   /* Responsive para pantallas pequeñas */
-   @media (max-width: 768px) {
-     .table-responsive {
-       font-size: 0.75rem;
-     }
-     
-     .table th,
-     .table td {
-       padding: 0.225rem;
-       white-space: nowrap;
-     }
-     
-     .btn-sm {
-       padding: 0.15rem 0.3rem;
-       font-size: 0.7rem;
-     }
-   }
-
-   /* Responsive para tablets */
-   @media (max-width: 1024px) and (min-width: 769px) {
-     .table-responsive {
-       font-size: 0.8rem;
-     }
-     
-     .table th,
-     .table td {
-       padding: 0.275rem;
-     }
-   }
-
-  /* Mejorar la apariencia de los placeholders */
-  .form-control::placeholder {
-    color: #6c757d;
-    opacity: 1;
-  }
-
-  /* Estilos para el header de la tabla */
-  .card-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-  }
-
-  /* Estilos para los mensajes de error */
-  .text-danger.small {
-    font-size: 0.7rem;
-    margin-top: 0.225rem;
-  }
-
-  /* Estilos para filas con errores */
-  .table-warning {
-    background-color: #fff3cd !important;
-  }
-
-  .table-warning:hover {
-    background-color: #ffeaa7 !important;
-  }
-
-  /* Estilos para los botones de acción en las filas */
-  .btn-sm {
-    min-width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* Mejorar la apariencia de los gaps */
-  .d-flex.gap-1 > * + * {
-    margin-left: 0.225rem;
-  }
-
-  .d-flex.gap-2 > * + * {
-    margin-left: 0.45rem;
-  }
-
-  /* Estilos adicionales para hacer los controles más compactos */
-  .table th,
-  .table td {
-    padding: 0.35rem 0.45rem;
-    font-size: 0.85rem;
-  }
-  
-  /* Mobile responsive adjustments for header buttons */
-  @media (max-width: 768px) {
-    .card-header {
-      padding: 0.75rem;
-    }
-    
-    .btn-sm {
-      font-size: 0.75rem;
-      padding: 0.25rem 0.4rem;
-      min-width: auto;
-    }
-    
-    .btn-sm i {
-      font-size: 0.8rem;
-    }
-    
-    /* Ensure buttons don't overflow */
-    .d-flex.gap-1 > * + * {
-      margin-left: 0.25rem;
-    }
-    
-    .flex-fill {
-      flex: 1 1 auto;
-      min-width: 0;
-    }
-  }
-
-  /* Reducir el tamaño de los dropdowns de vue-select */
-  :deep(.vs__dropdown-toggle) {
-    min-height: 31px;
-    height: 31px;
-    font-size: 0.8rem;
-  }
-
-  :deep(.vs__selected-options) {
-    padding: 0.225rem 0.35rem;
-    line-height: 1.2;
-  }
-
-  :deep(.vs__search) {
-    font-size: 0.8rem;
-    padding: 0.225rem 0.35rem;
-    line-height: 1.2;
-  }
-
-  :deep(.vs__dropdown-menu) {
-    font-size: 0.8rem;
-  }
-
-  :deep(.vs__dropdown-option) {
-    padding: 0.225rem 0.45rem;
-    line-height: 1.2;
-  }
-
-  /* Reducir el tamaño del texto en el header */
-  .card-header {
-    font-size: 0.9rem;
-    padding: 0.6rem 0.8rem;
-  }
-
-  /* Reducir el tamaño del contador de filas */
-  .small {
-    font-size: 0.75rem;
-  }
-
-  /* Asegurar que todos los controles vue-select tengan la misma altura que los inputs */
-  :deep(.vs__control) {
-    min-height: 31px;
-    height: 31px;
-  }
-
-  :deep(.vs__actions) {
-    padding: 0.225rem 0.35rem;
-  }
-
-  :deep(.vs__clear) {
-    padding: 0.225rem 0.35rem;
-  }
-
-  :deep(.vs__open-indicator) {
-    padding: 0.225rem 0.35rem;
-  }
+}
 </style>

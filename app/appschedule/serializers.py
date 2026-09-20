@@ -219,27 +219,36 @@ class EventDraftSerializer(serializers.ModelSerializer):
 class EventNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventNote
-        fields = ['notes', 'updated_at', 'updated_by', 'work_account']
-        read_only_fields = ['updated_at', 'updated_by']
+        fields = ['notes', 'updated_at', 'updated_by', 'work_account', 'event']
+        read_only_fields = ['updated_at', 'updated_by', 'event']
 
     def create(self, validated_data):
-        print('create validated_data', validated_data)
+        event = validated_data.pop('event', None)
         work_account = validated_data.pop('work_account', None)
+        if not event:
+            raise serializers.ValidationError({'event': 'event is required'})
         if not work_account:
-            raise serializers.ValidationError('work_account is required')
+            work_account = getattr(event, 'work_account', None)
         validated_data['updated_by'] = self.context['request'].user
-        print('create validated_data', validated_data)
         try:
-            event_note, created = EventNote.objects.update_or_create(
-                work_account=work_account,
-                defaults=validated_data
+            event_note, _created = EventNote.objects.update_or_create(
+                event=event,
+                defaults={
+                    **validated_data,
+                    'work_account': work_account,
+                },
             )
             return event_note
         except Exception as e:
             raise serializers.ValidationError(f"Error creating EventNote: {e}")
-    
+
     def update(self, instance, validated_data):
+        validated_data.pop('event', None)
         validated_data['updated_by'] = self.context['request'].user
+        if 'work_account' not in validated_data and instance.event_id:
+            wa = getattr(instance.event, 'work_account', None)
+            if wa and not instance.work_account_id:
+                validated_data['work_account'] = wa
         return super().update(instance, validated_data)
 
 class UserSerializer(serializers.ModelSerializer):

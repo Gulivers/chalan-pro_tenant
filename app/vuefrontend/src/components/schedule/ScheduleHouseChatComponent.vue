@@ -12,31 +12,35 @@
         </span>
       </div>
 
-      <div
-        ref="chatContainer"
-        class="jr-house-chat__messages"
-        aria-live="polite">
-        <JREmptyState
-          v-if="!messages.length"
-          title="No messages yet"
-          description="Start the conversation for this work order." />
+      <JRScrollArea
+        class="jr-house-chat__scroll"
+        height="var(--jr-wov-body-height, 22rem)">
         <div
-          v-for="message in messages"
-          :key="message.id"
-          class="jr-house-chat__bubble"
-          :class="
-            message.author?.id === user?.id
-              ? 'jr-house-chat__bubble--mine'
-              : 'jr-house-chat__bubble--theirs'
-          ">
-          <div class="jr-house-chat__meta">
-            <span class="jr-house-chat__author">{{ message.author?.username || 'User' }}</span>
-            <span class="jr-house-chat__dot" aria-hidden="true">·</span>
-            <time class="jr-house-chat__time">{{ parseDate(message.timestamp) }}</time>
+          ref="chatContainer"
+          class="jr-house-chat__messages"
+          aria-live="polite">
+          <JREmptyState
+            v-if="!messages.length"
+            title="No messages yet"
+            description="Start the conversation for this work order." />
+          <div
+            v-for="message in messages"
+            :key="message.id"
+            class="jr-house-chat__bubble"
+            :class="
+              message.author?.id === user?.id
+                ? 'jr-house-chat__bubble--mine'
+                : 'jr-house-chat__bubble--theirs'
+            ">
+            <div class="jr-house-chat__meta">
+              <span class="jr-house-chat__author">{{ message.author?.username || 'User' }}</span>
+              <span class="jr-house-chat__dot" aria-hidden="true">·</span>
+              <time class="jr-house-chat__time">{{ parseDate(message.timestamp) }}</time>
+            </div>
+            <div class="jr-house-chat__text">{{ message.message }}</div>
           </div>
-          <div class="jr-house-chat__text">{{ message.message }}</div>
         </div>
-      </div>
+      </JRScrollArea>
 
       <form class="jr-house-chat__composer" @submit.prevent="sendMessage">
         <JRInput
@@ -63,7 +67,7 @@ import "@assets/css/base.css";
 import axios from "axios";
 import { useAuthStore } from "@stores/auth";
 import dayjs from "dayjs";
-import { JRButton, JREmptyState, JRInput } from "@ui";
+import { JRButton, JREmptyState, JRInput, JRScrollArea } from "@ui";
 
 export default {
   name: "ScheduleHouseChatComponent",
@@ -71,6 +75,7 @@ export default {
     JRButton,
     JREmptyState,
     JRInput,
+    JRScrollArea,
   },
   props: {
     eventId: {
@@ -227,10 +232,16 @@ export default {
       }
     },
     scrollToBottom() {
-      const container = this.$refs.chatContainer;
-      if (container) {
+      this.$nextTick(() => {
+        const container = this.$refs.chatContainer;
+        if (!container) return;
+        const viewport = container.closest(".p-scrollarea-viewport");
+        if (viewport) {
+          viewport.scrollTop = viewport.scrollHeight;
+          return;
+        }
         container.scrollTop = container.scrollHeight;
-      }
+      });
     },
   },
 };
@@ -241,7 +252,8 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  min-height: 22rem;
+  min-height: 0;
+  height: 100%;
 }
 
 .jr-house-chat__debug {
@@ -256,7 +268,8 @@ export default {
   display: flex;
   flex-direction: column;
   flex: 1;
-  min-height: 18rem;
+  min-height: 0;
+  height: 100%;
   border: 1px solid var(--color-jr-border, #e5e7eb);
   border-radius: var(--radius-jr-control, 0);
   background: var(--color-jr-surface, #fff);
@@ -286,17 +299,18 @@ export default {
   color: var(--color-jr-muted, #4b5563);
 }
 
+.jr-house-chat__scroll {
+  flex: 1 1 auto;
+  border: none !important;
+  border-radius: 0;
+}
+
 .jr-house-chat__messages {
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
-  flex: 1;
-  max-height: 50vh;
   min-height: 12rem;
-  overflow-y: auto;
   padding: 1rem 1.125rem;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-jr-hover-border, #d1d5db) var(--color-jr-surface-muted, #f9fafb);
 }
 
 .jr-house-chat__bubble {

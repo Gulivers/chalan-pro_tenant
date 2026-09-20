@@ -286,12 +286,8 @@ class EventNoteViewSet(viewsets.ViewSet):
     def retrieve(self, request, event_id=None):
         try:
             event = get_object_or_404(Event, pk=event_id)
-            work_account = event.work_account
-            
-            # Buscar nota por event primero, o fallback a work_account
+            # Notes are scoped per event (work order), same as chat.
             note = EventNote.objects.filter(event=event).first()
-            if not note and work_account:
-                note = EventNote.objects.filter(work_account=work_account).first()
             if note:
                 serializer = self.serializer_class(note)
                 return Response(serializer.data)
@@ -303,18 +299,18 @@ class EventNoteViewSet(viewsets.ViewSet):
         try:
             event = get_object_or_404(Event, pk=event_id)
             work_account = event.work_account
-            
-            # Buscar nota existente por event primero, o fallback a work_account
             event_note = EventNote.objects.filter(event=event).first()
-            if not event_note and work_account:
-                event_note = EventNote.objects.filter(work_account=work_account).first()
 
             if event_note:
-                serializer = self.serializer_class(event_note, data=request.data, context={'request': request})
+                serializer = self.serializer_class(
+                    event_note, data=request.data, context={'request': request}
+                )
             else:
-                serializer = self.serializer_class(data=request.data, context={'request': request})
+                serializer = self.serializer_class(
+                    data=request.data, context={'request': request}
+                )
             serializer.is_valid(raise_exception=True)
-            serializer.save(event=event)
+            serializer.save(event=event, work_account=work_account)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

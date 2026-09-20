@@ -188,12 +188,11 @@ class CrewMiniSerializer(serializers.ModelSerializer):
 class JobSerializer(serializers.ModelSerializer):
     builder = serializers.PrimaryKeyRelatedField(queryset=Builder.objects.all())
 
-    # Acepta escribir crews como lista de IDs
+    # M2M Crew ↔ Job (Assigned Jobs en Crew / Area Supervisor en Community)
     crews = serializers.PrimaryKeyRelatedField(
         queryset=Crew.objects.all(),
         many=True,
         required=False,
-        write_only=True  # solo escritura; si quieres verlo en responses, quítalo
     )
 
     # Detalle de lectura opcional (no estorba)

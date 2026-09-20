@@ -13,7 +13,10 @@ function matchesWorkAccount(event, workAccountId) {
  * Picks the most recent event (by date) among matches.
  * Returns null when no linked event exists.
  */
-export async function resolveScheduleEventForWorkAccount(workAccountId, title = "") {
+export async function resolveScheduleEventForWorkAccount(
+  workAccountId,
+  title = ""
+) {
   if (!workAccountId) return null;
 
   const matches = [];
@@ -22,9 +25,13 @@ export async function resolveScheduleEventForWorkAccount(workAccountId, title = 
   let hasNext = true;
 
   while (hasNext && page <= 10) {
-    const { data } = await axios.get(`/api/my-events/?page=${page}${searchParam}`);
+    const { data } = await axios.get(
+      `/api/my-events/?page=${page}${searchParam}`
+    );
     const results = Array.isArray(data?.results) ? data.results : [];
-    matches.push(...results.filter((event) => matchesWorkAccount(event, workAccountId)));
+    matches.push(
+      ...results.filter((event) => matchesWorkAccount(event, workAccountId))
+    );
 
     if (!data?.next) {
       hasNext = false;
@@ -46,10 +53,12 @@ export async function resolveScheduleEventForWorkAccount(workAccountId, title = 
 
 export const WORK_ORDER_VIEWER_TABS = [
   { id: "chat", label: "Chat for Job" },
-  { id: "notes", label: "Notes" },
+  { id: "notes", label: "Notes for Job" },
   { id: "folder", label: "Folder" },
   { id: "contracts", label: "Contracts" },
   { id: "transactions", label: "Transactions" },
 ];
 
-export const WORK_ORDER_VIEWER_TAB_IDS = WORK_ORDER_VIEWER_TABS.map((tab) => tab.id);
+export const WORK_ORDER_VIEWER_TAB_IDS = WORK_ORDER_VIEWER_TABS.map(
+  (tab) => tab.id
+);

@@ -19,3 +19,4 @@ export { default as JRRowActions } from './JRRowActions.vue';
 export { default as JRTooltip } from './JRTooltip.vue';
 export { default as JRDialog } from './JRDialog.vue';
 export { default as JRTextarea } from './JRTextarea.vue';
+export { default as JRScrollArea } from './JRScrollArea.vue';

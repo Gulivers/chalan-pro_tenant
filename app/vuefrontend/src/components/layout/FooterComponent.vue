@@ -209,7 +209,7 @@ export default {
         },
         {
           label: "Measure the Operation",
-          route: "/inventory-dashboard",
+          route: "/reports-exports",
           icon: FlowIconDashboard,
         },
       ],

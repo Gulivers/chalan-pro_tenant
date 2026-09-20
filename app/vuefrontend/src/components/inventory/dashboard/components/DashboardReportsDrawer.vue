@@ -10,7 +10,7 @@
 
     <div class="jr-reports-nav" role="tablist" aria-label="Report categories">
       <JRButton
-        v-for="tab in tabs"
+        v-for="tab in visibleTabs"
         :key="tab.id"
         type="button"
         size="sm"
@@ -22,12 +22,20 @@
       </JRButton>
     </div>
 
-    <div v-show="activeTab === 'stock'" class="jr-reports-panel" role="tabpanel">
+    <div
+      v-if="showsTab('stock')"
+      v-show="activeTab === 'stock'"
+      class="jr-reports-panel"
+      role="tabpanel">
       <h3 class="jr-reports-panel__title">Stock reports</h3>
       <StockExportButtons :loading="loading" />
     </div>
 
-    <div v-show="activeTab === 'sales'" class="jr-reports-panel" role="tabpanel">
+    <div
+      v-if="showsTab('sales')"
+      v-show="activeTab === 'sales'"
+      class="jr-reports-panel"
+      role="tabpanel">
       <h3 class="jr-reports-panel__title">Sales reports</h3>
       <div class="jr-reports-period">
         <JRField label="Period" inputId="dash-export-sales-period">
@@ -43,12 +51,20 @@
       <SalesExportButtons :period="salesPeriod" :loading="loading" />
     </div>
 
-    <div v-show="activeTab === 'parties'" class="jr-reports-panel" role="tabpanel">
+    <div
+      v-if="showsTab('parties')"
+      v-show="activeTab === 'parties'"
+      class="jr-reports-panel"
+      role="tabpanel">
       <h3 class="jr-reports-panel__title">Customer & supplier reports</h3>
       <CustomersSuppliersExportButtons active-tab="customers" :loading="loading" />
     </div>
 
-    <div v-show="activeTab === 'movements'" class="jr-reports-panel" role="tabpanel">
+    <div
+      v-if="showsTab('movements')"
+      v-show="activeTab === 'movements'"
+      class="jr-reports-panel"
+      role="tabpanel">
       <h3 class="jr-reports-panel__title">Product movements</h3>
       <ProductMovementsReport />
     </div>
@@ -61,6 +77,19 @@ import StockExportButtons from './StockExportButtons.vue';
 import SalesExportButtons from './SalesExportButtons.vue';
 import CustomersSuppliersExportButtons from './CustomersSuppliersExportButtons.vue';
 import ProductMovementsReport from './ProductMovementsReport.vue';
+
+const ALL_TABS = [
+  { id: 'stock', label: 'Stock' },
+  { id: 'sales', label: 'Sales' },
+  { id: 'parties', label: 'Customers' },
+  { id: 'movements', label: 'Movements' },
+];
+
+const VARIANT_TABS = {
+  all: ['stock', 'sales', 'parties', 'movements'],
+  inventory: ['stock', 'movements'],
+  operations: ['sales', 'parties'],
+};
 
 export default {
   name: 'DashboardReportsDrawer',
@@ -87,11 +116,19 @@ export default {
       type: Number,
       default: 30,
     },
+    /**
+     * all | inventory (Stock + Movements) | operations (Sales + Customers)
+     */
+    variant: {
+      type: String,
+      default: 'all',
+      validator: (value) => ['all', 'inventory', 'operations'].includes(value),
+    },
   },
   emits: ['update:visible'],
   data() {
     return {
-      activeTab: 'stock',
+      activeTab: null,
       salesPeriod: this.periodDays || 30,
       periodOptions: [
         { label: 'Last 30 days', value: 30 },
@@ -99,19 +136,43 @@ export default {
         { label: 'Last 90 days', value: 90 },
         { label: 'Last year', value: 365 },
       ],
-      tabs: [
-        { id: 'stock', label: 'Stock' },
-        { id: 'sales', label: 'Sales' },
-        { id: 'parties', label: 'Customers' },
-        { id: 'movements', label: 'Movements' },
-      ],
     };
+  },
+  computed: {
+    visibleTabs() {
+      const allowed = VARIANT_TABS[this.variant] || VARIANT_TABS.all;
+      return ALL_TABS.filter((tab) => allowed.includes(tab.id));
+    },
   },
   watch: {
     periodDays(value) {
       const days = Number(value);
       if (Number.isFinite(days) && days > 0) {
         this.salesPeriod = days;
+      }
+    },
+    variant: {
+      immediate: true,
+      handler() {
+        this.ensureActiveTab();
+      },
+    },
+    visible(isOpen) {
+      if (isOpen) this.ensureActiveTab();
+    },
+  },
+  methods: {
+    showsTab(id) {
+      return this.visibleTabs.some((tab) => tab.id === id);
+    },
+    ensureActiveTab() {
+      const tabs = this.visibleTabs;
+      if (!tabs.length) {
+        this.activeTab = null;
+        return;
+      }
+      if (!tabs.some((tab) => tab.id === this.activeTab)) {
+        this.activeTab = tabs[0].id;
       }
     },
   },

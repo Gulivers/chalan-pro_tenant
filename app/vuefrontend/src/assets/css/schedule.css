@@ -1,215 +1,397 @@
-/* Estilo para móviles */
+/* JobRhythm Schedule — FullCalendar skin (scoped under .jr-schedule) */
+
+.jr-schedule .fc {
+  --fc-border-color: var(--color-jr-border, #e5e7eb);
+  --fc-page-bg-color: var(--color-jr-surface, #ffffff);
+  --fc-neutral-bg-color: var(--color-jr-surface-muted, #f9fafb);
+  --fc-list-event-hover-bg-color: var(--color-jr-surface-muted, #f9fafb);
+  --fc-button-bg-color: var(--color-jr-primary, #2563eb);
+  --fc-button-border-color: var(--color-jr-primary, #2563eb);
+  --fc-button-text-color: #ffffff;
+  --fc-button-hover-bg-color: var(--color-jr-primary-hover, #1d4ed8);
+  --fc-button-hover-border-color: var(--color-jr-primary-hover, #1d4ed8);
+  --fc-button-active-bg-color: var(--color-jr-primary-hover, #1d4ed8);
+  --fc-button-active-border-color: var(--color-jr-primary-hover, #1d4ed8);
+  --fc-today-bg-color: color-mix(
+    in srgb,
+    var(--color-jr-primary, #2563eb) 6%,
+    var(--color-jr-surface, #ffffff)
+  );
+  --jr-schedule-today-accent: var(--color-jr-primary, #2563eb);
+  --jr-schedule-today-bg: color-mix(
+    in srgb,
+    var(--color-jr-primary, #2563eb) 4%,
+    var(--color-jr-surface, #ffffff)
+  );
+  --jr-schedule-today-header-bg: color-mix(
+    in srgb,
+    var(--color-jr-primary, #2563eb) 10%,
+    var(--color-jr-surface-muted, #f9fafb)
+  );
+  --fc-event-text-color: var(--color-jr-text, #111827);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+  font-size: 0.875rem;
+  color: var(--color-jr-text, #111827);
+  height: 100%;
+}
+
+.jr-schedule .fc .fc-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: var(--color-jr-surface-muted, #f9fafb);
+  border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
+  flex: 0 0 auto;
+}
+
+.jr-schedule .fc .fc-toolbar-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-jr-text, #111827);
+}
+
+.jr-schedule .fc .fc-button-group {
+  display: inline-flex;
+  gap: 0;
+}
+
+.jr-schedule .fc .fc-toolbar-chunk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.jr-schedule .fc .fc-button {
+  border-radius: var(--radius-jr-control, 0) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  padding: 0.4rem 0.75rem !important;
+  line-height: 1.25 !important;
+  box-shadow: none !important;
+  text-transform: none !important;
+  transition: background-color 160ms ease-out, border-color 160ms ease-out;
+}
+
+.jr-schedule .fc .fc-today-button:disabled {
+  opacity: 0.55;
+}
+
+.jr-schedule .fc .fc-button:focus {
+  box-shadow: none !important;
+  outline: none;
+  border-color: var(--color-jr-primary, #2563eb) !important;
+}
+
+.jr-schedule .fc .fc-button-primary:not(:disabled).fc-button-active,
+.jr-schedule .fc .fc-button-primary:not(:disabled):active {
+  background-color: var(--color-jr-primary-hover, #1d4ed8);
+  border-color: var(--color-jr-primary-hover, #1d4ed8);
+}
+
+.jr-schedule .fc .fc-scrollgrid {
+  border-color: var(--color-jr-border, #e5e7eb);
+}
+
+/* Crew + day header row stays visible while the body timeline scrolls */
+.jr-schedule .fc .fc-scrollgrid-section-header,
+.jr-schedule .fc .fc-scrollgrid-section-header > * {
+  background-color: var(--color-jr-surface-muted, #f9fafb);
+}
+
+.jr-schedule
+  .fc
+  .fc-scrollgrid-section-header.fc-scrollgrid-section-sticky
+  > * {
+  background-color: var(--color-jr-surface-muted, #f9fafb);
+}
+
+.jr-schedule .fc .fc-col-header-cell,
+.jr-schedule .fc .fc-datagrid-header,
+.jr-schedule .fc .fc-timeline-header {
+  background: var(--color-jr-surface-muted, #f9fafb);
+}
+
+.jr-schedule .fc .fc-datagrid-header,
+.jr-schedule .fc .fc-timeline-header {
+  box-shadow: 0 1px 0 var(--color-jr-border, #e5e7eb);
+}
+
+.jr-schedule .fc .fc-col-header-cell-cushion,
+.jr-schedule .fc .fc-datagrid-cell-cushion {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-jr-text, #111827);
+  padding: 0.5rem 0.65rem;
+}
+
+.jr-schedule .fc .fc-resource-group,
+.jr-schedule .fc .fc-datagrid-cell.fc-resource-group {
+  background: var(--color-jr-page, #f3f4f6);
+}
+
+.jr-schedule .fc .fc-datagrid-cell-main {
+  font-weight: 600;
+  color: var(--color-jr-text, #111827);
+}
+
+.jr-schedule .fc .fc-timeline-slot-cushion {
+  font-weight: 600;
+  color: var(--color-jr-muted, #4b5563);
+  text-decoration: none;
+}
+
+/* Distinctive “today” — soft column wash, accent on header only */
+.jr-schedule .fc .fc-timeline-slots {
+  z-index: 0;
+}
+.jr-schedule .fc .fc-timeline-body > .fc-scrollgrid-sync-table {
+  position: relative;
+  z-index: 1;
+}
+.jr-schedule .fc .fc-timeline-slot.fc-day-today {
+  background-color: var(--jr-schedule-today-bg) !important;
+}
+
+.jr-schedule .fc .fc-day-today .fc-timeline-slot-cushion {
+  color: var(--jr-schedule-today-accent);
+  font-weight: 700;
+}
+
+.jr-schedule .fc .fc-timeline-slot-lane.fc-day-today {
+  box-shadow: none;
+}
+
+/*
+ * Do NOT force overflow-y:visible on all .fc-scroller nodes.
+ * Resource timeline keeps day/Crew headers outside the body scroller;
+ * the body must scroll vertically so the timeline-header stays fixed.
+ */
+.jr-schedule .fc-scroller-harness > .fc-scroller {
+  overflow-x: auto;
+}
+
+.jr-schedule .fc .fc-resource-timeline .fc-resource {
+  height: 80px !important;
+}
+
+.jr-schedule .fc-event {
+  height: auto !important;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  margin: 0;
+  padding: 0;
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  font-weight: 500;
+  overflow: visible;
+  white-space: normal;
+  box-shadow: none;
+}
+
+.jr-schedule .fc-event .fc-event-main {
+  padding: 0;
+  width: 100%;
+}
+
+.jr-schedule .fc-timeline-event-harness {
+  margin-top: 2px;
+  margin-left: 1px;
+  padding: 2px;
+}
+
+.jr-schedule .fc-event-title {
+  white-space: normal !important;
+  word-break: break-word;
+  text-align: left;
+}
+
+.jr-schedule .fc-event .fc-event-title,
+.jr-schedule .fc-event .fc-event-time {
+  word-wrap: break-word;
+  overflow: hidden;
+  white-space: normal;
+  height: auto;
+}
+
+/* Event cards — left accent + soft lift (user brief + reference) */
+.jr-schedule-event-card {
+  --jr-schedule-accent: var(--color-jr-primary, #2563eb);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  min-height: 100%;
+  padding: 0.45rem 0.55rem 0.45rem 0.65rem;
+  border: 1px solid var(--color-jr-border, #e5e7eb);
+  border-left: 4px solid var(--jr-schedule-accent);
+  background: color-mix(
+    in srgb,
+    var(--jr-schedule-accent) 10%,
+    var(--color-jr-surface, #ffffff)
+  );
+  color: var(--color-jr-text, #111827);
+  border-radius: var(--radius-jr-panel, 0.75rem);
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.06),
+    0 4px 10px rgba(17, 24, 39, 0.05);
+}
+
+.jr-schedule-event-card--posted {
+  --jr-schedule-accent: var(--color-jr-success, #16a34a);
+  background: color-mix(
+    in srgb,
+    var(--color-jr-success, #16a34a) 12%,
+    var(--color-jr-surface, #ffffff)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--color-jr-success, #16a34a) 28%,
+    var(--color-jr-border, #e5e7eb)
+  );
+  border-left-color: var(--jr-schedule-accent);
+}
+
+.jr-schedule-event-card--draft {
+  --jr-schedule-accent: var(--color-jr-muted, #4b5563);
+  background: var(--color-jr-surface-muted, #f9fafb);
+  border-color: var(--color-jr-hover-border, #d1d5db);
+  border-left-color: var(--jr-schedule-accent);
+}
+
+.jr-schedule-event-card--deleted {
+  --jr-schedule-accent: var(--color-jr-danger, #dc2626);
+  background: color-mix(
+    in srgb,
+    var(--color-jr-danger, #dc2626) 12%,
+    var(--color-jr-surface, #ffffff)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--color-jr-danger, #dc2626) 28%,
+    var(--color-jr-border, #e5e7eb)
+  );
+  border-left-color: var(--jr-schedule-accent);
+}
+
+.jr-schedule-event-card--absence {
+  --jr-schedule-accent: var(--color-jr-info, #0284c7);
+  background: color-mix(
+    in srgb,
+    var(--color-jr-info, #0284c7) 12%,
+    var(--color-jr-surface, #ffffff)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--color-jr-info, #0284c7) 28%,
+    var(--color-jr-border, #e5e7eb)
+  );
+  border-left-color: var(--jr-schedule-accent);
+  opacity: 0.98;
+}
+
+.jr-schedule-event-card__title {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-transform: none;
+  word-break: break-word;
+}
+
+.jr-schedule-event-card__absence-mark {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-right: 0.35rem;
+  vertical-align: 0.1em;
+  border-radius: 50%;
+  background: var(--color-jr-info, #0284c7);
+}
+
+.jr-schedule-event-card__desc {
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--color-jr-muted, #4b5563);
+  word-break: break-word;
+}
+
+.jr-schedule-event-card__meta {
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-jr-muted, #4b5563);
+}
+
+.jr-schedule-event-card__flags {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.15rem;
+}
+
+.jr-schedule-event-card__badge {
+  display: inline-block;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-jr-danger-text, #991b1b);
+  background: color-mix(
+    in srgb,
+    var(--color-jr-danger, #dc2626) 14%,
+    var(--color-jr-surface, #ffffff)
+  );
+  border-radius: var(--radius-jr-control, 0);
+}
+
 @media (max-width: 768px) {
+  .jr-schedule .fc .fc-resource-timeline-divider {
+    width: 12px !important;
+  }
 
-
-    .fc .fc-resource-timeline-divider {
-        width: 12px !important;
-        /* Ajusta según necesidad */
-    }
-
-    .fc .fc-datagrid-expander-placeholder {
-        display: none !important;
-        /* Oculta el placeholder del ícono */
-    }
-
-    span .fc fc-icon:empty {
-        display: none !important;
-    }
-
-      .fc .fc-datagrid-expander .fc-icon {
+  .jr-schedule .fc .fc-datagrid-expander-placeholder {
     display: none !important;
   }
 
-    .fc .fc-datagrid-cell-cushion {
-        font-size: 13px;
-        padding-left: 6px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: block
-    }
+  .jr-schedule .fc .fc-datagrid-expander .fc-icon {
+    display: none !important;
+  }
 
-
-
-    .fc .fc-button {
-        padding: 4px 8px !important;
-        font-size: 0.85rem !important;
-        min-width: 36px !important;
-        height: auto !important;
-        line-height: 1.2 !important;
-        border-radius: 4px !important;
-    }
-
-    .fc .fc-button .fc-icon {
-        font-size: 1rem !important;
-    }
-}
-
-/* Fin Estilo para móviles */
-
-.fc .fc-scrollgrid-section-header {
-    position: -webkit-sticky;
-    /* Para soporte en Safari */
-    position: sticky;
-    top: 0;
-    z-index: 3;
-    background-color: white;
-    /* Asegúrate que el fondo no sea transparente */
-}
-
-.fc-scroller {
-    overflow-y: visible !important;
-    /* Asegurarse de que el overflow en y no esté restringido */
-}
-
-/* Estilo adicional para asegurar que el texto se resalte adecuadamente */
-.fc .fc-day-today .fc-timeline-slot-cushion {
-    /* background-color: #f1f9fe; */
-    color: #f6a000;
-    font-weight: bold;
-    z-index: 0;
-}
-
-/* Resaltar el fondo de las celdas de la columna del día actual */
-/*
-.fc .fc-day-today  {
-    background-color: #f1f9fe;
-}
-
-
-/* Para ajustar alto de las filas */
-.fc .fc-resource-timeline .fc-resource {
-    height: 80px !important;
-}
-
-/* Ajusta el tamaño de los eventos */
-.fc-event {
-    height: auto !important;
-    /* Hace que los eventos ocupen toda la celda */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /*
-      font-family: Avenir, Helvetica, Arial, sans-serif; 
-      Fuente personalizada 
-      */
-    font-size: 1rem;
-    background-color: #ebf8ed;
-    /* Fondo del evento */
-    border: 1px solid #395ecb;
-    /* Borde con un tono más oscuro de verde */
-    color: white;
-    border-radius: 5px;
-    font-weight: bold;
-    padding: 4px;
+  .jr-schedule .fc .fc-datagrid-cell-cushion {
+    font-size: 0.75rem;
+    padding-left: 0.4rem;
+    white-space: nowrap;
     overflow: hidden;
-    /* Asegura que el contenido no se desborde */
-    white-space: normal;
-    /* Permite que el texto pase a la siguiente línea */
-}
+    text-overflow: ellipsis;
+    display: block;
+  }
 
+  .jr-schedule .fc .fc-toolbar {
+    padding: 0.65rem 0.75rem;
+  }
 
-.fc .fc-button-primary {
-    background-color: #0d6efd;
-    border-color: var(--fc-button-border-color);
-    color: var(--fc-button-text-color);
-}
+  .jr-schedule .fc .fc-toolbar-title {
+    font-size: 0.9375rem;
+    width: 100%;
+    order: -1;
+  }
 
-/* Evita que los eventos se vean aplastados */
-.fc-event-title {
-    white-space: normal !important;
-    word-break: break-word;
-    text-align: center;
-}
+  .jr-schedule .fc .fc-button {
+    padding: 0.35rem 0.55rem !important;
+    font-size: 0.75rem !important;
+    min-width: 2rem !important;
+  }
 
-/* Estilo para la cabecera del calendario */
-.fc-toolbar {
-    background-color: #f5f5f5;
-    /* Fondo gris claro */
-    border-bottom: 2px solid #ffa500;
-    /* Línea inferior */
-    padding: 10px;
-    /* Espaciado interno */
-}
-
-:root {
-    --fc-event-text-color: rgb(11, 11, 11);
-    /* Color del text de los eventos */
-    --bs-link-color-rgb: #a12121;
-    /* Color de los días */
-}
-
-/* Estilo para eventos importantes */
-.evento-importante {
-    background-color: #f2744d;
-    border-color: #E64A19;
-    font-weight: bold;
-}
-
-/* Estilo para el contenido personalizado de los eventos */
-.evento-personalizado {
-    background-color: #ebf8ed;
-    color: #2522d7;
-    /* padding: 4px; */
-    border-radius: 5px;
-}
-
-/* Estilos para los días en el calendario */
-.fc-timeline-slot-cushion {
-    font-weight: bold;
-    /* Texto en negrita para mayor visibilidad */
-    color: #333;
-    /* Color oscuro para el texto */
-    text-decoration: none;
-    /* Elimina el subrayado */
-}
-
-/* Hace que los títulos de los recursos (crew) sean negrita */
-.fc-datagrid-cell-main {
-    font-weight: bold;
-}
-
-/* Margen de los eventos dentro de las celdas */
-.fc-timeline-event-harness {
-    margin-top: 2px;
-    margin-left: 1px;
-    padding: 2px;
-}
-
-/* Fila de los nombres de los dias */
-.fc-scrollgrid-section-header {
-    background-color: #bcbfc3;
-}
-
-/* Asegura que el contenedor del calendario se expanda con el contenido */
-.fc {
-    overflow: visible !important;
-}
-
-/* Para el contenedor específico del timeline */
-.fc .fc-scroller {
-    overflow-y: visible !important;
-    /* Permite que el contenido se extienda verticalmente */
-    overflow-x: auto;
-    /* Mantiene el scroll horizontal si es necesario */
-}
-
-
-.fc-event .fc-event-title,
-.fc-event .fc-event-time {
-    word-wrap: break-word;
-    overflow: hidden;
-    /* Asegura que el contenido no se desborde */
-    white-space: normal;
-    /* Permite que el texto pase a la siguiente línea */
-    height: auto
-}
-
-.fc-event.absence-event {
-    background-color: #0c72df !important;
-    /* Azul claro */
-    border-color: #3399ff !important;
-    /* Azul más fuerte */
-    color: #003366 !important;
-    /* Azul oscuro para el texto */
+  .jr-schedule .fc .fc-button .fc-icon {
+    font-size: 0.875rem !important;
+  }
 }
