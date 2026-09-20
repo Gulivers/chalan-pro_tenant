@@ -717,10 +717,6 @@ watch(
       if (!isFromSchedule.value) {
         form.work_account = null;
       } else {
-        console.log(
-          "🔒 Manteniendo work_account desde schedule:",
-          form.work_account
-        );
       }
     }
   }
@@ -730,14 +726,6 @@ watch(
 watch(
   () => form.work_account,
   (newValue, oldValue) => {
-    console.log(
-      "🔍 DEBUG TransactionForm: form.work_account changed from",
-      oldValue,
-      "to",
-      newValue,
-      "Type:",
-      typeof newValue
-    );
   }
 );
 
@@ -812,8 +800,6 @@ async function onFavoriteSelected(favoriteData) {
     selectedFavoriteId.value = null;
     return;
   }
-
-  console.log("🔍 Importing favorite:", favoriteData);
 
   const incomingRaw =
     favoriteData.lines_data && Array.isArray(favoriteData.lines_data)
@@ -890,15 +876,6 @@ async function onFavoriteSelected(favoriteData) {
   }
 
   if (hasIncomingLines) {
-    console.log("🔍 Original lines_data:", incomingRaw);
-    console.log(
-      "🔍 Imported lines with product_label:",
-      importedLines.map((l) => ({
-        product: l.product,
-        product_label: l.product_label,
-      }))
-    );
-
     if (appendLinesOnly) {
       const combined = [...lines.value, ...importedLines];
       lines.value = mergeDuplicateTransactionLines(combined);
@@ -927,7 +904,6 @@ async function onFavoriteSelected(favoriteData) {
   linesGridUnlockedByFavoriteImport.value =
     !!form.document_type || hasIncomingLines;
 
-  console.log("✅ Favorite imported successfully");
 }
 
 function onEditFavorite(favoriteData) {
@@ -937,18 +913,15 @@ function onEditFavorite(favoriteData) {
 }
 
 function onFavoriteSaved(favorite) {
-  console.log("✅ Favorite saved:", favorite);
   // Refrescar el selector de favoritos para mostrar el nuevo favorito
   refreshFavoriteSelector();
 }
 
 function onFavoriteUpdated(favorite) {
-  console.log("✅ Favorite updated:", favorite);
   // Opcional: mostrar mensaje de éxito o actualizar UI
 }
 
 function onFavoriteDeleted(favoriteId) {
-  console.log("✅ Favorite deleted:", favoriteId);
   // Limpiar selección si el favorito eliminado estaba seleccionado
   if (selectedFavoriteId.value === favoriteId) {
     selectedFavoriteId.value = null;
@@ -1001,11 +974,6 @@ async function updateFavoriteFromCurrentTransaction() {
         })),
     };
 
-    console.log(
-      "🔄 Updating favorite with current transaction data:",
-      updateData
-    );
-
     const response = await axios.post(
       `/api/transaction-favorites/${selectedFavoriteId.value}/update-from-transaction/`,
       updateData
@@ -1020,7 +988,6 @@ async function updateFavoriteFromCurrentTransaction() {
         showConfirmButton: false,
       });
 
-      console.log("✅ Favorite updated successfully:", response.data);
     }
   } catch (error) {
     console.error("❌ Error updating favorite:", error);
@@ -1084,8 +1051,6 @@ async function handleSaveAndAddAnother() {
   try {
     const payload = normalizePayload();
 
-    console.log("🚀 Frontend: Guardando y agregando otra transacción...");
-
     const { data } = await axios.post("/api/documents/", payload);
     await Swal.fire({
       title: "Transaction Saved Successfully!",
@@ -1096,9 +1061,6 @@ async function handleSaveAndAddAnother() {
     });
     resetFormForNewTransaction();
 
-    console.log(
-      "✅ Transacción guardada, formulario reseteado para nueva transacción"
-    );
   } catch (err) {
     console.error("❌ Error al guardar transacción:", err);
 
@@ -1344,11 +1306,6 @@ async function loadDocument(id) {
   loadingDocument.value = true;
   try {
     const { data } = await axios.get(`/api/documents/${id}/`);
-    // console.log("💊Soy loadDocument")
-    // console.log('🔍 TransactionForm: Document data received:', data)
-    // console.log('🔍 TransactionForm: document_type from API:', data.document_type, typeof data.document_type)
-    // console.log('🔍 TransactionForm: builder from API:', data.builder, typeof data.builder)
-    // console.log('📍 TransactionForm: work_account from API:', data.work_account, typeof data.work_account)
 
     // Verificar que los datos relacionados existen
     if (!data.document_type) {
@@ -1356,10 +1313,6 @@ async function loadDocument(id) {
       form.document_type = null;
     } else {
       form.document_type = data.document_type;
-      console.log(
-        "🔍 TransactionForm: form.document_type set to:",
-        form.document_type
-      );
     }
 
     if (!data.builder) {
@@ -1370,7 +1323,6 @@ async function loadDocument(id) {
       try {
         await axios.get(`/api/builder/${data.builder}/`);
         form.builder = data.builder;
-        console.log("🔍 TransactionForm: form.builder set to:", form.builder);
       } catch (error) {
         if (error.response?.status === 404) {
           console.warn(`Builder ${data.builder} not found, setting to null`);
@@ -1383,25 +1335,12 @@ async function loadDocument(id) {
     }
 
     if (!data.work_account) {
-      console.log("Work account is null/empty, setting to null");
       form.work_account = null;
     } else {
-      console.log(
-        "🔍 DEBUG: Work account found:",
-        data.work_account,
-        "Type:",
-        typeof data.work_account
-      );
-      console.log("🔍 DEBUG: Document ID:", data.id, "Type:", typeof data.id);
-
       // Verificar que el work_account existe antes de asignarlo
       try {
         await axios.get(`/api/work-accounts/${data.work_account}/`);
         form.work_account = data.work_account;
-        console.log(
-          "🔍 TransactionForm: form.work_account set to:",
-          form.work_account
-        );
       } catch (error) {
         if (error.response?.status === 404) {
           console.warn(
@@ -1457,23 +1396,6 @@ async function loadDocument(id) {
       };
 
       // 🔍 DEBUG: Log de la línea cargada
-      console.log("🔍 Frontend: Línea cargada desde API:", {
-        original: {
-          product: l.product,
-          unit: l.unit,
-          warehouse: l.warehouse,
-          price_type: l.price_type,
-          brand: l.brand,
-        },
-        normalized: {
-          product: normalizedLine.product,
-          unit: normalizedLine.unit,
-          warehouse: normalizedLine.warehouse,
-          price_type: normalizedLine.price_type,
-          brand: normalizedLine.brand,
-        },
-      });
-
       return normalizedLine;
     });
 
@@ -1554,16 +1476,6 @@ function normalizePayload() {
   const workAccountId = extractId(workAccountToUse);
 
   // 🔍 DEBUG: Log para verificar work_account
-  console.log("🔍 Frontend normalizePayload - work_account:", {
-    original: form.work_account,
-    workAccountToUse: workAccountToUse,
-    workAccountParam: workAccountParam,
-    isFromSchedule: isFromSchedule.value,
-    type: typeof workAccountToUse,
-    normalized: workAccountId,
-    normalizedType: typeof workAccountId,
-  });
-
   const normalizedPayload = {
     document_type: form.document_type,
     builder: builderToSend ? extractId(builderToSend) : null,
@@ -1592,23 +1504,6 @@ function normalizePayload() {
         };
 
         // 🔍 DEBUG: Log de la línea normalizada
-        console.log("🔍 Frontend: Línea normalizada:", {
-          original: {
-            product: l.product,
-            unit: l.unit,
-            warehouse: l.warehouse,
-            price_type: l.price_type,
-            brand: l.brand,
-          },
-          normalized: {
-            product: normalizedLine.product,
-            unit: normalizedLine.unit,
-            warehouse: normalizedLine.warehouse,
-            price_type: normalizedLine.price_type,
-            brand: normalizedLine.brand,
-          },
-        });
-
         return normalizedLine;
       }),
   };
@@ -1637,19 +1532,15 @@ function applyServerErrors(errData) {
     }
     return;
   }
-  console.log("🔍 Frontend: applyServerErrors called with:", errData);
-
   // High-level document errors
   for (const k in errData) {
     if (k !== "lines") {
       errors[k] = errData[k];
-      console.log(`🔍 Frontend: Error for field ${k}:`, errData[k]);
     }
   }
 
   // Per-line errors (DRF devuelve lista alineada con índices)
   if (Array.isArray(errData.lines)) {
-    console.log("🔍 Frontend: Processing line errors:", errData.lines);
     errData.lines.forEach((item, idx) => {
       if (!item) return;
       const target = lines.value[idx];
@@ -1658,10 +1549,6 @@ function applyServerErrors(errData) {
     });
   } else if (errData.lines && typeof errData.lines === "object") {
     // Formato objeto { "0": {...}, "1": {...} }
-    console.log(
-      "🔍 Frontend: Processing line errors (object format):",
-      errData.lines
-    );
     Object.entries(errData.lines).forEach(([key, item]) => {
       const idx = parseInt(key, 10);
       if (isNaN(idx) || !item) return;
@@ -1682,31 +1569,8 @@ async function handleSubmit() {
     const payload = normalizePayload();
 
     // 🔍 DEBUG: Log del payload completo
-    console.log(
-      "🚀 Frontend: Enviando payload:",
-      JSON.stringify(payload, null, 2)
-    );
-    console.log("📊 Frontend: Líneas a enviar:", payload.lines.length);
     payload.lines.forEach((line, idx) => {
-      console.log(`📝 Frontend: Línea ${idx}:`, {
-        id: line.id,
-        product: line.product,
-        quantity: line.quantity,
-        unit: line.unit,
-        unit_price: line.unit_price,
-        warehouse: line.warehouse,
-        price_type: line.price_type,
-        brand: line.brand,
-      });
-
       // 🔍 DEBUG: Verificar tipos de datos
-      console.log(`🔍 Frontend: Tipos de datos línea ${idx}:`, {
-        product_type: typeof line.product,
-        unit_type: typeof line.unit,
-        warehouse_type: typeof line.warehouse,
-        price_type_type: typeof line.price_type,
-        brand_type: typeof line.brand,
-      });
     });
 
     const url = isEditMode.value
@@ -1812,8 +1676,6 @@ async function handleSubmit() {
 
     // Función para extraer información del producto del mensaje de error
     function extractProductInfo(errorMsg, lineIndex = null) {
-      console.log("💊 Frontend: errorMsg", errorMsg);
-
       // Extraer directamente del errorMsg
       try {
         if (errorMsg && errorMsg.quantity && errorMsg.quantity.product_name) {
@@ -2059,7 +1921,6 @@ async function loadWorkAccountTitle(workAccountId) {
     const { data } = await axios.get(`/api/work-accounts/${workAccountId}/`);
     if (data && data.title) {
       workAccountTitle.value = data.title;
-      console.log("✅ Work Account title loaded:", workAccountTitle.value);
     }
   } catch (error) {
     console.error("Error loading work account title:", error);
@@ -2068,17 +1929,9 @@ async function loadWorkAccountTitle(workAccountId) {
 }
 
 onMounted(async () => {
-  console.log("TransactionForm mounted, loading data...");
   await Promise.all([fetchStaticOptions(), loadHasInventoryProducts()]);
-  console.log("Units loaded:", unitsOptions.value.length);
-  console.log("Warehouses loaded:", warehousesOptions.value.length);
-
   // Si hay work_account en query params (viene desde schedule), prellenarlo y cargar título
   if (workAccountParam) {
-    console.log(
-      "🔑 Prellenando work_account desde query params:",
-      workAccountParam
-    );
     form.work_account = workAccountParam;
     // Cargar el título del work account
     await loadWorkAccountTitle(workAccountParam);
@@ -2152,6 +2005,7 @@ onMounted(async () => {
   color: var(--color-jr-text);
   background: var(--color-jr-surface-muted, var(--color-jr-page));
   border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-control, 0);
 }
 
 .jr-tx-form__info {
@@ -2186,6 +2040,17 @@ onMounted(async () => {
   min-width: 0;
 }
 
+@media (min-width: 768px) {
+  .jr-tx-form__import-col--favorites {
+    padding-right: 1.25rem;
+    border-right: 1px solid var(--color-jr-border);
+  }
+
+  .jr-tx-form__import-col--excel {
+    padding-left: 0.25rem;
+  }
+}
+
 .jr-tx-form__favorites {
   display: flex;
   flex-direction: column;
@@ -2202,7 +2067,16 @@ onMounted(async () => {
 }
 
 .jr-tx-form__lines {
-  margin-top: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.jr-tx-form {
+  caret-color: var(--color-jr-primary);
+}
+
+.jr-tx-form ::selection {
+  background: color-mix(in srgb, var(--color-jr-primary) 28%, transparent);
+  color: var(--color-jr-text);
 }
 
 .jr-tx-form__totals {
@@ -2283,9 +2157,10 @@ onMounted(async () => {
   position: sticky;
   bottom: 0;
   z-index: 2;
-  padding: 0.75rem 0 0.25rem;
-  margin-top: 0.5rem;
+  padding: 0.75rem 0 0.35rem;
+  margin-top: 0.75rem;
   background: var(--color-jr-page);
   border-top: 1px solid var(--color-jr-border);
+  box-shadow: 0 -2px 10px color-mix(in srgb, var(--color-jr-text) 6%, transparent);
 }
 </style>

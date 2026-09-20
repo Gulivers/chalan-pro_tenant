@@ -153,7 +153,7 @@
               <th>Product</th>
               <th>Qty</th>
               <th>Unit</th>
-              <th>Unit Price</th>
+              <th class="jr-lines-table__price">Unit Price</th>
               <th>Disc %</th>
               <th>Warehouse</th>
               <th>Price Type</th>
@@ -250,7 +250,7 @@
                     {{ rowErrorText(row._errors.unit) }}
                   </p>
                 </td>
-                <td>
+                <td class="jr-lines-table__price">
                   <JRInput
                     :inputId="`unit_price-${idx}`"
                     type="number"
@@ -578,7 +578,6 @@
     JRRowActions,
     JRCheckbox,
   } from '@ui';
-  import CopyIcon from '@/ui/CopyIcon.vue';
 
   const PHONE_MQ = '(max-width: 767.98px)';
   const TABLET_MQ = '(min-width: 768px) and (max-width: 1023.98px)';
@@ -722,7 +721,6 @@
   watch(
     () => props.lines,
     async val => {
-      console.log('LinesGrid: lines prop changed:', val);
       isUpdatingFromProps.value = true;
 
       const newLines = (val || []).map(x => ({
@@ -734,10 +732,6 @@
         _purchase_unit_cost: x._purchase_unit_cost ?? null,
         _suppressPriceEvent: false,
       }));
-      console.log('🔍 New lines with product_label:', newLines.map(l => ({ 
-        product: l.product, 
-        product_label: l.product_label 
-      })));
 
       // Comparar también contenido cuando todos los ids son null (importar favoritos, etc.)
       const currentLength = linesLocal.value.length;
@@ -773,8 +767,6 @@
   watch(
     linesLocal,
     val => {
-      console.log('LinesGrid: linesLocal changed:', val.length, 'lines');
-
       // Don't emit if we're updating from props to avoid infinite loops
       if (!isUpdatingFromProps.value) {
         nextTick(() => {
@@ -801,10 +793,8 @@
   watch(
     () => props.documentTypeId,
     async newDocTypeId => {
-      console.log('🔍 LinesGrid: documentTypeId changed to:', newDocTypeId, typeof newDocTypeId)
       if (newDocTypeId) {
         try {
-          console.log('🔍 LinesGrid: Making request to:', `/api/document-types/${newDocTypeId}/`)
           const { data } = await axios.get(`/api/document-types/${newDocTypeId}/`);
           const requiresWarehouse = data.warehouse_required;
 
@@ -1101,7 +1091,6 @@
       const { data } = await axios.get('/api/default-warehouse/');
       if (data.id) {
         defaultWarehouse.value = data.id;
-        console.log('🔍 Default warehouse loaded:', data.name);
       }
     } catch (error) {
       console.warn('Could not fetch default warehouse:', error);
@@ -1132,7 +1121,6 @@
       _errors: {},
     };
 
-    console.log('Adding new line with default warehouse:', newLine);
     linesLocal.value.push(newLine);
   }
 
@@ -1289,13 +1277,6 @@
     if (props.disabled) return [];
     return [
       {
-        key: 'duplicate',
-        label: 'Duplicate',
-        severity: 'secondary',
-        icon: CopyIcon,
-        command: () => duplicateRow(idx),
-      },
-      {
         key: 'delete',
         label: 'Delete',
         severity: 'danger',
@@ -1358,20 +1339,15 @@
         },
       });
       const list = Array.isArray(data) ? data : data?.results || [];
-      console.log('🔍 Products API response:', data);
-      console.log('🔍 Products list:', list);
-      
       productOptions.value = list.map(p => {
         const option = {
           value: p.id,
           label: `${p.name} (${p.sku})`,
           product: p,
         };
-        console.log('🔍 Mapped product option:', option);
         return option;
       });
       
-      console.log('🔍 Mapped productOptions:', productOptions.value);
     } catch (error) {
       console.error('Error searching products:', error);
       productOptions.value = [];
@@ -1409,11 +1385,6 @@
           r.brand = defaultBrand.id;
         }
         
-        console.log('🔍 Updated brands for product:', {
-          productId,
-          brands: r.brands,
-          selectedBrand: r.brand
-        });
       }
     } catch (error) {
       console.warn('Error updating brands for product:', error);
@@ -1432,10 +1403,8 @@
   }
 
   async function onProductSelected(idx, option) {
-    console.log('🔍 onProductSelected called with:', option);
     const r = linesLocal.value[idx];
     r.product_label = option?.product?.name || option?.label || '';
-    console.log('🔍 Set product_label to:', r.product_label);
     r.price_manually_edited = false;
 
     // Auto-fill fields from ProductPrice predeterminado
@@ -1445,12 +1414,9 @@
         const params = {};
         if (props.documentTypeId) {
           params.document_type_id = props.documentTypeId;
-          console.log('🔍 Fetching price with document_type_id:', props.documentTypeId);
         }
         
         const { data } = await axios.get(`/api/products/${option.value}/default-price/`, { params });
-        
-        console.log('🔍 Received price data:', data);
         
         // Auto-fill Unit desde ProductPrice predeterminado
         if (data.unit) {
@@ -1476,15 +1442,6 @@
           }
         }
         
-        console.log('🔍 Auto-filled fields from ProductPrice:', {
-          unit: data.unit,
-          unit_price: data.unit_price,
-          price_type: data.price_type,
-          brand: data.default_brand,
-          brands: r.brands,
-          document_type_used: props.documentTypeId
-        });
-
         if (data.purchase_unit_cost != null) {
           r._purchase_unit_cost = Number(data.purchase_unit_cost);
         }
@@ -1505,7 +1462,6 @@
 
     // Auto-fill default price type from work account if available (fallback)
     if (props.workAccountId && props.workAccountId !== null && !r.price_type) {
-      console.log('🔍 DEBUG LinesGrid: workAccountId prop:', props.workAccountId, 'Type:', typeof props.workAccountId);
       try {
         const { data } = await axios.get(`/api/work-accounts/${props.workAccountId}/`);
         if (data.default_price_type) {
@@ -1811,8 +1767,16 @@
   });
 </script>
 
-
 <style scoped>
+.jr-lines {
+  caret-color: var(--color-jr-primary);
+}
+
+.jr-lines ::selection {
+  background: color-mix(in srgb, var(--color-jr-primary) 28%, transparent);
+  color: var(--color-jr-text);
+}
+
 .jr-lines__toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -1827,13 +1791,15 @@
 .jr-lines__toolbar-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 0.5rem;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .jr-lines__maint {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  flex: 0 0 auto;
 }
 
 .jr-lines__maint-icon {
@@ -1855,7 +1821,7 @@
 .jr-lines-table__check {
   width: 2.25rem;
   text-align: center;
-  vertical-align: middle;
+  vertical-align: top;
 }
 
 .jr-lines-table__row--selected {
@@ -1933,9 +1899,10 @@
 
 .jr-lines-item__actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-direction: row;
+  align-items: center;
   gap: 0.25rem;
+  flex-shrink: 0;
 }
 
 .jr-lines-table-scroll {
@@ -1944,18 +1911,20 @@
   border: 1px solid var(--color-jr-border);
   border-radius: var(--radius-jr-panel);
   background: var(--color-jr-surface);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-jr-hover-border) transparent;
 }
 
 .jr-lines-table {
   width: 100%;
-  min-width: 64rem;
+  min-width: 70rem;
   border-collapse: collapse;
   font-size: 0.875rem;
 }
 
 .jr-lines-table th,
 .jr-lines-table td {
-  padding: 0.45rem 0.5rem;
+  padding: 0.3rem 0.5rem;
   border-bottom: 1px solid var(--color-jr-border);
   vertical-align: top;
   text-align: left;
@@ -1965,7 +1934,7 @@
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-jr-text);
-  background: var(--color-jr-page);
+  background: var(--color-jr-surface-muted, var(--color-jr-page));
   position: sticky;
   top: 0;
   z-index: 1;
@@ -1986,12 +1955,46 @@
 }
 
 .jr-lines-table__actions {
-  width: 7rem;
+  width: 5.25rem;
   white-space: nowrap;
 }
 
 .jr-lines-table__product {
-  min-width: 14rem;
+  min-width: 20rem;
+  width: 24%;
+}
+
+.jr-lines-table__price {
+  min-width: 9.5rem;
+  width: 9.5rem;
+}
+
+.jr-lines-table__price :deep(.p-inputnumber),
+.jr-lines-table__price :deep(.p-inputtext) {
+  min-width: 8rem;
+  width: 100%;
+}
+
+.jr-lines-table__product :deep(.p-select) {
+  min-width: 0;
+  width: 100%;
+}
+
+@media (min-width: 1024px) and (max-width: 1199.98px) {
+  /* iPad Pro portrait (~1032) and small laptops: favor Product + Unit Price. */
+  .jr-lines-table {
+    min-width: 66rem;
+  }
+
+  .jr-lines-table__product {
+    min-width: 18rem;
+    width: 28%;
+  }
+
+  .jr-lines-table__price {
+    min-width: 9rem;
+    width: 10rem;
+  }
 }
 
 .jr-lines-table__serial,

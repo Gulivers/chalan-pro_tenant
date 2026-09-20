@@ -91,7 +91,7 @@
 
 .jr-shell-sidebar .p-sidebar-menu-button,
 .jr-shell-sidebar .p-sidebar-menu-sub-button {
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
   color: var(--color-jr-text);
   font-weight: 500;
 }
@@ -388,7 +388,7 @@
   margin: 0;
   padding: 0.35rem 0.5rem;
   border: 0;
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
   background: transparent;
   color: var(--color-jr-text);
   font: inherit;
@@ -472,7 +472,7 @@
   height: 2.25rem;
   padding: 0.2rem 0.4rem 0.2rem 0.25rem;
   border: 1px solid transparent;
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
   background: transparent;
   color: var(--color-jr-text);
   font: inherit;
@@ -499,7 +499,7 @@
   justify-content: center;
   width: 1.5rem;
   height: 1.5rem;
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
   background: color-mix(
     in srgb,
     var(--color-jr-primary, #2563eb) 14%,
@@ -537,7 +537,7 @@
   min-height: 2.25rem;
   height: 2.25rem;
   padding: 0.2rem 0.65rem;
-  border-radius: var(--radius-jr-panel, 0.75rem);
+  border-radius: var(--radius-jr-control, 0);
   border: 1px solid transparent;
   background: transparent;
   color: var(--color-jr-text);
@@ -662,7 +662,7 @@
     min-height: 2rem;
     padding: 0.35rem 0.65rem;
     border: 0;
-    border-radius: var(--radius-jr-panel, 0.75rem);
+    border-radius: var(--radius-jr-control, 0);
     background: transparent;
     color: rgba(255, 255, 255, 0.9);
     font: inherit;
@@ -737,7 +737,7 @@
     min-height: 2.25rem;
     padding: 0.25rem 0.55rem 0.25rem 0.35rem;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: var(--radius-jr-panel, 0.75rem);
+    border-radius: var(--radius-jr-control, 0);
     background: rgba(255, 255, 255, 0.08);
     color: #ffffff;
     font: inherit;
@@ -763,7 +763,7 @@
     justify-content: center;
     width: 1.75rem;
     height: 1.75rem;
-    border-radius: var(--radius-jr-panel, 0.75rem);
+    border-radius: var(--radius-jr-control, 0);
     background: rgba(255, 255, 255, 0.16);
     border: 1px solid rgba(255, 255, 255, 0.22);
     font-size: 0.75rem;
@@ -790,7 +790,7 @@
     align-items: center;
     min-height: 2.25rem;
     padding: 0.35rem 0.75rem;
-    border-radius: var(--radius-jr-panel, 0.75rem);
+    border-radius: var(--radius-jr-control, 0);
     border: 1px solid rgba(255, 255, 255, 0.22);
     color: #ffffff;
     font-size: 0.8125rem;
@@ -816,7 +816,7 @@
   min-width: 13.75rem;
   max-width: min(18rem, calc(100vw - 1.5rem));
   padding: 0.35rem;
-  border-radius: var(--radius-jr-panel);
+  border-radius: var(--radius-jr-control, 0);
   font-family: var(--font-jr-sans);
   font-size: 0.875rem;
 }
@@ -825,7 +825,7 @@
   max-width: min(18rem, calc(100vw - 1.5rem));
   min-width: 13.75rem;
   padding: 0.35rem;
-  border-radius: var(--radius-jr-panel);
+  border-radius: var(--radius-jr-control, 0);
 }
 
 .p-menu.jr-shell-topbar-menu .p-menu-list,
@@ -889,11 +889,11 @@
 
 .p-menu.jr-shell-topbar-menu
   .p-menu-item.jr-shell-topbar-menu__heading:first-child {
-  border-radius: var(--radius-jr-panel) var(--radius-jr-panel) 0 0;
+  border-radius: 0;
 }
 
 .p-menu.jr-shell-topbar-menu .p-menu-item.jr-shell-topbar-menu__name {
-  border-radius: 0 0 var(--radius-jr-panel) var(--radius-jr-panel);
+  border-radius: 0;
 }
 
 .p-menu.jr-shell-topbar-menu
@@ -1385,7 +1385,7 @@
     width: 2.25rem;
     height: 2.25rem;
     border: 1px solid var(--color-jr-border);
-    border-radius: var(--radius-jr-panel, 0.75rem);
+    border-radius: var(--radius-jr-control, 0);
     background: var(--color-jr-surface);
     color: var(--color-jr-text);
     cursor: pointer;
@@ -1417,7 +1417,7 @@
     min-width: 2.25rem;
     gap: 0.35rem;
     padding: 0 0.55rem;
-    border-radius: var(--radius-jr-panel, 0.75rem);
+    border-radius: var(--radius-jr-control, 0);
     font-family: var(--font-jr-sans);
     font-size: 0.75rem;
     font-weight: 700;
