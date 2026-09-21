@@ -104,7 +104,65 @@ class WorkAccountSerializer(serializers.ModelSerializer):
         if ctx: 
             parts.append("• " + " • ".join(ctx))
         return " ".join(parts)
-            
+
+
+class WorkAccountListSerializer(serializers.ModelSerializer):
+    """
+    Listado ligero: sin supervisor/area_manager (N+1 caro por fila).
+    Suficiente para tablas, selectors y options.
+    """
+    builder_name = serializers.CharField(source="builder.name", read_only=True)
+    job_name = serializers.CharField(source="job.name", read_only=True)
+    house_model_name = serializers.CharField(source="house_model.name", read_only=True)
+    default_price_type_name = serializers.SerializerMethodField()
+    display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = WorkAccount
+        fields = [
+            "id",
+            "title",
+            "builder",
+            "builder_name",
+            "job",
+            "job_name",
+            "house_model",
+            "house_model_name",
+            "lot",
+            "address",
+            "city",
+            "state",
+            "zipcode",
+            "default_price_type",
+            "default_price_type_name",
+            "notes",
+            "is_active",
+            "created_by",
+            "created_at",
+            "display",
+        ]
+
+    def get_default_price_type_name(self, obj):
+        if obj.default_price_type_id:
+            return obj.default_price_type.name
+        return None
+
+    def get_display(self, obj):
+        parts = [obj.title]
+        ctx = []
+        if obj.builder_id and getattr(obj, "builder", None):
+            ctx.append(obj.builder.name)
+        if obj.job_id and getattr(obj, "job", None):
+            ctx.append(obj.job.name)
+        if obj.house_model_id and getattr(obj, "house_model", None):
+            ctx.append(obj.house_model.name)
+        if obj.lot:
+            ctx.append(f"Lot {obj.lot}")
+        ctx = [p for p in ctx if p]
+        if ctx:
+            parts.append("• " + " • ".join(ctx))
+        return " ".join(parts)
+
 
 class PartySerializer(serializers.ModelSerializer):
     # IDs de relaciones (simple y performante para list/create/update)

@@ -208,6 +208,7 @@
 </template>
 
 <script>
+import { getAccessToken } from '@/auth/tokenHelpers';
 import {
   computed,
   getCurrentInstance,
@@ -595,11 +596,11 @@ export default {
     };
 
     const connectWebSocket = async () => {
-      const token = localStorage.getItem("authToken");
+      const token = getAccessToken();
       if (!token) return;
 
       try {
-        const res = await axios.get("/api/user_detail/");
+        const res = await axios.get("/api/auth/me/");
         const userId = res.data?.id;
         if (!userId) return;
 

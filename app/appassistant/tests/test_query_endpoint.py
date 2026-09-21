@@ -13,7 +13,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.test import override_settings
 from django_tenants.test.cases import TenantTestCase
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from appassistant.models import AssistantQueryLog
@@ -41,8 +40,7 @@ class AssistantQueryEndpointTests(TenantTestCase):
             email='assistant@example.com',
             password='testpass123',
         )
-        # appcore signal creates Token on user save; do not force-insert again.
-        self.token, _ = Token.objects.get_or_create(user=self.user)
+        # JWT era: force_authenticate does not need a DRF Token row.
         # Unsupported message avoids Document spend queries in this gate suite.
         self.payload = {
             'schema_version': '1',
@@ -67,7 +65,7 @@ class AssistantQueryEndpointTests(TenantTestCase):
         if user is None:
             force_authenticate(request, user=AnonymousUser())
         else:
-            force_authenticate(request, user=user, token=getattr(user, 'auth_token', None))
+            force_authenticate(request, user=user)
         return self.view(request)
 
     def test_unauthenticated_returns_401(self):

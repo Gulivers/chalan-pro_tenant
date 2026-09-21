@@ -703,7 +703,8 @@ export default {
 
 :deep(.jr-toolbar__actions .jr-serialized-list__entries.p-select),
 :deep(.jr-toolbar__actions .jr-serialized-list__entries.jr-control) {
-  width: 4.75rem;
+  width: 6.25rem;
+  min-width: 6.25rem;
   flex: 0 0 auto;
 }
 

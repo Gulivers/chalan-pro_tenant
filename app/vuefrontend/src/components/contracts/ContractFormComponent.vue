@@ -600,7 +600,7 @@ export default {
           ],
           validationErrors: {},
           _syncingFromWorkAccount: false,
-          /** From public.tenants_tenant.client_type via /api/user_detail/ */
+          /** From public.tenants_tenant.client_type via /api/auth/me/ */
           tenantClientType: null,
       };
   },

@@ -1,17 +1,37 @@
-// Interceptor de solicitudes de Axios para manejar la autenticación
+// Interceptor de solicitudes de Axios para manejar la autenticación JWT
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useAuthStore } from '../stores/auth';
+import authService from '../auth/authService';
 import router from '../router';
 
+let refreshPromise = null;
+
+function isPublicPath() {
+  if (typeof window === 'undefined') return false;
+  const currentPath = window.location.pathname || '';
+  const publicPaths = ['/onboarding', '/login', '/reset_password', '/reset-password-confirm'];
+  if (publicPaths.some((path) => currentPath.startsWith(path))) return true;
+  try {
+    const currentRoute = router.currentRoute?.value;
+    const publicRoutes = ['onboarding', 'login', 'reset_password', 'reset_password_confirm'];
+    if (currentRoute && publicRoutes.includes(currentRoute.name)) return true;
+  } catch (_) {
+    /* ignore */
+  }
+  const urlLower = currentPath.toLowerCase();
+  return urlLower.includes('onboarding') || urlLower.includes('login') || urlLower.includes('reset');
+}
+
 export function setupAxiosInterceptors() {
-  // Interceptor de solicitud
+  axios.defaults.withCredentials = true;
+
   axios.interceptors.request.use(
     (config) => {
-      const token = localStorage.getItem('authToken');
-
+      const authStore = useAuthStore();
+      const token = authStore.accessToken?.value;
       if (token) {
-        config.headers['Authorization'] = `Token ${token}`;
+        config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
     },
@@ -19,107 +39,75 @@ export function setupAxiosInterceptors() {
   );
 
   const api_endpoints = [
-    { 'route': '/api/contract/', 'method': 'PUT' },
-    { 'route': '/api/contract/', 'method': 'POST' },
-    { 'route': '/api/contract/', 'method': 'DELETE' },
-    // { 'route': '/api/contract/', 'method': 'GET' },
-    { 'route': '/api/contractdetails/', 'method': 'PUT' },
-    { 'route': '/api/workprice/', 'method': 'PUT' },
-    { 'route': '/api/workprice/', 'method': 'POST' },
-    { 'route': '/api/workprice/', 'method': 'DELETE' },
-    // { 'route': '/api/workprice/', 'method': 'GET' }
+    { route: '/api/contract/', method: 'PUT' },
+    { route: '/api/contract/', method: 'POST' },
+    { route: '/api/contract/', method: 'DELETE' },
+    { route: '/api/contractdetails/', method: 'PUT' },
+    { route: '/api/workprice/', method: 'PUT' },
+    { route: '/api/workprice/', method: 'POST' },
+    { route: '/api/workprice/', method: 'DELETE' },
   ];
 
-  // Función para verificar si la ruta y el método están en la lista
   function shouldLogAction(url, method) {
-    return api_endpoints.some(endpoint => url.includes(endpoint.route) && method.toUpperCase() === endpoint.method);
+    return api_endpoints.some(
+      (endpoint) => url.includes(endpoint.route) && method.toUpperCase() === endpoint.method
+    );
   }
 
-  // Interceptor de respuesta
   axios.interceptors.response.use(
-    response => {
-
+    (response) => {
       const config = response.config;
-      // console.log("config->", config);
-      // Verificamos si la URL y el método están en la lista api_endpoints
       if (shouldLogAction(config.url, config.method)) {
         logUserAction(config, response.data);
       }
-
       return response;
     },
-    async error => {
+    async (error) => {
       const originalRequest = error?.config;
       const status = error?.response?.status;
       const data = error?.response?.data || {};
       const method = (originalRequest?.method || '').toUpperCase();
+      const requestUrl = originalRequest?.url || '';
 
-      // 401 → limpiar y redirigir a login (excepto en rutas públicas o endpoints opcionales)
-      if (status === 401 && !originalRequest?._retry) {
+      const skipRefresh =
+        requestUrl.includes('/api/auth/login/') ||
+        requestUrl.includes('/api/auth/refresh/') ||
+        requestUrl.includes('/api/auth/logout/') ||
+        requestUrl.includes('/api/auth/password/');
+
+      // 401 → try one silent refresh, then redirect
+      if (status === 401 && originalRequest && !originalRequest._retry && !skipRefresh) {
         originalRequest._retry = true;
-        
-        // Endpoints opcionales que pueden devolver 401 sin causar redirección
-        const optionalEndpoints = ['/api/unread-chat-counts/', '/api/user_detail/', '/api/validate-token/'];
-        const requestUrl = originalRequest?.url || '';
-        const isOptionalEndpoint = optionalEndpoints.some(endpoint => requestUrl.includes(endpoint));
-        
-        // Verificar si estamos en una ruta pública usando window.location.pathname (más confiable)
-        // IMPORTANTE: Verificar PRIMERO window.location.pathname ya que es más confiable
-        let isPublicRoute = false;
-        let currentPath = '';
-        let routeName = '';
-        
-        if (typeof window !== 'undefined') {
-          currentPath = window.location.pathname || '';
-          const publicPaths = ['/onboarding', '/login', '/reset_password', '/reset-password-confirm'];
-          isPublicRoute = publicPaths.some(path => currentPath.startsWith(path));
-          
-          // También verificar el router si está disponible (como fallback)
-          if (!isPublicRoute) {
-            try {
-              const currentRoute = router.currentRoute?.value;
-              routeName = currentRoute?.name || 'unknown';
-              const publicRoutes = ['onboarding', 'login', 'reset_password', 'reset_password_confirm'];
-              isPublicRoute = currentRoute && publicRoutes.includes(currentRoute.name);
-            } catch (e) {
-              console.warn('[Axios Interceptor] Error accessing router:', e);
-            }
+
+        const optionalEndpoints = [
+          '/api/unread-chat-counts/',
+          '/api/auth/me/',
+          '/api/auth/tenant-context/',
+          '/api/auth/validate/',
+        ];
+        const isOptionalEndpoint = optionalEndpoints.some((endpoint) =>
+          requestUrl.includes(endpoint)
+        );
+        const isPublicRoute = isPublicPath();
+
+        try {
+          if (!refreshPromise) {
+            refreshPromise = authService.refreshAccess().finally(() => {
+              refreshPromise = null;
+            });
           }
-          
-          // Verificación adicional: si la URL contiene "onboarding" o "login", considerarla pública
-          if (!isPublicRoute && currentPath) {
-            const urlLower = currentPath.toLowerCase();
-            if (urlLower.includes('onboarding') || urlLower.includes('login') || urlLower.includes('reset')) {
-              isPublicRoute = true;
-              console.log('[Axios Interceptor] Detected public route from URL pattern:', currentPath);
-            }
+          const newAccess = await refreshPromise;
+          originalRequest.headers.Authorization = `Bearer ${newAccess}`;
+          return axios(originalRequest);
+        } catch (_) {
+          if (!isOptionalEndpoint && !isPublicRoute) {
+            useAuthStore().clearSession();
+            router.push('/login');
           }
+          return Promise.reject(error);
         }
-        
-        // Log detallado para depuración
-        console.log('[Axios Interceptor] 401 Error:', {
-          requestUrl,
-          currentPath,
-          routeName,
-          isOptionalEndpoint,
-          isPublicRoute,
-          willRedirect: !isOptionalEndpoint && !isPublicRoute
-        });
-        
-        // Solo limpiar localStorage y redirigir si NO es un endpoint opcional y NO es una ruta pública
-        if (!isOptionalEndpoint && !isPublicRoute) {
-          console.log('[Axios Interceptor] Redirecting to login - protected route without auth');
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('userPermissions');
-          router.push('/login');
-        } else {
-          console.log('[Axios Interceptor] NOT redirecting - public route or optional endpoint');
-        }
-        
-        return Promise.reject(error);
       }
 
-      // 403 → workspace deactivated
       if (status === 403 && data.code === 'tenant_inactive') {
         if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/account-suspended')) {
           router.push(data.redirect || '/account-suspended');
@@ -127,7 +115,6 @@ export function setupAxiosInterceptors() {
         return Promise.reject(error);
       }
 
-      // 402 → subscription required
       if (status === 402 && data.code === 'subscription_required') {
         const billingPath = data.redirect || '/billing';
         if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/billing')) {
@@ -136,8 +123,6 @@ export function setupAxiosInterceptors() {
         return Promise.reject(error);
       }
 
-      // 👇 NUEVO: Manejo global del PROTECT (DELETE → 409 Conflict)
-      // Backend debe devolver: { detail: "...", code: "in_use" }
       if (
         method === 'DELETE' &&
         status === 409 &&
@@ -150,13 +135,8 @@ export function setupAxiosInterceptors() {
         );
       }
 
-      // 👇 NUEVO: Manejo silencioso de errores 404 para referencias rotas
-      // No mostrar errores al usuario para referencias que no existen
       if (status === 404) {
-        const url = originalRequest?.url || '';
-        // Solo logear en consola, no mostrar al usuario
-        console.warn(`Resource not found (404): ${url}`);
-        // No mostrar SweetAlert para errores 404
+        console.warn(`Resource not found (404): ${requestUrl}`);
         return Promise.reject(error);
       }
 
@@ -165,37 +145,33 @@ export function setupAxiosInterceptors() {
   );
 }
 
-// Función para registrar la acción del usuario
 function logUserAction(config, data) {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    axios.post('/api/log-action/', {
-      action: config.method.toUpperCase(),
-      model_name: extractModelName(config.url), // Extraemos el nombre del modelo
-      object_id: data.id || null, // ID del objeto, si está disponible
-      details: `Action logged at ${config.url} with method ${config.method.toUpperCase()}`
-    }, {
-      headers: {
-        Authorization: `Token ${token}`,
-        'Content-Type': 'application/json'
+  const authStore = useAuthStore();
+  const token = authStore.accessToken?.value;
+  if (!token) return;
+  axios
+    .post(
+      '/api/log-action/',
+      {
+        action: config.method.toUpperCase(),
+        model_name: extractModelName(config.url),
+        object_id: data.id || null,
+        details: `Action logged at ${config.url} with method ${config.method.toUpperCase()}`,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       }
-    })
-      .then(response => {
-        console.log("Action logged:", response.data);
-      })
-      .catch(error => {
-        console.error("Error logging the action:", error);
-      });
-  } else {
-    console.error("Token not found. The user is not authenticated.");
-  }
+    )
+    .catch(() => {});
 }
 
-// Función para extraer el nombre del modelo de la URL
 function extractModelName(url) {
   if (url.includes('/api/contract/')) return 'Contract';
   if (url.includes('/api/contractdetails/')) return 'ContractDetails';
   if (url.includes('/api/workprice/')) return 'WorkPrice';
   if (url.includes('/api/events/')) return 'Event';
-  return 'UnknownModel'; // Modelo desconocido si no se encuentra
+  return 'UnknownModel';
 }

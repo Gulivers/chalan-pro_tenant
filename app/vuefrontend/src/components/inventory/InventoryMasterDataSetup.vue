@@ -97,6 +97,7 @@
 </template>
 
 <script>
+import { getAccessToken } from '@/auth/tokenHelpers';
 import { defineComponent } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -137,10 +138,10 @@ export default defineComponent({
       try {
         this.loading = true;
         this.error = null;
-        const token = localStorage.getItem("authToken");
+        const token = getAccessToken();
         const response = await axios.get("/api/master-data/preview/", {
           headers: {
-            Authorization: `Token ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         this.seedDone = response.data.seed_done || false;
@@ -160,10 +161,10 @@ export default defineComponent({
     async downloadExcel() {
       try {
         this.downloading = true;
-        const token = localStorage.getItem("authToken");
+        const token = getAccessToken();
         const response = await axios.get("/api/master-data/download-excel/", {
           headers: {
-            Authorization: `Token ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           responseType: "blob",
         });
@@ -215,13 +216,13 @@ export default defineComponent({
 
       try {
         this.importing = true;
-        const token = localStorage.getItem("authToken");
+        const token = getAccessToken();
         const response = await axios.post(
           "/api/master-data/import/",
           { confirm: true },
           {
             headers: {
-              Authorization: `Token ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );

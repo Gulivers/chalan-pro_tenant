@@ -1,12 +1,15 @@
 import { createRouter, createWebHistory } from "vue-router";
 import axios from "axios";
 import { fetchBillingStatus } from "@/api/billing";
+import authService from "@/auth/authService";
+import { useAuthStore } from "@/stores/auth";
+import { hasAuthSession } from "@/auth/tokenHelpers";
 
 // ───────────────────────────────────────────────────────────
 // LAZY IMPORTS (ordenado por módulos)
 // ───────────────────────────────────────────────────────────
 
-const LoginView = () => import("@views/LoginView.vue");
+const LoginView = () => import("@/components/auth/LoginView.vue");
 const HomeView = () => import("@views/HomeView.vue");
 const AboutView = () => import("@/views/AboutView.vue");
 const OnboardingView = () => import("@views/OnboardingView.vue");
@@ -15,9 +18,9 @@ const BillingSuccessView = () => import("@views/BillingSuccessView.vue");
 const JobMap = () => import("@components/houses/JobMap.vue");
 const SupervisorCommunitiesList = () =>
   import("@components/houses/SupervisorCommunitiesList.vue");
-const PasswordReset = () => import("@components/PasswordReset.vue");
+const PasswordReset = () => import("@/components/auth/PasswordReset.vue");
 const PasswordResetConfirm = () =>
-  import("@components/PasswordResetConfirm.vue");
+  import("@/components/auth/PasswordResetConfirm.vue");
 
 // Contracts
 const ContractListView = () => import("@views/contract/ContractListView.vue");
@@ -120,7 +123,7 @@ const routes = [
     path: "/login",
     name: "login",
     component: LoginView,
-    meta: { hideNavbar: true },
+    meta: { hideNavbar: true, hideFooter: true, requiresAuth: false },
   },
   {
     path: "/onboarding",
@@ -138,9 +141,7 @@ const routes = [
     path: "/logout",
     name: "logout",
     beforeEnter: (to, from, next) => {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("userPermissions");
-      next({ name: "login" });
+      authService.handleLogout().finally(() => next({ name: "login" }));
     },
   },
   {
@@ -162,13 +163,13 @@ const routes = [
     path: "/reset_password",
     name: "reset_password",
     component: PasswordReset,
-    meta: { hideNavbar: true, requiresAuth: false },
+    meta: { hideNavbar: true, hideFooter: true, requiresAuth: false },
   },
   {
     path: "/reset-password-confirm",
     name: "reset_password_confirm",
     component: PasswordResetConfirm,
-    meta: { hideNavbar: true, requiresAuth: false },
+    meta: { hideNavbar: true, hideFooter: true, requiresAuth: false },
   },
   {
     path: "/",
@@ -207,12 +208,14 @@ const routes = [
   {
     path: "/account-suspended",
     name: "account-suspended",
-    component: () => import("@/views/AccountSuspendedView.vue"),
+    component: () => import("@/components/auth/AccountSuspendedView.vue"),
     meta: {
       requiresAuth: true,
       requiredPermissions: [],
       billingExempt: true,
       tenantAccessExempt: true,
+      hideNavbar: true,
+      hideFooter: true,
     },
   },
   {
@@ -1172,36 +1175,29 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
-  const authToken = localStorage.getItem("authToken");
-  console.log(`Auth Token in Router>>: ${authToken ? "true" : "false"}`);
-  console.log(
-    `Navigating to: ${to.name || to.path}, requiresAuth: ${to.matched.some(
-      (record) => record.meta.requiresAuth
-    )}`
-  );
   const userPermissions = JSON.parse(
     localStorage.getItem("userPermissions") || "[]"
   );
-  //console.log(`User Permissions in Router>>: ${JSON.stringify(userPermissions)}`);
 
-  // Si la ruta NO requiere autenticación, permitir acceso inmediatamente
   if (!to.matched.some((record) => record.meta.requiresAuth)) {
-    console.log("Route does not require auth, allowing access");
     next();
     return;
   }
 
-  // Solo validar token si la ruta requiere autenticación
-  if (!authToken) {
-    console.log("No auth token, redirecting to login");
+  let access = null;
+  try {
+    access = await authService.ensureAccess();
+  } catch (_) {
+    access = null;
+  }
+
+  if (!access && !hasAuthSession()) {
     next({ name: "login" });
     return;
   }
 
   try {
-    const response = await axios.get("/api/validate-token/", {
-      headers: { Authorization: `Token ${authToken}` },
-    });
+    const response = await axios.get("/api/auth/validate/");
 
     if (response.data.valid) {
       const requiredPermissions = to.meta.requiredPermissions || [];
@@ -1213,7 +1209,6 @@ router.beforeEach(async (to, from, next) => {
         requiredPermissions.every((permission) =>
           userPermissionsSet.has(permission)
         );
-      console.log("Has permission:", hasPermission);
 
       if (hasPermission) {
         const accessExempt = to.matched.some(
@@ -1248,13 +1243,11 @@ router.beforeEach(async (to, from, next) => {
         next(false);
       }
     } else {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("userPermissions");
+      useAuthStore().clearSession();
       next({ name: "login" });
     }
   } catch (error) {
     console.error("Error validating token:", error);
-    // Si estamos en una ruta pública, no redirigir
     const publicRoutes = [
       "onboarding",
       "onboarding-verify",
@@ -1263,8 +1256,7 @@ router.beforeEach(async (to, from, next) => {
       "reset_password_confirm",
     ];
     if (!publicRoutes.includes(to.name)) {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("userPermissions");
+      useAuthStore().clearSession();
       next({ name: "login" });
     } else {
       next();

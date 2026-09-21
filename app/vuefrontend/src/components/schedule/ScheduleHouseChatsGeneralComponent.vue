@@ -341,7 +341,7 @@ export default {
     },
     async getAuthenticatedUser() {
       try {
-        const response = await axios.get("/api/user_detail/");
+        const response = await axios.get("/api/auth/me/");
         return response.data;
       } catch (error) {
         console.error("Error fetching authenticated user:", error);

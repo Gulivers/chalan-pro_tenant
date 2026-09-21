@@ -33,6 +33,7 @@
 </template>
 
 <script>
+import { getAccessToken } from '@/auth/tokenHelpers';
 import { defineComponent } from "vue";
 import axios from "axios";
 import { JRPage, JRPageHeader, JRSection } from "@ui";
@@ -82,7 +83,7 @@ export default defineComponent({
     },
 
     logUserAction(action, model_name, object_id, details) {
-      const token = localStorage.getItem("authToken");
+      const token = getAccessToken();
       if (token) {
         axios
           .post(
@@ -95,7 +96,7 @@ export default defineComponent({
             },
             {
               headers: {
-                Authorization: `Token ${token}`,
+                Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
               },
             }

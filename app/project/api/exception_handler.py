@@ -6,6 +6,7 @@ from django.db import IntegrityError
 from rest_framework.views import exception_handler as drf_exception_handler
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import Throttled
 from itertools import islice
 import logging
 
@@ -84,8 +85,19 @@ def custom_exception_handler(exc, context):
       - ProtectedError → 409 (in use) con ejemplos
       - IntegrityError (FK/constraint) → 409 (in use)
       - IntegrityError (UNIQUE) → 400 con errores por campo (para formularios)
+      - Throttled → 429 con code estable
       - Delega el resto al handler por defecto de DRF
     """
+    if isinstance(exc, Throttled):
+        wait = getattr(exc, 'wait', None)
+        payload = {
+            'code': getattr(exc, 'default_code', None) or 'throttled',
+            'detail': str(exc.detail) if exc.detail is not None else 'Request was throttled.',
+        }
+        if wait is not None:
+            payload['wait'] = wait
+        return Response(payload, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
     # --- django.core.exceptions.ValidationError (p. ej. Model.clean fuera del serializer)
     if isinstance(exc, DjangoValidationError):
         payload = _django_validation_error_payload(exc)

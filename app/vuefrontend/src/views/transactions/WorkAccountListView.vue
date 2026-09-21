@@ -387,6 +387,8 @@ export default {
     const { proxy } = getCurrentInstance();
 
     const workAccounts = ref([]);
+    const totalRows = ref(0);
+    const stats = ref({ total: 0, active: 0, inactive: 0 });
     const isLoading = ref(true);
     const loadError = ref(false);
     const currentPage = ref(1);
@@ -397,6 +399,7 @@ export default {
     const toolsMenu = ref(null);
     const toolsMenuOpen = ref(false);
     let searchTimer = null;
+    let fetchSeq = 0;
 
     const initialViewport = readViewport();
     const isMobile = ref(initialViewport.isMobile);
@@ -412,70 +415,8 @@ export default {
       { value: 100, label: "100" },
     ];
 
-    const filteredItems = computed(() => {
-      const q = (filter.value || "").trim().toLowerCase();
-      if (!q) return workAccounts.value;
-      return workAccounts.value.filter((item) => {
-        const hay = [
-          item.title,
-          item.builder_name,
-          item.job_name,
-          item.house_model_name,
-          item.lot,
-          item.address,
-          item.city,
-          item.zipcode,
-        ].map((v) => (v || "").toString().toLowerCase());
-        return hay.some((t) => t.includes(q));
-      });
-    });
-
-    const sortedItems = computed(() => {
-      const items = [...filteredItems.value];
-      const field = sortField.value;
-      const dir = sortOrder.value === 1 ? 1 : -1;
-      if (!field) return items;
-
-      items.sort((a, b) => {
-        let va = a?.[field];
-        let vb = b?.[field];
-        if (field === "is_active") {
-          va = a?.is_active ? 1 : 0;
-          vb = b?.is_active ? 1 : 0;
-        }
-        if (field === "created_at") {
-          va = a?.created_at ? new Date(a.created_at).getTime() : 0;
-          vb = b?.created_at ? new Date(b.created_at).getTime() : 0;
-        }
-        if (va == null && vb == null) return 0;
-        if (va == null) return 1;
-        if (vb == null) return -1;
-        if (typeof va === "number" && typeof vb === "number") {
-          return (va - vb) * dir;
-        }
-        return String(va).localeCompare(String(vb), undefined, {
-          sensitivity: "base",
-          numeric: true,
-        }) * dir;
-      });
-      return items;
-    });
-
-    const totalRows = computed(() => sortedItems.value.length);
+    const pageItems = computed(() => workAccounts.value);
     const tableFirst = computed(() => (currentPage.value - 1) * perPage.value);
-    const pageItems = computed(() => {
-      const start = tableFirst.value;
-      return sortedItems.value.slice(start, start + perPage.value);
-    });
-
-    const stats = computed(() => {
-      const items = filteredItems.value;
-      return {
-        total: items.length,
-        active: items.filter((i) => i.is_active).length,
-        inactive: items.filter((i) => !i.is_active).length,
-      };
-    });
 
     const tableMinWidth = computed(() =>
       isTablet.value ? "min-width: 36rem" : "min-width: 48rem"
@@ -516,21 +457,56 @@ export default {
       }
     };
 
+    const getOrderingFromSort = () => {
+      const fieldMap = {
+        title: "title",
+        builder_name: "builder__name",
+        job_name: "job__name",
+        house_model_name: "house_model__name",
+        lot: "lot",
+        address: "address",
+        city: "city",
+        is_active: "is_active",
+        created_at: "created_at",
+        id: "id",
+      };
+      const djangoField = fieldMap[sortField.value] || "created_at";
+      return sortOrder.value === 1 ? djangoField : `-${djangoField}`;
+    };
+
     const fetchWorkAccounts = async () => {
+      const seq = ++fetchSeq;
       if (!isLoading.value) isLoading.value = true;
       try {
-        const { data } = await axios.get(ENDPOINT, {
-          params: { ordering: "-created_at", page_size: 500 },
-        });
+        const params = {
+          page: currentPage.value,
+          page_size: perPage.value,
+          ordering: getOrderingFromSort(),
+        };
+        const q = (filter.value || "").trim();
+        if (q) params.search = q;
+
+        const { data } = await axios.get(ENDPOINT, { params });
+        if (seq !== fetchSeq) return;
+
         workAccounts.value = normalizeList(data);
+        totalRows.value = Number(data?.count ?? workAccounts.value.length) || 0;
+        stats.value = {
+          total: Number(data?.stats?.total ?? totalRows.value) || 0,
+          active: Number(data?.stats?.active ?? 0) || 0,
+          inactive: Number(data?.stats?.inactive ?? 0) || 0,
+        };
         loadError.value = false;
       } catch (err) {
+        if (seq !== fetchSeq) return;
         console.error("Error fetching work accounts", err);
         loadError.value = true;
         workAccounts.value = [];
+        totalRows.value = 0;
+        stats.value = { total: 0, active: 0, inactive: 0 };
         proxy?.notifyError?.("Error loading work accounts.");
       } finally {
-        isLoading.value = false;
+        if (seq === fetchSeq) isLoading.value = false;
       }
     };
 
@@ -540,10 +516,14 @@ export default {
     };
 
     const onTablePage = (event) => {
-      currentPage.value = (event.page ?? 0) + 1;
-      if (event.rows && event.rows !== perPage.value) {
-        perPage.value = event.rows;
+      const nextRows =
+        event.rows != null && event.rows !== ""
+          ? Number(event.rows)
+          : perPage.value;
+      if (Number.isFinite(nextRows) && nextRows > 0 && nextRows !== perPage.value) {
+        perPage.value = nextRows;
       }
+      currentPage.value = (event.page ?? 0) + 1;
     };
 
     const onTableSort = (event) => {
@@ -617,10 +597,10 @@ export default {
         async () => {
           try {
             await axios.delete(`${ENDPOINT}${id}/`);
-            workAccounts.value = workAccounts.value.filter((wa) => wa.id !== id);
             proxy?.notifyToastSuccess?.(
               "The work account has been deleted."
             );
+            await fetchWorkAccounts();
           } catch (err) {
             console.error("Error deleting work account", err);
             const status = err?.response?.status;
@@ -673,14 +653,23 @@ export default {
       }
     });
 
-    watch(perPage, () => {
-      currentPage.value = 1;
+    watch([currentPage, perPage, sortField, sortOrder], (next, prev) => {
+      // Changing page size while not on page 1: reset to page 1, then that change loads.
+      if (prev && next[1] !== prev[1] && next[0] !== 1) {
+        currentPage.value = 1;
+        return;
+      }
+      fetchWorkAccounts();
     });
 
     watch(filter, () => {
       if (searchTimer) clearTimeout(searchTimer);
       searchTimer = setTimeout(() => {
-        currentPage.value = 1;
+        if (currentPage.value !== 1) {
+          currentPage.value = 1;
+        } else {
+          fetchWorkAccounts();
+        }
       }, 300);
     });
 
@@ -792,8 +781,19 @@ export default {
 
 :deep(.jr-toolbar__actions .jr-wa-list__entries.p-select),
 :deep(.jr-toolbar__actions .jr-wa-list__entries.jr-control) {
-  width: 4.75rem;
+  width: 6.25rem;
+  min-width: 6.25rem;
   flex: 0 0 auto;
+}
+
+:deep(.jr-toolbar__actions .jr-wa-list__entries .p-select-label) {
+  overflow: visible;
+  text-overflow: clip;
+}
+
+:deep(.jr-toolbar__actions .jr-wa-list__entries .p-select-label) {
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .jr-wa-list__loading {

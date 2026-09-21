@@ -6,7 +6,7 @@ from rest_framework.permissions import (
 )
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.authentication import TokenAuthentication
+from appauth.authentication import TenantJWTAuthentication
 from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action, api_view, permission_classes
 from django.db.models import (
@@ -622,7 +622,7 @@ def export_schedule_excel(request):
 class AbsenceReasonViewSet(viewsets.ModelViewSet):
     queryset = AbsenceReason.objects.filter(is_active=True)
     serializer_class = AbsenceReasonSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     
     

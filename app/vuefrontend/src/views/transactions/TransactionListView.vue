@@ -315,6 +315,7 @@
 </template>
 
 <script>
+import { getAccessToken } from '@/auth/tokenHelpers';
 import axios from "axios";
 import {
   ref,
@@ -568,7 +569,7 @@ export default {
       try {
         const response = await axios.get(`/api/documents/${documentId}/pdf/`, {
           headers: {
-            Authorization: `Token ${localStorage.getItem("authToken")}`,
+            Authorization: `Bearer ${getAccessToken()}`,
           },
         });
 
@@ -861,7 +862,8 @@ export default {
 
 :deep(.jr-toolbar__actions .jr-tx-list__entries.p-select),
 :deep(.jr-toolbar__actions .jr-tx-list__entries.jr-control) {
-  width: 4.75rem;
+  width: 6.25rem;
+  min-width: 6.25rem;
   flex: 0 0 auto;
 }
 
