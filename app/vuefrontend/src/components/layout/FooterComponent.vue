@@ -120,6 +120,7 @@
 </template>
 
 <script>
+import { getAccessToken } from '@/auth/tokenHelpers';
 import { h } from "vue";
 
 const stroke = {
@@ -245,7 +246,7 @@ export default {
       );
     },
     loadFooterBranding() {
-      const token = localStorage.getItem("authToken");
+      const token = getAccessToken();
       if (!token) {
         this.tenantLogoUrl = null;
         this.tenantName = null;

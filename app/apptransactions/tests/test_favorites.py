@@ -342,12 +342,10 @@ class TransactionFavoriteViewSetTests(TestCase):
     def test_user_can_only_see_own_favorites(self):
         """Test that users can only see their own favorites"""
         from rest_framework.test import APIClient
-        from rest_framework.authtoken.models import Token
-        
-        # Create token for user
-        token = Token.objects.create(user=self.user)
+        from appauth.testing import authenticate_api_client
+
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        authenticate_api_client(client, self.user)
         
         # Get favorites
         response = client.get('/api/transaction-favorites/')
@@ -359,12 +357,10 @@ class TransactionFavoriteViewSetTests(TestCase):
     def test_user_cannot_access_other_user_favorites(self):
         """Test that users cannot access other users' favorites"""
         from rest_framework.test import APIClient
-        from rest_framework.authtoken.models import Token
-        
-        # Create token for other user
-        token = Token.objects.create(user=self.other_user)
+        from appauth.testing import authenticate_api_client
+
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        authenticate_api_client(client, self.other_user)
         
         # Try to access favorite created by first user
         response = client.get(f'/api/transaction-favorites/{self.favorite.id}/')
@@ -374,12 +370,10 @@ class TransactionFavoriteViewSetTests(TestCase):
     def test_create_favorite_from_transaction(self):
         """Test creating favorite from transaction data"""
         from rest_framework.test import APIClient
-        from rest_framework.authtoken.models import Token
-        
-        # Create token for user
-        token = Token.objects.create(user=self.user)
+        from appauth.testing import authenticate_api_client
+
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        authenticate_api_client(client, self.user)
         
         # Data for creating favorite
         data = {
@@ -401,12 +395,10 @@ class TransactionFavoriteViewSetTests(TestCase):
     def test_import_favorite(self):
         """Test importing favorite data"""
         from rest_framework.test import APIClient
-        from rest_framework.authtoken.models import Token
-        
-        # Create token for user
-        token = Token.objects.create(user=self.user)
+        from appauth.testing import authenticate_api_client
+
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        authenticate_api_client(client, self.user)
         
         # Import favorite
         response = client.get(f'/api/transaction-favorites/{self.favorite.id}/import/')
@@ -419,12 +411,10 @@ class TransactionFavoriteViewSetTests(TestCase):
     def test_update_favorite_from_transaction(self):
         """Test updating favorite with new transaction data"""
         from rest_framework.test import APIClient
-        from rest_framework.authtoken.models import Token
-        
-        # Create token for user
-        token = Token.objects.create(user=self.user)
+        from appauth.testing import authenticate_api_client
+
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        authenticate_api_client(client, self.user)
         
         # New transaction data
         new_data = {
@@ -443,12 +433,10 @@ class TransactionFavoriteViewSetTests(TestCase):
     def test_soft_delete_favorite(self):
         """Test soft deleting a favorite"""
         from rest_framework.test import APIClient
-        from rest_framework.authtoken.models import Token
-        
-        # Create token for user
-        token = Token.objects.create(user=self.user)
+        from appauth.testing import authenticate_api_client
+
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        authenticate_api_client(client, self.user)
         
         # Delete favorite
         response = client.delete(f'/api/transaction-favorites/{self.favorite.id}/')

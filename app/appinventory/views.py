@@ -19,7 +19,7 @@ from rest_framework import status, viewsets
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.authentication import TokenAuthentication
+from appauth.authentication import TenantJWTAuthentication
 from rest_framework.decorators import permission_classes, action, api_view
 from rest_framework.permissions import (
     IsAuthenticated,
@@ -109,7 +109,7 @@ class DashboardView(TemplateView):
 class WarehouseViewSet(viewsets.ModelViewSet):
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
@@ -137,7 +137,7 @@ class InventoryTransferViewSet(viewsets.ModelViewSet):
         'from_warehouse', 'from_warehouse__truck', 'to_warehouse', 'to_warehouse__truck', 'created_by'
     ).order_by('-created_at')
     serializer_class = InventoryTransferSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filterset_fields = ['status', 'from_warehouse', 'to_warehouse']
     search_fields = ['description', 'from_warehouse__name', 'to_warehouse__name']
@@ -148,7 +148,7 @@ class InventoryTransferListProviderAPIView(APIView):
     Endpoint para provider pattern con paginación, search y ordering.
     Respuesta: { items: [...], totalRows: N }
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -206,7 +206,7 @@ class InventoryTransferListProviderAPIView(APIView):
 class ProductCategoryViewSet(viewsets.ModelViewSet):
     queryset = ProductCategory.objects.all()
     serializer_class = ProductCategorySerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
@@ -215,7 +215,7 @@ class UnitCategoryViewSet(viewsets.ModelViewSet):
     queryset = UnitCategory.objects.all()
     serializer_class = UnitCategorySerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
 
@@ -223,12 +223,12 @@ class UnitCategoryListAPIView(ListAPIView):
     queryset = UnitCategory.objects.all()
     serializer_class = UnitCategorySerializer
     permission_classes = [IsAuthenticated]
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
 
 class ProductBrandViewSet(viewsets.ModelViewSet):
     queryset = ProductBrand.objects.all()
     serializer_class = ProductBrandSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active', 'is_default']
@@ -237,13 +237,13 @@ class PriceTypeViewSet(viewsets.ModelViewSet):
     queryset = PriceType.objects.all()
     serializer_class = PriceTypeSerializer
     permission_classes = [IsAuthenticated]
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.select_related('unit_default', 'category').prefetch_related('images').all()
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['is_active', 'category', 'brands', 'tracking_mode']
@@ -265,7 +265,7 @@ class ProductImageViewSet(viewsets.ModelViewSet):
     """
     queryset = ProductImage.objects.select_related('product', 'assignment__brand', 'uploaded_by').all()
     serializer_class = ProductImageSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['product', 'assignment__brand', 'is_primary']
@@ -284,7 +284,7 @@ class SerializedItemViewSet(viewsets.ModelViewSet):
         'document_line', 'document_line__product',
     ).order_by('-id')
     serializer_class = SerializedItemSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['document', 'document_line', 'product', 'current_warehouse', 'status', 'condition']
@@ -338,7 +338,7 @@ class SerializedItemListProviderAPIView(APIView):
     Endpoint para provider pattern con server-side pagination, search y ordering.
     Respuesta: { items: [...], totalRows: N }
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -406,7 +406,7 @@ class ProductImagesByBrandAPIView(APIView):
     Retorna un objeto donde cada clave es el ID de la marca y el valor es un array de imágenes.
     Útil para el componente Vue con tabs por marca.
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, product_id):
@@ -499,7 +499,7 @@ class ProductListAPIView(APIView):
 class UnitOfMeasureViewSet(viewsets.ModelViewSet):
     queryset = UnitOfMeasure.objects.all()
     serializer_class = UnitOfMeasureSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
@@ -513,7 +513,7 @@ class UnitOfMeasureListAPIView(APIView):
         ])
 
 class ProductDataTableAPIView(APIView):
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -543,7 +543,7 @@ class ProductListProviderAPIView(APIView):
     """
     Endpoint para provider pattern con server-side pagination, filtering y sorting
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -646,7 +646,7 @@ def _safe_ordering(ordering_param, allowed_fields, default='-id'):
 
 
 class WarehouseListProviderAPIView(APIView):
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -676,7 +676,7 @@ class WarehouseListProviderAPIView(APIView):
 
 
 class ProductCategoryListProviderAPIView(APIView):
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -706,7 +706,7 @@ class ProductCategoryListProviderAPIView(APIView):
 
 
 class PriceTypeListProviderAPIView(APIView):
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -744,7 +744,7 @@ class PriceTypeListProviderAPIView(APIView):
 
 
 class UnitOfMeasureListProviderAPIView(APIView):
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -781,7 +781,7 @@ class UnitOfMeasureListProviderAPIView(APIView):
 
 
 class UnitCategoryListProviderAPIView(APIView):
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -815,7 +815,7 @@ class ProductListDirectAPIView(APIView):
     Endpoint que devuelve productos como array directo (sin paginación)
     para compatibilidad con frontend que espera array directo
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -874,7 +874,7 @@ class ProductBrandsListAPIView(APIView):
     """
     Endpoint para obtener las marcas disponibles para un producto específico
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, product_id):
@@ -909,7 +909,7 @@ class ProductBrandsUpdateAPIView(APIView):
     """
     Endpoint para actualizar las marcas de un producto
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request, product_id):
@@ -965,7 +965,7 @@ class ProductPurchaseCostAPIView(APIView):
     Costo de compra por producto/unidad (para margen/markup en líneas de venta).
     GET /api/products/<id>/purchase-cost/?unit=<unit_id>
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, product_id):
@@ -990,7 +990,7 @@ class ProductDefaultPriceAPIView(APIView):
     Endpoint para obtener el precio predeterminado de un producto
     Soporta selección de precio según tipo de documento (compra/venta)
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, product_id):
@@ -1099,7 +1099,7 @@ class DefaultWarehouseAPIView(APIView):
     """
     Endpoint para obtener el warehouse predeterminado
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1127,7 +1127,7 @@ class TestDashboardAPIView(APIView):
     """
     Vista de prueba para verificar que las URLs funcionan
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1138,7 +1138,7 @@ class InventoryDashboardMetricsAPIView(APIView):
     """
     Métricas generales del dashboard de inventario
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1198,7 +1198,7 @@ class TopSellingProductsAPIView(APIView):
     """
     Top 25 productos más vendidos por período
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1247,7 +1247,7 @@ class SalesAnalysisAPIView(APIView):
     """
     Análisis completo de ventas con métricas y top productos
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1332,7 +1332,7 @@ class LowStockProductsAPIView(APIView):
     """
     Productos con stock por debajo del nivel de reorden
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1385,7 +1385,7 @@ class LowestStockProductsAPIView(APIView):
     """
     Top 25 productos con menor stock
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1439,7 +1439,7 @@ class TopCustomersAPIView(APIView):
     """
     Top 10 clientes por volumen de compras
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1495,7 +1495,7 @@ class TopSuppliersAPIView(APIView):
     """
     Top 10 proveedores por volumen de compras
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1551,7 +1551,7 @@ class CustomersSuppliersComparisonAPIView(APIView):
     """
     Comparación de volumen entre clientes y proveedores por mes
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1613,7 +1613,7 @@ class ProductMovementsReportAPIView(APIView):
     """
     Reporte de movimientos de productos con filtros
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1710,7 +1710,7 @@ class ProductMovementsExportAPIView(APIView):
     """
     Export product movements report to Excel
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1830,7 +1830,7 @@ class SalesByProductExportAPIView(APIView):
     """
     Export sales data by product to Excel
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1907,7 +1907,7 @@ class SalesByCustomerExportAPIView(APIView):
     """
     Export sales data by customer to Excel
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -1983,7 +1983,7 @@ class SalesByPeriodExportAPIView(APIView):
     """
     Export sales data by period to Excel
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -2057,7 +2057,7 @@ class FinancialSummaryExportAPIView(APIView):
     """
     Export financial summary to Excel
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -2140,7 +2140,7 @@ class StockByWarehouseExportAPIView(APIView):
     """
     Export stock data by warehouse to Excel
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -2226,7 +2226,7 @@ class CompleteStockExportAPIView(APIView):
     """
     Export complete stock inventory to Excel
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -2314,7 +2314,7 @@ class LowStockProductsExportAPIView(APIView):
     """
     Export low stock products to Excel
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -2408,7 +2408,7 @@ class StockReportExportAPIView(APIView):
     """
     Export comprehensive stock report to Excel
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -2537,7 +2537,7 @@ class CustomersListExportAPIView(APIView):
     """
     Export customers list to Excel
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -2614,7 +2614,7 @@ class SuppliersListExportAPIView(APIView):
     """
     Export suppliers list to Excel
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -2691,7 +2691,7 @@ class ComparativeAnalysisExportAPIView(APIView):
     """
     Export comparative analysis between customers and suppliers to Excel
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -2869,7 +2869,7 @@ class TrendsExportAPIView(APIView):
     """
     Export monthly trends analysis to Excel
     """
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):

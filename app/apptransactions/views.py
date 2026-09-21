@@ -23,15 +23,22 @@ from .models import (
 from .serializers import (
     DocumentTypeSerializer, PartyTypeSerializer, PartyCategorySerializer, PartySerializer,
     DocumentSerializer, DocumentListSerializer, DocumentLineSerializer, WorkAccountSerializer,
-    TransactionFavoriteSerializer, TransactionFavoriteImportSerializer,
+    WorkAccountListSerializer, TransactionFavoriteSerializer, TransactionFavoriteImportSerializer,
 )
-from rest_framework.authentication import TokenAuthentication
+from appauth.authentication import TenantJWTAuthentication
+from rest_framework.pagination import PageNumberPagination
+
+
+class WorkAccountPagination(PageNumberPagination):
+    page_size = 25
+    page_size_query_param = "page_size"
+    max_page_size = 500
 
 
 class DocumentTypeViewSet(viewsets.ModelViewSet):
     queryset = DocumentType.objects.all()
     serializer_class = DocumentTypeSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
@@ -39,7 +46,7 @@ class DocumentTypeViewSet(viewsets.ModelViewSet):
 class PartyTypeViewSet(viewsets.ModelViewSet):
     queryset = PartyType.objects.all()
     serializer_class = PartyTypeSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
@@ -47,7 +54,7 @@ class PartyTypeViewSet(viewsets.ModelViewSet):
 class PartyCategoryViewSet(viewsets.ModelViewSet):
     queryset = PartyCategory.objects.all()
     serializer_class = PartyCategorySerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
@@ -67,10 +74,28 @@ class PartyViewSet(viewsets.ModelViewSet):
 class WorkAccountViewSet(viewsets.ModelViewSet):
     queryset = WorkAccount.objects.select_related("builder", "job", "house_model", "default_price_type").all()
     serializer_class = WorkAccountSerializer
+    pagination_class = WorkAccountPagination
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["title", "builder__name", "job__name", "house_model__name", "lot", "address", "city", "zipcode"]
-    ordering_fields = ["id", "created_at"]
+    ordering_fields = [
+        "id",
+        "created_at",
+        "title",
+        "lot",
+        "address",
+        "city",
+        "is_active",
+        "builder__name",
+        "job__name",
+        "house_model__name",
+    ]
+    ordering = ["-created_at"]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return WorkAccountListSerializer
+        return WorkAccountSerializer
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -79,6 +104,23 @@ class WorkAccountViewSet(viewsets.ModelViewSet):
         if active_only in ("1", "true", "True"):
             qs = qs.filter(is_active=True)
         return qs
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        stats = queryset.aggregate(
+            total=Count("id"),
+            active=Count("id", filter=Q(is_active=True)),
+            inactive=Count("id", filter=Q(is_active=False)),
+        )
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page, many=True)
+        response = self.get_paginated_response(serializer.data)
+        response.data["stats"] = {
+            "total": stats["total"] or 0,
+            "active": stats["active"] or 0,
+            "inactive": stats["inactive"] or 0,
+        }
+        return response
 
     def perform_create(self, serializer):
         """Asigna automáticamente el usuario actual al campo created_by"""
@@ -192,7 +234,7 @@ class DocumentListProviderAPIView(APIView):
     Respuesta: { items, totalRows, stats }
     """
 
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     _ALLOWED_ORDERING = {

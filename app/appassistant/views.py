@@ -8,7 +8,7 @@ import uuid
 
 from django.conf import settings
 from rest_framework import status
-from rest_framework.authentication import TokenAuthentication
+from appauth.authentication import TenantJWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -34,7 +34,7 @@ class AssistantQueryView(APIView):
     No LLM (C4). Client may send conversation_id; never authoritative state.
     """
 
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, HasDocumentViewPermission]
 
     def post(self, request):

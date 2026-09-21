@@ -35,6 +35,7 @@
   --color-jr-muted: #4b5563;
   --color-jr-primary: #2563eb;
   --color-jr-primary-hover: #1d4ed8;
+  --color-jr-primary-950: #172554;
   --color-jr-success: #16a34a;
   --color-jr-success-text: #166534;
   --color-jr-success-subtle: color-mix(in srgb, var(--color-jr-success) 14%, var(--color-jr-surface));
@@ -472,6 +473,19 @@
     gap: 0.5rem 0.75rem;
     min-width: 0;
     flex: 0 0 auto;
+  }
+
+  /* Page-size selects (10/25/50/100) — room for 3 digits + chevron */
+  .jr-pilot .jr-toolbar__actions [class*="__entries"].p-select,
+  .jr-pilot .jr-toolbar__actions [class*="__entries"].jr-control {
+    width: 6.25rem;
+    min-width: 6.25rem;
+    flex: 0 0 auto;
+  }
+
+  .jr-pilot .jr-toolbar__actions [class*="__entries"] .p-select-label {
+    overflow: visible;
+    text-overflow: clip;
   }
 
   .jr-pilot .jr-badge.p-badge {

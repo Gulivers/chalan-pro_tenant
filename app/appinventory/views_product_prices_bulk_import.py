@@ -11,7 +11,7 @@ from io import BytesIO
 from django.db import transaction
 from openpyxl import load_workbook
 from rest_framework import status
-from rest_framework.authentication import TokenAuthentication
+from appauth.authentication import TenantJWTAuthentication
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -83,7 +83,7 @@ class ProductPricesBulkImportAPIView(APIView):
     sin ventana de vigencia (valid_from/valid_until null) para el par (price_type, unit).
     """
 
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 

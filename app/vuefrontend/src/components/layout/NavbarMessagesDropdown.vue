@@ -267,6 +267,7 @@
 </template>
 
 <script>
+import { getAccessToken } from '@/auth/tokenHelpers';
 import Comments from "@primeicons/vue/comments";
 import ArrowRight from "@primeicons/vue/arrow-right";
 import Popover from "primevue/popover";
@@ -342,7 +343,7 @@ export default {
         return false;
       }
 
-      const token = localStorage.getItem("authToken");
+      const token = getAccessToken();
       if (!token) {
         return false;
       }
@@ -489,7 +490,7 @@ export default {
     const connectWebSocket = async () => {
       if (!shouldShow.value) return;
 
-      const token = localStorage.getItem("authToken");
+      const token = getAccessToken();
       if (!token) return;
 
       const currentPath = window.location.pathname || route.path || "";
@@ -505,7 +506,7 @@ export default {
       }
 
       try {
-        const res = await axios.get("/api/user_detail/");
+        const res = await axios.get("/api/auth/me/");
         userId.value = res.data.id;
         if (!userId.value) throw new Error("User ID not found.");
 
@@ -548,7 +549,7 @@ export default {
         return;
       }
 
-      const token = localStorage.getItem("authToken");
+      const token = getAccessToken();
       if (!token) return;
 
       try {

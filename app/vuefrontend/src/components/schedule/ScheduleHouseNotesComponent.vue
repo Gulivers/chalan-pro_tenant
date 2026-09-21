@@ -57,6 +57,7 @@
 </template>
 
 <script>
+import { getAccessToken } from '@/auth/tokenHelpers';
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import axios from "axios";
@@ -264,7 +265,7 @@ export default {
       }
     },
     checkUserIdentity() {
-      const token = localStorage.getItem("authToken");
+      const token = getAccessToken();
       this.isLoggedIn = !!token;
       if (this.isLoggedIn) {
         this.getAuthenticatedUser().then((user) => {

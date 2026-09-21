@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { hasAuthSession } from '@/auth/tokenHelpers';
 
 const ensureTrailingSlash = (url = '') => (url.endsWith('/') ? url : `${url}/`); // Asegura slash final.
 const stripTrailingSlash = (url = '') => url.replace(/\/+$/, ''); // Quita slashes duplicados al final.
@@ -26,10 +27,9 @@ export const appMixin = {
     // AUTHENTICATION & USER DATA
     // ───────────────────────────────────────────────────────────────
     getAuthenticatedUser() {
-      const token = localStorage.getItem('authToken');
-      if (token) {
+      if (hasAuthSession()) {
         return axios
-          .get('/api/user_detail/')
+          .get('/api/auth/me/')
           .then(response => {
             return response.data;
           })
@@ -38,7 +38,7 @@ export const appMixin = {
             return null;
           });
       } else {
-        console.error('No auth token found');
+        console.error('No auth session found');
         return null;
       }
     },

@@ -133,6 +133,7 @@
 </template>
 
 <script>
+import { getAccessToken } from '@/auth/tokenHelpers';
 import axios from 'axios';
 import { JRField, JRInput, JRSelect, JRButton, JRBadge, JREmptyState } from '@ui';
 
@@ -319,7 +320,7 @@ export default {
         const response = await axios.get(url, {
           responseType: 'blob',
           headers: {
-            Authorization: `Token ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${getAccessToken()}`,
           },
         });
 

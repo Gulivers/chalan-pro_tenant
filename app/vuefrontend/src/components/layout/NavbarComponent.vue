@@ -274,6 +274,7 @@
 </template>
 
 <script>
+import { getAccessToken } from '@/auth/tokenHelpers';
 import Box from "@primeicons/vue/box";
 import Building from "@primeicons/vue/building";
 import BuildingColumns from "@primeicons/vue/building-columns";
@@ -315,6 +316,7 @@ import VirtualScroller from "primevue/virtualscroller";
 import FooterComponent from "./FooterComponent.vue";
 import NavbarMessagesDropdown from "./NavbarMessagesDropdown.vue";
 import { openAssistant } from "@/utils/assistantBus";
+import authService from "@/auth/authService";
 
 const NAV_ICONS = {
   home: Home,
@@ -733,7 +735,7 @@ export default {
       document.body.style.overflow = mobile && this.sidebarOpen ? "hidden" : "";
     },
     checkUserIdentity() {
-      const token = localStorage.getItem("authToken");
+      const token = getAccessToken();
       this.isLoggedIn = !!token;
       if (!this.isLoggedIn) {
         this.userName = "";
@@ -828,11 +830,9 @@ export default {
       }
     },
     logout() {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("userPermissions");
       this.isLoggedIn = false;
-      this.$router.push("/login");
       this.closeSidebar();
+      authService.handleLogout();
     },
     openAssistant() {
       this.closeSidebar();

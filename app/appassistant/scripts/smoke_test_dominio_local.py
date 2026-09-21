@@ -12,7 +12,6 @@ import json
 from django.contrib.auth import get_user_model
 from django.db.models import Max, Min
 from django_tenants.utils import schema_context
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from appassistant.contracts.response import validate_response_payload
@@ -72,7 +71,7 @@ def _summarize_blocks(blocks):
     return lines
 
 
-def run_set(label, prompts, user, view, factory, token):
+def run_set(label, prompts, user, view, factory):
     print('=' * 72)
     print(label)
     print('=' * 72)
@@ -84,7 +83,7 @@ def run_set(label, prompts, user, view, factory, token):
             'context': {'view': 'transactions', 'route_name': 'transactions'},
         }
         request = factory.post('/api/assistant/query/', payload, format='json')
-        force_authenticate(request, user=user, token=token)
+        force_authenticate(request, user=user)
         response = view(request)
         data = response.data
         errs = (
@@ -125,16 +124,14 @@ with schema_context(SCHEMA):
 
     factory = APIRequestFactory()
     view = AssistantQueryView.as_view()
-    token, _ = Token.objects.get_or_create(user=user)
 
-    run_set('A) 6 PROMPTS EXACTOS (aceptación)', PROMPTS_EXACT, user, view, factory, token)
+    run_set('A) 6 PROMPTS EXACTOS (aceptación)', PROMPTS_EXACT, user, view, factory)
     run_set(
         'B) VARIANTES CON VENDOR REAL (Home Depot)',
         PROMPTS_ADAPTED,
         user,
         view,
         factory,
-        token,
     )
 
 print('SMOKE_DONE')

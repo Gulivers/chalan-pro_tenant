@@ -194,6 +194,7 @@
 </template>
 
 <script>
+import { getAccessToken } from '@/auth/tokenHelpers';
 import axios from "axios";
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
@@ -548,7 +549,7 @@ export default {
       try {
         const response = await axios.get(`/api/documents/${documentId}/pdf/`, {
           headers: {
-            Authorization: `Token ${localStorage.getItem("authToken")}`,
+            Authorization: `Bearer ${getAccessToken()}`,
           },
           responseType: "json",
         });

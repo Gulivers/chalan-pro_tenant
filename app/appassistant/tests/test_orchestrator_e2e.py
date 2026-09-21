@@ -15,7 +15,6 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import override_settings
 from django_tenants.test.cases import TenantTestCase
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from appassistant.contracts.response import validate_response_payload
@@ -85,8 +84,7 @@ class OrchestratorE2ETests(TenantTestCase):
         perm = Permission.objects.get(content_type=ct, codename='view_document')
         self.user.user_permissions.add(perm)
         self.user = User.objects.get(pk=self.user.pk)
-        # appcore signal creates Token on user save; do not force-insert again.
-        self.token, _ = Token.objects.get_or_create(user=self.user)
+        # JWT era: force_authenticate does not need a DRF Token row.
 
         self.today = date(2026, 7, 15)
         self.doc_harbor = Document.objects.create(
@@ -140,7 +138,7 @@ class OrchestratorE2ETests(TenantTestCase):
             },
         }
         request = self.factory.post('/api/assistant/query/', payload, format='json')
-        force_authenticate(request, user=user or self.user, token=self.token)
+        force_authenticate(request, user=user or self.user)
         return self.view(request)
 
     def _assert_valid(self, data):
@@ -272,13 +270,12 @@ class OrchestratorE2ETests(TenantTestCase):
 
     def test_permission_denied_403(self):
         naked = User.objects.create_user(username='noperm_orch', password='x')
-        token, _ = Token.objects.get_or_create(user=naked)
         payload = {
             'schema_version': '1',
             'message': 'Show purchases by vendor this month.',
             'context': {},
         }
         request = self.factory.post('/api/assistant/query/', payload, format='json')
-        force_authenticate(request, user=naked, token=token)
+        force_authenticate(request, user=naked)
         response = self.view(request)
         self.assertEqual(response.status_code, 403)

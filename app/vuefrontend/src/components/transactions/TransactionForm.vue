@@ -329,6 +329,7 @@
 </template>
 
 <script setup>
+import { getAccessToken } from '@/auth/tokenHelpers';
 import {
   ref,
   reactive,
@@ -1148,7 +1149,7 @@ async function downloadTransactionPDF(documentId) {
   try {
     const response = await axios.get(`/api/documents/${documentId}/pdf/`, {
       headers: {
-        Authorization: `Token ${localStorage.getItem("authToken")}`,
+        Authorization: `Bearer ${getAccessToken()}`,
       },
     });
 
@@ -1240,7 +1241,7 @@ async function fetchStaticOptions() {
   // Work Accounts
   try {
     const { data } = await axios.get("/api/work-accounts/", {
-      params: { active_only: true },
+      params: { active_only: true, page_size: 500 },
     });
     const list = Array.isArray(data) ? data : data?.results || [];
     workAccountsOptions.value = list.map((wa) => ({
