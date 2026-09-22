@@ -1,4 +1,18 @@
 <template>
+  <!--
+    NotFoundView — pantallas 404 de la SPA JobRhythm.
+
+    Se usa como catch-all del Vue Router (`/:pathMatch(.*)*`, name: not-found)
+    cuando la URL no coincide con ninguna ruta definida (p. ej. /foo).
+
+    Sin navbar/footer (meta.hideNavbar / hideFooter). Muestra:
+      - "404"
+      - "Route is not found."
+      - CTA: "Back to log in form" si no hay sesión JWT, o "Back to home" si sí.
+
+    No sustituye el redirect a /login de las rutas protegidas sin auth;
+    esas van al guard del router. Este componente es solo para paths desconocidos.
+  -->
   <div class="jr-not-found">
     <div class="jr-not-found__card" role="alert">
       <p class="jr-not-found__code">404</p>
@@ -13,6 +27,10 @@
 </template>
 
 <script setup>
+/**
+ * Vista pública de ruta no encontrada (catch-all del router).
+ * El CTA depende de si hay access JWT en memoria o flag/sesión de refresh.
+ */
 import { computed } from 'vue';
 import { hasAuthSession, getAccessToken } from '@/auth/tokenHelpers';
 
