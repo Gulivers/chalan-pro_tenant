@@ -315,7 +315,9 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 
 #### Frontend (Vue.js)
 
-- **`vuefrontend/src/router/index.js`**: Configuración de rutas Vue Router. Define rutas públicas (`/onboarding`, `/login`, reset password) con `meta: { hideNavbar: true, hideFooter: true }` y rutas protegidas que requieren sesión JWT (validate/refresh).
+- **`vuefrontend/src/router/index.js`**: Vue Router + `beforeEach` de auth. Rutas públicas (`login`, `onboarding`, reset password, `about`, `not-found`) no exigen JWT. El resto exige access JWT usable (`authService.ensureAccess()`); si no hay access → `/login?redirect=<path>` (no basta un `jr_session` huérfano). Alias `/home` → `/`. Catch-all `/:pathMatch(.*)*` → `NotFoundView` (404 sin shell). Tras validar JWT, el guard comprueba permisos UX y billing/tenant access.
+
+- **`vuefrontend/src/views/NotFoundView.vue`**: Página 404 pública (sin navbar/footer). Texto “Route is not found.” y CTA a login o home según haya sesión.
 
 - **`vuefrontend/src/stores/auth.js`** + **`vuefrontend/src/auth/`**: Sesión JWT. Access en memoria; refresh en cookie HttpOnly (`jr_refresh`, path `/api/auth/`) o body según `AUTH_USE_REFRESH_COOKIE`; flag no secreto `jr_session` en `localStorage` para multi-tab; `userPermissions` en `localStorage` solo para UX (Django Permissions siguen siendo autoridad en backend).
 
@@ -325,9 +327,9 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
   - Si el refresh falla, limpia sesión y redirige a `/login` (excepto rutas públicas)
   - `withCredentials` para enviar/recibir la cookie de refresh
 
-- **`vuefrontend/src/components/auth/`**: Pantallas de login / forgot / reset / account-suspended al design system JR (`AuthShell`, branding vía `/api/auth/tenant-context/`).
+- **`vuefrontend/src/components/auth/`**: Login / forgot / reset / account-suspended al design system JR (`AuthShell`, branding vía `/api/auth/tenant-context/`). `LoginView` respeta `?redirect=` tras login exitoso (solo paths relativos seguros).
 
-- **`vuefrontend/src/components/layout/NavbarComponent.vue`**: Barra de navegación principal. Se oculta en rutas con `meta.hideNavbar: true`.
+- **`vuefrontend/src/components/layout/NavbarComponent.vue`**: Shell principal. Se oculta con `meta.hideNavbar`. Sin sesión JWT no muestra ítems de menú (p. ej. Communities Map sin `permission` ya no aparece a invitados).
 
 - **`vuefrontend/src/components/layout/NavbarMessagesDropdown.vue`**: Componente de mensajes. Verifica si debe mostrarse antes de hacer llamadas API para evitar 401 en rutas públicas.
 
