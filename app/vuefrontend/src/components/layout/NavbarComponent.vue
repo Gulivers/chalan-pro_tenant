@@ -711,6 +711,7 @@ export default {
       return NAV_ICONS[name] || Home;
     },
     canAccessMenuItem(item) {
+      if (!this.isLoggedIn) return false;
       if (!item?.permission) return true;
       try {
         return !!this.hasPermission?.(item.permission);

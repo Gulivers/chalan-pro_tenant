@@ -4,7 +4,7 @@ Checklist para desplegar los cambios de PWA y corrección del login en el VPS.
 
 ## Cambios incluidos
 
-1. **main.js**: Fix para que la PWA en `*.localhost:8080` use el backend en puerto 8000 (evita 404 en `/api/login`).
+1. **main.js**: Fix para que la PWA en `*.localhost:8080` use el backend en puerto 8000 (evita 404 en `/api/auth/login/`).
 2. **nginx/default.conf**: Headers PWA para `service-worker.js` y `manifest.json` (no cachear, permitir actualizaciones).
 3. **vue.config.js** y **package.json**: Plugin PWA, iconos, manifest.
 
@@ -61,7 +61,7 @@ El script hace:
 
 1. **HTTPS tenant**: Abrir `https://TU-TENANT.chalanpro.net`
 2. **PWA**: Comprobar que se puede instalar (icono "Instalar app" en el navegador).
-3. **Login**: Hacer login y verificar que no hay 404 en `/api/login`.
+3. **Login**: Hacer login y verificar que no hay 404 en `/api/auth/login/`.
 4. **DevTools**: Application → Manifest, Service Worker registrado.
 
 ## Rollback (si algo falla)
