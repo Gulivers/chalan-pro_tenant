@@ -434,6 +434,21 @@ Prefijo `/api/auth/` está **exento** del enforcement de trial/billing (`TenantA
 4. Nueva pestaña: lee `jr_session`, llama refresh, rehidrata access.
 5. Logout / reset password → blacklist de refresh del usuario.
 
+#### Guard del router (`vuefrontend/src/router/index.js`)
+
+| Caso | Comportamiento |
+| ---- | -------------- |
+| Ruta pública (`login`, `onboarding`, reset, `about`, `not-found`) | Entra sin JWT |
+| Ruta protegida sin access JWT | Redirect a `/login?redirect=<ruta>` |
+| Path desconocido | `NotFoundView` (404; sin navbar/footer) |
+| Alias `/home` | Redirect a `/` (home autenticado) |
+| JWT ok + sin permiso UX | Alerta y se cancela la navegación |
+| JWT ok + tenant/billing bloqueado | `/account-suspended` o `/billing` |
+
+El login, tras éxito, navega a `redirect` si es un path relativo seguro (`/…`); si no, a `/`.
+
+El menú del shell (`NavbarComponent`) **no lista módulos** si no hay sesión (`canAccessMenuItem` exige login), aunque el ítem no declare `permission`.
+
 #### Variables de entorno (VPS: `envs/backend.env`)
 
 | Variable | Default | Notas |
