@@ -95,3 +95,11 @@ scripts/renew_wildcard_certbot_auto.sh
 
 # Comando local opcional (carga de imágenes desde disco); no versionar
 app/appinventory/management/commands/load_product_images.py
+
+# Artefactos del espejo (jobrithm.net) - SOLO LOCAL, NUNCA subir al remoto
+mirror/
+envs/*.sh
+nginx/jobrithm.net.conf
+
+# Salida de collectstatic (build) - no versionar
+app/staticfiles/
