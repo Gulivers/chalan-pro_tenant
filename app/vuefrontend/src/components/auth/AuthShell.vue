@@ -3,6 +3,42 @@
     <div class="jr-auth__layout">
       <main class="jr-auth__panel">
         <header class="jr-auth__chrome">
+          <div
+            v-if="tenantLogoUrl"
+            class="jr-auth__tenant"
+            :title="tenantName || undefined">
+            <img
+              :src="tenantLogoUrl"
+              :alt="tenantName || 'Workspace'"
+              class="jr-auth__brand-logo"
+              width="220"
+              height="56"
+              @error="onTenantLogoError" />
+          </div>
+          <router-link
+            v-else
+            to="/login"
+            class="jr-auth__brand"
+            aria-label="JobRhythm">
+            <img
+              :src="brandLogoUrl"
+              alt="JobRhythm"
+              class="jr-auth__brand-logo"
+              width="220"
+              height="56" />
+          </router-link>
+        </header>
+
+        <header class="jr-auth__intro">
+          <h1 class="jr-auth__title">{{ title }}</h1>
+          <p v-if="lead" class="jr-auth__lead">{{ lead }}</p>
+        </header>
+
+        <div class="jr-auth__body">
+          <slot />
+        </div>
+
+        <div v-if="tenantLogoUrl" class="jr-auth__mark">
           <router-link
             to="/login"
             class="jr-auth__brand"
@@ -14,29 +50,6 @@
               width="220"
               height="56" />
           </router-link>
-          <div
-            v-if="tenantName"
-            class="jr-auth__tenant"
-            :title="tenantName">
-            <img
-              v-if="tenantLogoUrl"
-              :src="tenantLogoUrl"
-              alt=""
-              class="jr-auth__tenant-logo"
-              width="28"
-              height="28"
-              @error="onTenantLogoError" />
-            <span class="jr-auth__tenant-name">{{ tenantName }}</span>
-          </div>
-        </header>
-
-        <header class="jr-auth__intro">
-          <h1 class="jr-auth__title">{{ title }}</h1>
-          <p v-if="lead" class="jr-auth__lead">{{ lead }}</p>
-        </header>
-
-        <div class="jr-auth__body">
-          <slot />
         </div>
 
         <p class="jr-auth__legal">
@@ -138,17 +151,21 @@ onMounted(async () => {
 
 .jr-auth__chrome {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1rem;
   margin-bottom: 2rem;
 }
 
+.jr-auth__tenant,
 .jr-auth__brand {
   display: inline-flex;
   line-height: 0;
   text-decoration: none;
+  max-width: 100%;
+}
+
+.jr-auth__brand:focus-visible {
+  outline: 2px solid var(--color-jr-primary, #2563eb);
+  outline-offset: 3px;
 }
 
 .jr-auth__brand-logo {
@@ -159,31 +176,10 @@ onMounted(async () => {
   object-fit: contain;
 }
 
-.jr-auth__tenant {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
-  max-width: 100%;
-  padding: 0.35rem 0.65rem;
-  border: 1px solid var(--color-jr-border, #e5e7eb);
-  background: var(--color-jr-surface-muted, #f9fafb);
-}
-
-.jr-auth__tenant-logo {
-  width: 1.5rem;
-  height: 1.5rem;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-.jr-auth__tenant-name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-jr-text, #111827);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.jr-auth__mark {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
 }
 
 .jr-auth__intro {

@@ -72,7 +72,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import Message from 'primevue/message';
 import Eye from '@primeicons/vue/eye';
 import EyeSlash from '@primeicons/vue/eye-slash';
@@ -86,10 +86,19 @@ const error = ref('');
 const isLoading = ref(false);
 const showPassword = ref(false);
 const router = useRouter();
+const route = useRoute();
 
 onMounted(() => {
   document.getElementById('login-username')?.focus();
 });
+
+function safeRedirectTarget() {
+  const raw = route.query.redirect;
+  if (typeof raw !== 'string' || !raw.startsWith('/') || raw.startsWith('//')) {
+    return '/';
+  }
+  return raw;
+}
 
 async function login() {
   isLoading.value = true;
@@ -99,7 +108,7 @@ async function login() {
     if (!data?.access) {
       throw new Error('Access token not received in the response');
     }
-    router.push('/');
+    router.push(safeRedirectTarget());
   } catch (err) {
     console.error('Login error:', err);
     if (err.response) {

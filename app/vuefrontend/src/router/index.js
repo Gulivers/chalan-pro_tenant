@@ -3,7 +3,6 @@ import axios from "axios";
 import { fetchBillingStatus } from "@/api/billing";
 import authService from "@/auth/authService";
 import { useAuthStore } from "@/stores/auth";
-import { hasAuthSession } from "@/auth/tokenHelpers";
 
 // ───────────────────────────────────────────────────────────
 // LAZY IMPORTS (ordenado por módulos)
@@ -170,6 +169,10 @@ const routes = [
     name: "reset_password_confirm",
     component: PasswordResetConfirm,
     meta: { hideNavbar: true, hideFooter: true, requiresAuth: false },
+  },
+  {
+    path: "/home",
+    redirect: { name: "home" },
   },
   {
     path: "/",
@@ -1167,6 +1170,16 @@ const routes = [
       requiredPermissions: ["apptransactions.add_workaccount"],
     },
   },
+  {
+    path: "/:pathMatch(.*)*",
+    name: "not-found",
+    component: () => import("@/views/NotFoundView.vue"),
+    meta: {
+      hideNavbar: true,
+      hideFooter: true,
+      requiresAuth: false,
+    },
+  },
 ];
 
 const router = createRouter({
@@ -1174,13 +1187,41 @@ const router = createRouter({
   routes,
 });
 
+const PUBLIC_ROUTE_NAMES = new Set([
+  "onboarding",
+  "onboarding-verify",
+  "login",
+  "reset_password",
+  "reset_password_confirm",
+  "about",
+  "not-found",
+]);
+
 router.beforeEach(async (to, from, next) => {
   const userPermissions = JSON.parse(
     localStorage.getItem("userPermissions") || "[]"
   );
 
-  if (!to.matched.some((record) => record.meta.requiresAuth)) {
+  // Public surfaces (login, onboarding, reset, about, 404) — no JWT required.
+  if (PUBLIC_ROUTE_NAMES.has(to.name)) {
     next();
+    return;
+  }
+
+  const requiresAuth = to.matched.some(
+    (record) => record.meta.requiresAuth === true
+  );
+
+  if (!requiresAuth) {
+    // Explicitly public meta, or unknown — never render the app shell for guests.
+    if (
+      to.matched.length > 0 &&
+      to.matched.every((record) => record.meta.requiresAuth === false)
+    ) {
+      next();
+      return;
+    }
+    next({ name: "not-found", replace: true });
     return;
   }
 
@@ -1191,8 +1232,9 @@ router.beforeEach(async (to, from, next) => {
     access = null;
   }
 
-  if (!access && !hasAuthSession()) {
-    next({ name: "login" });
+  // No usable JWT → always login (ignore stale jr_session alone).
+  if (!access) {
+    next({ name: "login", query: { redirect: to.fullPath } });
     return;
   }
 
@@ -1244,23 +1286,12 @@ router.beforeEach(async (to, from, next) => {
       }
     } else {
       useAuthStore().clearSession();
-      next({ name: "login" });
+      next({ name: "login", query: { redirect: to.fullPath } });
     }
   } catch (error) {
     console.error("Error validating token:", error);
-    const publicRoutes = [
-      "onboarding",
-      "onboarding-verify",
-      "login",
-      "reset_password",
-      "reset_password_confirm",
-    ];
-    if (!publicRoutes.includes(to.name)) {
-      useAuthStore().clearSession();
-      next({ name: "login" });
-    } else {
-      next();
-    }
+    useAuthStore().clearSession();
+    next({ name: "login", query: { redirect: to.fullPath } });
   }
 });
 
