@@ -14,6 +14,7 @@
     - [Frontend (Vue.js)](#frontend-vuejs)
     - [Infraestructura](#infraestructura)
   - [2.3 Backend - Exception Handler y Protección de Datos Relacionales](#23-backend---exception-handler-y-protección-de-datos-relacionales)
+  - [2.4 Autenticación JWT (appauth)](#24-autenticación-jwt-appauth)
 - [2.1 Flujo del Proceso de Creación de Tenant](#21-flujo-del-proceso-de-creación-de-tenant)
   - [2.1.1 Diagrama de Flujo](#211-diagrama-de-flujo)
   - [2.1.2 Puntos Clave del Flujo](#212-puntos-clave-del-flujo)
@@ -86,7 +87,7 @@
 
 ## 📋 Resumen Ejecutivo
 
-Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con Ubuntu 24.04 LTS. La plataforma permite la creación dinámica de tenants mediante un proceso de onboarding, donde cada tenant obtiene su propio subdominio y schema de base de datos aislado.
+Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con Ubuntu 24.04 LTS. La plataforma permite la creación dinámica de tenants mediante un proceso de onboarding, donde cada tenant obtiene su propio subdominio y schema de base de datos aislado. La API se autentica con **Simple JWT tenant-bound** (`appauth`; ver [§2.4](#24-autenticación-jwt-appauth)).
 
 **VPS (Hostinger):** IP y acceso SSH → panel **hPanel → VPS** (no documentar en este repositorio).  
 **Dominio Base (actual):** `jobrhythm.net`  
@@ -230,17 +231,28 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 │   │   ├── services/                      # Stripe, access, sync, crews limits
 │   │   └── management/commands/           # seed_plans, backfill_trial_dates, send_trial_reminders
 │   │
+│   ├── appauth/                           # Autenticación JWT tenant-bound (TENANT_APPS)
+│   │   ├── authentication.py              # TenantJWTAuthentication (claim schema_name)
+│   │   ├── jwt_tokens.py                  # Emisión Refresh/Access con schema_name
+│   │   ├── cookies.py                     # Cookie HttpOnly de refresh (jr_refresh)
+│   │   ├── urls.py                        # /api/auth/* (login, refresh, logout, me, …)
+│   │   ├── views/                         # Login, session, password reset
+│   │   ├── services/                      # tenant branding, tokens, password_reset
+│   │   └── migrations/                    # Cleanup authtoken + tablas propias
+│   │
 │   ├── vuefrontend/                       # Frontend Vue.js
 │   │   ├── src/
 │   │   │   ├── router/                    # Vue Router (rutas públicas/privadas)
+│   │   │   ├── auth/                      # authService, tokenHelpers (Bearer en memoria)
 │   │   │   ├── components/                # Componentes Vue
+│   │   │   │   ├── auth/                  # Login, PasswordReset, AuthShell (JR)
 │   │   │   │   └── layout/
 │   │   │   │       ├── NavbarComponent.vue
 │   │   │   │       └── NavbarMessagesDropdown.vue
-│   │   │   ├── views/                     # Vistas (OnboardingView, LoginView, etc.)
-│   │   │   ├── stores/                    # Pinia stores (auth, chat)
+│   │   │   ├── views/                     # Vistas (OnboardingView, HomeView, etc.)
+│   │   │   ├── stores/                    # Pinia stores (auth JWT, chat)
 │   │   │   └── utils/
-│   │   │       └── axiosConfig.js         # Interceptor Axios (manejo de 401, CSRF)
+│   │   │       └── axiosConfig.js         # Interceptor Axios (Bearer, refresh, 401)
 │   │   ├── dist/                          # Build de producción (generado)
 │   │   └── Dockerfile.frontend            # Imagen Docker para build del frontend
 │   │
@@ -299,18 +311,25 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 
 - **`tenants/apps.py`**: `TenantsConfig.ready()` se ejecuta al iniciar Django y carga todos los dominios activos en `CSRF_TRUSTED_ORIGINS` (carga inicial).
 
-- **`project/api/exception_handler.py`**: Manejador global personalizado de excepciones para DRF (`REST_FRAMEWORK['EXCEPTION_HANDLER']`). Intercepta `ProtectedError` e `IntegrityError` retornando HTTP 409 (`in_use`), errores de unicidad como HTTP 400 mapeados por campo, y desincronizaciones de secuencia como HTTP 500 (ver [2.3 Backend - Exception Handler y Protección de Datos Relacionales](#23-backend---exception-handler-y-protección-de-datos-relacionales)).
+- **`project/api/exception_handler.py`**: Manejador global personalizado de excepciones para DRF (`REST_FRAMEWORK['EXCEPTION_HANDLER']`). Intercepta `ProtectedError` e `IntegrityError` retornando HTTP 409 (`in_use`), errores de unicidad como HTTP 400 mapeados por campo, desincronizaciones de secuencia como HTTP 500, y errores de auth tipados (`code` + `detail`) desde `appauth` (ver [2.3](#23-backend---exception-handler-y-protección-de-datos-relacionales) y [2.4](#24-autenticación-jwt-appauth)).
 
 #### Frontend (Vue.js)
 
-- **`vuefrontend/src/router/index.js`**: Configuración de rutas Vue Router. Define rutas públicas (`/onboarding`, `/login`) con `meta: { hideNavbar: true }` y rutas protegidas que requieren autenticación.
+- **`vuefrontend/src/router/index.js`**: Vue Router + `beforeEach` de auth. Rutas públicas (`login`, `onboarding`, reset password, `about`, `not-found`) no exigen JWT. El resto exige access JWT usable (`authService.ensureAccess()`); si no hay access → `/login?redirect=<path>` (no basta un `jr_session` huérfano). Alias `/home` → `/`. Catch-all `/:pathMatch(.*)*` → `NotFoundView` (404 sin shell). Tras validar JWT, el guard comprueba permisos UX y billing/tenant access.
+
+- **`vuefrontend/src/views/NotFoundView.vue`**: Página 404 pública (sin navbar/footer). Texto “Route is not found.” y CTA a login o home según haya sesión.
+
+- **`vuefrontend/src/stores/auth.js`** + **`vuefrontend/src/auth/`**: Sesión JWT. Access en memoria; refresh en cookie HttpOnly (`jr_refresh`, path `/api/auth/`) o body según `AUTH_USE_REFRESH_COOKIE`; flag no secreto `jr_session` en `localStorage` para multi-tab; `userPermissions` en `localStorage` solo para UX (Django Permissions siguen siendo autoridad en backend).
 
 - **`vuefrontend/src/utils/axiosConfig.js`**: Interceptor de Axios que:
-  - Agrega token de autenticación a las peticiones
-  - Maneja errores 401 (redirige a login, excepto en rutas públicas)
-  - Identifica endpoints opcionales (`/api/unread-chat-counts/`, `/api/user_detail/`) que pueden devolver 401 sin causar redirección
+  - Envía `Authorization: Bearer <access>`
+  - Ante 401, intenta refresh silencioso y reintenta la petición
+  - Si el refresh falla, limpia sesión y redirige a `/login` (excepto rutas públicas)
+  - `withCredentials` para enviar/recibir la cookie de refresh
 
-- **`vuefrontend/src/components/layout/NavbarComponent.vue`**: Barra de navegación principal. Se oculta en rutas con `meta.hideNavbar: true`.
+- **`vuefrontend/src/components/auth/`**: Login / forgot / reset / account-suspended al design system JR (`AuthShell`, branding vía `/api/auth/tenant-context/`). `LoginView` respeta `?redirect=` tras login exitoso (solo paths relativos seguros).
+
+- **`vuefrontend/src/components/layout/NavbarComponent.vue`**: Shell principal. Se oculta con `meta.hideNavbar`. Sin sesión JWT no muestra ítems de menú (p. ej. Communities Map sin `permission` ya no aparece a invitados).
 
 - **`vuefrontend/src/components/layout/NavbarMessagesDropdown.vue`**: Componente de mensajes. Verifica si debe mostrarse antes de hacer llamadas API para evitar 401 en rutas públicas.
 
@@ -332,9 +351,10 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 
 - **`envs/backend.env`**: Variables de entorno del backend:
   - `DEBUG=False`
-  - `ALLOWED_HOSTS` (incluye wildcard `*.chalanpro.net`)
-  - `CSRF_TRUSTED_ORIGINS` (incluye wildcard `https://*.chalanpro.net`)
-  - `TENANT_BASE_DOMAIN=chalanpro.net`
+  - `ALLOWED_HOSTS` (incluye wildcard `*.jobrhythm.net` / legacy según despliegue)
+  - `CSRF_TRUSTED_ORIGINS` (incluye wildcard HTTPS)
+  - `TENANT_BASE_DOMAIN=jobrhythm.net`
+  - JWT: `AUTH_USE_REFRESH_COOKIE`, `AUTH_REFRESH_COOKIE_SECURE`, `AUTH_ACCESS_TOKEN_MINUTES`, `AUTH_REFRESH_TOKEN_DAYS` (ver [2.4](#24-autenticación-jwt-appauth))
 
 ### 2.3 Backend - Exception Handler y Protección de Datos Relacionales
 
@@ -373,6 +393,89 @@ Un evento del calendario (`Event`) no puede ser eliminado (ni mediante borrado f
 - **Contracts**: Contratos vinculados al evento (`Contract.schedule`, `on_delete=models.PROTECT`, `related_name='contracts'`).
 
 La validación se efectúa mediante `Event.raise_if_deletion_blocked()` en `EventViewSet.destroy()` y mediante restricciones de integridad en clave foránea (`PROTECT`), retornando HTTP 409 con el detalle de las dependencias encontradas.
+
+### 2.4 Autenticación JWT (`appauth`)
+
+JobRhythm usa **Simple JWT tenant-bound**. Se retiró `rest_framework.authtoken` (Token DRF permanente en `localStorage`). Los usuarios, grupos y permisos de Django (`auth.User`, `Group`, `Permission`) **no cambian**: el JWT solo identifica al usuario; la autoridad de permisos sigue en el backend.
+
+#### Modelo
+
+| Pieza | Dónde | Rol |
+| ----- | ----- | --- |
+| Access JWT | Memoria del navegador (`Authorization: Bearer …`) | ~15 min (`AUTH_ACCESS_TOKEN_MINUTES`) |
+| Refresh JWT | Cookie HttpOnly `jr_refresh` (path `/api/auth/`, host-only) o body si `AUTH_USE_REFRESH_COOKIE=False` | ~7 días (`AUTH_REFRESH_TOKEN_DAYS`); rotación + blacklist |
+| Claim `schema_name` | Dentro del access y del refresh | Debe coincidir con el schema del request; si no → rechazo |
+| `userPermissions` | `localStorage` | Solo UX (menú/rutas); no es secreto ni autoridad |
+| `jr_session` | `localStorage` (`'1'`) | Flag no secreto para que otras pestañas sepan llamar a `/api/auth/refresh/` |
+
+`DEFAULT_AUTHENTICATION_CLASSES` = `appauth.authentication.TenantJWTAuthentication`. Apps tenant: `appauth` + `rest_framework_simplejwt.token_blacklist`.
+
+#### Endpoints (`/api/auth/*`, URLconf de tenant)
+
+| Método | Ruta | Auth | Descripción |
+| ------ | ---- | ---- | ----------- |
+| POST | `/api/auth/login/` | Público (throttle IP/usuario) | Credenciales → access (+ cookie/body refresh) + permisos + branding |
+| POST | `/api/auth/refresh/` | Cookie o body refresh | Nuevo access (y refresh rotado) |
+| POST | `/api/auth/logout/` | Público / sesión | Blacklist refresh + borra cookie |
+| GET | `/api/auth/me/` | Bearer | Usuario + permisos + branding tenant |
+| GET | `/api/auth/permissions/` | Bearer | Lista `user.get_all_permissions()` |
+| GET | `/api/auth/validate/` | Bearer | `{ "valid": true\|false }` (guard del router) |
+| GET | `/api/auth/tenant-context/` | Público | Nombre/logo del workspace (login visual) |
+| POST | `/api/auth/password/forgot/` | Público (throttle) | Email de reset |
+| POST | `/api/auth/password/reset/` | Público | Nueva contraseña; invalida refresh outstanding del usuario |
+
+Prefijo `/api/auth/` está **exento** del enforcement de trial/billing (`TenantAccessEnforcementMiddleware`) para permitir login y refresh.
+
+#### Flujo SPA
+
+1. Login → access en memoria + cookie refresh + `jr_session` + permisos UX.
+2. Cada API → `Bearer` access.
+3. 401 → axios intenta `/api/auth/refresh/` con credentials; reintenta; si falla → logout y `/login`.
+4. Nueva pestaña: lee `jr_session`, llama refresh, rehidrata access.
+5. Logout / reset password → blacklist de refresh del usuario.
+
+#### Guard del router (`vuefrontend/src/router/index.js`)
+
+| Caso | Comportamiento |
+| ---- | -------------- |
+| Ruta pública (`login`, `onboarding`, reset, `about`, `not-found`) | Entra sin JWT |
+| Ruta protegida sin access JWT | Redirect a `/login?redirect=<ruta>` |
+| Path desconocido | `NotFoundView` (404; sin navbar/footer) |
+| Alias `/home` | Redirect a `/` (home autenticado) |
+| JWT ok + sin permiso UX | Alerta y se cancela la navegación |
+| JWT ok + tenant/billing bloqueado | `/account-suspended` o `/billing` |
+
+El login, tras éxito, navega a `redirect` si es un path relativo seguro (`/…`); si no, a `/`.
+
+El menú del shell (`NavbarComponent`) **no lista módulos** si no hay sesión (`canAccessMenuItem` exige login), aunque el ítem no declare `permission`.
+
+#### Variables de entorno (VPS: `envs/backend.env`)
+
+| Variable | Default | Notas |
+| -------- | ------- | ----- |
+| `AUTH_ACCESS_TOKEN_MINUTES` | `15` | Vida del access |
+| `AUTH_REFRESH_TOKEN_DAYS` | `7` | Vida del refresh / cookie `Max-Age` |
+| `AUTH_USE_REFRESH_COOKIE` | `True` | Preferido multi-tab (mismo origen vía Nginx) |
+| `AUTH_REFRESH_COOKIE_SECURE` | `True` si `DEBUG=False` | En prod HTTPS debe ser `True` |
+| `AUTH_REFRESH_COOKIE_NAME` | `jr_refresh` | |
+| `AUTH_REFRESH_COOKIE_PATH` | `/api/auth/` | |
+| `AUTH_REFRESH_COOKIE_SAMESITE` | `Lax` | |
+
+#### Migraciones al desplegar
+
+Tras pull de esta migración auth:
+
+```bash
+docker compose exec -T backend python manage.py migrate_schemas
+```
+
+Incluye `tenants.0007_drop_authtoken_tables` (public) y `appauth.0001_drop_authtoken_tables` (cada tenant): elimina `authtoken_token` y filas huérfanas de `django_migrations` para `authtoken`. Las tablas de blacklist JWT viven en cada schema de tenant.
+
+#### Qué ya no existe
+
+- `rest_framework.authtoken` / `TokenAuthentication` / señal `create_auth_token`
+- Rutas legacy `/api/login/`, `/api/logout/`, `/api/validate-token/`, etc. (sin aliases)
+- `localStorage.authToken` (se limpia al iniciar sesión nueva; clave legacy solo para borrado)
 
 ---
 
@@ -974,7 +1077,7 @@ psql -h localhost -p 5432 -U chalanpro_user -d chalanpro
 | ------------------------ | ----------------------- | ----- | ------------------------------------------------- |
 | **HTTPS/SSL**            | ✅ Activo               | Alto  | Certificados Let's Encrypt, renovación automática |
 | **Firewall**             | ⚠️ Parcial              | Medio | Solo puertos 80, 443, 5432, 5050 abiertos         |
-| **Autenticación Django** | ✅ Activo               | Alto  | Token-based authentication, CSRF protection       |
+| **Autenticación Django** | ✅ Activo               | Alto  | Simple JWT tenant-bound (`appauth`), cookie refresh HttpOnly, CSRF protection |
 | **ALLOWED_HOSTS**        | ✅ Dinámico             | Alto  | Actualización automática vía middleware           |
 | **CSRF Protection**      | ✅ Dinámico             | Alto  | Actualización automática vía middleware           |
 | **DEBUG Mode**           | ✅ Deshabilitado        | Alto  | `DEBUG=False` en producción                       |
@@ -1824,11 +1927,11 @@ El plan sugerido al upgrade viene de `landing_selected_plan` / `recommended_plan
 
 | Método | Ruta                                           | Auth         | Descripción                                                   |
 | ------ | ---------------------------------------------- | ------------ | ------------------------------------------------------------- |
-| GET    | `/api/billing/status/`                         | Token        | Estado trial/suscripción, plan sugerido                       |
+| GET    | `/api/billing/status/`                         | JWT Bearer   | Estado trial/suscripción, plan sugerido                       |
 | GET    | `/api/billing/public-plans/`                   | Público      | Catálogo activo (landing, sin auth)                           |
-| GET    | `/api/billing/plans/`                          | Token        | Mismo catálogo (app `/billing`)                               |
-| POST   | `/api/billing/create-checkout-session/`        | Token        | Body: `plan_slug`, `billing_interval` (`monthly` \| `yearly`) |
-| POST   | `/api/billing/create-customer-portal-session/` | Token        | URL portal Stripe                                             |
+| GET    | `/api/billing/plans/`                          | JWT Bearer   | Mismo catálogo (app `/billing`)                               |
+| POST   | `/api/billing/create-checkout-session/`        | JWT Bearer   | Body: `plan_slug`, `billing_interval` (`monthly` \| `yearly`) |
+| POST   | `/api/billing/create-customer-portal-session/` | JWT Bearer   | URL portal Stripe                                             |
 | POST   | `/stripe/webhook/`                             | Firma Stripe | Sincroniza suscripciones e invoices                           |
 
 Los **price IDs** de Stripe solo se resuelven en backend (modelo `Plan`), nunca desde el frontend.
@@ -1845,9 +1948,9 @@ Los **price IDs** de Stripe solo se resuelven en backend (modelo `Plan`), nunca 
 
 - **Trial:** 30 días desde onboarding (`start_trial_for_tenant`). Requiere `on_trial=true` y `now < trial_end`.
 - **Enforcement:** `tenants.middleware.TenantAccessEnforcementMiddleware` (schema tenant, no public):
-  - `/api/*` → 403 o 402 (exentas: billing, login, logout, validate-token, user_detail, …)
+  - `/api/*` → 403 o 402 (exentas: `/api/billing/…`, **`/api/auth/`**, …)
   - **`/admin/*`** → HTML 403 (bloquea login y todo el admin del tenant si trial venció o workspace inactivo)
-- **Login:** `assert_login_allowed` — solo bloquea `tenant_inactive`; billing vencido permite token → guard manda a `/billing`.
+- **Login:** `assert_login_allowed` — solo bloquea `tenant_inactive`; billing vencido permite JWT → guard manda a `/billing`.
 - **Grace `past_due`:** 7 días (`BILLING_PAST_DUE_GRACE_DAYS`).
 - **Cuadrillas:** `crewsapp` → `appbilling.services.crews.validate_crew_create`.
 - **Frontend:** guard Vue (`tenant_active` primero), interceptor axios 403/402, rutas `/billing`, `/account-suspended`.
