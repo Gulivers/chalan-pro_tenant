@@ -51,7 +51,6 @@ const ProductCategoryView = () =>
 const ProductBrandView = () => import("@views/inventory/ProductBrandView.vue");
 const ReportsExportsView = () =>
   import("@views/reports/ReportsExportsView.vue");
-// const ProductUnitView = () => import('@views/inventory/ProductUnitView.vue');
 const UnitOfMeasureView = () =>
   import("@views/inventory/UnitOfMeasureView.vue");
 const UnitCategoryView = () => import("@views/inventory/UnitCategoryView.vue");
@@ -100,6 +99,12 @@ const WorkAccountSelect = () =>
   import("@components/transactions/WorkAccountSelect.vue");
 const WorkAccountListView = () =>
   import("@views/transactions/WorkAccountListView.vue");
+const MissingMaterialView = () =>
+  import("@views/material/MissingMaterialView.vue");
+const MaterialRequestListView = () =>
+  import("@views/material/MaterialRequestListView.vue");
+const MaterialRequestDetailView = () =>
+  import("@views/material/MaterialRequestDetailView.vue");
 
 // Crews and Fleet
 const CategoryListView = () => import("@views/crews/CategoryListView.vue");
@@ -1168,6 +1173,33 @@ const routes = [
     meta: {
       requiresAuth: true,
       requiredPermissions: ["apptransactions.add_workaccount"],
+    },
+  },
+  {
+    path: "/work-accounts/:workAccountId/orders/:eventId/missing-material",
+    name: "missing-material",
+    component: MissingMaterialView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.add_document"],
+    },
+  },
+  {
+    path: "/material-requests",
+    name: "material-requests",
+    component: MaterialRequestListView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.view_document"],
+    },
+  },
+  {
+    path: "/material-requests/:id",
+    name: "material-request-detail",
+    component: MaterialRequestDetailView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.view_document"],
     },
   },
   {

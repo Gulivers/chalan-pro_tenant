@@ -555,6 +555,8 @@ class ProductListProviderAPIView(APIView):
             # Parámetros de filtrado
             is_active = request.query_params.get('is_active')
             search = request.query_params.get('search', '').strip()
+            category = request.query_params.get('category', '').strip()
+            brand = request.query_params.get('brand', '').strip()
             ordering = request.query_params.get('ordering', '-id')  # Descendente por ID
             
             # Construir queryset base
@@ -574,6 +576,11 @@ class ProductListProviderAPIView(APIView):
                     queryset = queryset.filter(is_active=True)
                 elif is_active.lower() == 'false':
                     queryset = queryset.filter(is_active=False)
+
+            if category.isdigit():
+                queryset = queryset.filter(category_id=int(category))
+            if brand.isdigit():
+                queryset = queryset.filter(brands__id=int(brand)).distinct()
             
             # Aplicar búsqueda por múltiples palabras (cada palabra debe coincidir en al menos un campo)
             if search:
@@ -606,7 +613,12 @@ class ProductListProviderAPIView(APIView):
             paginated_queryset = queryset[start:end]
             
             # Serializar datos
-            serializer = ProductListSerializer(paginated_queryset, many=True)
+            brand_id = int(brand) if brand.isdigit() else None
+            serializer = ProductListSerializer(
+                paginated_queryset,
+                many=True,
+                context={'brand_id': brand_id},
+            )
             
             return Response({
                 'items': serializer.data,

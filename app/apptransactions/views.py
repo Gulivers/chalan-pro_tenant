@@ -1,11 +1,12 @@
 import base64
 from datetime import datetime
-from django.db.models import Q, Prefetch, Count
+from django.db.models import Q, Prefetch, Count, ProtectedError
 from django.utils.dateparse import parse_datetime
 from django.shortcuts import render, get_object_or_404
 from django.db import IntegrityError
 from django.http import JsonResponse
 from rest_framework import viewsets, status, filters, permissions
+from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action, api_view, permission_classes
@@ -42,6 +43,18 @@ class DocumentTypeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
+
+    def perform_destroy(self, instance):
+        if instance.type_code in DocumentType.PROTECTED_TYPE_CODES:
+            raise DRFValidationError(
+                'The Material Request document type is required by the system and cannot be deleted.'
+            )
+        try:
+            instance.delete()
+        except ProtectedError as exc:
+            raise DRFValidationError(
+                'This document type cannot be deleted while related records exist.'
+            ) from exc
     
 class PartyTypeViewSet(viewsets.ModelViewSet):
     queryset = PartyType.objects.all()

@@ -224,8 +224,8 @@ class ProductListSerializer(serializers.ModelSerializer):
 
     def get_image(self, obj):
         """
-        Thumbnail for list views: prefer primary image of the default brand,
-        then any image for that brand, then any product image.
+        Thumbnail for list views. When brand_id is in context, use that brand's
+        image only. Otherwise prefer the default brand, then any product image.
         """
         images = list(obj.images.all())
         if not images:
@@ -241,6 +241,13 @@ class ProductListSerializer(serializers.ModelSerializer):
 
         def image_url(image):
             return image.image.url if image.image else None
+
+        requested_id = self.context.get('brand_id')
+        if requested_id is not None:
+            for image in images:
+                if brand_id(image) == requested_id:
+                    return image_url(image)
+            return None
 
         if default_brand_id is not None:
             default_brand_images = [

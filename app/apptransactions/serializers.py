@@ -37,6 +37,10 @@ class DocumentTypeSerializer(serializers.ModelSerializer):
                     'and Purchase return.'
                 ),
             })
+        if self.instance and self.instance.type_code in DocumentType.PROTECTED_TYPE_CODES:
+            raise serializers.ValidationError(
+                'The Material Request document type is required by the system and cannot be edited.'
+            )
         return attrs
 
 class PartyTypeSerializer(serializers.ModelSerializer):
