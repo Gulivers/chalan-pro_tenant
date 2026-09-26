@@ -130,7 +130,7 @@
         <TabPanel value="materials">
           <MissingMaterialPanel
             v-if="eventId && workAccountId"
-            :key="eventId"
+            :key="`${workAccountId}-${eventId}`"
             :event-id="eventId"
             :work-account-id="workAccountId" />
           <JREmptyState

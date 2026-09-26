@@ -9,6 +9,7 @@
     <p v-if="loading" class="jr-mm-panel__status">Loading requests…</p>
     <DataTable
       v-else-if="requests.length"
+      :key="`${workAccountId}-${eventId}`"
       v-model:expandedRowGroups="expandedRowGroups"
       class="jr-mm-groups"
       :value="requests"
@@ -34,6 +35,7 @@
       <Column field="id" header="" />
       <template #groupfooter="{ data }">
         <MaterialRequestDetail
+          :key="data.id"
           :request-id="data.id"
           embedded
           hide-heading
@@ -81,13 +83,11 @@ export default {
     },
   },
   watch: {
-    eventId: {
-      immediate: true,
-      handler() {
-        this.expandedRowGroups = [];
-        this.load();
-      },
-    },
+    eventId: 'reload',
+    workAccountId: 'reload',
+  },
+  mounted() {
+    this.reload();
   },
   methods: {
     hiddenGroupRow() {
@@ -99,25 +99,54 @@ export default {
       if (code === 'closed') return 'secondary';
       return 'info';
     },
+    reload() {
+      this.expandedRowGroups = [];
+      this.requests = [];
+      this.load();
+    },
     async load() {
-      const eventId = this.eventId;
+      const eventId = Number(this.eventId);
+      const workAccountId = Number(this.workAccountId);
+      if (!eventId || !workAccountId) {
+        this.requests = [];
+        this.loading = false;
+        return;
+      }
       this.loading = true;
       try {
         const { data } = await axios.get('/api/material-requests/', {
           params: {
             work_order: eventId,
-            work_account: this.workAccountId,
+            work_account: workAccountId,
             page: 1,
             per_page: 200,
           },
         });
-        if (!this.alive || eventId !== this.eventId) return;
+        if (
+          !this.alive ||
+          eventId !== Number(this.eventId) ||
+          workAccountId !== Number(this.workAccountId)
+        ) {
+          return;
+        }
         this.requests = Array.isArray(data?.items) ? data.items : [];
       } catch {
-        if (!this.alive || eventId !== this.eventId) return;
+        if (
+          !this.alive ||
+          eventId !== Number(this.eventId) ||
+          workAccountId !== Number(this.workAccountId)
+        ) {
+          return;
+        }
         this.requests = [];
       } finally {
-        if (this.alive && eventId === this.eventId) this.loading = false;
+        if (
+          this.alive &&
+          eventId === Number(this.eventId) &&
+          workAccountId === Number(this.workAccountId)
+        ) {
+          this.loading = false;
+        }
       }
     },
     openRequest() {

@@ -328,10 +328,15 @@ export default {
     );
 
     const effectiveWorkAccountId = computed(() => {
+      // En el listado general, el evento elegido trae su work account al instante.
+      // No esperar a loadAccountForEvent: si no, Missing Material pide con la cuenta anterior.
+      if (browseAllWorkOrders.value && selectedEvent.value?.work_account) {
+        return Number(selectedEvent.value.work_account);
+      }
       if (workAccountId.value) return workAccountId.value;
       if (workAccount.value?.id) return workAccount.value.id;
       if (selectedEvent.value?.work_account)
-        return selectedEvent.value.work_account;
+        return Number(selectedEvent.value.work_account);
       return null;
     });
 
