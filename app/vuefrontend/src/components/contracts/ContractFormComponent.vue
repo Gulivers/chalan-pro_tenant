@@ -585,12 +585,9 @@ export default {
           initialPrices: {},
           error: null,
           lotValid: null,
-          selectedBuilders: {},
-          selectedJob: {},
           houseModelDrawerVisible: false,
           houseModelEditId: null,
           houseModelFormNonce: 0,
-          action: 'add',
           isBid: false, // Por defecto, el checkbox no está marcado, lo que significa "Contract"
           event: null,
           // Backend Contract.type choices are Rough|Trim strings only (not Category FK).
@@ -1586,37 +1583,6 @@ export default {
               });
       },
 
-      // Method to open the builder modal in edit mode with selected builder data
-      editBuilderModal(action, builderId) {
-          this.action = action;
-          // Find the builder by its ID in the builders array
-          const builderToEdit = this.builders.find((builder) => builder.id === builderId);
-
-          if (builderToEdit) {
-              this.selectedBuilders = { ...builderToEdit };
-              this.$refs.builderModal?.showModal();
-          } else {
-              console.error(`Builder with ID ${builderId} not found.`);
-          }
-      },
-
-      openBuilderModal(action) {
-          this.action = action;
-          this.selectedBuilders = action === 'edit' ? this.getSelectedBuilder() : {
-              name: '',
-              trim_amount: 0,
-              rough_amount: 0,
-              travel_price_amount: 0,
-          };
-
-          // Show the modal using JavaScript
-          this.$refs.builderModal?.showModal();
-      },
-
-      clearBuilderSelection() {
-          this.newContract.builder = null; // Clear the selected job in v-select
-      },
-
       // Fetch available builders from the server
       // Obtener builders disponibles del servidor
       fetchBuilders() {
@@ -1634,38 +1600,6 @@ export default {
                       reject(error); // Rechaza la promesa si ocurre un error
                   });
           });
-      },
-
-      // Open the modal to add a new job
-      // Open the modal to add a new job or edit an existing one
-      openJobModal(action, job = null) {
-          this.action = action;
-          // Reset for adding a new job
-          this.selectedJob = {
-              name: '',
-              builder: this.newContract.builder || null, // Use the current builder from newContract if available
-          };
-          // show the modal
-          this.$refs.jobModal?.showModal();
-      },
-
-      clearJobSelection() {
-          this.selectedJob = {}; // Reset job selection
-      },
-
-      // Open the modal to edit an existing job
-      editJobModal(action, jobId) {
-          this.action = action;
-          const jobToEdit = this.jobs.find((job) => job.id === jobId);
-          if (jobToEdit) {
-              // Make sure builder information is included in the selectedJob
-              this.selectedJob = { ...jobToEdit };
-              //this.newContract.builder = jobToEdit.builder; // Set the builder for modalJob (if necessary)
-              this.fetchJobs();
-              this.$refs.jobModal?.showModal();
-          } else {
-              console.error(`Job with ID ${jobId} not found.`);
-          }
       },
 
       // Fetch available Job from the server

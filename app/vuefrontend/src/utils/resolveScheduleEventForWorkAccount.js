@@ -57,6 +57,7 @@ export const WORK_ORDER_VIEWER_TABS = [
   { id: "folder", label: "Folder" },
   { id: "contracts", label: "Contracts" },
   { id: "transactions", label: "Transactions" },
+  { id: "materials", label: "Missing Material" },
 ];
 
 export const WORK_ORDER_VIEWER_TAB_IDS = WORK_ORDER_VIEWER_TABS.map(

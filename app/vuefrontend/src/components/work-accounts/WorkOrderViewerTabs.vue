@@ -66,6 +66,15 @@
                 d="M1 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-1 1H2a1 1 0 01-1-1V4zm0 6a1 1 0 011-1h16a1 1 0 011 1v6a1 1 0 01-1 1H2a1 1 0 01-1-1v-6zm3 2a1 1 0 000 2h3a1 1 0 000-2H4z"
                 clip-rule="evenodd" />
             </svg>
+            <svg
+              v-else-if="tab.id === 'materials'"
+              class="jr-wov-tab__icon"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true">
+              <path
+                d="M3.5 3A1.5 1.5 0 002 4.5v3A1.5 1.5 0 003.5 9h3A1.5 1.5 0 008 7.5v-3A1.5 1.5 0 006.5 3h-3zM3.5 11A1.5 1.5 0 002 12.5v3A1.5 1.5 0 003.5 17h3A1.5 1.5 0 008 15.5v-3A1.5 1.5 0 006.5 11h-3zM11 4.5A1.5 1.5 0 0112.5 3h3A1.5 1.5 0 0117 4.5v3A1.5 1.5 0 0115.5 9h-3A1.5 1.5 0 0111 7.5v-3zM12.5 11A1.5 1.5 0 0011 12.5v3A1.5 1.5 0 0012.5 17h3a1.5 1.5 0 001.5-1.5v-3A1.5 1.5 0 0015.5 11h-3z" />
+            </svg>
             <span class="jr-wov-tab__label">{{ tab.label }}</span>
           </span>
         </Tab>
@@ -117,6 +126,18 @@
             :event-id="eventId"
             :work-account-id="workAccountId" />
         </TabPanel>
+
+        <TabPanel value="materials">
+          <MissingMaterialPanel
+            v-if="eventId && workAccountId"
+            :key="eventId"
+            :event-id="eventId"
+            :work-account-id="workAccountId" />
+          <JREmptyState
+            v-else
+            title="Missing Material unavailable"
+            description="Open a work order linked to a schedule event to request material." />
+        </TabPanel>
       </TabPanels>
     </Tabs>
   </div>
@@ -135,6 +156,7 @@ import ScheduleHouseNotesComponent from "@components/schedule/ScheduleHouseNotes
 import EventImageAdmin from "@components/schedule/EventImageAdmin.vue";
 import ScheduleHouseContractsComponent from "@components/schedule/ScheduleHouseContractsComponent.vue";
 import ScheduleHouseTransactionsComponent from "@components/schedule/ScheduleHouseTransactionsComponent.vue";
+import MissingMaterialPanel from "@components/material/MissingMaterialPanel.vue";
 import { JREmptyState } from "@/ui";
 import {
   WORK_ORDER_VIEWER_TABS,
@@ -154,6 +176,7 @@ export default {
     EventImageAdmin,
     ScheduleHouseContractsComponent,
     ScheduleHouseTransactionsComponent,
+    MissingMaterialPanel,
     JREmptyState,
   },
   props: {

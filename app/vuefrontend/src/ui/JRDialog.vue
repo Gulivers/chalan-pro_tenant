@@ -30,7 +30,10 @@
         <JRButton variant="secondary" @click="$emit('update:visible', false)">
           {{ cancelLabel }}
         </JRButton>
-        <JRButton :variant="confirmVariant" @click="$emit('confirm')">
+        <JRButton
+          :variant="confirmVariant"
+          :disabled="confirmDisabled"
+          @click="$emit('confirm')">
           {{ confirmLabel }}
         </JRButton>
       </div>
@@ -96,6 +99,10 @@ export default {
     confirmVariant: {
       type: String,
       default: 'primary',
+    },
+    confirmDisabled: {
+      type: Boolean,
+      default: false,
     },
     showFooter: {
       type: Boolean,

@@ -122,6 +122,31 @@ class ProductListSerializerImageTests(TenantTestCase):
 
         self.assertEqual(self._serialized_image(product), other_img.image.url)
 
+    def test_context_brand_uses_only_that_brands_image(self):
+        product = self._create_product('IMG-CTX-001')
+        self._create_image(
+            product,
+            self.brand_default,
+            is_primary=True,
+            filename='default-ctx.png',
+        )
+        other_img = self._create_image(
+            product,
+            self.brand_other,
+            is_primary=True,
+            filename='other-ctx.png',
+        )
+        selected = ProductListSerializer(
+            product,
+            context={'brand_id': self.brand_other.id},
+        ).data['image']
+        self.assertEqual(selected, other_img.image.url)
+        missing = ProductListSerializer(
+            product,
+            context={'brand_id': self.brand_other.id + 1000},
+        ).data['image']
+        self.assertIsNone(missing)
+
 
 class ProductListSerializerStockTests(TenantTestCase):
     @classmethod

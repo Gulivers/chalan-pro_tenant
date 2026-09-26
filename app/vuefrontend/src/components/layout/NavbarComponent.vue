@@ -424,6 +424,13 @@ export default {
           group: "workflow",
         },
         {
+          text: "Missing Material",
+          route: "/material-requests",
+          icon: "transactions",
+          permission: "apptransactions.view_document",
+          group: "workflow",
+        },
+        {
           text: "Measure the Operation",
           route: "/reports-exports",
           icon: "reports",
