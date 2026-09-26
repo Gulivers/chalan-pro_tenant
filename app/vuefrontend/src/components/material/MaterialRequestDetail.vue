@@ -3,7 +3,7 @@
     <JRPageHeader v-if="!embedded" :title="request.document_number || 'Material Request'">
       <template #actions>
         <JRButton
-          v-if="!editable && canEdit"
+          v-if="!linesEditable && canEdit"
           type="button"
           variant="ghost"
           size="sm"
@@ -16,7 +16,7 @@
       </template>
     </JRPageHeader>
 
-    <header v-else-if="request.id" class="jr-mr-detail__embed-head">
+    <header v-else-if="request.id && !hideHeading" class="jr-mr-detail__embed-head">
       <router-link
         v-if="canView"
         class="jr-mr-detail__number"
@@ -49,7 +49,7 @@
             <th>Material</th>
             <th>SKU</th>
             <th>Qty</th>
-            <th v-if="editable"><span class="jr-sr-only">Remove</span></th>
+            <th v-if="linesEditable"><span class="jr-sr-only">Remove</span></th>
           </tr>
         </thead>
         <tbody>
@@ -57,7 +57,7 @@
             <td>{{ line.product_name }}</td>
             <td>{{ line.sku }}</td>
             <td>
-              <div v-if="editable" class="jr-mr-detail__qty">
+              <div v-if="linesEditable" class="jr-mr-detail__qty">
                 <button
                   type="button"
                   aria-label="Decrease quantity"
@@ -82,7 +82,7 @@
               </div>
               <span v-else>{{ line.quantity }}</span>
             </td>
-            <td v-if="editable">
+            <td v-if="linesEditable">
               <JRButton
                 type="button"
                 variant="ghost"
@@ -159,6 +159,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    hideHeading: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -179,6 +183,9 @@ export default {
     },
     canEdit() {
       return this.hasPermission('apptransactions.change_document');
+    },
+    linesEditable() {
+      return this.canEdit && (!this.embedded || this.editable);
     },
     notesId() {
       return `mr-transition-notes-${this.requestId}`;

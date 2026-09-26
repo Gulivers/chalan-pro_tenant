@@ -323,7 +323,7 @@ export default {
       summaryOpen: false,
       submitting: false,
       error: '',
-      layout: 'list',
+      layout: 'grid',
       layoutOptions: ['list', 'grid'],
       workAccountTitle: '',
       phase: '',

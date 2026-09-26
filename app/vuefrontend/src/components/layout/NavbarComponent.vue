@@ -281,6 +281,7 @@ import BuildingColumns from "@primeicons/vue/building-columns";
 import Bars from "@primeicons/vue/bars";
 import CalendarPlus from "@primeicons/vue/calendar-plus";
 import ChartBar from "@primeicons/vue/chart-bar";
+import Clipboard from "@primeicons/vue/clipboard";
 import ChevronDown from "@primeicons/vue/chevron-down";
 import Eye from "@primeicons/vue/eye";
 import File from "@primeicons/vue/file";
@@ -325,6 +326,7 @@ const NAV_ICONS = {
   contracts: File,
   workAccounts: BuildingColumns,
   workOrderViewer: Eye,
+  missingMaterial: Clipboard,
   reports: ChartBar,
   inventory: Box,
   pricing: File,
@@ -426,7 +428,7 @@ export default {
         {
           text: "Missing Material",
           route: "/material-requests",
-          icon: "transactions",
+          icon: "missingMaterial",
           permission: "apptransactions.view_document",
           group: "workflow",
         },

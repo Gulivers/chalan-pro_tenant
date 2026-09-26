@@ -7,26 +7,53 @@
       Request Material
     </JRButton>
     <p v-if="loading" class="jr-mm-panel__status">Loading requests…</p>
-    <div v-else-if="requests.length">
-      <MaterialRequestDetail
-        v-for="item in requests"
-        :key="item.id"
-        :request-id="item.id"
-        embedded
-        :editable="canEdit" />
-    </div>
+    <DataTable
+      v-else-if="requests.length"
+      v-model:expandedRowGroups="expandedRowGroups"
+      class="jr-mm-groups"
+      :value="requests"
+      dataKey="id"
+      expandableRowGroups
+      rowGroupMode="subheader"
+      groupRowsBy="id"
+      :rowClass="hiddenGroupRow"
+      :pt="{ rowToggleButton: { 'aria-label': 'Show or hide this request' } }">
+      <template #groupheader="{ data }">
+        <span class="jr-mm-group">
+          <router-link
+            v-if="canView"
+            class="jr-mm-group__number"
+            :to="{ name: 'material-request-detail', params: { id: data.id } }">
+            {{ data.document_number }}
+          </router-link>
+          <strong v-else>{{ data.document_number }}</strong>
+          <JRBadge :value="data.status_name || '—'" :severity="statusSeverity(data.status)" />
+          <span v-if="data.phase" class="jr-mm-group__meta">{{ data.phase }}</span>
+        </span>
+      </template>
+      <Column field="id" header="" />
+      <template #groupfooter="{ data }">
+        <MaterialRequestDetail
+          :request-id="data.id"
+          embedded
+          hide-heading
+          :editable="canEdit" />
+      </template>
+    </DataTable>
     <p v-else class="jr-mm-panel__status">No material requests for this work order yet.</p>
   </section>
 </template>
 
 <script>
 import axios from 'axios';
-import { JRButton } from '@/ui';
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
+import { JRBadge, JRButton } from '@/ui';
 import MaterialRequestDetail from './MaterialRequestDetail.vue';
 
 export default {
   name: 'MissingMaterialPanel',
-  components: { JRButton, MaterialRequestDetail },
+  components: { Column, DataTable, JRBadge, JRButton, MaterialRequestDetail },
   props: {
     eventId: { type: Number, required: true },
     workAccountId: { type: Number, required: true },
@@ -34,6 +61,7 @@ export default {
   data() {
     return {
       requests: [],
+      expandedRowGroups: [],
       loading: false,
       alive: true,
     };
@@ -45,6 +73,9 @@ export default {
     canRequest() {
       return this.hasPermission('apptransactions.add_document');
     },
+    canView() {
+      return this.hasPermission('apptransactions.view_document');
+    },
     canEdit() {
       return this.hasPermission('apptransactions.change_document');
     },
@@ -53,11 +84,21 @@ export default {
     eventId: {
       immediate: true,
       handler() {
+        this.expandedRowGroups = [];
         this.load();
       },
     },
   },
   methods: {
+    hiddenGroupRow() {
+      return 'jr-mm-group-row';
+    },
+    statusSeverity(code) {
+      if (code === 'delivered') return 'success';
+      if (code === 'preparing') return 'warning';
+      if (code === 'closed') return 'secondary';
+      return 'info';
+    },
     async load() {
       const eventId = this.eventId;
       this.loading = true;
@@ -102,5 +143,31 @@ export default {
 .jr-mm-panel__status {
   margin: 0;
   color: var(--color-jr-muted, #4b5563);
+}
+.jr-mm-groups :deep(.p-datatable-thead) {
+  display: none;
+}
+.jr-mm-groups :deep(tr.jr-mm-group-row) {
+  display: none;
+}
+.jr-mm-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  vertical-align: middle;
+}
+.jr-mm-group__number {
+  color: var(--color-jr-text, #111827);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.jr-mm-group__number:hover {
+  text-decoration: underline;
+}
+.jr-mm-group__meta {
+  color: var(--color-jr-muted, #4b5563);
+  font-size: 0.8125rem;
 }
 </style>

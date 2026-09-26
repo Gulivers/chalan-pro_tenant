@@ -9,7 +9,7 @@ from django.db.models import ProtectedError
 from rest_framework.exceptions import ValidationError
 from rest_framework.test import APIRequestFactory, force_authenticate
 
-from appinventory.models import Product
+from appinventory.models import Product, Stock, Warehouse
 from appschedule.models import Event
 from apptransactions.material_request_api import MaterialRequestViewSet
 from apptransactions.models import (
@@ -261,3 +261,41 @@ class MaterialRequestTests(TenantTestCase):
         )
         delete_material_request(document=document)
         self.assertFalse(Document.objects.filter(pk=document.pk).exists())
+
+    def test_delivered_reduces_stock_and_revert_restores_it(self):
+        warehouse = Warehouse.objects.create(name='Main', is_default=True)
+        Stock.objects.create(product=self.product, warehouse=warehouse, quantity=Decimal('10'))
+        document = create_material_request(
+            work_account=self.work_account,
+            work_order=self.event,
+            lines=[{'product': self.product, 'quantity': Decimal('3')}],
+            notes='',
+            user=self.user,
+        )
+        stock = Stock.objects.get(product=self.product, warehouse=warehouse)
+        self.assertEqual(stock.quantity, Decimal('10'))
+        for code in ('approved', 'preparing'):
+            transition_material_request(
+                document=document,
+                status_code=code,
+                notes='',
+                user=self.user,
+            )
+        stock.refresh_from_db()
+        self.assertEqual(stock.quantity, Decimal('10'))
+        transition_material_request(
+            document=document,
+            status_code='delivered',
+            notes='',
+            user=self.user,
+        )
+        stock.refresh_from_db()
+        self.assertEqual(stock.quantity, Decimal('7'))
+        transition_material_request(
+            document=document,
+            status_code='preparing',
+            notes='',
+            user=self.user,
+        )
+        stock.refresh_from_db()
+        self.assertEqual(stock.quantity, Decimal('10'))

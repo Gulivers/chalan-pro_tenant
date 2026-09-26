@@ -17,6 +17,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
+from appinventory.models import InventoryMovement, Stock, Warehouse
 from apptransactions.models import (
     Document,
     DocumentLine,
@@ -88,7 +89,7 @@ def create_material_request(*, work_account, work_order, lines, notes, user):
         else:
             current['quantity'] += quantity
 
-    # Available es informativo: no se reserva stock ni se rechaza por falta de inventario.
+    # Available es informativo al pedir. El stock se rebaja al pasar a Delivered.
     initial = initial_status_for(document_type)
     document = Document(
         document_type=document_type,
@@ -170,7 +171,72 @@ def update_material_request_lines(*, document, lines):
         line.delete()
     if deletions:
         document.calculate_totals()
+    _sync_delivered_stock(document)
     return document
+
+
+def _issue_warehouse(line):
+    """Almacén de la línea, o el que tiene stock, o el predeterminado."""
+    if line.warehouse_id:
+        return line.warehouse
+    stock = (
+        Stock.objects.filter(product_id=line.product_id, quantity__gt=0)
+        .select_related('warehouse')
+        .order_by('-quantity')
+        .first()
+    )
+    if stock:
+        return stock.warehouse
+    default = Warehouse.objects.filter(is_default=True, is_active=True).first()
+    if default:
+        return default
+    active = Warehouse.objects.filter(is_active=True).order_by('id').first()
+    if active:
+        return active
+    from apptransactions.signals import get_or_create_mobile_warehouse
+    return get_or_create_mobile_warehouse()
+
+
+def _status_code(document):
+    tracking = (
+        DocumentTracking.objects.select_related('current_status')
+        .filter(document_id=document.pk)
+        .first()
+    )
+    if tracking is None or tracking.current_status_id is None:
+        return ''
+    return tracking.current_status.code
+
+
+def apply_delivered_stock(document):
+    """Salida de inventario por cada línea. Reemplaza movimientos previos de esas líneas."""
+    lines = list(document.lines.select_related('product', 'unit', 'warehouse'))
+    for line in lines:
+        for movement in InventoryMovement.objects.filter(line_id=line.id):
+            movement.delete()
+        InventoryMovement.objects.create(
+            line_id=line.id,
+            product=line.product,
+            warehouse=_issue_warehouse(line),
+            quantity=line.quantity,
+            movement_type=InventoryMovement.MOVEMENT_TYPE_SALIDA,
+            unit=line.unit,
+            reason=f"Material Request {document.document_number} delivered",
+            document=str(document.id),
+            created_by=document.created_by,
+        )
+
+
+def reverse_delivered_stock(document):
+    """Repone el stock al salir de Delivered hacia Preparing."""
+    line_ids = list(document.lines.values_list('id', flat=True))
+    for movement in InventoryMovement.objects.filter(line_id__in=line_ids):
+        movement.delete()
+
+
+def _sync_delivered_stock(document):
+    if _status_code(document) in ('delivered', 'closed'):
+        apply_delivered_stock(document)
 
 
 def delete_material_request(*, document):
@@ -235,4 +301,8 @@ def transition_material_request(*, document, status_code, notes, user):
         changed_at=now,
         notes=note,
     )
+    if target.code == 'delivered' and current.code == 'preparing':
+        apply_delivered_stock(document)
+    elif current.code == 'delivered' and target.code == 'preparing':
+        reverse_delivered_stock(document)
     return document
