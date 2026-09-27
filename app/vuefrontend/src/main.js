@@ -8,57 +8,21 @@ import router from "./router";
 import { createPinia } from "pinia"; // OAHP
 import store from "./store";
 
-// jQuery y DataTables (deben estar antes de Bootstrap)
-import $ from "jquery";
-import "datatables.net"; // Solo JS, el CSS lo carga el CDN en index.html
-// Hacer jQuery disponible globalmente
-window.$ = window.jQuery = $;
-
-// Bootstrap (no es plugin de Vue)
-// Bootstrap CSS primero
-//import 'bootstrap/dist/css/bootstrap.min.css';
-import "bootstrap-vue-next/dist/bootstrap-vue-next.css";
-import "vue-select/dist/vue-select.css";
 import "leaflet/dist/leaflet.css";
-import "@/assets/scss/custom-bootstrap.scss"; // custom scss npm install sass sass-loader --save-dev
 
-// ───────────────────────────────────────────────────────────────
-// SKIN MODERN - Activar/Desactivar comentando/descomentando
-// ───────────────────────────────────────────────────────────────
-// Para ACTIVAR el skin moderno: descomenta la línea de abajo
-// Para DESACTIVAR: coméntala de nuevo
-//
-// NOTA: Si quieres ver mejor los cambios del skin moderno,
-// también puedes comentar temporalmente esta línea:
-// - import '@/assets/scss/custom-bootstrap.scss' (línea 23)
-//
-// (base.css se importa en componentes individuales, no aquí)
-// ───────────────────────────────────────────────────────────────
-import "@/assets/css/skin-modern.css";
-
-// JobRhythm Design System (Pilot): after skin-modern; scoped to .jr-pilot
+// JobRhythm Design System (Pilot). Tailwind utilities viven bajo .jr-pilot.
 import "@/assets/css/jr-design-system.css";
 import "@/assets/css/jr-shell-nav.css";
+import "@/assets/css/jr-tooltip.css";
 import PrimeVue from "primevue/config";
 import { JobRhythmPreset } from "@/ui/jr-primevue-preset";
-
-// Bootstrap JS (bundle = incluye Popper). Importa SOLO uno
-import "bootstrap/dist/js/bootstrap.bundle.min.js"; // OAHP
-// import 'bootstrap/dist/js/bootstrap.min.js';
-
-// BootstrapVueNext (plugin de Vue)
-// import BootstrapVueNext from 'bootstrap-vue-next';
 
 // Axios & helpers
 import axios from "axios";
 import { setupAxiosInterceptors } from "./utils/axiosConfig";
 
-import { BTable, BPagination } from "bootstrap-vue-next";
-import { Modal } from "bootstrap";
-
 // Mixins globales
 import { appMixin } from "@mixins/appMixin";
-import { dataTableMixin } from "@mixins/dataTableMixin";
 
 import authService from "./auth/authService";
 
@@ -84,7 +48,7 @@ const isLocalLikeHost = (hostname) => {
 };
 
 const resolveApiBaseUrl = () => {
-  const envUrl = (process.env.VUE_APP_API_BASE_URL || "").trim();
+  const envUrl = (import.meta.env.VITE_API_BASE_URL || "").trim();
   if (envUrl.length > 0) {
     return ensureTrailingSlash(envUrl);
   }
@@ -112,7 +76,7 @@ const resolveApiBaseUrl = () => {
 };
 
 const resolveWsBaseUrl = (apiUrl) => {
-  const envWs = (process.env.VUE_APP_WS_BASE_URL || "").trim();
+  const envWs = (import.meta.env.VITE_WS_BASE_URL || "").trim();
 
   // Si hay una URL de WebSocket configurada explícitamente, usarla
   if (envWs.length > 0) {
@@ -168,7 +132,7 @@ const pinia = createPinia();
 app.use(pinia);
 app.use(store);
 app.use(TooltipDirective);
-const primeUiLicense = (process.env.VUE_APP_PRIMEUI_LICENSE || "").trim();
+const primeUiLicense = (import.meta.env.VITE_PRIMEUI_LICENSE || "").trim();
 
 app.use(PrimeVue, {
   ...(primeUiLicense ? { license: primeUiLicense } : {}),
@@ -181,12 +145,8 @@ app.use(PrimeVue, {
   },
 });
 
-app.component("BTable", BTable);
-app.component("BPagination", BPagination);
-
 // Usa los mixins globalmente en toda la app
 app.mixin(appMixin);
-app.mixin(dataTableMixin);
 
 // Monta la aplicación con router y store
 app.mount("#app");

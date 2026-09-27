@@ -85,9 +85,9 @@ export default {
 
 <style scoped>
 .active-filters {
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--color-jr-border);
   padding: 0.55rem 0.75rem 0.45rem;
-  background: #f8f9fa;
+  background: var(--color-jr-surface-muted);
   text-align: left;
 }
 
@@ -100,18 +100,18 @@ export default {
 }
 
 .active-filters__title {
-  font-size: 0.7rem;
-  font-weight: 650;
+  font-size: 0.75rem;
+  font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: #6c757d;
+  color: var(--color-jr-muted);
 }
 
 .active-filters__clear {
   border: none;
   background: transparent;
-  color: #0d6efd;
-  font-size: 0.72rem;
+  color: var(--color-jr-primary);
+  font-size: 0.75rem;
   font-weight: 600;
   padding: 0;
   cursor: pointer;
@@ -137,19 +137,19 @@ export default {
   align-items: center;
   gap: 0.2rem;
   max-width: 100%;
-  border: 1px solid rgba(33, 37, 41, 0.16);
-  background: #fff;
-  color: #212529;
-  border-radius: 999px;
+  border: 1px solid var(--color-jr-border);
+  background: var(--color-jr-surface);
+  color: var(--color-jr-text);
+  border-radius: var(--radius-jr-control);
   padding: 0.2rem 0.55rem;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.3;
 }
 
 .filter-chip--fixed {
-  background: rgba(33, 37, 41, 0.06);
+  background: var(--color-jr-surface-muted);
   border-color: transparent;
-  color: #495057;
+  color: var(--color-jr-muted);
 }
 
 .filter-chip--removable {
@@ -166,12 +166,12 @@ export default {
 .filter-chip__remove {
   border: none;
   background: transparent;
-  color: #6c757d;
-  font-size: 1rem;
+  color: var(--color-jr-muted);
+  font-size: 0.9375rem;
   line-height: 1;
   width: 1.15rem;
   height: 1.15rem;
-  border-radius: 999px;
+  border-radius: var(--radius-jr-control);
   padding: 0;
   cursor: pointer;
   display: inline-flex;
@@ -180,8 +180,8 @@ export default {
 }
 
 .filter-chip__remove:hover:not(:disabled) {
-  background: rgba(33, 37, 41, 0.08);
-  color: #212529;
+  background: var(--color-jr-page);
+  color: var(--color-jr-text);
 }
 
 .filter-chip__remove:disabled {

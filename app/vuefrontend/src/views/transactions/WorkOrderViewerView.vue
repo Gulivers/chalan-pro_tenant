@@ -242,7 +242,7 @@ const stripLeadingSlash = (path) =>
   path.startsWith("/") ? path.slice(1) : path;
 
 const getWsBaseUrl = () => {
-  const envUrl = process.env.VUE_APP_WS_URL || process.env.VUE_APP_API_URL;
+  const envUrl = import.meta.env.VITE_WS_URL || import.meta.env.VITE_API_URL;
   if (envUrl) {
     const withoutProtocol = envUrl
       .replace(/^https?:\/\//i, "")
@@ -252,7 +252,7 @@ const getWsBaseUrl = () => {
     return `${protocol}//${base}`;
   }
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const port = process.env.NODE_ENV === "development" ? ":8000" : "";
+  const port = import.meta.env.DEV ? ":8000" : "";
   return `${protocol}//${window.location.hostname}${port}`;
 };
 

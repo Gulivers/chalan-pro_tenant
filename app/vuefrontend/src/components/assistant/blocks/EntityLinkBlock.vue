@@ -2,14 +2,14 @@
   <div class="assistant-entity-link text-start">
     <a
       v-if="canNavigate"
-      class="btn btn-link btn-sm p-0 text-decoration-none"
+      class="p-0 text-sm font-semibold text-jr-primary no-underline"
       :href="href"
       target="_blank"
       rel="noopener noreferrer"
       @click="onClick">
       {{ label }}
     </a>
-    <span v-else class="text-muted small">{{ label }}</span>
+    <span v-else class="text-sm text-jr-muted">{{ label }}</span>
   </div>
 </template>
 

@@ -502,7 +502,6 @@
 
 <script>
 import axios from 'axios';
-import '@assets/css/base.css';
 import DynamicForm from '@/components/parties/DynamicForm.vue';
 import { openPdf } from "@helpers";
 import WorkAccountSelector from '@/components/transactions/WorkAccountSelector.vue';
@@ -1013,8 +1012,8 @@ export default {
           }
           if (key === 'work_account' || key === 'house_model') {
               return (
-                  wrap.querySelector('input.vs__search') ||
-                  wrap.querySelector('.vs__search') ||
+                  wrap.querySelector('.p-select') ||
+                  wrap.querySelector('[data-pc-name="select"]') ||
                   wrap.querySelector('input') ||
                   wrap
               );

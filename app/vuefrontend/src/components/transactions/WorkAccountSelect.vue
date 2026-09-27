@@ -363,7 +363,7 @@ watch(formBannerMessage, (msg) => {
   });
 });
 
-const builderJobHouseData = reactive({
+const builderJobHouseData = ref({
   builder: local.builder,
   job: local.job,
   house_model: local.house_model,
@@ -512,10 +512,10 @@ async function resolveJobName(jobId) {
 }
 
 function onBuilderChanged(v) {
-  builderJobHouseData.builder = v;
+  builderJobHouseData.value.builder = v;
   local.builder = v;
-  builderJobHouseData.job = null;
-  builderJobHouseData.house_model = null;
+  builderJobHouseData.value.job = null;
+  builderJobHouseData.value.house_model = null;
   local.job = null;
   local.house_model = null;
   lotTouched.value = false;
@@ -525,9 +525,9 @@ function onBuilderChanged(v) {
 }
 
 function onJobChanged(v) {
-  builderJobHouseData.job = v;
+  builderJobHouseData.value.job = v;
   local.job = v;
-  builderJobHouseData.house_model = null;
+  builderJobHouseData.value.house_model = null;
   local.house_model = null;
   lotTouched.value = false;
   addrTouched.value = false;
@@ -537,7 +537,7 @@ function onJobChanged(v) {
 }
 
 function onHouseModelChanged(v) {
-  builderJobHouseData.house_model = v;
+  builderJobHouseData.value.house_model = v;
   local.house_model = v;
   autoFillTitle();
   emitChange();
@@ -627,9 +627,9 @@ const loadWorkAccount = async () => {
 
     meta.created_at = data.created_at || null;
 
-    builderJobHouseData.builder = data.builder;
-    builderJobHouseData.job = data.job;
-    builderJobHouseData.house_model = data.house_model;
+    builderJobHouseData.value.builder = data.builder;
+    builderJobHouseData.value.job = data.job;
+    builderJobHouseData.value.house_model = data.house_model;
 
     if (data.job) {
       await resolveJobName(data.job);
