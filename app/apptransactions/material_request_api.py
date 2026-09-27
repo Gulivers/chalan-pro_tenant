@@ -16,9 +16,10 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import ProtectedError, Q
+from django.db.models import Prefetch, ProtectedError, Q
 
-from appinventory.models import Product
+from appinventory.models import Product, ProductImage
+from appinventory.serializers import ProductListSerializer
 from appschedule.models import Event
 from apptransactions.models import (
     Document,
@@ -132,6 +133,10 @@ class MaterialRequestLineSerializer(serializers.Serializer):
     product_name = serializers.CharField(source='product.name')
     sku = serializers.CharField(source='product.sku')
     quantity = serializers.DecimalField(max_digits=10, decimal_places=2)
+    image = serializers.SerializerMethodField()
+
+    def get_image(self, obj):
+        return ProductListSerializer().get_image(obj.product)
 
 
 class MaterialRequestHistorySerializer(serializers.ModelSerializer):
@@ -306,7 +311,13 @@ class MaterialRequestViewSet(viewsets.GenericViewSet):
                 'document_type',
             )
             .prefetch_related(
-                'lines__product',
+                'lines__product__brands',
+                Prefetch(
+                    'lines__product__images',
+                    queryset=ProductImage.objects.select_related(
+                        'assignment__brand'
+                    ).order_by('-is_primary', '-uploaded_at'),
+                ),
                 'tracking_history__from_status',
                 'tracking_history__to_status',
                 'tracking_history__changed_by',

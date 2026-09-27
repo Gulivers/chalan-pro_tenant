@@ -107,7 +107,12 @@
                     <div class="jr-mr-actions">
                       <div class="jr-mr-qty">
                         <button type="button" aria-label="Decrease quantity" @click="step(item, -1)">−</button>
-                        <span>{{ displayQty(item) }}</span>
+                        <input
+                          type="number"
+                          min="1"
+                          :aria-label="`Quantity for ${item.name}`"
+                          :value="displayQty(item)"
+                          @change="setCardQty(item, $event)" />
                         <button type="button" aria-label="Increase quantity" @click="step(item, 1)">+</button>
                       </div>
                       <JRButton
@@ -161,7 +166,12 @@
                 <div class="jr-mr-actions">
                   <div class="jr-mr-qty">
                     <button type="button" aria-label="Decrease quantity" @click="step(item, -1)">−</button>
-                    <span>{{ displayQty(item) }}</span>
+                    <input
+                      type="number"
+                      min="1"
+                      :aria-label="`Quantity for ${item.name}`"
+                      :value="displayQty(item)"
+                      @change="setCardQty(item, $event)" />
                     <button type="button" aria-label="Increase quantity" @click="step(item, 1)">+</button>
                   </div>
                   <JRButton
@@ -429,6 +439,22 @@ export default {
       }
       const current = this.draft[item.id] || 1;
       this.draft = { ...this.draft, [item.id]: Math.max(1, current + delta) };
+    },
+    setCardQty(item, event) {
+      const quantity = Math.floor(Number(event.target.value));
+      const current = this.displayQty(item);
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        event.target.value = current;
+        return;
+      }
+      if (this.selection[item.id]) {
+        this.selection = {
+          ...this.selection,
+          [item.id]: { ...this.selection[item.id], quantity },
+        };
+        return;
+      }
+      this.draft = { ...this.draft, [item.id]: quantity };
     },
     add(item) {
       const quantity = this.draft[item.id] || 1;
@@ -743,11 +769,20 @@ export default {
   align-items: center;
   gap: 0.65rem;
 }
-.jr-mr-qty span {
-  min-width: 1.25rem;
+.jr-mr-qty input {
+  width: 4.5rem;
+  height: 2.25rem;
+  border: 1px solid var(--color-jr-border, #e5e7eb);
+  border-radius: var(--radius-jr-control);
+  background: var(--color-jr-surface, #fff);
+  color: var(--color-jr-text, #111827);
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   text-align: center;
+}
+.jr-mr-qty input:focus-visible {
+  outline: 2px solid var(--color-jr-primary, #2563eb);
+  outline-offset: 2px;
 }
 .jr-mr-qty button {
   width: 2.25rem;

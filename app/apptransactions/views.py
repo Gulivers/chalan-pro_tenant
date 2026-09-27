@@ -295,6 +295,14 @@ class DocumentListProviderAPIView(APIView):
                 else:
                     queryset = queryset.none()
 
+            exclude_codes = [
+                part.strip()
+                for part in request.query_params.get("exclude_type_code", "").split(",")
+                if part.strip()
+            ]
+            if exclude_codes:
+                queryset = queryset.exclude(document_type__type_code__in=exclude_codes)
+
             if search:
                 words = search.split()
                 for word in words:

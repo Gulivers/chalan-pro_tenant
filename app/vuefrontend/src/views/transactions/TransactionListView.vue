@@ -497,13 +497,16 @@ export default {
             sortField: sortField.value,
             sortOrder: sortOrder.value,
           }),
+          exclude_type_code: "MR",
         });
         const classicSearch = filter.value.trim();
         if (classicSearch) {
           params.set("search", classicSearch);
         }
         const { data } = await axios.get(`${ENDPOINT}?${params}`);
-        transactions.value = data.items || [];
+        transactions.value = (data.items || []).filter(
+          (item) => item.document_type_code !== "MR"
+        );
         totalRows.value = data.totalRows || 0;
         if (data.stats) stats.value = data.stats;
         loadError.value = false;
