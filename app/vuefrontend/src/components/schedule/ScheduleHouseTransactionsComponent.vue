@@ -269,9 +269,10 @@ export default {
       return this.canView || this.canChange;
     },
     filteredTransactions() {
-      if (!this.search) return this.transactions;
+      const rows = this.transactions.filter((item) => !this.isMaterialRequest(item));
+      if (!this.search) return rows;
       const q = this.search.toLowerCase();
-      return this.transactions.filter((item) => {
+      return rows.filter((item) => {
         const typeCode = this.documentTypesMap[item.document_type] || "";
         const typeName = this.documentTypeNamesMap[item.document_type] || "";
         const notes = item.notes || "";
@@ -318,6 +319,13 @@ export default {
     },
   },
   methods: {
+    isMaterialRequest(item) {
+      const code =
+        item?.document_type_code ||
+        this.documentTypesMap[item?.document_type] ||
+        "";
+      return code === "MR";
+    },
     hasPermission(permission) {
       try {
         const userPermissions = JSON.parse(

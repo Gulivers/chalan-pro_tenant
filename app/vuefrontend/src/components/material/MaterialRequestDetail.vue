@@ -43,58 +43,76 @@
       </p>
       <p v-if="request.notes">{{ request.notes }}</p>
 
-      <table class="jr-mr-detail__table">
-        <thead>
-          <tr>
-            <th>Material</th>
-            <th>SKU</th>
-            <th>Qty</th>
-            <th v-if="linesEditable"><span class="jr-sr-only">Remove</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="line in request.lines || []" :key="line.id">
-            <td>{{ line.product_name }}</td>
-            <td>{{ line.sku }}</td>
-            <td>
-              <div v-if="linesEditable" class="jr-mr-detail__qty">
-                <button
-                  type="button"
-                  aria-label="Decrease quantity"
-                  :disabled="saving"
-                  @click="adjustLine(line, -1)">
-                  −
-                </button>
-                <input
-                  type="number"
-                  min="1"
-                  :aria-label="`Quantity for ${line.product_name}`"
-                  :value="line.quantity"
-                  :disabled="saving"
-                  @change="setLineQty(line, $event)" />
-                <button
-                  type="button"
-                  aria-label="Increase quantity"
-                  :disabled="saving"
-                  @click="adjustLine(line, 1)">
-                  +
-                </button>
-              </div>
-              <span v-else>{{ line.quantity }}</span>
-            </td>
-            <td v-if="linesEditable">
-              <JRButton
+      <JRDataTable
+        class="jr-mr-detail__lines"
+        :value="request.lines || []"
+        dataKey="id"
+        :rowHover="false">
+        <Column field="product_name" header="Material">
+          <template #body="{ data }">
+            <div class="jr-product-cell">
+              <span class="jr-product-cell__thumb">
+                <img
+                  v-if="lineImageSrc(data)"
+                  :src="lineImageSrc(data)"
+                  alt=""
+                  class="jr-product-cell__img"
+                  width="44"
+                  height="44"
+                  loading="lazy"
+                  decoding="async"
+                  @error="onLineImageError(data)" />
+                <span v-else class="jr-product-cell__ph" aria-hidden="true" />
+              </span>
+              <span class="jr-product-cell__name">{{ data.product_name }}</span>
+            </div>
+          </template>
+        </Column>
+        <Column field="sku" header="SKU" />
+        <Column field="quantity" header="Qty">
+          <template #body="{ data }">
+            <div v-if="linesEditable" class="jr-mr-detail__qty">
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
+                aria-label="Decrease quantity"
                 :disabled="saving"
-                @click="removeLine(line)">
-                Remove
-              </JRButton>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                @click="adjustLine(data, -1)">
+                −
+              </button>
+              <input
+                type="number"
+                min="1"
+                :aria-label="`Quantity for ${data.product_name}`"
+                :value="data.quantity"
+                :disabled="saving"
+                @change="setLineQty(data, $event)" />
+              <button
+                type="button"
+                aria-label="Increase quantity"
+                :disabled="saving"
+                @click="adjustLine(data, 1)">
+                +
+              </button>
+            </div>
+            <span v-else>{{ data.quantity }}</span>
+          </template>
+        </Column>
+        <Column v-if="linesEditable">
+          <template #header>
+            <span class="jr-sr-only">Remove</span>
+          </template>
+          <template #body="{ data }">
+            <JRButton
+              type="button"
+              variant="ghost"
+              size="sm"
+              :disabled="saving"
+              @click="removeLine(data)">
+              Remove
+            </JRButton>
+          </template>
+        </Column>
+      </JRDataTable>
 
       <section
         v-if="canEdit && (request.next_status || request.previous_status)"
@@ -141,11 +159,12 @@
 
 <script>
 import axios from 'axios';
-import { JRPageHeader, JRButton, JRBadge, JRField, JRTextarea } from '@/ui';
+import Column from 'primevue/column';
+import { JRPageHeader, JRButton, JRBadge, JRField, JRTextarea, JRDataTable } from '@/ui';
 
 export default {
   name: 'MaterialRequestDetail',
-  components: { JRPageHeader, JRButton, JRBadge, JRField, JRTextarea },
+  components: { JRPageHeader, JRButton, JRBadge, JRField, JRTextarea, JRDataTable, Column },
   props: {
     requestId: {
       type: [Number, String],
@@ -172,6 +191,7 @@ export default {
       transitionNotes: '',
       error: '',
       alive: true,
+      brokenImageIds: {},
     };
   },
   beforeUnmount() {
@@ -288,6 +308,14 @@ export default {
       if (typeof detail === 'string') return detail;
       return fallback;
     },
+    lineImageSrc(line) {
+      if (!line?.product || this.brokenImageIds[line.product]) return '';
+      return line.image || '';
+    },
+    onLineImageError(line) {
+      if (!line?.product) return;
+      this.brokenImageIds = { ...this.brokenImageIds, [line.product]: true };
+    },
     formatWhen(value) {
       if (!value) return '';
       const date = new Date(value);
@@ -331,17 +359,40 @@ export default {
 .jr-mr-detail__meta {
   margin-top: 0;
 }
-.jr-mr-detail__table {
-  width: 100%;
-  border-collapse: collapse;
+.jr-mr-detail__lines {
   margin: 1rem 0 1.5rem;
 }
-.jr-mr-detail__table th,
-.jr-mr-detail__table td {
-  text-align: left;
-  padding: 0.45rem 0.25rem;
-  border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
-  vertical-align: middle;
+.jr-product-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.jr-product-cell__thumb {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+.jr-product-cell__img,
+.jr-product-cell__ph {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--color-jr-border, #e5e7eb);
+  border-radius: var(--radius-jr-control);
+  background: var(--color-jr-surface-muted, #f3f4f6);
+  object-fit: cover;
+}
+.jr-product-cell__ph {
+  display: block;
+  border-style: dashed;
+}
+.jr-product-cell__name {
+  overflow: hidden;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .jr-mr-detail__qty {
   display: flex;
