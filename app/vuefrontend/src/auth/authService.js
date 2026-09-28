@@ -2,11 +2,46 @@ import axios from 'axios'
 import router from '../router'
 import { useAuthStore } from '../stores/auth'
 
+let renewTimer = null
+const RENEW_LEAD_MS = 2 * 60 * 1000
+
+function clearRenewTimer() {
+  if (renewTimer) {
+    clearTimeout(renewTimer)
+    renewTimer = null
+  }
+}
+
+function readAccessExpiryMs(token) {
+  try {
+    const part = String(token || '').split('.')[1]
+    if (!part) return null
+    const json = atob(part.replace(/-/g, '+').replace(/_/g, '/'))
+    const exp = JSON.parse(json).exp
+    return typeof exp === 'number' ? exp * 1000 : null
+  } catch {
+    return null
+  }
+}
+
+function scheduleRenew(token) {
+  clearRenewTimer()
+  const expMs = readAccessExpiryMs(token)
+  if (!expMs) return
+  const delay = expMs - Date.now() - RENEW_LEAD_MS
+  if (delay <= 0) return
+  renewTimer = setTimeout(() => {
+    renewTimer = null
+    authService.refreshAccess().catch(() => {})
+  }, delay)
+}
+
 const authService = {
   async login(username, password) {
     const response = await axios.post('/api/auth/login/', { username, password })
     const authStore = useAuthStore()
     authStore.applyLoginResponse(response.data)
+    scheduleRenew(response.data.access)
     return response.data
   },
 
@@ -25,6 +60,7 @@ const authService = {
     if (response.data.refresh) {
       authStore.setRefreshToken(response.data.refresh)
     }
+    scheduleRenew(response.data.access)
     return response.data.access
   },
 
@@ -40,6 +76,7 @@ const authService = {
     } catch (_) {
       // Client cleanup proceeds even if server session already gone
     }
+    clearRenewTimer()
     authStore.clearSession()
     router.push('/login')
   },
@@ -52,6 +89,7 @@ const authService = {
     try {
       return await this.refreshAccess()
     } catch (_) {
+      clearRenewTimer()
       authStore.clearSession()
       return null
     }

@@ -359,8 +359,10 @@ REST_FRAMEWORK = {
 
 from datetime import timedelta
 
-# Simple JWT — tenant-bound via custom Token + TenantJWTAuthentication
-_ACCESS_MINUTES = int(os.environ.get('AUTH_ACCESS_TOKEN_MINUTES', '15'))
+# Simple JWT — tenant-bound via custom Token + TenantJWTAuthentication.
+# Access covers a work shift (8 h). Refresh keeps the session for 7 days
+# so the SPA can mint a new access without asking for the password again.
+_ACCESS_MINUTES = int(os.environ.get('AUTH_ACCESS_TOKEN_MINUTES', '480'))
 _REFRESH_DAYS = int(os.environ.get('AUTH_REFRESH_TOKEN_DAYS', '7'))
 
 SIMPLE_JWT = {
