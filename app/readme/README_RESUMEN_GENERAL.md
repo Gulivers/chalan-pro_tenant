@@ -402,7 +402,7 @@ JobRhythm usa **Simple JWT tenant-bound**. Se retiró `rest_framework.authtoken`
 
 | Pieza | Dónde | Rol |
 | ----- | ----- | --- |
-| Access JWT | Memoria del navegador (`Authorization: Bearer …`) | ~15 min (`AUTH_ACCESS_TOKEN_MINUTES`) |
+| Access JWT | Memoria del navegador (`Authorization: Bearer …`) | 8 h (`AUTH_ACCESS_TOKEN_MINUTES=480`). El SPA lo renueva con el refresh unos 2 min antes de vencer |
 | Refresh JWT | Cookie HttpOnly `jr_refresh` (path `/api/auth/`, host-only) o body si `AUTH_USE_REFRESH_COOKIE=False` | ~7 días (`AUTH_REFRESH_TOKEN_DAYS`); rotación + blacklist |
 | Claim `schema_name` | Dentro del access y del refresh | Debe coincidir con el schema del request; si no → rechazo |
 | `userPermissions` | `localStorage` | Solo UX (menú/rutas); no es secreto ni autoridad |
@@ -430,7 +430,7 @@ Prefijo `/api/auth/` está **exento** del enforcement de trial/billing (`TenantA
 
 1. Login → access en memoria + cookie refresh + `jr_session` + permisos UX.
 2. Cada API → `Bearer` access.
-3. 401 → axios intenta `/api/auth/refresh/` con credentials; reintenta; si falla → logout y `/login`.
+3. Unos 2 min antes de que venza el access (8 h), el SPA llama `/api/auth/refresh/` y guarda el access nuevo. Si una petición recibe 401, axios hace el mismo refresh y reintenta; si el refresh falla → logout y `/login`.
 4. Nueva pestaña: lee `jr_session`, llama refresh, rehidrata access.
 5. Logout / reset password → blacklist de refresh del usuario.
 
@@ -453,7 +453,7 @@ El menú del shell (`NavbarComponent`) **no lista módulos** si no hay sesión (
 
 | Variable | Default | Notas |
 | -------- | ------- | ----- |
-| `AUTH_ACCESS_TOKEN_MINUTES` | `15` | Vida del access |
+| `AUTH_ACCESS_TOKEN_MINUTES` | `480` | Vida del access (8 horas) |
 | `AUTH_REFRESH_TOKEN_DAYS` | `7` | Vida del refresh / cookie `Max-Age` |
 | `AUTH_USE_REFRESH_COOKIE` | `True` | Preferido multi-tab (mismo origen vía Nginx) |
 | `AUTH_REFRESH_COOKIE_SECURE` | `True` si `DEBUG=False` | En prod HTTPS debe ser `True` |
