@@ -239,7 +239,24 @@
         </thead>
         <tbody>
           <tr v-for="line in selectedLines" :key="line.id">
-            <td>{{ line.name }}</td>
+            <td>
+              <div class="jr-product-cell">
+                <span class="jr-product-cell__thumb">
+                  <img
+                    v-if="productImage(line)"
+                    :src="productImage(line)"
+                    alt=""
+                    class="jr-product-cell__img"
+                    width="44"
+                    height="44"
+                    loading="lazy"
+                    decoding="async"
+                    @error="onImageError(line)" />
+                  <span v-else class="jr-product-cell__ph" aria-hidden="true" />
+                </span>
+                <span class="jr-product-cell__name">{{ line.name }}</span>
+              </div>
+            </td>
             <td>
               <div class="jr-mr-summary__qty">
                 <button type="button" aria-label="Decrease quantity" @click="adjustLine(line, -1)">−</button>
@@ -464,6 +481,7 @@ export default {
           id: item.id,
           name: item.name,
           sku: item.sku,
+          image: item.image || '',
           quantity,
         },
       };
@@ -896,6 +914,38 @@ export default {
   padding: 0.4rem 0;
   border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
   vertical-align: middle;
+}
+.jr-product-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.jr-product-cell__thumb {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+.jr-product-cell__img,
+.jr-product-cell__ph {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--color-jr-border, #e5e7eb);
+  border-radius: var(--radius-jr-control);
+  background: var(--color-jr-surface-muted, #f3f4f6);
+  object-fit: cover;
+}
+.jr-product-cell__ph {
+  display: block;
+  border-style: dashed;
+}
+.jr-product-cell__name {
+  overflow: hidden;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .jr-mr-summary__qty {
   display: flex;

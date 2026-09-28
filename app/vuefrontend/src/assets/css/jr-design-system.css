@@ -1200,3 +1200,62 @@
   margin-top: auto;
   padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px));
 }
+
+/* Tooltip v-tt. Se pinta en document.body, fuera de .jr-pilot. */
+.cp-tt {
+  position: absolute;
+  background: var(--color-jr-text);
+  color: var(--color-jr-surface);
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius-jr-control);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  pointer-events: none;
+  z-index: 2000;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  box-shadow: var(--shadow-jr-overlay);
+}
+
+.cp-tt.show {
+  opacity: 1;
+}
+
+.cp-tt .cp-tt-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+}
+
+.cp-tt[data-placement="top"] .cp-tt-arrow {
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top-color: var(--color-jr-text);
+  border-bottom: 0;
+}
+
+.cp-tt[data-placement="bottom"] .cp-tt-arrow {
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-bottom-color: var(--color-jr-text);
+  border-top: 0;
+}
+
+.cp-tt[data-placement="left"] .cp-tt-arrow {
+  top: 50%;
+  right: -12px;
+  transform: translateY(-50%);
+  border-left-color: var(--color-jr-text);
+  border-right: 0;
+}
+
+.cp-tt[data-placement="right"] .cp-tt-arrow {
+  top: 50%;
+  left: -12px;
+  transform: translateY(-50%);
+  border-right-color: var(--color-jr-text);
+  border-left: 0;
+}

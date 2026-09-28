@@ -89,8 +89,6 @@ const PartyCategoryListView = () =>
   import("@views/transactions/PartyCategoryListView.vue");
 const PartyCategoryForm = () =>
   import("@components/transactions/PartyCategoryForm.vue");
-const PartyForm = () => import("@components/transactions/PartyForm.vue");
-const PartyListView = () => import("@views/transactions/PartyListView.vue");
 const TransactionForm = () =>
   import("@components/transactions/TransactionForm.vue");
 const TransactionListView = () =>
@@ -1104,24 +1102,6 @@ const routes = [
     },
   },
   {
-    path: "/parties",
-    name: "parties",
-    component: PartyListView,
-    meta: {
-      requiresAuth: true,
-      requiredPermissions: ["apptransactions.view_party"],
-    },
-  },
-  {
-    path: "/parties/form",
-    name: "parties-form",
-    component: PartyForm,
-    meta: {
-      requiresAuth: true,
-      requiredPermissions: ["apptransactions.add_party"],
-    },
-  },
-  {
     path: "/transactions/form",
     name: "transactions-form",
     component: TransactionForm,
@@ -1215,7 +1195,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
 

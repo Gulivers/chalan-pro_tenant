@@ -852,9 +852,9 @@ async function onFavoriteSelected(favoriteData) {
       confirmButtonText: "Add to existing lines",
       denyButtonText: "Replace all lines",
       cancelButtonText: "Cancel",
-      confirmButtonColor: "#198754",
-      denyButtonColor: "#6c757d",
-      cancelButtonColor: "#adb5bd",
+      confirmButtonColor: "#16a34a",
+      denyButtonColor: "#4b5563",
+      cancelButtonColor: "#d1d5db",
       reverseButtons: true,
     });
 
@@ -1123,8 +1123,8 @@ async function promptPrintAndRedirect(documentId) {
     text: "Do you want to print the PDF?",
     icon: "success",
     showCancelButton: true,
-    confirmButtonColor: "#3085d6",
-    cancelButtonColor: "#6c757d",
+    confirmButtonColor: "#2563eb",
+    cancelButtonColor: "#4b5563",
     confirmButtonText: "Yes, Print",
     cancelButtonText: "No, Continue",
     reverseButtons: true,
@@ -1839,13 +1839,13 @@ async function handleSubmit() {
           // Caso 1: Error estructurado del backend (nuevo formato)
           if (typeof error === "object" && error.productName) {
             return `
-            <div class="text-start mb-2 p-2 border-start border-danger border-2">
-              <small class="text-danger">${error.productName}</small><br>
-              <small class="text-muted">
+            <div class="mb-2 border-s-2 border-jr-danger p-2 text-start">
+              <p class="m-0 text-sm text-jr-danger">${error.productName}</p>
+              <p class="m-0 text-sm text-jr-muted">
                 Available: ${error.available} | 
                 Requested: ${error.requested}<br>
                 Document Type: ${error.documentType} (does not allow negative sales)
-              </small>
+              </p>
             </div>
           `;
           }
@@ -1859,44 +1859,46 @@ async function handleSubmit() {
               const [, available, requested, docType] = match;
               const productName = error.split(":")[0].replace("• ", "");
               return `
-              <div class="text-start mb-2 p-2 border-start border-danger border-2">
-                <small class="text-danger">${productName}</small><br>
-                <small class="text-muted">
+              <div class="mb-2 border-s-2 border-jr-danger p-2 text-start">
+                <p class="m-0 text-sm text-jr-danger">${productName}</p>
+                <p class="m-0 text-sm text-jr-muted">
                   Available: ${available} | 
                   Requested: ${requested}<br>
                   Document Type: ${docType} (does not allow negative sales)
-                </small>
+                </p>
               </div>
             `;
             }
             // Si no se puede parsear, mostrar el error tal como está
             return `
-            <div class="text-start mb-1">
-              <small class="text-danger">${error}</small>
+            <div class="mb-1 text-start">
+              <p class="m-0 text-sm text-jr-danger">${error}</p>
             </div>
           `;
           }
           // Caso 3: Fallback
           return `
-          <div class="text-start mb-1">
-            <small class="text-danger">${String(error)}</small>
+          <div class="mb-1 text-start">
+            <p class="m-0 text-sm text-jr-danger">${String(error)}</p>
           </div>
         `;
         })
         .join("");
 
       errorMessage = `
-        <div class="text-start">
-          <small class="mb-3">⚠️ The following products have insufficient stock:</small>
+        <div class="jr-pilot">
+          <div class="text-start">
+          <p class="mb-3 text-sm">⚠️ The following products have insufficient stock:</p>
           ${stockErrorsHTML}
-          <div class="mt-3 p-2 bg-light rounded">
-            <small class="text-muted">
+          <div class="mt-3 rounded-jr-panel bg-jr-surface-muted p-2">
+            <p class="m-0 text-sm text-jr-muted">
               ℹ️ 
               Solutions:<br>
               • Check inventory in other warehouses<br>
               • Adjust quantities to available stock<br>
               • Enable "Allow Negative Sales" in document type settings
-            </small>
+            </p>
+          </div>
           </div>
         </div>
       `;
@@ -1908,7 +1910,7 @@ async function handleSubmit() {
       html: errorMessage,
       width: "700px",
       confirmButtonText: "OK",
-      confirmButtonColor: "#dc3545",
+      confirmButtonColor: "#dc2626",
     });
   } finally {
     submitting.value = false;
@@ -2028,7 +2030,7 @@ onMounted(async () => {
 
 .jr-tx-form__fav-star {
   /* Favorite affordance: clear yellow (DESIGN.md warning token). */
-  color: #ffc107;
+  color: var(--color-jr-warning);
   width: 1.125rem;
   height: 1.125rem;
   flex-shrink: 0;

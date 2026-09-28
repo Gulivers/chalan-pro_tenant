@@ -1,9 +1,9 @@
 <template>
   <div class="assistant-chart-block">
-    <div v-if="block.title" class="assistant-block-title text-muted small mb-2">
+    <div v-if="block.title" class="assistant-block-title mb-2 text-sm text-jr-muted">
       {{ block.title }}
     </div>
-    <div v-if="!hasData" class="text-muted small text-start">No chart data.</div>
+    <div v-if="!hasData" class="text-start text-sm text-jr-muted">No chart data.</div>
     <div v-else class="assistant-chart-canvas-wrap">
       <canvas ref="chartCanvas" aria-label="Donut chart" role="img" />
     </div>
@@ -17,14 +17,14 @@ import { parseChartNumber } from '../formatValue';
 Chart.register(...registerables);
 
 const PALETTE = [
-  'rgba(13, 110, 253, 0.8)',
-  'rgba(25, 135, 84, 0.8)',
-  'rgba(255, 193, 7, 0.85)',
-  'rgba(220, 53, 69, 0.8)',
-  'rgba(111, 66, 193, 0.8)',
-  'rgba(13, 202, 240, 0.8)',
-  'rgba(108, 117, 125, 0.8)',
-  'rgba(253, 126, 20, 0.8)',
+  '#2563eb',
+  '#16a34a',
+  '#d97706',
+  '#dc2626',
+  '#0284c7',
+  '#4b5563',
+  '#1d4ed8',
+  '#111827',
 ];
 
 export default {
@@ -98,7 +98,7 @@ export default {
           plugins: {
             legend: {
               position: 'bottom',
-              labels: { boxWidth: 12, font: { size: 10 } },
+              labels: { boxWidth: 12 },
             },
           },
         },

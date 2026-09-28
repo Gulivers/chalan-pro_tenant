@@ -1376,7 +1376,7 @@
       const r = linesLocal.value[idx];
       
       if (brands.length > 0) {
-        // Formatear las marcas para v-select
+        // Marcas para el select JR (value / label)
         r.brands = brands.map(b => ({ value: b.id, label: b.name }));
         
         // Si no hay marca seleccionada, usar la default

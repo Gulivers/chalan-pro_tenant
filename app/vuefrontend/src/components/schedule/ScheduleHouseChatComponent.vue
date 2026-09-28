@@ -63,7 +63,6 @@
 </template>
 
 <script>
-import "@assets/css/base.css";
 import axios from "axios";
 import { useAuthStore } from "@stores/auth";
 import dayjs from "dayjs";

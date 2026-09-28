@@ -218,7 +218,7 @@ export default {
   },
   computed: {
     jobrhythmLogoUrl() {
-      const base = process.env.BASE_URL || "/";
+      const base = import.meta.env.BASE_URL || "/";
       return `${base}img/jobrhythm-logo.png`;
     },
     footerLogoSrc() {

@@ -25,7 +25,7 @@ No mezclar Bootstrap y JR en la misma pantalla (ni en Navbar / Footer).
 ## 1. Isolation
 
 - Envolver **solo** pantallas de feature migradas en `JRPage` (añade `.jr-pilot`).
-- Tailwind utilities viven como `.jr-pilot .utility` (y `.jr-shell` cuando exista en el App Shell). Bootstrap (`p-4`, etc.) sigue ganando **solo** en pantallas aún no migradas.
+- Tailwind utilities viven como `.jr-pilot .utility` (y `.jr-shell` cuando exista en el App Shell). El CSS global de Bootstrap ya no se carga.
 - Tailwind Preflight **no** está activo mientras queden restos Bootstrap globales.
 - **Navbar / Footer están en el alcance del upgrade:** migrar a tokens JR + PrimeVue (ver `DESIGN.md` Target State → App Shell). No dejar Bootstrap / `skin-modern` como contrato permanente del shell.
 - Overlays portaleados (drawer, dialog, menú): `.jr-pilot` / `.jr-shell` / `.jr-overlay` en el overlay; menús flotantes usan `.jr-overlay`, no el `jr-pilot` de página.

@@ -1,8 +1,8 @@
 <template>
   <div class="assistant-kpi-block">
-    <div class="assistant-kpi-title text-muted small">{{ block.title || 'Metric' }}</div>
+    <div class="assistant-kpi-title text-sm text-jr-muted">{{ block.title || 'Metric' }}</div>
     <div class="assistant-kpi-value">{{ formattedValue }}</div>
-    <div v-if="block.subtitle" class="assistant-kpi-subtitle text-muted small">
+    <div v-if="block.subtitle" class="assistant-kpi-subtitle text-sm text-jr-muted">
       {{ block.subtitle }}
     </div>
   </div>
@@ -35,18 +35,18 @@ export default {
 .assistant-kpi-block {
   text-align: left;
   padding: 0.65rem 0.75rem;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 0.375rem;
-  background: #f8f9fa;
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
+  background: var(--color-jr-surface-muted);
 }
 .assistant-kpi-title {
   font-weight: 600;
   margin-bottom: 0.15rem;
 }
 .assistant-kpi-value {
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: #212529;
+  font-size: 1.3125rem;
+  font-weight: 600;
+  color: var(--color-jr-text);
   line-height: 1.2;
 }
 .assistant-kpi-subtitle {
