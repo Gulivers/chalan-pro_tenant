@@ -86,6 +86,9 @@ scripts/sync_main_with_remote.sh
 # Migraciones de datos one-off / dumps locales (solo ubuntu-house)
 A-TMP_migration/
 
+# Cliente local Schneider Product Catalog v2 (OAuth, IDs y .env; no versionar)
+A-TMP_migration/schneider_product_catalog/
+
 # Hosts locales (IPs LAN); no versionar cambios de máquina
 scripts/hosts_entries.txt
 
