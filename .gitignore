@@ -103,3 +103,9 @@ scripts/renew_wildcard_certbot_auto.sh
 
 # Comando local opcional (carga de imágenes desde disco); no versionar
 app/appinventory/management/commands/load_product_images.py
+
+# Firmas temporales de verificación TikTok (siguen en el servidor, no se versionan)
+landing/src/tiktok*.txt
+landing/dist/tiktok*.txt
+landing/src/tiktok-verify/
+landing/dist/tiktok-verify/
