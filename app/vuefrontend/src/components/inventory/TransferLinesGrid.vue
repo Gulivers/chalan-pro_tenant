@@ -1,231 +1,382 @@
 <template>
-  <div class="card">
-    <div class="card-header">
-      <div class="d-none d-md-flex align-items-center justify-content-between">
-        <div class="d-flex gap-2">
-          <button class="btn btn-outline-primary" type="button" @click="addLine">
-            <i class="bi bi-plus-lg me-1"></i>
-            Add Row
-          </button>
-          <button class="btn btn-outline-danger" type="button" :disabled="!hasSelection" @click="removeSelected">
-            <i class="bi bi-trash me-1"></i>
-            Delete selected
-          </button>
-        </div>
-        <div class="small text-muted">Rows: {{ linesLocal?.length || 0 }}</div>
+  <div class="jr-transfer-lines">
+    <div class="jr-transfer-lines__toolbar">
+      <div class="jr-transfer-lines__toolbar-actions">
+        <JRButton
+          type="button"
+          variant="secondary"
+          size="sm"
+          :disabled="isReadOnly"
+          @click="addLine">
+          + Add Row
+        </JRButton>
+        <JRButton
+          type="button"
+          variant="danger"
+          size="sm"
+          :disabled="isReadOnly || !hasSelection"
+          @click="removeSelected">
+          Delete selected
+        </JRButton>
       </div>
-      <div class="d-md-none">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <div class="small text-muted">Rows: {{ linesLocal?.length || 0 }}</div>
-        </div>
-        <div class="d-flex gap-1 flex-wrap">
-          <button class="btn btn-outline-primary btn-sm flex-fill" type="button" @click="addLine">
-            <i class="bi bi-plus-lg"></i>
-            <span class="ms-1">Add Row</span>
-          </button>
-          <button class="btn btn-outline-danger btn-sm flex-fill" type="button" :disabled="!hasSelection" @click="removeSelected">
-            <i class="bi bi-trash"></i>
-            <span class="ms-1">Delete</span>
-          </button>
-        </div>
-      </div>
+      <span class="jr-transfer-lines__count">Rows: {{ linesLocal?.length || 0 }}</span>
     </div>
 
-    <div class="table-responsive" style="max-height: 70vh; min-height: 300px">
-      <table class="table table-sm align-middle table-hover table-sticky">
-        <thead>
-          <tr>
-            <th style="width: 30px" class="text-center">
-              <input type="checkbox" class="form-check-input" v-model="selectAll" />
-            </th>
-            <th style="min-width: 240px">Product <span class="text-danger">*</span></th>
-            <th style="min-width: 160px">From Warehouse</th>
-            <th style="min-width: 160px">To Warehouse</th>
-            <th style="min-width: 90px">Quantity</th>
-            <th style="min-width: 140px">Unit</th>
-            <th style="min-width: 200px">Serialized item</th>
-            <th style="min-width: 100px" class="text-center">Status</th>
-            <th style="min-width: 100px" class="text-center">Condition</th>
-            <th style="width: 70px"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(row, idx) in linesLocal"
-            :key="row.__key"
-            :class="{ 'table-warning': Object.keys(row._errors || {}).length > 0 }">
-            <td class="text-center">
-              <input type="checkbox" class="form-check-input" v-model="row.selected" />
-            </td>
-
-            <td>
-              <v-select
-                :id="`product-${idx}`"
-                :options="productOptions"
-                label="label"
-                :reduce="o => o.value"
-                :filterable="true"
-                :loading="loading.products[idx]"
-                v-model="row.product"
-                @search="q => searchProducts(idx, q)"
-                @option:selected="opt => onProductSelected(idx, opt)"
-                @clear="onProductCleared(idx)"
-                @update:modelValue="val => onProductChanged(idx, val)"
-                placeholder="Search product..."
+    <div v-if="isCompact" class="jr-transfer-lines__compact">
+      <JREmptyState
+        v-if="!linesLocal.length"
+        title="No transfer lines"
+        description="Add a row to move products between warehouses.">
+        <JRButton
+          v-if="!isReadOnly"
+          type="button"
+          variant="secondary"
+          size="sm"
+          @click="addLine">
+          + Add Row
+        </JRButton>
+      </JREmptyState>
+      <ul v-else class="jr-transfer-line-list">
+        <li
+          v-for="(row, idx) in linesLocal"
+          :key="row.__key"
+          class="jr-transfer-line-item"
+          :class="{
+            'jr-transfer-line-item--error':
+              Object.keys(row._errors || {}).length > 0,
+          }">
+          <div class="jr-transfer-line-item__check">
+            <JRCheckbox
+              v-if="!isReadOnly"
+              :modelValue="!!row.selected"
+              :ariaLabel="`Select line ${idx + 1}`"
+              @update:modelValue="(v) => (row.selected = v)" />
+          </div>
+          <div class="jr-transfer-line-item__main">
+              <JRField
+              :label="`Product`"
+              :inputId="`product-m-${idx}`"
+              required
+              :error="rowErrorText(row._errors?.product)">
+              <Select
+                class="jr-control"
+                :inputId="`product-m-${idx}`"
+                :modelValue="row.product"
+                :options="optionsForProduct(row)"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Search product…"
+                filter
+                filterPlaceholder="Type at least 2 characters…"
+                emptyFilterMessage="Type at least 2 characters to search…"
+                :loading="!!loading.products[idx]"
                 :disabled="isReadOnly"
-                :class="{ 'is-invalid': row._errors?.product }">
-                <template #selected-option="{ label, product }">
-                  <div class="d-flex align-items-center gap-2" style="max-width: 260px">
-                    <span class="text-truncate">{{ row.product_label || product?.name || label || 'No name' }}</span>
-                    <span
-                      v-if="product?.tracking_mode === 'SERIALIZED'"
-                      class="badge bg-info flex-shrink-0"
-                      style="font-size: 0.65rem">
-                      SERIALIZED
-                    </span>
-                  </div>
-                </template>
-                <template #option="{ label, product }">
-                  <div class="d-flex align-items-center gap-2" style="max-width: 260px">
-                    <span class="text-truncate">{{ product?.name || label || 'No name' }}</span>
-                    <span
-                      v-if="product?.tracking_mode === 'SERIALIZED'"
-                      class="badge bg-info flex-shrink-0"
-                      style="font-size: 0.65rem">
-                      SERIALIZED
-                    </span>
-                  </div>
-                </template>
-                <template #no-options>
-                  <div class="text-muted small">Type at least 2 characters to search...</div>
-                </template>
-              </v-select>
-              <div class="text-danger small" v-if="row._errors?.product">{{ row._errors.product[0] }}</div>
-            </td>
+                :invalid="!!row._errors?.product"
+                showClear
+                fluid
+                @filter="(e) => onProductFilter(idx, e)"
+                @show="() => onProductShow(idx, row)"
+                @update:modelValue="(val) => onProductModel(idx, val)" />
+              <JRBadge
+                v-if="row.isSerialized"
+                class="jr-transfer-line-item__serial-badge"
+                value="Serial tracking"
+                severity="info" />
+            </JRField>
 
-            <td>
-              <span class="form-control-plaintext small">
-                {{ fromWarehouseLabel }}
-              </span>
-            </td>
+            <p class="jr-transfer-line-item__route">
+              {{ fromWarehouseLabel }} → {{ toWarehouseLabel }}
+            </p>
 
-            <td>
-              <span class="form-control-plaintext small">
-                {{ toWarehouseLabel }}
-              </span>
-            </td>
+            <div class="jr-transfer-line-item__grid">
+              <JRField
+                label="Quantity"
+                :inputId="`quantity-m-${idx}`"
+                :error="rowErrorText(row._errors?.quantity)">
+                <JRInput
+                  :inputId="`quantity-m-${idx}`"
+                  type="number"
+                  :modelValue="row.quantity"
+                  :min="0.01"
+                  :minFractionDigits="0"
+                  :maxFractionDigits="2"
+                  placeholder="1.00"
+                  :disabled="row.isSerialized || isReadOnly"
+                  :invalid="!!row._errors?.quantity"
+                  @update:modelValue="(v) => (row.quantity = v)" />
+              </JRField>
 
-            <td>
-              <input
-                :id="`quantity-${idx}`"
-                type="number"
-                min="0.01"
-                step="0.01"
-                class="form-control form-control-sm"
-                :class="{ 'is-invalid': row._errors?.quantity }"
-                v-model.number="row.quantity"
-                :disabled="row.isSerialized || isReadOnly"
-                placeholder="1.00" />
-              <div class="text-danger small" v-if="row._errors?.quantity">{{ row._errors.quantity[0] }}</div>
-            </td>
+              <JRField
+                label="Unit"
+                :inputId="`unit-m-${idx}`"
+                :error="rowErrorText(row._errors?.unit)">
+                <JRSelect
+                  :inputId="`unit-m-${idx}`"
+                  v-model="row.unit"
+                  :options="unitsOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Select unit…"
+                  filter
+                  :disabled="isReadOnly"
+                  :invalid="!!row._errors?.unit" />
+              </JRField>
+            </div>
 
-            <td>
-              <v-select
-                :id="`unit-${idx}`"
-                :options="unitsOptions"
-                :reduce="o => o.value"
-                label="label"
-                v-model="row.unit"
-                :disabled="isReadOnly"
-                :class="{ 'is-invalid': row._errors?.unit }"
-                placeholder="Select unit...">
-                <template #selected-option="{ label }">
-                  <div class="text-truncate" style="max-width: 130px">{{ label }}</div>
-                </template>
-                <template #option="{ label }">
-                  <div class="text-truncate" style="max-width: 130px">{{ label }}</div>
-                </template>
-              </v-select>
-              <div class="text-danger small" v-if="row._errors?.unit">{{ row._errors.unit[0] }}</div>
-            </td>
-
-            <td>
-              <v-select
-                :id="`serialized-${idx}`"
+            <JRField
+              v-if="row.isSerialized"
+              label="Serialized item"
+              :inputId="`serialized-m-${idx}`"
+              required
+              :error="rowErrorText(row._errors?.serialized_item)">
+              <Select
+                class="jr-control"
+                :inputId="`serialized-m-${idx}`"
+                :modelValue="row.serialized_item"
                 :options="row.serializedOptions || []"
-                label="label"
-                :reduce="o => o.value"
-                v-model="row.serialized_item"
-                :disabled="!row.product || !row.isSerialized || isReadOnly"
-                :loading="loading.serialized[idx]"
-                @search="q => searchSerialized(idx, q)"
-                placeholder="Select serial number..."
-                clearable>
-                <template #selected-option="{ label }">
-                  <div class="text-truncate" style="max-width: 180px">{{ label }}</div>
-                </template>
-                <template #option="{ label }">
-                  <div class="text-truncate" style="max-width: 180px">{{ label }}</div>
-                </template>
-                <template #no-options>
-                  <div class="text-muted small">
-                    {{ row.isSerialized ? (row.product ? 'Type to search...' : 'Select product first') : '—' }}
-                  </div>
-                </template>
-              </v-select>
-              <div class="text-danger small" v-if="row._errors?.serialized_item">{{ row._errors.serialized_item[0] }}</div>
-            </td>
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select serial number…"
+                filter
+                filterPlaceholder="Search serial…"
+                :loading="!!loading.serialized[idx]"
+                :disabled="!row.product || isReadOnly"
+                :invalid="!!row._errors?.serialized_item"
+                showClear
+                fluid
+                @filter="(e) => onSerializedFilter(idx, e)"
+                @show="() => searchSerialized(idx, '')"
+                @update:modelValue="(val) => (row.serialized_item = val)" />
+            </JRField>
 
-            <td class="text-center align-middle">
-              <template v-if="row.isSerialized && row.serialized_item">
-                <span
-                  v-if="serializedStatus(row)"
-                  class="badge"
-                  :class="statusBadgeClass(serializedStatus(row))"
-                  style="font-size: 0.75rem">
-                  {{ serializedStatus(row) }}
-                </span>
-                <span v-else class="text-muted">—</span>
-              </template>
-              <span v-else class="text-muted">—</span>
-            </td>
+            <div
+              v-if="row.isSerialized && row.serialized_item"
+              class="jr-transfer-line-item__badges">
+              <JRBadge
+                v-if="serializedStatus(row)"
+                :value="serializedStatus(row)"
+                :severity="statusSeverity(serializedStatus(row))" />
+              <JRBadge
+                v-if="serializedCondition(row)"
+                :value="conditionLabel(serializedCondition(row))"
+                :severity="conditionSeverity(serializedCondition(row))" />
+            </div>
+          </div>
+          <div v-if="!isReadOnly" class="jr-transfer-line-item__actions">
+            <JRButton
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-label="Remove line"
+              @click="removeRow(idx)">
+              Remove
+            </JRButton>
+          </div>
+        </li>
+      </ul>
+    </div>
 
-            <td class="text-center align-middle">
-              <template v-if="row.isSerialized && row.serialized_item">
-                <span
-                  v-if="serializedCondition(row)"
-                  class="badge"
-                  :class="conditionBadgeClass(serializedCondition(row))"
-                  style="font-size: 0.75rem">
-                  {{ conditionLabel(serializedCondition(row)) }}
-                </span>
-                <span v-else class="text-muted">—</span>
-              </template>
-              <span v-else class="text-muted">—</span>
-            </td>
-
-            <td class="text-end">
-              <button
-                v-if="!isReadOnly"
-                class="btn btn-sm btn-outline-danger"
-                type="button"
-                @click="removeRow(idx)"
-                title="Remove line">
-                <i class="bi bi-x-lg"></i>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div v-else class="jr-transfer-lines__table-wrap">
+      <div class="jr-transfer-table-scroll">
+        <table class="jr-transfer-table">
+          <thead>
+            <tr>
+              <th class="jr-transfer-table__check">
+                <JRCheckbox
+                  v-if="!isReadOnly"
+                  :modelValue="selectAll"
+                  ariaLabel="Select all lines"
+                  @update:modelValue="onSelectAll" />
+              </th>
+              <th>Product <span class="jr-transfer-req" aria-hidden="true">*</span></th>
+              <th>From</th>
+              <th>To</th>
+              <th>Quantity</th>
+              <th>Unit</th>
+              <th>Serialized item</th>
+              <th class="jr-transfer-table__center">Status</th>
+              <th class="jr-transfer-table__center">Condition</th>
+              <th class="jr-transfer-table__actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(row, idx) in linesLocal"
+              :key="row.__key"
+              :class="{
+                'jr-transfer-table__row--error':
+                  Object.keys(row._errors || {}).length > 0,
+              }">
+              <td class="jr-transfer-table__check">
+                <JRCheckbox
+                  v-if="!isReadOnly"
+                  :modelValue="!!row.selected"
+                  :ariaLabel="`Select line ${idx + 1}`"
+                  @update:modelValue="(v) => (row.selected = v)" />
+              </td>
+              <td>
+                <Select
+                  class="jr-control"
+                  :inputId="`product-${idx}`"
+                  :modelValue="row.product"
+                  :options="optionsForProduct(row)"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Search product…"
+                  filter
+                  filterPlaceholder="Type at least 2 characters…"
+                  emptyFilterMessage="Type at least 2 characters to search…"
+                  :loading="!!loading.products[idx]"
+                  :disabled="isReadOnly"
+                  :invalid="!!row._errors?.product"
+                  showClear
+                  fluid
+                  @filter="(e) => onProductFilter(idx, e)"
+                  @show="() => onProductShow(idx, row)"
+                  @update:modelValue="(val) => onProductModel(idx, val)" />
+                <JRBadge
+                  v-if="row.isSerialized"
+                  class="jr-transfer-table__serial-badge"
+                  value="Serial tracking"
+                  severity="info" />
+                <p
+                  v-if="row._errors?.product"
+                  class="jr-transfer-row-error"
+                  role="alert">
+                  {{ rowErrorText(row._errors.product) }}
+                </p>
+              </td>
+              <td>
+                <span class="jr-transfer-table__readonly">{{
+                  fromWarehouseLabel
+                }}</span>
+              </td>
+              <td>
+                <span class="jr-transfer-table__readonly">{{
+                  toWarehouseLabel
+                }}</span>
+              </td>
+              <td>
+                <JRInput
+                  :inputId="`quantity-${idx}`"
+                  type="number"
+                  :modelValue="row.quantity"
+                  :min="0.01"
+                  :minFractionDigits="0"
+                  :maxFractionDigits="2"
+                  placeholder="1.00"
+                  :disabled="row.isSerialized || isReadOnly"
+                  :invalid="!!row._errors?.quantity"
+                  @update:modelValue="(v) => (row.quantity = v)" />
+                <p
+                  v-if="row._errors?.quantity"
+                  class="jr-transfer-row-error"
+                  role="alert">
+                  {{ rowErrorText(row._errors.quantity) }}
+                </p>
+              </td>
+              <td>
+                <JRSelect
+                  :inputId="`unit-${idx}`"
+                  v-model="row.unit"
+                  :options="unitsOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Select unit…"
+                  filter
+                  :disabled="isReadOnly"
+                  :invalid="!!row._errors?.unit" />
+                <p
+                  v-if="row._errors?.unit"
+                  class="jr-transfer-row-error"
+                  role="alert">
+                  {{ rowErrorText(row._errors.unit) }}
+                </p>
+              </td>
+              <td>
+                <Select
+                  class="jr-control"
+                  :inputId="`serialized-${idx}`"
+                  :modelValue="row.serialized_item"
+                  :options="row.serializedOptions || []"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Select serial number…"
+                  filter
+                  :loading="!!loading.serialized[idx]"
+                  :disabled="!row.product || !row.isSerialized || isReadOnly"
+                  :invalid="!!row._errors?.serialized_item"
+                  showClear
+                  fluid
+                  @filter="(e) => onSerializedFilter(idx, e)"
+                  @show="() => row.isSerialized && searchSerialized(idx, '')"
+                  @update:modelValue="(val) => (row.serialized_item = val)" />
+                <p
+                  v-if="row._errors?.serialized_item"
+                  class="jr-transfer-row-error"
+                  role="alert">
+                  {{ rowErrorText(row._errors.serialized_item) }}
+                </p>
+              </td>
+              <td class="jr-transfer-table__center">
+                <JRBadge
+                  v-if="row.isSerialized && row.serialized_item && serializedStatus(row)"
+                  :value="serializedStatus(row)"
+                  :severity="statusSeverity(serializedStatus(row))" />
+                <span v-else class="jr-transfer-table__muted">—</span>
+              </td>
+              <td class="jr-transfer-table__center">
+                <JRBadge
+                  v-if="
+                    row.isSerialized &&
+                    row.serialized_item &&
+                    serializedCondition(row)
+                  "
+                  :value="conditionLabel(serializedCondition(row))"
+                  :severity="conditionSeverity(serializedCondition(row))" />
+                <span v-else class="jr-transfer-table__muted">—</span>
+              </td>
+              <td class="jr-transfer-table__actions">
+                <JRButton
+                  v-if="!isReadOnly"
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Remove line"
+                  @click="removeRow(idx)">
+                  Remove
+                </JRButton>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, computed, nextTick, onMounted } from 'vue';
-import axios from 'axios';
-import vSelect from 'vue-select';
-import 'vue-select/dist/vue-select.css';
+import { ref, watch, computed, nextTick, onMounted, onUnmounted } from "vue";
+import axios from "axios";
+import Select from "primevue/select";
+import {
+  JRButton,
+  JRSelect,
+  JRInput,
+  JRCheckbox,
+  JRBadge,
+  JRField,
+  JREmptyState,
+} from "@ui";
+
+/*
+  Lead / UI System note:
+  Product + serialized async search needs Select `filter` emit + `loading`.
+  JRSelect is multi-root and does not forward those attrs/events yet.
+  Using PrimeVue Select + `jr-control` here until JRSelect gains:
+  - prop: loading, filterPlaceholder, emptyFilterMessage
+  - emit: filter
+*/
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
@@ -237,31 +388,49 @@ const props = defineProps({
   isReadOnly: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['update:lines']);
+const emit = defineEmits(["update:lines"]);
+
+const PHONE_MQ = "(max-width: 767.98px)";
+
+function readIsCompact() {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia(PHONE_MQ).matches;
+}
+
+const isCompact = ref(readIsCompact());
+let phoneQuery = null;
+let onViewport = null;
 
 const linesLocal = ref([]);
 const selectAll = ref(false);
 const productOptions = ref([]);
 const loading = ref({ products: {}, serialized: {} });
 const isUpdatingFromProps = ref(false);
+const productFilterTimers = {};
 
 const fromWarehouseLabel = computed(() => {
-  if (!props.fromWarehouseId) return '—';
-  const w = props.warehousesOptions.find(x => x.value === props.fromWarehouseId);
-  return w?.label || '—';
+  if (!props.fromWarehouseId) return "—";
+  const w = props.warehousesOptions.find(
+    (x) => x.value === props.fromWarehouseId
+  );
+  return w?.label || "—";
 });
 
 const toWarehouseLabel = computed(() => {
-  if (!props.toWarehouseId) return '—';
-  const w = props.warehousesOptions.find(x => x.value === props.toWarehouseId);
-  return w?.label || '—';
+  if (!props.toWarehouseId) return "—";
+  const w = props.warehousesOptions.find(
+    (x) => x.value === props.toWarehouseId
+  );
+  return w?.label || "—";
 });
+
+const hasSelection = computed(() => linesLocal.value.some((r) => r.selected));
 
 watch(
   () => props.lines,
-  val => {
+  (val) => {
     isUpdatingFromProps.value = true;
-    const newLines = (val || []).map(x => ({
+    const newLines = (val || []).map((x) => ({
       ...x,
       __key: x.__key || x.id || cryptoRandom(),
       serializedOptions: x.serializedOptions || [],
@@ -272,25 +441,56 @@ watch(
     } else if (linesLocal.value.length === 0) {
       addLine();
     }
-    nextTick(() => { isUpdatingFromProps.value = false; });
+    nextTick(() => {
+      isUpdatingFromProps.value = false;
+    });
   },
   { immediate: true, deep: true }
 );
 
 watch(
   linesLocal,
-  val => {
+  (val) => {
     if (!isUpdatingFromProps.value) {
-      nextTick(() => emit('update:lines', val));
+      nextTick(() => emit("update:lines", val));
     }
   },
   { deep: true }
 );
 
-watch(selectAll, checked => { linesLocal.value.forEach(r => (r.selected = checked)); });
-
 function cryptoRandom() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function rowErrorText(err) {
+  if (!err) return "";
+  return Array.isArray(err) ? err[0] : String(err);
+}
+
+function optionsForProduct(row) {
+  const opts = [...(productOptions.value || [])];
+  if (row?.product != null) {
+    const exists = opts.some((o) => o.value === row.product);
+    if (!exists) {
+      opts.unshift({
+        value: row.product,
+        label: row.product_label || `Product #${row.product}`,
+        product: {
+          id: row.product,
+          name: row.product_label,
+          tracking_mode: row.isSerialized ? "SERIALIZED" : undefined,
+        },
+      });
+    }
+  }
+  return opts;
+}
+
+function onSelectAll(checked) {
+  selectAll.value = !!checked;
+  linesLocal.value.forEach((r) => {
+    r.selected = !!checked;
+  });
 }
 
 function addLine() {
@@ -299,7 +499,7 @@ function addLine() {
     selected: false,
     id: null,
     product: null,
-    product_label: '',
+    product_label: "",
     quantity: 1,
     unit: null,
     serialized_item: null,
@@ -314,10 +514,8 @@ function removeRow(idx) {
   linesLocal.value.splice(idx, 1);
 }
 
-const hasSelection = computed(() => linesLocal.value.some(r => r.selected));
-
 function removeSelected() {
-  linesLocal.value = linesLocal.value.filter(r => !r.selected);
+  linesLocal.value = linesLocal.value.filter((r) => !r.selected);
   selectAll.value = false;
 }
 
@@ -328,13 +526,16 @@ async function searchProducts(idx, query) {
   }
   loading.value.products[idx] = true;
   try {
-    const { data } = await axios.get('/api/products/', {
+    const { data } = await axios.get("/api/products/", {
       params: { search: query, page_size: 20, is_active: true },
     });
     const list = Array.isArray(data) ? data : data?.results || [];
-    productOptions.value = list.map(p => ({
+    productOptions.value = list.map((p) => ({
       value: p.id,
-      label: `${p.name} (${p.sku})`,
+      label:
+        p.tracking_mode === "SERIALIZED"
+          ? `${p.name} (${p.sku}) · SERIALIZED`
+          : `${p.name} (${p.sku})`,
       product: p,
     }));
   } catch (error) {
@@ -344,24 +545,38 @@ async function searchProducts(idx, query) {
   }
 }
 
+function onProductFilter(idx, event) {
+  const query = event?.value ?? "";
+  if (productFilterTimers[idx]) clearTimeout(productFilterTimers[idx]);
+  productFilterTimers[idx] = setTimeout(() => {
+    searchProducts(idx, query);
+  }, 250);
+}
+
+function onProductShow(idx, row) {
+  if (row?.product_label && (!productOptions.value || !productOptions.value.length)) {
+    productOptions.value = optionsForProduct(row);
+  }
+}
+
 async function searchSerialized(idx, query) {
   const r = linesLocal.value[idx];
   if (!r?.product || !props.fromWarehouseId) return;
   loading.value.serialized[idx] = true;
   try {
-    const { data } = await axios.get('/api/serialized-items-provider/', {
+    const { data } = await axios.get("/api/serialized-items-provider/", {
       params: {
         page: 1,
         per_page: 30,
-        search: query || '',
+        search: query || "",
         product_id: r.product,
         warehouse_id: props.fromWarehouseId,
       },
     });
     const list = data?.items || [];
-    r.serializedOptions = list.map(s => ({
+    r.serializedOptions = list.map((s) => ({
       value: s.id,
-      label: `${s.asset_tag || s.id} (${s.product_name || ''})`,
+      label: `${s.asset_tag || s.id} (${s.product_name || ""})`,
       status: s.status,
       condition: s.condition,
     }));
@@ -372,95 +587,113 @@ async function searchSerialized(idx, query) {
   }
 }
 
+function onSerializedFilter(idx, event) {
+  const query = event?.value ?? "";
+  searchSerialized(idx, query);
+}
+
 async function onProductSelected(idx, option) {
   const r = linesLocal.value[idx];
-  r.product_label = option?.product?.name || option?.label || '';
-  r.isSerialized = option?.product?.tracking_mode === 'SERIALIZED';
+  if (!r) return;
+  r.product_label = option?.product?.name || option?.label || "";
+  r.isSerialized = option?.product?.tracking_mode === "SERIALIZED";
   if (r.isSerialized) {
     r.quantity = 1;
     r.serializedOptions = [];
     r.serialized_item = null;
-    await searchSerialized(idx, '');
+    await searchSerialized(idx, "");
   } else {
     r.serialized_item = null;
     r.serializedOptions = [];
   }
-  // Asignar Default Unit como selección en Unit (desde API o unit_default del producto)
   try {
-    const { data } = await axios.get(`/api/products/${option.value}/default-price/`);
+    const { data } = await axios.get(
+      `/api/products/${option.value}/default-price/`
+    );
     if (data?.unit != null) r.unit = data.unit;
   } catch (_) {
-    const unitId = option?.product?.unit_default_id ?? option?.product?.unit_default?.id;
+    const unitId =
+      option?.product?.unit_default_id ?? option?.product?.unit_default?.id;
     if (unitId != null) r.unit = unitId;
-  }
-}
-
-function onProductChanged(idx, val) {
-  if (!val) {
-    const r = linesLocal.value[idx];
-    r.product_label = '';
-    r.isSerialized = false;
-    r.serialized_item = null;
-    r.serializedOptions = [];
   }
 }
 
 function onProductCleared(idx) {
   const r = linesLocal.value[idx];
-  r.product_label = '';
+  if (!r) return;
+  r.product_label = "";
   r.isSerialized = false;
   r.serialized_item = null;
   r.serializedOptions = [];
 }
 
-// Badge helpers (same as SerializedItemForm.vue)
-function statusBadgeClass(value) {
-  const v = (value || '').trim();
-  if (v === 'Active') return 'bg-success';
-  if (v === 'Maintenance') return 'bg-warning text-dark';
-  if (v === 'Lost') return 'bg-danger';
-  if (v === 'Retired') return 'bg-secondary';
-  return 'bg-secondary';
+function onProductModel(idx, val) {
+  const r = linesLocal.value[idx];
+  if (!r) return;
+  r.product = val;
+  if (!val) {
+    onProductCleared(idx);
+    return;
+  }
+  const option =
+    optionsForProduct(r).find((o) => o.value === val) ||
+    productOptions.value.find((o) => o.value === val);
+  if (option) onProductSelected(idx, option);
 }
 
-function conditionBadgeClass(value) {
-  const v = (value || '').toLowerCase();
-  if (v === 'ok') return 'bg-success';
-  if (v === 'damaged') return 'bg-warning text-dark';
-  if (v === 'needs_repair') return 'bg-danger';
-  return 'bg-secondary';
+function statusSeverity(value) {
+  const v = (value || "").trim();
+  if (v === "Active") return "success";
+  if (v === "Maintenance") return "info";
+  if (v === "Lost") return "danger";
+  return "secondary";
+}
+
+function conditionSeverity(value) {
+  const v = (value || "").toLowerCase();
+  if (v === "ok") return "success";
+  if (v === "damaged" || v === "needs_repair") return "danger";
+  return "secondary";
 }
 
 function conditionLabel(value) {
-  const labels = { ok: 'OK', damaged: 'Damaged', needs_repair: 'Needs repair' };
-  const v = (value || '').toLowerCase().replace(/\s/g, '_');
-  return labels[v] || value || '—';
+  const labels = {
+    ok: "OK",
+    damaged: "Damaged",
+    needs_repair: "Needs repair",
+  };
+  const v = (value || "").toLowerCase().replace(/\s/g, "_");
+  return labels[v] || value || "—";
 }
 
 function serializedStatus(row) {
-  const opt = row.serializedOptions?.find(o => o.value === row.serialized_item);
+  const opt = row.serializedOptions?.find(
+    (o) => o.value === row.serialized_item
+  );
   return opt?.status ?? null;
 }
 
 function serializedCondition(row) {
-  const opt = row.serializedOptions?.find(o => o.value === row.serialized_item);
+  const opt = row.serializedOptions?.find(
+    (o) => o.value === row.serialized_item
+  );
   return opt?.condition ?? null;
 }
 
 function validateLines() {
   let isValid = true;
-  linesLocal.value.forEach(row => {
+  linesLocal.value.forEach((row) => {
     row._errors = {};
     if (!row.product) {
-      row._errors.product = ['Product is required'];
+      row._errors.product = ["Product is required"];
       isValid = false;
     }
     if (!row.isSerialized && (row.quantity == null || row.quantity <= 0)) {
-      row._errors.quantity = ['Quantity must be greater than 0'];
+      row._errors.quantity = ["Quantity must be greater than 0"];
       isValid = false;
     }
     if (row.isSerialized && !row.serialized_item) {
-      row._errors.serialized_item = ['Serialized item is required'];
+      row._errors.serialized_item = ["Serialized item is required"];
       isValid = false;
     }
   });
@@ -469,24 +702,192 @@ function validateLines() {
 
 onMounted(() => {
   if (linesLocal.value.length === 0) addLine();
+  if (typeof window !== "undefined" && window.matchMedia) {
+    phoneQuery = window.matchMedia(PHONE_MQ);
+    onViewport = () => {
+      isCompact.value = readIsCompact();
+    };
+    onViewport();
+    if (phoneQuery.addEventListener) {
+      phoneQuery.addEventListener("change", onViewport);
+    } else {
+      phoneQuery.addListener(onViewport);
+    }
+  }
+});
+
+onUnmounted(() => {
+  Object.values(productFilterTimers).forEach((t) => clearTimeout(t));
+  if (onViewport && phoneQuery) {
+    if (phoneQuery.removeEventListener) {
+      phoneQuery.removeEventListener("change", onViewport);
+    } else {
+      phoneQuery.removeListener?.(onViewport);
+    }
+  }
 });
 
 defineExpose({ validateLines });
 </script>
 
 <style scoped>
-.table tbody tr:hover { background-color: #fafafa; }
-.is-invalid { border-color: #dc3545; }
-:deep(.is-invalid .vs__dropdown-toggle) { border-color: #dc3545; }
-.table-sticky thead th {
+.jr-transfer-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--color-jr-surface);
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
+}
+
+.jr-transfer-lines__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.jr-transfer-lines__toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.jr-transfer-lines__count {
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-transfer-line-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.jr-transfer-line-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.5rem 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
+  background: var(--color-jr-surface-muted);
+}
+
+.jr-transfer-line-item--error {
+  border-color: var(--color-jr-danger-text);
+}
+
+.jr-transfer-line-item__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.jr-transfer-line-item__route {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-transfer-line-item__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.jr-transfer-line-item__badges,
+.jr-transfer-line-item__serial-badge {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.jr-transfer-line-item__serial-badge {
+  margin-top: 0.35rem;
+}
+
+.jr-transfer-table-scroll {
+  max-height: 70vh;
+  min-height: 16rem;
+  overflow: auto;
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
+}
+
+.jr-transfer-table {
+  width: 100%;
+  min-width: 56rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.jr-transfer-table th,
+.jr-transfer-table td {
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid var(--color-jr-border);
+  vertical-align: top;
+  text-align: left;
+}
+
+.jr-transfer-table thead th {
   position: sticky;
   top: 0;
   z-index: 1;
-  background: #f8f9fa;
-  border-bottom: 2px solid #dee2e6;
+  background: var(--color-jr-surface-muted);
+  font-weight: 600;
+  color: var(--color-jr-muted);
+  border-bottom: 2px solid var(--color-jr-border);
 }
-:deep(.vs__dropdown-menu) { z-index: 1050 !important; }
-:deep(.vs__dropdown-toggle) { z-index: 1049 !important; }
-.table-responsive { border-radius: 0.375rem; overflow-x: auto; }
-.form-control-plaintext { padding: 0.225rem 0.45rem; }
+
+.jr-transfer-table__check {
+  width: 2.5rem;
+  text-align: center;
+}
+
+.jr-transfer-table__center {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.jr-transfer-table__actions {
+  width: 5.5rem;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.jr-transfer-table__readonly {
+  display: inline-block;
+  padding: 0.4rem 0;
+  font-size: 0.8125rem;
+  color: var(--color-jr-text);
+}
+
+.jr-transfer-table__muted {
+  color: var(--color-jr-muted);
+}
+
+.jr-transfer-table__serial-badge {
+  margin-top: 0.35rem;
+}
+
+.jr-transfer-table__row--error {
+  background: var(--color-jr-danger-subtle);
+}
+
+.jr-transfer-row-error {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-jr-danger-text);
+}
+
+.jr-transfer-req {
+  color: var(--color-jr-danger-text);
+}
 </style>

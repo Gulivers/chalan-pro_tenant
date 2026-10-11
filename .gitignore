@@ -28,9 +28,11 @@ envs/*.env
 !envs/*.example.env
 !envs/*.dev.example.env
 
-# Ignore IDE
+# Ignore IDE / agent tooling (local; no versionar)
 .idea/
 .cursor/
+.impeccable/
+.impeccable-evidence/
 *.swp
 
 # Ignore VisualStudioCode (excepto configuraciones útiles)
@@ -84,6 +86,9 @@ scripts/sync_main_with_remote.sh
 # Migraciones de datos one-off / dumps locales (solo ubuntu-house)
 A-TMP_migration/
 
+# Cliente local Schneider Product Catalog v2 (OAuth, IDs y .env; no versionar)
+A-TMP_migration/schneider_product_catalog/
+
 # Hosts locales (IPs LAN); no versionar cambios de máquina
 scripts/hosts_entries.txt
 
@@ -93,5 +98,14 @@ scripts/certbot_hostinger_cleanup.py
 scripts/renew_wildcard_certbot.sh
 scripts/renew_wildcard_certbot_auto.sh
 
+# Evidence / screenshots locales de Impeccable (no versionar)
+# (también listado arriba junto a .cursor / .impeccable)
+
 # Comando local opcional (carga de imágenes desde disco); no versionar
 app/appinventory/management/commands/load_product_images.py
+
+# Firmas temporales de verificación TikTok (siguen en el servidor, no se versionan)
+landing/src/tiktok*.txt
+landing/dist/tiktok*.txt
+landing/src/tiktok-verify/
+landing/dist/tiktok-verify/

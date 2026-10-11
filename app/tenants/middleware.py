@@ -47,13 +47,7 @@ def _spa_url(request, path: str) -> str:
 # API paths always allowed (prefix match on request.path)
 TENANT_ACCESS_API_EXEMPT_PREFIXES = (
     '/api/billing/',
-    '/api/validate-token/',
-    '/api/login/',
-    '/api/logout/',
-    '/api/user_detail/',
-    '/api/user-permissions/',
-    '/api/request-password-reset/',
-    '/api/password-reset-confirm/',
+    '/api/auth/',
     '/stripe/webhook/',
     '/media/',
     '/static/',

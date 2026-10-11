@@ -140,6 +140,45 @@ class BuilderSerializer(serializers.ModelSerializer):
             return value.strip().lower()
         return value
 
+    def validate(self, attrs):
+        """At least one pricing amount must be greater than zero."""
+        instance = getattr(self, "instance", None)
+        trim = attrs.get(
+            "trim_amount",
+            getattr(instance, "trim_amount", 0) if instance else 0,
+        ) or 0
+        rough = attrs.get(
+            "rough_amount",
+            getattr(instance, "rough_amount", 0) if instance else 0,
+        ) or 0
+        travel = attrs.get(
+            "travel_price_amount",
+            getattr(instance, "travel_price_amount", 0) if instance else 0,
+        ) or 0
+
+        if not any(amount > 0 for amount in (trim, rough, travel)):
+            raise serializers.ValidationError({
+                "trim_amount": (
+                    "Enter at least one amount greater than 0 for Trim, Rough, or Travel."
+                ),
+            })
+
+        customer = attrs.get(
+            "customer_rank",
+            getattr(instance, "customer_rank", 0) if instance else 0,
+        ) or 0
+        supplier = attrs.get(
+            "supplier_rank",
+            getattr(instance, "supplier_rank", 0) if instance else 0,
+        ) or 0
+        if not customer and not supplier:
+            raise serializers.ValidationError({
+                "customer_rank": "Is Customer is required.",
+                "supplier_rank": "Is Supplier is required.",
+            })
+
+        return attrs
+
 # Mini serializer de lectura (opcional, para debug/UX)
 class CrewMiniSerializer(serializers.ModelSerializer):
     class Meta:
@@ -149,12 +188,11 @@ class CrewMiniSerializer(serializers.ModelSerializer):
 class JobSerializer(serializers.ModelSerializer):
     builder = serializers.PrimaryKeyRelatedField(queryset=Builder.objects.all())
 
-    # Acepta escribir crews como lista de IDs
+    # M2M Crew ↔ Job (Assigned Jobs en Crew / Area Supervisor en Community)
     crews = serializers.PrimaryKeyRelatedField(
         queryset=Crew.objects.all(),
         many=True,
         required=False,
-        write_only=True  # solo escritura; si quieres verlo en responses, quítalo
     )
 
     # Detalle de lectura opcional (no estorba)
@@ -315,6 +353,8 @@ class ContractSerializer(serializers.ModelSerializer):
     house_model_id = serializers.PrimaryKeyRelatedField(queryset=HouseModel.objects.all(), source='house_model', write_only=True)
     builder_id = serializers.PrimaryKeyRelatedField(queryset=Builder.objects.all(), source='builder', write_only=True)
     job_id = serializers.PrimaryKeyRelatedField(queryset=Job.objects.all(), source='job', write_only=True)
+    # Spot Lot: empty lot is allowed when address is present (null/blank → stored as null)
+    lot = serializers.CharField(required=False, allow_null=True, allow_blank=True, max_length=10)
     # Nuevos campos para enlazar Work Account y Schedule (Event)
     work_account_id = serializers.PrimaryKeyRelatedField(queryset=WorkAccount.objects.all(), source='work_account', write_only=True, required=False, allow_null=True)
     schedule_id = serializers.PrimaryKeyRelatedField(queryset=Event.objects.all(), source='schedule', write_only=True, required=False, allow_null=True)
@@ -331,6 +371,16 @@ class ContractSerializer(serializers.ModelSerializer):
             'work_account_id', 'schedule_id',
         ]
         read_only_fields = ['id', 'date_created', 'last_updated']
+
+    def validate_lot(self, value):
+        """Normalize blank / 'null' string to None for Spot Lot contracts."""
+        if value is None:
+            return None
+        if isinstance(value, str):
+            value = value.strip()
+            if value == '' or value.lower() == 'null':
+                return None
+        return value
 
     # Create a new Contract instance with validated data
     # Crear una nueva instancia de Contract con datos validados

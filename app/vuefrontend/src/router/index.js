@@ -1,12 +1,14 @@
 import { createRouter, createWebHistory } from "vue-router";
 import axios from "axios";
 import { fetchBillingStatus } from "@/api/billing";
+import authService from "@/auth/authService";
+import { useAuthStore } from "@/stores/auth";
 
 // ───────────────────────────────────────────────────────────
 // LAZY IMPORTS (ordenado por módulos)
 // ───────────────────────────────────────────────────────────
 
-const LoginView = () => import("@views/LoginView.vue");
+const LoginView = () => import("@/components/auth/LoginView.vue");
 const HomeView = () => import("@views/HomeView.vue");
 const AboutView = () => import("@/views/AboutView.vue");
 const OnboardingView = () => import("@views/OnboardingView.vue");
@@ -15,9 +17,9 @@ const BillingSuccessView = () => import("@views/BillingSuccessView.vue");
 const JobMap = () => import("@components/houses/JobMap.vue");
 const SupervisorCommunitiesList = () =>
   import("@components/houses/SupervisorCommunitiesList.vue");
-const PasswordReset = () => import("@components/PasswordReset.vue");
+const PasswordReset = () => import("@/components/auth/PasswordReset.vue");
 const PasswordResetConfirm = () =>
-  import("@components/PasswordResetConfirm.vue");
+  import("@/components/auth/PasswordResetConfirm.vue");
 
 // Contracts
 const ContractListView = () => import("@views/contract/ContractListView.vue");
@@ -34,8 +36,8 @@ const WeeklySummaryListComponent = () =>
 // Schedule & Chat
 const ScheduleComponent = () =>
   import("@components/schedule/ScheduleComponent.vue");
-const ScheduleHouseChatsGeneralComponent = () =>
-  import("@components/schedule/ScheduleHouseChatsGeneralComponent.vue");
+const WorkOrderViewerView = () =>
+  import("@views/transactions/WorkOrderViewerView.vue");
 
 // Inventory
 const ProductForm = () => import("@components/inventory/ProductForm.vue");
@@ -47,7 +49,8 @@ const DynamicForm = () => import("@components/inventory/DynamicForm.vue");
 const ProductCategoryView = () =>
   import("@views/inventory/ProductCategoryView.vue");
 const ProductBrandView = () => import("@views/inventory/ProductBrandView.vue");
-// const ProductUnitView = () => import('@views/inventory/ProductUnitView.vue');
+const ReportsExportsView = () =>
+  import("@views/reports/ReportsExportsView.vue");
 const UnitOfMeasureView = () =>
   import("@views/inventory/UnitOfMeasureView.vue");
 const UnitCategoryView = () => import("@views/inventory/UnitCategoryView.vue");
@@ -86,8 +89,6 @@ const PartyCategoryListView = () =>
   import("@views/transactions/PartyCategoryListView.vue");
 const PartyCategoryForm = () =>
   import("@components/transactions/PartyCategoryForm.vue");
-const PartyForm = () => import("@components/transactions/PartyForm.vue");
-const PartyListView = () => import("@views/transactions/PartyListView.vue");
 const TransactionForm = () =>
   import("@components/transactions/TransactionForm.vue");
 const TransactionListView = () =>
@@ -96,6 +97,12 @@ const WorkAccountSelect = () =>
   import("@components/transactions/WorkAccountSelect.vue");
 const WorkAccountListView = () =>
   import("@views/transactions/WorkAccountListView.vue");
+const MissingMaterialView = () =>
+  import("@views/material/MissingMaterialView.vue");
+const MaterialRequestListView = () =>
+  import("@views/material/MaterialRequestListView.vue");
+const MaterialRequestDetailView = () =>
+  import("@views/material/MaterialRequestDetailView.vue");
 
 // Crews and Fleet
 const CategoryListView = () => import("@views/crews/CategoryListView.vue");
@@ -118,27 +125,25 @@ const routes = [
     path: "/login",
     name: "login",
     component: LoginView,
-    meta: { hideNavbar: true },
+    meta: { hideNavbar: true, hideFooter: true, requiresAuth: false },
   },
   {
     path: "/onboarding",
     name: "onboarding",
     component: OnboardingView,
-    meta: { hideNavbar: true, requiresAuth: false },
+    meta: { hideNavbar: true, hideFooter: true, requiresAuth: false },
   },
   {
     path: "/onboarding/verify",
     name: "onboarding-verify",
     component: () => import("@/views/OnboardingVerifyView.vue"),
-    meta: { hideNavbar: true, requiresAuth: false },
+    meta: { hideNavbar: true, hideFooter: true, requiresAuth: false },
   },
   {
     path: "/logout",
     name: "logout",
     beforeEnter: (to, from, next) => {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("userPermissions");
-      next({ name: "login" });
+      authService.handleLogout().finally(() => next({ name: "login" }));
     },
   },
   {
@@ -160,13 +165,17 @@ const routes = [
     path: "/reset_password",
     name: "reset_password",
     component: PasswordReset,
-    meta: { hideNavbar: true, requiresAuth: false },
+    meta: { hideNavbar: true, hideFooter: true, requiresAuth: false },
   },
   {
     path: "/reset-password-confirm",
     name: "reset_password_confirm",
     component: PasswordResetConfirm,
-    meta: { hideNavbar: true, requiresAuth: false },
+    meta: { hideNavbar: true, hideFooter: true, requiresAuth: false },
+  },
+  {
+    path: "/home",
+    redirect: { name: "home" },
   },
   {
     path: "/",
@@ -205,12 +214,14 @@ const routes = [
   {
     path: "/account-suspended",
     name: "account-suspended",
-    component: () => import("@/views/AccountSuspendedView.vue"),
+    component: () => import("@/components/auth/AccountSuspendedView.vue"),
     meta: {
       requiresAuth: true,
       requiredPermissions: [],
       billingExempt: true,
       tenantAccessExempt: true,
+      hideNavbar: true,
+      hideFooter: true,
     },
   },
   {
@@ -269,6 +280,10 @@ const routes = [
     },
   },
   {
+    path: "/work-prices/form",
+    redirect: { name: "work-prices-form" },
+  },
+  {
     path: "/work-prices/edit/:id",
     name: "work-prices-edit",
     component: WorkPriceFormComponent,
@@ -316,12 +331,7 @@ const routes = [
   },
   {
     path: "/chat-general",
-    name: "chat-general",
-    component: ScheduleHouseChatsGeneralComponent,
-    meta: {
-      requiresAuth: true,
-      requiredPermissions: ["appschedule.view_event"],
-    },
+    redirect: { name: "work-order-viewer-general" },
   },
 
   // ───────────────────────────────────────────────────────────
@@ -334,6 +344,15 @@ const routes = [
     meta: {
       requiresAuth: true,
       requiredPermissions: ["appinventory.view_product"],
+    },
+  },
+  {
+    path: "/reports-exports",
+    name: "reports-exports",
+    component: ReportsExportsView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.change_workaccount"],
     },
   },
   {
@@ -1083,24 +1102,6 @@ const routes = [
     },
   },
   {
-    path: "/parties",
-    name: "parties",
-    component: PartyListView,
-    meta: {
-      requiresAuth: true,
-      requiredPermissions: ["apptransactions.view_party"],
-    },
-  },
-  {
-    path: "/parties/form",
-    name: "parties-form",
-    component: PartyForm,
-    meta: {
-      requiresAuth: true,
-      requiredPermissions: ["apptransactions.add_party"],
-    },
-  },
-  {
     path: "/transactions/form",
     name: "transactions-form",
     component: TransactionForm,
@@ -1128,6 +1129,24 @@ const routes = [
     },
   },
   {
+    path: "/work-accounts/viewer",
+    name: "work-order-viewer-general",
+    component: WorkOrderViewerView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.view_workaccount"],
+    },
+  },
+  {
+    path: "/work-accounts/:id/view",
+    name: "work-order-viewer",
+    component: WorkOrderViewerView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.view_workaccount"],
+    },
+  },
+  {
     path: "/work-accounts/form",
     name: "work-accounts-form",
     component: WorkAccountSelect,
@@ -1136,44 +1155,103 @@ const routes = [
       requiredPermissions: ["apptransactions.add_workaccount"],
     },
   },
+  {
+    path: "/work-accounts/:workAccountId/orders/:eventId/missing-material",
+    name: "missing-material",
+    component: MissingMaterialView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.add_document"],
+    },
+  },
+  {
+    path: "/material-requests",
+    name: "material-requests",
+    component: MaterialRequestListView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.view_document"],
+    },
+  },
+  {
+    path: "/material-requests/:id",
+    name: "material-request-detail",
+    component: MaterialRequestDetailView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.view_document"],
+    },
+  },
+  {
+    path: "/:pathMatch(.*)*",
+    name: "not-found",
+    component: () => import("@/views/NotFoundView.vue"),
+    meta: {
+      hideNavbar: true,
+      hideFooter: true,
+      requiresAuth: false,
+    },
+  },
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
 
+const PUBLIC_ROUTE_NAMES = new Set([
+  "onboarding",
+  "onboarding-verify",
+  "login",
+  "reset_password",
+  "reset_password_confirm",
+  "about",
+  "not-found",
+]);
+
 router.beforeEach(async (to, from, next) => {
-  const authToken = localStorage.getItem("authToken");
-  console.log(`Auth Token in Router>>: ${authToken ? "true" : "false"}`);
-  console.log(
-    `Navigating to: ${to.name || to.path}, requiresAuth: ${to.matched.some(
-      (record) => record.meta.requiresAuth
-    )}`
-  );
   const userPermissions = JSON.parse(
     localStorage.getItem("userPermissions") || "[]"
   );
-  //console.log(`User Permissions in Router>>: ${JSON.stringify(userPermissions)}`);
 
-  // Si la ruta NO requiere autenticación, permitir acceso inmediatamente
-  if (!to.matched.some((record) => record.meta.requiresAuth)) {
-    console.log("Route does not require auth, allowing access");
+  // Public surfaces (login, onboarding, reset, about, 404) — no JWT required.
+  if (PUBLIC_ROUTE_NAMES.has(to.name)) {
     next();
     return;
   }
 
-  // Solo validar token si la ruta requiere autenticación
-  if (!authToken) {
-    console.log("No auth token, redirecting to login");
-    next({ name: "login" });
+  const requiresAuth = to.matched.some(
+    (record) => record.meta.requiresAuth === true
+  );
+
+  if (!requiresAuth) {
+    // Explicitly public meta, or unknown — never render the app shell for guests.
+    if (
+      to.matched.length > 0 &&
+      to.matched.every((record) => record.meta.requiresAuth === false)
+    ) {
+      next();
+      return;
+    }
+    next({ name: "not-found", replace: true });
+    return;
+  }
+
+  let access = null;
+  try {
+    access = await authService.ensureAccess();
+  } catch (_) {
+    access = null;
+  }
+
+  // No usable JWT → always login (ignore stale jr_session alone).
+  if (!access) {
+    next({ name: "login", query: { redirect: to.fullPath } });
     return;
   }
 
   try {
-    const response = await axios.get("/api/validate-token/", {
-      headers: { Authorization: `Token ${authToken}` },
-    });
+    const response = await axios.get("/api/auth/validate/");
 
     if (response.data.valid) {
       const requiredPermissions = to.meta.requiredPermissions || [];
@@ -1185,7 +1263,6 @@ router.beforeEach(async (to, from, next) => {
         requiredPermissions.every((permission) =>
           userPermissionsSet.has(permission)
         );
-      console.log("Has permission:", hasPermission);
 
       if (hasPermission) {
         const accessExempt = to.matched.some(
@@ -1220,27 +1297,13 @@ router.beforeEach(async (to, from, next) => {
         next(false);
       }
     } else {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("userPermissions");
-      next({ name: "login" });
+      useAuthStore().clearSession();
+      next({ name: "login", query: { redirect: to.fullPath } });
     }
   } catch (error) {
     console.error("Error validating token:", error);
-    // Si estamos en una ruta pública, no redirigir
-    const publicRoutes = [
-      "onboarding",
-      "onboarding-verify",
-      "login",
-      "reset_password",
-      "reset_password_confirm",
-    ];
-    if (!publicRoutes.includes(to.name)) {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("userPermissions");
-      next({ name: "login" });
-    } else {
-      next();
-    }
+    useAuthStore().clearSession();
+    next({ name: "login", query: { redirect: to.fullPath } });
   }
 });
 

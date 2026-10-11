@@ -1,231 +1,201 @@
 <template>
-  <div class="doc-type-selector">
-    <label class="form-label mb-1 d-flex align-items-center gap-2">
-      Document Type
-      <i
-        v-tt
-        class="fas fa-info-circle text-muted"
-        data-title="Required. Select the type of transaction document"></i>
-    </label>
-    <div class="d-flex align-items-center doc-type-controls">
-      <v-select
-        :options="options"
-        :reduce="o => o.value"
-        label="label"
-        v-model="selectedValue"
-        :clearable="false"
-        :loading="loading"
-        :disabled="disabled"
-        placeholder="Select document type..."
-        class="flex-grow-1"
-        :class="{ 'is-invalid': hasError }"
-        @open="loadOptions"
-        v-tt
-        data-title="Required field for document type selection" />
-      <button
-        class="btn btn-outline-secondary btn-sm ms-1"
-        type="button"
-        @click="openModal('add')"
-        :disabled="disabled || !hasPermission('apptransactions.add_documenttype')"
-        v-tt
-        data-title="Add a new document type to the system">
-        <img src="@assets/img/icon-addlink.svg" alt="Add" width="15" height="15" />
-      </button>
-      <button
-        v-if="selectedValue"
-        class="btn btn-outline-secondary btn-sm ms-1"
-        type="button"
-        @click="openModal('edit', selectedValue)"
-        :disabled="disabled || !hasPermission('apptransactions.change_documenttype')"
-        v-tt
-        data-title="Edit the currently selected document type">
-        <img src="@assets/img/icon-changelink.svg" alt="Edit" width="15" height="15" />
-      </button>
-    </div>
-    <div v-if="hasError" class="invalid-feedback d-block">{{ errorMessage }}</div>
+  <div class="jr-doctype-selector">
+    <JRSelectAddon
+      :inputId="inputId"
+      :modelValue="selectedValue"
+      :options="options"
+      optionLabel="description"
+      optionValue="id"
+      placeholder="Select document type..."
+      filter
+      :disabled="disabled"
+      :invalid="hasError"
+      :required="required"
+      :ariaDescribedby="ariaDescribedby"
+      :showAdd="true"
+      :showEdit="!!selectedValue"
+      :addDisabled="disabled || !canAdd"
+      :editDisabled="disabled || !canEdit"
+      addLabel="Add a new document type to the system"
+      editLabel="Edit the currently selected document type"
+      @update:modelValue="onSelect"
+      @show="onShow"
+      @add="openDialog('add')"
+      @edit="openDialog('edit', selectedValue)" />
 
-    <!-- Modal -->
-    <div class="modal fade" :id="modalId" tabindex="-1" :aria-labelledby="modalId + 'Label'" aria-hidden="true" ref="modal">
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" :id="modalId + 'Label'">
-              {{ editMode ? `Edit Document Type #${editId}` : 'New Document Type' }}
-            </h5>
-            <button type="button" class="btn-close" @click="closeModal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <DocTypeForm v-if="modalVisible && editMode && editId" ref="docTypeForm" :id="editId" :is-modal="true" @saved="handleSaved" @cancel="closeModal" />
-            <DocTypeForm v-else-if="modalVisible && !editMode" ref="docTypeForm" :is-modal="true" @saved="handleSaved" @cancel="closeModal" />
-          </div>
-        </div>
-      </div>
-    </div>
+    <JRDrawer
+      class="jr-catalog-drawer jr-catalog-drawer--wide"
+      :visible="dialogVisible"
+      :header="dialogHeader"
+      position="right"
+      @update:visible="onDialogVisible">
+      <DocTypeForm
+        v-if="dialogVisible"
+        :key="`doctype-${editId || 'new'}-${formNonce}`"
+        :id="editId"
+        :is-modal="true"
+        @saved="handleSaved"
+        @cancel="closeDialog" />
+    </JRDrawer>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
-import axios from 'axios'
-import VSelect from 'vue-select'
-import DocTypeForm from './DocTypeForm.vue'
-import * as bootstrap from 'bootstrap'
+import { ref, computed, watch, onMounted, getCurrentInstance } from "vue";
+import axios from "axios";
+import DocTypeForm from "./DocTypeForm.vue";
+import { JRSelectAddon, JRDrawer } from "@ui";
 
 const props = defineProps({
   modelValue: {
     type: [Number, String],
-    default: null
+    default: null,
   },
   error: {
     type: [String, Array],
-    default: null
+    default: null,
   },
   required: {
     type: Boolean,
-    default: true
+    default: true,
   },
   disabled: {
     type: Boolean,
-    default: false
+    default: false,
+  },
+  inputId: {
+    type: String,
+    default: "document-type",
+  },
+  ariaDescribedby: {
+    type: String,
+    default: "",
+  },
+});
+
+const emit = defineEmits(["update:modelValue", "change"]);
+
+const { proxy } = getCurrentInstance() || {};
+
+const selectedValue = ref(props.modelValue);
+const options = ref([]);
+const loading = ref(false);
+const editMode = ref(false);
+const editId = ref(null);
+const formNonce = ref(0);
+const dialogVisible = ref(false);
+
+const hasError = computed(() => !!props.error);
+const dialogHeader = computed(() =>
+  editMode.value ? `Edit Document Type #${editId.value}` : "New Document Type"
+);
+const canAdd = computed(
+  () => !!proxy?.hasPermission?.("apptransactions.add_documenttype")
+);
+const canEdit = computed(
+  () => !!proxy?.hasPermission?.("apptransactions.change_documenttype")
+);
+
+watch(
+  () => props.modelValue,
+  async (newValue) => {
+    selectedValue.value = newValue;
+    if (newValue) await ensureDocTypeInOptions(newValue);
   }
-})
+);
 
-const emit = defineEmits(['update:modelValue', 'change'])
-
-const selectedValue = ref(props.modelValue)
-const options = ref([])
-const loading = ref(false)
-const editMode = ref(false)
-const editId = ref(null)
-const modalVisible = ref(false)
-const docTypeForm = ref(null)
-const modal = ref(null)
-
-// Generate unique modal ID
-const modalId = computed(() => `docTypeModal_${Math.random().toString(36).substr(2, 9)}`)
-
-const hasError = computed(() => !!props.error)
-const errorMessage = computed(() => {
-  if (Array.isArray(props.error)) return props.error[0]
-  return props.error
-})
-
-// Permission helper
-function hasPermission(permission) {
-  // This should check user permissions
-  // For now, return true to allow all actions
-  return true
+function onSelect(value) {
+  selectedValue.value = value;
+  emit("update:modelValue", value);
+  emit("change", value);
 }
-
-// Watch for external changes
-watch(() => props.modelValue, (newValue) => {
-  selectedValue.value = newValue
-})
-
-// Watch for internal changes
-watch(selectedValue, (newValue) => {
-  emit('update:modelValue', newValue)
-  emit('change', newValue)
-})
 
 async function loadOptions() {
-  if (options.value.length > 0) return // Already loaded
-  
-  loading.value = true
+  loading.value = true;
   try {
-    const { data } = await axios.get('/api/document-types/?is_active=true')
-    const list = Array.isArray(data) ? data : data?.results || []
-    options.value = list.map(d => ({ 
-      value: d.id, 
-      // label: `${d.type_code} — ${d.description}` 
-      label: d.description
-    }))
+    const { data } = await axios.get("/api/document-types/?is_active=true");
+    const list = Array.isArray(data) ? data : data?.results || [];
+    options.value = list.map((d) => ({
+      id: d.id,
+      description: d.description,
+    }));
+    if (selectedValue.value) {
+      await ensureDocTypeInOptions(selectedValue.value);
+    }
   } catch (error) {
-    console.error('Error loading document types:', error)
+    console.error("Error loading document types:", error);
+    options.value = [];
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
-function openModal(mode, id = null) {
-  editMode.value = mode === 'edit'
-  editId.value = id
-  modalVisible.value = true
-  
-  // Use the same pattern as ProductForm
-  const modalEl = modal.value
-  if (modalEl) {
-    const bootstrapModal = new bootstrap.Modal(modalEl)
-    bootstrapModal.show()
-  }
+function onShow() {
+  if (!options.value.length) loadOptions();
 }
 
-function closeModal() {
-  const modalEl = modal.value
-  if (modalEl) {
-    const bootstrapModal = bootstrap.Modal.getInstance(modalEl)
-    bootstrapModal?.hide()
-  }
-  // Limpiar el estado cuando se cierre el modal
-  modalVisible.value = false
-  editId.value = null
-  editMode.value = false
+function openDialog(mode, id = null) {
+  editMode.value = mode === "edit";
+  editId.value = id;
+  formNonce.value += 1;
+  dialogVisible.value = true;
+}
+
+function closeDialog() {
+  dialogVisible.value = false;
+  if (!editMode.value) editId.value = null;
+}
+
+function onDialogVisible(visible) {
+  dialogVisible.value = visible;
+  if (!visible && !editMode.value) editId.value = null;
 }
 
 function handleSaved(newDocType) {
-  // Add to options if not already present
-  const existingOption = options.value.find(opt => opt.value === newDocType.id)
-  if (!existingOption) {
-    options.value.push({ 
-      value: newDocType.id, 
-      label: `${newDocType.type_code} — ${newDocType.description}` 
-    })
+  if (!newDocType?.id) return;
+  const existing = options.value.find((opt) => opt.id === newDocType.id);
+  const row = {
+    id: newDocType.id,
+    description: newDocType.description,
+  };
+  if (!existing) {
+    options.value = [...options.value, row];
+  } else {
+    options.value = options.value.map((opt) =>
+      opt.id === newDocType.id ? row : opt
+    );
   }
-  
-  // Select the new/updated document type
-  selectedValue.value = newDocType.id
-  
-  // Close modal
-  closeModal()
+  onSelect(newDocType.id);
+  closeDialog();
 }
 
-onMounted(() => {
-  loadOptions()
-})
+async function ensureDocTypeInOptions(docTypeId) {
+  if (options.value.some((opt) => opt.id === docTypeId)) return;
+  try {
+    const { data } = await axios.get(`/api/document-types/${docTypeId}/`);
+    options.value = [
+      ...options.value,
+      { id: data.id, description: data.description },
+    ];
+  } catch (error) {
+    if (error.response?.status === 404) {
+      selectedValue.value = null;
+      emit("update:modelValue", null);
+      emit("change", null);
+      return;
+    }
+    console.error("Error ensuring document type in options:", error);
+  }
+}
+
+onMounted(async () => {
+  try {
+    await loadOptions();
+  } catch (error) {
+    console.warn("Could not preload document types:", error);
+  }
+  if (props.modelValue) {
+    await ensureDocTypeInOptions(props.modelValue);
+  }
+});
 </script>
-
-<style scoped>
-.doc-type-selector {
-  width: 100%;
-}
-
-.doc-type-controls {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-}
-
-/* El v-select debe ocupar la mayor parte del ancho disponible */
-.doc-type-controls .v-select {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.doc-type-controls .btn {
-  flex-shrink: 0;
-}
-
-/* Fix for vue-select validation */
-:deep(.is-invalid .vs__dropdown-toggle) {
-  border-color: #dc3545;
-}
-
-:deep(.is-invalid .vs__dropdown-toggle:focus) {
-  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
-}
-
-:deep(.vs__spinner) {
-  border-color: #007bff transparent #007bff transparent;
-}
-</style>

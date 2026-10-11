@@ -21,17 +21,17 @@ const Tip = {
     // ------- estilos inline de respaldo (por si el CSS global no cargó) -------
     Object.assign(t.style, {
       position: 'absolute',
-      background: '#000',
-      color: '#fff',
-      padding: '2px 4px',
-      borderRadius: '4px',
-      fontSize: '12px',
+      background: 'var(--color-jr-text)',
+      color: 'var(--color-jr-surface)',
+      padding: '0.375rem 0.5rem',
+      borderRadius: 'var(--radius-jr-control)',
+      fontSize: '0.75rem',
       lineHeight: '1.2',
       pointerEvents: 'none',
       zIndex: '2000',
       opacity: '0',
       transition: 'opacity .12s ease',
-      boxShadow: '0 4px 16px rgba(0,0,0,.2)',
+      boxShadow: 'var(--shadow-jr-overlay)',
     })
     // --------------------------------------------------------------------------
     const textNode = document.createTextNode('')   // primer hijo siempre texto
@@ -69,22 +69,22 @@ const Tip = {
     if (this.placement === 'top') {
       Object.assign(arrow.style, {
         bottom: '-12px', left: '50%', transform: 'translateX(-50%)',
-        borderTopColor: '#000', borderBottomWidth: '0',
+        borderTopColor: 'var(--color-jr-text)', borderBottomWidth: '0',
       })
     } else if (this.placement === 'bottom') {
       Object.assign(arrow.style, {
         top: '-12px', left: '50%', transform: 'translateX(-50%)',
-        borderBottomColor: '#000', borderTopWidth: '0',
+        borderBottomColor: 'var(--color-jr-text)', borderTopWidth: '0',
       })
     } else if (this.placement === 'left') {
       Object.assign(arrow.style, {
         top: '50%', right: '-12px', transform: 'translateY(-50%)',
-        borderLeftColor: '#000', borderRightWidth: '0',
+        borderLeftColor: 'var(--color-jr-text)', borderRightWidth: '0',
       })
     } else { // right
       Object.assign(arrow.style, {
         top: '50%', left: '-12px', transform: 'translateY(-50%)',
-        borderRightColor: '#000', borderLeftWidth: '0',
+        borderRightColor: 'var(--color-jr-text)', borderLeftWidth: '0',
       })
     }
   },

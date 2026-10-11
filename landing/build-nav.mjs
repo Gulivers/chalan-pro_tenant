@@ -34,6 +34,30 @@ const NAV_BY_FILE = {
     LANG_ES_HREF: "pricing.html",
     indent: "    ",
   },
+  "terms.html": {
+    lang: "en",
+    NAV_CTA_HREF: "contact-en.html#landing-contact-form",
+    LANG_ES_HREF: "terms-es.html",
+    indent: "  ",
+  },
+  "privacy.html": {
+    lang: "en",
+    NAV_CTA_HREF: "contact-en.html#landing-contact-form",
+    LANG_ES_HREF: "privacy-es.html",
+    indent: "  ",
+  },
+  "terms-es.html": {
+    lang: "es",
+    NAV_CTA_HREF: "contact.html#landing-contact-form",
+    LANG_EN_HREF: "terms.html",
+    indent: "  ",
+  },
+  "privacy-es.html": {
+    lang: "es",
+    NAV_CTA_HREF: "contact.html#landing-contact-form",
+    LANG_EN_HREF: "privacy.html",
+    indent: "  ",
+  },
   "index-es.html": {
     lang: "es",
     NAV_CTA_HREF: "contact.html#landing-contact-form",

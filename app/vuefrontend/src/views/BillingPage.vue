@@ -1,155 +1,144 @@
 <template>
-  <div class="container py-4 billing-page">
-    <div class="row justify-content-center">
-      <div class="col-lg-10">
-        <h1 class="h3 fw-bold mb-2">Billing</h1>
-        <p class="text-muted mb-4">
-          Keep your operations connected after your trial ends.
-        </p>
+  <JRPage>
+    <div class="mx-auto max-w-5xl">
+      <JRPageHeader
+        title="Billing"
+        description="Keep your operations connected after your trial ends." />
 
-        <div v-if="loading" class="text-center py-5">
-          <div class="spinner-border text-primary" role="status" />
+      <div v-if="loading" class="flex justify-center py-12" role="status">
+        <ProgressSpinner
+          style="width: 2.5rem; height: 2.5rem"
+          strokeWidth="4"
+          aria-label="Loading billing" />
+      </div>
+
+      <Message v-else-if="error" severity="error" :closable="false">
+        {{ error }}
+      </Message>
+
+      <template v-else>
+        <Message
+          v-if="status.trial_active"
+          class="mb-4"
+          severity="success"
+          :closable="false">
+          <strong>Free trial:</strong>
+          {{ status.trial_days_left }} day(s) remaining.
+          Upgrade before your trial expires to avoid interruption.
+        </Message>
+
+        <Message
+          v-else-if="status.needs_payment"
+          class="mb-4"
+          severity="warn"
+          :closable="false">
+          <strong>Action required.</strong>
+          Your trial has ended or payment needs attention.
+          Choose a plan below to continue.
+        </Message>
+
+        <Message
+          v-if="status.in_grace_period"
+          class="mb-4"
+          severity="warn"
+          :closable="false">
+          Payment failed. You have a short grace period to update your payment method.
+        </Message>
+
+        <JRSection title="Current status">
+          <p class="mb-1">
+            <span class="text-jr-muted">Subscription:</span>
+            <strong>{{ status.subscription_status || 'None' }}</strong>
+          </p>
+          <p v-if="status.current_plan_slug" class="mb-1">
+            <span class="text-jr-muted">Plan:</span>
+            <strong>{{ formatPlanName(status.current_plan_slug) }}</strong>
+          </p>
+          <p
+            v-if="status.landing_selected_plan"
+            class="mb-0 text-sm text-jr-muted">
+            Selected at signup: {{ status.landing_selected_plan }}
+          </p>
+        </JRSection>
+
+        <div class="mb-4 flex flex-wrap items-center gap-2">
+          <span class="text-sm text-jr-muted">Billing period:</span>
+          <JRButton
+            type="button"
+            size="sm"
+            :variant="interval === 'monthly' ? 'primary' : 'secondary'"
+            @click="interval = 'monthly'">
+            Monthly
+          </JRButton>
+          <JRButton
+            type="button"
+            size="sm"
+            :variant="interval === 'yearly' ? 'primary' : 'secondary'"
+            @click="interval = 'yearly'">
+            Annual (save 15%)
+          </JRButton>
         </div>
 
-        <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
-
-        <template v-else>
-          <div
-            v-if="status.trial_active"
-            class="alert alert-success d-flex align-items-center justify-content-between flex-wrap gap-2"
-          >
-            <span>
-              <strong>Free trial:</strong>
-              {{ status.trial_days_left }} day(s) remaining.
-              Upgrade before your trial expires to avoid interruption.
-            </span>
-          </div>
-
-          <div
-            v-else-if="status.needs_payment"
-            class="alert alert-warning"
-          >
-            <strong>Action required.</strong>
-            Your trial has ended or payment needs attention.
-            Choose a plan below to continue.
-          </div>
-
-          <div
-            v-if="status.in_grace_period"
-            class="alert alert-warning"
-          >
-            Payment failed. You have a short grace period to update your payment method.
-          </div>
-
-          <div class="card shadow-sm mb-4">
-            <div class="card-body">
-              <h5 class="card-title">Current status</h5>
-              <p class="mb-1">
-                <span class="text-muted">Subscription:</span>
-                <strong>{{ status.subscription_status || 'None' }}</strong>
-              </p>
-              <p v-if="status.current_plan_slug" class="mb-1">
-                <span class="text-muted">Plan:</span>
-                <strong>{{ formatPlanName(status.current_plan_slug) }}</strong>
-              </p>
-              <p v-if="status.landing_selected_plan" class="mb-0 small text-muted">
-                Selected at signup: {{ status.landing_selected_plan }}
-              </p>
+        <div class="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+          <article
+            v-for="plan in plans"
+            :key="plan.slug"
+            class="flex h-full flex-col rounded-jr-panel border bg-jr-surface p-4"
+            :class="plan.is_recommended ? 'border-jr-primary' : 'border-jr-border'">
+            <div v-if="plan.is_recommended" class="mb-2">
+              <JRBadge value="Recommended" severity="info" />
             </div>
-          </div>
+            <h2 class="mb-2 text-base font-semibold">{{ plan.name }}</h2>
+            <p class="mb-1 text-2xl font-semibold">
+              {{ formatPrice(plan) }}
+              <span class="text-base font-normal text-jr-muted">
+                / {{ interval === 'yearly' ? 'year' : 'month' }}
+              </span>
+            </p>
+            <p v-if="plan.max_crews" class="text-sm text-jr-muted">
+              Up to {{ plan.max_crews }} active crews
+            </p>
+            <p v-else class="text-sm text-jr-muted">Unlimited crews</p>
+            <JRButton
+              type="button"
+              class="mt-auto"
+              :variant="plan.is_recommended ? 'primary' : 'secondary'"
+              :disabled="checkoutLoading === plan.slug"
+              @click="startCheckout(plan.slug)">
+              <span v-if="checkoutLoading === plan.slug">Redirecting…</span>
+              <span v-else-if="plan.slug === suggestedSlug && plan.is_recommended">
+                Upgrade to {{ plan.name }}
+              </span>
+              <span v-else-if="plan.slug === 'starter'">Continue with Starter</span>
+              <span v-else>Choose {{ plan.name }}</span>
+            </JRButton>
+          </article>
+        </div>
 
-          <div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
-            <span class="text-muted small">Billing period:</span>
-            <div class="btn-group" role="group">
-              <button
-                type="button"
-                class="btn btn-sm"
-                :class="interval === 'monthly' ? 'btn-primary' : 'btn-outline-primary'"
-                @click="interval = 'monthly'"
-              >
-                Monthly
-              </button>
-              <button
-                type="button"
-                class="btn btn-sm"
-                :class="interval === 'yearly' ? 'btn-primary' : 'btn-outline-primary'"
-                @click="interval = 'yearly'"
-              >
-                Annual (save 15%)
-              </button>
-            </div>
+        <JRSection title="Manage billing">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <p class="mb-0 text-sm text-jr-muted">
+              Update payment method, view invoices, or cancel in the Stripe customer portal.
+            </p>
+            <JRButton
+              type="button"
+              variant="secondary"
+              :disabled="portalLoading"
+              @click="openPortal">
+              {{ portalLoading ? 'Opening…' : 'Manage Billing' }}
+            </JRButton>
           </div>
-
-          <div class="row g-3 mb-4">
-            <div
-              v-for="plan in plans"
-              :key="plan.slug"
-              class="col-md-4"
-            >
-              <div
-                class="card h-100 shadow-sm"
-                :class="{ 'border-primary': plan.is_recommended }"
-              >
-                <div class="card-body d-flex flex-column">
-                  <div v-if="plan.is_recommended" class="mb-2">
-                    <span class="badge bg-primary">Recommended</span>
-                  </div>
-                  <h5 class="card-title">{{ plan.name }}</h5>
-                  <p class="fs-4 fw-bold mb-1">
-                    {{ formatPrice(plan) }}
-                    <span class="fs-6 text-muted fw-normal">
-                      / {{ interval === 'yearly' ? 'year' : 'month' }}
-                    </span>
-                  </p>
-                  <p v-if="plan.max_crews" class="small text-muted">
-                    Up to {{ plan.max_crews }} active crews
-                  </p>
-                  <p v-else class="small text-muted">Unlimited crews</p>
-                  <button
-                    type="button"
-                    class="btn mt-auto"
-                    :class="plan.is_recommended ? 'btn-primary' : 'btn-outline-primary'"
-                    :disabled="checkoutLoading === plan.slug"
-                    @click="startCheckout(plan.slug)"
-                  >
-                    <span v-if="checkoutLoading === plan.slug">Redirecting…</span>
-                    <span v-else-if="plan.slug === suggestedSlug && plan.is_recommended">
-                      Upgrade to {{ plan.name }}
-                    </span>
-                    <span v-else-if="plan.slug === 'starter'">Continue with Starter</span>
-                    <span v-else>Choose {{ plan.name }}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card shadow-sm">
-            <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
-              <div>
-                <h5 class="mb-1">Manage billing</h5>
-                <p class="text-muted small mb-0">
-                  Update payment method, view invoices, or cancel in the Stripe customer portal.
-                </p>
-              </div>
-              <button
-                type="button"
-                class="btn btn-outline-secondary"
-                :disabled="portalLoading"
-                @click="openPortal"
-              >
-                {{ portalLoading ? 'Opening…' : 'Manage Billing' }}
-              </button>
-            </div>
-          </div>
-        </template>
-      </div>
+        </JRSection>
+      </template>
     </div>
-  </div>
+  </JRPage>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import Message from 'primevue/message'
+import ProgressSpinner from 'primevue/progressspinner'
+import { JRPage, JRPageHeader, JRSection, JRButton, JRBadge } from '@/ui'
 import {
   fetchBillingStatus,
   fetchBillingPlans,
@@ -228,9 +217,3 @@ async function openPortal() {
 
 onMounted(load)
 </script>
-
-<style scoped>
-.billing-page .card.border-primary {
-  box-shadow: 0 0 0 1px var(--bs-primary);
-}
-</style>

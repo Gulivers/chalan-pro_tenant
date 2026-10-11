@@ -89,7 +89,7 @@ async function downloadTransactionPDF(documentId) {
         const response = await fetch(`/api/documents/${documentId}/pdf/`, {
             method: 'GET',
             headers: {
-                'Authorization': `Token ${authToken}`,
+                'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
             }
         });

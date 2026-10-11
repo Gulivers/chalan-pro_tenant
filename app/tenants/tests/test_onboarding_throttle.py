@@ -6,7 +6,7 @@ from rest_framework.test import APIClient, APITestCase
 THROTTLE_SETTINGS = {
     'REST_FRAMEWORK': {
         'DEFAULT_AUTHENTICATION_CLASSES': [
-            'rest_framework.authentication.TokenAuthentication',
+            'appauth.authentication.TenantJWTAuthentication',
         ],
         'DEFAULT_PERMISSION_CLASSES': [
             'rest_framework.permissions.IsAuthenticated',

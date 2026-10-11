@@ -1,10 +1,12 @@
 
 from decimal import Decimal
 import logging
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.db import transaction
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.utils import timezone
 from apptransactions.models import (
     DocumentType, PartyType, PartyCategory, Party, Document, DocumentLine,
     WorkAccount, TransactionFavorite
@@ -18,7 +20,29 @@ class DocumentTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentType
         fields = '__all__'
-        
+
+    def validate(self, attrs):
+        spend = attrs.get(
+            'counts_as_net_invoiced_spend',
+            getattr(self.instance, 'counts_as_net_invoiced_spend', False) if self.instance else False,
+        )
+        pret = attrs.get(
+            'counts_as_purchase_return',
+            getattr(self.instance, 'counts_as_purchase_return', False) if self.instance else False,
+        )
+        if spend and pret:
+            raise serializers.ValidationError({
+                'counts_as_purchase_return': (
+                    'A document type cannot count as both Net invoiced spending '
+                    'and Purchase return.'
+                ),
+            })
+        if self.instance and self.instance.type_code in DocumentType.PROTECTED_TYPE_CODES:
+            raise serializers.ValidationError(
+                'The Material Request document type is required by the system and cannot be edited.'
+            )
+        return attrs
+
 class PartyTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartyType
@@ -34,11 +58,39 @@ class WorkAccountSerializer(serializers.ModelSerializer):
     builder_name = serializers.CharField(source="builder.name", read_only=True)
     job_name = serializers.CharField(source="job.name", read_only=True)
     house_model_name = serializers.CharField(source="house_model.name", read_only=True)
+    default_price_type_name = serializers.SerializerMethodField()
+    supervisor = serializers.SerializerMethodField()
+    area_manager = serializers.SerializerMethodField()
     display = serializers.SerializerMethodField()
 
     class Meta:
         model = WorkAccount
         fields = "__all__"
+
+    def get_default_price_type_name(self, obj):
+        if obj.default_price_type_id:
+            return obj.default_price_type.name
+        return None
+
+    def get_supervisor(self, obj):
+        """
+        Supervisor = miembros (Crew Members) de las cuadrillas (Crews) que tienen
+        esta comunidad (Job) en sus Assigned Jobs.
+        Misma relación que SupervisorCommunitiesView (crewsapp).
+        """
+        if not obj.job_id:
+            return None
+        usernames = (
+            User.objects.filter(crews__jobs=obj.job, is_active=True)
+            .order_by("username")
+            .distinct()
+            .values_list("username", flat=True)
+        )
+        names = list(usernames)
+        return ", ".join(names) if names else None
+
+    def get_area_manager(self, obj):
+        return self.get_supervisor(obj)
 
     def get_display(self, obj):
         # Etiqueta compacta para el v-select
@@ -56,7 +108,65 @@ class WorkAccountSerializer(serializers.ModelSerializer):
         if ctx: 
             parts.append("• " + " • ".join(ctx))
         return " ".join(parts)
-            
+
+
+class WorkAccountListSerializer(serializers.ModelSerializer):
+    """
+    Listado ligero: sin supervisor/area_manager (N+1 caro por fila).
+    Suficiente para tablas, selectors y options.
+    """
+    builder_name = serializers.CharField(source="builder.name", read_only=True)
+    job_name = serializers.CharField(source="job.name", read_only=True)
+    house_model_name = serializers.CharField(source="house_model.name", read_only=True)
+    default_price_type_name = serializers.SerializerMethodField()
+    display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = WorkAccount
+        fields = [
+            "id",
+            "title",
+            "builder",
+            "builder_name",
+            "job",
+            "job_name",
+            "house_model",
+            "house_model_name",
+            "lot",
+            "address",
+            "city",
+            "state",
+            "zipcode",
+            "default_price_type",
+            "default_price_type_name",
+            "notes",
+            "is_active",
+            "created_by",
+            "created_at",
+            "display",
+        ]
+
+    def get_default_price_type_name(self, obj):
+        if obj.default_price_type_id:
+            return obj.default_price_type.name
+        return None
+
+    def get_display(self, obj):
+        parts = [obj.title]
+        ctx = []
+        if obj.builder_id and getattr(obj, "builder", None):
+            ctx.append(obj.builder.name)
+        if obj.job_id and getattr(obj, "job", None):
+            ctx.append(obj.job.name)
+        if obj.house_model_id and getattr(obj, "house_model", None):
+            ctx.append(obj.house_model.name)
+        if obj.lot:
+            ctx.append(f"Lot {obj.lot}")
+        ctx = [p for p in ctx if p]
+        if ctx:
+            parts.append("• " + " • ".join(ctx))
+        return " ".join(parts)
+
 
 class PartySerializer(serializers.ModelSerializer):
     # IDs de relaciones (simple y performante para list/create/update)
@@ -428,7 +538,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         # Crear el documento paso a paso para evitar problemas con ForeignKeys
         # Primero, extraer los valores que necesitamos
         document_type = validated_data.pop('document_type')
-        date = validated_data.pop('date', None)
+        date = validated_data.pop('date', None) or timezone.localdate()
         builder = validated_data.pop('builder', None)
         notes = validated_data.pop('notes', '')
         is_active = validated_data.pop('is_active', True)

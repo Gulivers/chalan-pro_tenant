@@ -11,7 +11,7 @@ src/
 │
 ├── assets/                  # Estilos globales, imágenes, íconos
 │   ├── css/                 # Archivos CSS base
-│   ├── scss/                # Estilos personalizados (ej: Bootstrap override)
+│   ├── scss/                # Estilos personalizados (legado; la UI usa PrimeVue + Tailwind)
 │   └── img/                 # Logos, íconos, gráficos
 │
 ├── components/              # Componentes Vue reutilizables y modulares
@@ -83,7 +83,7 @@ src/
 ## 🧩 Recursos útiles
 
 - [Documentación Vue.js](https://vuejs.org/guide/introduction.html)
-- [Bootstrap 5.3 Docs](https://getbootstrap.com/docs/5.3/getting-started/introduction/)
+- [PrimeVue](https://primevue.org/) y el libro de UI en `src/ui/README.md` (JobRhythm: PrimeVue + Tailwind)
 - [Axios](https://axios-http.com/)
 
 ---
@@ -92,14 +92,13 @@ src/
 
 Este patrón aplica a **todos los CRUD** del sistema:
 
-- **Forms**: Bootstrap puro (sin `bootstrap-vue-next`).  
+- **Forms y listas**: PrimeVue con primitivos JR (`JRPage`, `JRField`, `JRButton`, `JRDataTable`). Ver `src/ui/README.md` y `src/ui/LIST_VIEWS.md`. Sin Bootstrap ni `b-table`.
   ➡️ Éxito silencioso + redirección inmediata.
-- **Listas**: `bootstrap-vue-next` (`b-table`) para search/paginación client-side y acciones (view/edit/delete).
 - **Auth/axios**: No setear headers manualmente; la Pinia store de auth ya los inyecta.
 
 ---
 
-## 📄 Formularios (Bootstrap only)
+## 📄 Formularios (PrimeVue + JR)
 
 ### 🔹 Estructura base (`script setup`)
 
@@ -118,26 +117,22 @@ Este patrón aplica a **todos los CRUD** del sistema:
 
 ### 🔹 UI
 
-- Inputs `form-control` y `form-switch` de Bootstrap.
-- Botones `btn-outline` (primary, secondary).
+- Campos `JRField` + `JRInput` / `JRSelect` / `JRCheckbox` / `JRTextarea`.
+- Botones `JRButton` (`primary` / `secondary` / `danger`).
 - **Modo view**: deshabilita todos los campos y oculta el botón **Save**.
 
-Botón Save obligatorio:
-
-```vue
-<i v-else class="fas fa-save me-1"></i>
-{{ submitting ? 'Saving...' : 'Save' }}
+Botón Save: `JRButton` con el texto `Saving...` o `Save`. Sin clase `btn`.
 
 Redirección recomendada:
 
 router.push({ name: 'party-types' }).catch(() => router.push('/party-types'))
 
-📋 Listas (bootstrap-vue-next)
+📋 Listas (JRDataTable)
 
-b-table con columns mínimas + actions (view/edit/delete).
-Search client-side (b-form-input).
-Entries per page (10, 25, 50, 100).
-b-pagination.
+`JRDataTable` + `Column` de PrimeVue, toolbar de búsqueda y acciones View / Edit / Delete (`JRRowActions`).
+Search client-side.
+Entries per page (10, 25, 50, 100) con el pager JR.
+Referencia: `ProductListView.vue` y `src/ui/LIST_VIEWS.md`.
 
 🔹 Acciones
 
@@ -177,15 +172,7 @@ Sí usaremos validaciones a nivel de serializer y view para tablas transaccional
 (Opcional, recomendado): mapear errores de BD a 400 en el back cuando queramos mensajes por campo más consistentes en transaccionales.
 
 ---
-<label class="col-12 col-sm-3 col-form-label text-start text-sm-end"> Este label se alinea a la derecha al input y se queda arriba en movil
-<div class="row mt-4">
-  <div class="col-12 d-flex flex-column flex-sm-row justify-content-center align-items-center gap-2">
-    <!-- botones iguales al ejemplo de arriba -->
-  </div>
-</div>
-
-
-🔮 Clave: d-flex justify-content-center centra horizontalmente; gap-2 separa; y con la opción 2, flex-column flex-sm-row apila en pantallas chicas y alinea en fila desde sm.
+Los formularios JR usan un grid de 1 columna que pasa a 2 (≥768) y 3 (≥1024). Las acciones Save / Cancel van en una barra sticky, con `JRButton`. Ver `src/ui/README.md` § Formularios.
 
 ---
 
@@ -225,19 +212,17 @@ Si la columna name está en _ci, unique=True será case-insensitive para evitar 
 
 ---
 
-Patrón estándar de formularios (Chalan-Pro)
+Patrón estándar de formularios (JobRhythm)
 
-Encabezado principal centrado, color orange (h2.text-orange.text-center), sin fw-semibold.
+`JRPage` + `JRPageHeader` (título a la izquierda) y `JRSection` por bloque.
 
-Subtítulo dinámico con title = computed(() => isCreateMode ? 'Create …' : isViewMode ? 'View …' : 'Edit …') en h6.text-primary.text-center dentro del card-header.
+Subtítulo dinámico con title = computed(() => isCreateMode ? 'Create …' : isViewMode ? 'View …' : 'Edit …') en `JRPageHeader`.
 
-Card base con class="card shadow mb-4" para sombra y separación vertical.
+Sin card Bootstrap. La superficie es el panel JR (`--color-jr-surface`, borde `--color-jr-border`).
 
-Formulario horizontal: labels a la izquierda usando grid (ej. row g-2, label.col-sm-3.col-form-label, control en col-sm-9).
+Campos: `JRField` con el control dentro. En desktop, hasta tres columnas.
 
-Responsive: en móviles, labels alineados a la izquierda con media query:
-
-@media (max-width: 576px){ .col-form-label{ text-align:left!important; } }
+Labels siempre a la izquierda; el hint vive debajo del campo, no en un tooltip único.
 
 
 Validación de negocio mínima (cliente): longitudes, formato de email, enteros no negativos para ranks, etc. Mantener en función validateClient().
@@ -257,12 +242,10 @@ onActivated(() => refreshCatalogs(true));
 window.addEventListener('focus', () => refreshCatalogs(true));
 
 
-Botonera centrada al final:
+Botonera al final del formulario:
 
-<div class="mt-4 d-flex justify-content-center gap-2">
-  <button class="btn btn-primary">Save</button>
-  <button class="btn btn-secondary">Cancel</button>
-</div>
+JRButton variant="primary" Save
+JRButton variant="secondary" Cancel
 
 ---
 

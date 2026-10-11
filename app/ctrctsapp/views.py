@@ -9,10 +9,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.http import JsonResponse
-from rest_framework.authtoken.models import Token
-from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions, AllowAny, IsAuthenticatedOrReadOnly
-from rest_framework.authentication import TokenAuthentication
+from appauth.authentication import TenantJWTAuthentication
 from .models import Contract, WorkPrice, ContractDetails, Builder, Job, HouseModel
 from .serializers import (
     ContractSerializer, WorkPriceSerializer, ContractDetailsSerializer,
@@ -30,12 +28,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.models import User
 from django.http import JsonResponse, HttpResponse
 from django.template.loader import render_to_string
-from django.db import connection
-from django_tenants.utils import get_public_schema_name, get_tenant
 from .utils import geocode_address
 from utils.datatable import handle_datatable_query
-from utils.tenant_branding import get_tenant_logo_url
-from tenants.services.access import assert_login_allowed
+from utils.tenant_branding import get_tenant_logo_url, _resolve_tenant
 
 from weasyprint import (
     CSS,
@@ -60,148 +55,6 @@ def geocode_view(request):
         return JsonResponse({"address": address, "latitude": latitude, "longitude": longitude})
     else:
         return JsonResponse({"error": "Could not geocode address"}, status=404)
-
-
-def _resolve_request_tenant(request):
-    """
-    Tenant activo para la petición: django-tenants suele fijar connection.tenant;
-    get_tenant(request) puede fallar en algunos contextos DRF. Excluimos el schema público.
-    """
-    public_schema = get_public_schema_name()
-
-    conn_tenant = getattr(connection, 'tenant', None)
-    if conn_tenant is not None and getattr(
-        conn_tenant, 'schema_name', None
-    ) != public_schema:
-        return conn_tenant
-
-    try:
-        t = get_tenant(request)
-    except Exception:
-        t = None
-    if t is not None and getattr(t, 'schema_name', None) != public_schema:
-        return t
-    return None
-
-
-@permission_classes([AllowAny])
-class UserDetailView(APIView):
-    def get(self, request):
-        user = request.user
-        data = {
-            'id': user.pk if user.is_authenticated else None,
-            'username': user.get_username() if user.is_authenticated else '',
-        }
-        tenant = _resolve_request_tenant(request)
-        if tenant is not None:
-            data['tenant_name'] = tenant.name
-            logo_url = tenant.get_logo_url()
-            if logo_url:
-                # Preferir URL relativa /media/... para mismo origen que la SPA (proxy /media en dev).
-                if logo_url.startswith(('http://', 'https://')):
-                    data['tenant_logo_url'] = logo_url
-                else:
-                    data['tenant_logo_url'] = logo_url
-            else:
-                data['tenant_logo_url'] = None
-        else:
-            data['tenant_name'] = None
-            data['tenant_logo_url'] = None
-        data['is_tenant_owner'] = (
-            user.is_authenticated
-            and user.is_staff
-            and bool(user.email)
-            and tenant is not None
-            and bool(tenant.email)          # Fix 3: tenant.email is nullable
-            and user.email == tenant.email
-        )
-        return Response(data)
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def user_permissions(request):
-    permissions = list(request.user.get_all_permissions())
-    # print(f"Permissions in View>>: {permissions}")
-    return Response({'permissions': permissions})
-
-@api_view(['GET'])
-def validate_token(request):
-    token_key = request.headers.get('Authorization')
-    if token_key:
-        # Obtener solo el valor del token
-        token_key = token_key.replace('Token ', '')
-        try:
-            token = Token.objects.get(key=token_key)
-            # print(f"Token found in View>>: {token}")
-            return Response({'valid': True}, status=status.HTTP_200_OK)
-        except Token.DoesNotExist:
-            return Response({'valid': False}, status=status.HTTP_401_UNAUTHORIZED)
-    return Response({'valid': False}, status=status.HTTP_401_UNAUTHORIZED)
-
-class LoginView(APIView):
-    permission_classes = [AllowAny]  # Permite acceso sin autenticación
-
-    def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        # print(f"Intentando LoginView: {username} {password}")
-        user = authenticate(username=username, password=password)
-
-        if user is not None:
-            tenant = _resolve_request_tenant(request)
-            ok, msg = assert_login_allowed(tenant)
-            if not ok:
-                return Response(
-                    {'error': msg, 'code': 'tenant_inactive'},
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-            token, created = Token.objects.get_or_create(user=user)
-            permissions = list(user.get_all_permissions())
-            return Response({
-                'token': token.key,
-                'permissions': permissions
-            }, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'Credenciales inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def login_view(request):
-    # print("Request data:", request.data)
-    username = request.data.get('username')
-    password = request.data.get('password')
-    # print(f"Intentando login_view: {username} {password}")
-    user = authenticate(username=username, password=password)
-    if user:
-        tenant = _resolve_request_tenant(request)
-        ok, msg = assert_login_allowed(tenant)
-        if not ok:
-            return Response(
-                {'error': msg, 'code': 'tenant_inactive'},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        token, _ = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key}, status=status.HTTP_200_OK)
-    else:
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-    
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def logout_view(request):
-    try:
-        token = request.auth
-        token.delete()  # Eliminar el token del usuario actual
-        response = Response({"message": "Session closed successfully."}, status=200)
-        response.delete_cookie('userPermissions')  # Eliminar la cookie de permisos
-        
-        # Agregar instrucciones para eliminar datos de sessionStorage
-        response['X-Delete-Session-Storage'] = 'authToken,userPermissions'
-        
-        return response
-    except AttributeError:
-        return Response({"error": "No token found."}, status=400)
 
 
 @api_view(['GET'])
@@ -296,7 +149,7 @@ def weekly_summary(request): # AreaChart.vue component
 class ContractViewSet(viewsets.ModelViewSet):
     queryset = Contract.objects.all()
     serializer_class = ContractSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
     def get_queryset(self):
@@ -352,11 +205,6 @@ class ContractViewSet(viewsets.ModelViewSet):
         logger.error("Serializer errors: %s", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def to_internal_value(self, data):
-        if 'lot' in data and (data['lot'] is None or (data['lot'] == '' or data['lot'] == "null")):
-            data['lot'] = None
-        return super().to_internal_value(data)
-
     @action(detail=False, methods=['get'], url_path='validate-lot')
     def validate_contract(self, request):
         lot = request.GET.get('lot')
@@ -367,23 +215,46 @@ class ContractViewSet(viewsets.ModelViewSet):
         if not type_:
             return JsonResponse({'error': 'Type is a required parameter.'}, status=400)
 
+        def duplicate_payload(contract):
+            details = []
+            if contract.lot:
+                details.append(f'Lot {contract.lot}')
+            if contract.address:
+                details.append(f'Address {contract.address}')
+            detail_str = (' ' + ' '.join(details)) if details else ''
+            message = (
+                f'There is already a contract with this lot or address in '
+                f'{contract.type},{detail_str}'
+            )
+            return JsonResponse({
+                'exists': True,
+                'message': message,
+                'type': contract.type,
+                'lot': contract.lot,
+                'address': contract.address,
+                'id': contract.id,
+            })
+
         # Validar por lote
         if lot:
             if job_id == 'S/L':
-                lot_exists = Contract.objects.filter(
-                    lot=lot, type=type_, address=address).exists()
+                match = Contract.objects.filter(
+                    lot=lot, type=type_, address=address
+                ).order_by('id').first()
             else:
-                lot_exists = Contract.objects.filter(
-                    lot=lot, type=type_, job_id=job_id).exists()
-            if lot_exists:
-                return JsonResponse({'exists': True})
+                match = Contract.objects.filter(
+                    lot=lot, type=type_, job_id=job_id
+                ).order_by('id').first()
+            if match:
+                return duplicate_payload(match)
 
-        # Validar por dirección cuando no hay lote
+        # Validar por dirección cuando no hay lote (Spot Lot)
         if address and (not lot or lot == ''):
-            address_exists = Contract.objects.filter(
-                address=address, type=type_).exists()
-            if address_exists:
-                return JsonResponse({'exists': True})
+            match = Contract.objects.filter(
+                address=address, type=type_
+            ).order_by('id').first()
+            if match:
+                return duplicate_payload(match)
 
         return JsonResponse({'exists': False})
     
@@ -536,14 +407,14 @@ class ContractViewSet(viewsets.ModelViewSet):
 class ContractDetailsViewSet(viewsets.ModelViewSet):
     queryset = ContractDetails.objects.all()
     serializer_class = ContractDetailsSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
 
 class WorkPriceViewSet(viewsets.ModelViewSet):
     queryset = WorkPrice.objects.all()
     serializer_class = WorkPriceSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
     def get_queryset(self):
@@ -557,7 +428,7 @@ class WorkPriceViewSet(viewsets.ModelViewSet):
 class BuilderViewSet(viewsets.ModelViewSet):
     queryset = Builder.objects.all()
     serializer_class = BuilderSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
@@ -603,7 +474,7 @@ class BuilderViewSet(viewsets.ModelViewSet):
 class JobViewSet(viewsets.ModelViewSet):
     queryset = Job.objects.all().select_related("builder").prefetch_related("crews")
     serializer_class = JobSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
     @action(detail=False, methods=['get'])
@@ -620,7 +491,7 @@ class JobViewSet(viewsets.ModelViewSet):
 class HouseModelViewSet(viewsets.ModelViewSet):
     queryset = HouseModel.objects.all()
     serializer_class = HouseModelSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     
     def get_serializer_context(self):
@@ -689,13 +560,21 @@ def download_contract_pdf(request, contract_id):
         right_details = details[mid_index:]
         
         logo_url = get_tenant_logo_url(request)
+        tenant = _resolve_tenant(request)
+        show_lighting_circuits = (
+            tenant is not None
+            and getattr(tenant, 'client_type', None) == 'electric'
+        )
 
         # Prepare the data to return
         context = {
             'contract': contract,
             'left_details': left_details,
             'right_details': right_details,
-            'lighting_circuits': lighting_circuits(contract.sqft),
+            'lighting_circuits': (
+                lighting_circuits(contract.sqft) if show_lighting_circuits else None
+            ),
+            'show_lighting_circuits': show_lighting_circuits,
             'logo_url': logo_url,
         }
         font_config = FontConfiguration()

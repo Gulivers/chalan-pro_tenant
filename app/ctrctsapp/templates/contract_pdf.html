@@ -167,8 +167,12 @@
     <!-- Totals -->
     <div class="row mb-2">
         <div class="col-12 mb-2">
+            {% if show_lighting_circuits %}
             <strong>LIGHTING CIRCUITS:</strong> {{ lighting_circuits }}
             <strong class="ms-3">OPTIONAL PAY: $</strong> {{ contract.total_options }}
+            {% else %}
+            <strong>OPTIONAL PAY: $</strong> {{ contract.total_options }}
+            {% endif %}
         </div>
         <div class="col-12 text-end" style="font-size: 13px">
             <span class="fw-bold">GRAND TOTAL:</span> $ {{ contract.total }} + ____________ = ____________

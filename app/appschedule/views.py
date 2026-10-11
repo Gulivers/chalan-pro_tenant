@@ -6,7 +6,7 @@ from rest_framework.permissions import (
 )
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.authentication import TokenAuthentication
+from appauth.authentication import TenantJWTAuthentication
 from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action, api_view, permission_classes
 from django.db.models import (
@@ -176,11 +176,14 @@ class EventViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         deleted = request.query_params.get('deleted', False)
         if deleted:
-            event = Event.objects.get(pk=kwargs['pk'])
+            event = get_object_or_404(Event, pk=kwargs['pk'])
+            event.raise_if_deletion_blocked()
             event.deleted = True
             event.save()
             return Response({'message': f'Event with ID {event.id} has been deleted'}, status=status.HTTP_200_OK)
         instance = self.get_object()
+        if hasattr(instance, 'raise_if_deletion_blocked'):
+            instance.raise_if_deletion_blocked()
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -283,18 +286,12 @@ class EventNoteViewSet(viewsets.ViewSet):
     def retrieve(self, request, event_id=None):
         try:
             event = get_object_or_404(Event, pk=event_id)
-            work_account = event.work_account
-            
-            if not work_account:
-                return Response({'error': 'Event does not have a work_account associated.'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            try:
-                # Buscar nota por work_account
-                note = EventNote.objects.get(work_account=work_account)
+            # Notes are scoped per event (work order), same as chat.
+            note = EventNote.objects.filter(event=event).first()
+            if note:
                 serializer = self.serializer_class(note)
                 return Response(serializer.data)
-            except EventNote.DoesNotExist:
-                return Response({'notes': ''}, status=status.HTTP_200_OK)
+            return Response({'notes': ''}, status=status.HTTP_200_OK)
         except Event.DoesNotExist:
             return Response({'error': f'Event with ID {event_id} not found.'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -302,19 +299,18 @@ class EventNoteViewSet(viewsets.ViewSet):
         try:
             event = get_object_or_404(Event, pk=event_id)
             work_account = event.work_account
-            
-            if not work_account:
-                return Response({'error': 'Event does not have a work_account associated.'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Buscar nota existente por work_account
-            event_note = EventNote.objects.filter(work_account=work_account).first()
+            event_note = EventNote.objects.filter(event=event).first()
+
             if event_note:
-                serializer = self.serializer_class(event_note, data=request.data, context={'request': request})
+                serializer = self.serializer_class(
+                    event_note, data=request.data, context={'request': request}
+                )
             else:
-                # Crear nueva nota con work_account
-                serializer = self.serializer_class(data=request.data, context={'request': request})
+                serializer = self.serializer_class(
+                    data=request.data, context={'request': request}
+                )
             serializer.is_valid(raise_exception=True)
-            serializer.save(work_account=work_account)
+            serializer.save(event=event, work_account=work_account)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -331,15 +327,13 @@ class EventChatViewSet(viewsets.ViewSet):
             return Response({"error": "Event ID is required."}, status=400)
 
         event = get_object_or_404(Event, pk=event_id)
-        work_account = event.work_account
         
-        if not work_account:
-            return Response({"error": "Event does not have a work_account associated."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Filtrar mensajes por work_account
-        queryset = EventChatMessage.objects.filter(work_account=work_account).order_by('timestamp')
-        serializer = self.serializer_class(queryset, many=True)
+        # Filtrar mensajes por event (con fallback a work_account para chats legacy)
+        queryset = EventChatMessage.objects.filter(event=event).order_by('timestamp')
+        if not queryset.exists() and event.work_account:
+            queryset = EventChatMessage.objects.filter(work_account=event.work_account, event__isnull=True).order_by('timestamp')
 
+        serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
 
     def create(self, request, event_id=None):
@@ -491,9 +485,12 @@ class MyEventsView(APIView):
 
     def get(self, request, format=None):
         search = self.request.query_params.get('search')
+        work_account = self.request.query_params.get('work_account')
         user = request.user
 
         q = Q(deleted=False)
+        if work_account:
+            q &= Q(work_account_id=work_account)
 
         #  Detecta si el usuario es supervisor (tiene jobs asignados)
         jobs = Job.objects.filter(crews__members=user).values_list('id', flat=True)
@@ -625,7 +622,7 @@ def export_schedule_excel(request):
 class AbsenceReasonViewSet(viewsets.ModelViewSet):
     queryset = AbsenceReason.objects.filter(is_active=True)
     serializer_class = AbsenceReasonSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     
     
@@ -905,16 +902,12 @@ class EventImageViewSet(viewsets.ModelViewSet):
         event_id = self.request.query_params.get('event')
         qs = super().get_queryset()
         if event_id:
-            # Obtener work_account del evento y filtrar por work_account
             try:
                 event = Event.objects.get(id=event_id)
-                if event.work_account_id:
-                    qs = qs.filter(work_account=event.work_account)
-                else:
-                    # Fallback a event_id si no hay work_account
-                    qs = qs.filter(event_id=event_id)
+                # Filtrar por el evento específico o imágenes legacy asociadas al work_account
+                qs = qs.filter(Q(event=event) | Q(event__isnull=True, work_account=event.work_account))
             except Event.DoesNotExist:
-                pass
+                return qs.none()
         return qs
     
     @action(detail=False, methods=['post'], url_path='upload', parser_classes=[MultiPartParser, FormParser])

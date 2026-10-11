@@ -6,6 +6,7 @@ from django.db import IntegrityError
 from rest_framework.views import exception_handler as drf_exception_handler
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import Throttled
 from itertools import islice
 import logging
 
@@ -14,7 +15,8 @@ logger = logging.getLogger('ctrctsapp')
 # === Opcional: mapea nombres de constraints a errores por campo ===
 # Recomendado si defines UniqueConstraint(name="uq_party_name_ci") u otros.
 UNIQUE_CONSTRAINT_MAP = {
-    # "uq_party_name_ci": {"name": ["A party with this name already exists."]},
+    "uniq_builder_name_ci": {"name": ["A party with this name already exists."]},
+    "uniq_builder_rfc": {"rfc": ["A party with this RFC already exists."]},
 }
 
 # === Heurísticas por campo si no hay constraint name fiable ===
@@ -23,6 +25,10 @@ UNIQUE_FIELD_GUESSES = [
     (" name ", {"name": ["A party with this name already exists."]}),
     ("'name'", {"name": ["A party with this name already exists."]}),
     ('"name"', {"name": ["A party with this name already exists."]}),
+    ("lower(name)", {"name": ["A party with this name already exists."]}),
+    (" rfc ", {"rfc": ["A party with this RFC already exists."]}),
+    ("'rfc'", {"rfc": ["A party with this RFC already exists."]}),
+    ('"rfc"', {"rfc": ["A party with this RFC already exists."]}),
     (" email ", {"email": ["A party with this email already exists."]}),
     ("'email'", {"email": ["A party with this email already exists."]}),
     ('"email"', {"email": ["A party with this email already exists."]}),
@@ -79,8 +85,19 @@ def custom_exception_handler(exc, context):
       - ProtectedError → 409 (in use) con ejemplos
       - IntegrityError (FK/constraint) → 409 (in use)
       - IntegrityError (UNIQUE) → 400 con errores por campo (para formularios)
+      - Throttled → 429 con code estable
       - Delega el resto al handler por defecto de DRF
     """
+    if isinstance(exc, Throttled):
+        wait = getattr(exc, 'wait', None)
+        payload = {
+            'code': getattr(exc, 'default_code', None) or 'throttled',
+            'detail': str(exc.detail) if exc.detail is not None else 'Request was throttled.',
+        }
+        if wait is not None:
+            payload['wait'] = wait
+        return Response(payload, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
     # --- django.core.exceptions.ValidationError (p. ej. Model.clean fuera del serializer)
     if isinstance(exc, DjangoValidationError):
         payload = _django_validation_error_payload(exc)
@@ -112,8 +129,24 @@ def custom_exception_handler(exc, context):
         msg = (str(exc) or "")
         msg_lower = msg.lower()
 
-        # a) FK / constraint de "in use" (no es UNIQUE) → 409
-        if ("foreign key" in msg_lower) or ("constraint" in msg_lower and "unique" not in msg_lower):
+        # a) Primary key / sequence out of sync (not a duplicate name/rfc)
+        if "pkey" in msg_lower or "primary key" in msg_lower:
+            logger.error("IntegrityError(PK/sequence) handled: %s", msg)
+            return Response(
+                {
+                    "detail": (
+                        "Could not save this record. The database ID sequence "
+                        "is out of sync. Run fix_builder_sequences and try again."
+                    ),
+                    "code": "sequence_out_of_sync",
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        # b) FK / constraint de "in use" (no es UNIQUE) → 409
+        if ("foreign key" in msg_lower) or (
+            "constraint" in msg_lower and "unique" not in msg_lower
+        ):
             logger.info("IntegrityError(FK/constraint) handled as 409 Conflict: %s", msg)
             return Response(
                 {
@@ -123,7 +156,7 @@ def custom_exception_handler(exc, context):
                 status=status.HTTP_409_CONFLICT,
             )
 
-        # b) UNIQUE → 400 con errores por campo
+        # c) UNIQUE → 400 con errores por campo
         if "unique" in msg_lower or "duplicate entry" in msg_lower:
             # MySQL suele traer "Duplicate entry '... for key '...'"
             payload = _payload_unique_from_message(msg_lower)

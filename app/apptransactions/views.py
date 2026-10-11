@@ -1,11 +1,12 @@
 import base64
 from datetime import datetime
-from django.db.models import Q, Prefetch, Count
+from django.db.models import Q, Prefetch, Count, ProtectedError
 from django.utils.dateparse import parse_datetime
 from django.shortcuts import render, get_object_or_404
 from django.db import IntegrityError
 from django.http import JsonResponse
 from rest_framework import viewsets, status, filters, permissions
+from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action, api_view, permission_classes
@@ -23,23 +24,42 @@ from .models import (
 from .serializers import (
     DocumentTypeSerializer, PartyTypeSerializer, PartyCategorySerializer, PartySerializer,
     DocumentSerializer, DocumentListSerializer, DocumentLineSerializer, WorkAccountSerializer,
-    TransactionFavoriteSerializer, TransactionFavoriteImportSerializer,
+    WorkAccountListSerializer, TransactionFavoriteSerializer, TransactionFavoriteImportSerializer,
 )
-from rest_framework.authentication import TokenAuthentication
+from appauth.authentication import TenantJWTAuthentication
+from rest_framework.pagination import PageNumberPagination
+
+
+class WorkAccountPagination(PageNumberPagination):
+    page_size = 25
+    page_size_query_param = "page_size"
+    max_page_size = 500
 
 
 class DocumentTypeViewSet(viewsets.ModelViewSet):
     queryset = DocumentType.objects.all()
     serializer_class = DocumentTypeSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
+
+    def perform_destroy(self, instance):
+        if instance.type_code in DocumentType.PROTECTED_TYPE_CODES:
+            raise DRFValidationError(
+                'The Material Request document type is required by the system and cannot be deleted.'
+            )
+        try:
+            instance.delete()
+        except ProtectedError as exc:
+            raise DRFValidationError(
+                'This document type cannot be deleted while related records exist.'
+            ) from exc
     
 class PartyTypeViewSet(viewsets.ModelViewSet):
     queryset = PartyType.objects.all()
     serializer_class = PartyTypeSerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
@@ -47,7 +67,7 @@ class PartyTypeViewSet(viewsets.ModelViewSet):
 class PartyCategoryViewSet(viewsets.ModelViewSet):
     queryset = PartyCategory.objects.all()
     serializer_class = PartyCategorySerializer
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
@@ -67,10 +87,28 @@ class PartyViewSet(viewsets.ModelViewSet):
 class WorkAccountViewSet(viewsets.ModelViewSet):
     queryset = WorkAccount.objects.select_related("builder", "job", "house_model", "default_price_type").all()
     serializer_class = WorkAccountSerializer
+    pagination_class = WorkAccountPagination
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["title", "builder__name", "job__name", "house_model__name", "lot", "address", "city", "zipcode"]
-    ordering_fields = ["id", "created_at"]
+    ordering_fields = [
+        "id",
+        "created_at",
+        "title",
+        "lot",
+        "address",
+        "city",
+        "is_active",
+        "builder__name",
+        "job__name",
+        "house_model__name",
+    ]
+    ordering = ["-created_at"]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return WorkAccountListSerializer
+        return WorkAccountSerializer
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -80,9 +118,30 @@ class WorkAccountViewSet(viewsets.ModelViewSet):
             qs = qs.filter(is_active=True)
         return qs
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        stats = queryset.aggregate(
+            total=Count("id"),
+            active=Count("id", filter=Q(is_active=True)),
+            inactive=Count("id", filter=Q(is_active=False)),
+        )
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page, many=True)
+        response = self.get_paginated_response(serializer.data)
+        response.data["stats"] = {
+            "total": stats["total"] or 0,
+            "active": stats["active"] or 0,
+            "inactive": stats["inactive"] or 0,
+        }
+        return response
+
     def perform_create(self, serializer):
         """Asigna automáticamente el usuario actual al campo created_by"""
         serializer.save(created_by=self.request.user)
+
+    def perform_destroy(self, instance):
+        instance.raise_if_deletion_blocked()
+        super().perform_destroy(instance)
 
     @action(detail=True, methods=["post"], url_path="sync-schedule-titles")
     def sync_schedule_titles(self, request, pk=None):
@@ -188,7 +247,7 @@ class DocumentListProviderAPIView(APIView):
     Respuesta: { items, totalRows, stats }
     """
 
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     _ALLOWED_ORDERING = {
@@ -235,6 +294,14 @@ class DocumentListProviderAPIView(APIView):
                     queryset = queryset.filter(id__in=document_ids)
                 else:
                     queryset = queryset.none()
+
+            exclude_codes = [
+                part.strip()
+                for part in request.query_params.get("exclude_type_code", "").split(",")
+                if part.strip()
+            ]
+            if exclude_codes:
+                queryset = queryset.exclude(document_type__type_code__in=exclude_codes)
 
             if search:
                 words = search.split()

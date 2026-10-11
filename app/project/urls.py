@@ -21,6 +21,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
+    path('', include('appauth.urls')),
     path('', include('appcore.urls')),
     path('', include('ctrctsapp.urls')),
     path('', include('auditapp.urls')),  # rutas de auditapp
@@ -28,6 +29,7 @@ urlpatterns = [
     path('', include('appschedule.urls')),
     path('', include('appinventory.urls')),
     path('', include('apptransactions.urls')),
+    path('', include('appassistant.urls')),
     path('', include('appbilling.urls')),
 ]
 

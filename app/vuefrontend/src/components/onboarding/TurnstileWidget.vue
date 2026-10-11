@@ -1,7 +1,9 @@
 <template>
   <div class="turnstile-widget">
     <div ref="containerRef" class="turnstile-container"></div>
-    <p v-if="loadError" class="text-danger small mb-0">{{ loadError }}</p>
+    <p v-if="loadError" class="jr-pilot">
+      <span class="m-0 block text-sm text-jr-danger">{{ loadError }}</span>
+    </p>
   </div>
 </template>
 

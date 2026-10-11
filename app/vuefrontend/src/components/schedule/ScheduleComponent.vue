@@ -1,77 +1,118 @@
 <template>
-  <div class="calendar-container">
-    <div
-      class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-md-end gap-2 py-2">
-      <div v-if="categoryTotals.length">
-        <div class="text-center me-5">
-          <strong>Weekly Totals:</strong>
-          <span
+  <JRPage>
+    <JRPageHeader
+      title="Schedule"
+      description="Plan crew work by day or week. Search, jump to a date, or publish drafts in view." />
+
+    <JRToolbar>
+      <template #start>
+        <div class="jr-schedule__search">
+          <label class="jr-sr-only" for="schedule-search">Search schedule</label>
+          <span class="jr-schedule__search-icon" aria-hidden="true">
+            <SearchIcon />
+          </span>
+          <JRInput
+            inputId="schedule-search"
+            v-model="search"
+            type="search"
+            placeholder="Search crew, address, title…"
+            autocomplete="off"
+            :spellcheck="false"
+            enterkeyhint="search" />
+        </div>
+      </template>
+
+      <template v-if="categoryTotals.length" #stats>
+        <div class="jr-schedule__totals" aria-live="polite">
+          <span class="jr-schedule__totals-label">Weekly Totals</span>
+          <JRBadge
             v-for="(item, index) in categoryTotals"
             :key="index"
-            class="badge bg-secondary mx-1">
-            {{ removeEmojis(item.crew__category__name) }}: {{ item.total }}
-          </span>
+            :value="`${removeEmojis(item.crew__category__name)}: ${item.total}`"
+            severity="secondary" />
         </div>
-      </div>
-      <div class="me-2" v-if="hasPermission('appschedule.view_event')">
-        <button
-          class="btn btn-outline-success me-2 btn-sm"
+      </template>
+
+      <template #actions>
+        <div class="jr-schedule__jump">
+          <label class="jr-sr-only" for="schedule-jump-date">Go to date</label>
+          <JRDatePicker
+            inputId="schedule-jump-date"
+            :model-value="jumpDate"
+            placeholder="Go to date"
+            :show-button-bar="true"
+            @update:model-value="onJumpDate" />
+        </div>
+
+        <JRButton
+          v-if="hasPermission('appschedule.view_event')"
+          type="button"
+          variant="ghost"
+          size="sm"
           @click="downloadScheduleExcel">
-          <img
-            src="@/assets/img/microsoft-excel-icon.svg"
-            alt="Excel"
-            width="25"
-            class="me-1" />
-          Excel Schedule
-        </button>
-        <button
-          class="btn btn-outline-dark btn-sm"
+          <FileExcel
+            class="jr-schedule__excel-icon"
+            aria-hidden="true" />
+          Excel
+        </JRButton>
+
+        <JRButton
+          v-if="hasPermission('appschedule.view_event')"
+          type="button"
+          variant="ghost"
+          size="sm"
           @click="generateSchedulePDF">
-          📄 Print Schedule PDF
-        </button>
-      </div>
-      <div v-if="hasPermission('appschedule.add_event')">
-        <button
-          class="btn btn-warning me-3 btn-sm"
+          <FilePdf
+            class="jr-schedule__pdf-icon"
+            aria-hidden="true" />
+          Print PDF
+        </JRButton>
+
+        <JRButton
+          v-if="hasPermission('appschedule.add_event')"
+          type="button"
+          :variant="showBntPublishAll ? 'primary' : 'secondary'"
+          size="sm"
           :disabled="publishing || !showBntPublishAll"
-          :aria-busy="publishing"
+          :aria-busy="publishing ? 'true' : 'false'"
           :title="
             publishing
               ? 'Publishing drafts…'
               : showBntPublishAll
-              ? 'Publish all drafts in view'
-              : 'No drafts to publish'
+                ? 'Publish all drafts in view'
+                : 'No drafts to publish'
           "
           @click="publishAllDrafts">
-          <span
-            v-if="publishing"
-            class="spinner-border spinner-border-sm me-2"
-            role="status"></span>
-          {{ publishing ? "Publishing..." : "📢 Publish All Drafts" }}
-        </button>
-      </div>
+          {{ publishing ? "Publishing…" : "Publish All Drafts" }}
+        </JRButton>
+      </template>
+    </JRToolbar>
 
-      <div class="input-group input-group-sm me-2" style="max-width: 280px">
-        <span class="input-group-text">Search:</span>
-        <input
-          type="text"
-          class="form-control form-control-sm"
-          placeholder="Search here 🔍"
-          v-model="search" />
-        <!--<button class="btn btn-outline-primary btn-sm" type="button">
-          <img src="@assets/img/search.svg" alt="Search" width="20" height="20" />
-        </button>-->
+    <div class="jr-schedule">
+      <p
+        v-if="!showFullCalendar"
+        class="jr-schedule__loading"
+        role="status"
+        aria-live="polite">
+        Loading schedule…
+      </p>
+      <JREmptyState
+        v-else-if="!allResources.length"
+        title="No crews to schedule"
+        description="Active crews with a category appear here as rows. Add or activate a crew, then refresh." />
+      <div v-else class="jr-schedule__pane">
+        <FullCalendar
+          ref="calendarRef"
+          class="jr-schedule__calendar"
+          :options="calendarOptions" />
       </div>
     </div>
-    <FullCalendar
-      ref="calendarRef"
-      :options="calendarOptions"
-      v-if="showFullCalendar" />
+
     <EventModal
       ref="eventModal"
       :formData="formData"
       @save-event="handleSaveEvent" />
-  </div>
+  </JRPage>
 </template>
 
 <script>
@@ -79,7 +120,6 @@ import FullCalendar from "@fullcalendar/vue3";
 import interactionPlugin from "@fullcalendar/interaction";
 import resourceTimelinePlugin from "@fullcalendar/resource-timeline";
 import "@assets/css/schedule.css";
-import "@assets/css/base.css";
 import EventModal from "./ScheduleEventModal.vue";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -90,15 +130,48 @@ import { useAuthStore } from "@stores/auth";
 import { openPdf } from "@helpers";
 import SearchIcon from "@components/icons/searchIcon.vue";
 import { appMixin } from "@mixins/appMixin";
+import FileExcel from "@primeicons/vue/file-excel";
+import FilePdf from "@primeicons/vue/file-pdf";
+import {
+  JRPage,
+  JRPageHeader,
+  JRToolbar,
+  JRInput,
+  JRButton,
+  JRBadge,
+  JRDatePicker,
+  JREmptyState,
+} from "@ui";
 
-// npm install @fullcalendar/vue3 @fullcalendar/interaction @fullcalendar/resource-timeline
+function escapeScheduleHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
 export default {
-  components: { SearchIcon, FullCalendar, EventModal },
+  components: {
+    SearchIcon,
+    FileExcel,
+    FilePdf,
+    FullCalendar,
+    EventModal,
+    JRPage,
+    JRPageHeader,
+    JRToolbar,
+    JRInput,
+    JRButton,
+    JRBadge,
+    JRDatePicker,
+    JREmptyState,
+  },
   mixins: [appMixin],
   data() {
     return {
       search: "",
+      jumpDate: null,
       calendar_start: null,
       calendar_end: null,
       resizeObserver: null,
@@ -114,47 +187,47 @@ export default {
         description: "",
         extendedService: false,
       },
-      userId: null, // _OAHP
-      publishing: false, // OAHO400
+      userId: null,
+      publishing: false,
       categoryTotals: [],
-      /** Ancho columna crew: 25% móvil/tablet pequeña, 15% desktop / tablet grande (≥992px, ej. iPad Pro) */
+      /** Ancho columna crew: 25% móvil/tablet pequeña, 15% desktop / tablet grande (≥992px) */
       resourceAreaWidthCurrent: "25%",
-      // filteredEvents: [],
       websocket: null,
       wsUrl: null,
-      // categoryOrder: ['Rough', 'Roug-hWaitList', 'Trim', 'TrimWaitList', 'Others', 'Hourly'],
       initialCalendarOptions: {
         plugins: [interactionPlugin, resourceTimelinePlugin],
-        /** Open-source use of @fullcalendar/resource-timeline (see fullcalendar.io/docs/schedulerLicenseKey) */
         schedulerLicenseKey: "GPL-My-Project-Is-Open-Source",
         initialView: "resourceTimelineWeek",
-        firstDay: 1, // Lunes como primer día de la semana
+        firstDay: 1,
         headerToolbar: {
           left: "prev,next today",
           center: "title",
           right: "resourceTimelineDay,resourceTimelineWeek",
         },
+        buttonText: {
+          today: "Today",
+          resourceTimelineDay: "Day",
+          resourceTimelineWeek: "Week",
+        },
         editable: false,
         eventResizableFromStart: false,
         droppable: false,
         resourceAreaHeaderContent: "Crew",
-        eventMinHeight: 90, // Altura mínima para asegurar visibilidad
-        // slotHeight: null,
-        height: "auto", // Establece la altura como auto
+        eventMinHeight: 90,
+        height: "100%",
+        stickyHeaderDates: true,
         slotLabelInterval: { days: 1 },
         slotDuration: { days: 1 },
         slotLabelFormat: { weekday: "long", month: "short", day: "numeric" },
         resourceGroupField: "category",
-        // resourceOrder: 'title',
         resourceOrder: "category",
         resources: [],
-        // events: [],
         eventDrop: () => {
           return false;
         },
         eventResize: () => {
           return false;
-        }, // Manejo para cuando se cambia el tamaño de un evento
+        },
         dateClick: () => {
           return false;
         },
@@ -163,35 +236,36 @@ export default {
         eventContent: function (arg) {
           const event_date = dayjs(arg.event.extendedProps.updated_at);
           const isAbsence = arg.event.extendedProps?.is_absence;
-          let event_class = "p-1 bg-light";
+          let cardClass = "jr-schedule-event-card";
           if (arg.event.extendedProps?.deleted !== undefined) {
-            // is_event
-            event_class = `p-1 ${
-              !arg.event.extendedProps?.deleted ? "bg-success" : "bg-danger"
-            } bg-opacity-25`;
+            cardClass += arg.event.extendedProps?.deleted
+              ? " jr-schedule-event-card--deleted"
+              : " jr-schedule-event-card--posted";
+          } else {
+            cardClass += " jr-schedule-event-card--draft";
           }
           if (isAbsence) {
-            event_class =
-              "p-1 bg-success-subtle opacity-75 border border-success-subtle"; // Azulito pa' las ausencias
+            cardClass =
+              "jr-schedule-event-card jr-schedule-event-card--absence";
           }
+          const title = escapeScheduleHtml(arg.event.title || "");
+          const description = escapeScheduleHtml(
+            arg.event.extendedProps.description || ""
+          );
+          const extService = arg.event.extendedProps?.extended_service
+            ? `<div class="jr-schedule-event-card__flags"><span class="jr-schedule-event-card__badge">Ext. Service</span></div>`
+            : "";
+          const absencePrefix = isAbsence
+            ? `<span class="jr-schedule-event-card__absence-mark" aria-hidden="true"></span>`
+            : "";
           return {
-            html: `<div class="${event_class}">
-                     <span class="text-capitalize" style="font-size: 0.9rem"> ${
-                       isAbsence ? "🛑 " : ""
-                     }${arg.event.title}</span>
-                     <div class="mb-1 text-muted text-break" style="font-size: 0.75rem">${
-                       arg.event.extendedProps.description || ""
-                     }</div>
-                     ${
-                       arg.event.extendedProps?.extended_service
-                         ? '<div class="text-end pb-1"><span class="badge text-bg-danger bg-danger">Ext. Service</span></div>'
-                         : ""
-                     }
-                     <div class="hstack">
-                         <small class="text-black-50 " style="font-size: 0.7rem">${event_date.format(
-                           "lll"
-                         )}</small>
-                     </div>
+            html: `<div class="${cardClass}">
+                     <span class="jr-schedule-event-card__title">${absencePrefix}${title}</span>
+                     <div class="jr-schedule-event-card__desc">${description}</div>
+                     ${extService}
+                     <div class="jr-schedule-event-card__meta">${escapeScheduleHtml(
+                       event_date.format("lll")
+                     )}</div>
                    </div>`,
           };
         },
@@ -262,17 +336,40 @@ export default {
   },
 
   methods: {
+    toCalendarDate(value) {
+      if (!value) return null;
+      if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+      const d = dayjs(value);
+      return d.isValid() ? d.toDate() : null;
+    },
+    onJumpDate(value) {
+      this.jumpDate = value;
+      const date = this.toCalendarDate(value);
+      if (!date) return;
+      const api = this.$refs.calendarRef?.getApi?.();
+      if (!api) return;
+      api.gotoDate(date);
+    },
     /** Alineado con breakpoint Bootstrap lg (992px): ancho útil para iPad Pro y desktop. */
     updateResourceAreaWidth() {
       if (typeof window === "undefined") return;
       const wide = window.matchMedia("(min-width: 992px)").matches;
       this.resourceAreaWidthCurrent = wide ? "15%" : "25%";
+      this.$nextTick(() => {
+        const api = this.$refs.calendarRef?.getApi?.();
+        if (api) {
+          try {
+            api.updateSize();
+          } catch (e) {
+            // Calendar not ready
+          }
+        }
+      });
     },
     reSizeCalendar() {
       const resourceRows = document.querySelectorAll(".fc-resource-cell");
       const eventRows = document.querySelectorAll(".fc-datagrid-cell");
 
-      // Observador para ajustar la altura
       this.resizeObserver = new ResizeObserver((entries) => {
         entries.forEach((entry, index) => {
           if (resourceRows[index]) {
@@ -281,7 +378,6 @@ export default {
         });
       });
 
-      // Aplicar observador a cada fila de evento
       eventRows.forEach((row) => {
         this.resizeObserver.observe(row);
       });
@@ -291,7 +387,6 @@ export default {
       try {
         const { data } = await axios.get("/api/crew/supervisor/");
         const crewId = data.crew?.id;
-        console.log("✔ Permisos cargados desde API directo:", data);
 
         this.userCrewCategoryName = data.crew?.category?.name || null;
         this.can_create_event = data.can_create_event;
@@ -307,7 +402,7 @@ export default {
           this.initialCalendarOptions.eventResizableFromStart = true;
           this.initialCalendarOptions.droppable = true;
           this.initialCalendarOptions.eventDrop = this.handleEventDrop;
-          this.initialCalendarOptions.eventResize = this.handleEventDrop; // Manejo para cuando se cambia el tamaño de un evento
+          this.initialCalendarOptions.eventResize = this.handleEventDrop;
           this.initialCalendarOptions.dateClick = this.handleDateClick;
         }
       } catch (error) {
@@ -316,48 +411,30 @@ export default {
     },
 
     handleDatesSet(info) {
-      // Esta función se ejecuta cuando cambia la vista (mes, semana, día, etc.)
       const startDate = dayjs(info.view.currentStart).format("YYYY-MM-DD");
       const endDate = dayjs(info.view.currentEnd).format("YYYY-MM-DD");
-      // console.log('Rango de fechas actual (Options API), aqui debemos cargar los eventos que están en ese rango de fechas:', startDate, ' - ', endDate);
+
+      this.jumpDate = dayjs(info.view.currentStart).toDate();
 
       if (startDate !== this.calendar_start && endDate !== this.calendar_end) {
         this.calendar_start = startDate;
         this.calendar_end = endDate;
         this.getEvents();
       }
-
-      // Aquí podrías llamar a tu función para cargar los eventos
-      // this.fetchEvents(startDate, endDate);
     },
 
     async getCrews() {
       this.showFullCalendar = false;
       try {
         const response = await axios.get("/api/crews/");
-        console.log("🔍 Respuesta completa de /api/crews/:", response.data);
 
         if (response.status === 200) {
-          // Manejar respuesta paginada o directa
           const data = response.data.results || response.data;
           const crews = Array.isArray(data) ? data : [];
 
-          console.log("📦 Total crews recibidos:", crews.length);
-          console.log(
-            "📦 Estructura del primer crew (si existe):",
-            crews.length > 0 ? crews[0] : "No hay crews"
+          const crewsWithCategory = crews.filter(
+            (item) => item && item.category_name
           );
-
-          // Filtrar crews que tengan category_name válido
-          const crewsWithCategory = crews.filter((item) => {
-            const hasCategory = item && item.category_name;
-            if (!hasCategory) {
-              console.log("⚠️ Crew sin category_name:", item);
-            }
-            return hasCategory;
-          });
-
-          console.log("✅ Crews con categoría:", crewsWithCategory.length);
 
           this.allResources = crewsWithCategory.map((item) => ({
             id: item.id,
@@ -366,45 +443,23 @@ export default {
             crewActive: item.status !== false,
           }));
 
-          // No necesitamos asignar a initialCalendarOptions.resources porque
-          // el computed calendarOptions ya incluye this.resources reactivamente
-          console.log(
-            "✅ Recursos cargados:",
-            this.allResources.length,
-            "crews"
-          );
-          console.log("📋 Categorías encontradas:", [
-            ...new Set(this.allResources.map((r) => r.category)),
-          ]);
-          console.log("📋 Recursos finales:", this.allResources);
-
           if (this.allResources.length === 0) {
             console.warn(
               "⚠️ No crews found with category_name. Calendar will be empty."
             );
-            console.warn(
-              "⚠️ Datos recibidos de la API:",
-              JSON.stringify(crews, null, 2)
-            );
           }
         }
-        // Mostrar calendario después de cargar recursos (o si hay error)
         this.showFullCalendar = true;
-        // Esperar a que Vue actualice el DOM antes de intentar refetch
         await this.$nextTick();
-        // Si el calendario ya está montado, refrescar recursos
         if (this.$refs.calendarRef && this.$refs.calendarRef.getApi) {
           try {
             this.$refs.calendarRef.getApi().refetchResources();
           } catch (e) {
-            console.log(
-              "ℹ️ Calendar API not ready yet, resources will load on next render"
-            );
+            // Calendar API not ready yet
           }
         }
       } catch (error) {
         console.error("❌ Error fetching crews data:", error);
-        // Mostrar calendario incluso si hay error para que el usuario vea el problema
         this.showFullCalendar = true;
         Swal.fire({
           icon: "error",
@@ -455,23 +510,19 @@ export default {
     },
     async updateEvent(url, payload, method = "patch") {
       const axios_method = method === "patch" ? axios.patch : axios.post;
-      const resp = await axios_method(url, payload);
+      await axios_method(url, payload);
     },
 
     handleDateClick(info) {
       try {
         const isCoordinator = this.is_coordinator;
         const canCreateEvent = this.can_create_event;
-        const crewCategoryName = this.userCrewCategoryName?.toLowerCase(); // ej. "slabs"
-        const clickedCategoryName = this.resources
-          .find((r) => r.id == info.resource.id)
-          ?.category?.toLowerCase();
+        const crewCategoryName = this.userCrewCategoryName?.toLowerCase();
         const clickedCrewId = parseInt(info.resource.id);
         const crewId = this.crewId;
         const crewName = this.crewName;
         this.clickedCrewId = clickedCrewId;
 
-        //  No tiene permiso para crear
         if (!canCreateEvent && !isCoordinator) {
           Swal.fire(
             "Permission Denied",
@@ -481,11 +532,9 @@ export default {
           return;
         }
 
-        // Si NO es coordinador, validar categoría
         if (!isCoordinator && crewId !== clickedCrewId) {
           Swal.fire(
             "Permission Denied",
-            // `You can only create events for your category (${crewCategoryName?.toUpperCase() || 'UNKNOWN'}).`,
             `You can only create events for your category (${
               crewCategoryName?.toUpperCase() || "UNKNOWN"
             }) with your assigned crew (${crewName || "No Crew"}).`,
@@ -494,7 +543,6 @@ export default {
           return;
         }
 
-        // Abre el modal si todo es válido
         this.$refs.eventModal.open(
           {
             date: info.dateStr,
@@ -523,8 +571,6 @@ export default {
     },
 
     handleEventClick(info) {
-      // console.log("Clicked event data:", info.event);
-      // console.log("Clicked event data:", info.event.getResources()[0].id);
       const clickedCrewId = parseInt(info.event.getResources()[0].id);
       this.clickedCrewId = clickedCrewId;
       const resource = info.event.getResources()[0];
@@ -558,14 +604,6 @@ export default {
       const clickedCrewId = parseInt(info.event.getResources()[0].id);
       const crewName = this.crewName;
 
-      console.log("🎯 Drag Event Info:", {
-        isCoordinator,
-        crewId,
-        clickedCrewId,
-        eventTitle: info.event.title,
-      });
-
-      // Bloquea si NO es coordinador y está intentando mover otra cuadrilla
       if (!isCoordinator && crewId !== clickedCrewId) {
         Swal.fire(
           "Permission Denied",
@@ -574,19 +612,12 @@ export default {
           }).`,
           "warning"
         );
-        info.revert(); // Devuelve el evento a su posición original
+        info.revert();
         return;
       }
-      // console.log(info.event.extendedProps)
-      // console.log(`Moved ${info.event.title} to ${info.event.startStr} under ${info.event.getResources()[0].title}`);
       const is_draft = info.event.extendedProps?.event !== undefined;
       try {
         if (is_draft) {
-          //const payload = {
-          //  date: info.event.startStr,
-          //  end_dt: info.event.endStr,
-          //  crew: info.event.getResources()[0].id
-          //}
           const payload = {
             title: info.event.title,
             description: info.event.extendedProps?.description,
@@ -597,7 +628,6 @@ export default {
             extended_service: info.event.extendedProps?.extended_service,
             is_absence: info.event.extendedProps?.is_absence || false,
           };
-          // console.log('📍 PATCH Draft Payload:', payload)
           await this.updateEvent(
             `/api/schedule/${info.event.extendedProps?.id}/`,
             payload
@@ -632,7 +662,6 @@ export default {
           Swal.fire(e.response.statusText, e.message, "error");
         }
         if (e.response.status === 403) {
-          const err = e.response.data;
           Swal.fire(
             "Action not allowed",
             "You do not have permission to publish events",
@@ -643,32 +672,23 @@ export default {
       }
     },
 
-    handleSaveEvent(eventData) {
-      // console.log('Event saved:', eventData);
+    handleSaveEvent() {
       this.getEvents();
     },
 
     connectWebSocket() {
-      console.log("🔌 Conectando WebSocket a:", this.wsUrl);
-      console.log("🔌 URL completa construida:", this.wsUrl);
-      console.log("🔌 Base URL:", this.getWsBaseUrl());
       this.websocket = new WebSocket(this.wsUrl);
 
       this.websocket.onopen = () => {
         console.log("Conexión WebSocket establecida.");
       };
 
-      this.websocket.onmessage = (event) => {
-        console.log("websocket.onmessage:: ", event);
+      this.websocket.onmessage = () => {
         this.getEvents();
-        // const data = JSON.parse(event.data);
-        // this.messages.push(data.message);
       };
 
       this.websocket.onclose = () => {
         console.log("Conexión WebSocket cerrada.");
-        // Opcional: Intenta reconectar después de un tiempo
-        // setTimeout(this.connectWebSocket, 3000);
       };
 
       this.websocket.onerror = (error) => {
@@ -694,7 +714,6 @@ export default {
       if (!this.showBntPublishAll || this.publishing) return;
       this.publishing = true;
 
-      // Watchdog por si la request queda colgada
       const watchdog = setTimeout(() => {
         if (this.publishing) {
           this.publishing = false;
@@ -713,7 +732,7 @@ export default {
             start_date: this.calendar_start,
             end_date: this.calendar_end,
           },
-          { timeout: 30000 } // ✅ NEW: timeout duro en axios
+          { timeout: 30000 }
         );
 
         if (typeof this.getEvents === "function") {
@@ -741,12 +760,9 @@ export default {
     async generateSchedulePDF() {
       try {
         const url = `/api/schedule-report/?start_at=${this.calendar_start}&end_at=${this.calendar_end}`;
-        // console.log('📡 Sending PDF request to:', url);
-
         const response = await axios.get(url);
 
         if (response.status === 200) {
-          console.log("✅ PDF response received:", response.data);
           openPdf(response.data);
         }
       } catch (error) {
@@ -756,7 +772,6 @@ export default {
     },
     async downloadScheduleExcel() {
       const url = `/api/schedule-excel/?start_at=${this.calendar_start}&end_at=${this.calendar_end}`;
-      // console.log('✌ Sending PDF request to:', url);
       try {
         const response = await axios.get(url, { responseType: "blob" });
         const blob = new Blob([response.data], {
@@ -765,7 +780,6 @@ export default {
         const link = document.createElement("a");
         link.href = window.URL.createObjectURL(blob);
 
-        // Resto 1 día visualmente para el nombre del archivo
         const endDate = new Date(this.calendar_end);
         endDate.setDate(endDate.getDate() - 1);
         const formattedEnd = endDate.toISOString().split("T")[0];
@@ -778,9 +792,7 @@ export default {
       }
     },
     removeEmojis(text) {
-      // Elimina numeritos emoji (1️⃣, 2️⃣, etc.)
       text = text.replace(/\d\uFE0F\u20E3/g, "");
-      // Elimina otros emojis y símbolos combinados
       return text
         .replace(
           /([\u2700-\u27BF]|[\uE000-\uF8FF]|[\uD83C-\uDBFF\uDC00-\uDFFF]+|[\uFE00-\uFE0F]|\u200D)/g,
@@ -793,9 +805,128 @@ export default {
 </script>
 
 <style scoped>
-/* 
- ::v-deep .fc-datagrid-cell-main {
-    font-weight: bold;
-  } 
-  */
+.jr-schedule__search {
+  position: relative;
+  width: 100%;
+  max-width: 22rem;
+}
+
+.jr-schedule__search-icon {
+  position: absolute;
+  left: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  color: var(--color-jr-muted, #4b5563);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.jr-schedule__search :deep(.jr-control),
+.jr-schedule__search :deep(input) {
+  padding-left: 2.15rem;
+}
+
+.jr-schedule__totals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  pointer-events: none;
+}
+
+.jr-schedule__totals-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-jr-muted, #4b5563);
+  margin-right: 0.15rem;
+}
+
+.jr-schedule__jump {
+  min-width: 10.5rem;
+  max-width: 12.5rem;
+  flex: 1 1 10.5rem;
+}
+
+.jr-schedule__excel-icon,
+.jr-schedule__pdf-icon {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  margin-right: 0.35rem;
+  vertical-align: -0.15em;
+}
+
+.jr-schedule__excel-icon {
+  color: var(--color-jr-success, #16a34a);
+}
+
+.jr-schedule__pdf-icon {
+  color: var(--color-jr-danger, #dc2626);
+}
+
+.jr-schedule {
+  margin-top: 0.75rem;
+}
+
+.jr-schedule__loading {
+  margin: 0;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-jr-muted, #4b5563);
+}
+
+.jr-schedule__pane {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-jr-surface, #ffffff);
+  border: 1px solid var(--color-jr-border, #e5e7eb);
+  border-radius: var(--radius-jr-panel, 0.75rem);
+  height: calc(100vh - var(--jr-shell-topbar, 3.5rem) - 10.5rem);
+  max-height: calc(100vh - var(--jr-shell-topbar, 3.5rem) - 10.5rem);
+  min-height: 22rem;
+  overflow: hidden;
+}
+
+.jr-schedule__calendar {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.jr-schedule__pane :deep(.fc),
+.jr-schedule__pane :deep(.fc-view-harness) {
+  height: 100% !important;
+}
+
+.jr-schedule__pane ::selection {
+  background: color-mix(
+    in srgb,
+    var(--color-jr-primary, #2563eb) 22%,
+    var(--color-jr-surface, #ffffff)
+  );
+  color: var(--color-jr-text, #111827);
+}
+
+@media (max-width: 1023.98px) {
+  .jr-schedule__search {
+    max-width: none;
+  }
+
+  .jr-schedule__jump {
+    max-width: none;
+    flex: 1 1 100%;
+  }
+
+  .jr-schedule__pane {
+    height: calc(100dvh - var(--jr-shell-mobile-bar, 3rem) - 13.5rem);
+    max-height: calc(100dvh - var(--jr-shell-mobile-bar, 3rem) - 13.5rem);
+    min-height: 18rem;
+  }
+}
 </style>

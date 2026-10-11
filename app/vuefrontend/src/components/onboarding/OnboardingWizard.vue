@@ -1,342 +1,436 @@
 <template>
-  <div class="onboarding-wizard">
-    <div class="wizard-container">
-      <header class="onboarding-hero text-center mb-4">
-        <h1 class="h3 fw-bold mb-2">Start your 30-day free trial</h1>
-        <p class="text-muted mb-2 mb-md-3 onboarding-hero-lead">
-          Set up your workspace and start tracking jobs, materials, crews, and field communication in one place—so you lose less money to disconnected scheduling, missing materials, and broken handoffs.
-        </p>
-        <p class="small text-muted mb-1 onboarding-hero-lead">
-          Your trial includes all core modules so your team can experience the full workflow. Full access during trial. You can choose your plan later.
+  <div class="jr-onboard">
+    <div class="jr-onboard__form-pane">
+      <header class="jr-onboard__chrome">
+        <router-link
+          to="/login"
+          class="jr-onboard__brand"
+          aria-label="JobRhythm">
+          <img
+            :src="brandLogoUrl"
+            alt="JobRhythm"
+            class="jr-onboard__brand-logo"
+            width="220"
+            height="56" />
+        </router-link>
+        <p class="jr-onboard__signin">
+          Have an account?
+          <router-link to="/login" class="jr-onboard__signin-link">
+            Sign In
+          </router-link>
         </p>
       </header>
 
-      <!-- Progress Bar -->
-      <div class="progress-container mb-4">
-        <div class="progress" style="height: 8px;">
-          <div class="progress-bar bg-primary" role="progressbar" :style="{ width: progressPercentage + '%' }"
-            :aria-valuenow="currentStep" aria-valuemin="1" aria-valuemax="4"></div>
-        </div>
-        <div class="step-indicators d-flex justify-content-between mt-3">
-          <div v-for="step in steps" :key="step.number" class="step-indicator"
-            :class="{ 'active': step.number === currentStep, 'completed': step.number < currentStep }">
-            <div class="step-number">
-              <span v-if="step.number < currentStep" class="check-icon">
-                <i class="fas fa-check"></i>
+      <div class="jr-onboard__body">
+        <nav class="jr-onboard__steps" aria-label="Onboarding progress">
+          <ol class="jr-onboard__step-list">
+            <li
+              v-for="step in steps"
+              :key="step.number"
+              class="jr-onboard__step"
+              :class="{
+                'jr-onboard__step--active': step.number === currentStep,
+                'jr-onboard__step--done': step.number < currentStep,
+              }">
+              <span class="jr-onboard__step-marker" aria-hidden="true">
+                <Check
+                  v-if="step.number < currentStep"
+                  class="jr-onboard__step-check" />
+                <span v-else>{{ step.number }}</span>
               </span>
-              <span v-else>{{ step.number }}</span>
-            </div>
-            <div class="step-label d-none d-md-block">{{ step.label }}</div>
+              <span class="jr-onboard__step-label">{{ step.label }}</span>
+            </li>
+          </ol>
+          <div class="jr-onboard__progress" aria-hidden="true">
+            <div
+              class="jr-onboard__progress-fill"
+              :style="{ transform: `scaleX(${progressRatio})` }" />
           </div>
+        </nav>
+
+        <div
+          v-if="verificationPending"
+          class="jr-onboard__verify"
+          role="status">
+          <h1 class="jr-onboard__title">Check your email</h1>
+          <p class="jr-onboard__lead">
+            We sent a confirmation link to
+            <strong>{{ verificationEmail }}</strong>
+            . Open it to create your workspace and start your trial.
+          </p>
+          <p v-if="debugVerifyUrl" class="jr-onboard__hint">
+            Dev link:
+            <a :href="debugVerifyUrl">{{ debugVerifyUrl }}</a>
+          </p>
+          <JRButton
+            type="button"
+            variant="secondary"
+            @click="router.push('/login')">
+            Go to Sign In
+          </JRButton>
         </div>
-      </div>
 
-      <!-- Wizard Card -->
-      <div class="wizard-card card shadow-lg">
-        <div class="card-body p-5">
-          <!-- Step Content with Transitions -->
-          <transition name="fade-slide" mode="out-in">
-            <div :key="currentStep">
-              <!-- Step 1: Company Information -->
-              <StepCompanyInfo v-if="currentStep === 1" v-model="formData.companyInfo" :errors="stepErrors.companyInfo"
-                @validate="validateStep1" />
+        <template v-else>
+          <header class="jr-onboard__intro">
+            <h1 class="jr-onboard__title">{{ stepTitle }}</h1>
+            <p class="jr-onboard__lead">{{ stepLead }}</p>
+          </header>
 
-              <!-- Step 2: Admin User -->
-              <StepAdminUser v-if="currentStep === 2" v-model="formData.adminUser" :errors="stepErrors.adminUser"
-                @validate="validateStep2" />
+          <div class="jr-onboard__panel">
+            <transition name="jr-onboard-fade" mode="out-in">
+              <div :key="currentStep" class="jr-onboard__step-panel">
+                <StepCompanyInfo
+                  v-if="currentStep === 1"
+                  v-model="formData.companyInfo"
+                  :errors="stepErrors.companyInfo"
+                  @validate="validateStep1" />
 
-              <!-- Step 3: Preferences -->
-              <StepPreferences v-if="currentStep === 3" :errors="stepErrors.preferences" />
+                <StepAdminUser
+                  v-if="currentStep === 2"
+                  v-model="formData.adminUser"
+                  :errors="stepErrors.adminUser"
+                  @validate="validateStep2" />
 
-              <!-- Step 4: Review -->
-              <StepReview v-if="currentStep === 4" :company-info="formData.companyInfo" :admin-user="formData.adminUser"
-                :preferences="formData.preferences" :recommended-plan="recommendedPlan"
-                :landing-selected-plan="landingSelectedPlan" :is-submitting="isSubmitting"
-                :turnstile-site-key="turnstileSiteKey"
-                :error-message="submitError" @submit="handleFinalSubmit" @go-back="goToPreviousStep" />
-            </div>
-          </transition>
+                <StepPreferences
+                  v-if="currentStep === 3"
+                  :errors="stepErrors.preferences" />
 
-          <div v-if="verificationPending" class="verification-pending card border-success shadow-sm mt-4">
-            <div class="card-body p-4 text-center">
-              <i class="fas fa-envelope-circle-check fa-2x text-success mb-3"></i>
-              <h2 class="h5 fw-bold">Check your email</h2>
-              <p class="text-muted mb-2">
-                We sent a confirmation link to <strong>{{ verificationEmail }}</strong>.
-                Open it to create your workspace and start your trial.
-              </p>
-              <p v-if="debugVerifyUrl" class="small text-muted mb-0">
-                Dev link:
-                <a :href="debugVerifyUrl">{{ debugVerifyUrl }}</a>
-              </p>
-            </div>
+                <StepReview
+                  v-if="currentStep === 4"
+                  :company-info="formData.companyInfo"
+                  :admin-user="formData.adminUser"
+                  :preferences="formData.preferences"
+                  :recommended-plan="recommendedPlan"
+                  :landing-selected-plan="landingSelectedPlan"
+                  :is-submitting="isSubmitting"
+                  :turnstile-site-key="turnstileSiteKey"
+                  :error-message="submitError"
+                  @submit="handleFinalSubmit"
+                  @go-back="goToPreviousStep" />
+              </div>
+            </transition>
+
+            <footer v-if="currentStep < 4" class="jr-onboard__actions">
+              <JRButton
+                v-if="currentStep > 1"
+                type="button"
+                variant="secondary"
+                :disabled="isSubmitting"
+                @click="goToPreviousStep">
+                ← Back
+              </JRButton>
+              <span v-else class="jr-onboard__actions-spacer" />
+              <JRButton
+                type="button"
+                variant="primary"
+                :disabled="isSubmitting || !canProceed"
+                @click="goToNextStep">
+                Next Step →
+              </JRButton>
+            </footer>
           </div>
-
-          <!-- Navigation Buttons -->
-          <div v-if="currentStep < 4" class="wizard-actions mt-5 pt-4 border-top">
-            <div class="d-flex justify-content-between">
-              <button v-if="currentStep > 1" type="button" class="btn btn-outline-secondary" @click="goToPreviousStep"
-                :disabled="isSubmitting">
-                <i class="fas fa-arrow-left me-2"></i>
-                Back
-              </button>
-              <div v-else></div>
-
-              <button type="button" class="btn btn-primary" @click="goToNextStep"
-                :disabled="isSubmitting || !canProceed">
-                Continue
-                <i class="fas fa-arrow-right ms-2"></i>
-              </button>
-            </div>
-          </div>
-        </div>
+        </template>
       </div>
     </div>
+
+    <aside class="jr-onboard__visual" aria-hidden="true">
+      <img
+        :src="heroImageUrl"
+        alt=""
+        class="jr-onboard__visual-img"
+        width="900"
+        height="1200" />
+      <div class="jr-onboard__visual-scrim">
+        <p class="jr-onboard__visual-quote">
+          Run residential jobs with clear schedules, materials, and crews—in one
+          workspace.
+        </p>
+      </div>
+    </aside>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import StepCompanyInfo from './StepCompanyInfo.vue'
-import StepAdminUser from './StepAdminUser.vue'
-import StepPreferences from './StepPreferences.vue'
-import StepReview from './StepReview.vue'
-import { createTenantWorkspace, fetchOnboardingConfig } from '@/api/onboarding'
-import { normalizeLandingPlan } from './planFromQuery.js'
+import { ref, reactive, computed, onMounted, watch } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import Check from "@primeicons/vue/check";
+import { JRButton } from "@ui";
+import StepCompanyInfo from "./StepCompanyInfo.vue";
+import StepAdminUser from "./StepAdminUser.vue";
+import StepPreferences from "./StepPreferences.vue";
+import StepReview from "./StepReview.vue";
+import { createTenantWorkspace, fetchOnboardingConfig } from "@/api/onboarding";
+import { normalizeLandingPlan } from "./planFromQuery.js";
 import {
   defaultOnboardingPreferences,
   normalizeStoredPreferences,
   ONBOARDING_MODULE_IDS,
-} from './onboardingModuleDefaults.js'
+} from "./onboardingModuleDefaults.js";
+import brandLogoUrl from "@/assets/img/jobrhythm-logo-onboarding.png";
+import heroImageUrl from "@/assets/img/onboarding-supervisor2.png";
 
-const router = useRouter()
-const route = useRoute()
+const router = useRouter();
+const route = useRoute();
 
 const steps = [
-  { number: 1, label: 'Company' },
-  { number: 2, label: 'Admin' },
-  { number: 3, label: 'Modules' },
-  { number: 4, label: 'Review' }
-]
+  { number: 1, label: "Company" },
+  { number: 2, label: "Admin" },
+  { number: 3, label: "Modules" },
+  { number: 4, label: "Review" },
+];
 
-/** Plan from landing URL (?plan=), persisted on tenant as landing_selected_plan */
-const landingSelectedPlan = ref(null)
+const STEP_COPY = {
+  1: {
+    title: "Tell us about your company",
+    lead: "A few details so we can size your workspace for residential trade operations in Florida and beyond.",
+  },
+  2: {
+    title: "Create your admin account",
+    lead: "This account owns settings, users, and data for your company subdomain.",
+  },
+  3: {
+    title: "Modules for your trial",
+    lead: "Your 30-day trial includes the full operational menu—so you can feel the real workflow.",
+  },
+  4: {
+    title: "Review & launch",
+    lead: "Confirm everything looks right. We email a verification link before your workspace goes live.",
+  },
+};
 
-const currentStep = ref(1)
-const isSubmitting = ref(false)
-const submitError = ref('')
-const turnstileSiteKey = ref('')
-const verificationPending = ref(false)
-const verificationEmail = ref('')
-const debugVerifyUrl = ref('')
+const landingSelectedPlan = ref(null);
+const currentStep = ref(1);
+const isSubmitting = ref(false);
+const submitError = ref("");
+const turnstileSiteKey = ref("");
+const verificationPending = ref(false);
+const verificationEmail = ref("");
+const debugVerifyUrl = ref("");
 
-// Form data structure
 const formData = reactive({
   companyInfo: {
-    business_name: '',
-    business_type: '',
+    business_name: "",
+    business_type: "",
     logo: null,
-    address: '',
-    monthly_operations: '',
-    crew_count: null
+    address: "",
+    monthly_operations: "",
+    crew_count: null,
   },
   adminUser: {
-    name: '',
-    email: '',
-    password: '',
-    password_confirm: ''
+    name: "",
+    email: "",
+    password: "",
+    password_confirm: "",
   },
   preferences: defaultOnboardingPreferences(),
-})
+});
 
-// Errors for each step
 const stepErrors = reactive({
   companyInfo: {},
   adminUser: {},
-  preferences: {}
-})
+  preferences: {},
+});
 
-// Load from localStorage on mount; honor ?plan= from marketing site
 onMounted(async () => {
-  landingSelectedPlan.value = normalizeLandingPlan(route.query.plan)
-  loadFromLocalStorage()
+  landingSelectedPlan.value = normalizeLandingPlan(route.query.plan);
+  loadFromLocalStorage();
 
   try {
-    const config = await fetchOnboardingConfig()
-    turnstileSiteKey.value = config.turnstile_site_key || ''
+    const config = await fetchOnboardingConfig();
+    turnstileSiteKey.value = config.turnstile_site_key || "";
   } catch (error) {
-    console.warn('Could not load onboarding config:', error)
+    console.warn("Could not load onboarding config:", error);
   }
 
-  watch(() => formData, () => {
-    saveToLocalStorage()
-  }, { deep: true })
+  watch(
+    () => formData,
+    () => {
+      saveToLocalStorage();
+    },
+    { deep: true }
+  );
 
-  watch(() => route.query.plan, (q) => {
-    landingSelectedPlan.value = normalizeLandingPlan(q)
-  })
-})
+  watch(
+    () => route.query.plan,
+    (q) => {
+      landingSelectedPlan.value = normalizeLandingPlan(q);
+    }
+  );
 
-// Calculate recommended plan based on crew_count
+  watch(
+    () => formData.companyInfo,
+    () => {
+      if (currentStep.value === 1) {
+        stepErrors.companyInfo = getStep1Errors();
+      }
+    },
+    { deep: true }
+  );
+
+  watch(
+    () => formData.adminUser,
+    () => {
+      if (currentStep.value === 2) {
+        stepErrors.adminUser = getStep2Errors();
+      }
+    },
+    { deep: true }
+  );
+});
+
 const recommendedPlan = computed(() => {
-  const crewCount = formData.companyInfo.crew_count
-  if (!crewCount || crewCount < 1) return null
+  const crewCount = formData.companyInfo.crew_count;
+  if (!crewCount || crewCount < 1) return null;
+  if (crewCount <= 3) return "Starter";
+  if (crewCount >= 4 && crewCount <= 8) return "Professional";
+  if (crewCount >= 9) return "Enterprise";
+  return null;
+});
 
-  if (crewCount <= 3) {
-    return 'Starter'
-  } else if (crewCount >= 4 && crewCount <= 8) {
-    return 'Professional'
-  } else if (crewCount >= 9) {
-    return 'Enterprise'
-  }
-  return null
-})
+const progressRatio = computed(() => currentStep.value / steps.length);
 
-// Progress calculation
-const progressPercentage = computed(() => {
-  return (currentStep.value / steps.length) * 100
-})
+const stepTitle = computed(
+  () => STEP_COPY[currentStep.value]?.title || "Start your free trial"
+);
+const stepLead = computed(() => STEP_COPY[currentStep.value]?.lead || "");
 
-// Validation (silent getters avoid flashing errors on every keystroke via computed side effects)
 const getStep1Errors = () => {
-  const errors = {}
-  const bn = formData.companyInfo.business_name?.trim() || ''
+  const errors = {};
+  const bn = formData.companyInfo.business_name?.trim() || "";
   if (!bn || bn.length < 3) {
-    errors.business_name = 'Enter your company name (at least 3 characters).'
+    errors.business_name = "Enter your company name (at least 3 characters).";
   }
-
   if (!formData.companyInfo.business_type) {
-    errors.business_type = 'Choose the trade that best describes your business.'
+    errors.business_type =
+      "Choose the trade that best describes your business.";
   }
-
   if (!formData.companyInfo.monthly_operations) {
-    errors.monthly_operations = 'Select how many jobs or homes you typically handle each month.'
+    errors.monthly_operations =
+      "Select how many jobs or homes you typically handle each month.";
   }
-
-  const rawCrew = formData.companyInfo.crew_count
+  const rawCrew = formData.companyInfo.crew_count;
   const crewParsed =
-    rawCrew === '' || rawCrew === null || rawCrew === undefined ? null : Number(rawCrew)
+    rawCrew === "" || rawCrew === null || rawCrew === undefined
+      ? null
+      : Number(rawCrew);
   if (crewParsed === null || Number.isNaN(crewParsed)) {
-    errors.crew_count = 'Enter how many crews you run (whole number, at least 1).'
+    errors.crew_count =
+      "Enter how many crews you run (whole number, at least 1).";
   } else if (!Number.isInteger(crewParsed)) {
-    errors.crew_count = 'Use a whole number for active crews.'
+    errors.crew_count = "Use a whole number for active crews.";
   } else if (crewParsed < 1) {
-    errors.crew_count = 'Enter at least 1 active crew.'
+    errors.crew_count = "Enter at least 1 active crew.";
   }
-
   if (formData.companyInfo.logo) {
-    const maxSize = 5 * 1024 * 1024
+    const maxSize = 5 * 1024 * 1024;
     if (formData.companyInfo.logo.size > maxSize) {
-      errors.logo = 'Logo must be 5MB or smaller.'
+      errors.logo = "Logo must be 5MB or smaller.";
     }
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif']
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif"];
     if (!allowedTypes.includes(formData.companyInfo.logo.type)) {
-      errors.logo = 'Use a PNG, JPG, or GIF image.'
+      errors.logo = "Use a PNG, JPG, or GIF image.";
     }
   }
-
-  return errors
-}
+  return errors;
+};
 
 const validateStep1 = () => {
-  const errors = getStep1Errors()
-  stepErrors.companyInfo = errors
-  return Object.keys(errors).length === 0
-}
+  const errors = getStep1Errors();
+  stepErrors.companyInfo = errors;
+  return Object.keys(errors).length === 0;
+};
 
 const getStep2Errors = () => {
-  const errors = {}
-  const name = formData.adminUser.name?.trim() || ''
+  const errors = {};
+  const name = formData.adminUser.name?.trim() || "";
   if (!name || name.length < 2) {
-    errors.name = 'Enter your full name (at least 2 characters).'
+    errors.name = "Enter your full name (at least 2 characters).";
   }
-
-  const email = (formData.adminUser.email || '').trim()
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const email = (formData.adminUser.email || "").trim();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email) {
-    errors.email = 'Enter your work email address.'
+    errors.email = "Enter your work email address.";
   } else if (!emailRegex.test(email)) {
-    errors.email = 'That does not look like a valid email address. Check for typos.'
+    errors.email =
+      "That does not look like a valid email address. Check for typos.";
   }
-
-  const pwd = formData.adminUser.password || ''
+  const pwd = formData.adminUser.password || "";
   if (!pwd || pwd.length < 8) {
-    errors.password = 'Use at least 8 characters.'
+    errors.password = "Use at least 8 characters.";
   } else {
-    const hasUpperCase = /[A-Z]/.test(pwd)
-    const hasLowerCase = /[a-z]/.test(pwd)
-    const hasNumber = /[0-9]/.test(pwd)
+    const hasUpperCase = /[A-Z]/.test(pwd);
+    const hasLowerCase = /[a-z]/.test(pwd);
+    const hasNumber = /[0-9]/.test(pwd);
     if (!hasUpperCase || !hasLowerCase || !hasNumber) {
-      errors.password = 'Include uppercase, lowercase, and a number.'
+      errors.password = "Include uppercase, lowercase, and a number.";
     }
   }
-
-  const pwd2 = formData.adminUser.password_confirm || ''
+  const pwd2 = formData.adminUser.password_confirm || "";
   if (!pwd2) {
-    errors.password_confirm = 'Confirm your password.'
+    errors.password_confirm = "Confirm your password.";
   } else if (pwd !== pwd2) {
-    errors.password_confirm = 'Passwords do not match—try again.'
+    errors.password_confirm = "Passwords do not match—try again.";
   }
-
-  return errors
-}
+  return errors;
+};
 
 const validateStep2 = () => {
-  const errors = getStep2Errors()
-  stepErrors.adminUser = errors
-  return Object.keys(errors).length === 0
-}
+  const errors = getStep2Errors();
+  stepErrors.adminUser = errors;
+  return Object.keys(errors).length === 0;
+};
 
 const getStep3Errors = () => {
-  const errors = {}
-  const p = formData.preferences || []
-  const missing = ONBOARDING_MODULE_IDS.some((id) => !p.includes(id))
+  const errors = {};
+  const p = formData.preferences || [];
+  const missing = ONBOARDING_MODULE_IDS.some((id) => !p.includes(id));
   if (!p.length || p.length !== ONBOARDING_MODULE_IDS.length || missing) {
     errors.preferences =
-      'Module list is incomplete. Refresh the page to continue—all trial modules should be listed.'
+      "Module list is incomplete. Refresh the page to continue—all trial modules should be listed.";
   }
-  return errors
-}
+  return errors;
+};
 
 const validateStep3 = () => {
-  const errors = getStep3Errors()
-  stepErrors.preferences = errors
-  return Object.keys(errors).length === 0
-}
+  const errors = getStep3Errors();
+  stepErrors.preferences = errors;
+  return Object.keys(errors).length === 0;
+};
 
 const canProceed = computed(() => {
-  if (currentStep.value === 1) return Object.keys(getStep1Errors()).length === 0
-  if (currentStep.value === 2) return Object.keys(getStep2Errors()).length === 0
-  if (currentStep.value === 3) return Object.keys(getStep3Errors()).length === 0
-  return true
-})
+  if (currentStep.value === 1)
+    return Object.keys(getStep1Errors()).length === 0;
+  if (currentStep.value === 2)
+    return Object.keys(getStep2Errors()).length === 0;
+  if (currentStep.value === 3)
+    return Object.keys(getStep3Errors()).length === 0;
+  return true;
+});
 
 const goToNextStep = () => {
-  let ok = true
-  if (currentStep.value === 1) ok = validateStep1()
-  else if (currentStep.value === 2) ok = validateStep2()
-  else if (currentStep.value === 3) ok = validateStep3()
+  let ok = true;
+  if (currentStep.value === 1) ok = validateStep1();
+  else if (currentStep.value === 2) ok = validateStep2();
+  else if (currentStep.value === 3) ok = validateStep3();
   if (!ok) {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-    return
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
   }
   if (currentStep.value < steps.length) {
-    currentStep.value++
-    saveToLocalStorage()
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    currentStep.value++;
+    saveToLocalStorage();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
-}
+};
 
 const goToPreviousStep = () => {
   if (currentStep.value > 1) {
-    currentStep.value--
-    saveToLocalStorage()
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    currentStep.value--;
+    saveToLocalStorage();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
-}
+};
 
-// LocalStorage management
 const saveToLocalStorage = () => {
   try {
     const dataToSave = {
@@ -344,71 +438,65 @@ const saveToLocalStorage = () => {
       formData: {
         companyInfo: {
           ...formData.companyInfo,
-          logo: null // Don't save file to localStorage
+          logo: null,
         },
         adminUser: {
           ...formData.adminUser,
-          password: '', // Don't save password
-          password_confirm: ''
+          password: "",
+          password_confirm: "",
         },
-        preferences: formData.preferences
-      }
-    }
-    localStorage.setItem('onboarding_progress', JSON.stringify(dataToSave))
+        preferences: formData.preferences,
+      },
+    };
+    localStorage.setItem("onboarding_progress", JSON.stringify(dataToSave));
   } catch (error) {
-    console.warn('Could not save onboarding progress:', error)
+    console.warn("Could not save onboarding progress:", error);
   }
-}
+};
 
 const loadFromLocalStorage = () => {
   try {
-    const saved = localStorage.getItem('onboarding_progress')
+    const saved = localStorage.getItem("onboarding_progress");
     if (saved) {
-      const data = JSON.parse(saved)
-      currentStep.value = data.currentStep || 1
-
+      const data = JSON.parse(saved);
+      currentStep.value = data.currentStep || 1;
       if (data.formData) {
         if (data.formData.companyInfo) {
-          Object.assign(formData.companyInfo, data.formData.companyInfo)
+          Object.assign(formData.companyInfo, data.formData.companyInfo);
         }
         if (data.formData.adminUser) {
           Object.assign(formData.adminUser, {
             ...data.formData.adminUser,
-            password: '',
-            password_confirm: ''
-          })
+            password: "",
+            password_confirm: "",
+          });
         }
         if (data.formData.preferences != null) {
-          formData.preferences = normalizeStoredPreferences(data.formData.preferences)
+          formData.preferences = normalizeStoredPreferences(
+            data.formData.preferences
+          );
         }
       }
     }
   } catch (error) {
-    console.warn('Could not load onboarding progress:', error)
+    console.warn("Could not load onboarding progress:", error);
   }
-}
+};
 
-// Final submit
 const handleFinalSubmit = async (turnstileToken) => {
-  // Validate all steps before submitting
   if (!validateStep1() || !validateStep2() || !validateStep3()) {
-    submitError.value = 'Please fix the highlighted fields before continuing.'
-    // Go to first step with errors
-    if (!validateStep1()) {
-      currentStep.value = 1
-    } else if (!validateStep2()) {
-      currentStep.value = 2
-    } else if (!validateStep3()) {
-      currentStep.value = 3
-    }
-    return
+    submitError.value = "Please fix the highlighted fields before continuing.";
+    if (!validateStep1()) currentStep.value = 1;
+    else if (!validateStep2()) currentStep.value = 2;
+    else if (!validateStep3()) currentStep.value = 3;
+    return;
   }
 
-  isSubmitting.value = true
-  submitError.value = ''
+  isSubmitting.value = true;
+  submitError.value = "";
 
   try {
-    formData.preferences = normalizeStoredPreferences(formData.preferences)
+    formData.preferences = normalizeStoredPreferences(formData.preferences);
     const payload = {
       business_name: formData.companyInfo.business_name.trim(),
       business_type: formData.companyInfo.business_type,
@@ -421,190 +509,336 @@ const handleFinalSubmit = async (turnstileToken) => {
       admin: {
         name: formData.adminUser.name.trim(),
         email: formData.adminUser.email.trim(),
-        password: formData.adminUser.password
+        password: formData.adminUser.password,
       },
-      preferences: formData.preferences
-    }
+      preferences: formData.preferences,
+    };
 
-    const response = await createTenantWorkspace(payload, turnstileToken)
-
-    localStorage.removeItem('onboarding_progress')
+    const response = await createTenantWorkspace(payload, turnstileToken);
+    localStorage.removeItem("onboarding_progress");
 
     if (response.verification_required) {
-      verificationPending.value = true
-      verificationEmail.value = response.email || formData.adminUser.email
-      debugVerifyUrl.value = response.debug_verify_url || ''
-      submitError.value = ''
-      return
+      verificationPending.value = true;
+      verificationEmail.value = response.email || formData.adminUser.email;
+      debugVerifyUrl.value = response.debug_verify_url || "";
+      submitError.value = "";
+      return;
     }
 
-    // Legacy direct-create response (fallback)
     if (response.url) {
-      window.location.href = response.url
+      window.location.href = response.url;
     } else if (response.tenant && response.tenant.domain) {
-      const protocol = window.location.protocol
-      window.location.href = `${protocol}//${response.tenant.domain}/login/`
+      const protocol = window.location.protocol;
+      window.location.href = `${protocol}//${response.tenant.domain}/login/`;
     } else {
-      // Fallback: redirect to login
       setTimeout(() => {
-        router.push('/login')
-      }, 2000)
+        router.push("/login");
+      }, 2000);
     }
   } catch (error) {
-    console.error('Error creating tenant:', error)
-    submitError.value = error.message || 'We could not create your workspace. Please try again in a moment.'
+    console.error("Error creating tenant:", error);
+    submitError.value =
+      error.message ||
+      "We could not create your workspace. Please try again in a moment.";
   } finally {
-    isSubmitting.value = false
+    isSubmitting.value = false;
   }
-}
+};
 </script>
 
 <style scoped>
-.onboarding-wizard {
+.jr-onboard {
   min-height: 100vh;
-  padding: 2rem 1rem;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  background: var(--color-jr-surface, #fff);
+  color: var(--color-jr-text, #111827);
+  font-family: var(--font-jr-sans, Inter, system-ui, sans-serif);
+  caret-color: var(--color-jr-primary, #2563eb);
 }
 
-.onboarding-hero h1 {
-  color: var(--bs-dark);
+.jr-onboard ::selection {
+  background: color-mix(
+    in srgb,
+    var(--color-jr-primary, #2563eb) 28%,
+    transparent
+  );
+  color: var(--color-jr-text, #111827);
 }
 
-/* Match hero copy width to wizard column (same as .wizard-container max-width) */
-.onboarding-hero-lead {
-  width: 100%;
-  max-width: 100%;
-  margin-left: auto;
-  margin-right: auto;
+.jr-onboard__form-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-.wizard-container {
-  max-width: 1000px;
-  margin: 0 auto;
+.jr-onboard__chrome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
 }
 
-.progress-container {
-  margin-bottom: 2rem;
+.jr-onboard__brand {
+  display: inline-flex;
+  line-height: 0;
+  text-decoration: none;
 }
 
-.step-indicators {
-  margin-top: 1rem;
+.jr-onboard__brand-logo {
+  height: 3.25rem;
+  width: auto;
+  max-width: 14rem;
+  object-fit: contain;
 }
 
-.step-indicator {
+.jr-onboard__signin {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-jr-muted, #4b5563);
+}
+
+.jr-onboard__signin-link {
+  color: var(--color-jr-primary, #2563eb);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.jr-onboard__signin-link:hover {
+  text-decoration: underline;
+}
+
+.jr-onboard__body {
   flex: 1;
-  text-align: center;
-  position: relative;
-}
-
-.step-indicator::before {
-  content: '';
-  position: absolute;
-  top: 15px;
-  left: 50%;
   width: 100%;
-  height: 2px;
-  background-color: var(--bs-border-color);
-  z-index: 0;
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 2rem;
 }
 
-.step-indicator:first-child::before {
+.jr-onboard__steps {
+  margin-bottom: 1.75rem;
+}
+
+.jr-onboard__step-list {
+  list-style: none;
+  margin: 0 0 0.65rem;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.jr-onboard__step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.jr-onboard__step-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 2px solid var(--color-jr-border, #e5e7eb);
+  border-radius: 0;
+  background: var(--color-jr-surface, #fff);
+  color: var(--color-jr-muted, #4b5563);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.jr-onboard__step--active .jr-onboard__step-marker,
+.jr-onboard__step--done .jr-onboard__step-marker {
+  border-color: var(--color-jr-primary, #2563eb);
+  background: var(--color-jr-primary, #2563eb);
+  color: #fff;
+}
+
+.jr-onboard__step-check {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.jr-onboard__step-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-jr-muted, #4b5563);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.jr-onboard__step--active .jr-onboard__step-label,
+.jr-onboard__step--done .jr-onboard__step-label {
+  color: var(--color-jr-text, #111827);
+}
+
+.jr-onboard__progress {
+  height: 0.25rem;
+  background: var(--color-jr-border, #e5e7eb);
+  overflow: hidden;
+}
+
+.jr-onboard__progress-fill {
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  transform: scaleX(0.25);
+  background: var(--color-jr-primary, #2563eb);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.jr-onboard__intro {
+  margin-bottom: 1.5rem;
+}
+
+.jr-onboard__title {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--color-jr-text, #111827);
+}
+
+.jr-onboard__lead {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-jr-muted, #4b5563);
+}
+
+.jr-onboard__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.jr-onboard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-jr-border, #e5e7eb);
+}
+
+.jr-onboard__actions-spacer {
+  flex: 1;
+}
+
+.jr-onboard__verify {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.5rem 0 2rem;
+}
+
+.jr-onboard__hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-jr-muted, #4b5563);
+  word-break: break-all;
+}
+
+.jr-onboard__visual {
   display: none;
 }
 
-.step-indicator.completed::before {
-  background-color: var(--bs-primary);
+.jr-onboard-fade-enter-active,
+.jr-onboard-fade-leave-active {
+  transition: opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.step-number {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: var(--bs-light);
-  border: 2px solid var(--bs-border-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 0.5rem;
-  font-weight: 600;
-  color: var(--bs-secondary);
-  position: relative;
-  z-index: 1;
-  transition: all 0.3s ease;
-}
-
-.step-indicator.active .step-number {
-  background-color: var(--bs-primary);
-  border-color: var(--bs-primary);
-  color: white;
-  transform: scale(1.1);
-}
-
-.step-indicator.completed .step-number {
-  background-color: var(--bs-success);
-  border-color: var(--bs-success);
-  color: white;
-}
-
-.check-icon {
-  font-size: 0.875rem;
-}
-
-.step-label {
-  font-size: 0.875rem;
-  color: var(--bs-secondary);
-  font-weight: 500;
-}
-
-.step-indicator.active .step-label {
-  color: var(--bs-primary);
-  font-weight: 600;
-}
-
-.step-indicator.completed .step-label {
-  color: var(--bs-success);
-}
-
-.wizard-card {
-  border-radius: 1rem;
-  border: none;
-  min-height: 500px;
-}
-
-.wizard-actions {
-  border-top: 1px solid var(--bs-border-color);
-}
-
-/* Transitions */
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: all 0.3s ease;
-}
-
-.fade-slide-enter-from {
+.jr-onboard-fade-enter-from {
   opacity: 0;
-  transform: translateX(20px);
+  transform: translateY(0.35rem);
 }
 
-.fade-slide-leave-to {
+.jr-onboard-fade-leave-to {
   opacity: 0;
-  transform: translateX(-20px);
+  transform: translateY(-0.25rem);
 }
 
-.btn-primary {
-  min-width: 120px;
-}
-
-@media (max-width: 768px) {
-  .onboarding-wizard {
-    padding: 1rem 0.5rem;
+@media (min-width: 1024px) {
+  .jr-onboard {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
-  .wizard-card .card-body {
-    padding: 2rem 1.5rem !important;
+  .jr-onboard__chrome {
+    padding: 1.25rem 2rem;
+    border-bottom: 0;
   }
 
-  .step-label {
-    font-size: 0.75rem;
+  .jr-onboard__body {
+    max-width: 34rem;
+    margin: 0;
+    padding: 0.5rem 2.75rem 2.5rem;
+    align-self: center;
+    width: 100%;
+  }
+
+  .jr-onboard__brand-logo {
+    height: 3.5rem;
+    max-width: 15.5rem;
+  }
+
+  .jr-onboard__form-pane {
+    justify-content: flex-start;
+  }
+
+  .jr-onboard__visual {
+    display: block;
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+    background: var(--color-jr-primary-deep, #1e3a8a);
+  }
+
+  .jr-onboard__visual-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
+
+  .jr-onboard__visual-scrim {
+    position: absolute;
+    inset: auto 0 0;
+    padding: 2rem 2rem 2.25rem;
+    background: linear-gradient(
+      to top,
+      color-mix(in srgb, #0f172a 78%, transparent) 0%,
+      transparent 100%
+    );
+  }
+
+  .jr-onboard__visual-quote {
+    margin: 0;
+    max-width: 22rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
   }
 }
 </style>

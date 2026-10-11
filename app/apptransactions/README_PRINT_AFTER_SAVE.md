@@ -22,7 +22,7 @@ async function downloadTransactionPDF(documentId) {
   try {
     const response = await axios.get(`/api/documents/${documentId}/pdf/`, {
       headers: {
-        'Authorization': `Token ${localStorage.getItem('authToken')}`
+        'Authorization': `Bearer ${getAccessToken()}`
       }
     })
 

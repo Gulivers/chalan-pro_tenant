@@ -1,21 +1,15 @@
 <template>
-  <div class="container-fluid">
-    <InventoryMasterDataSetup />
-  </div>
+  <InventoryMasterDataSetup />
 </template>
 
 <script>
-import { defineComponent } from 'vue';
-import InventoryMasterDataSetup from '@components/inventory/InventoryMasterDataSetup.vue';
+import { defineComponent } from "vue";
+import InventoryMasterDataSetup from "@components/inventory/InventoryMasterDataSetup.vue";
 
 export default defineComponent({
-  name: 'InventoryMasterDataSetupView',
+  name: "InventoryMasterDataSetupView",
   components: {
     InventoryMasterDataSetup,
   },
-  methods: {},
 });
 </script>
-
-<style scoped>
-</style>

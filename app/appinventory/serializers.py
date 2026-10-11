@@ -211,13 +211,64 @@ class ProductListSerializer(serializers.ModelSerializer):
     brands_count = serializers.SerializerMethodField()
     unit_name = serializers.CharField(source='unit_default.name', default='', read_only=True)
     unit_default_code = serializers.CharField(source='unit_default.code', default='', read_only=True)
+    image = serializers.SerializerMethodField()
+    total_stock = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'sku', 'model_number', 'category_name', 'default_brand', 'brands_count',
-            'reorder_level', 'unit_name', 'unit_default_code', 'tracking_mode', 'is_active'
+            'reorder_level', 'unit_name', 'unit_default_code', 'tracking_mode', 'is_active',
+            'image', 'total_stock',
         ]
+
+    def get_image(self, obj):
+        """
+        Thumbnail for list views. When brand_id is in context, use that brand's
+        image only. Otherwise prefer the default brand, then any product image.
+        """
+        images = list(obj.images.all())
+        if not images:
+            return None
+
+        default_brand = obj.get_default_brand()
+        default_brand_id = default_brand.id if default_brand else None
+
+        def brand_id(image):
+            assignment = getattr(image, 'assignment', None)
+            brand = getattr(assignment, 'brand', None) if assignment else None
+            return getattr(brand, 'id', None)
+
+        def image_url(image):
+            return image.image.url if image.image else None
+
+        requested_id = self.context.get('brand_id')
+        if requested_id is not None:
+            for image in images:
+                if brand_id(image) == requested_id:
+                    return image_url(image)
+            return None
+
+        if default_brand_id is not None:
+            default_brand_images = [
+                image for image in images if brand_id(image) == default_brand_id
+            ]
+            if default_brand_images:
+                return image_url(default_brand_images[0])
+
+        for image in images:
+            url = image_url(image)
+            if url:
+                return url
+
+        return None
+
+    def get_total_stock(self, obj):
+        """On-hand quantity across warehouses when the queryset annotates total_stock."""
+        value = getattr(obj, 'total_stock', None)
+        if value is None:
+            return None
+        return float(value)
     
     def get_default_brand(self, obj):
         """Obtiene la marca predeterminada del producto"""

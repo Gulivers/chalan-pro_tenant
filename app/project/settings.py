@@ -152,7 +152,6 @@ SHARED_APPS = [
     'django.contrib.postgres',
     'channels',
     'rest_framework',
-    'rest_framework.authtoken',
     'django_filters',
     'corsheaders',
     'project',  # Configuración del proyecto
@@ -169,15 +168,17 @@ TENANT_APPS = [
     'django.contrib.postgres',
     'channels',
     'rest_framework',
-    'rest_framework.authtoken',
+    'rest_framework_simplejwt.token_blacklist',
     'django_filters',
     'corsheaders',
     'auditapp',
+    'appauth',
     'ctrctsapp',
     'crewsapp',
     'appschedule',
     'appinventory',
     'apptransactions',
+    'appassistant',
     'appcore',
 ]
 
@@ -213,7 +214,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Si usas sesiones de autenticación (en lugar de TokenAuthentication), habilita CSRF
+# CSRF: API usa JWT Bearer (no sesiones SPA). Admin Django sigue con sesiones.
 # CSRF Trusted Origins
 # Los dominios se cargan DINÁMICAMENTE desde la BD (tabla public.tenants_domain)
 # Ver: tenants/apps.py (TenantsConfig.ready) y project/middleware/dynamic_csrf.py
@@ -329,9 +330,9 @@ CORS_ALLOW_METHODS = (
 )
 
 REST_FRAMEWORK = {
-    # Definir las clases de autenticación por defecto
+    # Tenant-bound Simple JWT (schema_name claim validated on every request)
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',  # Autenticación con tokens
+        'appauth.authentication.TenantJWTAuthentication',
     ],
     
     # Clases de permisos por defecto (esto afecta las vistas por defecto de DRF)
@@ -346,8 +347,56 @@ REST_FRAMEWORK = {
         'onboarding_create_ip': os.environ.get('ONBOARDING_THROTTLE_IP', '5/hour'),
         'onboarding_create_email': os.environ.get('ONBOARDING_THROTTLE_EMAIL', '3/day'),
         'onboarding_verify_ip': os.environ.get('ONBOARDING_VERIFY_THROTTLE_IP', '20/hour'),
+        'auth_login_ip': os.environ.get('AUTH_LOGIN_THROTTLE_IP', '10/minute'),
+        'auth_login_username': os.environ.get('AUTH_LOGIN_THROTTLE_USERNAME', '5/minute'),
+        'auth_password_forgot_ip': os.environ.get('AUTH_PASSWORD_FORGOT_THROTTLE_IP', '5/hour'),
+        'auth_password_forgot_email': os.environ.get(
+            'AUTH_PASSWORD_FORGOT_THROTTLE_EMAIL', '3/hour'
+        ),
+        'auth_password_reset_ip': os.environ.get('AUTH_PASSWORD_RESET_THROTTLE_IP', '10/hour'),
     },
 }
+
+from datetime import timedelta
+
+# Simple JWT — tenant-bound via custom Token + TenantJWTAuthentication.
+# Access covers a work shift (8 h). Refresh keeps the session for 7 days
+# so the SPA can mint a new access without asking for the password again.
+_ACCESS_MINUTES = int(os.environ.get('AUTH_ACCESS_TOKEN_MINUTES', '480'))
+_REFRESH_DAYS = int(os.environ.get('AUTH_REFRESH_TOKEN_DAYS', '7'))
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=_ACCESS_MINUTES),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=_REFRESH_DAYS),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': False,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'JTI_CLAIM': 'jti',
+}
+
+# Refresh cookie: preferred for multi-tab (same-origin SPA proxy in local, Nginx in prod).
+# Set AUTH_USE_REFRESH_COOKIE=False only for true cross-origin body-only mode (rare).
+_auth_cookie_env = os.environ.get('AUTH_USE_REFRESH_COOKIE')
+if _auth_cookie_env is None:
+    AUTH_USE_REFRESH_COOKIE = True
+else:
+    AUTH_USE_REFRESH_COOKIE = _auth_cookie_env.strip().lower() in ('1', 'true', 'yes')
+
+AUTH_REFRESH_COOKIE_NAME = os.environ.get('AUTH_REFRESH_COOKIE_NAME', 'jr_refresh')
+AUTH_REFRESH_COOKIE_PATH = os.environ.get('AUTH_REFRESH_COOKIE_PATH', '/api/auth/')
+AUTH_REFRESH_COOKIE_SAMESITE = os.environ.get('AUTH_REFRESH_COOKIE_SAMESITE', 'Lax')
+AUTH_REFRESH_COOKIE_SECURE = os.environ.get(
+    'AUTH_REFRESH_COOKIE_SECURE',
+    'False' if DEBUG else 'True',
+).strip().lower() in ('1', 'true', 'yes')
+AUTH_REFRESH_COOKIE_MAX_AGE = _REFRESH_DAYS * 24 * 60 * 60
 
 # Public onboarding abuse protection (see tenants/throttles.py)
 ONBOARDING_THROTTLE_IP = os.environ.get('ONBOARDING_THROTTLE_IP', '5/hour')
@@ -547,6 +596,19 @@ BILLING_ENFORCEMENT_ENABLED = _env_bool('BILLING_ENFORCEMENT_ENABLED', True)
 
 # Landing (getjobrhythm.com) contact form — inbox that receives submissions
 LANDING_CONTACT_TO_EMAIL = _env_email('LANDING_CONTACT_TO_EMAIL', 'team@jobrhythm.net')
+
+# JobRhythm Assistant (Level 1). When False, query endpoint returns 503.
+ASSISTANT_ENABLED = os.environ.get('ASSISTANT_ENABLED', 'True') == 'True'
+
+# LLM planner (C4). Disabled unless explicitly enabled + API key present.
+ASSISTANT_LLM_ENABLED = os.environ.get('ASSISTANT_LLM_ENABLED', 'False') == 'True'
+ASSISTANT_LLM_MODEL = os.environ.get('ASSISTANT_LLM_MODEL', 'gpt-4.1-mini')
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+ASSISTANT_LLM_TIMEOUT_SECONDS = int(os.environ.get('ASSISTANT_LLM_TIMEOUT_SECONDS', '30'))
+ASSISTANT_LLM_MAX_TOKENS = int(os.environ.get('ASSISTANT_LLM_MAX_TOKENS', '800'))
+# When True (+ LLM enabled + key): OpenAI plans first; deterministic router is fallback.
+# When False: legacy order (DeterministicRouter → LLM → Continuity).
+ASSISTANT_LLM_PRIMARY = os.environ.get('ASSISTANT_LLM_PRIMARY', 'False') == 'True'
 
 # Channel Layers - Redis configuration
 REDIS_URL = os.environ.get('REDIS_URL')

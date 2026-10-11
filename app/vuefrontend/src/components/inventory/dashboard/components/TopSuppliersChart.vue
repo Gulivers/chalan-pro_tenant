@@ -1,45 +1,34 @@
 <template>
-  <div class="top-suppliers-chart">
-    <div v-if="loading" class="text-center py-4">
-      <div class="spinner-border text-primary" role="status">
-        <span class="sr-only">Loading...</span>
-      </div>
-    </div>
-    
-    <div v-else-if="suppliers.length === 0" class="text-center py-4">
-      <div class="alert alert-info">
-        <i class="fas fa-info-circle"></i>
-        No supplier data available
-      </div>
-    </div>
-    
+  <div class="jr-chart-block">
+    <div v-if="loading" class="jr-dash-state">Loading…</div>
+
+    <JREmptyState
+      v-else-if="suppliers.length === 0"
+      title="No supplier data available"
+      description="There is no supplier data to chart right now."
+    />
+
     <div v-else>
-      <!-- Controles del gráfico -->
-      <div class="chart-controls mb-3">
-        <div class="row align-items-center">
-          <div class="col-md-6">
-            <h6 class="mb-0">Top {{ Math.min(suppliers.length, 10) }} Suppliers</h6>
-            <small class="text-muted">By purchase volume</small>
-          </div>
-          <div class="col-md-6 text-right">
-            <button class="btn btn-sm btn-outline-success" @click="refreshChart">
-              <i class="fas fa-sync-alt"></i>
-              Refresh
-            </button>
-          </div>
+      <div class="jr-chart-controls">
+        <div>
+          <p class="jr-chart-controls__title">Top {{ rankedSuppliers.length }} suppliers</p>
+          <span class="jr-chart-controls__hint">By purchase volume</span>
         </div>
+        <JRButton variant="secondary" size="sm" type="button" @click="refreshChart">Refresh</JRButton>
       </div>
-      
-      <!-- Canvas del gráfico -->
-      <div class="chart-container">
-        <canvas ref="chartCanvas"></canvas>
+
+      <div class="jr-chart-container">
+        <canvas
+          ref="chartCanvas"
+          role="img"
+          :aria-label="`Bar chart of top ${rankedSuppliers.length} suppliers by purchase volume`"
+        />
       </div>
-      
-      <!-- Tabla de datos -->
-      <div class="chart-data-table mt-4">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover">
-            <thead class="table-light">
+
+      <div class="jr-chart-data">
+        <div class="jr-dash-table-wrap">
+          <table class="jr-dash-table">
+            <thead>
               <tr>
                 <th>#</th>
                 <th>Supplier</th>
@@ -50,27 +39,17 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(supplier, index) in suppliers.slice(0, 10)" :key="supplier.id" class="clickable-row">
+              <tr v-for="(supplier, index) in rankedSuppliers" :key="supplier.id">
                 <td>{{ index + 1 }}</td>
                 <td>
-                  <div class="supplier-info">
-                    <strong>{{ supplier.name }}</strong>
-                    <br>
-                    <small class="text-muted">{{ supplier.party?.name || 'N/A' }}</small>
-                  </div>
+                  <strong>{{ supplier.name }}</strong>
+                  <br />
+                  <span class="jr-dash-muted">{{ supplier.party?.name || '—' }}</span>
                 </td>
-                <td>
-                  <span class="badge badge-secondary">{{ supplier.party?.rfc || 'N/A' }}</span>
-                </td>
-                <td>
-                  <span class="text-danger font-weight-bold">${{ formatCurrency(supplier.total_purchases) }}</span>
-                </td>
-                <td>
-                  <span class="badge badge-info">{{ supplier.transaction_count }}</span>
-                </td>
-                <td>
-                  <small class="text-muted">{{ formatDate(supplier.last_purchase) }}</small>
-                </td>
+                <td><JRBadge :value="supplier.party?.rfc || '—'" severity="secondary" /></td>
+                <td><span class="is-danger-text">${{ formatCurrency(supplier.total_purchases) }}</span></td>
+                <td><JRBadge :value="supplier.transaction_count" severity="secondary" /></td>
+                <td><span class="jr-dash-muted">{{ formatDate(supplier.last_purchase) }}</span></td>
               </tr>
             </tbody>
           </table>
@@ -81,11 +60,14 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { defineComponent, ref, watch, computed } from 'vue';
 import { Chart, registerables } from 'chart.js';
+import { JRButton, JRBadge, JREmptyState } from '@ui';
+import { useDashboardChart } from './useDashboardChart';
 Chart.register(...registerables);
 
 export default defineComponent({
+  components: { JRButton, JRBadge, JREmptyState },
   name: 'TopSuppliersChart',
   props: {
     suppliers: {
@@ -104,7 +86,10 @@ export default defineComponent({
   emits: ['refresh', 'supplier-clicked'],
   setup(props, { emit }) {
     const chartCanvas = ref(null);
-    const chartInstance = ref(null);
+
+    const rankedSuppliers = computed(() =>
+      Array.isArray(props.suppliers) ? props.suppliers.slice(0, 10) : []
+    );
 
     const formatCurrency = (value) => {
       if (!value) return '0.00';
@@ -115,157 +100,88 @@ export default defineComponent({
     };
 
     const formatDate = (dateString) => {
-      if (!dateString) return 'N/A';
+      if (!dateString) return '—';
       const date = new Date(dateString);
       return date.toLocaleDateString('en-US');
     };
 
-    const createChart = (retryCount = 0) => {
-      try {
-        if (chartInstance.value) {
-          chartInstance.value.destroy();
-          chartInstance.value = null;
-        }
+    const { scheduleRender } = useDashboardChart({
+      isLoading: () => props.loading,
+      hasData: () => rankedSuppliers.value.length > 0,
+      getCanvas: () => chartCanvas.value,
+      buildChart: (canvas) => {
+        const rows = rankedSuppliers.value;
+        const labels = rows.map(s => s.name.length > 20 ? s.name.substring(0, 20) + '…' : s.name);
+        const data = rows.map(s => s.total_purchases);
 
-        if (!chartCanvas.value) {
-          if (retryCount < 3) {
-            setTimeout(() => {
-              createChart(retryCount + 1);
-            }, 200);
-          }
-          return;
-        }
-
-        if (!props.suppliers || props.suppliers.length === 0) {
-          return;
-        }
-
-      const labels = props.suppliers.map(s => s.name.length > 20 ? s.name.substring(0, 20) + '...' : s.name);
-      const data = props.suppliers.map(s => s.total_purchases);
-
-      chartInstance.value = new Chart(chartCanvas.value, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Total Purchases ($)',
-            data: data,
-            backgroundColor: 'rgba(220, 53, 69, 0.8)',
-            borderColor: 'rgba(220, 53, 69, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          indexAxis: 'y',
-          animation: {
-            duration: 0
+        return new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Total Purchases ($)',
+              data,
+              backgroundColor: 'rgba(220, 53, 69, 0.8)',
+              borderColor: 'rgba(220, 53, 69, 1)',
+              borderWidth: 1
+            }]
           },
-          plugins: {
-            title: {
-              display: true,
-              text: 'Top 10 Suppliers by Purchase Volume',
-              font: {
-                size: 16,
-                weight: 'bold'
-              }
-            },
-            legend: {
-              display: false
-            },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  const supplier = props.suppliers[context.dataIndex];
-                  return [
-                    `Supplier: ${supplier.name}`,
-                    `Party: ${supplier.party?.name || 'N/A'}`,
-                    `Tax ID: ${supplier.party?.rfc || 'N/A'}`,
-                    `Total: $${(supplier.total_purchases || 0).toLocaleString()}`,
-                    `Transactions: ${supplier.transaction_count || 0}`
-                  ];
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            animation: { duration: 0 },
+            plugins: {
+              title: { display: false },
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label(context) {
+                    const supplier = rows[context.dataIndex];
+                    return [
+                      `Supplier: ${supplier.name}`,
+                      `Party: ${supplier.party?.name || '—'}`,
+                      `Tax ID: ${supplier.party?.rfc || '—'}`,
+                      `Total: $${(supplier.total_purchases || 0).toLocaleString()}`,
+                      `Transactions: ${supplier.transaction_count || 0}`
+                    ];
+                  }
                 }
               }
-            }
-          },
-          scales: {
-            x: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: 'Total Purchases ($)'
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                title: { display: true, text: 'Total Purchases ($)' }
+              },
+              y: {
+                title: { display: true, text: 'Suppliers' }
               }
             },
-            y: {
-              title: {
-                display: true,
-                text: 'Suppliers'
+            onClick(_event, elements) {
+              if (elements.length > 0) {
+                emit('supplier-clicked', rows[elements[0].index]);
               }
             }
-          },
-          onClick: (event, elements) => {
-            if (elements.length > 0) {
-              const index = elements[0].index;
-              const supplier = props.suppliers[index];
-              emit('supplier-clicked', supplier);
-            }
           }
-        }
-      });
-      } catch (error) {
-        if (chartInstance.value) {
-          chartInstance.value.destroy();
-          chartInstance.value = null;
-        }
-        // Reintentar si hay error
-        if (retryCount < 3) {
-          setTimeout(() => {
-            createChart(retryCount + 1);
-          }, 500);
-        }
+        });
       }
-    };
+    });
+
+    watch(
+      () => props.suppliers,
+      () => scheduleRender(),
+      { deep: true }
+    );
 
     const refreshChart = () => {
       emit('refresh');
-      setTimeout(() => {
-        createChart();
-      }, 300);
+      scheduleRender();
     };
-
-    // Watch for changes in suppliers
-    watch(
-      () => props.suppliers,
-      async (newSuppliers) => {
-        if (newSuppliers && newSuppliers.length > 0) {
-          await nextTick();
-          await nextTick();
-          setTimeout(() => {
-            createChart();
-          }, 100);
-        }
-      },
-      { deep: true, immediate: true }
-    );
-
-    onMounted(async () => {
-      await nextTick();
-      await nextTick();
-      setTimeout(() => {
-        createChart();
-      }, 100);
-    });
-
-    onUnmounted(() => {
-      if (chartInstance.value) {
-        chartInstance.value.destroy();
-        chartInstance.value = null;
-      }
-    });
 
     return {
       chartCanvas,
+      rankedSuppliers,
       formatCurrency,
       formatDate,
       refreshChart
@@ -273,82 +189,108 @@ export default defineComponent({
   }
 });
 </script>
-
 <style scoped>
-.top-suppliers-chart {
-  min-height: 500px;
+.jr-chart-block {
+  min-height: 0;
 }
 
-.chart-controls {
-  background-color: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid #dee2e6;
+.jr-dash-state {
+  padding: 0.75rem 0;
+  font-size: 0.875rem;
+  color: var(--color-jr-muted);
 }
 
-.chart-container {
-  position: relative;
-  height: 400px;
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.jr-chart-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
 }
 
-.chart-container canvas {
-  max-width: 100%;
-  height: 100%;
-}
-
-.chart-data-table {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.table th {
-  border-top: none;
+.jr-chart-controls__title {
+  margin: 0;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #495057;
-  background-color: #f8f9fa;
+  color: var(--color-jr-text);
 }
 
-.table td {
+.jr-chart-controls__hint {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-chart-container {
+  position: relative;
+  height: 320px;
+  margin-bottom: 0.85rem;
+  background: var(--color-jr-surface);
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
+  padding: 0.85rem;
+}
+
+.jr-chart-container canvas {
+  display: block;
+  max-width: 100%;
+}
+
+.jr-chart-data {
+  margin-top: 0.5rem;
+}
+
+.jr-dash-muted {
+  font-size: 0.75rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-dash-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
+  max-height: 22rem;
+}
+
+.jr-dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.jr-dash-table th,
+.jr-dash-table td {
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid var(--color-jr-border);
+  text-align: left;
   vertical-align: middle;
 }
 
-.clickable-row {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+.jr-dash-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--color-jr-surface-muted);
+  font-weight: 600;
+  color: var(--color-jr-text);
 }
 
-.clickable-row:hover {
-  background-color: rgba(0, 123, 255, 0.1);
+.is-success-text {
+  color: var(--color-jr-success-text);
+  font-weight: 600;
 }
 
-.badge {
-  font-size: 0.75rem;
-  padding: 0.3rem 0.6rem;
+.is-danger-text {
+  color: var(--color-jr-danger-text);
+  font-weight: 600;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .chart-container {
-    height: 300px;
-    padding: 10px;
+@media (max-width: 767.98px) {
+  .jr-chart-container {
+    height: 260px;
   }
-  
-  .chart-controls {
-    padding: 10px;
-  }
-  
-  .chart-data-table {
-    padding: 15px;
-  }
-  
-  .table-responsive {
-    font-size: 0.9rem;
-  }
+
 }
 </style>

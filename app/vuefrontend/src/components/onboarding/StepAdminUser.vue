@@ -1,183 +1,162 @@
 <template>
-  <div class="step-admin-user">
-    <div class="step-header mb-4">
-      <h3 class="fw-bold mb-2">Administrator account</h3>
-      <p class="text-muted mb-0">
-        This will be the main administrator for your company workspace: full
-        access to settings, users, and data.
-      </p>
-    </div>
-
-    <div class="step-content">
-      <InputField
-        id="admin_name"
-        v-model="localData.name"
+  <div class="jr-onboard-step">
+    <div class="jr-onboard-step__fields">
+      <JRField
         label="Full name"
-        :error="errors.name"
-        :required="true"
-        :maxlength="150"
-        @blur="validateField('name')" />
+        required
+        inputId="admin_name"
+        :error="errors.name || ''">
+        <template #default="{ invalid, describedby }">
+          <JRInput
+            inputId="admin_name"
+            v-model="localData.name"
+            :invalid="invalid"
+            :aria-describedby="describedby || undefined"
+            maxlength="150"
+            placeholder="Your full name"
+            @blur="validateField('name')" />
+        </template>
+      </JRField>
 
-      <InputField
-        id="admin_email"
-        v-model="localData.email"
-        type="email"
+      <JRField
         label="Work email"
-        :error="errors.email"
-        :required="true"
-        :maxlength="254"
+        required
+        inputId="admin_email"
         hint="You will use this email to sign in to JobRhythm."
-        @blur="validateField('email')" />
+        :error="errors.email || ''">
+        <template #default="{ invalid, describedby }">
+          <JRInput
+            inputId="admin_email"
+            type="email"
+            v-model="localData.email"
+            :invalid="invalid"
+            :aria-describedby="describedby || undefined"
+            maxlength="254"
+            placeholder="you@company.com"
+            @blur="validateField('email')" />
+        </template>
+      </JRField>
 
-      <div class="form-floating mb-3">
-        <input
-          id="admin_password"
-          :type="showPassword ? 'text' : 'password'"
-          v-model="localData.password"
-          class="form-control"
-          :class="{
-            'is-invalid': errors.password,
-            'has-value': localData.password && localData.password.trim() !== '',
-          }"
-          placeholder=""
-          required
-          maxlength="128"
-          @input="updatePassword"
-          @blur="validateField('password')"
-          aria-label="Admin password"
-          :aria-describedby="
-            errors.password ? 'admin_password-error' : undefined
-          " />
-        <label for="admin_password">
-          Password
-          <span class="text-danger">*</span>
-        </label>
-        <button
-          type="button"
-          class="btn btn-link position-absolute end-0 top-50 translate-middle-y pe-3"
-          style="z-index: 10; border: none; background: none"
-          @click="togglePasswordVisibility"
-          :aria-label="showPassword ? 'Hide password' : 'Show password'">
-          <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-        </button>
-        <div
-          v-if="errors.password"
-          id="admin_password-error"
-          class="invalid-feedback d-block mt-1">
-          {{ errors.password }}
-        </div>
-      </div>
+      <JRField
+        label="Password"
+        required
+        inputId="admin_password"
+        :error="errors.password || ''">
+        <template #default="{ invalid, describedby }">
+          <div class="jr-onboard-pw">
+            <JRInput
+              inputId="admin_password"
+              :type="showPassword ? 'text' : 'password'"
+              v-model="localData.password"
+              :invalid="invalid"
+              :aria-describedby="describedby || undefined"
+              maxlength="128"
+              autocomplete="new-password"
+              @blur="validateField('password')" />
+            <button
+              type="button"
+              class="jr-onboard-pw__toggle"
+              :aria-label="showPassword ? 'Hide password' : 'Show password'"
+              @click="showPassword = !showPassword">
+              <EyeSlash v-if="showPassword" class="jr-onboard-pw__icon" />
+              <Eye v-else class="jr-onboard-pw__icon" />
+            </button>
+          </div>
+        </template>
+      </JRField>
 
-      <!-- Password Strength Meter -->
-      <div v-if="localData.password" class="password-strength mb-3">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <small class="text-muted">Password strength:</small>
-          <span class="badge" :class="strengthClass">{{ strengthLabel }}</span>
+      <div v-if="localData.password" class="jr-onboard-strength" aria-live="polite">
+        <div class="jr-onboard-strength__meta">
+          <span class="jr-onboard-strength__label">Password strength</span>
+          <span
+            class="jr-onboard-strength__value"
+            :data-level="passwordStrength">
+            {{ strengthLabel }}
+          </span>
         </div>
-        <div class="progress" style="height: 6px">
+        <div class="jr-onboard-strength__track" aria-hidden="true">
           <div
-            class="progress-bar"
-            :class="strengthBarClass"
-            :style="{ width: strengthPercentage + '%' }"
-            role="progressbar"
-            :aria-valuenow="strengthPercentage"
-            aria-valuemin="0"
-            aria-valuemax="100"></div>
+            class="jr-onboard-strength__fill"
+            :data-level="passwordStrength"
+            :style="{ transform: `scaleX(${strengthRatio})` }" />
         </div>
       </div>
 
-      <div class="form-floating mb-3">
-        <input
-          id="admin_password_confirm"
-          :type="showPasswordConfirm ? 'text' : 'password'"
-          v-model="localData.password_confirm"
-          class="form-control"
-          :class="{
-            'is-invalid': errors.password_confirm,
-            'has-value':
-              localData.password_confirm &&
-              localData.password_confirm.trim() !== '',
-          }"
-          placeholder=""
-          required
-          maxlength="128"
-          @input="validateField('password_confirm')"
-          @blur="validateField('password_confirm')"
-          aria-label="Confirm password"
-          :aria-describedby="
-            errors.password_confirm ? 'admin_password_confirm-error' : undefined
-          " />
-        <label for="admin_password_confirm">
-          Confirm Password
-          <span class="text-danger">*</span>
-        </label>
-        <button
-          type="button"
-          class="btn btn-link position-absolute end-0 top-50 translate-middle-y pe-3"
-          style="z-index: 10; border: none; background: none"
-          @click="togglePasswordConfirmVisibility"
-          :aria-label="
-            showPasswordConfirm ? 'Hide confirmation' : 'Show confirmation'
-          ">
-          <i
-            :class="
-              showPasswordConfirm ? 'fas fa-eye-slash' : 'fas fa-eye'
-            "></i>
-        </button>
-        <div
-          v-if="errors.password_confirm"
-          id="admin_password_confirm-error"
-          class="invalid-feedback d-block mt-1">
-          {{ errors.password_confirm }}
-        </div>
-        <div
-          v-else-if="passwordsMatchSuccess"
-          class="valid-feedback d-block mt-1 text-success"
-          role="status">
-          <i class="fas fa-check-circle me-1"></i>
-          Passwords match
-        </div>
-      </div>
+      <JRField
+        label="Confirm password"
+        required
+        inputId="admin_password_confirm"
+        :error="errors.password_confirm || ''"
+        :hint="
+          passwordsMatchSuccess && !errors.password_confirm
+            ? 'Passwords match.'
+            : ''
+        ">
+        <template #default="{ invalid, describedby }">
+          <div class="jr-onboard-pw">
+            <JRInput
+              inputId="admin_password_confirm"
+              :type="showPasswordConfirm ? 'text' : 'password'"
+              v-model="localData.password_confirm"
+              :invalid="invalid"
+              :aria-describedby="describedby || undefined"
+              maxlength="128"
+              autocomplete="new-password"
+              @blur="validateField('password_confirm')" />
+            <button
+              type="button"
+              class="jr-onboard-pw__toggle"
+              :aria-label="
+                showPasswordConfirm ? 'Hide confirmation' : 'Show confirmation'
+              "
+              @click="showPasswordConfirm = !showPasswordConfirm">
+              <EyeSlash v-if="showPasswordConfirm" class="jr-onboard-pw__icon" />
+              <Eye v-else class="jr-onboard-pw__icon" />
+            </button>
+          </div>
+        </template>
+      </JRField>
 
-      <!-- Password Requirements -->
-      <div class="password-requirements">
-        <small class="text-muted d-block mb-2">
-          Your password must include:
-        </small>
-        <ul class="list-unstyled small mb-0">
-          <li :class="{ 'text-success': hasMinLength }">
-            <i
-              :class="hasMinLength ? 'fas fa-check-circle' : 'far fa-circle'"
-              class="me-2"></i>
-            At least 8 characters
-          </li>
-          <li :class="{ 'text-success': hasUpperCase }">
-            <i
-              :class="hasUpperCase ? 'fas fa-check-circle' : 'far fa-circle'"
-              class="me-2"></i>
-            An uppercase letter
-          </li>
-          <li :class="{ 'text-success': hasLowerCase }">
-            <i
-              :class="hasLowerCase ? 'fas fa-check-circle' : 'far fa-circle'"
-              class="me-2"></i>
-            A lowercase letter
-          </li>
-          <li :class="{ 'text-success': hasNumber }">
-            <i
-              :class="hasNumber ? 'fas fa-check-circle' : 'far fa-circle'"
-              class="me-2"></i>
-            A number
-          </li>
-        </ul>
-      </div>
+      <ul class="jr-onboard-reqs" aria-label="Password requirements">
+        <li :class="{ 'jr-onboard-reqs__item--ok': hasMinLength }">
+          <CheckCircle
+            v-if="hasMinLength"
+            class="jr-onboard-reqs__icon" />
+          <span v-else class="jr-onboard-reqs__dot" aria-hidden="true" />
+          At least 8 characters
+        </li>
+        <li :class="{ 'jr-onboard-reqs__item--ok': hasUpperCase }">
+          <CheckCircle
+            v-if="hasUpperCase"
+            class="jr-onboard-reqs__icon" />
+          <span v-else class="jr-onboard-reqs__dot" aria-hidden="true" />
+          An uppercase letter
+        </li>
+        <li :class="{ 'jr-onboard-reqs__item--ok': hasLowerCase }">
+          <CheckCircle
+            v-if="hasLowerCase"
+            class="jr-onboard-reqs__icon" />
+          <span v-else class="jr-onboard-reqs__dot" aria-hidden="true" />
+          A lowercase letter
+        </li>
+        <li :class="{ 'jr-onboard-reqs__item--ok': hasNumber }">
+          <CheckCircle
+            v-if="hasNumber"
+            class="jr-onboard-reqs__icon" />
+          <span v-else class="jr-onboard-reqs__dot" aria-hidden="true" />
+          A number
+        </li>
+      </ul>
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, computed, watch, ref } from "vue";
-import InputField from "./InputField.vue";
+import { reactive, computed, watch, ref } from 'vue'
+import Eye from '@primeicons/vue/eye'
+import EyeSlash from '@primeicons/vue/eye-slash'
+import CheckCircle from '@primeicons/vue/check-circle'
+import { JRField, JRInput } from '@ui'
 
 const props = defineProps({
   modelValue: {
@@ -188,113 +167,56 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
-});
+})
 
-const emit = defineEmits(["update:modelValue", "validate"]);
+const emit = defineEmits(['update:modelValue', 'validate'])
 
 const localData = reactive({
-  name: props.modelValue.name || "",
-  email: props.modelValue.email || "",
-  password: props.modelValue.password || "",
-  password_confirm: props.modelValue.password_confirm || "",
-});
+  name: props.modelValue.name || '',
+  email: props.modelValue.email || '',
+  password: props.modelValue.password || '',
+  password_confirm: props.modelValue.password_confirm || '',
+})
 
-const showPassword = ref(false);
-const showPasswordConfirm = ref(false);
-
-// Watch for changes and emit updates
-watch(
-  () => localData.name,
-  () => {
-    emit("update:modelValue", { ...localData });
-  }
-);
+const showPassword = ref(false)
+const showPasswordConfirm = ref(false)
 
 watch(
-  () => localData.email,
+  localData,
   () => {
-    emit("update:modelValue", { ...localData });
-  }
-);
+    emit('update:modelValue', { ...localData })
+  },
+  { deep: true }
+)
 
-watch(
-  () => localData.password,
-  () => {
-    emit("update:modelValue", { ...localData });
-  }
-);
-
-watch(
-  () => localData.password_confirm,
-  () => {
-    emit("update:modelValue", { ...localData });
-  }
-);
-
-const updatePassword = (event) => {
-  localData.password = event.target.value;
-  emit("update:modelValue", { ...localData });
-};
-
-const togglePasswordVisibility = () => {
-  showPassword.value = !showPassword.value;
-};
-
-const togglePasswordConfirmVisibility = () => {
-  showPasswordConfirm.value = !showPasswordConfirm.value;
-};
-
-// Password strength calculation
 const passwordStrength = computed(() => {
-  const password = localData.password;
-  if (!password) return 0;
+  const password = localData.password
+  if (!password) return 0
+  let strength = 0
+  if (password.length >= 8) strength += 1
+  if (password.length >= 12) strength += 1
+  if (/[a-z]/.test(password)) strength += 1
+  if (/[A-Z]/.test(password)) strength += 1
+  if (/[0-9]/.test(password)) strength += 1
+  if (/[^a-zA-Z0-9]/.test(password)) strength += 1
+  return Math.min(strength, 5)
+})
 
-  let strength = 0;
-
-  // Length check
-  if (password.length >= 8) strength += 1;
-  if (password.length >= 12) strength += 1;
-
-  // Character type checks
-  if (/[a-z]/.test(password)) strength += 1;
-  if (/[A-Z]/.test(password)) strength += 1;
-  if (/[0-9]/.test(password)) strength += 1;
-  if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
-
-  return Math.min(strength, 5);
-});
-
-const strengthPercentage = computed(() => {
-  return (passwordStrength.value / 5) * 100;
-});
+const strengthRatio = computed(() => passwordStrength.value / 5)
 
 const strengthLabel = computed(() => {
-  const strength = passwordStrength.value;
-  if (strength <= 1) return "Very Weak";
-  if (strength <= 2) return "Weak";
-  if (strength <= 3) return "Fair";
-  if (strength <= 4) return "Strong";
-  return "Very Strong";
-});
+  const strength = passwordStrength.value
+  if (strength <= 1) return 'Very weak'
+  if (strength <= 2) return 'Weak'
+  if (strength <= 3) return 'Fair'
+  if (strength <= 4) return 'Strong'
+  return 'Very strong'
+})
 
-const strengthClass = computed(() => {
-  const strength = passwordStrength.value;
-  if (strength <= 1) return "bg-danger";
-  if (strength <= 2) return "bg-warning";
-  if (strength <= 3) return "bg-info";
-  if (strength <= 4) return "bg-primary";
-  return "bg-success";
-});
-
-const strengthBarClass = computed(() => {
-  return strengthClass.value;
-});
-
-// Password requirements
-const hasMinLength = computed(() => localData.password.length >= 8);
-const hasUpperCase = computed(() => /[A-Z]/.test(localData.password));
-const hasLowerCase = computed(() => /[a-z]/.test(localData.password));
-const hasNumber = computed(() => /[0-9]/.test(localData.password));
+const hasMinLength = computed(() => localData.password.length >= 8)
+const hasUpperCase = computed(() => /[A-Z]/.test(localData.password))
+const hasLowerCase = computed(() => /[a-z]/.test(localData.password))
+const hasNumber = computed(() => /[0-9]/.test(localData.password))
 
 const passwordMeetsPolicy = computed(
   () =>
@@ -302,113 +224,154 @@ const passwordMeetsPolicy = computed(
     hasUpperCase.value &&
     hasLowerCase.value &&
     hasNumber.value
-);
+)
 
 const passwordsMatchSuccess = computed(
   () =>
     passwordMeetsPolicy.value &&
     localData.password_confirm.length > 0 &&
     localData.password === localData.password_confirm
-);
+)
 
 const validateField = (fieldName) => {
-  emit("validate", fieldName);
-};
+  emit('validate', fieldName)
+}
 </script>
 
 <style scoped>
-.step-header {
-  text-align: center;
+.jr-onboard-step__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-.step-header h3 {
-  color: var(--bs-dark);
-  font-size: 1.75rem;
-}
-
-.step-content {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.password-strength {
-  margin-top: -0.5rem;
-}
-
-.password-requirements {
-  background-color: var(--bs-light);
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin-top: 1rem;
-}
-
-.password-requirements ul li {
-  margin-bottom: 0.5rem;
-  transition: color 0.2s ease;
-}
-
-.password-requirements ul li:last-child {
-  margin-bottom: 0;
-}
-
-.form-floating > .btn-link {
-  color: var(--bs-secondary);
-  text-decoration: none;
-}
-
-.form-floating > .btn-link:hover {
-  color: var(--bs-primary);
-}
-
-/* Estilos para form-floating (password inputs) */
-.form-floating {
+.jr-onboard-pw {
   position: relative;
 }
 
-.form-floating > label {
-  padding: 0.75rem 1rem;
-  font-weight: 500;
+.jr-onboard-pw :deep(.jr-control),
+.jr-onboard-pw :deep(input) {
+  padding-right: 2.75rem;
+}
+
+.jr-onboard-pw__toggle {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-jr-muted, #4b5563);
+  cursor: pointer;
+}
+
+.jr-onboard-pw__toggle:hover {
+  color: var(--color-jr-primary, #2563eb);
+}
+
+.jr-onboard-pw__icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.jr-onboard-strength__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.jr-onboard-strength__label,
+.jr-onboard-strength__value {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.jr-onboard-strength__label {
+  color: var(--color-jr-muted, #4b5563);
+}
+
+.jr-onboard-strength__value[data-level='1'],
+.jr-onboard-strength__value[data-level='2'] {
+  color: var(--color-jr-danger, #dc2626);
+}
+
+.jr-onboard-strength__value[data-level='3'] {
+  color: var(--color-jr-warning, #d97706);
+}
+
+.jr-onboard-strength__value[data-level='4'],
+.jr-onboard-strength__value[data-level='5'] {
+  color: var(--color-jr-success, #16a34a);
+}
+
+.jr-onboard-strength__track {
+  height: 0.25rem;
+  background: var(--color-jr-border, #e5e7eb);
+  overflow: hidden;
+}
+
+.jr-onboard-strength__fill {
   height: 100%;
-  pointer-events: none;
-  border: 1px solid transparent;
-  transform-origin: 0 0;
-  transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
+  width: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.2s ease;
+  background: var(--color-jr-danger, #dc2626);
 }
 
-.form-floating .form-control {
-  padding: 0.75rem 1rem;
-  min-height: calc(3.5rem + 2px);
-  line-height: 1.5;
+.jr-onboard-strength__fill[data-level='3'] {
+  background: var(--color-jr-warning, #d97706);
 }
 
-/* Cuando el input está vacío, la label está dentro */
-.form-floating
-  .form-control:not(:focus):not(:not(:placeholder-shown)):placeholder-shown {
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
+.jr-onboard-strength__fill[data-level='4'],
+.jr-onboard-strength__fill[data-level='5'] {
+  background: var(--color-jr-success, #16a34a);
 }
 
-/* Cuando el input tiene valor o está en focus, mover la label arriba */
-.form-floating .form-control:focus,
-.form-floating .form-control.has-value,
-.form-floating .form-control:not(:placeholder-shown) {
-  padding-top: 2rem !important;
-  padding-bottom: 0.75rem !important;
+.jr-onboard-reqs {
+  list-style: none;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--color-jr-border, #e5e7eb);
+  background: var(--color-jr-surface-muted, #f9fafb);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.form-floating .form-control:focus ~ label,
-.form-floating .form-control.has-value ~ label,
-.form-floating .form-control:not(:placeholder-shown) ~ label {
-  opacity: 0.65;
-  transform: scale(0.85) translateY(-0.25rem) translateX(0.15rem);
-  padding-top: 0.5rem;
+.jr-onboard-reqs li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-jr-muted, #4b5563);
 }
 
-.form-floating .form-control:focus {
-  border-color: var(--bs-primary);
-  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+.jr-onboard-reqs__item--ok {
+  color: var(--color-jr-success, #16a34a);
+  font-weight: 600;
+}
+
+.jr-onboard-reqs__icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+}
+
+.jr-onboard-reqs__dot {
+  width: 0.95rem;
+  height: 0.95rem;
+  border: 1px solid var(--color-jr-border, #e5e7eb);
+  border-radius: 0;
+  flex-shrink: 0;
 }
 </style>

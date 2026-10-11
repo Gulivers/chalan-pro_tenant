@@ -1,220 +1,330 @@
 <template>
-  <div class="container">
-    <h3 class="text-warning pt-3">
-      <p>Warehouse Manager</p>
-    </h3>
+  <JRPage>
+    <JRPageHeader :title="pageTitle" />
 
-    <div class="card shadow mb-4">
-      <div class="card-header py-2">
-        <h6 class="ms-1 font-weight-bold text-primary">
-          {{ isViewMode ? 'View Warehouse' : isEditMode ? 'Edit Warehouse' : 'Create Warehouse' }}
-        </h6>
-      </div>
+    <div class="jr-warehouse-form">
+      <p v-if="loadError" class="jr-form-banner" role="alert">{{ loadError }}</p>
+      <p v-else-if="loading" class="jr-warehouse-form__status" role="status">
+        Loading warehouse…
+      </p>
 
-      <div class="card-body text-start">
-        <div class="row">
-          <!-- Name & Active switch -->
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Name</label>
-            <input
-              v-model.trim="warehouse.name"
-              type="text"
-              class="form-control"
-              placeholder="Warehouse Name"
+      <form
+        v-else
+        class="jr-warehouse-form__form"
+        @submit.prevent="saveWarehouse"
+        novalidate>
+        <p v-if="formBanner" class="jr-form-banner" role="alert">
+          {{ formBanner }}
+        </p>
+
+        <div class="jr-form-grid">
+          <JRField
+            v-slot="{ describedby, invalid }"
+            label="Name"
+            inputId="warehouse-name"
+            required
+            :error="fieldErrors.name">
+            <JRInput
+              inputId="warehouse-name"
+              v-model="warehouse.name"
+              placeholder="Warehouse name"
+              :disabled="isDisabled"
+              :invalid="invalid"
+              required
+              :ariaDescribedby="describedby"
+              @update:modelValue="clearFieldError('name')" />
+          </JRField>
+
+          <JRField
+            v-slot="{ describedby, invalid }"
+            label="Location"
+            inputId="warehouse-location"
+            :error="fieldErrors.location">
+            <JRInput
+              inputId="warehouse-location"
+              v-model="warehouse.location"
+              placeholder="Warehouse location"
+              :disabled="isDisabled"
+              :invalid="invalid"
+              :ariaDescribedby="describedby"
+              @update:modelValue="clearFieldError('location')" />
+          </JRField>
+
+          <JRField label="Active" inputId="warehouse-is-active">
+            <JRCheckbox
+              inputId="warehouse-is-active"
+              v-model="warehouse.is_active"
+              ariaLabel="Active"
               :disabled="isDisabled" />
+          </JRField>
 
-            <div class="form-check form-switch mt-3 d-flex align-items-center gap-2">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="isActiveCheck"
-                v-model="warehouse.is_active"
-                :disabled="isDisabled" />
-              <label class="form-check-label mb-0" for="isActiveCheck">Active</label>
-            </div>
-          </div>
-
-          <!-- Location -->
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Location</label>
-            <input
-              v-model.trim="warehouse.location"
-              type="text"
-              class="form-control"
-              placeholder="Warehouse Location"
-              :disabled="isDisabled" />
-          </div>
+          <JRField
+            label="Default warehouse"
+            inputId="warehouse-is-default"
+            hint="Only one warehouse can be default"
+            :error="fieldErrors.is_default">
+            <JRCheckbox
+              inputId="warehouse-is-default"
+              v-model="warehouse.is_default"
+              ariaLabel="Default warehouse"
+              :disabled="isDisabled"
+              @update:modelValue="onDefaultChange" />
+          </JRField>
         </div>
 
-        <div class="row">
-          <!-- Default Warehouse Switch -->
-          <div class="col-md-6 mb-3">
-            <div class="form-check form-switch d-flex align-items-center gap-2">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="isDefaultCheck"
-                v-model="warehouse.is_default"
-                :disabled="isDisabled"
-                @change="handleDefaultChange" />
-              <label class="form-check-label mb-0" for="isDefaultCheck">
-                <strong :class="{ 'text-warning': warehouse.is_default }">Default Warehouse</strong>
-                <small class="text-muted d-block">Only one warehouse can be default</small>
-              </label>
-            </div>
-          </div>
+        <div class="jr-warehouse-form__actions">
+          <template v-if="!isViewMode">
+            <JRButton
+              type="submit"
+              variant="primary"
+              :disabled="isDisabled">
+              {{
+                submitting
+                  ? isEditMode
+                    ? "Updating..."
+                    : "Saving..."
+                  : isEditMode
+                    ? "Update"
+                    : "Save"
+              }}
+            </JRButton>
+            <JRButton
+              type="button"
+              variant="secondary"
+              :disabled="submitting"
+              @click="goBack">
+              Cancel
+            </JRButton>
+          </template>
+          <JRButton
+            v-else
+            type="button"
+            variant="secondary"
+            :disabled="submitting"
+            @click="goBack">
+            Back
+          </JRButton>
         </div>
-
-        <div class="row mt-4">
-          <div class="col-12 d-flex flex-column flex-sm-row justify-content-center align-items-center gap-2"> 
-            <button v-if="!isViewMode" class="btn btn-primary" @click="saveWarehouse" :disabled="isDisabled">
-              <span
-                v-if="submitting"
-                class="spinner-border spinner-border-sm me-1"
-                role="status"
-                aria-hidden="true"></span>
-              <i v-else class="fas fa-save me-1"></i>
-              {{ isEditMode ? (submitting ? 'Updating...' : 'Update') : submitting ? 'Saving...' : 'Save' }}
-            </button>
-            
-            <button type="button" class="btn btn-secondary" @click="goBack" :disabled="submitting">Cancel</button>
-          </div>
-        </div>
-      </div>
+      </form>
     </div>
-  </div>
+  </JRPage>
 </template>
 
 <script>
-  import axios from 'axios';
-  import Swal from 'sweetalert2';
+import axios from "axios";
+import { JRPage, JRPageHeader, JRField, JRInput, JRCheckbox, JRButton } from "@ui";
 
-  export default {
-    name: 'WarehouseForm',
-    data() {
-      return {
-        warehouse: {
-          name: '',
-          location: '',
-          is_active: true,
-          is_default: false,
-        },
-        submitting: false,
-      };
+export default {
+  name: "WarehouseForm",
+  components: {
+    JRPage,
+    JRPageHeader,
+    JRField,
+    JRInput,
+    JRCheckbox,
+    JRButton,
+  },
+  data() {
+    return {
+      warehouse: {
+        name: "",
+        location: "",
+        is_active: true,
+        is_default: false,
+      },
+      submitting: false,
+      loading: false,
+      loadError: "",
+      formBanner: "",
+      fieldErrors: {},
+    };
+  },
+  computed: {
+    id() {
+      return this.$route.params.id;
     },
-    computed: {
-      id() {
-        return this.$route.params.id;
-      },
-      isViewMode() {
-        // soporta ruta dedicada y (por si acaso) query ?mode=view
-        return this.$route.name === 'warehouse-view' || this.$route.query.mode === 'view';
-      },
-      isEditMode() {
-        return !!this.id && !this.isViewMode;
-      },
-      isDisabled() {
-        return this.isViewMode || this.submitting;
-      },
+    isViewMode() {
+      return (
+        this.$route.name === "warehouse-view" || this.$route.query.mode === "view"
+      );
     },
-    mounted() {
-      if (this.id) this.loadWarehouse();
+    isEditMode() {
+      return !!this.id && !this.isViewMode;
     },
-    methods: {
-      async loadWarehouse() {
-        try {
-          const { data } = await axios.get(`/api/warehouses/${this.id}/`);
-          this.warehouse = {
-            name: data.name ?? '',
-            location: data.location ?? '',
-            is_active: !!data.is_active,
-            is_default: !!data.is_default,
-          };
-        } catch (error) {
-          console.error('Error fetching warehouse:', error);
-          await Swal.fire('Oops!', 'Error loading the warehouse.', 'error');
-        }
-      },
+    isDisabled() {
+      return this.isViewMode || this.submitting;
+    },
+    pageTitle() {
+      if (this.isViewMode) return "View Warehouse";
+      if (this.isEditMode) return "Edit Warehouse";
+      return "New Warehouse";
+    },
+  },
+  mounted() {
+    if (this.id) this.loadWarehouse();
+  },
+  methods: {
+    clearFieldError(key) {
+      if (!this.fieldErrors[key]) return;
+      const next = { ...this.fieldErrors };
+      delete next[key];
+      this.fieldErrors = next;
+      if (this.formBanner) this.formBanner = "";
+    },
 
-      async saveWarehouse() {
-        if (this.isViewMode) return;
-        // Validación mínima local
-        if (!this.warehouse.name?.trim()) {
-          await Swal.fire('Validation', 'Name is required.', 'warning');
-          return;
-        }
+    applyServerErrors(data) {
+      const next = {};
+      if (data && typeof data === "object") {
+        Object.entries(data).forEach(([field, msgs]) => {
+          if (field === "detail" || field === "non_field_errors") return;
+          const text = Array.isArray(msgs) ? msgs.join(", ") : String(msgs);
+          if (text) next[field] = text;
+        });
+      }
+      this.fieldErrors = next;
+      const detail =
+        (data && (data.detail || data.non_field_errors)) ||
+        Object.values(next).join(" ");
+      this.formBanner =
+        (Array.isArray(detail) ? detail.join(", ") : detail) ||
+        "There were validation errors.";
+    },
 
-        this.submitting = true;
-        const url = this.id ? `/api/warehouses/${this.id}/` : '/api/warehouses/';
-        const method = this.id ? 'put' : 'post';
+    async loadWarehouse() {
+      this.loading = true;
+      this.loadError = "";
+      try {
+        const { data } = await axios.get(`/api/warehouses/${this.id}/`);
+        this.warehouse = {
+          name: data.name ?? "",
+          location: data.location ?? "",
+          is_active: !!data.is_active,
+          is_default: !!data.is_default,
+        };
+      } catch (error) {
+        console.error("Error fetching warehouse:", error);
+        this.loadError = "Error loading the warehouse.";
+      } finally {
+        this.loading = false;
+      }
+    },
 
-        try {
-          // Si se está marcando como predeterminado, primero limpiar otros
-          if (this.warehouse.is_default) {
-            await axios.patch('/api/warehouses/clear-default/');
-          }
+    async onDefaultChange(value) {
+      this.clearFieldError("is_default");
+      if (!value) return;
+      try {
+        await axios.patch("/api/warehouses/clear-default/");
+      } catch (error) {
+        console.error("Error clearing default warehouses:", error);
+        this.warehouse.is_default = false;
+        this.formBanner = "Could not update default warehouse status.";
+      }
+    },
 
-          await axios[method](url, this.warehouse);
-          this.$router.push('/warehouses'); // éxito silencioso + redirect
-        } catch (error) {
-          console.error('Error saving warehouse:', error);
-          const { status, data } = error?.response || {};
-          if (status === 400 && data) {
-            const messages = Object.entries(data)
-              .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
-              .join('\n');
-            await Swal.fire('Oops!', messages || 'There were validation errors.', 'error');
-          } else if (status === 403) {
-            await Swal.fire('Forbidden', 'You do not have permission for this action.', 'error');
-          } else {
-            await Swal.fire('Oops!', 'Error saving the warehouse.', 'error');
-          }
-        } finally {
-          this.submitting = false;
-        }
-      },
+    async saveWarehouse() {
+      if (this.isViewMode) return;
 
-      goBack() {
-        if (this.$router && this.$route.name) {
-          this.$router.back();
-        } else {
-          this.$router.push('/warehouses');
-        }
-      },
+      this.formBanner = "";
+      this.fieldErrors = {};
 
-      async handleDefaultChange() {
+      if (!this.warehouse.name?.trim()) {
+        this.fieldErrors = { name: "Name is required." };
+        this.formBanner = "Name is required.";
+        return;
+      }
+
+      this.submitting = true;
+      const url = this.id ? `/api/warehouses/${this.id}/` : "/api/warehouses/";
+      const method = this.id ? "put" : "post";
+
+      try {
         if (this.warehouse.is_default) {
-          // Si se está marcando como predeterminado, desactivar otros warehouses
-          try {
-            await axios.patch('/api/warehouses/clear-default/');
-            console.log('Other warehouses unset as default');
-          } catch (error) {
-            console.error('Error clearing default warehouses:', error);
-            // Si hay error, revertir el cambio
-            this.warehouse.is_default = false;
-            await Swal.fire('Error', 'Could not update default warehouse status.', 'error');
-          }
+          await axios.patch("/api/warehouses/clear-default/");
         }
-      },
+
+        await axios[method](url, this.warehouse);
+        this.$router.push("/warehouses");
+      } catch (error) {
+        console.error("Error saving warehouse:", error);
+        const { status, data } = error?.response || {};
+        if (status === 400 && data) {
+          this.applyServerErrors(data);
+        } else if (status === 403) {
+          this.formBanner = "You do not have permission for this action.";
+        } else {
+          this.formBanner = "Error saving the warehouse.";
+        }
+      } finally {
+        this.submitting = false;
+      }
     },
-  };
+
+    goBack() {
+      if (this.$router && this.$route.name) {
+        this.$router.back();
+      } else {
+        this.$router.push("/warehouses");
+      }
+    },
+  },
+};
 </script>
 
 <style scoped>
-  .form-check-input:checked {
-    background-color: #ffc107;
-    border-color: #ffc107;
+.jr-warehouse-form__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.jr-warehouse-form__status {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .jr-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  
-  .form-check-input:checked:focus {
-    background-color: #ffc107;
-    border-color: #ffc107;
-    box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.25);
+}
+
+@media (min-width: 1024px) {
+  .jr-form-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  
-  .text-warning {
-    color: #ffc107 !important;
-  }
+}
+
+.jr-warehouse-form :deep(.jr-checkbox) {
+  column-gap: 0.85rem;
+  align-items: center;
+}
+
+.jr-warehouse-form :deep(.jr-checkbox__label) {
+  margin-inline-start: 0.15rem;
+}
+
+.jr-warehouse-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.jr-form-banner {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-jr-danger-text);
+  background: var(--color-jr-danger-subtle);
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
+}
 </style>

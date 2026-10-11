@@ -19,6 +19,11 @@ class EventSerializer(serializers.ModelSerializer):
     crew_category = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     work_account_title = serializers.SerializerMethodField()
+    supervisor = serializers.SerializerMethodField()
+    builder_name = serializers.SerializerMethodField()
+    job_name = serializers.SerializerMethodField()
+    house_model_name = serializers.SerializerMethodField()
+    default_price_type_name = serializers.SerializerMethodField()
 
     def get_crew_title(self, obj):
         return obj.crew.name
@@ -31,6 +36,45 @@ class EventSerializer(serializers.ModelSerializer):
     def get_work_account_title(self, obj):
         if obj.work_account:
             return obj.work_account.title
+        return None
+
+    def get_supervisor(self, obj):
+        job = obj.job or (obj.work_account.job if obj.work_account else None)
+        if not job:
+            return None
+        usernames = (
+            User.objects.filter(crews__jobs=job, is_active=True)
+            .order_by("username")
+            .distinct()
+            .values_list("username", flat=True)
+        )
+        names = list(usernames)
+        return ", ".join(names) if names else None
+
+    def get_builder_name(self, obj):
+        if obj.builder:
+            return obj.builder.name
+        if obj.work_account and obj.work_account.builder:
+            return obj.work_account.builder.name
+        return None
+
+    def get_job_name(self, obj):
+        if obj.job:
+            return obj.job.name
+        if obj.work_account and obj.work_account.job:
+            return obj.work_account.job.name
+        return None
+
+    def get_house_model_name(self, obj):
+        if obj.house_model:
+            return obj.house_model.name
+        if obj.work_account and obj.work_account.house_model:
+            return obj.work_account.house_model.name
+        return None
+
+    def get_default_price_type_name(self, obj):
+        if obj.work_account and obj.work_account.default_price_type:
+            return obj.work_account.default_price_type.name
         return None
 
     def get_images(self, obj):
@@ -175,27 +219,36 @@ class EventDraftSerializer(serializers.ModelSerializer):
 class EventNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventNote
-        fields = ['notes', 'updated_at', 'updated_by', 'work_account']
-        read_only_fields = ['updated_at', 'updated_by']
+        fields = ['notes', 'updated_at', 'updated_by', 'work_account', 'event']
+        read_only_fields = ['updated_at', 'updated_by', 'event']
 
     def create(self, validated_data):
-        print('create validated_data', validated_data)
+        event = validated_data.pop('event', None)
         work_account = validated_data.pop('work_account', None)
+        if not event:
+            raise serializers.ValidationError({'event': 'event is required'})
         if not work_account:
-            raise serializers.ValidationError('work_account is required')
+            work_account = getattr(event, 'work_account', None)
         validated_data['updated_by'] = self.context['request'].user
-        print('create validated_data', validated_data)
         try:
-            event_note, created = EventNote.objects.update_or_create(
-                work_account=work_account,
-                defaults=validated_data
+            event_note, _created = EventNote.objects.update_or_create(
+                event=event,
+                defaults={
+                    **validated_data,
+                    'work_account': work_account,
+                },
             )
             return event_note
         except Exception as e:
             raise serializers.ValidationError(f"Error creating EventNote: {e}")
-    
+
     def update(self, instance, validated_data):
+        validated_data.pop('event', None)
         validated_data['updated_by'] = self.context['request'].user
+        if 'work_account' not in validated_data and instance.event_id:
+            wa = getattr(instance.event, 'work_account', None)
+            if wa and not instance.work_account_id:
+                validated_data['work_account'] = wa
         return super().update(instance, validated_data)
 
 class UserSerializer(serializers.ModelSerializer):

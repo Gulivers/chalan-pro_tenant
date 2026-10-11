@@ -94,12 +94,12 @@ class BuilderSchemaView(APIView):
             "customer_rank": {
                 "type": "boolean",
                 "label": "Is Customer",
-                "required": False
+                "required": True
             },
             "supplier_rank": {
                 "type": "boolean",
                 "label": "Is Supplier",
-                "required": False
+                "required": True
             },
             "is_active": {
                 "type": "boolean",
@@ -116,12 +116,19 @@ class JobSchemaView(APIView):
         schema = {
             "name": {
                 "type": "string",
-                "label": "Job Name",
+                "label": "Name",
                 "required": True
+            },
+            "crews": {
+                "type": "select",
+                "label": "Area Supervisor",
+                "required": False,
+                "optionsEndpoint": "/api/crews/",
+                "multiple": True,
             },
             "builder": {
                 "type": "select",
-                "label": "Party",
+                "label": "Builder",
                 "required": True,
                 "optionsEndpoint": "/api/builder/"
             },

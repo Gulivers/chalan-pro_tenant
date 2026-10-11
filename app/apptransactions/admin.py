@@ -40,9 +40,27 @@ class PartyAdmin(admin.ModelAdmin):
 
 @admin.register(DocumentType)
 class DocumentTypeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type_code', 'description', 'creates_serialized_items', 'stock_movement', 'is_active')
+    def has_change_permission(self, request, obj=None):
+        if obj is not None and obj.type_code in DocumentType.PROTECTED_TYPE_CODES:
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None and obj.type_code in DocumentType.PROTECTED_TYPE_CODES:
+            return False
+        return super().has_delete_permission(request, obj)
+
+    list_display = (
+        'id', 'type_code', 'description', 'creates_serialized_items',
+        'counts_as_net_invoiced_spend', 'counts_as_job_material_issue',
+        'counts_as_purchase_return', 'stock_movement', 'is_active',
+    )
     search_fields = ('type_code', 'description')
-    list_filter = ('is_active', 'stock_movement')
+    list_filter = (
+        'is_active', 'stock_movement',
+        'counts_as_net_invoiced_spend', 'counts_as_job_material_issue',
+        'counts_as_purchase_return',
+    )
 
 # Validación que aplica a cada línea del inline
 class DocumentLineInlineFormSet(BaseInlineFormSet):

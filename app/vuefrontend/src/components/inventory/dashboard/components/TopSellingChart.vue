@@ -1,47 +1,35 @@
 <template>
-  <div class="top-selling-chart">
-    <div v-if="loading" class="text-center py-4">
-      <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-      </div>
-      <div class="mt-2">
-        <small class="text-muted">Loading products...</small>
-      </div>
-    </div>
+  <div class="jr-chart-block">
+    <div v-if="loading" class="jr-dash-state">Loading…</div>
 
-    <div v-else-if="products.length === 0" class="text-center py-4">
-      <div class="alert alert-info">
-        <i class="fas fa-info-circle"></i>
-        No sales data for the selected period
-      </div>
-    </div>
+    <JREmptyState
+      v-else-if="products.length === 0"
+      title="No sales data"
+      description="No sales data for the selected period"
+    />
 
     <div v-else>
-      <!-- Controles del gráfico -->
-      <div class="chart-controls mb-3">
-        <div class="row align-items-center">
-          <div class="col-md-6">
-            <h6 class="mb-0">Top {{ Math.min(products.length, 25) }} Products Sold</h6>
-            <small class="text-muted">Period: {{ period }} days</small>
-          </div>
-          <div class="col-md-6 text-right">
-            <button class="btn btn-sm btn-outline-success" @click="refreshChart">
-              <i class="fas fa-sync-alt"></i>
-              Refresh
-            </button>
-          </div>
+      <div class="jr-chart-controls">
+        <div>
+          <p class="jr-chart-controls__hint">
+            Showing top {{ displayCount }} · Period: {{ period }} days
+          </p>
         </div>
+        <JRButton variant="secondary" size="sm" type="button" @click="refreshChart">Refresh</JRButton>
       </div>
 
-      <!-- Canvas del gráfico -->
-      <div class="chart-container">
-        <canvas ref="chartCanvas"></canvas>
+      <div class="jr-chart-container">
+        <canvas
+          ref="chartCanvas"
+          role="img"
+          :aria-label="`Bar chart of top ${displayCount} selling products for the last ${period} days`"
+        />
       </div>
 
-      <!-- Tabla de datos -->
-      <div class="chart-data-table mt-4">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover">
-            <thead class="table-light">
+      <div class="jr-chart-data">
+        <div class="jr-dash-table-wrap">
+          <table class="jr-dash-table">
+            <thead>
               <tr>
                 <th>#</th>
                 <th>Product</th>
@@ -53,30 +41,18 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(product, index) in products.slice(0, 10)" :key="product.id" class="clickable-row">
+              <tr v-for="(product, index) in rankedProducts" :key="product.id">
                 <td>{{ index + 1 }}</td>
                 <td>
-                  <div class="product-info">
-                    <strong>{{ product.name }}</strong>
-                    <br />
-                    <small class="text-muted">{{ product.category?.name || 'N/A' }}</small>
-                  </div>
+                  <strong>{{ product.name }}</strong>
+                  <br />
+                  <span class="jr-dash-muted">{{ product.category?.name || '—' }}</span>
                 </td>
-                <td>
-                  <span class="badge badge-secondary">{{ product.sku }}</span>
-                </td>
-                <td>
-                  <span class="text-primary font-weight-bold">{{ formatNumber(product.quantity_sold) }}</span>
-                </td>
-                <td>
-                  <span class="text-success font-weight-bold">${{ formatCurrency(product.total_value) }}</span>
-                </td>
-                <td>
-                  <span class="badge badge-info">{{ product.transaction_count }}</span>
-                </td>
-                <td>
-                  <small class="text-muted">{{ formatDate(product.last_sale_date) }}</small>
-                </td>
+                <td><JRBadge :value="product.sku" severity="secondary" /></td>
+                <td><span class="is-primary-text">{{ formatNumber(product.quantity_sold) }}</span></td>
+                <td><span class="is-success-text">${{ formatCurrency(product.total_value) }}</span></td>
+                <td><JRBadge :value="product.transaction_count" severity="secondary" /></td>
+                <td><span class="jr-dash-muted">{{ formatDate(product.last_sale_date) }}</span></td>
               </tr>
             </tbody>
           </table>
@@ -87,82 +63,74 @@
 </template>
 
 <script>
-  import { defineComponent, ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
-  import { Chart, registerables } from 'chart.js';
-  Chart.register(...registerables);
+import { defineComponent, ref, watch, computed } from 'vue';
+import { Chart, registerables } from 'chart.js';
+import { JRButton, JRBadge, JREmptyState } from '@ui';
+import { useDashboardChart } from './useDashboardChart';
+Chart.register(...registerables);
 
-  export default defineComponent({
-    name: 'TopSellingChart',
-    props: {
-      products: {
-        type: Array,
-        default: () => [],
-      },
-      period: {
-        type: Number,
-        default: 30,
-      },
-      loading: {
-        type: Boolean,
-        default: false,
-      },
+export default defineComponent({
+  components: { JRButton, JRBadge, JREmptyState },
+  name: 'TopSellingChart',
+  props: {
+    products: {
+      type: Array,
+      default: () => [],
     },
-    emits: ['refresh', 'product-clicked'],
-    setup(props, { emit }) {
-      const chartCanvas = ref(null);
-      const chartInstance = ref(null);
+    period: {
+      type: Number,
+      default: 30,
+    },
+    loading: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  emits: ['refresh', 'product-clicked'],
+  setup(props, { emit }) {
+    const chartCanvas = ref(null);
 
-      const formatNumber = value => {
-        if (!value) return '0';
-        return new Intl.NumberFormat('en-US').format(value);
-      };
+    const rankedProducts = computed(() =>
+      Array.isArray(props.products) ? props.products.slice(0, 25) : []
+    );
+    const displayCount = computed(() => rankedProducts.value.length);
 
-      const formatCurrency = value => {
-        if (!value) return '0.00';
-        return new Intl.NumberFormat('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(value);
-      };
+    const formatNumber = value => {
+      if (!value) return '0';
+      return new Intl.NumberFormat('en-US').format(value);
+    };
 
-      const formatDate = dateString => {
-        if (!dateString) return 'N/A';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US');
-      };
+    const formatCurrency = value => {
+      if (!value) return '0.00';
+      return new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(value);
+    };
 
-      const createChart = (retryCount = 0) => {
-        try {
-          if (chartInstance.value) {
-            chartInstance.value.destroy();
-            chartInstance.value = null;
-          }
+    const formatDate = dateString => {
+      if (!dateString) return '—';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US');
+    };
 
-          if (!chartCanvas.value) {
-            if (retryCount < 3) {
-              setTimeout(() => {
-                createChart(retryCount + 1);
-              }, 200);
-            }
-            return;
-          }
+    const { scheduleRender } = useDashboardChart({
+      isLoading: () => props.loading,
+      hasData: () => rankedProducts.value.length > 0,
+      getCanvas: () => chartCanvas.value,
+      buildChart: (canvas) => {
+        const topProducts = rankedProducts.value;
+        const labels = topProducts.map(p => (p.name.length > 25 ? p.name.substring(0, 25) + '...' : p.name));
+        const data = topProducts.map(p => p.total_value || 0);
 
-          if (!props.products || props.products.length === 0) {
-            return;
-          }
-
-          const topProducts = props.products.slice(0, 25);
-          const labels = topProducts.map(p => (p.name.length > 25 ? p.name.substring(0, 25) + '...' : p.name));
-          const data = topProducts.map(p => p.total_value || 0);
-
-          chartInstance.value = new Chart(chartCanvas.value, {
+        return new Chart(canvas, {
           type: 'bar',
           data: {
-            labels: labels,
+            labels,
             datasets: [
               {
                 label: 'Total Sales Value ($)',
-                data: data,
+                data,
                 backgroundColor: 'rgba(40, 167, 69, 0.8)',
                 borderColor: 'rgba(40, 167, 69, 1)',
                 borderWidth: 1,
@@ -173,24 +141,13 @@
             responsive: true,
             maintainAspectRatio: false,
             indexAxis: 'y',
-            animation: {
-              duration: 0
-            },
+            animation: { duration: 0 },
             plugins: {
-              title: {
-                display: true,
-                text: `Top 25 Best Selling Products (${props.period} days)`,
-                font: {
-                  size: 16,
-                  weight: 'bold',
-                },
-              },
-              legend: {
-                display: false,
-              },
+              title: { display: false },
+              legend: { display: false },
               tooltip: {
                 callbacks: {
-                  label: function (context) {
+                  label(context) {
                     const product = topProducts[context.dataIndex];
                     return [
                       `Product: ${product.name}`,
@@ -206,168 +163,143 @@
             scales: {
               x: {
                 beginAtZero: true,
-                title: {
-                  display: true,
-                  text: 'Total Sales Value ($)',
-                },
+                title: { display: true, text: 'Total Sales Value ($)' },
               },
               y: {
-                title: {
-                  display: true,
-                  text: 'Products',
-                },
+                title: { display: true, text: 'Products' },
               },
             },
-            onClick: (event, elements) => {
+            onClick(_event, elements) {
               if (elements.length > 0) {
-                const index = elements[0].index;
-                const product = topProducts[index];
-                emit('product-clicked', product);
+                emit('product-clicked', topProducts[elements[0].index]);
               }
             },
           },
         });
-        
-        } catch (error) {
-          if (chartInstance.value) {
-            chartInstance.value.destroy();
-            chartInstance.value = null;
-          }
-          // Reintentar si hay error
-          if (retryCount < 3) {
-            setTimeout(() => {
-              createChart(retryCount + 1);
-            }, 500);
-          }
-        }
-      };
+      },
+    });
 
-      const refreshChart = () => {
-        emit('refresh');
-        // After parent reloads data, re-render chart shortly after
-        setTimeout(() => {
-          createChart();
-        }, 300);
-      };
+    watch(
+      () => props.products,
+      () => scheduleRender(),
+      { deep: true }
+    );
 
-      // Watch for changes in products
-      watch(
-        () => props.products,
-        async (newProducts) => {
-          if (newProducts && newProducts.length > 0) {
-            // Esperar múltiples ticks para asegurar que el DOM esté listo
-            await nextTick();
-            await nextTick();
-            setTimeout(() => {
-              createChart();
-            }, 100);
-          }
-        },
-        { deep: true, immediate: true }
-      );
+    watch(
+      () => props.period,
+      () => scheduleRender()
+    );
 
-      onMounted(async () => {
-        // Esperar múltiples ticks para asegurar que el DOM esté listo
-        await nextTick();
-        await nextTick();
-        setTimeout(() => {
-          createChart();
-        }, 100);
-      });
+    const refreshChart = () => {
+      emit('refresh');
+      scheduleRender();
+    };
 
-      onUnmounted(() => {
-        if (chartInstance.value) {
-          chartInstance.value.destroy();
-          chartInstance.value = null;
-        }
-      });
-
-      return {
-        chartCanvas,
-        formatNumber,
-        formatCurrency,
-        formatDate,
-        refreshChart,
-      };
-    },
-  });
+    return {
+      chartCanvas,
+      rankedProducts,
+      displayCount,
+      formatNumber,
+      formatCurrency,
+      formatDate,
+      refreshChart,
+    };
+  },
+});
 </script>
 
 <style scoped>
-  .top-selling-chart {
-    min-height: 500px;
+.jr-chart-block {
+  min-height: 0;
+}
+
+.jr-dash-state {
+  padding: 0.75rem 0;
+  font-size: 0.875rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-chart-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.jr-chart-controls__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-chart-container {
+  position: relative;
+  height: 360px;
+  background: var(--color-jr-surface);
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
+  padding: 0.85rem;
+}
+
+.jr-chart-container canvas {
+  display: block;
+  max-width: 100%;
+}
+
+.jr-chart-data {
+  margin-top: 0.85rem;
+}
+
+.jr-dash-muted {
+  font-size: 0.75rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-dash-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
+  max-height: 22rem;
+}
+
+.jr-dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.jr-dash-table th,
+.jr-dash-table td {
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid var(--color-jr-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.jr-dash-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--color-jr-surface-muted);
+  font-weight: 600;
+  color: var(--color-jr-text);
+}
+
+.is-success-text {
+  color: var(--color-jr-success-text);
+  font-weight: 600;
+}
+
+.is-primary-text {
+  color: var(--color-jr-primary);
+  font-weight: 600;
+}
+
+@media (max-width: 767.98px) {
+  .jr-chart-container {
+    height: 280px;
   }
-
-  .chart-controls {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-  }
-
-  .chart-container {
-    position: relative;
-    height: 400px;
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  .chart-container canvas {
-    max-width: 100%;
-    height: 100%;
-  }
-
-  .chart-data-table {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  .table th {
-    border-top: none;
-    font-weight: 600;
-    color: #495057;
-    background-color: #f8f9fa;
-  }
-
-  .table td {
-    vertical-align: middle;
-  }
-
-  .clickable-row {
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-
-  .clickable-row:hover {
-    background-color: rgba(0, 123, 255, 0.1);
-  }
-
-  .badge {
-    font-size: 0.75rem;
-    padding: 0.3rem 0.6rem;
-  }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    .chart-container {
-      height: 300px;
-      padding: 10px;
-    }
-
-    .chart-controls {
-      padding: 10px;
-    }
-
-    .chart-data-table {
-      padding: 15px;
-    }
-
-    .table-responsive {
-      font-size: 0.9rem;
-    }
-  }
+}
 </style>

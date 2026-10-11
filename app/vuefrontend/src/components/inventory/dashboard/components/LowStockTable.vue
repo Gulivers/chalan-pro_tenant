@@ -1,270 +1,404 @@
 <template>
   <div class="low-stock-table">
-    <div v-if="loading" class="text-center py-4">
-      <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+    <div v-if="loading" class="jr-dash-state" aria-live="polite">Loading…</div>
+
+    <JREmptyState
+      v-else-if="!products.length"
+      title="No stock attention needed"
+      description="No products are below reorder level right now."
+    />
+
+    <template v-else>
+      <!-- Phone: scan list -->
+      <ul v-if="isMobile" class="jr-stock-rows" :aria-busy="loading ? 'true' : 'false'">
+        <li
+          v-for="product in products"
+          :key="product.id"
+          class="jr-stock-row"
+          :class="rowToneClass(product)">
+          <div class="jr-stock-row__main">
+            <p class="jr-stock-row__name">{{ product.name }}</p>
+            <p class="jr-stock-row__meta">
+              <span>{{ product.sku }}</span>
+              <span v-if="product.category?.name" aria-hidden="true"> · </span>
+              <span v-if="product.category?.name">{{ product.category.name }}</span>
+            </p>
+            <p class="jr-stock-row__nums">
+              On hand
+              <strong :class="stockTextClass(product)">{{ formatNumber(stockQty(product)) }}</strong>
+              <span class="jr-dash-muted"> · Reorder {{ formatNumber(reorderLevel(product)) }}</span>
+            </p>
+          </div>
+          <div class="jr-stock-row__aside">
+            <JRBadge
+              :value="statusLabel(product)"
+              :severity="statusSeverity(product)" />
+            <div class="jr-stock-row__actions">
+              <JRButton
+                v-if="canView"
+                type="button"
+                variant="ghost"
+                size="sm"
+                @click="viewProduct(product)">
+                View
+              </JRButton>
+              <JRButton
+                v-if="canEdit"
+                type="button"
+                variant="ghost"
+                size="sm"
+                @click="editProduct(product)">
+                Edit
+              </JRButton>
+            </div>
+          </div>
+        </li>
+      </ul>
+
+      <!-- Tablet / desktop table -->
+      <div v-else class="jr-dash-table-wrap">
+        <table class="jr-dash-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>SKU</th>
+              <th class="jr-col-num">On hand</th>
+              <th class="jr-col-num">Reorder</th>
+              <th>Status</th>
+              <th class="jr-col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="product in products"
+              :key="product.id"
+              :class="rowToneClass(product)">
+              <td>
+                <strong>{{ product.name }}</strong>
+                <br />
+                <span class="jr-dash-muted">{{ product.category?.name || '—' }}</span>
+              </td>
+              <td><span class="jr-sku">{{ product.sku }}</span></td>
+              <td class="jr-col-num">
+                <span :class="stockTextClass(product)">
+                  {{ formatNumber(stockQty(product)) }}
+                </span>
+              </td>
+              <td class="jr-col-num jr-dash-muted">
+                {{ formatNumber(reorderLevel(product)) }}
+              </td>
+              <td>
+                <JRBadge
+                  :value="statusLabel(product)"
+                  :severity="statusSeverity(product)" />
+              </td>
+              <td class="jr-col-actions">
+                <div class="jr-dash-actions">
+                  <JRButton
+                    v-if="canView"
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    @click="viewProduct(product)">
+                    View
+                  </JRButton>
+                  <JRButton
+                    v-if="canEdit"
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    @click="editProduct(product)">
+                    Edit
+                  </JRButton>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="mt-2">
-        <small class="text-muted">Loading products...</small>
-      </div>
-    </div>
-    
-    <div v-else-if="products.length === 0" class="text-center py-4">
-      <div class="alert alert-success">
-        <i class="fas fa-check-circle"></i>
-        ✅ All products are above reorder level
-      </div>
-      <button class="btn btn-outline-primary btn-sm mt-2" @click="showEmptyTable = !showEmptyTable">
-        <i class="fas fa-table"></i>
-        {{ showEmptyTable ? 'Hide' : 'Show' }} Empty Table
-      </button>
-    </div>
-    
-    <div v-else-if="showEmptyTable || products.length > 0" class="table-responsive scrollable-table">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>SKU</th>
-            <th>Current Stock</th>
-            <th>Reorder Level</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="product in products" :key="product.id" 
-              :class="getRowClass(product)">
-            <td>
-              <strong>{{ product.name }}</strong>
-              <br>
-              <small class="text-muted">{{ product.category?.name || 'No category' }}</small>
-            </td>
-            <td>
-              <code>{{ product.sku }}</code>
-            </td>
-            <td>
-              <span class="stock-value" :class="getStockClass(product)">
-                {{ formatNumber(product.current_stock || product.total_stock || 0) }}
-              </span>
-            </td>
-            <td>
-              <span class="reorder-level">
-                {{ formatNumber(product.reorder_level || 0) }}
-              </span>
-            </td>
-            <td>
-              <span class="badge" :class="getStatusBadgeClass(product)">
-                {{ getStatusText(product) }}
-              </span>
-            </td>
-            <td>
-              <button class="btn btn-sm btn-outline-primary" 
-                      @click="viewProduct(product)"
-                      v-if="hasPermission('appinventory.view_product')"
-                      title="Ver Transacciones">
-                <i class="fas fa-receipt"></i>
-                Transacciones
-              </button>
-              <button class="btn btn-sm btn-outline-warning" 
-                      @click="editProduct(product)"
-                      v-if="hasPermission('appinventory.change_product')"
-                      title="Editar Producto">
-                <i class="fas fa-edit"></i>
-                Editar
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    </template>
   </div>
 </template>
 
 <script>
+import { JRButton, JRBadge, JREmptyState } from '@ui';
+import {
+  getStockQty,
+  getReorderLevel,
+  getStockStatus,
+  stockStatusLabel,
+  stockStatusSeverity,
+} from './stockStatus';
+
+const PHONE_MQ = '(max-width: 767.98px)';
+
 export default {
   name: 'LowStockTable',
+  components: {
+    JRButton,
+    JRBadge,
+    JREmptyState,
+  },
   props: {
     products: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
     loading: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   data() {
     return {
-      showEmptyTable: false
+      isMobile: false,
+      phoneQuery: null,
+    };
+  },
+  computed: {
+    canView() {
+      return !!this.hasPermission?.('appinventory.view_product');
+    },
+    canEdit() {
+      return !!this.hasPermission?.('appinventory.change_product');
+    },
+  },
+  mounted() {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      this.phoneQuery = window.matchMedia(PHONE_MQ);
+      this.onViewport = () => {
+        this.isMobile = this.phoneQuery.matches;
+      };
+      this.onViewport();
+      if (this.phoneQuery.addEventListener) {
+        this.phoneQuery.addEventListener('change', this.onViewport);
+      } else {
+        this.phoneQuery.addListener(this.onViewport);
+      }
+    }
+  },
+  beforeUnmount() {
+    if (!this.phoneQuery || !this.onViewport) return;
+    if (this.phoneQuery.removeEventListener) {
+      this.phoneQuery.removeEventListener('change', this.onViewport);
+    } else {
+      this.phoneQuery.removeListener?.(this.onViewport);
     }
   },
   methods: {
+    stockQty: getStockQty,
+    reorderLevel: getReorderLevel,
+
     formatNumber(value) {
-      if (!value) return '0'
-      return new Intl.NumberFormat('en-US').format(value)
+      const n = Number(value);
+      if (!Number.isFinite(n)) return '0';
+      return new Intl.NumberFormat('en-US', {
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 0,
+      }).format(n);
     },
-    
-    getRowClass(product) {
-      const stock = product.current_stock || product.total_stock || 0
-      const reorderLevel = product.reorder_level || 0
-      
-      if (stock === 0) return 'table-danger'
-      if (stock < reorderLevel) return 'table-warning'
-      return ''
+
+    statusOf(product) {
+      return getStockStatus(product);
     },
-    
-    getStockClass(product) {
-      const stock = product.current_stock || product.total_stock || 0
-      const reorderLevel = product.reorder_level || 0
-      
-      if (stock === 0) return 'text-danger font-weight-bold'
-      if (stock < reorderLevel) return 'text-warning font-weight-bold'
-      return 'text-success'
+
+    statusLabel(product) {
+      return stockStatusLabel(this.statusOf(product));
     },
-    
-    getStatusBadgeClass(product) {
-      const stock = product.current_stock || product.total_stock || 0
-      const reorderLevel = product.reorder_level || 0
-      
-      if (stock === 0) return 'badge-danger'
-      if (stock < reorderLevel) return 'badge-warning'
-      return 'badge-success'
+
+    statusSeverity(product) {
+      return stockStatusSeverity(this.statusOf(product));
     },
-    
-    getStatusText(product) {
-      const stock = product.current_stock || product.total_stock || 0
-      const reorderLevel = product.reorder_level || 0
-      
-      if (stock === 0) return 'Out of Stock'
-      if (stock < reorderLevel) return 'Low Stock'
-      return 'Normal'
+
+    rowToneClass(product) {
+      const status = this.statusOf(product);
+      if (status === 'critical' || status === 'out') return 'is-danger';
+      if (status === 'low') return 'is-warning';
+      return '';
     },
-    
+
+    stockTextClass(product) {
+      const status = this.statusOf(product);
+      if (status === 'critical' || status === 'out') return 'is-danger-text';
+      if (status === 'low') return 'is-warning-text';
+      return 'is-success-text';
+    },
+
     viewProduct(product) {
-      this.$router.push(`/transactions/form`)
+      this.$router.push({
+        name: 'product-form',
+        query: { mode: 'view', id: product.id },
+      });
     },
-    
+
     editProduct(product) {
-      this.$router.push(`/products/edit/${product.id}`)
-    }
-  }
-}
+      this.$router.push({
+        name: 'product-form',
+        query: { mode: 'edit', id: product.id },
+      });
+    },
+  },
+};
 </script>
 
 <style scoped>
 .low-stock-table {
-  min-height: 200px;
+  min-height: 0;
 }
 
-.table {
-  margin-bottom: 0;
+.jr-dash-state {
+  padding: 0.75rem 0;
+  font-size: 0.875rem;
+  color: var(--color-jr-muted);
 }
 
-.table th {
-  border-top: none;
-  font-weight: 600;
-  color: #495057;
-  background-color: #f8f9fa;
+.jr-dash-muted {
+  font-size: 0.75rem;
+  color: var(--color-jr-muted);
 }
 
-.table td {
+.jr-dash-table-wrap {
+  max-height: 28rem;
+  overflow: auto;
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
+}
+
+.jr-dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.jr-dash-table th,
+.jr-dash-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--color-jr-border);
+  text-align: left;
   vertical-align: middle;
 }
 
-.stock-value {
-  font-size: 1.1rem;
+.jr-dash-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-jr-surface-muted);
+  font-weight: 600;
+  color: var(--color-jr-text);
+}
+
+.jr-dash-table tbody tr.is-danger {
+  background: var(--color-jr-danger-subtle);
+}
+
+.jr-dash-table tbody tr.is-warning {
+  background: var(--color-jr-warning-subtle);
+}
+
+.jr-col-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.jr-col-actions {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.is-danger-text {
+  color: var(--color-jr-danger-text);
   font-weight: 600;
 }
 
-.reorder-level {
-  font-weight: 500;
-  color: #6c757d;
+.is-warning-text {
+  color: var(--color-jr-warning-text);
+  font-weight: 600;
 }
 
-.badge {
-  font-size: 0.8rem;
-  padding: 0.4rem 0.8rem;
+.is-success-text {
+  color: var(--color-jr-success-text);
+  font-weight: 600;
 }
 
-.table-danger {
-  background-color: rgba(220, 53, 69, 0.1);
+.jr-dash-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
 }
 
-.table-warning {
-  background-color: rgba(255, 193, 7, 0.1);
+.jr-stock-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-jr-border);
 }
 
-.btn {
-  margin-right: 5px;
+.jr-stock-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--color-jr-border);
 }
 
-.btn:last-child {
-  margin-right: 0;
+.jr-stock-row.is-danger {
+  background: var(--color-jr-danger-subtle);
+  margin: 0 -0.25rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
 }
 
-/* Spinner fixes */
-.spinner-border {
-  animation: spinner-border 0.75s linear infinite;
+.jr-stock-row.is-warning {
+  background: var(--color-jr-warning-subtle);
+  margin: 0 -0.25rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
 }
 
-@keyframes spinner-border {
-  to {
-    transform: rotate(360deg);
-  }
+.jr-stock-row__main {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
-/* Scroll optimizado para muchas filas */
-.scrollable-table {
-  max-height: 500px;
-  overflow-y: auto;
-  border: 1px solid #dee2e6;
-  border-radius: 0.375rem;
+.jr-stock-row__name {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-jr-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.scrollable-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background-color: #f8f9fa;
-  border-bottom: 2px solid #dee2e6;
+.jr-stock-row__meta,
+.jr-stock-row__nums {
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-jr-muted);
 }
 
-/* Scroll suave */
-.scrollable-table {
-  scroll-behavior: smooth;
+.jr-stock-row__aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  flex-shrink: 0;
 }
 
-/* Scrollbar personalizado */
-.scrollable-table::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.jr-stock-row__actions {
+  display: flex;
+  gap: 0.25rem;
 }
 
-.scrollable-table::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-
-}
-
-.scrollable-table::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.scrollable-table::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .scrollable-table {
-    font-size: 0.9rem;
-    max-height: 400px;
-  }
-  
-  .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.8rem;
-  }
+.jr-sku {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-jr-text);
+  letter-spacing: 0.02em;
 }
 </style>

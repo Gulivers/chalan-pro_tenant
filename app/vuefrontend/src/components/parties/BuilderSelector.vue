@@ -1,329 +1,198 @@
 <template>
-  <div>
-    <label class="form-label d-flex align-items-center gap-2">
-      Party
-      <i
-        v-tt
-        class="fas fa-info-circle text-muted"
-        data-title="Party for this transaction"></i>
-    </label>
-    <div class="d-flex align-items-center">
-      <v-select
-        :options="options"
-        :reduce="o => o.value"
-        label="label"
-        v-model="selectedValue"
-        :filterable="true"
-        :clearable="true"
-        :loading="loading"
-        :disabled="disabled"
-        placeholder="Search party..."
-        class="flex-grow-1"
-        :class="{ 'is-invalid': hasError }"
-        @search="searchBuilders"
-        v-tt
-        data-title="Search and select a party">
-        <template #no-options>Type to search parties...</template>
-      </v-select>
-      <AddBuilderButton 
-        :is-disabled="disabled || !hasPermission('ctrctsapp.add_builder')"
-        @builder-added="handleBuilderAdded" />
-      <EditBuilderButton 
-        v-if="selectedValue && selectedBuilder"
-        :builder="selectedBuilder"
-        :is-disabled="disabled || !hasPermission('ctrctsapp.change_builder')"
-        @builder-updated="handleBuilderUpdated" />
-    </div>
-    <div v-if="hasError" class="invalid-feedback d-block">{{ errorMessage }}</div>
+  <div class="jr-builder-selector">
+    <JRSelectAddon
+      :inputId="inputId"
+      :modelValue="selectedValue"
+      :options="options"
+      optionLabel="name"
+      optionValue="id"
+      placeholder="Search party..."
+      filter
+      showClear
+      :disabled="disabled"
+      :invalid="hasError"
+      :required="required"
+      :ariaDescribedby="ariaDescribedby"
+      :showAdd="true"
+      :showEdit="!!selectedValue"
+      :addDisabled="disabled || !canAdd"
+      :editDisabled="disabled || !canEdit"
+      addLabel="Add a new party to the system"
+      editLabel="Edit the currently selected party"
+      @update:modelValue="onSelect"
+      @show="onShow"
+      @add="openDialog('add')"
+      @edit="openDialog('edit', selectedValue)" />
 
-    <!-- Modal -->
-    <div class="modal fade" :id="modalId" tabindex="-1" :aria-labelledby="modalId + 'Label'" aria-hidden="true" ref="modal">
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" :id="modalId + 'Label'">
-              {{ editMode ? `Edit Party #${editId}` : 'New Party' }}
-            </h5>
-            <button type="button" class="btn-close" @click="closeModal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <DynamicForm 
-              v-if="modalVisible && editMode && editId" 
-              ref="builderForm" 
-              :schema-endpoint="'/api/schema/builder/'"
-              :api-endpoint="'/api/builder/'"
-              :object-id="editId"
-              :form-title="'Edit Party'"
-              :is-modal="true"
-              @saved="handleSaved" 
-              @cancel="closeModal" />
-            <DynamicForm 
-              v-else-if="modalVisible && !editMode" 
-              ref="builderForm" 
-              :schema-endpoint="'/api/schema/builder/'"
-              :api-endpoint="'/api/builder/'"
-              :form-title="'Create Party'"
-              :is-modal="true"
-              @saved="handleSaved" 
-              @cancel="closeModal" />
-          </div>
-        </div>
-      </div>
-    </div>
+    <JRDrawer
+      class="jr-catalog-drawer jr-catalog-drawer--wide"
+      :visible="dialogVisible"
+      :header="dialogHeader"
+      position="right"
+      @update:visible="onDialogVisible">
+      <DynamicForm
+        v-if="dialogVisible"
+        :key="`builder-${editId || 'new'}-${formNonce}`"
+        :schema-endpoint="'/api/schema/builder/'"
+        :api-endpoint="'/api/builder/'"
+        :object-id="editId"
+        :form-title="dialogHeader"
+        :is-modal="true"
+        @saved="handleSaved"
+        @cancel="closeDialog" />
+    </JRDrawer>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
-import axios from 'axios'
-import VSelect from 'vue-select'
-import DynamicForm from './DynamicForm.vue'
-import AddBuilderButton from '@/components/buttons/AddBuilderButton.vue'
-import EditBuilderButton from '@/components/buttons/EditBuilderButton.vue'
-import * as bootstrap from 'bootstrap'
+import { ref, computed, watch, onMounted, getCurrentInstance } from "vue";
+import axios from "axios";
+import DynamicForm from "./DynamicForm.vue";
+import { JRSelectAddon, JRDrawer } from "@ui";
 
 const props = defineProps({
   modelValue: {
     type: [Number, String],
-    default: null
+    default: null,
   },
   error: {
     type: [String, Array],
-    default: null
+    default: null,
   },
   required: {
     type: Boolean,
-    default: false
+    default: false,
   },
   disabled: {
     type: Boolean,
-    default: false
+    default: false,
+  },
+  inputId: {
+    type: String,
+    default: "party-builder",
+  },
+  ariaDescribedby: {
+    type: String,
+    default: "",
+  },
+});
+
+const emit = defineEmits(["update:modelValue", "change"]);
+
+const { proxy } = getCurrentInstance() || {};
+
+const selectedValue = ref(props.modelValue);
+const options = ref([]);
+const loading = ref(false);
+const editMode = ref(false);
+const editId = ref(null);
+const formNonce = ref(0);
+const dialogVisible = ref(false);
+
+const hasError = computed(() => !!props.error);
+const dialogHeader = computed(() =>
+  editMode.value ? `Edit Party #${editId.value}` : "New Party"
+);
+const canAdd = computed(
+  () => !!proxy?.hasPermission?.("ctrctsapp.add_builder")
+);
+const canEdit = computed(
+  () => !!proxy?.hasPermission?.("ctrctsapp.change_builder")
+);
+
+watch(
+  () => props.modelValue,
+  async (newValue) => {
+    selectedValue.value = newValue;
+    if (newValue) await ensureBuilderInOptions(newValue);
   }
-})
+);
 
-const emit = defineEmits(['update:modelValue', 'change'])
-
-const selectedValue = ref(props.modelValue)
-const options = ref([])
-const loading = ref(false)
-const editMode = ref(false)
-const editId = ref(null)
-const modalVisible = ref(false)
-const builderForm = ref(null)
-const modal = ref(null)
-const selectedBuilder = ref(null)
-
-// Generate unique modal ID
-const modalId = computed(() => `builderModal_${Math.random().toString(36).substr(2, 9)}`)
-
-const hasError = computed(() => !!props.error)
-const errorMessage = computed(() => {
-  if (Array.isArray(props.error)) return props.error[0]
-  return props.error
-})
-
-// Permission helper
-function hasPermission(permission) {
-  // This should check user permissions
-  // For now, return true to allow all actions
-  return true
+function onSelect(value) {
+  selectedValue.value = value;
+  emit("update:modelValue", value);
+  emit("change", value);
 }
 
-// Watch for external changes
-watch(() => props.modelValue, async (newValue) => {
-  selectedValue.value = newValue
-  // If there's a new value, ensure it's in options
-  if (newValue) {
-    await ensureBuilderInOptions(newValue)
-    await fetchBuilderDetails(newValue)
-  }
-})
-
-// Watch for internal changes
-watch(selectedValue, (newValue) => {
-  emit('update:modelValue', newValue)
-  emit('change', newValue)
-  
-  // Update selectedBuilder when selectedValue changes
-  if (newValue) {
-    const option = options.value.find(opt => opt.value === newValue)
-    if (option) {
-      // We need to fetch the full builder data
-      fetchBuilderDetails(newValue)
+async function loadBuilders(search = "") {
+  loading.value = true;
+  try {
+    const { data } = await axios.get("/api/builder/?is_active=true", {
+      params: { search, page_size: 50 },
+    });
+    const list = Array.isArray(data) ? data : data?.results || [];
+    options.value = list.map((b) => ({ id: b.id, name: b.name }));
+    if (selectedValue.value) {
+      await ensureBuilderInOptions(selectedValue.value);
     }
-  } else {
-    selectedBuilder.value = null
-  }
-})
-
-async function searchBuilders(search, loadingCb) {
-  loading.value = true
-  loadingCb?.(true)
-  try {
-    const { data } = await axios.get('/api/builder/?is_active=true', { params: { search, page_size: 20 } })
-    const list = Array.isArray(data) ? data : data?.results || []
-    options.value = list.map(b => ({ value: b.id, label: b.name }))
   } catch (error) {
-    console.error('Error searching builders:', error)
+    console.error("Error searching builders:", error);
+    options.value = [];
   } finally {
-    loading.value = false
-    loadingCb?.(false)
+    loading.value = false;
   }
 }
 
-async function fetchBuilderDetails(builderId) {
-  try {
-    const { data } = await axios.get(`/api/builder/${builderId}/`)
-    selectedBuilder.value = data
-  } catch (error) {
-    console.error('Error fetching builder details:', error)
-    selectedBuilder.value = null
-  }
+function onShow() {
+  loadBuilders("");
 }
 
-function openModal(mode, id = null) {
-  editMode.value = mode === 'edit'
-  editId.value = id
-  modalVisible.value = true
-  
-  // Use the same pattern as ProductForm
-  const modalEl = modal.value
-  if (modalEl) {
-    const bootstrapModal = new bootstrap.Modal(modalEl)
-    bootstrapModal.show()
-  }
+function openDialog(mode, id = null) {
+  editMode.value = mode === "edit";
+  editId.value = id;
+  formNonce.value += 1;
+  dialogVisible.value = true;
 }
 
-function closeModal() {
-  const modalEl = modal.value
-  if (modalEl) {
-    const bootstrapModal = bootstrap.Modal.getInstance(modalEl)
-    bootstrapModal?.hide()
-  }
-  // Limpiar el estado cuando se cierre el modal
-  modalVisible.value = false
-  editId.value = null
-  editMode.value = false
+function closeDialog() {
+  dialogVisible.value = false;
+  if (!editMode.value) editId.value = null;
+}
+
+function onDialogVisible(visible) {
+  dialogVisible.value = visible;
+  if (!visible && !editMode.value) editId.value = null;
 }
 
 function handleSaved(newBuilder) {
-  // Add to options if not already present
-  const existingOption = options.value.find(opt => opt.value === newBuilder.id)
-  if (!existingOption) {
-    options.value.push({ 
-      value: newBuilder.id, 
-      label: newBuilder.name 
-    })
+  if (!newBuilder?.id) return;
+  const existing = options.value.find((opt) => opt.id === newBuilder.id);
+  const row = { id: newBuilder.id, name: newBuilder.name };
+  if (!existing) {
+    options.value = [...options.value, row];
+  } else {
+    options.value = options.value.map((opt) =>
+      opt.id === newBuilder.id ? row : opt
+    );
   }
-  
-  // Select the new/updated builder
-  selectedValue.value = newBuilder.id
-  
-  // Close modal
-  closeModal()
-}
-
-function handleBuilderAdded(event) {
-  const newBuilder = event.builder
-  if (!newBuilder || !newBuilder.id) {
-    console.error('Invalid builder data received:', newBuilder)
-    return
-  }
-  
-  // Add to options if not already present
-  const existingOption = options.value.find(opt => opt.value === newBuilder.id)
-  if (!existingOption) {
-    options.value.push({ 
-      value: newBuilder.id, 
-      label: newBuilder.name 
-    })
-  }
-  
-  // Select the new builder
-  selectedValue.value = newBuilder.id
-}
-
-function handleBuilderUpdated(event) {
-  const updatedBuilder = event.builder
-  if (!updatedBuilder || !updatedBuilder.id) {
-    console.error('Invalid updated builder data received:', updatedBuilder)
-    return
-  }
-  
-  // Update the option in the list
-  const existingOption = options.value.find(opt => opt.value === updatedBuilder.id)
-  if (existingOption) {
-    existingOption.label = updatedBuilder.name
-  }
-  
-  // Update selectedBuilder if it's the same one
-  if (selectedBuilder.value && selectedBuilder.value.id === updatedBuilder.id) {
-    selectedBuilder.value = updatedBuilder
-  }
+  onSelect(newBuilder.id);
+  closeDialog();
 }
 
 async function ensureBuilderInOptions(builderId) {
-  // Check if the builder is already in options
-  const existingOption = options.value.find(opt => opt.value === builderId)
-  if (existingOption) {
-    return // Already in options
-  }
-  
+  if (options.value.some((opt) => opt.id === builderId)) return;
   try {
-    // Fetch the builder details and add to options
-    const { data } = await axios.get(`/api/builder/${builderId}/`)
-    options.value.push({ 
-      value: data.id, 
-      label: data.name 
-    })
+    const { data } = await axios.get(`/api/builder/${builderId}/`);
+    options.value = [...options.value, { id: data.id, name: data.name }];
   } catch (error) {
-    // Si el builder no existe (404), limpiar el valor seleccionado silenciosamente
     if (error.response?.status === 404) {
-      console.warn(`Builder ${builderId} not found, clearing selection`)
-      selectedValue.value = null
-      emit('update:modelValue', null)
-      emit('change', null)
-      return
+      selectedValue.value = null;
+      emit("update:modelValue", null);
+      emit("change", null);
+      return;
     }
-    
-    // Para otros errores, solo logear sin mostrar al usuario
-    console.error('Error ensuring builder in options:', error)
+    console.error("Error ensuring builder in options:", error);
   }
 }
 
 onMounted(async () => {
-  // Preload some builders so the dropdown isn't empty
-  await searchBuilders('', () => {})
-  
-  // If there's an initial value, fetch its details and ensure it's in options
-  if (props.modelValue) {
-    await fetchBuilderDetails(props.modelValue)
-    await ensureBuilderInOptions(props.modelValue)
+  try {
+    await loadBuilders("");
+  } catch (error) {
+    console.warn("Could not preload parties:", error);
   }
-})
+  if (props.modelValue) {
+    await ensureBuilderInOptions(props.modelValue);
+  }
+});
 </script>
-
-<style scoped>
-/* Flex layout for select + buttons */
-.d-flex.align-items-center .v-select {
-  flex: 1;
-  min-width: 0;
-}
-
-.d-flex.align-items-center .btn {
-  flex-shrink: 0;
-}
-
-/* Fix for vue-select validation */
-:deep(.is-invalid .vs__dropdown-toggle) {
-  border-color: #dc3545;
-}
-
-:deep(.is-invalid .vs__dropdown-toggle:focus) {
-  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
-}
-
-:deep(.vs__spinner) {
-  border-color: #007bff transparent #007bff transparent;
-}
-</style>

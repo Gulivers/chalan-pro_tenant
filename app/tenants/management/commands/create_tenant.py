@@ -111,7 +111,9 @@ class Command(BaseCommand):
                 self.style.SUCCESS('✓ Migraciones completadas para el nuevo tenant')
             )
 
-            # Seed inicial de tipos de documento (apptransactions.documenttype)
+            # Seed inicial de tipos de documento (apptransactions.documenttype).
+            # MR y sus estados los siembra la migración 0008; no van en el fixture
+            # para no chocar con type_code único después de migrate_schemas.
             try:
                 fixture_doc_types = os.path.join(
                     settings.BASE_DIR,

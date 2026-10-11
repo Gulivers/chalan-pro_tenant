@@ -1,288 +1,251 @@
 <template>
-  <div class="container mt-3">
-    <div class="text-center">
-      <h3 class="text-warning">Serialized Item</h3>
-    </div>
-    <div class="card shadow" style="height: auto">
-      <div class="card-header d-flex justify-content-center align-items-center">
-        <h6 class="mb-0 w-100 text-center text-primary">{{ formTitle }}</h6>
+  <JRPage>
+    <JRPageHeader :title="formTitle" :description="formDescription">
+      <template #actions>
+        <JRButton
+          v-if="
+            isViewMode &&
+            id &&
+            hasPermission('appinventory.change_serializeditem')
+          "
+          variant="primary"
+          size="sm"
+          @click="goToEdit">
+          Edit item
+        </JRButton>
+      </template>
+    </JRPageHeader>
+
+    <p v-if="loadError" class="jr-form-banner" role="alert">{{ loadError }}</p>
+    <p v-else-if="loading" class="jr-serialized-form__status" role="status">
+      Loading serialized item…
+    </p>
+
+    <form
+      v-else
+      class="jr-serialized-form"
+      @submit.prevent="handleSubmit"
+      novalidate>
+      <p
+        v-if="formBanner"
+        ref="formBannerEl"
+        class="jr-form-banner"
+        role="alert"
+        tabindex="-1">
+        {{ formBanner }}
+      </p>
+
+      <div class="jr-form-grid">
+        <JRField
+          v-slot="{ describedby, invalid }"
+          label="Product"
+          required
+          inputId="serialized-product"
+          hint="Product with SERIALIZED tracking (equipment/tool)."
+          :error="fieldErrors.product">
+          <JRInput
+            v-if="id"
+            inputId="serialized-product"
+            :modelValue="form.product_name"
+            disabled
+            :ariaDescribedby="describedby" />
+          <JRSelect
+            v-else
+            inputId="serialized-product"
+            :modelValue="form.product"
+            :options="productOptions"
+            optionLabel="label"
+            optionValue="id"
+            placeholder="Select product"
+            :disabled="submitting"
+            :invalid="invalid"
+            :required="true"
+            :ariaDescribedby="describedby"
+            filter
+            @show="loadProducts"
+            @update:modelValue="onField('product', $event)" />
+        </JRField>
+
+        <JRField
+          v-slot="{ describedby }"
+          label="Serial Number"
+          inputId="serialized-asset-tag"
+          :hint="serialHint"
+          :error="fieldErrors.asset_tag">
+          <JRInput
+            inputId="serialized-asset-tag"
+            v-model="form.asset_tag"
+            maxlength="100"
+            placeholder="e.g. LQCH020233"
+            disabled
+            :ariaDescribedby="describedby" />
+        </JRField>
+
+        <JRField
+          v-slot="{ describedby, invalid }"
+          label="Current warehouse"
+          required
+          inputId="serialized-warehouse"
+          hint="Warehouse where the equipment is located."
+          :error="fieldErrors.current_warehouse">
+          <JRInput
+            v-if="id"
+            inputId="serialized-warehouse"
+            :modelValue="form.current_warehouse_name || '—'"
+            disabled
+            :ariaDescribedby="describedby" />
+          <JRSelect
+            v-else
+            inputId="serialized-warehouse"
+            :modelValue="form.current_warehouse"
+            :options="warehouses"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Select warehouse"
+            :disabled="submitting"
+            :invalid="invalid"
+            :required="true"
+            :ariaDescribedby="describedby"
+            filter
+            @show="loadWarehouses"
+            @update:modelValue="onField('current_warehouse', $event)" />
+        </JRField>
+
+        <JRField
+          v-slot="{ describedby }"
+          label="Document"
+          inputId="serialized-document">
+          <JRInput
+            inputId="serialized-document"
+            :modelValue="form.document_display || '—'"
+            disabled
+            :ariaDescribedby="describedby" />
+        </JRField>
+
+        <JRField
+          v-slot="{ describedby }"
+          label="Document line"
+          inputId="serialized-document-line">
+          <JRInput
+            inputId="serialized-document-line"
+            :modelValue="form.document_line_display || '—'"
+            disabled
+            :ariaDescribedby="describedby" />
+        </JRField>
+
+        <JRField
+          v-slot="{ describedby, invalid }"
+          label="Status"
+          required
+          inputId="serialized-status"
+          :error="fieldErrors.status">
+          <JRSelect
+            inputId="serialized-status"
+            :modelValue="form.status"
+            :options="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select status"
+            :disabled="isViewMode || submitting"
+            :invalid="invalid"
+            :required="true"
+            :ariaDescribedby="describedby"
+            @update:modelValue="onField('status', $event)" />
+        </JRField>
+
+        <JRField
+          v-slot="{ describedby, invalid }"
+          label="Condition"
+          required
+          inputId="serialized-condition"
+          :error="fieldErrors.condition">
+          <JRSelect
+            inputId="serialized-condition"
+            :modelValue="form.condition"
+            :options="conditionOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select condition"
+            :disabled="isViewMode || submitting"
+            :invalid="invalid"
+            :required="true"
+            :ariaDescribedby="describedby"
+            @update:modelValue="onField('condition', $event)" />
+        </JRField>
+
+        <JRField
+          v-slot="{ describedby }"
+          label="Purchase date"
+          inputId="serialized-purchase-date"
+          :error="fieldErrors.purchase_date">
+          <JRInput
+            inputId="serialized-purchase-date"
+            v-model="form.purchase_date"
+            type="date"
+            disabled
+            :ariaDescribedby="describedby" />
+        </JRField>
+
+        <JRField
+          class="jr-serialized-form__notes"
+          v-slot="{ describedby, invalid }"
+          label="Notes"
+          inputId="serialized-notes"
+          :error="fieldErrors.notes">
+          <JRTextarea
+            inputId="serialized-notes"
+            :modelValue="form.notes"
+            rows="7"
+            placeholder="Notes here..."
+            :disabled="isViewMode || submitting"
+            :invalid="invalid"
+            :ariaDescribedby="describedby"
+            @update:modelValue="onField('notes', $event)" />
+        </JRField>
       </div>
-      <div class="card-body text-start">
-        <form @submit.prevent="handleSubmit" novalidate>
-          <div class="row">
-            <!-- Columna izquierda -->
-            <div class="col-md-6">
-              <!-- Product: solo lectura (informativo) -->
-              <div class="mb-3">
-                <label class="form-label d-flex align-items-center gap-2">
-                  Product
-                  <span class="text-danger">*</span>
-                  <i
-                    v-tt
-                    class="fas fa-info-circle text-muted"
-                    data-title="Product with SERIALIZED tracking (equipment/tool)"></i>
-                </label>
-                <input
-                  v-if="id"
-                  type="text"
-                  class="form-control bg-light"
-                  :value="form.product_name"
-                  readonly
-                  v-tt
-                  data-title="Read-only. Product cannot be changed" />
-                <v-select
-                  v-else
-                  :options="products"
-                  v-model="form.product"
-                  :reduce="(p) => p.id"
-                  :label="(p) => (p ? `${p.name} (${p.sku || ''})` : '')"
-                  placeholder="Select product"
-                  :disabled="submitting"
-                  :clearable="false"
-                  @open="loadProducts"
-                  v-tt
-                  data-title="Required. Select a serialized product (equipment or tool)" />
-              </div>
 
-              <div class="mb-3">
-                <label class="form-label d-flex align-items-center gap-2">
-                  Serial Number
-                  <i
-                    v-tt
-                    class="fas fa-info-circle text-muted"
-                    data-title="Unique serial number or QR identifier for this unit"></i>
-                </label>
-                <input
-                  v-model.trim="form.asset_tag"
-                  type="text"
-                  class="form-control bg-light"
-                  maxlength="100"
-                  placeholder="e.g. LQCH020233"
-                  disabled
-                  v-tt
-                  data-title="Unique serial number/QR identifier for the equipment (cannot be changed)" />
-                <small class="text-muted">Unique serial number or QR identifier</small>
-              </div>
+      <p v-if="form.created_at" class="jr-serialized-form__meta">
+        Created at: {{ formatDateTime(form.created_at) }}
+      </p>
 
-              <!-- Current warehouse: input informativo en edición, selector en alta -->
-              <div class="mb-3">
-                <label class="form-label d-flex align-items-center gap-2">
-                  Current warehouse
-                  <span class="text-danger">*</span>
-                  <i
-                    v-tt
-                    class="fas fa-info-circle text-muted"
-                    data-title="Warehouse where the equipment is located"></i>
-                </label>
-                <input
-                  v-if="id"
-                  type="text"
-                  class="form-control bg-light"
-                  :value="form.current_warehouse_name || '—'"
-                  readonly
-                  v-tt
-                  data-title="Read-only. Warehouse where the equipment is stored" />
-                <v-select
-                  v-else
-                  :options="warehouses"
-                  v-model="form.current_warehouse"
-                  :reduce="(w) => w.id"
-                  label="name"
-                  placeholder="Select warehouse"
-                  :disabled="submitting"
-                  @open="loadWarehouses"
-                  v-tt
-                  data-title="Required. Warehouse where the equipment is stored" />
-              </div>
-
-              <!-- Document: solo lectura (informativo) -->
-              <div class="mb-3">
-                <label class="form-label d-flex align-items-center gap-2">
-                  Document
-                  <i
-                    v-tt
-                    class="fas fa-info-circle text-muted"
-                    data-title="Purchase or transaction document that created this item"></i>
-                </label>
-                <input
-                  type="text"
-                  class="form-control bg-light"
-                  :value="form.document_display || '—'"
-                  readonly
-                  v-tt
-                  data-title="Read-only. Document cannot be changed" />
-              </div>
-
-              <!-- Document line: solo lectura (informativo) -->
-              <div class="mb-3">
-                <label class="form-label d-flex align-items-center gap-2">
-                  Document line
-                  <i
-                    v-tt
-                    class="fas fa-info-circle text-muted"
-                    data-title="Line of the document that created this serialized item"></i>
-                </label>
-                <input
-                  type="text"
-                  class="form-control bg-light"
-                  :value="form.document_line_display || '—'"
-                  readonly
-                  v-tt
-                  data-title="Read-only. Document line cannot be changed" />
-              </div>
-            </div>
-
-            <!-- Columna derecha: Status, Condition, Purchase date (seguimiento) -->
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label class="form-label d-flex align-items-center gap-2">
-                  Status
-                  <span class="text-danger">*</span>
-                  <i
-                    v-tt
-                    class="fas fa-info-circle text-muted"
-                    data-title="Current status of the equipment"></i>
-                </label>
-                <v-select
-                  :options="statusOptions"
-                  v-model="form.status"
-                  :reduce="(s) => s.value"
-                  label="label"
-                  placeholder="Select status"
-                  :disabled="isViewMode || submitting"
-                  v-tt
-                  data-title="Active, Maintenance, Lost, or Retired">
-                  <template #option="option">
-                    <span class="badge" :class="statusBadgeClass(option.value)">
-                      {{ option.label }}
-                    </span>
-                  </template>
-                  <template #selected-option="option">
-                    <span
-                      v-if="option"
-                      class="badge"
-                      :class="statusBadgeClass(option.value)">
-                      {{ option.label }}
-                    </span>
-                  </template>
-                </v-select>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label d-flex align-items-center gap-2">
-                  Condition
-                  <span class="text-danger">*</span>
-                  <i
-                    v-tt
-                    class="fas fa-info-circle text-muted"
-                    data-title="Physical condition of the equipment"></i>
-                </label>
-                <v-select
-                  :options="conditionOptions"
-                  v-model="form.condition"
-                  :reduce="(c) => c.value"
-                  label="label"
-                  placeholder="Select condition"
-                  :disabled="isViewMode || submitting"
-                  v-tt
-                  data-title="OK, Damaged, or Needs repair">
-                  <template #option="option">
-                    <span
-                      class="badge"
-                      :class="conditionBadgeClass(option.value)">
-                      {{ option.label }}
-                    </span>
-                  </template>
-                  <template #selected-option="option">
-                    <span
-                      v-if="option"
-                      class="badge"
-                      :class="conditionBadgeClass(option.value)">
-                      {{ option.label }}
-                    </span>
-                  </template>
-                </v-select>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label d-flex align-items-center gap-2">
-                  Purchase date
-                  <i
-                    v-tt
-                    class="fas fa-info-circle text-muted"
-                    data-title="Date when the equipment was acquired"></i>
-                </label>
-                <BFormInput
-                  v-model="form.purchase_date"
-                  type="date"
-                  class="bg-light"
-                  disabled
-                  v-tt
-                  data-title="Read-only. Use this form for status/condition tracking" />
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label d-flex align-items-center gap-2">
-                  Notes
-                  <i
-                    v-tt
-                    class="fas fa-info-circle text-muted"
-                    data-title="Additional notes about this equipment"></i>
-                </label>
-                <textarea
-                  v-model.trim="form.notes"
-                  class="form-control"
-                  rows="7"
-                  placeholder="Notes here..."
-                  :disabled="isViewMode || submitting"
-                  v-tt
-                  data-title="Additional notes about the equipment" />
-              </div>
-
-              <div v-if="form.created_at" class="mb-3 small text-muted">
-                Created at: {{ formatDateTime(form.created_at) }}
-              </div>
-            </div>
-          </div>
-
-          <div class="d-flex justify-content-center gap-2 mt-3">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              :disabled="submitting"
-              @click="goList">
-              Cancel
-            </button>
-            <button
-              v-if="!isViewMode"
-              type="submit"
-              class="btn btn-primary"
-              :disabled="submitting">
-              <span
-                v-if="submitting"
-                class="spinner-border spinner-border-sm me-1"
-                role="status"></span>
-              {{ submitting ? "Saving..." : "Save" }}
-            </button>
-          </div>
-          <p class="small text-muted mt-3 mb-0">
-            <span class="text-danger">*</span>
-            Indicates required fields.
-          </p>
-        </form>
+      <div class="jr-serialized-form__actions">
+        <JRButton
+          v-if="!isViewMode"
+          type="submit"
+          variant="primary"
+          :disabled="submitting">
+          {{ submitting ? "Saving..." : "Save" }}
+        </JRButton>
+        <JRButton
+          type="button"
+          variant="secondary"
+          :disabled="submitting"
+          @click="goList">
+          {{ isViewMode ? "Back to list" : "Cancel" }}
+        </JRButton>
       </div>
-    </div>
-  </div>
+
+      <p class="jr-serialized-form__required-note">
+        <span class="jr-serialized-form__required-mark" aria-hidden="true">*</span>
+        Indicates required fields.
+      </p>
+    </form>
+  </JRPage>
 </template>
 
 <script setup>
 import axios from "axios";
-import Swal from "sweetalert2";
 import { onMounted, ref, computed, getCurrentInstance } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { BFormInput } from "bootstrap-vue-next";
-import vSelect from "vue-select";
-import "vue-select/dist/vue-select.css";
+import {
+  JRPage,
+  JRPageHeader,
+  JRField,
+  JRInput,
+  JRSelect,
+  JRTextarea,
+  JRButton,
+} from "@ui";
 
 const { proxy } = getCurrentInstance();
 const route = useRoute();
@@ -291,7 +254,12 @@ const id = route.params.id;
 const isViewMode = computed(() => route.name === "serialized-item-view");
 const isEditMode = computed(() => !!id && !isViewMode.value);
 
+const loading = ref(!!id);
+const loadError = ref("");
 const submitting = ref(false);
+const formBanner = ref("");
+const fieldErrors = ref({});
+const formBannerEl = ref(null);
 const products = ref([]);
 const warehouses = ref([]);
 
@@ -302,28 +270,11 @@ const statusOptions = [
   { value: "Retired", label: "Retired" },
 ];
 
-function statusBadgeClass(value) {
-  const v = (value || "").trim();
-  if (v === "Active") return "bg-success";
-  if (v === "Maintenance") return "bg-warning text-dark";
-  if (v === "Lost") return "bg-danger";
-  if (v === "Retired") return "bg-secondary";
-  return "bg-secondary";
-}
-
 const conditionOptions = [
   { value: "ok", label: "OK" },
   { value: "damaged", label: "Damaged" },
   { value: "needs_repair", label: "Needs repair" },
 ];
-
-function conditionBadgeClass(value) {
-  const v = (value || "").toLowerCase();
-  if (v === "ok") return "bg-success";
-  if (v === "damaged") return "bg-warning text-dark";
-  if (v === "needs_repair") return "bg-danger";
-  return "bg-secondary";
-}
 
 const form = ref({
   product: null,
@@ -348,10 +299,29 @@ const formTitle = computed(() => {
   return "Add Serialized Item";
 });
 
+const formDescription = computed(() => {
+  if (isViewMode.value) return "Review equipment status and location details.";
+  if (isEditMode.value) return "Update status, condition, and notes.";
+  return "Create a serialized equipment unit.";
+});
+
+const serialHint = computed(() =>
+  id
+    ? "Unique serial; cannot be changed."
+    : "Assigned when the item is created from a purchase."
+);
+
+const productOptions = computed(() =>
+  (products.value || []).map((p) => ({
+    id: p.id,
+    label: p ? `${p.name} (${p.sku || ""})` : "",
+  }))
+);
+
 function toDatePart(d) {
   if (!d) return "";
   const date = new Date(d);
-  if (isNaN(date.getTime())) return "";
+  if (Number.isNaN(date.getTime())) return "";
   const pad = (n) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
     date.getDate()
@@ -368,6 +338,25 @@ function formatDateTime(val) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function clearFieldError(key) {
+  if (!fieldErrors.value[key]) return;
+  const next = { ...fieldErrors.value };
+  delete next[key];
+  fieldErrors.value = next;
+}
+
+function onField(key, value) {
+  form.value[key] = value;
+  clearFieldError(key);
+}
+
+function focusBanner() {
+  const el = formBannerEl.value;
+  if (el && typeof el.focus === "function") {
+    el.focus();
+  }
 }
 
 async function loadProducts() {
@@ -396,6 +385,8 @@ async function loadWarehouses() {
 
 async function loadData() {
   if (!id) return;
+  loading.value = true;
+  loadError.value = "";
   try {
     const { data } = await axios.get(`/api/serialized-items/${id}/`);
     form.value = {
@@ -416,25 +407,79 @@ async function loadData() {
     };
   } catch (err) {
     console.error("Load error:", err);
-    await Swal.fire("Oops!", "Error loading the serialized item.", "error");
+    loadError.value = "Error loading the serialized item.";
+  } finally {
+    loading.value = false;
   }
 }
 
 function validate() {
+  const next = {};
   if (!form.value.product) {
-    Swal.fire("Validation", "Product is required.", "warning");
-    return false;
+    next.product = "Product is required.";
   }
   if (!form.value.current_warehouse) {
-    Swal.fire("Validation", "Current warehouse is required.", "warning");
+    next.current_warehouse = "Current warehouse is required.";
+  }
+  fieldErrors.value = next;
+  if (Object.keys(next).length) {
+    formBanner.value = `${Object.keys(next).length} ${
+      Object.keys(next).length === 1 ? "field needs" : "fields need"
+    } attention`;
     return false;
   }
+  formBanner.value = "";
   return true;
 }
 
+function mapApiErrors(data) {
+  const next = {};
+  const leftover = [];
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    formBanner.value =
+      typeof data === "string" ? data : "Could not save. Try again.";
+    return;
+  }
+  const known = [
+    "product",
+    "asset_tag",
+    "status",
+    "condition",
+    "purchase_date",
+    "current_warehouse",
+    "notes",
+  ];
+  for (const [key, value] of Object.entries(data)) {
+    if (value == null) continue;
+    const msg = Array.isArray(value)
+      ? value.map(String).join(" ")
+      : typeof value === "object"
+        ? Object.values(value).flat().map(String).join(" ")
+        : String(value);
+    if (known.includes(key)) next[key] = msg;
+    else if (["detail", "__all__", "non_field_errors"].includes(key))
+      leftover.push(msg);
+    else leftover.push(msg);
+  }
+  fieldErrors.value = next;
+  formBanner.value =
+    leftover.filter(Boolean).join(" ") ||
+    (Object.keys(next).length
+      ? `${Object.keys(next).length} ${
+          Object.keys(next).length === 1 ? "field needs" : "fields need"
+        } attention`
+      : "Could not save. Try again.");
+}
+
 async function handleSubmit() {
-  if (!validate()) return;
+  if (isViewMode.value) return;
+  if (!validate()) {
+    focusBanner();
+    return;
+  }
   submitting.value = true;
+  formBanner.value = "";
+  fieldErrors.value = {};
   try {
     const payload = {
       asset_tag: form.value.asset_tag || null,
@@ -455,16 +500,13 @@ async function handleSubmit() {
     router.push({ name: "serialized-item-list" });
   } catch (err) {
     console.error("Save error:", err);
+    const status = err.response?.status;
     const data = err.response?.data;
-    let msg = "Error saving serialized item.";
-    if (data) {
-      if (typeof data === "string") msg = data;
-      else if (data.detail)
-        msg = Array.isArray(data.detail) ? data.detail.join(" ") : data.detail;
-      else if (data.non_field_errors) msg = data.non_field_errors.join(" ");
-      else msg = Object.values(data).flat().join(" ") || msg;
-    }
-    await Swal.fire("Validation Error", msg, "error");
+    if (status === 400 && data) mapApiErrors(data);
+    else if (status === 403)
+      formBanner.value = "You do not have permission for this action.";
+    else formBanner.value = "Error saving serialized item.";
+    focusBanner();
   } finally {
     submitting.value = false;
   }
@@ -474,19 +516,90 @@ function goList() {
   router.push({ name: "serialized-item-list" });
 }
 
+function goToEdit() {
+  if (!id) return;
+  router.push({ name: "serialized-item-edit", params: { id } });
+}
+
 onMounted(async () => {
   if (id) {
-    // Edit/View: solo necesitamos el item y warehouses (Product es read-only)
     await Promise.all([loadData(), loadWarehouses()]);
   } else {
-    // Add: productos y warehouses en paralelo
-    await Promise.all([loadProducts(), loadWarehouses()]);
+    loading.value = true;
+    try {
+      await Promise.all([loadProducts(), loadWarehouses()]);
+    } finally {
+      loading.value = false;
+    }
   }
 });
 </script>
 
 <style scoped>
-.v-select {
-  --vs-border-color: #ced4da;
+.jr-serialized-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.jr-serialized-form__status {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .jr-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .jr-serialized-form__notes {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .jr-form-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.jr-serialized-form__meta {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-serialized-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.jr-serialized-form__required-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-serialized-form__required-mark {
+  color: var(--color-jr-danger-text);
+}
+
+.jr-form-banner {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-jr-danger-text);
+  background: var(--color-jr-danger-subtle);
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
 }
 </style>

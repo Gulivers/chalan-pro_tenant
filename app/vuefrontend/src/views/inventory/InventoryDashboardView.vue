@@ -1,7 +1,5 @@
 <template>
-  <div class="inventory-dashboard-view">
-    <InventoryDashboard />
-  </div>
+  <InventoryDashboard />
 </template>
 
 <script>
@@ -17,10 +15,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.inventory-dashboard-view {
-  min-height: 100vh;
-  background-color: #f8f9fa;
-}
-</style>
