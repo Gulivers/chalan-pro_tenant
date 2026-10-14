@@ -189,7 +189,7 @@ ALLOWED_HOSTS="192.168.0.105,192.168.0.248,localhost,127.0.0.1,api.jobrhythm.net
 TENANT_BASE_DOMAIN=jobrhythm.net
 FRONT_URL=http://192.168.0.105:8080
 CSRF_TRUSTED_ORIGINS=http://192.168.0.105,http://192.168.0.105:8080,http://*.jobrhythm.net,http://*.jobrhythm.net:8080,http://*.chalanpro.net,http://*.chalanpro.net:8080
-CORS_ALLOW_ALL_ORIGINS=True
+CORS_ALLOW_ALL_ORIGINS=False
 ```
 
 **Puntos clave**:

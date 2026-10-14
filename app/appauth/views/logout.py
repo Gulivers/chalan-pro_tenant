@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import TokenError
@@ -8,13 +8,27 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from appauth.cookies import (
     clear_refresh_cookie,
     read_refresh_from_request,
+    same_origin_auth_request,
     set_refresh_cookie,
     use_refresh_cookie,
 )
-from appauth.errors import LOGOUT_OK, NO_TOKEN, SESSION_EXPIRED, error_payload
+from appauth.errors import CROSS_ORIGIN, LOGOUT_OK, NO_TOKEN, SESSION_EXPIRED, error_payload
+from appauth.throttles import AuthSessionIPThrottle
 from appauth.jwt_tokens import TenantRefreshToken
 from appauth.services.tokens import invalidate_user_auth_tokens
 from django.db import connection
+
+
+def _cross_origin_response(request):
+    """Cookie mode refuses auth posts that are not same-origin."""
+    if not use_refresh_cookie():
+        return None
+    if same_origin_auth_request(request):
+        return None
+    return Response(
+        error_payload(CROSS_ORIGIN, 'This request must come from the same site.'),
+        status=status.HTTP_403_FORBIDDEN,
+    )
 
 
 def _assert_refresh_schema(refresh: RefreshToken) -> None:
@@ -26,12 +40,17 @@ def _assert_refresh_schema(refresh: RefreshToken) -> None:
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([AuthSessionIPThrottle])
 def logout_view(request):
     """
     POST /api/auth/logout/
 
     Blacklist the refresh token (body/cookie) and clear the refresh cookie.
     """
+    rejected = _cross_origin_response(request)
+    if rejected is not None:
+        return rejected
+
     refresh_str = read_refresh_from_request(request)
     blacklisted = False
 
@@ -67,6 +86,7 @@ def logout_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([AuthSessionIPThrottle])
 def refresh_view(request):
     """
     POST /api/auth/refresh/
@@ -74,6 +94,10 @@ def refresh_view(request):
     Rotate refresh token (blacklist old) and return a new access token.
     Dev: refresh in JSON body. Prod: refresh cookie.
     """
+    rejected = _cross_origin_response(request)
+    if rejected is not None:
+        return rejected
+
     refresh_str = read_refresh_from_request(request)
     if not refresh_str:
         return Response(
@@ -99,12 +123,12 @@ def refresh_view(request):
         access = str(new_refresh.access_token)
         refresh_out = str(new_refresh)
     except Exception:
-        response = Response(
+        # A failed rotation must not delete jr_refresh: another tab may already
+        # have stored the new cookie.
+        return Response(
             error_payload(SESSION_EXPIRED, 'Session expired. Please sign in again.'),
             status=status.HTTP_401_UNAUTHORIZED,
         )
-        clear_refresh_cookie(response)
-        return response
 
     cookie_mode = use_refresh_cookie()
     payload = {

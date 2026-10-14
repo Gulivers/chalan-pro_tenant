@@ -122,6 +122,7 @@ import resourceTimelinePlugin from "@fullcalendar/resource-timeline";
 import "@assets/css/schedule.css";
 import EventModal from "./ScheduleEventModal.vue";
 import axios from "axios";
+import { withWsTicket } from "@/auth/wsTicket";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import Swal from "sweetalert2";
@@ -325,7 +326,7 @@ export default {
     this.updateResourceAreaWidth();
     window.addEventListener("resize", this.updateResourceAreaWidth);
     this.getCrews();
-    this.wsUrl = this.buildWsUrl("ws/calendar-updates/");
+    this.wsUrl = await withWsTicket(this.buildWsUrl("ws/calendar-updates/"));
     this.connectWebSocket();
     this.updateCalendarPermissions();
   },

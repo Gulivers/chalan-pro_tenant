@@ -5,8 +5,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
+from django.core import signing
+
 from appauth.authentication import TenantJWTAuthentication
 from appauth.errors import TOKEN_INVALID, error_payload
+from appauth.ws_tickets import issue_ws_ticket
 from appauth.services.tenant import (
     is_tenant_owner,
     resolve_request_tenant,
@@ -27,7 +30,9 @@ class TenantContextView(APIView):
 
     def get(self, request):
         tenant = resolve_request_tenant(request)
-        return Response(tenant_branding_payload(tenant))
+        payload = tenant_branding_payload(tenant)
+        payload.pop('schema_name', None)
+        return Response(payload)
 
 
 class MeView(APIView):
@@ -105,3 +110,24 @@ def validate_token_view(request):
         )
 
     return Response({'valid': True}, status=status.HTTP_200_OK)
+
+
+class WsTicketView(APIView):
+    """
+    POST /api/auth/ws-ticket/
+
+    Exchange the current access JWT for a one-minute, one-time WebSocket ticket.
+    """
+
+    authentication_classes = [TenantJWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            ticket = issue_ws_ticket(request.user)
+        except signing.BadSignature:
+            return Response(
+                error_payload(TOKEN_INVALID, 'Could not issue a WebSocket ticket.'),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response({'ticket': ticket})

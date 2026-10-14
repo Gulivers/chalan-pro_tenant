@@ -14,7 +14,7 @@ from corsheaders.defaults import default_headers
 from pathlib import Path
 from corsheaders.defaults import default_headers
 import os
-import logging 
+from django.core.exceptions import ImproperlyConfigured 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,7 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-zf^1c+5%cj8m5k%^1(5c06e79xo81tgsapvcp1y6n7o74_q_$#')
+_secret_key = (os.environ.get('DJANGO_SECRET_KEY') or '').strip()
+if not _secret_key:
+    raise ImproperlyConfigured(
+        'DJANGO_SECRET_KEY is required. Refusing to start with a built-in key.'
+    )
+SECRET_KEY = _secret_key
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
@@ -270,9 +275,9 @@ if DEBUG:
     # Esto elimina la necesidad de agregar dominios manualmente
 
 
-# Permitir todas las solicitudes desde el frontend
-# En producción, usa CORS_ALLOWED_ORIGINS en lugar de CORS_ALLOW_ALL_ORIGINS
-CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'True') == 'True'  # Solo para desarrollo
+# Orígenes explícitos. CORS_ALLOW_ALL_ORIGINS=True reabre cualquier origen y no
+# debe combinarse con CORS_ALLOW_CREDENTIALS.
+CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
 
 _cors_allowed_env = os.environ.get('CORS_ALLOWED_ORIGINS', '').strip()
 if _cors_allowed_env:
@@ -281,8 +286,22 @@ elif not CORS_ALLOW_ALL_ORIGINS:
     CORS_ALLOWED_ORIGINS = [
         'https://getjobrhythm.com',
         'https://www.getjobrhythm.com',
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
+        'https://getjobrithm.com',
+        'https://www.getjobrithm.com',
+    ]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^https://([a-z0-9_-]+\.)*jobrhythm\.net$',
+    r'^https://([a-z0-9_-]+\.)*jobrithm\.net$',
+    r'^https://(www\.)?getjobrhythm\.com$',
+    r'^https://(www\.)?getjobrithm\.com$',
+]
+if DEBUG:
+    CORS_ALLOWED_ORIGIN_REGEXES += [
+        r'^http://([a-z0-9_-]+\.)*chalanpro\.net(:\d+)?$',
+        r'^http://([a-z0-9_-]+\.)*jobrhythm\.net(:\d+)?$',
+        r'^http://([a-z0-9_-]+\.)*jobrithm\.net(:\d+)?$',
+        r'^http://(localhost|127\.0\.0\.1|192\.168\.0\.105|192\.168\.0\.248)(:\d+)?$',
     ]
 
 # CORS_ALLOWED_ORIGINS = [
@@ -354,6 +373,7 @@ REST_FRAMEWORK = {
             'AUTH_PASSWORD_FORGOT_THROTTLE_EMAIL', '3/hour'
         ),
         'auth_password_reset_ip': os.environ.get('AUTH_PASSWORD_RESET_THROTTLE_IP', '10/hour'),
+        'auth_session_ip': os.environ.get('AUTH_SESSION_THROTTLE_IP', '30/minute'),
     },
 }
 
@@ -541,10 +561,6 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-logger = logging.getLogger('django.db.backends')
-logger.setLevel(logging.DEBUG)
-logger.addHandler(logging.StreamHandler())
 
 # Configuración para el envío de correos electrónicos (SMTP)
 # Hostinger: smtp.hostinger.com, 465 + SSL o 587 + STARTTLS (ver envs/backend.env)

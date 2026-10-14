@@ -20,6 +20,7 @@ from appschedule.models import Event, EventChatMessage, EventChatReadStatus     
 from django.utils import timezone
 from django.utils.timezone import now            # OAHP
 from asgiref.sync import async_to_sync            # OAHP
+from appschedule.ws_groups import tenant_ws_group
 from django.contrib.auth import get_user_model   # OAHP
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
@@ -369,7 +370,7 @@ class EventChatViewSet(viewsets.ViewSet):
 
             count = unread_count.count()
 
-            group_name = f"user_{user.id}_unread"
+            group_name = tenant_ws_group(f"user_{user.id}_unread")
             async_to_sync(channel_layer.group_send)(
                 group_name,
                 {

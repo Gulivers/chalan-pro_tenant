@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import DjangoModelPermissions, IsAuthenticated
 from rest_framework.views import APIView
 from django.db import connection, transaction
 from django.contrib.auth import get_user_model
@@ -12,6 +12,18 @@ from .serializers import (
 )
 
 User = get_user_model()
+
+
+class AuthenticatedReadModelWrite(DjangoModelPermissions):
+    """Signed-in users may read. Creating or changing a row still needs the model permission."""
+
+    def has_permission(self, request, view):
+        user = getattr(request, 'user', None)
+        if not user or not user.is_authenticated:
+            return False
+        if request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return True
+        return super().has_permission(request, view)
 
 
 def _build_warehouse_name(truck):
@@ -32,7 +44,7 @@ def _build_warehouse_location(truck):
 class TruckViewSet(viewsets.ModelViewSet):
     queryset = Truck.objects.all()
     serializer_class = TruckSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, AuthenticatedReadModelWrite]
 
     @action(detail=True, methods=['post'], url_path='create-mobile-warehouse')
     def create_mobile_warehouse(self, request, pk=None):
@@ -110,21 +122,21 @@ class TruckViewSet(viewsets.ModelViewSet):
 class CrewViewSet(viewsets.ModelViewSet):
     queryset = Crew.objects.all().order_by('id')
     serializer_class = CrewSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, AuthenticatedReadModelWrite]
 
 
 # ViewSet para TruckAssignment
 class TruckAssignmentViewSet(viewsets.ModelViewSet):
     queryset = TruckAssignment.objects.all().order_by('-assigned_at')
     serializer_class = TruckAssignmentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, AuthenticatedReadModelWrite]
 
 
 # ViewSet para Category (CRUD)
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, AuthenticatedReadModelWrite]
 
 
 class CategoryListView(APIView):

@@ -3,6 +3,7 @@ from django.urls import path
 from appauth.views import (
     LoginView,
     MeView,
+    WsTicketView,
     PasswordForgotView,
     PasswordResetView,
     TenantContextView,
@@ -24,6 +25,7 @@ urlpatterns = [
     ),
     path('api/auth/permissions/', permissions_view, name='auth_permissions'),
     path('api/auth/validate/', validate_token_view, name='auth_validate'),
+    path('api/auth/ws-ticket/', WsTicketView.as_view(), name='auth_ws_ticket'),
     path(
         'api/auth/password/forgot/',
         PasswordForgotView.as_view(),

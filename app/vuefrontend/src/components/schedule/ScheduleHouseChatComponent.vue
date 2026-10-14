@@ -64,6 +64,7 @@
 
 <script>
 import axios from "axios";
+import { withWsTicket } from "@/auth/wsTicket";
 import { useAuthStore } from "@stores/auth";
 import dayjs from "dayjs";
 import { JRButton, JREmptyState, JRInput, JRScrollArea } from "@ui";
@@ -114,8 +115,8 @@ export default {
 
     await this.loadWorkAccountId();
 
-    this.wsUrl = this.buildWsUrl(
-      `ws/schedule/event/${this.$props.eventId}/chat/`
+    this.wsUrl = await withWsTicket(
+      this.buildWsUrl(`ws/schedule/event/${this.$props.eventId}/chat/`)
     );
     this.connectWebSocket();
     this.getMessages();

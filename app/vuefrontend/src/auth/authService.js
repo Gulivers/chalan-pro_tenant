@@ -3,7 +3,9 @@ import router from '../router'
 import { useAuthStore } from '../stores/auth'
 
 let renewTimer = null
+let refreshInflight = null
 const RENEW_LEAD_MS = 2 * 60 * 1000
+const REFRESH_LOCK = 'jr-refresh'
 
 function clearRenewTimer() {
   if (renewTimer) {
@@ -46,6 +48,18 @@ const authService = {
   },
 
   async refreshAccess() {
+    if (refreshInflight) return refreshInflight
+    const run = () => this._refreshOnce()
+    const locked = (typeof navigator !== 'undefined' && navigator.locks?.request)
+      ? navigator.locks.request(REFRESH_LOCK, run)
+      : run()
+    refreshInflight = locked.finally(() => {
+      refreshInflight = null
+    })
+    return refreshInflight
+  },
+
+  async _refreshOnce() {
     const authStore = useAuthStore()
     const body = {}
     const refresh = authStore.getRefreshToken()

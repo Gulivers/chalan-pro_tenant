@@ -1,6 +1,7 @@
 import os
 import django
 from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.security.websocket import AllowedHostsOriginValidator
 from django.core.asgi import get_asgi_application
 from channels.auth import AuthMiddlewareStack
 
@@ -17,22 +18,13 @@ from django.conf import settings
 
 # Para desarrollo local, simplificar el stack de WebSocket
 # En producción, usar TenantASGIMiddleware para multi-tenant
+_routes = AllowedHostsOriginValidator(
+    AuthMiddlewareStack(URLRouter(routing.websocket_urlpatterns))
+)
 if settings.DEBUG:
-    # Desarrollo local: stack simple sin middleware de tenant (más fácil de debuggear)
-    websocket_stack = AuthMiddlewareStack(
-        URLRouter(
-            routing.websocket_urlpatterns
-        )
-    )
+    websocket_stack = _routes
 else:
-    # Producción: stack completo con middleware de tenant
-    websocket_stack = TenantASGIMiddleware(
-        AuthMiddlewareStack(
-            URLRouter(
-                routing.websocket_urlpatterns
-            )
-        )
-    )
+    websocket_stack = TenantASGIMiddleware(_routes)
 
 application = ProtocolTypeRouter({
     "http": django_asgi_app,
