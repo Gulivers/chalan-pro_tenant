@@ -268,6 +268,7 @@
 
 <script>
 import { getAccessToken } from '@/auth/tokenHelpers';
+import { withWsTicket } from '@/auth/wsTicket';
 import Comments from "@primeicons/vue/comments";
 import ArrowRight from "@primeicons/vue/arrow-right";
 import Popover from "primevue/popover";
@@ -511,7 +512,7 @@ export default {
         if (!userId.value) throw new Error("User ID not found.");
 
         ws.value = new WebSocket(
-          buildWsUrl(`ws/schedule/unread/user/${userId.value}/`)
+          await withWsTicket(buildWsUrl(`ws/schedule/unread/user/${userId.value}/`))
         );
 
         ws.value.onmessage = async (event) => {

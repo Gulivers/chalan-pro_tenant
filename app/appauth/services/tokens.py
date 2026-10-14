@@ -1,4 +1,7 @@
 """Invalidate authentication material for a user in the current tenant schema."""
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def invalidate_user_auth_tokens(user) -> int:
@@ -18,5 +21,6 @@ def invalidate_user_auth_tokens(user) -> int:
             BlacklistedToken.objects.get_or_create(token=token)
             count += 1
     except Exception:
-        pass
+        logger.exception('Could not blacklist outstanding refresh tokens')
+        raise
     return count

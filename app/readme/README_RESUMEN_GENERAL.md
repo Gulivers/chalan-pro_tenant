@@ -156,7 +156,7 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 | **Backend**    | `chalanpro_backend`  | 8000 (interno) | API Django REST + Admin, Daphne (ASGI) para soporte WebSocket |
 | **Frontend**   | `chalanpro_frontend` | -              | Build de Vue.js, archivos estáticos servidos por Nginx        |
 | **PostgreSQL** | `chalanpro_postgres` | 5432           | Base de datos multi-tenant con schemas aislados               |
-| **pgAdmin**    | `chalanpro_pgadmin`  | 5050           | Interfaz web para administración de PostgreSQL                |
+| **pgAdmin**    | `chalanpro_pgadmin`  | 127.0.0.1:5050 | PostgreSQL web; solo localhost del VPS (túnel SSH)            |
 
 ### 1.3 Flujo de Peticiones
 
@@ -173,9 +173,10 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
    - `/api/*` → Nginx → Backend (8000) → Middleware detecta tenant → Schema específico
 
 4. **WebSocket (Actualizaciones en tiempo real):**
-   - Cliente → Nginx (443) → `/ws/*` → Backend Daphne (8000)
-   - Middleware `TenantASGIMiddleware` identifica tenant desde hostname
-   - Configura schema del tenant → Conexión WebSocket establecida
+   - El SPA pide `POST /api/auth/ws-ticket/` con el access JWT y abre `/ws/*?ticket=`
+   - El ticket dura 60 s, es de un solo uso y fija el schema. Sin ticket el socket cierra (4401)
+   - Cada grupo de Channels lleva el schema (`{schema}.calendar_updates`, etc.)
+   - Nginx reescribe `X-Forwarded-Host` con `$host`. El origen del handshake se valida contra `ALLOWED_HOSTS`
    - Rutas WebSocket:
      - `/ws/calendar-updates/` - Actualizaciones del calendario
      - `/ws/schedule/event/{id}/` - Notas de eventos
@@ -415,12 +416,13 @@ JobRhythm usa **Simple JWT tenant-bound**. Se retiró `rest_framework.authtoken`
 | Método | Ruta | Auth | Descripción |
 | ------ | ---- | ---- | ----------- |
 | POST | `/api/auth/login/` | Público (throttle IP/usuario) | Credenciales → access (+ cookie/body refresh) + permisos + branding |
-| POST | `/api/auth/refresh/` | Cookie o body refresh | Nuevo access (y refresh rotado) |
-| POST | `/api/auth/logout/` | Público / sesión | Blacklist refresh + borra cookie |
+| POST | `/api/auth/refresh/` | Cookie `jr_refresh`, mismo origen | Nuevo access. En modo cookie no lee body ni `X-Refresh-Token`. Un fallo no borra la cookie |
+| POST | `/api/auth/logout/` | Cookie o Bearer, mismo origen | Blacklist de los refresh + borra cookie |
+| POST | `/api/auth/ws-ticket/` | Bearer | Ticket de 60 s y un solo uso para el handshake WebSocket |
 | GET | `/api/auth/me/` | Bearer | Usuario + permisos + branding tenant |
 | GET | `/api/auth/permissions/` | Bearer | Lista `user.get_all_permissions()` |
 | GET | `/api/auth/validate/` | Bearer | `{ "valid": true\|false }` (guard del router) |
-| GET | `/api/auth/tenant-context/` | Público | Nombre/logo del workspace (login visual) |
+| GET | `/api/auth/tenant-context/` | Público | Nombre y logo del workspace. No devuelve `schema_name` |
 | POST | `/api/auth/password/forgot/` | Público (throttle) | Email de reset |
 | POST | `/api/auth/password/reset/` | Público | Nueva contraseña; invalida refresh outstanding del usuario |
 
@@ -430,9 +432,9 @@ Prefijo `/api/auth/` está **exento** del enforcement de trial/billing (`TenantA
 
 1. Login → access en memoria + cookie refresh + `jr_session` + permisos UX.
 2. Cada API → `Bearer` access.
-3. Unos 2 min antes de que venza el access (8 h), el SPA llama `/api/auth/refresh/` y guarda el access nuevo. Si una petición recibe 401, axios hace el mismo refresh y reintenta; si el refresh falla → logout y `/login`.
+3. Unos 2 min antes de que venza el access (8 h), el SPA llama `/api/auth/refresh/` y guarda el access nuevo. `navigator.locks` deja una sola renovación a la vez entre pestañas. Si una petición recibe 401, axios hace el mismo refresh y reintenta; si el refresh falla → logout y `/login`.
 4. Nueva pestaña: lee `jr_session`, llama refresh, rehidrata access.
-5. Logout / reset password → blacklist de refresh del usuario.
+5. Logout / reset password → blacklist de los refresh del usuario. El access ya emitido sigue válido hasta que vence (hasta 8 h).
 
 #### Guard del router (`vuefrontend/src/router/index.js`)
 
@@ -460,6 +462,18 @@ El menú del shell (`NavbarComponent`) **no lista módulos** si no hay sesión (
 | `AUTH_REFRESH_COOKIE_NAME` | `jr_refresh` | |
 | `AUTH_REFRESH_COOKIE_PATH` | `/api/auth/` | |
 | `AUTH_REFRESH_COOKIE_SAMESITE` | `Lax` | |
+| `DJANGO_SECRET_KEY` | obligatoria | Sin esta variable el proceso no arranca. No hay clave de respaldo en el código |
+| `CORS_ALLOW_ALL_ORIGINS` | `False` | Orígenes explícitos (`jobrhythm.net`, landing y, en `DEBUG`, la red local). No combinarlo con credenciales en `True` |
+
+#### Cierres de seguridad (sept. 2026)
+
+Aplican en el VPS al desplegar esta revisión (`deploy-vps.sh`). No cambian solos el servidor que ya está corriendo.
+
+- WebSocket: ticket de un uso y grupos con `schema_name`. Notas de work order: HTML limitado a las etiquetas de Quill.
+- Refresh/logout en modo cookie: solo `jr_refresh`, mismo origen, throttle 30/min. La IP de login sale de `X-Real-IP`.
+- El enlace de restablecimiento usa el host ya validado por Django. Nginx fija `X-Forwarded-Host $host`.
+- Sin sesión: 401 en contratos, constructores, comunidades, documentos y cuadrillas. La lista de contratos exige `view_contract`; transacciones, `view_document`. Leer cuadrillas sigue abierto con solo la sesión; crear o cambiar exige el permiso de modelo.
+- pgAdmin en `docker-compose.yml` publica `127.0.0.1:5050:80`.
 
 #### Migraciones al desplegar
 
@@ -1054,7 +1068,7 @@ psql -h localhost -p 5432 -U chalanpro_user -d chalanpro
 
 ### 5.4 Conexión desde pgAdmin
 
-**URL:** puerto `5050` del VPS (mapear solo si es imprescindible; preferir túnel SSH).
+**URL:** `127.0.0.1:5050` en el VPS. Entrar con túnel SSH (`ssh -L 5050:127.0.0.1:5050`). No está publicado en la interfaz pública.
 
 **Credenciales pgAdmin:** ver `envs/pgadmin.env` (`PGADMIN_DEFAULT_EMAIL`, `PGADMIN_DEFAULT_PASSWORD`).
 
@@ -1077,13 +1091,13 @@ psql -h localhost -p 5432 -U chalanpro_user -d chalanpro
 | ------------------------ | ----------------------- | ----- | ------------------------------------------------- |
 | **HTTPS/SSL**            | ✅ Activo               | Alto  | Certificados Let's Encrypt, renovación automática |
 | **Firewall**             | ⚠️ Parcial              | Medio | Solo puertos 80, 443, 5432, 5050 abiertos         |
-| **Autenticación Django** | ✅ Activo               | Alto  | Simple JWT tenant-bound (`appauth`), cookie refresh HttpOnly, CSRF protection |
+| **Autenticación Django** | ✅ Activo               | Alto  | JWT tenant-bound, cookie HttpOnly, refresh solo mismo origen, WebSocket con ticket |
 | **ALLOWED_HOSTS**        | ✅ Dinámico             | Alto  | Actualización automática vía middleware           |
 | **CSRF Protection**      | ✅ Dinámico             | Alto  | Actualización automática vía middleware           |
 | **DEBUG Mode**           | ✅ Deshabilitado        | Alto  | `DEBUG=False` en producción                       |
 | **Secret Keys**          | ✅ Variables de entorno | Alto  | No hardcodeadas en código                         |
 | **PostgreSQL Acceso**    | ⚠️ Expuesto             | Medio | Puerto 5432 abierto (considerar restringir)       |
-| **pgAdmin Acceso**       | ⚠️ Expuesto             | Bajo  | Puerto 5050 abierto sin autenticación adicional   |
+| **pgAdmin Acceso**       | ✅ Localhost            | Alto  | `127.0.0.1:5050` en compose; entrar por túnel SSH |
 | **Headers de Seguridad** | ✅ Configurados         | Alto  | HSTS, X-Frame-Options, X-Content-Type-Options     |
 | **Backups Automáticos**  | ❌ No configurado       | Bajo  | Requiere configuración de cron job                |
 
@@ -1099,10 +1113,7 @@ psql -h localhost -p 5432 -U chalanpro_user -d chalanpro
    # Editar docker-compose.yml: remover "5432:5432" de ports
    ```
 
-2. **Proteger pgAdmin:**
-   - Configurar autenticación adicional (2FA)
-   - Restringir acceso por IP
-   - O mejor: acceder solo vía túnel SSH
+2. **pgAdmin:** el compose ya publica solo `127.0.0.1:5050`. Tras el despliegue, entrar por túnel SSH. Si el firewall del VPS sigue abriendo 5050 hacia fuera, cerrar esa regla.
 
 3. **Configurar Backups Automáticos:**
    ```bash

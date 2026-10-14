@@ -26,7 +26,11 @@ class TenantASGIMiddleware:
     
     async def __call__(self, scope, receive, send):
         # Log para debugging
-        logger.info(f'🔍 ASGI scope type: {scope.get("type")}, path: {scope.get("path")}, headers: {dict(scope.get("headers", []))}')
+        logger.info(
+            'ASGI scope type=%s path=%s',
+            scope.get('type'),
+            scope.get('path'),
+        )
         
         # Solo procesar conexiones WebSocket
         if scope['type'] == 'websocket':
@@ -118,18 +122,7 @@ class TenantASGIMiddleware:
             
             if domain:
                 return domain.tenant
-            
-            # Si no se encuentra dominio exacto, intentar buscar por subdominio
-            # Esto es útil si el hostname incluye el subdominio completo
-            # Por ejemplo: 'globo_dyned2.chalan-pro.net' -> buscar 'globo_dyned2'
-            parts = hostname.split('.')
-            if len(parts) > 1:
-                # Intentar con el primer subdominio
-                subdomain = parts[0]
-                domain = DomainModel.objects.filter(domain__icontains=subdomain).first()
-                if domain:
-                    return domain.tenant
-            
+
             return None
             
         except Exception as e:

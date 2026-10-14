@@ -209,6 +209,7 @@
 
 <script>
 import { getAccessToken } from '@/auth/tokenHelpers';
+import { withWsTicket } from '@/auth/wsTicket';
 import {
   computed,
   getCurrentInstance,
@@ -610,7 +611,7 @@ export default {
         if (!userId) return;
 
         ws.value = new WebSocket(
-          buildWsUrl(`ws/schedule/unread/user/${userId}/`)
+          await withWsTicket(buildWsUrl(`ws/schedule/unread/user/${userId}/`))
         );
 
         ws.value.onmessage = (msgEvent) => {

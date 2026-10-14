@@ -1,4 +1,6 @@
 """Refresh-token cookie helpers (default) vs optional body mode."""
+from urllib.parse import urlparse
+
 from django.conf import settings
 
 
@@ -47,8 +49,38 @@ def clear_refresh_cookie(response):
     return response
 
 
+def same_origin_auth_request(request) -> bool:
+    """True when this auth POST comes from the same host that issued the cookie.
+
+    The dev proxy strips the port from Host, so the SPA on :8080 must still
+    match. A different hostname does not. Sec-Fetch-Site: cross-site never does.
+    """
+    site = (request.headers.get('Sec-Fetch-Site') or '').strip().lower()
+    if site == 'cross-site':
+        return False
+    origin = (request.headers.get('Origin') or '').strip()
+    if not origin:
+        return site == 'same-origin'
+    parsed = urlparse(origin)
+    if parsed.scheme not in ('http', 'https') or not parsed.hostname:
+        return False
+    try:
+        host = request.get_host()
+    except Exception:
+        return False
+    request_host = host.split(':')[0].lower()
+    if parsed.hostname.lower() != request_host:
+        return False
+    return site in ('', 'same-origin', 'same-site', 'none')
+
+
 def read_refresh_from_request(request) -> str | None:
-    """Prefer body/header refresh; fall back to cookie when enabled."""
+    """Cookie mode reads only jr_refresh. Body mode reads body, then header."""
+    if use_refresh_cookie():
+        name = getattr(settings, 'AUTH_REFRESH_COOKIE_NAME', REFRESH_COOKIE_NAME)
+        cookie_val = request.COOKIES.get(name)
+        return cookie_val or None
+
     body_refresh = None
     if hasattr(request, 'data'):
         body_refresh = request.data.get('refresh')
@@ -58,10 +90,4 @@ def read_refresh_from_request(request) -> str | None:
     header = request.headers.get('X-Refresh-Token')
     if header:
         return header.strip() or None
-
-    if use_refresh_cookie():
-        name = getattr(settings, 'AUTH_REFRESH_COOKIE_NAME', REFRESH_COOKIE_NAME)
-        cookie_val = request.COOKIES.get(name)
-        if cookie_val:
-            return cookie_val
     return None

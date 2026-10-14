@@ -59,6 +59,7 @@
 <script>
 import { getAccessToken } from '@/auth/tokenHelpers';
 import Quill from "quill";
+import { withWsTicket } from "@/auth/wsTicket";
 import "quill/dist/quill.snow.css";
 import axios from "axios";
 import { JRButton, JRScrollArea } from "@ui";
@@ -95,8 +96,8 @@ export default {
 
     await this.loadWorkAccountId();
 
-    this.wsUrl = this.buildWsUrl(
-      `ws/schedule/event/${this.$props.eventId}/`
+    this.wsUrl = await withWsTicket(
+      this.buildWsUrl(`ws/schedule/event/${this.$props.eventId}/`)
     );
     this.connectWebSocket();
     this.getNote();
@@ -111,6 +112,10 @@ export default {
   },
 
   methods: {
+    setNoteHtml(html) {
+      const delta = this.quill.clipboard.convert({ html: html || "" });
+      this.quill.setContents(delta, "silent");
+    },
     async loadWorkAccountId() {
       if (this.workAccountId) {
         this.resolvedWorkAccountId = this.workAccountId;
@@ -212,7 +217,7 @@ export default {
       this.websocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === "note.updated") {
-          this.quill.root.innerHTML = data.event.notes;
+          this.setNoteHtml(data.event.notes);
           this.lastSavedHTML = data.event.notes?.trim() || "";
           if (this.showEditor)
             this.notifyToastSuccess?.(
@@ -235,7 +240,7 @@ export default {
           `/api/events/${this.$props.eventId}/note/`
         );
         if (status === 200) {
-          this.quill.root.innerHTML = data.notes || "";
+          this.setNoteHtml(data.notes || "");
           this.lastSavedHTML = (data.notes || "").trim();
         }
       } catch (e) {

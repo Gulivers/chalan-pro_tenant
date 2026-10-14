@@ -6,7 +6,7 @@ from django.shortcuts import render, get_object_or_404
 from django.db import IntegrityError
 from django.http import JsonResponse
 from rest_framework import viewsets, status, filters, permissions
-from rest_framework.exceptions import ValidationError as DRFValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError as DRFValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action, api_view, permission_classes
@@ -262,6 +262,8 @@ class DocumentListProviderAPIView(APIView):
     }
 
     def get(self, request):
+        if not request.user.has_perm('apptransactions.view_document'):
+            raise PermissionDenied()
         try:
             page = int(request.query_params.get("page", 1))
             per_page = int(request.query_params.get("per_page", 25))

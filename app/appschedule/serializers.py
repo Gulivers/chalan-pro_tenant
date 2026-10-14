@@ -222,6 +222,17 @@ class EventNoteSerializer(serializers.ModelSerializer):
         fields = ['notes', 'updated_at', 'updated_by', 'work_account', 'event']
         read_only_fields = ['updated_at', 'updated_by', 'event']
 
+    def validate_notes(self, value):
+        from appschedule.note_html import sanitize_note_html
+        return sanitize_note_html(value)
+
+    def to_representation(self, instance):
+        from appschedule.note_html import sanitize_note_html
+        data = super().to_representation(instance)
+        if data.get('notes'):
+            data['notes'] = sanitize_note_html(data['notes'])
+        return data
+
     def create(self, validated_data):
         event = validated_data.pop('event', None)
         work_account = validated_data.pop('work_account', None)
