@@ -13,6 +13,7 @@ Características principales de esta API:
 
 import base64
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Prefetch, ProtectedError, Q
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -89,6 +90,29 @@ def _line_product_image_pdf_uri(line, request):
     if image is None or not getattr(image, 'image', None):
         return None
     return file_field_to_pdf_uri(image.image, request=request)
+
+
+def _current_status_for_pdf(document):
+    """
+    Current workflow status for the PDF.
+
+    Prefer DocumentTracking.current_status; if missing, use the latest
+    DocumentTrackingHistory.to_status (already prefetched oldest→newest).
+    """
+    tracking = None
+    try:
+        tracking = document.tracking
+    except ObjectDoesNotExist:
+        tracking = None
+
+    if tracking is not None and getattr(tracking, 'current_status_id', None):
+        return tracking.current_status, tracking.status_changed_at
+
+    history = list(document.tracking_history.all())
+    if history:
+        last = history[-1]
+        return last.to_status, last.changed_at
+    return None, None
 
 
 class MaterialRequestPermission(BasePermission):
@@ -500,14 +524,15 @@ class MaterialRequestViewSet(viewsets.GenericViewSet):
             for line in document.lines.all()
         ]
 
-        tracking = getattr(document, 'tracking', None)
-        current_status = getattr(tracking, 'current_status', None)
+        current_status, status_changed_at = _current_status_for_pdf(document)
         status_label = (
-            getattr(current_status, 'name', None)
-            or getattr(current_status, 'code', None)
+            (getattr(current_status, 'name', None) or '').strip()
+            or (getattr(current_status, 'code', None) or '').strip()
             or 'Requested'
         )
-        status_code = getattr(current_status, 'code', None) or 'requested'
+        status_code = (
+            (getattr(current_status, 'code', None) or '').strip() or 'requested'
+        )
 
         try:
             html = render_to_string(
@@ -517,6 +542,8 @@ class MaterialRequestViewSet(viewsets.GenericViewSet):
                     'line_rows': line_rows,
                     'logo_url': get_tenant_logo_url(request),
                     'status_label': status_label,
+                    'status_code': status_code,
+                    'status_changed_at': status_changed_at,
                     'phase': _phase_name(document),
                     'requested_by': requested_by,
                     'requested_at': (
