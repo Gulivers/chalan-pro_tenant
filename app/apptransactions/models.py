@@ -140,6 +140,16 @@ class DocumentType(models.Model):
         default=False,
         help_text="Include this type as purchase returns (not mixed into net invoiced spending).",
     )
+    # When True, new documents of this type get DocumentTracking + history.
+    # Material Request (MR) keeps tracking via its dedicated service regardless;
+    # the flag is forced True for MR by migration and cannot be turned off.
+    uses_status_tracking = models.BooleanField(
+        default=False,
+        help_text=(
+            "Enable configurable status tracking for documents of this type. "
+            "When off, documents behave as before (no tracking required)."
+        ),
+    )
     is_active = models.BooleanField(default=True)
 
     objects = DocumentTypeQuerySet.as_manager()
@@ -162,9 +172,11 @@ class DocumentType(models.Model):
                 ),
             })
         self._reject_protected_edits()
+        self._validate_status_tracking_flag()
 
     def save(self, *args, **kwargs):
         self._reject_protected_edits()
+        self._validate_status_tracking_flag()
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
@@ -188,6 +200,53 @@ class DocumentType(models.Model):
                 raise ValidationError(
                     'The Material Request document type is required by the system and cannot be edited.'
                 )
+
+    def _validate_status_tracking_flag(self):
+        """Guard enable/disable of uses_status_tracking for non-protected types."""
+        if self.type_code in self.PROTECTED_TYPE_CODES:
+            # MR stays on tracking; edits are blocked by _reject_protected_edits.
+            return
+        previous = None
+        if self.pk:
+            previous = (
+                DocumentType.objects.filter(pk=self.pk)
+                .only('uses_status_tracking')
+                .first()
+            )
+        enabling = self.uses_status_tracking and (
+            previous is None or not previous.uses_status_tracking
+        )
+        disabling = (
+            previous is not None
+            and previous.uses_status_tracking
+            and not self.uses_status_tracking
+        )
+        if enabling and self.pk:
+            statuses = self.statuses.all()
+            # Si aún no hay estados (p. ej. Admin guarda tipo + inline a la vez),
+            # permitir el flag; ensure_initial_tracking fallará si falta el inicial.
+            if statuses.exists() and not statuses.filter(
+                is_initial=True,
+                is_active=True,
+            ).exists():
+                raise ValidationError({
+                    'uses_status_tracking': (
+                        'Add at least one active initial status before enabling '
+                        'status tracking for this document type.'
+                    ),
+                })
+        if disabling:
+            in_progress = DocumentTracking.objects.filter(
+                document__document_type_id=self.pk,
+                current_status__is_terminal=False,
+            ).exists()
+            if in_progress:
+                raise ValidationError({
+                    'uses_status_tracking': (
+                        'Cannot disable status tracking while documents of this '
+                        'type are still in a non-terminal status.'
+                    ),
+                })
     
     
 JOB_FK = 'ctrctsapp.Job'
@@ -529,9 +588,63 @@ class DocumentStatus(models.Model):
                 name='uniq_document_status_type_sequence',
             ),
         ]
+        verbose_name = 'Document Status'
+        verbose_name_plural = 'Document Statuses'
 
     def __str__(self):
         return f"{self.document_type.type_code}:{self.code}"
+
+    def _is_referenced(self):
+        if not self.pk:
+            return False
+        return (
+            self.current_documents.exists()
+            or self.history_from.exists()
+            or self.history_to.exists()
+        )
+
+    def clean(self):
+        super().clean()
+        if self.is_initial and self.document_type_id:
+            qs = DocumentStatus.objects.filter(
+                document_type_id=self.document_type_id,
+                is_initial=True,
+            )
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            if qs.exists():
+                raise ValidationError({
+                    'is_initial': (
+                        'Only one initial status is allowed per document type.'
+                    ),
+                })
+        if self.pk:
+            previous = DocumentStatus.objects.filter(pk=self.pk).first()
+            if (
+                previous is not None
+                and previous.code != self.code
+                and self._is_referenced()
+            ):
+                raise ValidationError({
+                    'code': (
+                        'This status is already referenced by documents or '
+                        'history and its code cannot be changed. Deactivate it '
+                        'instead if it should no longer be used.'
+                    ),
+                })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self._is_referenced():
+            raise ProtectedError(
+                'This status is referenced by documents or history and cannot '
+                'be deleted. Set is_active=False instead.',
+                {self},
+            )
+        return super().delete(*args, **kwargs)
 
 
 class DocumentTracking(models.Model):

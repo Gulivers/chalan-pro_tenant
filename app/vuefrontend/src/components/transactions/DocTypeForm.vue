@@ -243,8 +243,31 @@
                 ariaLabel="Active Document Type"
                 :disabled="isDisabled" />
             </JRField>
+            <JRField
+              label="Status Tracking"
+              inputId="doctype-uses-status-tracking"
+              hint="When on, new documents of this type get a status workflow. Add an initial status below first."
+              :error="fieldErrors.uses_status_tracking">
+              <JRCheckbox
+                inputId="doctype-uses-status-tracking"
+                v-model="form.uses_status_tracking"
+                ariaLabel="Status Tracking"
+                :disabled="isDisabled" />
+            </JRField>
           </div>
         </JRSection>
+
+        <DocumentStatusEditor
+          v-if="id"
+          :documentTypeId="id"
+          :readOnly="isProtectedType || isViewMode" />
+
+        <p
+          v-else-if="!isViewMode"
+          class="jr-doctype-form__note"
+          role="status">
+          Save this document type to define its Document Statuses workflow.
+        </p>
 
         <div
           :class="[
@@ -291,6 +314,7 @@ import {
   JRCheckbox,
   JRButton,
 } from "@ui";
+import DocumentStatusEditor from "./DocumentStatusEditor.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -354,6 +378,7 @@ const form = ref({
   counts_as_net_invoiced_spend: false,
   counts_as_job_material_issue: false,
   counts_as_purchase_return: false,
+  uses_status_tracking: false,
   is_active: true,
 });
 
@@ -466,6 +491,7 @@ onMounted(async () => {
         counts_as_net_invoiced_spend: !!data.counts_as_net_invoiced_spend,
         counts_as_job_material_issue: !!data.counts_as_job_material_issue,
         counts_as_purchase_return: !!data.counts_as_purchase_return,
+        uses_status_tracking: !!data.uses_status_tracking,
         is_active: !!data.is_active,
       };
     } catch (error) {
@@ -506,6 +532,7 @@ const handleSubmit = async () => {
       counts_as_net_invoiced_spend: !!form.value.counts_as_net_invoiced_spend,
       counts_as_job_material_issue: !!form.value.counts_as_job_material_issue,
       counts_as_purchase_return: !!form.value.counts_as_purchase_return,
+      uses_status_tracking: !!form.value.uses_status_tracking,
       is_active: form.value.is_active,
     };
 
@@ -554,7 +581,19 @@ const handleSubmit = async () => {
     );
 
     if (!props.isModal) {
-      goList();
+      // After create, stay on the edit form so statuses can be configured.
+      if (!isEditMode.value && savedData?.id) {
+        router
+          .push({
+            name: "document-types-form",
+            query: { id: String(savedData.id) },
+          })
+          .catch(() => {
+            router.push(`/document-types/form?id=${savedData.id}`);
+          });
+      } else {
+        goList();
+      }
     }
   } catch (error) {
     console.error("Error saving document type:", error);

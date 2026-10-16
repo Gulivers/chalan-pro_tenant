@@ -11,18 +11,25 @@ Características principales de esta API:
 - Integra validaciones y reglas de negocio para asegurar la trazabilidad y control de los movimientos de inventario originados por una solicitud de materiales.
 """
 
+import base64
+
+from django.db.models import Prefetch, ProtectedError, Q
+from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Prefetch, ProtectedError, Q
+from weasyprint import HTML
+from weasyprint.text.fonts import FontConfiguration
 
 from appinventory.models import Product, ProductImage
 from appinventory.serializers import ProductListSerializer
 from appschedule.models import Event
 from apptransactions.models import (
     Document,
+    DocumentLine,
     DocumentStatus,
     DocumentTrackingHistory,
 )
@@ -34,6 +41,54 @@ from apptransactions.services.material_request import (
     update_material_request_lines,
 )
 from appauth.authentication import TenantJWTAuthentication
+from utils.tenant_branding import file_field_to_pdf_uri, get_tenant_logo_url
+
+
+def _product_image_brand_id(image):
+    assignment = getattr(image, 'assignment', None)
+    brand = getattr(assignment, 'brand', None) if assignment else None
+    return getattr(brand, 'id', None)
+
+
+def _select_product_image(product, brand_id=None):
+    """
+    Same selection rules as ProductListSerializer.get_image:
+    brand on the line → default brand → first available image.
+    """
+    if product is None:
+        return None
+    images = list(product.images.all())
+    if not images:
+        return None
+
+    if brand_id is not None:
+        for image in images:
+            if _product_image_brand_id(image) == brand_id:
+                return image
+        return None
+
+    default_brand = product.get_default_brand()
+    default_brand_id = default_brand.id if default_brand else None
+    if default_brand_id is not None:
+        for image in images:
+            if _product_image_brand_id(image) == default_brand_id:
+                return image
+
+    return images[0]
+
+
+def _line_product_image_pdf_uri(line, request):
+    product = getattr(line, 'product', None)
+    brand_id = getattr(line, 'brand_id', None)
+    # Prefer line brand (same idea as ProductListSerializer brand_id context),
+    # then fall back to default/any image so the PDF still shows a thumb when
+    # the product has photos under another brand.
+    image = _select_product_image(product, brand_id=brand_id)
+    if image is None and brand_id is not None:
+        image = _select_product_image(product, brand_id=None)
+    if image is None or not getattr(image, 'image', None):
+        return None
+    return file_field_to_pdf_uri(image.image, request=request)
 
 
 class MaterialRequestPermission(BasePermission):
@@ -41,7 +96,7 @@ class MaterialRequestPermission(BasePermission):
         user = request.user
         if not user or not user.is_authenticated:
             return False
-        if view.action in ('list', 'retrieve'):
+        if view.action in ('list', 'retrieve', 'pdf'):
             return user.has_perm('apptransactions.view_document')
         if view.action == 'create':
             return user.has_perm('apptransactions.add_document')
@@ -376,6 +431,116 @@ class MaterialRequestViewSet(viewsets.GenericViewSet):
     def retrieve(self, request, pk=None):
         document = self.get_object()
         return Response(MaterialRequestSerializer(document).data)
+
+    @action(detail=True, methods=['get'], url_path='pdf')
+    def pdf(self, request, pk=None):
+        """
+        PDF pick list for Missing Material / Requested materials.
+
+        Same contract as transaction PDFs:
+        { file: base64, filename, file_type: application/pdf }
+        """
+        document = get_object_or_404(
+            Document.objects.filter(document_type__type_code=MR_TYPE_CODE)
+            .select_related(
+                'document_type',
+                'created_by',
+                'work_account',
+                'work_account__builder',
+                'work_account__job',
+                'work_account__house_model',
+                'work_order__crew__category',
+                'tracking__current_status',
+            )
+            .prefetch_related(
+                Prefetch(
+                    'lines',
+                    queryset=DocumentLine.objects.select_related(
+                        'product',
+                        'unit',
+                        'brand',
+                    ).prefetch_related(
+                        Prefetch(
+                            'product__images',
+                            queryset=ProductImage.objects.select_related(
+                                'assignment__brand'
+                            ).order_by('-is_primary', '-uploaded_at'),
+                        ),
+                        'product__brands',
+                    ).order_by('id'),
+                ),
+                Prefetch(
+                    'tracking_history',
+                    queryset=DocumentTrackingHistory.objects.select_related(
+                        'to_status',
+                        'changed_by',
+                    ).order_by('changed_at', 'id'),
+                ),
+            ),
+            pk=pk,
+        )
+
+        requested_event = None
+        for row in document.tracking_history.all():
+            if getattr(row.to_status, 'code', None) == 'requested':
+                requested_event = row
+                break
+
+        requested_by = ''
+        if requested_event and requested_event.changed_by_id:
+            requested_by = requested_event.changed_by.username
+        elif document.created_by_id:
+            requested_by = document.created_by.username
+
+        line_rows = [
+            {
+                'line': line,
+                'image_url': _line_product_image_pdf_uri(line, request),
+            }
+            for line in document.lines.all()
+        ]
+
+        tracking = getattr(document, 'tracking', None)
+        current_status = getattr(tracking, 'current_status', None)
+        status_label = (
+            getattr(current_status, 'name', None)
+            or getattr(current_status, 'code', None)
+            or 'Requested'
+        )
+        status_code = getattr(current_status, 'code', None) or 'requested'
+
+        try:
+            html = render_to_string(
+                'material_request_pdf.html',
+                {
+                    'document': document,
+                    'line_rows': line_rows,
+                    'logo_url': get_tenant_logo_url(request),
+                    'status_label': status_label,
+                    'phase': _phase_name(document),
+                    'requested_by': requested_by,
+                    'requested_at': (
+                        requested_event.changed_at if requested_event else None
+                    ),
+                },
+            )
+            pdf_file = HTML(string=html).write_pdf(
+                font_config=FontConfiguration()
+            )
+            number = document.document_number or f'MR-{document.id}'
+            return Response(
+                {
+                    'file': base64.b64encode(pdf_file).decode('utf-8'),
+                    'filename': f'{number}_{status_code}.pdf',
+                    'file_type': 'application/pdf',
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception as exc:
+            return Response(
+                {'error': f'Could not generate PDF: {exc}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     def create(self, request):
         if not request.user.has_perm('apptransactions.add_document'):

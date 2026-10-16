@@ -1,10 +1,12 @@
 from django.contrib import admin
 from django.forms.models import BaseInlineFormSet
 from django.core.exceptions import ValidationError
+from django.db.models import ProtectedError
 from django.utils.html import format_html
 from .models import (
     Party, PartyType, PartyCategory,
-    DocumentType, Document, DocumentLine, WorkAccount, TransactionFavorite
+    DocumentType, Document, DocumentLine, WorkAccount, TransactionFavorite,
+    DocumentStatus, DocumentTracking, DocumentTrackingHistory,
 )
 
 @admin.register(PartyType)
@@ -38,6 +40,17 @@ class PartyAdmin(admin.ModelAdmin):
         return filters
 
 
+class DocumentStatusInline(admin.TabularInline):
+    """Estados del tipo, estilo lineal (Requested → … → Closed)."""
+    model = DocumentStatus
+    extra = 0
+    ordering = ('sequence',)
+    fields = (
+        'sequence', 'code', 'name',
+        'is_initial', 'is_terminal', 'is_active',
+    )
+
+
 @admin.register(DocumentType)
 class DocumentTypeAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
@@ -51,16 +64,154 @@ class DocumentTypeAdmin(admin.ModelAdmin):
         return super().has_delete_permission(request, obj)
 
     list_display = (
-        'id', 'type_code', 'description', 'creates_serialized_items',
+        'id', 'type_code', 'description', 'uses_status_tracking',
+        'creates_serialized_items',
         'counts_as_net_invoiced_spend', 'counts_as_job_material_issue',
         'counts_as_purchase_return', 'stock_movement', 'is_active',
     )
     search_fields = ('type_code', 'description')
     list_filter = (
-        'is_active', 'stock_movement',
+        'is_active', 'uses_status_tracking', 'stock_movement',
         'counts_as_net_invoiced_spend', 'counts_as_job_material_issue',
         'counts_as_purchase_return',
     )
+    inlines = [DocumentStatusInline]
+    fieldsets = (
+        (None, {
+            'fields': ('type_code', 'description', 'is_active', 'uses_status_tracking'),
+        }),
+        ('Inventory / accounting flags', {
+            'fields': (
+                'affects_physical', 'affects_logical', 'affects_accounting',
+                'is_taxable', 'is_purchase', 'is_sales', 'warehouse_required',
+                'is_operational', 'prices_required', 'allow_negative_sales',
+                'creates_serialized_items', 'stock_movement',
+            ),
+        }),
+        ('Assistant intentions', {
+            'classes': ('collapse',),
+            'fields': (
+                'counts_as_net_invoiced_spend',
+                'counts_as_job_material_issue',
+                'counts_as_purchase_return',
+            ),
+        }),
+    )
+
+
+@admin.register(DocumentStatus)
+class DocumentStatusAdmin(admin.ModelAdmin):
+    list_display = (
+        'id', 'document_type', 'sequence', 'code', 'name',
+        'is_initial', 'is_terminal', 'is_active',
+    )
+    list_filter = ('document_type', 'is_initial', 'is_terminal', 'is_active')
+    search_fields = ('code', 'name', 'document_type__type_code')
+    ordering = ('document_type__type_code', 'sequence')
+    autocomplete_fields = ('document_type',)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None and obj._is_referenced():
+            return False
+        return super().has_delete_permission(request, obj)
+
+    def delete_model(self, request, obj):
+        try:
+            super().delete_model(request, obj)
+        except ProtectedError as exc:
+            raise ValidationError(str(exc)) from exc
+
+
+@admin.register(DocumentTracking)
+class DocumentTrackingAdmin(admin.ModelAdmin):
+    list_display = (
+        'id', 'document', 'document_type_code', 'current_status',
+        'status_changed_at', 'changed_by',
+    )
+    list_filter = ('current_status__document_type', 'current_status')
+    search_fields = (
+        'document__id', 'document__document_number',
+        'current_status__code', 'current_status__name',
+    )
+    autocomplete_fields = ('document', 'current_status', 'changed_by')
+    readonly_fields = (
+        'document', 'current_status', 'status_changed_at', 'changed_by', 'notes',
+        'history_readonly',
+    )
+    fields = (
+        'document', 'current_status', 'status_changed_at', 'changed_by', 'notes',
+        'history_readonly',
+    )
+
+    def document_type_code(self, obj):
+        try:
+            return obj.document.document_type.type_code
+        except Exception:
+            return ''
+    document_type_code.short_description = 'Type'
+
+    def history_readonly(self, obj):
+        if not obj or not obj.document_id:
+            return '—'
+        rows = []
+        for row in (
+            DocumentTrackingHistory.objects.filter(document_id=obj.document_id)
+            .select_related('from_status', 'to_status', 'changed_by')
+            .order_by('changed_at', 'id')
+        ):
+            origin = row.from_status.code if row.from_status_id else '—'
+            actor = getattr(row.changed_by, 'username', '') or '—'
+            rows.append(
+                f'<tr><td>{row.changed_at}</td><td>{origin}</td>'
+                f'<td>{row.to_status.code}</td><td>{actor}</td>'
+                f'<td>{row.notes or ""}</td></tr>'
+            )
+        if not rows:
+            return 'No history yet.'
+        table = (
+            '<table style="width:100%;border-collapse:collapse">'
+            '<thead><tr><th>When</th><th>From</th><th>To</th>'
+            '<th>By</th><th>Notes</th></tr></thead>'
+            f'<tbody>{"".join(rows)}</tbody></table>'
+        )
+        return format_html(table)
+    history_readonly.short_description = 'Transition history (read-only)'
+
+    def has_add_permission(self, request):
+        # Los cambios de estado van por la lógica de negocio / API, no por Admin.
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        # Permitir abrir el detalle en solo lectura; los campos son readonly.
+        return request.user.has_perm('apptransactions.view_documenttracking')
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+
+@admin.register(DocumentTrackingHistory)
+class DocumentTrackingHistoryAdmin(admin.ModelAdmin):
+    list_display = (
+        'id', 'document', 'from_status', 'to_status', 'changed_by', 'changed_at',
+    )
+    list_filter = ('to_status__document_type', 'to_status')
+    search_fields = (
+        'document__id', 'document__document_number',
+        'from_status__code', 'to_status__code', 'notes',
+    )
+    readonly_fields = (
+        'document', 'from_status', 'to_status', 'changed_by', 'changed_at', 'notes',
+    )
+    ordering = ('-changed_at', '-id')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
 
 # Validación que aplica a cada línea del inline
 class DocumentLineInlineFormSet(BaseInlineFormSet):

@@ -85,6 +85,9 @@ export default {
   watch: {
     eventId: 'reload',
     workAccountId: 'reload',
+    '$route.query.mr'() {
+      this.applyExpandFromRoute();
+    },
   },
   mounted() {
     this.reload();
@@ -98,6 +101,17 @@ export default {
       if (code === 'preparing') return 'warning';
       if (code === 'closed') return 'secondary';
       return 'info';
+    },
+    focusRequestId() {
+      const raw = this.$route?.query?.mr;
+      const id = Number(Array.isArray(raw) ? raw[0] : raw);
+      return Number.isFinite(id) && id > 0 ? id : null;
+    },
+    applyExpandFromRoute() {
+      const focusId = this.focusRequestId();
+      if (!focusId) return;
+      if (!this.requests.some((row) => Number(row.id) === focusId)) return;
+      this.expandedRowGroups = [focusId];
     },
     reload() {
       this.expandedRowGroups = [];
@@ -130,6 +144,7 @@ export default {
           return;
         }
         this.requests = Array.isArray(data?.items) ? data.items : [];
+        this.applyExpandFromRoute();
       } catch {
         if (
           !this.alive ||

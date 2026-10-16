@@ -125,7 +125,18 @@ class Command(BaseCommand):
                     self.stdout.write('Cargando tipos de documento iniciales desde masters_document_type.json...')
                     with schema_context(schema_name):
                         call_command('loaddata', fixture_doc_types, verbosity=0)
+                        from apptransactions.services.document_status import (
+                            seed_default_document_statuses,
+                        )
+                        seeded = seed_default_document_statuses()
                     self.stdout.write(self.style.SUCCESS('✓ Tipos de documento iniciales cargados.'))
+                    if seeded:
+                        self.stdout.write(
+                            self.style.SUCCESS(
+                                f'✓ Estados predeterminados PO/PK/PR creados ({seeded}). '
+                                'Status tracking permanece deshabilitado.'
+                            )
+                        )
                 else:
                     self.stdout.write(
                         self.style.WARNING(

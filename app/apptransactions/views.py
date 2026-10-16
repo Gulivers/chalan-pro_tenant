@@ -28,6 +28,7 @@ from .serializers import (
 )
 from appauth.authentication import TenantJWTAuthentication
 from rest_framework.pagination import PageNumberPagination
+from .document_status_api import DocumentStatusActionsMixin
 
 
 class WorkAccountPagination(PageNumberPagination):
@@ -42,7 +43,7 @@ class DocumentTypeViewSet(viewsets.ModelViewSet):
     authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['is_active']
+    filterset_fields = ['is_active', 'uses_status_tracking']
 
     def perform_destroy(self, instance):
         if instance.type_code in DocumentType.PROTECTED_TYPE_CODES:
@@ -193,7 +194,7 @@ class WorkAccountViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 # Documentos
-class DocumentViewSet(viewsets.ModelViewSet):
+class DocumentViewSet(DocumentStatusActionsMixin, viewsets.ModelViewSet):
     queryset = (
         Document.objects
         .select_related("document_type", "builder", "created_by", "work_account")
@@ -203,6 +204,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         .order_by("-id")
     )
     serializer_class = DocumentSerializer
+    authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [SearchFilter, OrderingFilter, DjangoFilterBackend]
     search_fields = ["notes", "builder__name", "work_account__job__name", "work_account__lot", "document_type__type_code"]
@@ -278,6 +280,7 @@ class DocumentListProviderAPIView(APIView):
                     "work_account",
                     "work_account__builder",
                     "work_account__job",
+                    "tracking__current_status",
                 )
                 .annotate(lines_count=Count("lines"))
                 .order_by("-id")

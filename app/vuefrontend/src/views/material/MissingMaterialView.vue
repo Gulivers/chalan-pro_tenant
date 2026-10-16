@@ -585,7 +585,7 @@ export default {
       this.submitting = true;
       this.error = '';
       try {
-        await axios.post('/api/material-requests/', {
+        const { data } = await axios.post('/api/material-requests/', {
           work_account: Number(this.$route.params.workAccountId),
           work_order: Number(this.$route.params.eventId),
           notes: this.notes,
@@ -598,7 +598,7 @@ export default {
         this.selection = {};
         this.notes = '';
         this.notifyToastSuccess('Material request submitted.');
-        this.goBack();
+        this.goBack({ materialRequestId: data?.id });
       } catch (err) {
         const detail = err?.response?.data;
         this.error = detail?.lines || detail?.work_order || detail?.document_type || detail?.detail || 'Could not submit the material request.';
@@ -608,11 +608,17 @@ export default {
         this.submitting = false;
       }
     },
-    goBack() {
+    goBack({ materialRequestId } = {}) {
+      const workAccountId = this.$route.params.workAccountId;
+      const eventId = this.$route.params.eventId;
       this.$router.push({
         name: 'work-order-viewer',
-        params: { id: this.$route.params.workAccountId },
-        query: { tab: 'materials' },
+        params: { id: workAccountId },
+        query: {
+          ...(eventId ? { event: String(eventId) } : {}),
+          tab: 'materials',
+          ...(materialRequestId ? { mr: String(materialRequestId) } : {}),
+        },
       });
     },
   },

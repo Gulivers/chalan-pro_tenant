@@ -1,7 +1,49 @@
 <template>
   <JRPage>
     <JRPageHeader :title="pageTitle" :description="pageDescription">
+      <template v-if="statusBadgeVisible" #title-end>
+        <button
+          type="button"
+          class="jr-tx-form__status-badge-btn"
+          :aria-expanded="statusDrawerOpen ? 'true' : 'false'"
+          aria-controls="jr-doc-status-drawer"
+          :aria-label="`Open status panel: ${statusBadgeLabel}`"
+          @click="openStatusDrawer">
+          <JRBadge
+            :value="statusBadgeLabel"
+            :severity="statusBadgeSeverity" />
+        </button>
+      </template>
       <template #actions>
+        <JRButton
+          v-if="statusDrawerTriggerVisible"
+          type="button"
+          size="sm"
+          :variant="statusDrawerOpen ? 'primary' : 'secondary'"
+          :aria-expanded="statusDrawerOpen ? 'true' : 'false'"
+          aria-controls="jr-doc-status-drawer"
+          @click="openStatusDrawer">
+          <svg
+            class="jr-tx-form__status-drawer-icon"
+            width="18"
+            height="18"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true">
+            <rect x="1.75" y="2" width="12.5" height="12" rx="0" />
+            <line x1="10.5" y1="2" x2="10.5" y2="14" />
+            <path
+              d="M10.5 2H14.25V14H10.5Z"
+              :fill="statusDrawerOpen ? 'currentColor' : 'transparent'"
+              :opacity="statusDrawerOpen ? '0.35' : '0'"
+              stroke="none" />
+          </svg>
+          {{ statusTriggerLabel }}
+        </JRButton>
         <JRButton
           v-if="
             isViewMode &&
@@ -325,6 +367,22 @@
       @updated="onFavoriteUpdated"
       @deleted="onFavoriteDeleted"
       @update:visible="favoriteModalVisible = $event" />
+
+    <JRDrawer
+      id="jr-doc-status-drawer"
+      class="jr-catalog-drawer"
+      :visible="statusDrawerOpen"
+      :header="statusDrawerHeader"
+      position="right"
+      @update:visible="statusDrawerOpen = $event">
+      <DocumentStatusPanel
+        v-if="statusDrawerOpen && idParam && documentUsesStatusTracking"
+        :document-id="idParam"
+        :document-type-id="form.document_type"
+        :uses-status-tracking="documentUsesStatusTracking"
+        :can-transition="hasPermission('apptransactions.view_document')"
+        @update:tracking="onDocumentTrackingUpdate" />
+    </JRDrawer>
   </JRPage>
 </template>
 
@@ -355,14 +413,18 @@ import WorkAccountSelector from "@/components/transactions/WorkAccountSelector.v
 import TransactionFavoriteModal from "@/components/transactions/TransactionFavoriteModal.vue";
 import AssetTagAssignmentModal from "@/components/transactions/AssetTagAssignmentModal.vue";
 import FavoriteTransactionSelector from "@/components/transactions/FavoriteTransactionSelector.vue";
+import DocumentStatusPanel from "@/components/transactions/DocumentStatusPanel.vue";
+import { documentStatusSeverity } from "@/utils/documentStatus";
 import {
   JRPage,
   JRPageHeader,
   JRSection,
   JRField,
   JRButton,
+  JRBadge,
   JRCheckbox,
   JRDatePicker,
+  JRDrawer,
   JRTextarea,
 } from "@ui";
 
@@ -437,6 +499,63 @@ const pageDescription = computed(() => {
   if (isEditMode.value) return "Update document header, lines, and totals.";
   return "Create a document with lines, parties or work account, and totals.";
 });
+
+const documentUsesStatusTracking = ref(false);
+const documentTracking = ref(null);
+const statusDrawerOpen = ref(false);
+
+const statusBadgeVisible = computed(
+  () =>
+    !!idParam &&
+    documentUsesStatusTracking.value &&
+    !!documentTracking.value?.status_name
+);
+const statusBadgeLabel = computed(
+  () => documentTracking.value?.status_name || ""
+);
+const statusBadgeSeverity = computed(() =>
+  documentStatusSeverity(documentTracking.value?.status_code, {
+    isTerminal: !!documentTracking.value?.is_terminal,
+  })
+);
+const statusDrawerTriggerVisible = computed(
+  () => !!idParam && documentUsesStatusTracking.value
+);
+const statusTriggerLabel = computed(
+  () => documentTracking.value?.status_name || "Status"
+);
+const statusDrawerHeader = computed(() => {
+  const name = documentTracking.value?.status_name;
+  return name ? `Status · ${name}` : "Document Status";
+});
+
+function openStatusDrawer() {
+  statusDrawerOpen.value = true;
+}
+
+function onDocumentTrackingUpdate(tracking) {
+  documentTracking.value = tracking;
+  if (tracking) documentUsesStatusTracking.value = true;
+}
+
+async function loadDocumentStatus(documentId) {
+  if (!documentId) {
+    documentTracking.value = null;
+    return;
+  }
+  try {
+    const { data } = await axios.get(`/api/documents/${documentId}/status/`);
+    documentTracking.value = data;
+    documentUsesStatusTracking.value = true;
+  } catch (err) {
+    documentTracking.value = null;
+    if (err?.response?.status === 404) {
+      documentUsesStatusTracking.value = !!err.response?.data?.uses_status_tracking;
+      return;
+    }
+    // Keep uses_status_tracking from document payload when status read fails.
+  }
+}
 
 const saveButtonLabel = computed(() => {
   if (loadingDocument.value) return "Loading...";
@@ -1307,6 +1426,7 @@ async function loadDocument(id) {
   loadingDocument.value = true;
   try {
     const { data } = await axios.get(`/api/documents/${id}/`);
+    documentUsesStatusTracking.value = !!data.uses_status_tracking;
 
     // Verificar que los datos relacionados existen
     if (!data.document_type) {
@@ -1426,6 +1546,11 @@ async function loadDocument(id) {
     }
 
     lines.value = normalizedLines;
+    if (data.uses_status_tracking) {
+      await loadDocumentStatus(id);
+    } else {
+      documentTracking.value = null;
+    }
   } catch (error) {
     console.error("Error loading document:", error);
     await Swal.fire({
@@ -2151,6 +2276,28 @@ onMounted(async () => {
 .jr-tx-form__totals-bad {
   color: var(--color-jr-danger-text);
   font-weight: 600;
+}
+
+.jr-tx-form__status-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: var(--radius-jr-control, 0);
+}
+
+.jr-tx-form__status-badge-btn:focus-visible {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: 2px;
+}
+
+.jr-tx-form__status-drawer-icon {
+  flex-shrink: 0;
+  margin-inline-end: 0.35rem;
+  vertical-align: -0.2em;
 }
 
 .jr-tx-form__actions {

@@ -1,7 +1,12 @@
 <template>
   <header class="jr-page-header">
     <div class="jr-page-header__text">
-      <h1 class="jr-page-header__title">{{ title }}</h1>
+      <div class="jr-page-header__title-row">
+        <h1 class="jr-page-header__title">{{ title }}</h1>
+        <div v-if="$slots['title-end']" class="jr-page-header__title-end">
+          <slot name="title-end" />
+        </div>
+      </div>
       <p v-if="description" class="jr-page-header__desc">{{ description }}</p>
     </div>
     <div v-if="$slots.actions" class="jr-page-header__actions">

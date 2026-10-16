@@ -21,6 +21,9 @@
         :text="!useSolid && !isOutlinedAction(action)"
         :outlined="useSolid ? isOutlined(action) : isOutlinedAction(action)"
         size="small"
+        :disabled="!!action.disabled"
+        :tabindex="action.disabled ? -1 : undefined"
+        :aria-hidden="action.disabled ? 'true' : undefined"
         :aria-label="actionAriaLabel(action)"
         @click="action.command">
         <template v-if="!useSolid && action.icon" #icon="{ class: iconClass }">
