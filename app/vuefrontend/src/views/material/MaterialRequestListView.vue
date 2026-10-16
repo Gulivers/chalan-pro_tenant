@@ -219,6 +219,8 @@ import PencilIcon from "@primevue/icons/pencil";
 import RefreshIcon from "@primevue/icons/refresh";
 import SearchIcon from "@primevue/icons/search";
 import TrashIcon from "@primevue/icons/trash";
+import UploadIcon from "@primevue/icons/upload";
+import { getAccessToken } from "@/auth/tokenHelpers";
 import {
   JRPage,
   JRPageHeader,
@@ -340,6 +342,69 @@ function editTo(id) {
   };
 }
 
+function isMobileUa() {
+  return (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    ) || window.innerWidth <= 768
+  );
+}
+
+async function printRequest(documentId) {
+  try {
+    const response = await axios.get(`${ENDPOINT}${documentId}/pdf/`, {
+      headers: {
+        Authorization: `Bearer ${getAccessToken()}`,
+      },
+    });
+    if (!response.data?.file) {
+      throw new Error("No PDF file received");
+    }
+    const byteCharacters = atob(response.data.file);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i += 1) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const blob = new Blob([new Uint8Array(byteNumbers)], {
+      type: "application/pdf",
+    });
+    const url = window.URL.createObjectURL(blob);
+    const filename =
+      response.data.filename || `material_request_${documentId}.pdf`;
+
+    if (isMobileUa()) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      proxy?.notifyToastSuccess?.("PDF generated and downloaded successfully.");
+    } else {
+      const newWindow = window.open(url, "_blank");
+      if (!newWindow) {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        proxy?.notifyToastSuccess?.(
+          "PDF generated and downloaded successfully."
+        );
+      } else {
+        proxy?.notifyToastSuccess?.("PDF opened in new window.");
+      }
+    }
+    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+  } catch (error) {
+    console.error("Error generating material request PDF:", error);
+    proxy?.notifyError?.(
+      "Could not generate the PDF document. Please try again."
+    );
+  }
+}
+
 function getRowActions(item) {
   const actions = [];
   if (proxy?.hasPermission?.("apptransactions.view_document")) {
@@ -349,6 +414,14 @@ function getRowActions(item) {
       severity: "success",
       icon: EyeIcon,
       command: () => router.push(viewTo(item.id)),
+    });
+    actions.push({
+      key: "print",
+      label: "Print",
+      severity: "secondary",
+      buttonClass: "jr-row-actions__btn--print",
+      icon: UploadIcon,
+      command: () => printRequest(item.id),
     });
   }
   if (proxy?.hasPermission?.("apptransactions.change_document")) {
@@ -360,17 +433,27 @@ function getRowActions(item) {
       command: () => router.push(editTo(item.id)),
     });
   }
-  if (
-    proxy?.hasPermission?.("apptransactions.delete_document") &&
-    item.status !== "closed"
-  ) {
-    actions.push({
-      key: "delete",
-      label: "Delete",
-      severity: "danger",
-      icon: TrashIcon,
-      command: () => deleteRequest(item),
-    });
+  if (proxy?.hasPermission?.("apptransactions.delete_document")) {
+    if (item.status === "closed") {
+      // Keep vertical slot so View/Print/Edit stay column-aligned with open rows.
+      actions.push({
+        key: "delete-placeholder",
+        label: "Delete",
+        severity: "danger",
+        icon: TrashIcon,
+        buttonClass: "jr-row-actions__btn--placeholder",
+        disabled: true,
+        command: () => {},
+      });
+    } else {
+      actions.push({
+        key: "delete",
+        label: "Delete",
+        severity: "danger",
+        icon: TrashIcon,
+        command: () => deleteRequest(item),
+      });
+    }
   }
   return actions;
 }
@@ -601,8 +684,8 @@ onUnmounted(() => {
 }
 .jr-master-list__table :deep(th.jr-col-actions),
 .jr-master-list__table :deep(td.jr-col-actions) {
-  width: 16.5rem;
-  text-align: center;
+  width: 20rem;
+  text-align: left;
   white-space: nowrap;
 }
 .jr-master-list__table :deep(th.jr-col-actions.jr-col-actions--compact),
@@ -611,11 +694,16 @@ onUnmounted(() => {
 }
 .jr-master-list__table :deep(th.jr-col-actions .p-datatable-column-header-content) {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
 }
 .jr-master-list__table :deep(td.jr-col-actions .jr-row-actions) {
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
+}
+.jr-master-list__table
+  :deep(td.jr-col-actions .jr-row-actions__btn--placeholder.p-button) {
+  visibility: hidden;
+  pointer-events: none;
 }
 </style>

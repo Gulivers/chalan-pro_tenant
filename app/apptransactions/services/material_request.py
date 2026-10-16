@@ -14,7 +14,6 @@ Este archivo centraliza la gestión de las solicitudes de materiales, desde su c
 from decimal import Decimal
 
 from django.db import transaction
-from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from appinventory.models import InventoryMovement, Stock, Warehouse
@@ -22,10 +21,13 @@ from apptransactions.models import (
     Document,
     DocumentLine,
     DocumentSequence,
-    DocumentStatus,
     DocumentTracking,
-    DocumentTrackingHistory,
     DocumentType,
+)
+from apptransactions.services.document_status import (
+    ensure_initial_tracking,
+    initial_status_for,
+    transition_document_status,
 )
 
 MR_TYPE_CODE = 'MR'
@@ -40,21 +42,6 @@ def allocate_document_number(document_type):
     sequence.last_number += 1
     sequence.save(update_fields=['last_number'])
     return f'{document_type.type_code}-{sequence.last_number:06d}'
-
-
-def initial_status_for(document_type):
-    status = (
-        DocumentStatus.objects.filter(
-            document_type=document_type,
-            is_initial=True,
-            is_active=True,
-        )
-        .order_by('sequence')
-        .first()
-    )
-    if status is None:
-        raise ValidationError({'status': 'This document type has no initial status.'})
-    return status
 
 
 @transaction.atomic
@@ -90,7 +77,8 @@ def create_material_request(*, work_account, work_order, lines, notes, user):
             current['quantity'] += quantity
 
     # Available es informativo al pedir. El stock se rebaja al pasar a Delivered.
-    initial = initial_status_for(document_type)
+    # Valida estado inicial antes de persistir el documento.
+    initial_status_for(document_type)
     document = Document(
         document_type=document_type,
         work_account=work_account,
@@ -114,21 +102,13 @@ def create_material_request(*, work_account, work_order, lines, notes, user):
             pricing_rule=DocumentLine.PRICING_MANUAL,
         )
 
-    now = timezone.now()
-    DocumentTracking.objects.create(
+    # force=True: MR siempre trackea, aunque uses_status_tracking fallara.
+    # Idempotente con el signal post_save de Document.
+    ensure_initial_tracking(
         document=document,
-        current_status=initial,
-        status_changed_at=now,
-        changed_by=document.created_by,
-        notes='',
-    )
-    DocumentTrackingHistory.objects.create(
-        document=document,
-        from_status=None,
-        to_status=initial,
-        changed_by=document.created_by,
-        changed_at=now,
+        user=document.created_by,
         notes=(notes or '').strip(),
+        force=True,
     )
     return document
 
@@ -262,47 +242,19 @@ def transition_material_request(*, document, status_code, notes, user):
     Se puede volver al estado anterior, incluido salir de Closed. Los saltos se rechazan.
     """
     tracking = (
-        DocumentTracking.objects.select_for_update()
-        .select_related('current_status', 'document__document_type')
-        .filter(document=document)
+        DocumentTracking.objects.select_related('current_status')
+        .filter(document_id=document.pk)
         .first()
     )
-    if tracking is None:
-        raise ValidationError({'status': 'This document has no tracking record.'})
-
-    current = tracking.current_status
-    target = DocumentStatus.objects.filter(
-        document_type_id=document.document_type_id,
-        code=status_code,
-        is_active=True,
-    ).first()
-    if target is None:
-        raise ValidationError({'status': 'Unknown status for this document type.'})
-    if abs(target.sequence - current.sequence) != 1:
-        raise ValidationError({
-            'status': (
-                f'Cannot move from {current.name} to {target.name}. '
-                'Only the next or previous status is allowed.'
-            ),
-        })
-
-    now = timezone.now()
-    note = (notes or '').strip()
-    tracking.current_status = target
-    tracking.status_changed_at = now
-    tracking.changed_by = user if getattr(user, 'is_authenticated', False) else None
-    tracking.notes = note
-    tracking.save(update_fields=['current_status', 'status_changed_at', 'changed_by', 'notes'])
-    DocumentTrackingHistory.objects.create(
+    previous_code = tracking.current_status.code if tracking else ''
+    transition_document_status(
         document=document,
-        from_status=current,
-        to_status=target,
-        changed_by=tracking.changed_by,
-        changed_at=now,
-        notes=note,
+        status_code=status_code,
+        notes=notes,
+        user=user,
     )
-    if target.code == 'delivered' and current.code == 'preparing':
+    if status_code == 'delivered' and previous_code == 'preparing':
         apply_delivered_stock(document)
-    elif current.code == 'delivered' and target.code == 'preparing':
+    elif previous_code == 'delivered' and status_code == 'preparing':
         reverse_delivered_stock(document)
     return document

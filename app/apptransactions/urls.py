@@ -6,9 +6,11 @@ from .views import (
     TransactionFavoriteViewSet, download_transaction_pdf,
 )
 from .material_request_api import MaterialRequestViewSet
+from .document_status_api import DocumentStatusViewSet
 
 router = DefaultRouter()
 router.register(r'document-types', DocumentTypeViewSet)
+router.register(r'document-statuses', DocumentStatusViewSet, basename='document-statuses')
 router.register(r'party-types', PartyTypeViewSet)
 router.register(r'party-categories', PartyCategoryViewSet)
 router.register(r'parties', PartyViewSet)

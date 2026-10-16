@@ -91,22 +91,44 @@ def get_tenant_logo_url(request):
     except Exception:
         return None
 
-    # Para WeasyPrint es más robusto usar URI local file:// que URL HTTP.
+    return file_field_to_pdf_uri(logo_field, request=request, name=logo_name)
+
+
+def file_field_to_pdf_uri(file_field, request=None, name=None):
+    """
+    URI usable por WeasyPrint para un FileField/ImageField.
+
+    Prefiere file:// local; si no hay path, cae a URL HTTP absoluta.
+    `name` opcional permite un path recuperado (p. ej. logo sin sufijo random).
+    """
+    if not file_field:
+        return None
+
+    storage_name = name or getattr(file_field, "name", None)
+    if not storage_name:
+        return None
+
     try:
-        logo_path = logo_field.storage.path(logo_name)
-        if logo_path and os.path.exists(logo_path):
-            return Path(logo_path).resolve().as_uri()
+        if not file_field.storage.exists(storage_name):
+            return None
+    except Exception:
+        return None
+
+    try:
+        local_path = file_field.storage.path(storage_name)
+        if local_path and os.path.exists(local_path):
+            return Path(local_path).resolve().as_uri()
     except Exception:
         pass
 
-    # Fallback: URL del storage (por si no hay path local disponible).
     try:
-        logo_url = logo_field.storage.url(logo_name)
+        url = file_field.storage.url(storage_name)
     except Exception:
-        logo_url = tenant.get_logo_url()
-    if not logo_url:
         return None
-
-    if logo_url.startswith(("http://", "https://", "file://")):
-        return logo_url
-    return request.build_absolute_uri(logo_url)
+    if not url:
+        return None
+    if url.startswith(("http://", "https://", "file://")):
+        return url
+    if request is not None:
+        return request.build_absolute_uri(url)
+    return url

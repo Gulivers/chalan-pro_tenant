@@ -41,6 +41,17 @@ class DocumentTypeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'The Material Request document type is required by the system and cannot be edited.'
             )
+        tracking = attrs.get('uses_status_tracking', None)
+        if tracking is not None and self.instance is not None:
+            # Reuse model validation (enable needs initial status; disable blocks in-progress).
+            previous_flag = self.instance.uses_status_tracking
+            self.instance.uses_status_tracking = tracking
+            try:
+                self.instance._validate_status_tracking_flag()
+            except DjangoValidationError as exc:
+                raise serializers.ValidationError(exc.message_dict) from exc
+            finally:
+                self.instance.uses_status_tracking = previous_flag
         return attrs
 
 class PartyTypeSerializer(serializers.ModelSerializer):
@@ -377,6 +388,12 @@ class DocumentListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for transaction list views (no lines / serialized items)."""
 
     document_type_code = serializers.CharField(source="document_type.type_code", read_only=True)
+    uses_status_tracking = serializers.BooleanField(
+        source="document_type.uses_status_tracking",
+        read_only=True,
+    )
+    status_code = serializers.SerializerMethodField()
+    status_name = serializers.SerializerMethodField()
     builder_name = serializers.SerializerMethodField()
     work_account_display = serializers.SerializerMethodField()
     lines_count = serializers.IntegerField(read_only=True)
@@ -387,6 +404,9 @@ class DocumentListSerializer(serializers.ModelSerializer):
             "id",
             "document_type",
             "document_type_code",
+            "uses_status_tracking",
+            "status_code",
+            "status_name",
             "date",
             "builder",
             "builder_name",
@@ -398,6 +418,21 @@ class DocumentListSerializer(serializers.ModelSerializer):
             "is_active",
             "lines_count",
         ]
+
+    def _tracking_status(self, obj):
+        try:
+            tracking = obj.tracking
+        except Exception:
+            return None
+        return getattr(tracking, "current_status", None)
+
+    def get_status_code(self, obj):
+        status_obj = self._tracking_status(obj)
+        return getattr(status_obj, "code", None) if status_obj else None
+
+    def get_status_name(self, obj):
+        status_obj = self._tracking_status(obj)
+        return getattr(status_obj, "name", None) if status_obj else None
 
     def get_builder_name(self, obj):
         builder = getattr(obj, "builder", None)
@@ -418,6 +453,10 @@ class DocumentSerializer(serializers.ModelSerializer):
     document_type_creates_serialized_items = serializers.BooleanField(
         source="document_type.creates_serialized_items", read_only=True
     )
+    uses_status_tracking = serializers.BooleanField(
+        source="document_type.uses_status_tracking",
+        read_only=True,
+    )
     builder_name = serializers.SerializerMethodField()
     work_account_display = serializers.SerializerMethodField()
     party = serializers.SerializerMethodField()
@@ -428,6 +467,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         model = Document
         fields = [
             "id", "document_type", "document_type_code", "document_type_creates_serialized_items",
+            "uses_status_tracking",
             "date", "builder", "builder_name", "party",
             "work_account", "work_account_display",
             "created_by", "notes",

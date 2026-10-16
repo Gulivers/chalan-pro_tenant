@@ -115,14 +115,17 @@
       </JRDataTable>
 
       <section
-        v-if="canEdit && (request.next_status || request.previous_status)"
+        v-if="showAdvanceBar"
         class="jr-mr-detail__advance">
-        <JRField :label="notesLabel" :inputId="notesId">
+        <JRField
+          v-if="canTransition"
+          :label="notesLabel"
+          :inputId="notesId">
           <JRTextarea :inputId="notesId" v-model="transitionNotes" :rows="2" />
         </JRField>
         <div class="jr-mr-detail__moves">
           <JRButton
-            v-if="request.previous_status"
+            v-if="canEdit && request.previous_status"
             type="button"
             variant="secondary"
             :disabled="saving"
@@ -130,11 +133,25 @@
             Revert to {{ request.previous_status_name }}
           </JRButton>
           <JRButton
-            v-if="request.next_status"
+            v-if="canEdit && request.next_status"
             type="button"
             :disabled="saving"
             @click="moveTo(request.next_status)">
             Mark as {{ request.next_status_name }}
+          </JRButton>
+          <JRButton
+            v-if="canView"
+            type="button"
+            variant="ghost"
+            size="sm"
+            class="jr-mr-detail__print jr-row-actions__btn--print"
+            :disabled="printing"
+            :aria-label="`Print materials for ${request.document_number || request.id}`"
+            @click="printRequestedPdf">
+            <UploadIcon
+              class="jr-mr-detail__print-icon"
+              aria-hidden="true" />
+            Print
           </JRButton>
         </div>
       </section>
@@ -143,10 +160,15 @@
       <section>
         <h2>History</h2>
         <ol class="jr-mr-detail__history">
-          <li v-for="row in request.history || []" :key="row.id">
-            <strong>{{ row.from_status_name || 'New' }} → {{ row.to_status_name }}</strong>
-            <span>{{ row.changed_by_username }} · {{ formatWhen(row.changed_at) }}</span>
-            <span v-if="row.notes">{{ row.notes }}</span>
+          <li
+            v-for="row in request.history || []"
+            :key="row.id"
+            class="jr-mr-detail__history-item">
+            <div class="jr-mr-detail__history-main">
+              <strong>{{ row.from_status_name || 'New' }} → {{ row.to_status_name }}</strong>
+              <span>{{ row.changed_by_username }} · {{ formatWhen(row.changed_at) }}</span>
+              <span v-if="row.notes">{{ row.notes }}</span>
+            </div>
           </li>
         </ol>
       </section>
@@ -160,11 +182,31 @@
 <script>
 import axios from 'axios';
 import Column from 'primevue/column';
+import UploadIcon from '@primevue/icons/upload';
+import Swal from 'sweetalert2';
+import { getAccessToken } from '@/auth/tokenHelpers';
 import { JRPageHeader, JRButton, JRBadge, JRField, JRTextarea, JRDataTable } from '@/ui';
+
+function isMobileDevice() {
+  return (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    ) || window.innerWidth <= 768
+  );
+}
 
 export default {
   name: 'MaterialRequestDetail',
-  components: { JRPageHeader, JRButton, JRBadge, JRField, JRTextarea, JRDataTable, Column },
+  components: {
+    JRPageHeader,
+    JRButton,
+    JRBadge,
+    JRField,
+    JRTextarea,
+    JRDataTable,
+    Column,
+    UploadIcon,
+  },
   props: {
     requestId: {
       type: [Number, String],
@@ -188,6 +230,7 @@ export default {
       request: {},
       loading: false,
       saving: false,
+      printing: false,
       transitionNotes: '',
       error: '',
       alive: true,
@@ -212,6 +255,15 @@ export default {
     },
     notesLabel() {
       return 'Notes';
+    },
+    canTransition() {
+      return (
+        this.canEdit &&
+        !!(this.request.next_status || this.request.previous_status)
+      );
+    },
+    showAdvanceBar() {
+      return this.canTransition || this.canView;
     },
   },
   watch: {
@@ -322,6 +374,67 @@ export default {
       if (Number.isNaN(date.getTime())) return value;
       return date.toLocaleString();
     },
+    async printRequestedPdf() {
+      if (!this.request?.id || this.printing) return;
+      this.printing = true;
+      this.error = '';
+      try {
+        const response = await axios.get(
+          `/api/material-requests/${this.request.id}/pdf/`,
+          {
+            headers: {
+              Authorization: `Bearer ${getAccessToken()}`,
+            },
+          }
+        );
+        if (!response.data?.file) {
+          throw new Error('No PDF file was returned from the server.');
+        }
+        const byteCharacters = atob(response.data.file);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i += 1) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const blob = new Blob([new Uint8Array(byteNumbers)], {
+          type: 'application/pdf',
+        });
+        const url = window.URL.createObjectURL(blob);
+        const filename =
+          response.data.filename ||
+          `${this.request.document_number || this.request.id}_requested.pdf`;
+
+        if (isMobileDevice()) {
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          const newWindow = window.open(url, '_blank');
+          if (!newWindow) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
+        }
+        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      } catch (err) {
+        console.error('Material Request PDF error:', err);
+        this.error = this.readError(err, 'Could not generate the requested materials PDF.');
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Could not generate the requested materials PDF. Please try again.',
+          confirmButtonText: 'OK',
+        });
+      } finally {
+        this.printing = false;
+      }
+    },
     goList() {
       this.$router.push({ name: 'material-requests' });
     },
@@ -421,16 +534,39 @@ export default {
 .jr-mr-detail__moves {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
 }
 .jr-mr-detail__history {
   margin: 0;
   padding-left: 1.1rem;
 }
-.jr-mr-detail__history li {
+.jr-mr-detail__history-item {
+  margin-bottom: 0.75rem;
+}
+.jr-mr-detail__history-main {
   display: flex;
   flex-direction: column;
-  margin-bottom: 0.75rem;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.jr-mr-detail__print {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-jr-text);
+}
+
+.jr-mr-detail__print-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.jr-mr-detail__print.jr-row-actions__btn--print :deep(.p-button-label),
+.jr-mr-detail__print.jr-row-actions__btn--print svg {
+  color: var(--color-jr-text);
 }
 .jr-mr-detail__error {
   color: var(--color-jr-danger, #dc2626);

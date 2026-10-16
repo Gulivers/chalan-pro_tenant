@@ -881,6 +881,13 @@
   line-height: inherit;
 }
 
+.jr-pilot .jr-page-header__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
 .jr-pilot .jr-page-header__title {
   margin: 0;
   font-size: 1.3125rem;
@@ -888,6 +895,13 @@
   line-height: 1.25;
   color: var(--color-jr-text);
   text-align: left;
+}
+
+.jr-pilot .jr-page-header__title-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 .jr-pilot .jr-section__title {

@@ -189,6 +189,24 @@ def track_document_previous_state(sender, instance, **kwargs):
             pass
 
 
+@receiver(post_save, sender=Document, dispatch_uid="document_ensure_status_tracking")
+def ensure_document_status_tracking(sender, instance, created, **kwargs):
+    """
+    Alta genérica (API DocumentSerializer, Admin, etc.): si el tipo tiene
+    uses_status_tracking, crea tracking + historial inicial. Idempotente con MR.
+    No backfillea documentos históricos (solo created=True).
+    """
+    if not created:
+        return
+    from apptransactions.services.document_status import ensure_initial_tracking
+
+    ensure_initial_tracking(
+        document=instance,
+        user=getattr(instance, 'created_by', None),
+        notes='',
+    )
+
+
 @receiver(post_save, sender=Document, dispatch_uid="document_handle_active_status")
 def handle_document_active_status(sender, instance, created, **kwargs):
     """
