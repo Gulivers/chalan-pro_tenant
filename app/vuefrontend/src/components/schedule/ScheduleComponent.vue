@@ -192,8 +192,15 @@ export default {
       userId: null,
       publishing: false,
       categoryTotals: [],
-      /** Ancho columna crew: 25% móvil/tablet pequeña, 15% desktop / tablet grande (≥992px) */
+      /** Ancho columna crew: estrecho en phone ≤440px, 22% tablet, 15% desktop ≥992px */
       resourceAreaWidthCurrent: "25%",
+      slotMinWidthCurrent: 96,
+      eventMinHeightCurrent: 180,
+      slotLabelFormatCurrent: {
+        weekday: "long",
+        month: "short",
+        day: "numeric",
+      },
       websocket: null,
       wsUrl: null,
       initialCalendarOptions: {
@@ -215,12 +222,10 @@ export default {
         eventResizableFromStart: false,
         droppable: false,
         resourceAreaHeaderContent: "Crew",
-        eventMinHeight: 180,
         height: "100%",
         stickyHeaderDates: true,
         slotLabelInterval: { days: 1 },
         slotDuration: { days: 1 },
-        slotLabelFormat: { weekday: "long", month: "short", day: "numeric" },
         resourceGroupField: "category",
         resourceOrder: "category",
         resources: [],
@@ -325,6 +330,9 @@ export default {
       return {
         ...this.initialCalendarOptions,
         resourceAreaWidth: this.resourceAreaWidthCurrent,
+        slotMinWidth: this.slotMinWidthCurrent,
+        eventMinHeight: this.eventMinHeightCurrent,
+        slotLabelFormat: this.slotLabelFormatCurrent,
         resources: this.resources,
         events: this.filteredEvents,
       };
@@ -335,15 +343,15 @@ export default {
     const authStore = useAuthStore();
     authStore.setUser(data);
     this.userId = data.id;
-    this.updateResourceAreaWidth();
-    window.addEventListener("resize", this.updateResourceAreaWidth);
+    this.updateCalendarDensity();
+    window.addEventListener("resize", this.updateCalendarDensity);
     this.getCrews();
     this.wsUrl = await withWsTicket(this.buildWsUrl("ws/calendar-updates/"));
     this.connectWebSocket();
     this.updateCalendarPermissions();
   },
   beforeUnmount() {
-    window.removeEventListener("resize", this.updateResourceAreaWidth);
+    window.removeEventListener("resize", this.updateCalendarDensity);
     this.disconnectWebSocket();
     this.disconnectResizeObserver();
   },
@@ -363,15 +371,54 @@ export default {
       if (!api) return;
       api.gotoDate(date);
     },
-    /** Alineado con breakpoint Bootstrap lg (992px): ancho útil para iPad Pro y desktop. */
-    updateResourceAreaWidth() {
+    /**
+     * Densidad del timeline según viewport.
+     * ≤440px (iPhone 16 Pro Max logical width e inferior): más compacto para ver más semana;
+     * el pinch-zoom del navegador sigue habilitado (viewport sin maximum-scale=1).
+     */
+    updateCalendarDensity() {
       if (typeof window === "undefined") return;
       const wide = window.matchMedia("(min-width: 992px)").matches;
-      this.resourceAreaWidthCurrent = wide ? "15%" : "25%";
+      const phone = window.matchMedia("(max-width: 440px)").matches;
+
+      if (wide) {
+        this.resourceAreaWidthCurrent = "15%";
+        this.slotMinWidthCurrent = 110;
+        this.eventMinHeightCurrent = 180;
+        this.slotLabelFormatCurrent = {
+          weekday: "long",
+          month: "short",
+          day: "numeric",
+        };
+      } else if (phone) {
+        /* 56px × 1.5 → más letras del nombre del crew */
+        this.resourceAreaWidthCurrent = "84px";
+        /* Días un poco más anchos → tarjetas legibles; el resto se ve con scroll/pinch */
+        this.slotMinWidthCurrent = 80;
+        this.eventMinHeightCurrent = 100;
+        this.slotLabelFormatCurrent = {
+          weekday: "short",
+          day: "numeric",
+        };
+      } else {
+        this.resourceAreaWidthCurrent = "22%";
+        this.slotMinWidthCurrent = 84;
+        this.eventMinHeightCurrent = 120;
+        this.slotLabelFormatCurrent = {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        };
+      }
+
       this.$nextTick(() => {
         const api = this.$refs.calendarRef?.getApi?.();
         if (api) {
           try {
+            api.setOption("resourceAreaWidth", this.resourceAreaWidthCurrent);
+            api.setOption("slotMinWidth", this.slotMinWidthCurrent);
+            api.setOption("eventMinHeight", this.eventMinHeightCurrent);
+            api.setOption("slotLabelFormat", this.slotLabelFormatCurrent);
             api.updateSize();
           } catch (e) {
             // Calendar not ready
@@ -584,6 +631,12 @@ export default {
     },
 
     handleEventClick(info) {
+      // Release focus from the FullCalendar event before the modal hides the grid.
+      if (info?.el instanceof HTMLElement) {
+        info.el.blur();
+      } else if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
       const clickedCrewId = parseInt(info.event.getResources()[0].id);
       this.clickedCrewId = clickedCrewId;
       const resource = info.event.getResources()[0];
@@ -974,6 +1027,85 @@ export default {
     height: calc(100dvh - var(--jr-shell-mobile-bar, 3rem) - 6.75rem);
     max-height: calc(100dvh - var(--jr-shell-mobile-bar, 3rem) - 6.75rem);
     min-height: 36rem;
+  }
+}
+
+/* ≤440px (iPhone 16 logical width e inferior): denser grid; pinch-zoom del browser OK */
+@media (max-width: 440px) {
+  .jr-schedule__pane {
+    min-height: 16rem;
+    touch-action: pan-x pan-y pinch-zoom;
+  }
+
+  .jr-schedule__pane :deep(.fc) {
+    font-size: 0.75rem;
+  }
+
+  .jr-schedule__pane :deep(.fc .fc-toolbar) {
+    padding: 0.4rem 0.5rem;
+    gap: 0.35rem 0.5rem;
+  }
+
+  .jr-schedule__pane :deep(.fc .fc-toolbar-title) {
+    font-size: 0.8125rem;
+  }
+
+  .jr-schedule__pane :deep(.fc .fc-button) {
+    padding: 0.25rem 0.4rem !important;
+    font-size: 0.75rem !important;
+    min-width: 1.75rem !important;
+  }
+
+  .jr-schedule__pane :deep(.fc .fc-resource-timeline .fc-resource) {
+    height: 68px !important;
+  }
+
+  .jr-schedule__pane :deep(.fc .fc-datagrid-cell-cushion),
+  .jr-schedule__pane :deep(.fc .fc-col-header-cell-cushion),
+  .jr-schedule__pane :deep(.fc .fc-timeline-slot-cushion) {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.3rem;
+    line-height: 1.25;
+  }
+
+  .jr-schedule__pane :deep(.jr-schedule-event-card) {
+    padding: 0.3rem 0.4rem 0.3rem 0.45rem;
+    gap: 0.15rem;
+    border-radius: var(--radius-jr-badge, 0.5rem);
+    min-width: 0;
+  }
+
+  .jr-schedule__pane :deep(.jr-schedule-event-card__title) {
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+
+  .jr-schedule__pane :deep(.jr-schedule-event-card__desc) {
+    font-size: 0.625rem;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .jr-schedule__pane :deep(.jr-schedule-event-card__meta) {
+    font-size: 0.625rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .jr-schedule__pane :deep(.jr-schedule-event-card__badge) {
+    font-size: 0.625rem;
+    padding: 0.05rem 0.25rem;
+    line-height: 1.2;
   }
 }
 </style>

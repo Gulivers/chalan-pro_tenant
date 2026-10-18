@@ -60,8 +60,10 @@
 
           <JRField
             v-if="isAbsence"
+            v-slot="{ labelledby }"
             label="Absence reason"
             inputId="jr-schedule-absence-reason"
+            :use-for="false"
             required>
             <JRSelect
               inputId="jr-schedule-absence-reason"
@@ -71,6 +73,7 @@
               option-label="name"
               option-value="id"
               :disabled="!isEditing"
+              :ariaLabelledby="labelledby"
               placeholder="Select absence reason"
               filter
               show-clear />
@@ -78,15 +81,18 @@
 
           <div v-if="!isAbsence" class="jr-schedule-event__wa">
             <JRField
+              v-slot="{ labelledby }"
               label="Work Account"
               inputId="jr-schedule-event-wa"
+              :use-for="false"
               required>
               <WorkAccountSelector
                 inputId="jr-schedule-event-wa"
                 v-model="localFormData.work_account"
                 :showLabel="false"
                 :disabled="!isEditing"
-                :required="!isAbsence" />
+                :required="!isAbsence"
+                :ariaLabelledby="labelledby" />
             </JRField>
           </div>
 
@@ -527,12 +533,22 @@ export default {
       this.clickedCrewId = eventData?.clickedCrewId || eventData?.crew || null;
 
       this.isEditing = isEditMode;
+      // Blur calendar event (or any) focus before Dialog sets aria-hidden on the page.
+      if (
+        typeof document !== "undefined" &&
+        document.activeElement instanceof HTMLElement
+      ) {
+        document.activeElement.blur();
+      }
       this.visible = true;
       this.loadWorkAccountDetails(this.localFormData.work_account);
     },
 
     hideModal() {
-      if (document.activeElement) {
+      if (
+        typeof document !== "undefined" &&
+        document.activeElement instanceof HTMLElement
+      ) {
         document.activeElement.blur();
       }
       this.visible = false;
