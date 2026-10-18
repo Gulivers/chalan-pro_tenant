@@ -1,7 +1,11 @@
 <template>
   <div class="jr-field">
     <div v-if="label || $slots.help" class="jr-field__heading">
-      <label v-if="label" class="jr-field__label" :for="resolvedInputId">
+      <label
+        v-if="label"
+        class="jr-field__label"
+        :id="labelDomId"
+        :for="useFor ? resolvedInputId : undefined">
         <span class="jr-field__label-text">
           {{ label }}
           <span v-if="required" class="jr-field__required" aria-hidden="true">*</span>
@@ -9,7 +13,12 @@
       </label>
       <slot name="help" />
     </div>
-    <slot :errorId="errorId" :hintId="hintId" :invalid="!!error" :describedby="describedby" />
+    <slot
+      :errorId="errorId"
+      :hintId="hintId"
+      :invalid="!!error"
+      :describedby="describedby"
+      :labelledby="labelDomId" />
     <p v-if="hint" class="jr-field__hint" :id="hintId">{{ hint }}</p>
     <p v-if="error" class="jr-field__error" :id="errorId" role="alert">
       {{ error }}
@@ -43,6 +52,14 @@ export default {
       type: String,
       default: '',
     },
+    /**
+     * When false, omit label[for] (PrimeVue Select puts inputId on a non-labelable
+     * span). Pair with slot `labelledby` → control aria-labelledby instead.
+     */
+    useFor: {
+      type: Boolean,
+      default: true,
+    },
   },
   data() {
     return {
@@ -52,6 +69,9 @@ export default {
   computed: {
     resolvedInputId() {
       return this.inputId || this.uid;
+    },
+    labelDomId() {
+      return `${this.resolvedInputId}-label`;
     },
     errorId() {
       return `${this.resolvedInputId}-error`;
