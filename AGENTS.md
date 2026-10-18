@@ -45,6 +45,7 @@ Flujo: commit en `dev_local_status` → merge a `main_deploy` → push → en VP
 
 ## Documentación útil
 
+- Skill UI JobRhythm (JR): `.cursor/skills/jobrhythm-ui/SKILL.md` — contrato visual para agentes al implementar/migrar pantallas Vue (tokens, primitivos `@/ui`, sin Bootstrap). Detalle humano: `app/vuefrontend/src/ui/README.md`, listas en `LIST_VIEWS.md`, mundo visual en `DESIGN.md`.
 - Skill PDFs de transacciones: `.cursor/skills/transaction-pdf-reports/SKILL.md` (detalle humano: `app/apptransactions/README_PDF_REPORTS.md`)
 - Local / ubuntu-house: `app/readme/README_RESUMEN_GENERAL_LOCAL.md`
 - Resumen general produccion en VPS en Hostinger: `app/readme/README_RESUMEN_GENERAL.md`

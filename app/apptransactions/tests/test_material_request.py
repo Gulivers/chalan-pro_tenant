@@ -262,6 +262,30 @@ class MaterialRequestTests(TenantTestCase):
         delete_material_request(document=document)
         self.assertFalse(Document.objects.filter(pk=document.pk).exists())
 
+    def test_closed_request_cannot_update_lines(self):
+        document = create_material_request(
+            work_account=self.work_account,
+            work_order=self.event,
+            lines=[{'product': self.product, 'quantity': Decimal('2')}],
+            notes='',
+            user=self.user,
+        )
+        line = document.lines.first()
+        for code in ('approved', 'preparing', 'delivered', 'closed'):
+            transition_material_request(
+                document=document,
+                status_code=code,
+                notes='',
+                user=self.user,
+            )
+        with self.assertRaises(ValidationError):
+            update_material_request_lines(
+                document=document,
+                lines=[{'id': line.id, 'quantity': Decimal('5')}],
+            )
+        line.refresh_from_db()
+        self.assertEqual(line.quantity, Decimal('2'))
+
     def test_delivered_reduces_stock_and_revert_restores_it(self):
         warehouse = Warehouse.objects.create(name='Main', is_default=True)
         Stock.objects.create(product=self.product, warehouse=warehouse, quantity=Decimal('10'))

@@ -55,6 +55,7 @@ class MeView(APIView):
                 'username': user.get_username(),
                 'email': user.email or '',
                 'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
                 'is_tenant_owner': is_tenant_owner(user, tenant),
                 'permissions': list(user.get_all_permissions()),
                 **branding,

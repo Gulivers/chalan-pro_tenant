@@ -73,6 +73,7 @@
           type="button"
           :variant="showBntPublishAll ? 'primary' : 'secondary'"
           size="sm"
+          class="jr-schedule__publish-btn"
           :disabled="publishing || !showBntPublishAll"
           :aria-busy="publishing ? 'true' : 'false'"
           :title="
@@ -214,7 +215,7 @@ export default {
         eventResizableFromStart: false,
         droppable: false,
         resourceAreaHeaderContent: "Crew",
-        eventMinHeight: 90,
+        eventMinHeight: 180,
         height: "100%",
         stickyHeaderDates: true,
         slotLabelInterval: { days: 1 },
@@ -237,17 +238,28 @@ export default {
         eventContent: function (arg) {
           const event_date = dayjs(arg.event.extendedProps.updated_at);
           const isAbsence = arg.event.extendedProps?.is_absence;
+          const isDraft =
+            arg.event.extendedProps?.is_draft === true ||
+            arg.event.id?.startsWith("draft_id_") ||
+            arg.event.extendedProps?.deleted === undefined;
           let cardClass = "jr-schedule-event-card";
-          if (arg.event.extendedProps?.deleted !== undefined) {
-            cardClass += arg.event.extendedProps?.deleted
-              ? " jr-schedule-event-card--deleted"
-              : " jr-schedule-event-card--posted";
-          } else {
+          if (isDraft) {
             cardClass += " jr-schedule-event-card--draft";
-          }
-          if (isAbsence) {
-            cardClass =
-              "jr-schedule-event-card jr-schedule-event-card--absence";
+            if (isAbsence) {
+              cardClass += " jr-schedule-event-card--absence";
+            }
+          } else if (
+            arg.event.extendedProps?.deleted !== undefined &&
+            arg.event.extendedProps?.deleted
+          ) {
+            cardClass += " jr-schedule-event-card--deleted";
+            if (isAbsence) {
+              cardClass += " jr-schedule-event-card--absence";
+            }
+          } else if (isAbsence) {
+            cardClass += " jr-schedule-event-card--absence";
+          } else {
+            cardClass += " jr-schedule-event-card--posted";
           }
           const title = escapeScheduleHtml(arg.event.title || "");
           const description = escapeScheduleHtml(
@@ -498,7 +510,7 @@ export default {
               start: item.date,
               end: item.end_dt,
               title: item.title,
-              extendedProps: item,
+              extendedProps: { ...item, is_draft: true },
             });
           });
           this.$nextTick(() => {
@@ -869,6 +881,24 @@ export default {
   color: var(--color-jr-danger, #dc2626);
 }
 
+.jr-schedule__publish-btn:not(:disabled) {
+  background-color: var(--color-jr-warning, #d97706) !important;
+  border-color: var(--color-jr-warning, #d97706) !important;
+  color: #ffffff !important;
+}
+
+.jr-schedule__publish-btn:not(:disabled):hover {
+  background-color: var(--color-jr-warning-text, #92400e) !important;
+  border-color: var(--color-jr-warning-text, #92400e) !important;
+  color: #ffffff !important;
+}
+
+.jr-schedule__publish-btn:not(:disabled):focus-visible,
+.jr-schedule__publish-btn:not(:disabled).p-focus {
+  outline: 2px solid var(--color-jr-warning, #d97706) !important;
+  outline-offset: 2px !important;
+}
+
 .jr-schedule {
   margin-top: 0.75rem;
 }
@@ -887,10 +917,10 @@ export default {
   flex-direction: column;
   background: var(--color-jr-surface, #ffffff);
   border: 1px solid var(--color-jr-border, #e5e7eb);
-  border-radius: var(--radius-jr-panel, 0.75rem);
-  height: calc(100vh - var(--jr-shell-topbar, 3.5rem) - 10.5rem);
-  max-height: calc(100vh - var(--jr-shell-topbar, 3.5rem) - 10.5rem);
-  min-height: 22rem;
+  border-radius: 0;
+  height: calc(100vh - var(--jr-shell-topbar, 3.5rem) - 5.25rem);
+  max-height: calc(100vh - var(--jr-shell-topbar, 3.5rem) - 5.25rem);
+  min-height: 44rem;
   overflow: hidden;
 }
 
@@ -903,6 +933,22 @@ export default {
 .jr-schedule__pane :deep(.fc),
 .jr-schedule__pane :deep(.fc-view-harness) {
   height: 100% !important;
+}
+
+.jr-schedule__pane :deep(.jr-schedule-event-card--draft),
+.jr-schedule__pane :deep(.jr-schedule-event-card--draft.jr-schedule-event-card--absence) {
+  --jr-schedule-accent: var(--color-jr-muted, #4b5563);
+  background: var(--color-jr-page, #f3f4f6);
+  border-color: var(--color-jr-hover-border, #d1d5db);
+  border-left-color: var(--jr-schedule-accent);
+  color: var(--color-jr-text, #111827);
+}
+
+.jr-schedule__pane :deep(.jr-schedule-event-card--draft .jr-schedule-event-card__desc),
+.jr-schedule__pane :deep(.jr-schedule-event-card--draft .jr-schedule-event-card__meta),
+.jr-schedule__pane :deep(.jr-schedule-event-card--draft.jr-schedule-event-card--absence .jr-schedule-event-card__desc),
+.jr-schedule__pane :deep(.jr-schedule-event-card--draft.jr-schedule-event-card--absence .jr-schedule-event-card__meta) {
+  color: var(--color-jr-muted, #4b5563);
 }
 
 .jr-schedule__pane ::selection {
@@ -925,9 +971,9 @@ export default {
   }
 
   .jr-schedule__pane {
-    height: calc(100dvh - var(--jr-shell-mobile-bar, 3rem) - 13.5rem);
-    max-height: calc(100dvh - var(--jr-shell-mobile-bar, 3rem) - 13.5rem);
-    min-height: 18rem;
+    height: calc(100dvh - var(--jr-shell-mobile-bar, 3rem) - 6.75rem);
+    max-height: calc(100dvh - var(--jr-shell-mobile-bar, 3rem) - 6.75rem);
+    min-height: 36rem;
   }
 }
 </style>

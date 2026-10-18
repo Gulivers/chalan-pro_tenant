@@ -3,7 +3,7 @@
     <JRPageHeader v-if="!embedded" :title="request.document_number || 'Material Request'">
       <template #actions>
         <JRButton
-          v-if="!linesEditable && canEdit"
+          v-if="!linesEditable && canEdit && !isClosed"
           type="button"
           variant="ghost"
           size="sm"
@@ -247,8 +247,11 @@ export default {
     canEdit() {
       return this.hasPermission('apptransactions.change_document');
     },
+    isClosed() {
+      return String(this.request?.status || '').toLowerCase() === 'closed';
+    },
     linesEditable() {
-      return this.canEdit && (!this.embedded || this.editable);
+      return !this.isClosed && this.canEdit && (!this.embedded || this.editable);
     },
     notesId() {
       return `mr-transition-notes-${this.requestId}`;
@@ -314,6 +317,7 @@ export default {
       }
     },
     adjustLine(line, delta) {
+      if (this.isClosed) return;
       const next = Number(line.quantity) + delta;
       if (next <= 0) {
         this.removeLine(line);
@@ -322,6 +326,7 @@ export default {
       this.saveLine(line, next);
     },
     setLineQty(line, event) {
+      if (this.isClosed) return;
       const quantity = Number(event.target.value);
       if (!Number.isFinite(quantity) || quantity <= 0) {
         event.target.value = line.quantity;
@@ -331,6 +336,7 @@ export default {
       this.saveLine(line, quantity);
     },
     removeLine(line) {
+      if (this.isClosed) return;
       this.confirmDelete(
         'Remove this item?',
         `${line.product_name} will be removed from this request.`,
@@ -338,6 +344,7 @@ export default {
       );
     },
     async saveLine(line, quantity) {
+      if (this.isClosed) return;
       this.saving = true;
       this.error = '';
       try {

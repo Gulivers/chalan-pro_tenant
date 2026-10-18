@@ -66,6 +66,7 @@
             <JRSelect
               inputId="jr-schedule-absence-reason"
               v-model="localFormData.absence_reason"
+              class="jr-schedule-event__absence-select"
               :options="absenceReasons"
               option-label="name"
               option-value="id"
@@ -76,10 +77,17 @@
           </JRField>
 
           <div v-if="!isAbsence" class="jr-schedule-event__wa">
-            <WorkAccountSelector
-              v-model="localFormData.work_account"
-              :disabled="!isEditing"
-              :required="!isAbsence" />
+            <JRField
+              label="Work Account"
+              inputId="jr-schedule-event-wa"
+              required>
+              <WorkAccountSelector
+                inputId="jr-schedule-event-wa"
+                v-model="localFormData.work_account"
+                :showLabel="false"
+                :disabled="!isEditing"
+                :required="!isAbsence" />
+            </JRField>
           </div>
 
           <JRField label="Title" inputId="jr-schedule-event-title" required>
@@ -789,6 +797,35 @@ export default {
   padding: 0.75rem;
   border: 1px solid var(--color-jr-border, #e5e7eb);
   background: var(--color-jr-surface, #ffffff);
+}
+
+.jr-schedule-event__absence-select :deep(.p-select),
+.jr-schedule-event__form :deep(.jr-schedule-event__absence-select:not(.p-disabled)) {
+  border-color: var(--color-jr-primary, #2563eb);
+  background-color: color-mix(
+    in srgb,
+    var(--color-jr-primary, #2563eb) 6%,
+    var(--color-jr-surface, #ffffff)
+  );
+}
+
+.jr-schedule-event__form :deep(.jr-schedule-event__absence-select:not(.p-disabled):hover) {
+  border-color: var(--color-jr-primary-hover, #1d4ed8);
+}
+
+.jr-schedule-event__form :deep(.jr-schedule-event__absence-select:not(.p-disabled).p-focus),
+.jr-schedule-event__form :deep(.jr-schedule-event__absence-select:not(.p-disabled):focus-within) {
+  border-color: var(--color-jr-primary-active, #1e40af);
+  box-shadow: 0 0 0 1px var(--color-jr-primary, #2563eb);
+}
+
+.jr-schedule-event__form :deep(.jr-schedule-event__absence-select:not(.p-disabled) .p-select-label:not(.p-placeholder)) {
+  color: var(--color-jr-primary-active, #1e40af);
+  font-weight: 500;
+}
+
+.jr-schedule-event__form :deep(.jr-schedule-event__absence-select:not(.p-disabled) .p-select-dropdown) {
+  color: var(--color-jr-primary, #2563eb);
 }
 
 .jr-schedule-event__wa :deep(.jr-field),

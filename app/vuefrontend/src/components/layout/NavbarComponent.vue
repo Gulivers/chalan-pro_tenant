@@ -191,6 +191,7 @@
                   :user-name="userName"
                   :user-initials="userInitials"
                   :is-tenant-owner="isTenantOwner"
+                  :is-staff="isStaff"
                   @navigate="navigateTo"
                   @logout="logout" />
                 <SidebarMenuButton
@@ -222,6 +223,7 @@
         :user-name="userName"
         :user-initials="userInitials"
         :is-tenant-owner="isTenantOwner"
+        :is-staff="isStaff"
         :brand-logo-src="brandLogoSrc"
         :brand-logo-alt="brandLogoAlt"
         @navigate="navigateTo"
@@ -275,6 +277,7 @@
 
 <script>
 import { getAccessToken } from '@/auth/tokenHelpers';
+import { useAuthStore } from '@/stores/auth';
 import Box from "@primeicons/vue/box";
 import Building from "@primeicons/vue/building";
 import BuildingColumns from "@primeicons/vue/building-columns";
@@ -587,6 +590,7 @@ export default {
       ],
       userName: "",
       isTenantOwner: false,
+      isStaff: false,
       tenantLogoUrl: null,
       tenantName: null,
       tenantLogoFailed: false,
@@ -750,6 +754,7 @@ export default {
       if (!this.isLoggedIn) {
         this.userName = "";
         this.isTenantOwner = false;
+        this.isStaff = false;
         this.tenantLogoUrl = null;
         this.tenantName = null;
         this.tenantLogoFailed = false;
@@ -759,6 +764,12 @@ export default {
         if (user) {
           this.userName = user.username;
           this.isTenantOwner = !!user.is_tenant_owner;
+          this.isStaff = !!user.is_staff;
+          try {
+            useAuthStore().setStaff(this.isStaff);
+          } catch (_) {
+            /* ignore */
+          }
           this.tenantLogoUrl = user.tenant_logo_url || null;
           this.tenantName = user.tenant_name || null;
           this.tenantLogoFailed = false;

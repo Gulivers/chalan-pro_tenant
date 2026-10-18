@@ -11,6 +11,11 @@ RUN npm ci
 # Copy source files
 COPY . .
 
+# Vite inlines VITE_* at build time. Pass from compose / VPS:
+#   docker compose build --build-arg VITE_PRIMEUI_LICENSE=...
+ARG VITE_PRIMEUI_LICENSE=
+ENV VITE_PRIMEUI_LICENSE=$VITE_PRIMEUI_LICENSE
+
 # Build for production (will be in /app/dist)
 RUN npm run build
 
