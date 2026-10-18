@@ -121,7 +121,7 @@
 
 <script>
 import { getAccessToken } from '@/auth/tokenHelpers';
-import { h } from "vue";
+import { h, markRaw } from "vue";
 
 const stroke = {
   stroke: "currentColor",
@@ -131,7 +131,7 @@ const stroke = {
 };
 
 function createFlowIcon(nodes) {
-  return {
+  return markRaw({
     render() {
       return h(
         "svg",
@@ -145,7 +145,7 @@ function createFlowIcon(nodes) {
         nodes
       );
     },
-  };
+  });
 }
 
 const FlowIconCalendar = createFlowIcon([
@@ -178,6 +178,34 @@ const FlowIconDashboard = createFlowIcon([
   h("path", { d: "M4 19V5M4 19h16M8 19v-6M12 19V9M16 19v-3", ...stroke }),
 ]);
 
+const OPERATIONAL_FLOW_STEPS = Object.freeze([
+  {
+    label: "Schedule",
+    route: "/schedule",
+    icon: FlowIconCalendar,
+  },
+  {
+    label: "Prepare Material Packing",
+    route: "/transactions",
+    icon: FlowIconBox,
+  },
+  {
+    label: "Piece Work Contract",
+    route: "/contracts",
+    icon: FlowIconContract,
+  },
+  {
+    label: "Track Work Order",
+    route: "/work-accounts",
+    icon: FlowIconChat,
+  },
+  {
+    label: "Measure the Operation",
+    route: "/reports-exports",
+    icon: FlowIconDashboard,
+  },
+]);
+
 export default {
   name: "FooterComponent",
   data() {
@@ -187,36 +215,12 @@ export default {
       tenantLogoUrl: null,
       tenantName: null,
       tenantLogoFailed: false,
-      operationalFlowSteps: [
-        {
-          label: "Schedule",
-          route: "/schedule",
-          icon: FlowIconCalendar,
-        },
-        {
-          label: "Prepare Material Packing",
-          route: "/transactions",
-          icon: FlowIconBox,
-        },
-        {
-          label: "Piece Work Contract",
-          route: "/contracts",
-          icon: FlowIconContract,
-        },
-        {
-          label: "Track Work Order",
-          route: "/work-accounts",
-          icon: FlowIconChat,
-        },
-        {
-          label: "Measure the Operation",
-          route: "/reports-exports",
-          icon: FlowIconDashboard,
-        },
-      ],
     };
   },
   computed: {
+    operationalFlowSteps() {
+      return OPERATIONAL_FLOW_STEPS;
+    },
     jobrhythmLogoUrl() {
       const base = import.meta.env.BASE_URL || "/";
       return `${base}img/jobrhythm-logo.png`;

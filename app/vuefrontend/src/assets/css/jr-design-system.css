@@ -1273,3 +1273,236 @@
   border-right-color: var(--color-jr-text);
   border-left: 0;
 }
+
+/* ——— User / Group admin forms (Operate typeset + layout) ———
+   Path: header → identity → credentials → personal → access →
+   assignments → dates → sticky actions.
+   Spacing scale: 0.35 / 0.5 / 0.75 / 1 / 1.25 (tight in-group, generous between). */
+.jr-pilot.jr-user-admin .jr-page-header {
+  margin-bottom: 1.25rem;
+  gap: 0.65rem;
+}
+
+.jr-pilot.jr-user-admin .jr-page-header__title {
+  letter-spacing: -0.015em;
+}
+
+.jr-pilot.jr-user-admin .jr-page-header__desc {
+  max-width: 62ch;
+  margin-top: 0.45rem;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--color-jr-muted);
+}
+
+.jr-pilot.jr-user-admin .jr-user-admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.jr-pilot.jr-user-admin .jr-section {
+  margin-bottom: 2rem;
+}
+
+.jr-pilot.jr-user-admin .jr-section:last-of-type {
+  margin-bottom: 1.25rem;
+}
+
+.jr-pilot.jr-user-admin .jr-section__header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+.jr-pilot.jr-user-admin .jr-section__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.jr-pilot.jr-user-admin .jr-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.jr-pilot.jr-user-admin .jr-field__hint,
+.jr-pilot.jr-user-admin .jr-field__error {
+  max-width: 60ch;
+  line-height: 1.5;
+}
+
+.jr-pilot.jr-user-admin .jr-form-banner {
+  max-width: 65ch;
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--color-jr-danger-text);
+  background: var(--color-jr-danger-subtle);
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-panel);
+}
+
+.jr-pilot.jr-user-admin .jr-form-banner:focus {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: 2px;
+}
+
+.jr-pilot.jr-user-admin .jr-user-admin-form__status,
+.jr-pilot.jr-user-admin .jr-user-admin-form__note {
+  max-width: 62ch;
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--color-jr-muted);
+}
+
+.jr-pilot.jr-user-admin .jr-form-grid {
+  display: grid;
+  gap: 0.75rem 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+
+.jr-pilot.jr-user-admin .jr-form-grid--identity,
+.jr-pilot.jr-user-admin .jr-form-grid--dates {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 28rem;
+}
+
+.jr-pilot.jr-user-admin .jr-form-stack--credentials {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 36rem;
+  min-width: 0;
+  padding-top: 0.25rem;
+}
+
+@media (min-width: 768px) {
+  .jr-pilot.jr-user-admin .jr-form-grid--personal {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .jr-pilot.jr-user-admin .jr-form-grid--dates {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 36rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .jr-pilot.jr-user-admin .jr-form-grid--personal {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: none;
+  }
+
+  .jr-pilot.jr-user-admin .jr-user-admin-form__email-field {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 1023.98px) {
+  .jr-pilot.jr-user-admin .jr-user-admin-form__email-field {
+    grid-column: 1 / -1;
+  }
+}
+
+.jr-pilot.jr-user-admin .jr-user-admin-form__access {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 36rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--color-jr-border);
+}
+
+.jr-pilot.jr-user-admin .jr-form-checks {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  max-width: none;
+}
+
+@media (min-width: 768px) {
+  .jr-pilot.jr-user-admin .jr-form-checks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1.25rem;
+  }
+}
+
+.jr-pilot.jr-user-admin .jr-user-admin-form__assignments {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.jr-pilot.jr-user-admin .jr-user-admin-form__pick {
+  margin: 0;
+  min-width: 0;
+}
+
+.jr-pilot.jr-user-admin .jr-user-admin-form__pick-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  color: var(--color-jr-text);
+}
+
+.jr-pilot.jr-user-admin .jr-user-admin-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-top: 0.5rem;
+  padding: 0.75rem 0 0.35rem;
+  background: var(--color-jr-page);
+  border-top: 1px solid var(--color-jr-border);
+}
+
+.jr-pilot.jr-user-admin .jr-dual-pick__hint {
+  max-width: 62ch;
+  margin-top: 0.65rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-jr-muted);
+}
+
+.jr-pilot.jr-user-admin .jr-dual-pick__option {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.jr-pilot.jr-user-admin .p-picklist-header {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+@media (max-width: 767.98px) {
+  .jr-pilot.jr-user-admin .jr-user-admin-form__actions {
+    gap: 0.5rem;
+  }
+
+  .jr-pilot.jr-user-admin .jr-user-admin-form__actions .jr-button {
+    flex: 1 1 calc(50% - 0.25rem);
+    min-width: 0;
+  }
+
+  .jr-pilot.jr-user-admin .jr-user-admin-form__actions .jr-button.p-button-danger,
+  .jr-pilot.jr-user-admin .jr-user-admin-form__actions .p-button-danger {
+    flex: 1 1 100%;
+  }
+}

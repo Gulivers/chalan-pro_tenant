@@ -142,16 +142,18 @@ export default {
         : 'More actions';
     },
     menuModel() {
-      return this.visibleActions.map((action) => {
-        const iconIsComponent = this.isIconComponent(action.icon);
-        return {
-          label: action.label,
-          icon: iconIsComponent ? undefined : action.icon,
-          iconComponent: iconIsComponent ? action.icon : undefined,
-          class: `jr-row-actions__item--${action.severity || 'primary'}`,
-          command: action.command,
-        };
-      });
+      return this.visibleActions
+        .filter((action) => !this.isPlaceholderAction(action))
+        .map((action) => {
+          const iconIsComponent = this.isIconComponent(action.icon);
+          return {
+            label: action.label,
+            icon: iconIsComponent ? undefined : action.icon,
+            iconComponent: iconIsComponent ? action.icon : undefined,
+            class: `jr-row-actions__item--${action.severity || 'primary'}`,
+            command: action.command,
+          };
+        });
     },
   },
   mounted() {
@@ -181,6 +183,13 @@ export default {
   methods: {
     isIconComponent(icon) {
       return !!(icon && typeof icon !== 'string');
+    },
+    /** Invisible layout slot (e.g. reserved Delete) — omit from compact menus. */
+    isPlaceholderAction(action) {
+      if (!action) return false;
+      if (action.placeholder === true) return true;
+      const cls = String(action.buttonClass || '');
+      return !!action.disabled && cls.includes('placeholder');
     },
     primeSeverity(action) {
       if (!action?.severity || action.severity === 'primary') return undefined;

@@ -81,6 +81,10 @@ const HouseModelFormView = () =>
 // Transactions
 const DocTypeListView = () => import("@views/transactions/DocTypeListView.vue");
 const DocTypeForm = () => import("@components/transactions/DocTypeForm.vue");
+const UserPermissionsHub = () =>
+  import("@views/auth/UserPermissionsHub.vue");
+const UserAdminForm = () => import("@components/auth/UserForm.vue");
+const GroupAdminForm = () => import("@components/auth/GroupForm.vue");
 const PartyTypeListView = () =>
   import("@views/transactions/PartyTypeListView.vue");
 const PartyTypeForm = () =>
@@ -1066,6 +1070,76 @@ const routes = [
     },
   },
   {
+    path: "/user-permissions",
+    name: "user-permissions",
+    component: UserPermissionsHub,
+    meta: {
+      requiresAuth: true,
+      requiresStaff: true,
+      requiredPermissions: [],
+    },
+  },
+  {
+    path: "/user-permissions/users/new",
+    name: "user-permissions-user-new",
+    component: UserAdminForm,
+    meta: {
+      requiresAuth: true,
+      requiresStaff: true,
+      requiredPermissions: [],
+    },
+  },
+  {
+    path: "/user-permissions/users/:id",
+    name: "user-permissions-user-detail",
+    component: UserAdminForm,
+    meta: {
+      requiresAuth: true,
+      requiresStaff: true,
+      requiredPermissions: [],
+    },
+  },
+  {
+    path: "/user-permissions/users/:id/edit",
+    name: "user-permissions-user-edit",
+    component: UserAdminForm,
+    meta: {
+      requiresAuth: true,
+      requiresStaff: true,
+      requiredPermissions: [],
+    },
+  },
+  {
+    path: "/user-permissions/groups/new",
+    name: "user-permissions-group-new",
+    component: GroupAdminForm,
+    meta: {
+      requiresAuth: true,
+      requiresStaff: true,
+      requiredPermissions: [],
+    },
+  },
+  {
+    path: "/user-permissions/groups/:id",
+    name: "user-permissions-group-detail",
+    component: GroupAdminForm,
+    meta: {
+      requiresAuth: true,
+      requiresStaff: true,
+      requiredPermissions: [],
+    },
+  },
+  {
+    path: "/user-permissions/groups/:id/edit",
+    name: "user-permissions-group-edit",
+    component: GroupAdminForm,
+    meta: {
+      requiresAuth: true,
+      requiresStaff: true,
+      requiredPermissions: [],
+    },
+  },
+  {
     path: "/party-types",
     name: "party-types",
     component: PartyTypeListView,
@@ -1265,6 +1339,24 @@ router.beforeEach(async (to, from, next) => {
         );
 
       if (hasPermission) {
+        const requiresStaff = to.matched.some((r) => r.meta.requiresStaff);
+        if (requiresStaff) {
+          let staffOk = useAuthStore().isStaff();
+          if (!staffOk) {
+            try {
+              const me = await axios.get("/api/auth/me/");
+              staffOk = !!me.data?.is_staff;
+              useAuthStore().setStaff(staffOk);
+            } catch (_) {
+              staffOk = false;
+            }
+          }
+          if (!staffOk) {
+            alert("Staff access is required for User permissions.");
+            next(false);
+            return;
+          }
+        }
         const accessExempt = to.matched.some(
           (r) => r.meta.billingExempt || r.meta.tenantAccessExempt
         );

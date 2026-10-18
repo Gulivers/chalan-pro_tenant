@@ -49,6 +49,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    isStaff: {
+      type: Boolean,
+      default: false,
+    },
     /** `topbar` = desktop header; `sidebar` = mobile drawer footer */
     surface: {
       type: String,
@@ -111,6 +115,16 @@ export default {
           label: "Inventory Master Data Setup",
           command: () => this.$emit("navigate", "/inventory-master-data-setup"),
         },
+      );
+
+      if (this.isStaff || this.isTenantOwner) {
+        items.push({
+          label: "User permissions",
+          command: () => this.$emit("navigate", "/user-permissions"),
+        });
+      }
+
+      items.push(
         { separator: true },
         {
           label: "Log Out",

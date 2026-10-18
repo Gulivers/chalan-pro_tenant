@@ -53,6 +53,9 @@ services:
     build:
       context: ./app/vuefrontend
       dockerfile: Dockerfile.frontend
+      args:
+        # Definir en el .env del proyecto en el VPS (junto a docker-compose), no en Git.
+        VITE_PRIMEUI_LICENSE: ${VITE_PRIMEUI_LICENSE:-}
     container_name: chalanpro_frontend
     volumes:
       - ./app/vuefrontend/dist:/app/dist

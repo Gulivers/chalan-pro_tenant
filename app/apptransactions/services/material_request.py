@@ -116,6 +116,9 @@ def create_material_request(*, work_account, work_order, lines, notes, user):
 @transaction.atomic
 def update_material_request_lines(*, document, lines):
     """Cambia cantidades de un MR. Cantidad 0 quita el ítem. Debe quedar al menos uno."""
+    if _status_code(document) == 'closed':
+        raise ValidationError({'lines': 'Cannot edit quantities on a closed material request.'})
+
     locked = {
         line.id: line
         for line in DocumentLine.objects.select_for_update().filter(document=document)

@@ -135,7 +135,9 @@ app.use(TooltipDirective);
 const primeUiLicense = (import.meta.env.VITE_PRIMEUI_LICENSE || "").trim();
 
 app.use(PrimeVue, {
-  ...(primeUiLicense ? { license: primeUiLicense } : {}),
+  // PrimeVue 5 / PrimeUI: signed community or commercial key (offline verify).
+  // Without it the console shows: [PrimeUI] PrimeUI license is not configured.
+  license: primeUiLicense || undefined,
   theme: {
     preset: JobRhythmPreset,
     options: {

@@ -13,6 +13,7 @@ const ACCESS_KEY = 'jr_access' // legacy clear only
 const REFRESH_SESSION_KEY = 'jr_refresh'
 const SESSION_FLAG_KEY = 'jr_session'
 const PERMS_KEY = 'userPermissions'
+const STAFF_KEY = 'jr_is_staff'
 const LEGACY_TOKEN_KEY = 'authToken'
 
 const accessToken = ref(null)
@@ -77,8 +78,31 @@ export function useAuthStore() {
     localStorage.setItem(PERMS_KEY, JSON.stringify({ permissions: list }))
   }
 
+  function setStaff(isStaff) {
+    try {
+      if (isStaff) {
+        localStorage.setItem(STAFF_KEY, '1')
+      } else {
+        localStorage.removeItem(STAFF_KEY)
+      }
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
+  function isStaff() {
+    try {
+      return localStorage.getItem(STAFF_KEY) === '1'
+    } catch (_) {
+      return false
+    }
+  }
+
   function setUser(newUser) {
     user.value = newUser
+    if (newUser && Object.prototype.hasOwnProperty.call(newUser, 'is_staff')) {
+      setStaff(!!newUser.is_staff)
+    }
   }
 
   function applyLoginResponse(data) {
@@ -105,6 +129,7 @@ export function useAuthStore() {
     setRefreshToken(null)
     setUser(null)
     setSessionFlag(false)
+    setStaff(false)
     clearLegacyStorage()
     try {
       localStorage.removeItem(PERMS_KEY)
@@ -127,6 +152,8 @@ export function useAuthStore() {
     setRefreshToken,
     getRefreshToken,
     setPermissions,
+    setStaff,
+    isStaff,
     setUser,
     applyLoginResponse,
     clearSession,
@@ -135,4 +162,4 @@ export function useAuthStore() {
   }
 }
 
-export { REFRESH_SESSION_KEY, PERMS_KEY, SESSION_FLAG_KEY }
+export { REFRESH_SESSION_KEY, PERMS_KEY, SESSION_FLAG_KEY, STAFF_KEY }
