@@ -216,6 +216,7 @@
     </Sidebar>
 
     <SidebarMain class="jr-app-shell__main">
+      <!-- Desktop: topbar sits beside the sidebar and scrolls with the page -->
       <AppShellTopbar
         :dashboard-active="isRouteActive('/')"
         :show-assistant="showAssistantButton"
@@ -231,7 +232,7 @@
         @open-assistant="openAssistant"
         @brand-logo-error="onTenantLogoError" />
 
-          <header class="jr-shell-mobile-bar" aria-label="App navigation">
+      <header class="jr-shell-mobile-bar" aria-label="App navigation">
         <SidebarTrigger
           class="jr-shell-mobile-bar__menu"
           target="jr-main-sidebar"

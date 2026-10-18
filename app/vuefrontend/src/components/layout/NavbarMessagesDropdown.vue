@@ -611,11 +611,24 @@ export default {
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
-  border: 1px solid var(--color-jr-border);
-  background: var(--color-jr-surface);
-  color: var(--color-jr-text);
+  border: 0;
+  border-radius: var(--radius-jr-control, 0);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
   cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.jr-shell-messages:hover,
+.jr-shell-messages[aria-expanded="true"] {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.jr-shell-messages:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }
 
 .jr-shell-messages svg {
