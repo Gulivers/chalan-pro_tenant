@@ -29,6 +29,7 @@ export function readApiError(err, fallback = 'Something went wrong.') {
   const data = err?.response?.data;
   if (!data) return fallback;
   if (typeof data === 'string') return data;
+  if (Array.isArray(data)) return data.join(' ');
   const detail =
     data.status ||
     data.detail ||
