@@ -259,6 +259,7 @@
 
         <DocumentStatusEditor
           v-if="id"
+          ref="statusEditorRef"
           :documentTypeId="id"
           :readOnly="isProtectedType || isViewMode" />
 
@@ -336,6 +337,7 @@ const props = defineProps({
 const submitting = ref(false);
 const loading = ref(false);
 const fieldErrors = ref({});
+const statusEditorRef = ref(null);
 
 const id = computed(() => props.id || route.query.id || null);
 const isViewMode = computed(() => route.query.mode === "view");
@@ -563,8 +565,9 @@ const handleSubmit = async () => {
       return;
     }
 
+    const wasEdit = isEditMode.value;
     let savedData;
-    if (isEditMode.value) {
+    if (wasEdit) {
       const response = await axios.put(
         `/api/document-types/${id.value}/`,
         trimmedData
@@ -575,14 +578,33 @@ const handleSubmit = async () => {
       savedData = response.data;
     }
 
+    // Persist Document Statuses with the same Save action (edit form only).
+    let statusesSaved = false;
+    if (wasEdit && statusEditorRef.value?.saveAll) {
+      const statusResult = await statusEditorRef.value.saveAll();
+      if (!statusResult?.ok) {
+        emit("saved", savedData);
+        proxy?.notifyToastError?.(
+          statusResult?.error ||
+            "Document type saved, but statuses could not be saved."
+        );
+        return;
+      }
+      statusesSaved = (statusResult.savedCount || 0) > 0;
+    }
+
     emit("saved", savedData);
     proxy?.notifyToastSuccess?.(
-      isEditMode.value ? "Document type updated." : "Document type created."
+      wasEdit
+        ? statusesSaved
+          ? "Document type and statuses saved."
+          : "Document type updated."
+        : "Document type created."
     );
 
     if (!props.isModal) {
       // After create, stay on the edit form so statuses can be configured.
-      if (!isEditMode.value && savedData?.id) {
+      if (!wasEdit && savedData?.id) {
         router
           .push({
             name: "document-types-form",

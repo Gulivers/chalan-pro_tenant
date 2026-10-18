@@ -3,7 +3,8 @@
     <p class="jr-doc-status-editor__note">
       Workflow for this document type. Sequence order controls transitions
       (one step at a time). Add an active initial status before enabling
-      status tracking on documents.
+      status tracking on documents. The form Save button also saves all
+      status rows below.
     </p>
 
     <p
@@ -157,6 +158,7 @@
 
 <script>
 import axios from 'axios';
+import Swal from 'sweetalert2';
 import { JRButton, JRCheckbox, JRInput, JRSection } from '@/ui';
 import { readApiError } from '@/utils/documentStatus';
 
@@ -323,35 +325,110 @@ export default {
       if (!row.name?.trim()) return 'Name is required.';
       return '';
     },
+    buildPayload(row) {
+      return {
+        document_type: Number(this.documentTypeId),
+        sequence: Number(row.sequence),
+        code: this.normalizeCode(row.code),
+        name: row.name.trim(),
+        is_initial: !!row.is_initial,
+        is_terminal: !!row.is_terminal,
+        is_active: !!row.is_active,
+      };
+    },
+    async persistRow(row) {
+      const payload = this.buildPayload(row);
+      if (this.isDraft(row)) {
+        if (!this.canAdd) {
+          throw new Error('You do not have permission to add statuses.');
+        }
+        await axios.post('/api/document-statuses/', payload);
+        return;
+      }
+      if (!this.canChange) {
+        throw new Error('You do not have permission to change statuses.');
+      }
+      await axios.patch(`/api/document-statuses/${row.id}/`, {
+        sequence: payload.sequence,
+        code: payload.code,
+        name: payload.name,
+        is_initial: payload.is_initial,
+        is_terminal: payload.is_terminal,
+        is_active: payload.is_active,
+      });
+    },
     async saveRow(row) {
       this.rowError = this.validateRow(row);
       if (this.rowError) return;
       this.saving = true;
       try {
-        const payload = {
-          document_type: Number(this.documentTypeId),
-          sequence: Number(row.sequence),
-          code: this.normalizeCode(row.code),
-          name: row.name.trim(),
-          is_initial: !!row.is_initial,
-          is_terminal: !!row.is_terminal,
-          is_active: !!row.is_active,
-        };
-        if (this.isDraft(row)) {
-          await axios.post('/api/document-statuses/', payload);
-        } else {
-          await axios.patch(`/api/document-statuses/${row.id}/`, {
-            sequence: payload.sequence,
-            code: payload.code,
-            name: payload.name,
-            is_initial: payload.is_initial,
-            is_terminal: payload.is_terminal,
-            is_active: payload.is_active,
-          });
-        }
+        await this.persistRow(row);
         await this.load();
       } catch (err) {
-        this.rowError = readApiError(err, 'Could not save this status.');
+        this.rowError =
+          err?.message && !err?.response
+            ? err.message
+            : readApiError(err, 'Could not save this status.');
+      } finally {
+        this.saving = false;
+      }
+    },
+    /**
+     * Persist every editable row (drafts + existing). Used by DocTypeForm Save.
+     * Non-initial rows are saved first so switching the initial flag does not
+     * trip the one-initial-per-type validation.
+     * @returns {Promise<{ ok: boolean, error?: string, savedCount?: number }>}
+     */
+    async saveAll() {
+      if (this.readOnly || !this.documentTypeId) {
+        return { ok: true, savedCount: 0 };
+      }
+      if (this.loading) {
+        return { ok: false, error: 'Statuses are still loading. Try again.' };
+      }
+      if (!this.canAdd && !this.canChange) {
+        return { ok: true, savedCount: 0 };
+      }
+
+      const rows = this.sortedRows;
+      for (const row of rows) {
+        const err = this.validateRow(row);
+        if (err) {
+          this.rowError = err;
+          return { ok: false, error: err };
+        }
+      }
+
+      const initialCount = rows.filter((row) => row.is_initial).length;
+      if (rows.length && initialCount !== 1) {
+        const msg = 'Exactly one status must be marked as Initial.';
+        this.rowError = msg;
+        return { ok: false, error: msg };
+      }
+
+      this.saving = true;
+      this.rowError = '';
+      let savedCount = 0;
+      try {
+        const ordered = [
+          ...rows.filter((row) => !row.is_initial),
+          ...rows.filter((row) => row.is_initial),
+        ];
+        for (const row of ordered) {
+          if (this.isDraft(row) && !this.canAdd) continue;
+          if (!this.isDraft(row) && !this.canChange) continue;
+          await this.persistRow(row);
+          savedCount += 1;
+        }
+        await this.load();
+        return { ok: true, savedCount };
+      } catch (err) {
+        const msg =
+          err?.message && !err?.response
+            ? err.message
+            : readApiError(err, 'Could not save document statuses.');
+        this.rowError = msg;
+        return { ok: false, error: msg, savedCount };
       } finally {
         this.saving = false;
       }
@@ -361,20 +438,40 @@ export default {
         this.rows = this.rows.filter((item) => item !== row);
         return;
       }
-      const ok = window.confirm(
-        `Delete status "${row.name}"? If it is already used, deactivate it instead.`
-      );
-      if (!ok) return;
+
+      const confirmResult = await Swal.fire({
+        title: 'Delete Status?',
+        text: `Delete status "${row.name}"? If it is already used, deactivate it instead.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true,
+      });
+
+      if (!confirmResult.isConfirmed) return;
+
       this.saving = true;
       this.rowError = '';
       try {
         await axios.delete(`/api/document-statuses/${row.id}/`);
+        this.notifyToastSuccess?.('Status deleted successfully.');
         await this.load();
       } catch (err) {
-        this.rowError = readApiError(
+        const errorMsg = readApiError(
           err,
           'Could not delete this status. Deactivate it if it is already in use.'
         );
+        this.rowError = errorMsg;
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Cannot Delete Status',
+          text: errorMsg,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#2563eb',
+        });
       } finally {
         this.saving = false;
       }
