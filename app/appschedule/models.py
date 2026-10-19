@@ -1,7 +1,7 @@
 from django.db import models
-from django.db.models import ProtectedError, Q
+from django.db.models import ProtectedError, Q, UniqueConstraint
 from django.contrib.auth.models import User
-from crewsapp.models import Crew
+from crewsapp.models import Crew, Category
 from ctrctsapp.models import Builder, HouseModel, Job
 from django.utils import timezone    #OAHP
 from django.utils.deconstruct import deconstructible
@@ -353,3 +353,335 @@ class EventImage(models.Model):
                 name='event_image_requires_event_or_work_account'
             )
         ]
+
+
+# ---------------------------------------------------------------------------
+# Work Order Status & Progress (tenant-scoped catalog + per-Event tracking)
+# ---------------------------------------------------------------------------
+
+
+class WorkOrderStatus(models.Model):
+    """
+    Single catalog of Work Order statuses per tenant (not per crew category).
+
+    Operative users change Event tracking via the API; only admins maintain
+    this catalog (Django Admin / catalog endpoints).
+    """
+
+    code = models.CharField(max_length=64)
+    name = models.CharField(max_length=120)
+    sequence = models.PositiveIntegerField()
+    is_initial = models.BooleanField(
+        default=False,
+        help_text='Assigned automatically when a Work Order is published.',
+    )
+    is_terminal = models.BooleanField(
+        default=False,
+        help_text='Marks the Work Order as completed (e.g. Passed & Closed).',
+    )
+    requires_inspection_ready = models.BooleanField(
+        default=False,
+        help_text=(
+            'Entering this status requires all progress items marked '
+            'required for inspection to be completed.'
+        ),
+    )
+    requires_completion_ready = models.BooleanField(
+        default=False,
+        help_text=(
+            'Entering this status requires all progress items marked '
+            'required for completion to be completed.'
+        ),
+    )
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['sequence', 'id']
+        verbose_name = 'Work Order Status'
+        verbose_name_plural = 'Work Order Statuses'
+        constraints = [
+            UniqueConstraint(fields=['code'], name='uniq_work_order_status_code'),
+            UniqueConstraint(fields=['sequence'], name='uniq_work_order_status_sequence'),
+        ]
+
+    def __str__(self):
+        return f'{self.sequence}. {self.name}'
+
+    def _is_referenced(self):
+        if not self.pk:
+            return False
+        return (
+            self.current_work_orders.exists()
+            or self.history_from.exists()
+            or self.history_to.exists()
+        )
+
+    def clean(self):
+        super().clean()
+        if self.is_initial:
+            qs = WorkOrderStatus.objects.filter(is_initial=True)
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            if qs.exists():
+                raise ValidationError({
+                    'is_initial': 'Only one initial Work Order status is allowed.',
+                })
+        if self.pk:
+            previous = WorkOrderStatus.objects.filter(pk=self.pk).first()
+            if (
+                previous is not None
+                and previous.code != self.code
+                and self._is_referenced()
+            ):
+                raise ValidationError({
+                    'code': (
+                        'This status is already referenced and its code cannot '
+                        'be changed. Deactivate it instead.'
+                    ),
+                })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self._is_referenced():
+            raise ProtectedError(
+                'This status is referenced by Work Orders or history and cannot '
+                'be deleted. Set is_active=False instead.',
+                {self},
+            )
+        return super().delete(*args, **kwargs)
+
+
+class WorkOrderTracking(models.Model):
+    """Current operative status of a published Work Order (Event)."""
+
+    event = models.OneToOneField(
+        Event,
+        on_delete=models.CASCADE,
+        related_name='work_order_tracking',
+    )
+    current_status = models.ForeignKey(
+        WorkOrderStatus,
+        on_delete=models.PROTECT,
+        related_name='current_work_orders',
+    )
+    status_changed_at = models.DateTimeField(default=timezone.now)
+    changed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='work_order_status_changes',
+    )
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = 'Work Order Tracking'
+        verbose_name_plural = 'Work Order Tracking'
+
+    def __str__(self):
+        return f'{self.event_id} → {self.current_status.code}'
+
+
+class WorkOrderStatusHistory(models.Model):
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name='work_order_status_history',
+    )
+    from_status = models.ForeignKey(
+        WorkOrderStatus,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='history_from',
+    )
+    to_status = models.ForeignKey(
+        WorkOrderStatus,
+        on_delete=models.PROTECT,
+        related_name='history_to',
+    )
+    changed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='work_order_status_history',
+    )
+    changed_at = models.DateTimeField(default=timezone.now)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['changed_at', 'id']
+        verbose_name = 'Work Order Status History'
+        verbose_name_plural = 'Work Order Status History'
+
+    def __str__(self):
+        origin = self.from_status.code if self.from_status_id else '—'
+        return f'{self.event_id} {origin} → {self.to_status.code}'
+
+
+class WorkOrderProgressTemplate(models.Model):
+    """
+    Progress checklist template for a crew category (phase), or a general
+    template when category is null.
+    """
+
+    name = models.CharField(max_length=120)
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='work_order_progress_templates',
+        help_text='Crew category this template applies to (e.g. Rough, Trim).',
+    )
+    is_active = models.BooleanField(default=True)
+    is_expected_for_work_account = models.BooleanField(
+        default=True,
+        help_text=(
+            'When True, Work Account rollup treats this phase as expected '
+            'for project completion (even if no Work Order exists yet).'
+        ),
+    )
+    description = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['name', 'id']
+        verbose_name = 'Work Order Progress Template'
+        verbose_name_plural = 'Work Order Progress Templates'
+        constraints = [
+            UniqueConstraint(
+                fields=['category'],
+                condition=Q(category__isnull=False),
+                name='uniq_wo_progress_template_category',
+            ),
+        ]
+
+    def __str__(self):
+        if self.category_id:
+            return f'{self.name} ({self.category.name})'
+        return self.name
+
+
+class WorkOrderProgressItem(models.Model):
+    """Configurable checkpoint definition inside a progress template."""
+
+    template = models.ForeignKey(
+        WorkOrderProgressTemplate,
+        on_delete=models.CASCADE,
+        related_name='items',
+    )
+    code = models.CharField(max_length=64)
+    name = models.CharField(max_length=160)
+    sequence = models.PositiveIntegerField()
+    is_required_for_inspection = models.BooleanField(
+        default=False,
+        help_text='Must be completed before entering an inspection-ready status.',
+    )
+    is_required_for_completion = models.BooleanField(
+        default=False,
+        help_text='Must be completed before entering a completion/terminal status.',
+    )
+    is_informational = models.BooleanField(
+        default=False,
+        help_text='Shown for awareness only; never blocks transitions.',
+    )
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['template', 'sequence', 'id']
+        verbose_name = 'Work Order Progress Item'
+        verbose_name_plural = 'Work Order Progress Items'
+        constraints = [
+            UniqueConstraint(
+                fields=['template', 'code'],
+                name='uniq_wo_progress_item_template_code',
+            ),
+            UniqueConstraint(
+                fields=['template', 'sequence'],
+                name='uniq_wo_progress_item_template_sequence',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.template_id}:{self.code}'
+
+    def clean(self):
+        super().clean()
+        if self.is_informational and (
+            self.is_required_for_inspection or self.is_required_for_completion
+        ):
+            raise ValidationError({
+                'is_informational': (
+                    'Informational items cannot also be required for '
+                    'inspection or completion.'
+                ),
+            })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
+class WorkOrderProgressCheck(models.Model):
+    """Per-Work-Order instance of a progress checkpoint."""
+
+    SOURCE_MANUAL = 'manual'
+    SOURCE_TRANSACTION = 'transaction'
+    SOURCE_CHOICES = (
+        (SOURCE_MANUAL, 'Manual'),
+        (SOURCE_TRANSACTION, 'Transaction'),
+    )
+
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name='progress_checks',
+    )
+    item = models.ForeignKey(
+        WorkOrderProgressItem,
+        on_delete=models.PROTECT,
+        related_name='checks',
+    )
+    is_done = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    completed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='work_order_progress_completions',
+    )
+    notes = models.TextField(blank=True)
+    source = models.CharField(
+        max_length=32,
+        choices=SOURCE_CHOICES,
+        default=SOURCE_MANUAL,
+    )
+    source_document = models.ForeignKey(
+        'apptransactions.Document',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='work_order_progress_checks',
+        help_text='Optional link for future transaction-driven suggestions.',
+    )
+
+    class Meta:
+        ordering = ['item__sequence', 'id']
+        verbose_name = 'Work Order Progress Check'
+        verbose_name_plural = 'Work Order Progress Checks'
+        constraints = [
+            UniqueConstraint(
+                fields=['event', 'item'],
+                name='uniq_wo_progress_check_event_item',
+            ),
+        ]
+
+    def __str__(self):
+        state = 'done' if self.is_done else 'pending'
+        return f'{self.event_id}:{self.item.code} ({state})'

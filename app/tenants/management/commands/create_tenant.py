@@ -128,13 +128,24 @@ class Command(BaseCommand):
                         from apptransactions.services.document_status import (
                             seed_default_document_statuses,
                         )
+                        from appschedule.services.work_order_status import (
+                            seed_work_order_defaults,
+                        )
                         seeded = seed_default_document_statuses()
+                        wo_seed = seed_work_order_defaults()
                     self.stdout.write(self.style.SUCCESS('✓ Tipos de documento iniciales cargados.'))
                     if seeded:
                         self.stdout.write(
                             self.style.SUCCESS(
                                 f'✓ Estados predeterminados PO/PK/PR creados ({seeded}). '
                                 'Status tracking permanece deshabilitado.'
+                            )
+                        )
+                    if wo_seed and any(wo_seed.values()):
+                        self.stdout.write(
+                            self.style.SUCCESS(
+                                '✓ Work Order statuses/progress defaults: '
+                                f'{wo_seed}'
                             )
                         )
                 else:

@@ -171,3 +171,19 @@ def delete_event_image_file(sender, instance, **kwargs):
         except Exception as e:
             # Si hay error (por ejemplo, permisos), solo lo imprime, no detiene el proceso
             print(f"Error al borrar carpeta vacía: {dir_path} -> {e}")
+
+
+@receiver(post_save, sender=Event, dispatch_uid='event_ensure_work_order_status')
+def ensure_work_order_status_on_event_create(sender, instance, created, **kwargs):
+    """
+    Admin / API create of a published Event: assign Scheduled + progress.
+    Idempotent with publish_draft hook. Never resets status on later saves.
+    """
+    if not created:
+        return
+    from appschedule.services.work_order_status import ensure_initial_work_order_status
+
+    ensure_initial_work_order_status(
+        event=instance,
+        user=getattr(instance, 'created_by', None),
+    )

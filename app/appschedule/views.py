@@ -135,6 +135,21 @@ class EventViewSet(viewsets.ModelViewSet):
                     event.id, _created, draft.id, draft.crew.name if draft.crew else None, 
                     draft.date, draft.title)
 
+        # Work Order status/progress: seed on publish; never reset status on re-publish.
+        from appschedule.services.work_order_status import (
+            ensure_initial_work_order_status,
+            ensure_progress_checks,
+        )
+        from appschedule.models import WorkOrderTracking
+
+        if WorkOrderTracking.objects.filter(event_id=event.pk).exists():
+            ensure_progress_checks(event=event)
+        else:
+            ensure_initial_work_order_status(
+                event=event,
+                user=getattr(draft, 'created_by', None),
+            )
+
         draft.delete()
         return event
 
