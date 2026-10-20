@@ -25,6 +25,17 @@
                 clip-rule="evenodd" />
             </svg>
             <svg
+              v-else-if="tab.id === 'status'"
+              class="jr-wov-tab__icon"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true">
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clip-rule="evenodd" />
+            </svg>
+            <svg
               v-else-if="tab.id === 'notes'"
               class="jr-wov-tab__icon"
               viewBox="0 0 20 20"
@@ -92,6 +103,19 @@
             description="This work account has no linked schedule event yet. Create a schedule event to start chatting." />
         </TabPanel>
 
+        <TabPanel value="status">
+          <WorkOrderStatusPanel
+            v-if="eventId"
+            :key="eventId"
+            :event-id="eventId"
+            @status-changed="$emit('status-changed', $event)"
+            @progress-changed="$emit('progress-changed', $event)" />
+          <JREmptyState
+            v-else
+            title="Status unavailable"
+            description="This work account has no linked schedule event yet. Create a schedule event to track its status and progress." />
+        </TabPanel>
+
         <TabPanel value="notes">
           <ScheduleHouseNotesComponent
             v-if="eventId"
@@ -157,6 +181,7 @@ import EventImageAdmin from "@components/schedule/EventImageAdmin.vue";
 import ScheduleHouseContractsComponent from "@components/schedule/ScheduleHouseContractsComponent.vue";
 import ScheduleHouseTransactionsComponent from "@components/schedule/ScheduleHouseTransactionsComponent.vue";
 import MissingMaterialPanel from "@components/material/MissingMaterialPanel.vue";
+import WorkOrderStatusPanel from "@components/work-accounts/WorkOrderStatusPanel.vue";
 import { JREmptyState } from "@/ui";
 import {
   WORK_ORDER_VIEWER_TABS,
@@ -177,8 +202,10 @@ export default {
     ScheduleHouseContractsComponent,
     ScheduleHouseTransactionsComponent,
     MissingMaterialPanel,
+    WorkOrderStatusPanel,
     JREmptyState,
   },
+  emits: ["status-changed", "progress-changed"],
   props: {
     workAccountId: {
       type: Number,
