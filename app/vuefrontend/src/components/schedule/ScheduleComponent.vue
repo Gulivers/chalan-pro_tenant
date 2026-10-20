@@ -132,6 +132,7 @@ import { useAuthStore } from "@stores/auth";
 import { openPdf } from "@helpers";
 import SearchIcon from "@components/icons/searchIcon.vue";
 import { appMixin } from "@mixins/appMixin";
+import { workOrderStatusSeverity } from "@/utils/workOrderStatus";
 import FileExcel from "@primeicons/vue/file-excel";
 import FilePdf from "@primeicons/vue/file-pdf";
 import {
@@ -151,6 +152,19 @@ function escapeScheduleHtml(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/** Mini badge with the Work Order status of a published event. */
+function workOrderStatusBadgeHtml(props, isDraftEvent) {
+  if (isDraftEvent || !props || props.is_absence || props.deleted) return "";
+  const name = props.work_order_status_name;
+  if (!name) return "";
+  const severity = workOrderStatusSeverity({
+    status_code: props.work_order_status_code,
+    is_terminal: !!props.work_order_status_is_terminal,
+  });
+  const safeName = escapeScheduleHtml(name);
+  return `<span class="jr-schedule-event-card__status jr-schedule-event-card__status--${severity}" title="Work Order status: ${safeName}">${safeName}</span>`;
 }
 
 export default {
@@ -270,9 +284,17 @@ export default {
           const description = escapeScheduleHtml(
             arg.event.extendedProps.description || ""
           );
-          const extService = arg.event.extendedProps?.extended_service
-            ? `<div class="jr-schedule-event-card__flags"><span class="jr-schedule-event-card__badge">Ext. Service</span></div>`
+          const statusBadge = workOrderStatusBadgeHtml(
+            arg.event.extendedProps,
+            isDraft
+          );
+          const extServiceBadge = arg.event.extendedProps?.extended_service
+            ? `<span class="jr-schedule-event-card__badge">Ext. Service</span>`
             : "";
+          const flags =
+            statusBadge || extServiceBadge
+              ? `<div class="jr-schedule-event-card__flags">${statusBadge}${extServiceBadge}</div>`
+              : "";
           const absencePrefix = isAbsence
             ? `<span class="jr-schedule-event-card__absence-mark" aria-hidden="true"></span>`
             : "";
@@ -280,7 +302,7 @@ export default {
             html: `<div class="${cardClass}">
                      <span class="jr-schedule-event-card__title">${absencePrefix}${title}</span>
                      <div class="jr-schedule-event-card__desc">${description}</div>
-                     ${extService}
+                     ${flags}
                      <div class="jr-schedule-event-card__meta">${escapeScheduleHtml(
                        event_date.format("lll")
                      )}</div>
@@ -1104,6 +1126,12 @@ export default {
 
   .jr-schedule__pane :deep(.jr-schedule-event-card__badge) {
     font-size: 0.625rem;
+    padding: 0.05rem 0.25rem;
+    line-height: 1.2;
+  }
+
+  .jr-schedule__pane :deep(.jr-schedule-event-card__status) {
+    font-size: 0.5625rem;
     padding: 0.05rem 0.25rem;
     line-height: 1.2;
   }

@@ -53,6 +53,7 @@ export async function resolveScheduleEventForWorkAccount(
 
 export const WORK_ORDER_VIEWER_TABS = [
   { id: "chat", label: "Chat for Job" },
+  { id: "status", label: "Status & Progress" },
   { id: "notes", label: "Notes for Job" },
   { id: "folder", label: "Folder" },
   { id: "contracts", label: "Contracts" },

@@ -263,7 +263,9 @@ class EventsListView(APIView):
               Q(date__gte=start_at, date__lte=end_at) |  # Empieza dentro del rango
               Q(end_dt__gte=start_at, end_dt__lte=end_at))  # Termina dentro del rango
 
-        events = Event.objects.select_related('crew').filter(q, deleted=False)
+        events = Event.objects.select_related(
+            'crew', 'work_order_tracking__current_status'
+        ).filter(q, deleted=False)
         
         # Excluir los eventos que ya tienen draft (solo para usuarios con permiso)
         if request.user.has_perm('appschedule.add_eventdraft'):
@@ -520,7 +522,9 @@ class MyEventsView(APIView):
 
             pass
 
-        queryset = Event.objects.select_related('crew', 'crew__category').filter(q).distinct()
+        queryset = Event.objects.select_related(
+            'crew', 'crew__category', 'work_order_tracking__current_status'
+        ).filter(q).distinct()
 
         # Subquery para contar mensajes NO leídos por usuario
         unread_subquery = EventChatMessage.objects.filter(
