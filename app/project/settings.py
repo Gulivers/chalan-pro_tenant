@@ -486,9 +486,13 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
     # Use PostgreSQL with Render's DATABASE_URL
+    # ASGI/Daphne: persistent connections must be OFF (Django docs). Each ASGI
+    # request runs in its own task context, so CONN_MAX_AGE>0 leaks one idle
+    # Postgres connection per request until max_connections is exhausted
+    # ("sorry, too many clients already"). Pool with PgBouncer if ever needed.
     db_config = dj_database_url.config(
         default=DATABASE_URL,
-        conn_max_age=int(os.environ.get('DJANGO_CONN_MAX_AGE', '60')),
+        conn_max_age=int(os.environ.get('DJANGO_CONN_MAX_AGE', '0')),
         conn_health_checks=True,
     )
     # Cambiar el ENGINE a django-tenants
@@ -506,6 +510,8 @@ else:
             'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'chalan2024'),
             'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
             'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+            # Ver nota ASGI arriba: sin conexiones persistentes.
+            'CONN_MAX_AGE': int(os.environ.get('DJANGO_CONN_MAX_AGE', '0')),
         }
     }
 
