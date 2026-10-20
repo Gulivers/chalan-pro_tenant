@@ -143,7 +143,11 @@ class CrewAdmin(admin.ModelAdmin):
     list_filter = ['category']
     search_fields = ['name']
 
-admin.site.register(Category)
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['name']
+    search_fields = ['name']
+    ordering = ['name']
 
 
 @admin.register(TruckAssignment)

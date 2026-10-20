@@ -334,8 +334,46 @@
 
 .jr-schedule-event-card__flags {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 0.25rem;
   margin-top: 0.15rem;
+}
+
+/* Work Order status — very small badge on published event cards */
+.jr-schedule-event-card__status {
+  display: inline-block;
+  max-width: 100%;
+  margin-right: auto;
+  padding: 0.05rem 0.3rem;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-jr-muted, #4b5563);
+  background: color-mix(
+    in srgb,
+    var(--color-jr-muted, #4b5563) 14%,
+    var(--color-jr-surface, #ffffff)
+  );
+  border-radius: var(--radius-jr-control, 0);
+}
+
+.jr-schedule-event-card__status--success {
+  color: var(--color-jr-success-text, #166534);
+  background: var(--color-jr-success-subtle, #dcfce7);
+}
+
+.jr-schedule-event-card__status--warning {
+  color: var(--color-jr-warning-text, #92400e);
+  background: var(--color-jr-warning-subtle, #fef3c7);
+}
+
+.jr-schedule-event-card__status--info {
+  color: var(--color-jr-info-text, #1e40af);
+  background: var(--color-jr-info-subtle, #dbeafe);
 }
 
 .jr-schedule-event-card__badge {
