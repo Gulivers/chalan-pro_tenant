@@ -65,6 +65,16 @@ def refresh_dynamic_domains():
                 origins_added,
                 "desarrollo" if getattr(settings, 'DEBUG', False) else "producción",
             )
+            # Invalidar la caché de CsrfViewMiddleware para reflejar los nuevos orígenes sin reiniciar
+            try:
+                import gc
+                from django.middleware.csrf import CsrfViewMiddleware
+                for inst in gc.get_objects():
+                    if isinstance(inst, CsrfViewMiddleware):
+                        inst.__dict__.pop('allowed_origins_exact', None)
+                        inst.__dict__.pop('allowed_origin_subdomains', None)
+            except Exception as e:
+                logger.debug("No se pudo limpiar caché de CsrfViewMiddleware: %s", e)
 
         _last_domain_refresh = time.time()
         return domains_added, origins_added

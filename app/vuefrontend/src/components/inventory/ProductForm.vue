@@ -120,19 +120,18 @@
 
           <JRField
             v-slot="{ describedby, invalid }"
-            label="Brands"
+            label="Brand"
             required
-            inputId="product-brands"
-            hint="The first selected brand is the default for purchasing."
-            :error="fieldErrors.brands">
+            inputId="product-brand"
+            hint="Manufacturer or catalog brand for this SKU."
+            :error="fieldErrors.brand">
             <JRSelectAddon
-              inputId="product-brands"
-              v-model="product.brands"
+              inputId="product-brand"
+              v-model="product.brand"
               :options="brands"
               optionLabel="name"
               optionValue="id"
-              placeholder="Select Brands"
-              multiple
+              placeholder="Select brand"
               :disabled="isReadOnly"
               :invalid="invalid"
               :required="true"
@@ -145,25 +144,6 @@
               filter
               @show="loadBrands"
               @add="openCatalog('brand')" />
-            <JRField
-              v-if="selectedBrandOptions.length"
-              class="jr-product-form__default-brand"
-              label="Default for purchasing"
-              inputId="product-default-brand">
-              <JRSelect
-                v-if="selectedBrandOptions.length > 1"
-                inputId="product-default-brand"
-                :modelValue="defaultBrandId"
-                :options="selectedBrandOptions"
-                optionLabel="name"
-                optionValue="id"
-                :disabled="isReadOnly"
-                placeholder="Select default brand"
-                @update:modelValue="setDefaultBrand" />
-              <p v-else class="jr-product-form__brand-name">
-                {{ getDefaultBrandName() }}
-              </p>
-            </JRField>
           </JRField>
 
           <JRField
@@ -284,7 +264,7 @@
           @refresh-units="loadUnits" />
       </JRSection>
 
-      <JRSection v-if="!productLoading" title="Brand images">
+      <JRSection v-if="!productLoading" title="Product images">
         <ProductBrandImages
           ref="brandImages"
           :product-id="currentProductId"
@@ -399,8 +379,7 @@ const PRODUCT_FIELD_KEYS = [
   "sku",
   "model_number",
   "category",
-  "brands",
-  "brands_data",
+  "brand",
   "unit_default",
   "tracking_mode",
 ];
@@ -437,7 +416,7 @@ export default {
         sku: "",
         model_number: "",
         category: "",
-        brands: [],
+        brand: null,
         unit_default: "",
         reorder_level: 0,
         tracking_mode: "QUANTITY",
@@ -476,22 +455,12 @@ export default {
     formIsDirty() {
       return this.isDirty();
     },
-    defaultBrandId() {
-      return this.product.brands && this.product.brands.length
-        ? this.product.brands[0]
-        : null;
-    },
-    selectedBrandOptions() {
-      const ids = (this.product.brands || []).map((id) => String(id));
-      return (this.brands || []).filter((brand) => ids.includes(String(brand.id)));
-    },
     imageBrandOptions() {
-      const byId = new Map(
-        (this.brands || []).map((brand) => [String(brand.id), brand])
+      if (!this.product.brand) return [];
+      const brand = (this.brands || []).find(
+        (b) => String(b.id) === String(this.product.brand)
       );
-      return (this.product.brands || [])
-        .map((id) => byId.get(String(id)))
-        .filter(Boolean);
+      return brand ? [brand] : [];
     },
     pageTitle() {
       if (this.isReadOnly) return "View Product";
@@ -571,8 +540,8 @@ export default {
     "product.category"() {
       this.revalidateKnownField("category");
     },
-    "product.brands"() {
-      this.revalidateKnownField("brands");
+    "product.brand"() {
+      this.revalidateKnownField("brand");
     },
     "product.unit_default"() {
       this.revalidateKnownField("unit_default");
@@ -620,15 +589,9 @@ export default {
         const res = await axios.get(`/api/products/${id}/`);
         this.product = res.data;
         if (this.product.model_number == null) this.product.model_number = "";
-        if (res.data.brands && Array.isArray(res.data.brands)) {
-          this.product.brands = res.data.brands.map((brand) =>
-            typeof brand === "object" ? brand.id : brand
-          );
-        } else {
-          this.product.brands = [];
-        }
-        const defaultBrandId = this.normalizeId(res.data.default_brand);
-        if (defaultBrandId) this.setDefaultBrand(defaultBrandId);
+        this.product.brand = this.normalizeId(
+          res.data.brand ?? res.data.default_brand
+        );
 
         const prices = Array.isArray(res.data.prices) ? res.data.prices : [];
         const unitsFlags = Array.isArray(res.data.price_units)
@@ -726,7 +689,7 @@ export default {
           sku: this.product.sku,
           model_number: this.product.model_number,
           category: this.product.category,
-          brands: this.product.brands,
+          brand: this.product.brand,
           unit_default: this.product.unit_default,
           reorder_level: this.product.reorder_level,
           tracking_mode: this.product.tracking_mode,
@@ -741,12 +704,6 @@ export default {
       if (this.isReadOnly || !this.dirtySnapshot) return false;
       if (this.$refs.brandImages?.hasPending?.()) return true;
       return this.serializeFormState() !== this.dirtySnapshot;
-    },
-    setDefaultBrand(id) {
-      if (id == null || id === "") return;
-      const current = this.product.brands || [];
-      const rest = current.filter((item) => String(item) !== String(id));
-      this.product.brands = [id, ...rest];
     },
     askLeave(action, routerNext = null) {
       this.leaveAction = action;
@@ -818,15 +775,10 @@ export default {
           ? ""
           : "Category is required.";
       }
-      if (field === "brands") {
-        if (
-          !this.product.brands ||
-          !Array.isArray(this.product.brands) ||
-          this.product.brands.length === 0
-        ) {
-          return "At least one brand is required.";
-        }
-        return "";
+      if (field === "brand") {
+        return this.normalizeId(this.product.brand)
+          ? ""
+          : "Brand is required.";
       }
       if (field === "unit_default") {
         return this.normalizeId(this.product.unit_default)
@@ -872,7 +824,7 @@ export default {
       this.product.name = (this.product.name || "").trim();
       this.product.sku = (this.product.sku || "").trim();
       this.product.model_number = (this.product.model_number || "").trim();
-      ["name", "sku", "model_number", "category", "brands", "unit_default"].forEach(
+      ["name", "sku", "model_number", "category", "brand", "unit_default"].forEach(
         (field) => {
           const msg = this.fieldMessage(field);
           if (msg) this.pushFieldError(field, msg);
@@ -1046,7 +998,7 @@ export default {
           sku: this.product.sku,
           model_number: this.product.model_number || "",
           category: this.normalizeId(this.product.category),
-          brands_data: this.product.brands || [],
+          brand: this.normalizeId(this.product.brand),
           unit_default: this.normalizeId(this.product.unit_default),
           reorder_level: this.product.reorder_level,
           tracking_mode: this.product.tracking_mode || "QUANTITY",
@@ -1127,7 +1079,7 @@ export default {
           }
           const msg = this.humanizeErrorValue(value);
           if (PRODUCT_FIELD_KEYS.includes(key)) {
-            const fieldKey = key === "brands_data" ? "brands" : key;
+            const fieldKey = key === "brands_data" ? "brand" : key;
             this.pushFieldError(fieldKey, msg);
           }
         }
@@ -1308,10 +1260,9 @@ export default {
       }
     },
     getDefaultBrandName() {
-      if (!this.product.brands || this.product.brands.length === 0) return null;
-      const firstBrandId = this.product.brands[0];
+      if (!this.product.brand) return null;
       const brandObj = this.brands.find(
-        (b) => String(b.id) === String(firstBrandId)
+        (b) => String(b.id) === String(this.product.brand)
       );
       return brandObj ? brandObj.name : null;
     },

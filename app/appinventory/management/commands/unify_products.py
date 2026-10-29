@@ -153,24 +153,14 @@ class Command(BaseCommand):
             is_active=True
         )
         
-        # Obtener objetos de marca y asignarlos
-        brand_objects = []
-        for brand_name in group['brands']:
+        # Asignar la primera marca encontrada al producto unificado
+        for brand_name in group.get('brands') or []:
             try:
-                brand_obj = ProductBrand.objects.get(name__iexact=brand_name)
-                brand_objects.append(brand_obj)
+                unified_product.brand = ProductBrand.objects.get(name__iexact=brand_name)
+                unified_product.save(update_fields=['brand'])
+                break
             except ProductBrand.DoesNotExist:
                 self.stdout.write(f'  [WARNING] Brand "{brand_name}" not found, skipping')
-        
-        # Asignar marcas al producto unificado
-        if brand_objects:
-            unified_product.brands.set(brand_objects)
-            
-            # Marcar la primera marca como default
-            if brand_objects:
-                first_brand = brand_objects[0]
-                first_brand.is_default = True
-                first_brand.save()
         
         # Desactivar productos originales
         deactivated_ids = []

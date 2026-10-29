@@ -10,7 +10,6 @@ from django_tenants.test.cases import TenantTestCase
 from appinventory.models import (
     Product,
     ProductBrand,
-    ProductBrandAssignment,
     ProductCategory,
     ProductImage,
     Stock,
@@ -51,31 +50,20 @@ class ProductListSerializerImageTests(TenantTestCase):
             reference_unit=True,
         )
         self.category = ProductCategory.objects.create(name='Electrical')
-
-        self.brand_default = ProductBrand.objects.create(
-            name='Default Brand Test',
-            is_default=True,
-        )
-        self.brand_other = ProductBrand.objects.create(name='Other Brand Test')
+        self.brand = ProductBrand.objects.create(name='Default Brand Test', is_default=True)
 
     def _create_product(self, sku):
-        product = Product.objects.create(
+        return Product.objects.create(
             name=f'Product {sku}',
             sku=sku,
             category=self.category,
             unit_default=self.unit,
+            brand=self.brand,
         )
-        product.brands.add(self.brand_default, self.brand_other)
-        return product
 
-    def _assignment(self, product, brand):
-        return ProductBrandAssignment.objects.get(product=product, brand=brand)
-
-    def _create_image(self, product, brand, *, is_primary=False, filename='img.png'):
-        assignment = self._assignment(product, brand)
+    def _create_image(self, product, *, is_primary=False, filename='img.png'):
         return ProductImage.objects.create(
             product=product,
-            assignment=assignment,
             image=_tiny_png(filename),
             is_primary=is_primary,
         )
@@ -87,65 +75,16 @@ class ProductListSerializerImageTests(TenantTestCase):
         product = self._create_product('NO-IMG-001')
         self.assertIsNone(self._serialized_image(product))
 
-    def test_prefers_primary_image_of_default_brand(self):
-        product = self._create_product('IMG-DEFAULT-001')
-        self._create_image(product, self.brand_other, is_primary=True, filename='other.png')
-        default_img = self._create_image(
-            product,
-            self.brand_default,
-            is_primary=True,
-            filename='default-primary.png',
-        )
+    def test_prefers_primary_image(self):
+        product = self._create_product('IMG-PRIMARY-001')
+        self._create_image(product, is_primary=False, filename='secondary.png')
+        primary = self._create_image(product, is_primary=True, filename='primary.png')
+        self.assertEqual(self._serialized_image(product), primary.image.url)
 
-        self.assertEqual(self._serialized_image(product), default_img.image.url)
-
-    def test_uses_default_brand_image_when_other_brand_has_primary_only(self):
-        product = self._create_product('IMG-DEFAULT-002')
-        self._create_image(product, self.brand_other, is_primary=True, filename='other-only.png')
-        default_img = self._create_image(
-            product,
-            self.brand_default,
-            is_primary=False,
-            filename='default-secondary.png',
-        )
-
-        self.assertEqual(self._serialized_image(product), default_img.image.url)
-
-    def test_falls_back_to_any_product_image_when_default_brand_has_none(self):
+    def test_falls_back_to_first_image(self):
         product = self._create_product('IMG-FALLBACK-001')
-        other_img = self._create_image(
-            product,
-            self.brand_other,
-            is_primary=False,
-            filename='fallback.png',
-        )
-
-        self.assertEqual(self._serialized_image(product), other_img.image.url)
-
-    def test_context_brand_uses_only_that_brands_image(self):
-        product = self._create_product('IMG-CTX-001')
-        self._create_image(
-            product,
-            self.brand_default,
-            is_primary=True,
-            filename='default-ctx.png',
-        )
-        other_img = self._create_image(
-            product,
-            self.brand_other,
-            is_primary=True,
-            filename='other-ctx.png',
-        )
-        selected = ProductListSerializer(
-            product,
-            context={'brand_id': self.brand_other.id},
-        ).data['image']
-        self.assertEqual(selected, other_img.image.url)
-        missing = ProductListSerializer(
-            product,
-            context={'brand_id': self.brand_other.id + 1000},
-        ).data['image']
-        self.assertIsNone(missing)
+        first = self._create_image(product, is_primary=False, filename='fallback.png')
+        self.assertEqual(self._serialized_image(product), first.image.url)
 
 
 class ProductListSerializerStockTests(TenantTestCase):

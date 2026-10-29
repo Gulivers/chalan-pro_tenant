@@ -34,7 +34,7 @@ from utils.datatable import handle_datatable_query
 from appinventory.models import (
     Product, Stock, Warehouse, ProductCategory,
     ProductBrand, UnitOfMeasure, UnitCategory, PriceType, InventoryMovement, ProductImage,
-    ProductBrandAssignment, SerializedItem, InventoryTransfer,
+    SerializedItem, InventoryTransfer,
     )
 from django.core.files.base import ContentFile
 from apptransactions.models import Document, DocumentLine, DocumentType
@@ -246,7 +246,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['is_active', 'category', 'brands', 'tracking_mode']
+    filterset_fields = ['is_active', 'category', 'brand', 'tracking_mode']
     search_fields = ['name', 'sku', 'model_number']
     ordering_fields = ['name', 'sku', 'model_number', 'created_at']
     ordering = ['name']
@@ -263,12 +263,12 @@ class ProductImageViewSet(viewsets.ModelViewSet):
     """
     ViewSet para CRUD de imágenes de productos.
     """
-    queryset = ProductImage.objects.select_related('product', 'assignment__brand', 'uploaded_by').all()
+    queryset = ProductImage.objects.select_related('product', 'product__brand', 'uploaded_by').all()
     serializer_class = ProductImageSerializer
     authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['product', 'assignment__brand', 'is_primary']
+    filterset_fields = ['product', 'is_primary']
 
     def get_serializer_context(self):
         """Agregar request al contexto del serializer para generar URLs absolutas"""
@@ -402,72 +402,47 @@ class SerializedItemListProviderAPIView(APIView):
 
 class ProductImagesByBrandAPIView(APIView):
     """
-    API View para obtener imágenes de un producto agrupadas por marca.
-    Retorna un objeto donde cada clave es el ID de la marca y el valor es un array de imágenes.
-    Útil para el componente Vue con tabs por marca.
+    Imágenes de un producto (lista plana).
+    Conserva claves brands/images_by_brand por compatibilidad con el front,
+    con una sola entrada cuando el producto tiene marca.
     """
     authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, product_id):
         try:
-            product = Product.objects.prefetch_related('brand_assignments__brand', 'images__assignment__brand').get(pk=product_id)
-            
-            # Obtener todas las imágenes del producto
-            images = ProductImage.objects.filter(product=product).select_related('assignment__brand', 'uploaded_by').order_by('-is_primary', '-uploaded_at')
-            
-            # Agrupar por marca usando las asignaciones existentes
-            images_by_brand = {}
-            brands_info = {}
-            
-            # Primero, inicializar con todas las marcas asignadas al producto
-            for assignment in product.brand_assignments.all():
-                brand = assignment.brand
-                images_by_brand[brand.id] = []
-                brands_info[brand.id] = {
-                    'id': brand.id,
-                    'assignment_id': assignment.id,
-                    'name': brand.name,
-                    'is_default': brand.is_default
-                }
-            
-            # Luego, llenar con las imágenes
-            for image in images:
-                if not image.assignment:
-                    continue
-                    
-                brand_id = image.assignment.brand.id
-                
-                # Por si acaso hay imágenes con asignaciones que ya no están en product.brand_assignments
-                if brand_id not in images_by_brand:
-                    brand_name = image.assignment.brand.name
-                    images_by_brand[brand_id] = []
-                    brands_info[brand_id] = {
-                        'id': brand_id,
-                        'assignment_id': image.assignment.id,
-                        'name': brand_name,
-                        'is_default': image.assignment.brand.is_default
-                    }
-                
-                serializer = ProductImageSerializer(image, context={'request': request})
-                images_by_brand[brand_id].append(serializer.data)
-            
-            # Ordenar marcas: primero la default, luego por nombre
-            sorted_brand_ids = sorted(
-                brands_info.keys(),
-                key=lambda bid: (not brands_info[bid]['is_default'], brands_info[bid]['name'])
+            product = Product.objects.select_related('brand').get(pk=product_id)
+            images = (
+                ProductImage.objects.filter(product=product)
+                .select_related('uploaded_by')
+                .order_by('-is_primary', '-uploaded_at')
             )
-            
+            images_data = ProductImageSerializer(
+                images, many=True, context={'request': request}
+            ).data
+
+            brands = []
+            images_by_brand = {}
+            if product.brand_id:
+                brand = product.brand
+                brands = [{
+                    'id': brand.id,
+                    'name': brand.name,
+                    'is_default': True,
+                }]
+                images_by_brand[str(brand.id)] = images_data
+            else:
+                images_by_brand[''] = images_data
+
             return Response({
                 'product_id': product.id,
                 'product_name': product.name,
                 'product_sku': product.sku,
-                'brands': [brands_info[bid] for bid in sorted_brand_ids],
-                'images_by_brand': {
-                    str(bid): images_by_brand[bid] for bid in sorted_brand_ids
-                }
+                'images': images_data,
+                'brands': brands,
+                'images_by_brand': images_by_brand,
             })
-            
+
         except Product.DoesNotExist:
             return Response(
                 {'error': 'Product not found'},
@@ -517,7 +492,7 @@ class ProductDataTableAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        queryset = Product.objects.select_related('category', 'unit_default').prefetch_related('brands')
+        queryset = Product.objects.select_related('category', 'unit_default', 'brand')
         return handle_datatable_query(
             request,
             queryset,
@@ -560,13 +535,10 @@ class ProductListProviderAPIView(APIView):
             ordering = request.query_params.get('ordering', '-id')  # Descendente por ID
             
             # Construir queryset base
-            queryset = Product.objects.select_related('category', 'unit_default').prefetch_related(
-                'brands',
+            queryset = Product.objects.select_related('category', 'unit_default', 'brand').prefetch_related(
                 Prefetch(
                     'images',
-                    queryset=ProductImage.objects.select_related(
-                        'assignment__brand'
-                    ).order_by('-is_primary', '-uploaded_at'),
+                    queryset=ProductImage.objects.order_by('-is_primary', '-uploaded_at'),
                 ),
             ).annotate(total_stock=product_on_hand_annotation())
             
@@ -580,7 +552,7 @@ class ProductListProviderAPIView(APIView):
             if category.isdigit():
                 queryset = queryset.filter(category_id=int(category))
             if brand.isdigit():
-                queryset = queryset.filter(brands__id=int(brand)).distinct()
+                queryset = queryset.filter(brand_id=int(brand))
             
             # Aplicar búsqueda por múltiples palabras (cada palabra debe coincidir en al menos un campo)
             if search:
@@ -593,11 +565,11 @@ class ProductListProviderAPIView(APIView):
                         Q(category__name__icontains=w) |
                         Q(tracking_mode__icontains=w) |
                         Q(unit_default__name__icontains=w) |
-                        Q(brands__name__icontains=w)
+                        Q(brand__name__icontains=w)
                     )
                     if w.isdigit():
                         q = q | Q(id=w)
-                    queryset = queryset.filter(q).distinct()
+                    queryset = queryset.filter(q)
             
             # Aplicar ordenamiento
             queryset = queryset.order_by(ordering)
@@ -839,7 +811,7 @@ class ProductListDirectAPIView(APIView):
             ordering = request.query_params.get('ordering', '-id')  # Descendente por ID
             
             # Construir queryset
-            queryset = Product.objects.select_related('category', 'unit_default').prefetch_related('brands')
+            queryset = Product.objects.select_related('category', 'unit_default', 'brand')
             
             # Aplicar filtros
             if is_active is not None:
@@ -859,11 +831,11 @@ class ProductListDirectAPIView(APIView):
                         Q(category__name__icontains=w) |
                         Q(tracking_mode__icontains=w) |
                         Q(unit_default__name__icontains=w) |
-                        Q(brands__name__icontains=w)
+                        Q(brand__name__icontains=w)
                     )
                     if w.isdigit():
                         q = q | Q(id=w)
-                    queryset = queryset.filter(q).distinct()
+                    queryset = queryset.filter(q)
             
             # Aplicar ordenamiento
             queryset = queryset.order_by(ordering)
@@ -884,34 +856,31 @@ class ProductListDirectAPIView(APIView):
 
 class ProductBrandsListAPIView(APIView):
     """
-    Endpoint para obtener las marcas disponibles para un producto específico
+    Marca del producto (array de 0–1 elementos por compatibilidad con el front).
     """
     authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request, product_id):
         try:
-            product = Product.objects.get(id=product_id)
-            
-            # Obtener todas las marcas del producto con información de default
+            product = Product.objects.select_related('brand').get(id=product_id)
+            brand = product.brand
             brands_data = []
-            default_brand = product.get_default_brand()
-            
-            for brand in product.brands.filter(is_active=True):
+            if brand and brand.is_active:
                 brands_data.append({
                     'id': brand.id,
                     'name': brand.name,
-                    'is_default': brand == default_brand
+                    'is_default': True,
                 })
-            
+
             return Response({
                 'brands': brands_data,
                 'default_brand': {
-                    'id': default_brand.id if default_brand else None,
-                    'name': default_brand.name if default_brand else None
+                    'id': brand.id if brand else None,
+                    'name': brand.name if brand else None,
                 }
             })
-                
+
         except Product.DoesNotExist:
             return Response({'error': 'Producto no encontrado'}, status=404)
         except Exception as e:
@@ -919,7 +888,8 @@ class ProductBrandsListAPIView(APIView):
 
 class ProductBrandsUpdateAPIView(APIView):
     """
-    Endpoint para actualizar las marcas de un producto
+    Actualiza la marca única del producto.
+    Acepta `brand` (int) o `brands` ([id]) por compatibilidad.
     """
     authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated]
@@ -927,29 +897,30 @@ class ProductBrandsUpdateAPIView(APIView):
     def post(self, request, product_id):
         try:
             product = Product.objects.get(id=product_id)
-            brands_data = request.data.get('brands', [])
-            
-            # Validar que se proporcione al menos una marca
-            if not brands_data:
+            brand_id = request.data.get('brand')
+            if brand_id is None:
+                brands_data = request.data.get('brands', [])
+                if isinstance(brands_data, list) and brands_data:
+                    brand_id = brands_data[0]
+
+            if not brand_id:
                 return Response({
-                    'error': 'El producto debe tener al menos una marca asignada.'
+                    'error': 'El producto debe tener una marca asignada.'
                 }, status=400)
-            
-            # Actualizar marcas
-            brands = ProductBrand.objects.filter(id__in=brands_data)
-            if brands.count() != len(brands_data):
-                return Response({
-                    'error': 'Una o más marcas no existen.'
-                }, status=400)
-            
-            product.brands.set(brands)
-            product.ensure_default_brand()
-            
+
+            try:
+                brand = ProductBrand.objects.get(id=brand_id)
+            except ProductBrand.DoesNotExist:
+                return Response({'error': 'La marca no existe.'}, status=400)
+
+            product.brand = brand
+            product.save(update_fields=['brand'])
+
             return Response({
-                'message': 'Marcas actualizadas exitosamente',
-                'success': True
+                'message': 'Marca actualizada exitosamente',
+                'success': True,
             })
-                
+
         except Product.DoesNotExist:
             return Response({'error': 'Producto no encontrado'}, status=404)
         except Exception as e:
@@ -1012,20 +983,13 @@ class ProductDefaultPriceAPIView(APIView):
             # Nuevo: permitir filtrar por document_type_id
             document_type_id = request.query_params.get('document_type_id')
             
-            product = Product.objects.get(id=product_id)
+            product = Product.objects.select_related('brand').get(id=product_id)
             
-            # Obtener marca default del producto
-            default_brand = product.get_default_brand()
+            default_brand = product.brand
             requested_brand = None
+            if brand_id and default_brand and str(default_brand.id) == str(brand_id):
+                requested_brand = default_brand
             
-            # Si se especifica brand_id, encontrar la marca solicitada
-            if brand_id:
-                try:
-                    requested_brand = product.brands.get(id=brand_id, is_active=True)
-                except ProductBrand.DoesNotExist:
-                    pass
-            
-            # Usar la marca solicitada o la default
             brand_to_use = requested_brand or default_brand
             
             # Determinar qué precio usar según el tipo de documento
@@ -1361,7 +1325,7 @@ class LowStockProductsAPIView(APIView):
                 )
             ).filter(
                 total_stock__lt=F('reorder_level')
-            ).select_related('category').prefetch_related('brands').order_by('total_stock')
+            ).select_related('category', 'brand').order_by('total_stock')
             
             result = []
             for product in low_stock_products:
@@ -1414,7 +1378,7 @@ class LowestStockProductsAPIView(APIView):
                 )
             ).filter(
                 total_stock__isnull=False
-            ).select_related('category').prefetch_related('brands').order_by('total_stock')[:25]
+            ).select_related('category', 'brand').order_by('total_stock')[:25]
             
             result = []
             for product in lowest_stock_products:
@@ -2177,7 +2141,7 @@ class StockByWarehouseExportAPIView(APIView):
             
             # Obtener datos de stock por almacén
             from .models import Stock, Warehouse
-            stock_data = Stock.objects.select_related('product', 'warehouse', 'product__category').prefetch_related('product__brands').all()
+            stock_data = Stock.objects.select_related('product', 'warehouse', 'product__category', 'product__brand').all()
             
             row = 2
             for stock in stock_data:
@@ -2269,7 +2233,7 @@ class CompleteStockExportAPIView(APIView):
                     .annotate(qty=Sum('quantity'))
                     .values('qty')[:1]
                 )
-            ).select_related('category').prefetch_related('brands').order_by('name')
+            ).select_related('category', 'brand').order_by('name')
             
             row = 2
             for product in products:
@@ -2361,7 +2325,7 @@ class LowStockProductsExportAPIView(APIView):
                 )
             ).filter(
                 total_stock__lt=F('reorder_level')
-            ).select_related('category').prefetch_related('brands').order_by('total_stock')
+            ).select_related('category', 'brand').order_by('total_stock')
             
             row = 2
             for product in low_stock_products:
@@ -2453,7 +2417,7 @@ class StockReportExportAPIView(APIView):
                     .annotate(qty=Sum('quantity'))
                     .values('qty')[:1]
                 )
-            ).select_related('category').prefetch_related('brands').order_by('name')
+            ).select_related('category', 'brand').order_by('name')
             
             row = 2
             for product in products:
@@ -3101,8 +3065,10 @@ class InventoryMasterDataPreviewAPIView(APIView):
 
 def _copy_fixture_product_images_to_media():
     """
-    Copia el repo de imágenes (appinventory/fixtures/media/products/ o media_volume) a MEDIA_ROOT/products/.
-    Repo base actualizable desde test-dominio-local (tenant de desarrollo).
+    Copia el repo de imágenes (appinventory/fixtures/media/products/) a MEDIA_ROOT/products/.
+    Preserva subcarpetas (p. ej. products/{product_id}/{brand_id}/file.jpg) para que
+    coincidan con las rutas de masters_productimage.json.
+    Fuente canónica del repo: tenant jobrhythm_products (export_fixture_product_images).
     Se llama ANTES de loaddata en el master data import.
     """
     import shutil
@@ -3117,35 +3083,26 @@ def _copy_fixture_product_images_to_media():
     dest_base = os.path.join(media_root, 'products')
     os.makedirs(dest_base, exist_ok=True)
     copied = 0
-    for product_id_str in os.listdir(repo_products):
-        product_dir = os.path.join(repo_products, product_id_str)
-        if not os.path.isdir(product_dir):
-            continue
-        dest_product = os.path.join(dest_base, product_id_str)
-        os.makedirs(dest_product, exist_ok=True)
-        for brand_id_str in os.listdir(product_dir):
-            brand_dir = os.path.join(product_dir, brand_id_str)
-            if not os.path.isdir(brand_dir):
+    for root, _dirs, files in os.walk(repo_products):
+        rel = os.path.relpath(root, repo_products)
+        dest_dir = dest_base if rel == '.' else os.path.join(dest_base, rel)
+        os.makedirs(dest_dir, exist_ok=True)
+        for fname in files:
+            src = os.path.join(root, fname)
+            if not os.path.isfile(src):
                 continue
-            dest_brand = os.path.join(dest_product, brand_id_str)
-            os.makedirs(dest_brand, exist_ok=True)
-            for fname in os.listdir(brand_dir):
-                src = os.path.join(brand_dir, fname)
-                if not os.path.isfile(src):
-                    continue
-                dest = os.path.join(dest_brand, fname)
-                if not os.path.exists(dest) or os.path.getmtime(src) > os.path.getmtime(dest):
-                    shutil.copy2(src, dest)
-                copied += 1
+            dest = os.path.join(dest_dir, fname)
+            if not os.path.exists(dest) or os.path.getmtime(src) > os.path.getmtime(dest):
+                shutil.copy2(src, dest)
+            copied += 1
     return copied
 
 
 def _sync_fixture_product_images():
     """
-    Crea registros ProductImage desde MEDIA_ROOT/products/{product_id}/{brand_id}/*.jpg
-    tras loaddata. Los assignment_id son 1,2,3... en cada tenant; por eso NO cargamos
-    ProductImage desde el fixture (evita FK assignment_id inexistente).
-    Lee de MEDIA_ROOT/products/ (donde acabamos de copiar el repo).
+    Crea registros ProductImage desde MEDIA_ROOT/products/{product_id}/[brand_id/]*.jpg
+    tras loaddata cuando no hay masters_productimage.json.
+    Soporta layout legacy products/{product_id}/{brand_id}/ y plano products/{product_id}/.
     """
     from django.conf import settings as django_settings
     media_root = getattr(django_settings, 'MEDIA_ROOT', None)
@@ -3163,43 +3120,42 @@ def _sync_fixture_product_images():
         if not os.path.isdir(product_dir) or not product_id_str.isdigit():
             continue
         try:
-            product_id = int(product_id_str)
-        except ValueError:
+            product = Product.objects.get(pk=int(product_id_str))
+        except (ValueError, Product.DoesNotExist):
             continue
-        for brand_id_str in os.listdir(product_dir):
-            brand_dir = os.path.join(product_dir, brand_id_str)
-            if not os.path.isdir(brand_dir) or not brand_id_str.isdigit():
-                continue
-            try:
-                brand_id = int(brand_id_str)
-            except ValueError:
-                continue
-            assignment = ProductBrandAssignment.objects.filter(
-                product_id=product_id, brand_id=brand_id
-            ).first()
-            if not assignment or ProductImage.objects.filter(assignment=assignment).exists():
-                continue
-            jpg_files = [f for f in os.listdir(brand_dir) if f.lower().endswith(('.jpg', '.jpeg'))]
-            if not jpg_files:
-                continue
-            img_path = os.path.join(brand_dir, jpg_files[0])
-            if not os.path.isfile(img_path):
-                continue
-            try:
-                with open(img_path, 'rb') as f:
-                    content = f.read()
-                pi = ProductImage(
-                    product=assignment.product,
-                    assignment=assignment,
-                    is_primary=True,
-                    uploaded_by=None,
-                    description='',
-                )
-                pi.image.save(jpg_files[0], ContentFile(content), save=False)
-                pi.save()
-                created += 1
-            except Exception:
-                pass
+        if ProductImage.objects.filter(product=product).exists():
+            continue
+
+        candidate_dirs = [product_dir]
+        for name in os.listdir(product_dir):
+            sub = os.path.join(product_dir, name)
+            if os.path.isdir(sub):
+                candidate_dirs.append(sub)
+
+        jpg_path = None
+        jpg_name = None
+        for d in candidate_dirs:
+            jpgs = [f for f in os.listdir(d) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))]
+            if jpgs:
+                jpg_name = jpgs[0]
+                jpg_path = os.path.join(d, jpg_name)
+                break
+        if not jpg_path or not os.path.isfile(jpg_path):
+            continue
+        try:
+            with open(jpg_path, 'rb') as f:
+                content = f.read()
+            pi = ProductImage(
+                product=product,
+                is_primary=True,
+                uploaded_by=None,
+                description='',
+            )
+            pi.image.save(jpg_name, ContentFile(content), save=False)
+            pi.save()
+            created += 1
+        except Exception:
+            pass
     return created
 
 
@@ -3261,7 +3217,7 @@ class InventoryMasterDataImportAPIView(APIView):
             # Copiar repo de imágenes a MEDIA_ROOT (media_volume en Docker) para que las rutas del fixture existan
             images_copied = _copy_fixture_product_images_to_media()
             
-            # Cargar masters_inventory.json SIN entradas ProductImage (evita FK assignment_id del tenant origen)
+            # Cargar masters_inventory.json SIN ProductImage (se cargan aparte o se sincronizan)
             with open(fixture_path, 'r', encoding='utf-8') as f:
                 fixture_data = json.load(f)
             fixture_without_images = [item for item in fixture_data if item.get('model') != 'appinventory.productimage']
@@ -3269,32 +3225,48 @@ class InventoryMasterDataImportAPIView(APIView):
             for item in fixture_without_images:
                 if item.get('model') == 'appinventory.warehouse' and item.get('fields', {}).get('truck'):
                     item['fields']['truck'] = None
+
+            # Compat: fixtures viejos con brands M2M → brand FK; quitar assignment de imágenes
+            first_brand_pk = None
+            for item in fixture_data:
+                if item.get('model') == 'appinventory.productbrand':
+                    first_brand_pk = item.get('pk')
+                    break
+            if first_brand_pk is None:
+                first_brand_pk = 1
+
+            assignment_brand_map = {}
             fixture_assignment_path = os.path.join(
                 settings.BASE_DIR,
                 'appinventory',
                 'fixtures',
                 'productbrandassignment.json',
             )
-            use_assignment_fixture = os.path.exists(fixture_assignment_path)
-            if use_assignment_fixture:
-                # Si cargamos ProductBrandAssignment desde fixture, no crear asignaciones vía M2M
-                for item in fixture_without_images:
-                    if item.get('model') == 'appinventory.product':
-                        item.setdefault('fields', {}).pop('brands', None)
-            else:
-                # Sin fixture de assignments: inyectar brands para que loaddata cree ProductBrandAssignment
-                first_brand_pk = None
-                for item in fixture_data:
-                    if item.get('model') == 'appinventory.productbrand':
-                        first_brand_pk = item.get('pk')
-                        break
-                if first_brand_pk is None:
-                    first_brand_pk = 1
-                for item in fixture_without_images:
-                    if item.get('model') == 'appinventory.product':
-                        fields = item.setdefault('fields', {})
-                        if 'brands' not in fields:
-                            fields['brands'] = [first_brand_pk]
+            if os.path.exists(fixture_assignment_path):
+                with open(fixture_assignment_path, 'r', encoding='utf-8') as f:
+                    for item in json.load(f):
+                        if item.get('model') != 'appinventory.productbrandassignment':
+                            continue
+                        fields = item.get('fields') or {}
+                        assignment_brand_map[item.get('pk')] = fields.get('brand')
+                        product_pk = fields.get('product')
+                        brand_pk = fields.get('brand')
+                        if product_pk and brand_pk:
+                            for prod in fixture_without_images:
+                                if prod.get('model') == 'appinventory.product' and prod.get('pk') == product_pk:
+                                    pfields = prod.setdefault('fields', {})
+                                    if not pfields.get('brand'):
+                                        pfields['brand'] = brand_pk
+                                    pfields.pop('brands', None)
+                                    break
+
+            for item in fixture_without_images:
+                if item.get('model') == 'appinventory.product':
+                    fields = item.setdefault('fields', {})
+                    fields.pop('brands', None)
+                    if not fields.get('brand'):
+                        fields['brand'] = first_brand_pk
+
             import tempfile
             tmp_fixture_path = None
             with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp:
@@ -3312,14 +3284,29 @@ class InventoryMasterDataImportAPIView(APIView):
             with transaction.atomic():
                 try:
                     call_command('loaddata', tmp_fixture_path, verbosity=0)
-                    if use_assignment_fixture:
-                        call_command('loaddata', fixture_assignment_path, verbosity=0)
-                    # Inyectar ProductImage desde masters_productimage.json (assignment_id 1,2,3...)
                     if os.path.exists(fixture_productimage_path):
-                        call_command('loaddata', fixture_productimage_path, verbosity=0)
-                        images_synced = ProductImage.objects.count()  # ya cargados por loaddata
+                        with open(fixture_productimage_path, 'r', encoding='utf-8') as f:
+                            image_fixture = json.load(f)
+                        cleaned_images = []
+                        for item in image_fixture:
+                            if item.get('model') != 'appinventory.productimage':
+                                continue
+                            fields = item.setdefault('fields', {})
+                            fields.pop('assignment', None)
+                            fields.pop('brand', None)
+                            if not fields.get('product'):
+                                continue
+                            cleaned_images.append(item)
+                        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp_img:
+                            json.dump(cleaned_images, tmp_img, indent=2, ensure_ascii=False)
+                            tmp_img_path = tmp_img.name
+                        call_command('loaddata', tmp_img_path, verbosity=0)
+                        try:
+                            os.unlink(tmp_img_path)
+                        except OSError:
+                            pass
+                        images_synced = ProductImage.objects.count()
                     else:
-                        # Fallback: crear ProductImage desde MEDIA_ROOT/products/{product_id}/{brand_id}/
                         images_synced = _sync_fixture_product_images()
                     
                     # Resetear secuencias de PostgreSQL para este schema
@@ -3335,7 +3322,6 @@ class InventoryMasterDataImportAPIView(APIView):
                             'appinventory_pricetype',
                             'appinventory_product',
                             'appinventory_productprice',
-                            'appinventory_productbrandassignment',
                             'appinventory_productimage',
                         ]
                         for table in tables:

@@ -3,8 +3,8 @@
     <p
       v-if="!productId && !displayBrands.length"
       class="jr-brand-images__hint">
-      Select at least one brand above, then add photos here. They are uploaded
-      when you save the product.
+      Select a brand above, then add photos here. They are uploaded when you
+      save the product.
     </p>
 
     <p v-else-if="productId && isLoading" class="jr-brand-images__status" role="status">
@@ -24,8 +24,8 @@
 
     <JREmptyState
       v-else-if="productId && !displayBrands.length"
-      title="No brands on this product"
-      description="Assign at least one brand and save to keep photos per brand." />
+      title="No brand on this product"
+      description="Assign a brand and save before managing photos." />
 
     <Tabs
       v-else-if="displayBrands.length"
@@ -323,7 +323,7 @@ export default {
       if (this.canAdd) {
         return "Upload one or more images. Mark one as primary for the product list.";
       }
-      return "No photos for this brand yet.";
+      return "No photos yet.";
     },
     uploadButtonProps() {
       return {
@@ -474,8 +474,17 @@ export default {
         const { data } = await axios.get(
           `/api/products/${this.productId}/images/`
         );
-        this.brands = data.brands || [];
-        this.imagesByBrand = data.images_by_brand || {};
+        const flat = Array.isArray(data.images) ? data.images : [];
+        let brands = data.brands || [];
+        let imagesByBrand = data.images_by_brand || {};
+        if (!brands.length && flat.length) {
+          brands = [{ id: "product", name: "Product", is_default: true }];
+          imagesByBrand = { product: flat };
+        } else if (brands.length === 1 && flat.length && !Object.keys(imagesByBrand).length) {
+          imagesByBrand = { [this.brandKey(brands[0].id)]: flat };
+        }
+        this.brands = brands;
+        this.imagesByBrand = imagesByBrand;
         const current = this.brands.find(
           (brand) => this.brandKey(brand.id) === this.activeBrandKey
         );
@@ -504,7 +513,6 @@ export default {
         this.stageFiles(brand, files);
         return;
       }
-      if (!brand?.assignment_id) return;
       this.uploadLock = true;
       this.isUploading = brand.id;
       try {
@@ -513,7 +521,6 @@ export default {
             const body = new FormData();
             body.append("image", file);
             body.append("product", this.productId);
-            body.append("assignment", brand.assignment_id);
             return axios.post("/api/productimages/", body);
           })
         );
@@ -541,32 +548,24 @@ export default {
       let uploaded = 0;
       let failed = 0;
       try {
-        const { data } = await axios.get(`/api/products/${productId}/images/`);
-        const savedBrands = data.brands || [];
-        const jobs = [];
-        savedBrands.forEach((brand) => {
-          const staged = this.getPendingForBrand(brand.id);
-          staged.forEach((item, index) => {
-            if (!item?.file || !brand.assignment_id) {
+        const stagedAll = Object.values(this.pendingByBrand).flat();
+        const jobs = stagedAll.map((item, index) => {
+          if (!item?.file) {
+            failed += 1;
+            return Promise.resolve();
+          }
+          const body = new FormData();
+          body.append("image", item.file);
+          body.append("product", productId);
+          if (index === 0) body.append("is_primary", "true");
+          return axios
+            .post("/api/productimages/", body)
+            .then(() => {
+              uploaded += 1;
+            })
+            .catch(() => {
               failed += 1;
-              return;
-            }
-            const body = new FormData();
-            body.append("image", item.file);
-            body.append("product", productId);
-            body.append("assignment", brand.assignment_id);
-            if (index === 0) body.append("is_primary", "true");
-            jobs.push(
-              axios
-                .post("/api/productimages/", body)
-                .then(() => {
-                  uploaded += 1;
-                })
-                .catch(() => {
-                  failed += 1;
-                })
-            );
-          });
+            });
         });
         await Promise.all(jobs);
         return { uploaded, failed };
