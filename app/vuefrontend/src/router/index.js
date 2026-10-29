@@ -111,11 +111,15 @@ const MaterialRequestDetailView = () =>
 // Crews and Fleet
 const CategoryListView = () => import("@views/crews/CategoryListView.vue");
 const CrewListView = () => import("@views/crews/CrewListView.vue");
+const AbsenceReasonListView = () =>
+  import("@views/crews/AbsenceReasonListView.vue");
 const TruckListView = () => import("@views/crews/TruckListView.vue");
 const TruckAssignmentListView = () =>
   import("@views/crews/TruckAssignmentListView.vue");
 const CategoryForm = () => import("@components/crews/CategoryForm.vue");
 const CrewForm = () => import("@components/crews/CrewForm.vue");
+const AbsenceReasonForm = () =>
+  import("@components/crews/AbsenceReasonForm.vue");
 const TruckForm = () => import("@components/crews/TruckForm.vue");
 const TruckAssignmentForm = () =>
   import("@components/crews/TruckAssignmentForm.vue");
@@ -973,6 +977,42 @@ const routes = [
     name: "crew-edit",
     component: CrewForm,
     meta: { requiresAuth: true, requiredPermissions: ["crewsapp.change_crew"] },
+  },
+  {
+    path: "/crews/absence-reasons",
+    name: "absence-reasons",
+    component: AbsenceReasonListView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["appschedule.view_absencereason"],
+    },
+  },
+  {
+    path: "/crews/absence-reasons/form",
+    name: "absence-reason-form",
+    component: AbsenceReasonForm,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["appschedule.add_absencereason"],
+    },
+  },
+  {
+    path: "/crews/absence-reasons/view/:id",
+    name: "absence-reason-view",
+    component: AbsenceReasonForm,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["appschedule.view_absencereason"],
+    },
+  },
+  {
+    path: "/crews/absence-reasons/edit/:id",
+    name: "absence-reason-edit",
+    component: AbsenceReasonForm,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["appschedule.change_absencereason"],
+    },
   },
   {
     path: "/crews/trucks",

@@ -565,6 +565,11 @@ export default {
               permission: "crewsapp.view_crew",
             },
             {
+              text: "Absence Reasons",
+              route: "/crews/absence-reasons",
+              permission: "appschedule.view_absencereason",
+            },
+            {
               text: "Trucks",
               route: "/crews/trucks",
               permission: "crewsapp.view_truck",
