@@ -50,15 +50,11 @@ class ProductPriceSerializer(serializers.ModelSerializer):
 # Serializador principal para productos, incluye relación con precios y unidades
 class ProductSerializer(serializers.ModelSerializer):
     prices = ProductPriceSerializer(many=True, required=False)
-    brands_data = serializers.ListField(write_only=True, required=False)
 
     class Meta:
         model = Product
         fields = '__all__'
-        extra_kwargs = {
-            'brands': {'read_only': True}  # Exclude from automatic serialization
-        }
-        
+
     def validate_prices(self, value):
         seen = set()
         for item in value:
@@ -69,7 +65,6 @@ class ProductSerializer(serializers.ModelSerializer):
             valid_from = item.get('valid_from') or None
             valid_until = item.get('valid_until') or None
 
-            # Normalizar fechas: cadenas vacías → None
             key = (
                 price_type_id,
                 unit_id,
@@ -86,39 +81,22 @@ class ProductSerializer(serializers.ModelSerializer):
 
         return value
 
-    def validate_brands_data(self, value):
-        """Valida que al menos se proporcione una marca al crear producto"""
-        if not value or len(value) == 0:
-            raise serializers.ValidationError("El producto debe tener al menos una marca asignada.")
-        return value
-
     def validate(self, attrs):
-        """Validación completa del serializer"""
-        # Si es un nuevo producto, validar que tenga marcas
-        if self.instance is None:
-            brands_data = attrs.get('brands_data', [])
-            if not brands_data:
-                raise serializers.ValidationError({
-                    'brands_data': 'Debe proporcionar al menos una marca para el producto.'
-                })
-        
+        if self.instance is None and not attrs.get('brand'):
+            raise serializers.ValidationError({
+                'brand': 'Debe proporcionar una marca para el producto.'
+            })
+        if self.instance is not None and 'brand' in attrs and not attrs.get('brand'):
+            raise serializers.ValidationError({
+                'brand': 'El producto debe tener una marca asignada.'
+            })
         return super().validate(attrs)
 
     def create(self, validated_data):
         prices_data = validated_data.pop('prices', [])
-        brands_data = validated_data.pop('brands_data', [])
 
         with transaction.atomic():
             product = super().create(validated_data)
-            
-            # Asignar marcas
-            if brands_data:
-                brands = ProductBrand.objects.filter(id__in=brands_data)
-                product.brands.set(brands)
-                
-                # Asegurar que haya una marca default
-                product.ensure_default_brand()
-
             for price_data in prices_data:
                 payload = price_data.copy()
                 payload.pop('id', None)
@@ -128,24 +106,8 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         prices_data = validated_data.pop('prices', None)
-        brands_data = validated_data.pop('brands_data', None)
 
         with transaction.atomic():
-            # Actualizar marcas si se proporcionan
-            if brands_data is not None:
-                brands = ProductBrand.objects.filter(id__in=brands_data)
-                instance.brands.set(brands)
-
-                # Mantener validación: debe tener al menos una marca
-                if len(brands_data) == 0:
-                    raise serializers.ValidationError({
-                        'brands_data': 'El producto debe tener al menos una marca asignada.'
-                    })
-
-                # Reajustar marca default si es necesario
-                instance.ensure_default_brand()
-
-            # Actualiza campos del producto
             for attr, value in validated_data.items():
                 setattr(instance, attr, value)
             instance.save()
@@ -158,7 +120,6 @@ class ProductSerializer(serializers.ModelSerializer):
                     payload = price_data.copy()
                     price_id = payload.pop('id', None)
 
-                    # Normalizar fechas vacías a None
                     if payload.get('valid_from') in ('', None):
                         payload['valid_from'] = None
                     if payload.get('valid_until') in ('', None):
@@ -180,7 +141,6 @@ class ProductSerializer(serializers.ModelSerializer):
                             'prices': [f'Duplicate price combination (unit, price type, flags, dates). DB says: {exc}']
                         }) from exc
 
-                # Eliminar precios que ya no vienen en el payload
                 for price_id, price_obj in existing_prices.items():
                     if price_id not in seen_ids:
                         price_obj.delete()
@@ -208,7 +168,7 @@ class PriceTypeSerializer(serializers.ModelSerializer):
 class ProductListSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', default='', read_only=True)
     default_brand = serializers.SerializerMethodField()
-    brands_count = serializers.SerializerMethodField()
+    brand_name = serializers.CharField(source='brand.name', default='', read_only=True)
     unit_name = serializers.CharField(source='unit_default.name', default='', read_only=True)
     unit_default_code = serializers.CharField(source='unit_default.code', default='', read_only=True)
     image = serializers.SerializerMethodField()
@@ -217,44 +177,25 @@ class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'sku', 'model_number', 'category_name', 'default_brand', 'brands_count',
-            'reorder_level', 'unit_name', 'unit_default_code', 'tracking_mode', 'is_active',
-            'image', 'total_stock',
+            'id', 'name', 'sku', 'model_number', 'category_name', 'brand', 'brand_name',
+            'default_brand', 'reorder_level', 'unit_name', 'unit_default_code',
+            'tracking_mode', 'is_active', 'image', 'total_stock',
         ]
 
     def get_image(self, obj):
-        """
-        Thumbnail for list views. When brand_id is in context, use that brand's
-        image only. Otherwise prefer the default brand, then any product image.
-        """
+        """Thumbnail for list views: primary image, else first available."""
         images = list(obj.images.all())
         if not images:
             return None
 
-        default_brand = obj.get_default_brand()
-        default_brand_id = default_brand.id if default_brand else None
-
-        def brand_id(image):
-            assignment = getattr(image, 'assignment', None)
-            brand = getattr(assignment, 'brand', None) if assignment else None
-            return getattr(brand, 'id', None)
-
         def image_url(image):
             return image.image.url if image.image else None
 
-        requested_id = self.context.get('brand_id')
-        if requested_id is not None:
-            for image in images:
-                if brand_id(image) == requested_id:
-                    return image_url(image)
-            return None
-
-        if default_brand_id is not None:
-            default_brand_images = [
-                image for image in images if brand_id(image) == default_brand_id
-            ]
-            if default_brand_images:
-                return image_url(default_brand_images[0])
+        for image in images:
+            if image.is_primary:
+                url = image_url(image)
+                if url:
+                    return url
 
         for image in images:
             url = image_url(image)
@@ -269,37 +210,30 @@ class ProductListSerializer(serializers.ModelSerializer):
         if value is None:
             return None
         return float(value)
-    
+
     def get_default_brand(self, obj):
-        """Obtiene la marca predeterminada del producto"""
-        default_brand = obj.get_default_brand()
+        """Compat: marca del producto."""
+        brand = obj.brand
         return {
-            'id': default_brand.id if default_brand else None,
-            'name': default_brand.name if default_brand else None
+            'id': brand.id if brand else None,
+            'name': brand.name if brand else None,
         }
-    
-    def get_brands_count(self, obj):
-        """Retorna el número de marcas asociadas al producto"""
-        return obj.brands.count()
 
 # Serializador para detalle completo de producto (usado en modo edición o vista)
 class ProductDetailSerializer(ProductSerializer):
     prices = ProductPriceSerializer(many=True, read_only=True)
-    brands = ProductBrandSerializer(many=True, read_only=True)
-    brands_data = serializers.ListField(write_only=True, required=False)
+    brand_detail = ProductBrandSerializer(source='brand', read_only=True)
     default_brand = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = '__all__'
-        extra_fields = ['prices', 'brands', 'brands_data', 'default_brand']
-    
+
     def get_default_brand(self, obj):
-        """Obtiene la marca predeterminada del producto"""
-        default_brand = obj.get_default_brand()
+        brand = obj.brand
         return {
-            'id': default_brand.id if default_brand else None,
-            'name': default_brand.name if default_brand else None
+            'id': brand.id if brand else None,
+            'name': brand.name if brand else None,
         }
 
 # Serializador para ítems serializados (equipos/herramientas)
@@ -351,8 +285,6 @@ class SerializedItemSerializer(serializers.ModelSerializer):
 
 # Serializador para imágenes de productos
 class ProductImageSerializer(serializers.ModelSerializer):
-    brand_name = serializers.CharField(source='assignment.brand.name', read_only=True)
-    brand_id = serializers.IntegerField(source='assignment.brand.id', read_only=True)
     product_name = serializers.CharField(source='product.name', read_only=True)
     image_url = serializers.SerializerMethodField()
     uploaded_by_username = serializers.CharField(source='uploaded_by.username', read_only=True, allow_null=True)
@@ -360,57 +292,43 @@ class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
         fields = [
-            'id', 'product', 'product_name', 'assignment', 'brand_id', 'brand_name',
+            'id', 'product', 'product_name',
             'image', 'image_url', 'is_primary', 'uploaded_at',
-            'uploaded_by', 'uploaded_by_username', 'description'
+            'uploaded_by', 'uploaded_by_username', 'description',
         ]
         read_only_fields = ['uploaded_at', 'uploaded_by']
 
     def get_image_url(self, obj):
         """Returns the image URL (relative path for frontend proxy compatibility)"""
         if obj.image:
-            # Use relative URL so it works with frontend proxy in development
-            # and direct access in production
             return obj.image.url
         return None
 
     def validate(self, attrs):
-        """Valida que la asignación pertenezca al producto"""
         product = attrs.get('product') or (self.instance.product if self.instance else None)
-        assignment = attrs.get('assignment') or (self.instance.assignment if self.instance else None)
-        
-        if product and assignment:
-            if assignment.product != product:
-                raise serializers.ValidationError({
-                    'assignment': f"Assignment '{assignment}' does not belong to product '{product.name}'."
-                })
-        
+        if not product:
+            raise serializers.ValidationError({'product': 'La imagen debe pertenecer a un producto.'})
         return attrs
 
     def create(self, validated_data):
-        """Override create para asignar el usuario actual y manejar is_primary"""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             validated_data['uploaded_by'] = request.user
-        
-        # Si se marca como principal, desmarcar otras principales de la misma asignación
+
         if validated_data.get('is_primary'):
-            ProductImage.objects.filter(
-                assignment=validated_data['assignment'],
-                is_primary=True
-            ).update(is_primary=False)
-        
+            product = validated_data.get('product')
+            if product:
+                ProductImage.objects.filter(product=product, is_primary=True).update(is_primary=False)
+
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        """Override update para manejar is_primary"""
-        # Si se marca como principal, desmarcar otras principales de la misma asignación
-        if validated_data.get('is_primary', False):
+        if validated_data.get('is_primary', False) and instance.product_id:
             ProductImage.objects.filter(
-                assignment=instance.assignment,
-                is_primary=True
+                product_id=instance.product_id,
+                is_primary=True,
             ).exclude(pk=instance.pk).update(is_primary=False)
-        
+
         return super().update(instance, validated_data)
 
 

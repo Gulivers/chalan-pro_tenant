@@ -268,6 +268,18 @@ if DEBUG:
             origin = f'http://{subdomain}.{base_domain}:{port}'
             if origin not in CSRF_TRUSTED_ORIGINS:
                 CSRF_TRUSTED_ORIGINS.append(origin)
+
+# Subdominios comodín para tenants (cubren cualquier tenant en puertos de dev y https)
+_base_tenant_domains = ['jobrhythm.net', 'jobrithm.net', 'chalanpro.net', 'chalan-pro.net']
+for _dom in _base_tenant_domains:
+    for _pattern in (f'https://*.{_dom}', f'https://{_dom}', f'http://*.{_dom}', f'http://{_dom}'):
+        if _pattern not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(_pattern)
+    if DEBUG:
+        for _port in ('8000', '8080', '3000'):
+            for _pattern in (f'http://*.{_dom}:{_port}', f'http://{_dom}:{_port}'):
+                if _pattern not in CSRF_TRUSTED_ORIGINS:
+                    CSRF_TRUSTED_ORIGINS.append(_pattern)
     
     # Los dominios se cargarán dinámicamente desde la BD usando:
     # 1. TenantsConfig.ready() - cuando Django inicializa (en tenants/apps.py)

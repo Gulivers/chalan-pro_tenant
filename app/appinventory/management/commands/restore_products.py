@@ -88,22 +88,18 @@ class Command(BaseCommand):
                     except UnitOfMeasure.DoesNotExist:
                         self.stdout.write(f'  ⚠️  Unit {product_data["unit_default_id"]} not found for product {product.id}')
                 
-                # Restaurar marcas
-                brand_ids = []
-                for brand_data in product_data['brands']:
+                # Restaurar marca (FK única; compat con backups con lista brands)
+                brand_data = product_data.get('brand')
+                if not brand_data and product_data.get('brands'):
+                    brand_data = product_data['brands'][0]
+                if brand_data:
                     try:
-                        brand = ProductBrand.objects.get(id=brand_data['id'])
-                        brand_ids.append(brand.id)
-                        
-                        # Restaurar estado is_default
-                        if brand_data['is_default']:
-                            brand.is_default = True
-                            brand.save()
+                        product.brand = ProductBrand.objects.get(id=brand_data['id'])
+                        product.save(update_fields=['brand'])
                     except ProductBrand.DoesNotExist:
-                        self.stdout.write(f'  ⚠️  Brand {brand_data["id"]} not found for product {product.id}')
-                
-                if brand_ids:
-                    product.brands.set(brand_ids)
+                        self.stdout.write(
+                            f'  ⚠️  Brand {brand_data["id"]} not found for product {product.id}'
+                        )
                 
                 restored_count += 1
                 

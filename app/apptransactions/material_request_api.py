@@ -45,36 +45,16 @@ from appauth.authentication import TenantJWTAuthentication
 from utils.tenant_branding import file_field_to_pdf_uri, get_tenant_logo_url
 
 
-def _product_image_brand_id(image):
-    assignment = getattr(image, 'assignment', None)
-    brand = getattr(assignment, 'brand', None) if assignment else None
-    return getattr(brand, 'id', None)
-
-
 def _select_product_image(product, brand_id=None):
-    """
-    Same selection rules as ProductListSerializer.get_image:
-    brand on the line → default brand → first available image.
-    """
+    """Primary image of the product, else first available. brand_id is ignored."""
     if product is None:
         return None
     images = list(product.images.all())
     if not images:
         return None
-
-    if brand_id is not None:
-        for image in images:
-            if _product_image_brand_id(image) == brand_id:
-                return image
-        return None
-
-    default_brand = product.get_default_brand()
-    default_brand_id = default_brand.id if default_brand else None
-    if default_brand_id is not None:
-        for image in images:
-            if _product_image_brand_id(image) == default_brand_id:
-                return image
-
+    for image in images:
+        if image.is_primary:
+            return image
     return images[0]
 
 
@@ -390,12 +370,9 @@ class MaterialRequestViewSet(viewsets.GenericViewSet):
                 'document_type',
             )
             .prefetch_related(
-                'lines__product__brands',
                 Prefetch(
                     'lines__product__images',
-                    queryset=ProductImage.objects.select_related(
-                        'assignment__brand'
-                    ).order_by('-is_primary', '-uploaded_at'),
+                    queryset=ProductImage.objects.order_by('-is_primary', '-uploaded_at'),
                 ),
                 'tracking_history__from_status',
                 'tracking_history__to_status',
@@ -481,16 +458,16 @@ class MaterialRequestViewSet(viewsets.GenericViewSet):
                     'lines',
                     queryset=DocumentLine.objects.select_related(
                         'product',
+                        'product__brand',
                         'unit',
                         'brand',
                     ).prefetch_related(
                         Prefetch(
                             'product__images',
-                            queryset=ProductImage.objects.select_related(
-                                'assignment__brand'
-                            ).order_by('-is_primary', '-uploaded_at'),
+                            queryset=ProductImage.objects.order_by(
+                                '-is_primary', '-uploaded_at'
+                            ),
                         ),
-                        'product__brands',
                     ).order_by('id'),
                 ),
                 Prefetch(
