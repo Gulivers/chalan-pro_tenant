@@ -34,7 +34,8 @@ services:
     env_file:
       - ./envs/backend.env
     environment:
-      DJANGO_CONN_MAX_AGE: "60"
+      # ASGI/Daphne: must stay 0 (persistent conns leak under ASGI). See 6451ed4.
+      DJANGO_CONN_MAX_AGE: "0"
     volumes:
       - ./app:/app
       - staticfiles_volume:/app/staticfiles
