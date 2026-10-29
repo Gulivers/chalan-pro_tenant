@@ -107,3 +107,6 @@ landing/src/tiktok*.txt
 landing/dist/tiktok*.txt
 landing/src/tiktok-verify/
 landing/dist/tiktok-verify/
+
+# Product fixture images live on server / ubuntu-house; too heavy for Git
+app/appinventory/fixtures/media/products/
