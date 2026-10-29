@@ -683,8 +683,10 @@ export default {
 
     async loadAbsenceReasons() {
       try {
-        const response = await axios.get("/api/absence-reasons/");
-        this.absenceReasons = response.data;
+        const response = await axios.get("/api/absence-reasons/", {
+          params: { is_active: true },
+        });
+        this.absenceReasons = response.data.results ?? response.data;
       } catch (error) {
         console.error("Error loading absence reasons:", error);
         this.notifyError("Failed to load absence reasons");

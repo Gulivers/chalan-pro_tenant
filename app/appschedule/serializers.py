@@ -321,7 +321,7 @@ class EventChatMessageSerializer(serializers.ModelSerializer):
 class AbsenceReasonSerializer(serializers.ModelSerializer):
     class Meta:
         model = AbsenceReason
-        fields = ['id', 'name', 'description']
+        fields = ['id', 'name', 'description', 'is_active']
 
 
 class EventImageSerializer(serializers.ModelSerializer):
