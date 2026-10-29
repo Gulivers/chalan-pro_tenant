@@ -640,10 +640,18 @@ def export_schedule_excel(request):
     return response
 
 class AbsenceReasonViewSet(viewsets.ModelViewSet):
-    queryset = AbsenceReason.objects.filter(is_active=True)
+    queryset = AbsenceReason.objects.all().order_by('name')
     serializer_class = AbsenceReasonSerializer
     authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
+    def get_queryset(self):
+        qs = AbsenceReason.objects.all().order_by('name')
+        is_active = self.request.query_params.get('is_active')
+        if is_active is not None:
+            truthy = str(is_active).lower() in ('1', 'true', 'yes')
+            qs = qs.filter(is_active=truthy)
+        return qs
     
     
 class WeeklySupervisorStatsChartView(APIView):
