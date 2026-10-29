@@ -3284,6 +3284,20 @@ class InventoryMasterDataImportAPIView(APIView):
             with transaction.atomic():
                 try:
                     call_command('loaddata', tmp_fixture_path, verbosity=0)
+
+                    # Absence Reasons (fixture aparte, como masters_document_type)
+                    absence_synced = 0
+                    fixture_absence_path = os.path.join(
+                        settings.BASE_DIR,
+                        'appschedule',
+                        'fixtures',
+                        'masters_absence_reason.json',
+                    )
+                    if os.path.exists(fixture_absence_path):
+                        call_command('loaddata', fixture_absence_path, verbosity=0)
+                        from appschedule.models import AbsenceReason
+                        absence_synced = AbsenceReason.objects.count()
+
                     if os.path.exists(fixture_productimage_path):
                         with open(fixture_productimage_path, 'r', encoding='utf-8') as f:
                             image_fixture = json.load(f)
@@ -3323,6 +3337,7 @@ class InventoryMasterDataImportAPIView(APIView):
                             'appinventory_product',
                             'appinventory_productprice',
                             'appinventory_productimage',
+                            'appschedule_absencereason',
                         ]
                         for table in tables:
                             try:
@@ -3341,11 +3356,14 @@ class InventoryMasterDataImportAPIView(APIView):
                     msg = 'Datos maestros de inventario importados correctamente.'
                     if images_synced:
                         msg += f' Imágenes de productos creadas: {images_synced}.'
+                    if absence_synced:
+                        msg += f' Absence reasons: {absence_synced}.'
                     return Response({
                         'success': True,
                         'message': msg,
                         'images_copied': images_copied,
                         'images_synced': images_synced,
+                        'absence_reasons_synced': absence_synced,
                     })
                 
                 except Exception as e:
