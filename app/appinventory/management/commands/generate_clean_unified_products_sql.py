@@ -57,27 +57,13 @@ class Command(BaseCommand):
         sql_statements.append(',\n'.join(product_values) + ';')
         sql_statements.append('')
         
-        # Insertar relaciones producto-marca
-        sql_statements.append('-- Insert product-brand relationships')
-        sql_statements.append('INSERT INTO appinventory_product_brands (product_id, productbrand_id) VALUES')
-        
-        brand_relations = []
+        # Actualizar FK brand en productos unificados
+        sql_statements.append('-- Set product.brand_id')
         for product in unified_products:
-            for brand in product.brands.all():
-                brand_relations.append(f'({product.id}, {brand.id})')
-        
-        sql_statements.append(',\n'.join(brand_relations) + ';')
-        sql_statements.append('')
-        
-        # Actualizar marcas predeterminadas
-        sql_statements.append('-- Update default brands')
-        default_brands = []
-        for product in unified_products:
-            default_brand = product.get_default_brand()
-            if default_brand:
-                default_brands.append(f"UPDATE appinventory_productbrand SET is_default = 1 WHERE id = {default_brand.id};")
-        
-        sql_statements.extend(default_brands)
+            if product.brand_id:
+                sql_statements.append(
+                    f'UPDATE appinventory_product SET brand_id = {product.brand_id} WHERE id = {product.id};'
+                )
         sql_statements.append('')
         
         sql_statements.append('-- NOTE: Original products with brand prefixes have been permanently deleted')

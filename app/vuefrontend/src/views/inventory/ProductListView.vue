@@ -328,11 +328,8 @@
         </Column>
         <Column v-if="!isTablet" field="default_brand" header="Brand">
           <template #body="{ data }">
-            <span v-if="data.default_brand?.name">
-              {{ data.default_brand.name }}
-              <span v-if="data.brands_count > 1" class="jr-product-list__muted">
-                +{{ data.brands_count - 1 }}
-              </span>
+            <span v-if="data.default_brand?.name || data.brand_name">
+              {{ data.default_brand?.name || data.brand_name }}
             </span>
             <span v-else class="jr-product-list__muted">—</span>
           </template>

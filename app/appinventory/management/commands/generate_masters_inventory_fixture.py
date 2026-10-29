@@ -1,25 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-Genera app/appinventory/fixtures/masters_inventory.json desde un tenant.
+Genera fixtures de inventario maestro desde un tenant canónico.
 
-Incluye los modelos de datos maestros de inventario (categorías, unidades, marcas,
-productos, precios, etc.) en el orden correcto para loaddata. No incluye
-ProductImage ni ProductBrandAssignment; Product se serializa con el campo M2M
-"brands" para que al cargar se creen las asignaciones producto-marca.
+Incluye: UnitCategory, UnitOfMeasure, Warehouse, ProductCategory, ProductBrand,
+PriceType, Product, ProductPrice (Product.brand FK). ProductImage se genera aparte.
 
-Uso (desde el host, con Docker):
-  docker compose exec backend python manage.py generate_masters_inventory_fixture \\
-    --schema test_dominio_local
+Fuente canónica: schema jobrhythm_products (tenant_id=jobrhythm_products_001).
 
-Con salida en ruta distinta:
-  docker compose exec backend python manage.py generate_masters_inventory_fixture \\
-    --schema test_dominio_local \\
-    --output /app/appinventory/fixtures/masters_inventory.json
+Uso (ubuntu-house):
+  docker compose -f docker-compose.dev.yml exec backend python manage.py \\
+    generate_masters_inventory_fixture
 
-Tras generar masters_inventory.json, este comando ejecuta automáticamente:
-- generate_masters_productimage_fixture → masters_productimage.json
-- dumpdata de ProductBrandAssignment → productbrandassignment.json
-(ambos desde el mismo tenant para mantener coherencia de IDs.)
+Opciones:
+  --schema jobrhythm_products   (default)
+  --skip-images                 no exportar media ni masters_productimage.json
+  --skip-excel                  no regenerar masters_inventory.xlsx
 """
 import os
 from io import StringIO
@@ -28,8 +23,8 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django_tenants.utils import schema_context
 
+DEFAULT_SCHEMA = 'jobrhythm_products'
 
-# Orden de modelos por dependencias (FK); Product incluye "brands" (M2M) en la serialización
 MASTERS_INVENTORY_MODELS = [
     'appinventory.UnitCategory',
     'appinventory.UnitOfMeasure',
@@ -44,16 +39,16 @@ MASTERS_INVENTORY_MODELS = [
 
 class Command(BaseCommand):
     help = (
-        'Genera masters_inventory.json desde un tenant (datos maestros de inventario). '
-        'Uso: python manage.py generate_masters_inventory_fixture --schema <schema> [--output <ruta>]'
+        'Genera masters_inventory.json (+ imágenes + Excel) desde el tenant canónico. '
+        f'Default schema: {DEFAULT_SCHEMA}.'
     )
 
     def add_arguments(self, parser):
         parser.add_argument(
             '--schema',
             type=str,
-            required=True,
-            help='Schema del tenant fuente (ej: test_dominio_local)',
+            default=DEFAULT_SCHEMA,
+            help=f'Schema del tenant fuente (default: {DEFAULT_SCHEMA}).',
         )
         parser.add_argument(
             '--output',
@@ -61,9 +56,19 @@ class Command(BaseCommand):
             default=None,
             help='Ruta de salida (default: appinventory/fixtures/masters_inventory.json)',
         )
+        parser.add_argument(
+            '--skip-images',
+            action='store_true',
+            help='No exportar fixtures/media ni generar masters_productimage.json',
+        )
+        parser.add_argument(
+            '--skip-excel',
+            action='store_true',
+            help='No regenerar masters_inventory.xlsx',
+        )
 
     def handle(self, *args, **options):
-        schema = options['schema']
+        schema = options['schema'] or DEFAULT_SCHEMA
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
         default_output = os.path.join(base_dir, 'appinventory', 'fixtures', 'masters_inventory.json')
         output_path = options['output'] or default_output
@@ -88,23 +93,12 @@ class Command(BaseCommand):
             )
         )
 
-        # Regenerar masters_productimage.json para que assignment_id coincida con el orden del fixture
-        self.stdout.write('Ejecutando generate_masters_productimage_fixture...')
-        call_command('generate_masters_productimage_fixture', schema=schema)
+        if not options['skip_images']:
+            self.stdout.write('Exportando imágenes a fixtures/media/...')
+            call_command('export_fixture_product_images', schema=schema)
+            self.stdout.write('Generando masters_productimage.json...')
+            call_command('generate_masters_productimage_fixture', schema=schema)
 
-        # Regenerar productbrandassignment.json desde el mismo tenant (IDs coherentes con los anteriores)
-        assignment_output = os.path.join(base_dir, 'appinventory', 'fixtures', 'productbrandassignment.json')
-        self.stdout.write('Generando productbrandassignment.json...')
-        with schema_context(schema):
-            out_assign = StringIO()
-            call_command(
-                'dumpdata',
-                'appinventory.ProductBrandAssignment',
-                indent=2,
-                stdout=out_assign,
-            )
-            with open(assignment_output, 'w', encoding='utf-8') as f:
-                f.write(out_assign.getvalue())
-        self.stdout.write(
-            self.style.SUCCESS(f'productbrandassignment.json generado → {assignment_output}')
-        )
+        if not options['skip_excel']:
+            self.stdout.write('Regenerando masters_inventory.xlsx...')
+            call_command('generate_masters_inventory_excel')
