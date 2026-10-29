@@ -1521,7 +1521,7 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 
 - `InventoryMasterDataPreviewAPIView` (GET `/api/master-data/preview/`): Verifica el estado de `seed_inventory_done` y devuelve información sobre si los datos ya fueron importados.
 - `InventoryMasterDataExcelDownloadAPIView` (GET `/api/master-data/excel/`): Sirve el archivo Excel pre-generado desde `appinventory/static/appinventory/masters_inventory.xlsx`.
-- `InventoryMasterDataImportAPIView` (POST `/api/master-data/import/`): Copia el repo de imágenes (`fixtures/media/products/`) a `MEDIA_ROOT/products/` (preserva subcarpetas), carga `masters_inventory.json` **sin** entradas ProductImage, luego inyecta `masters_productimage.json` (ProductImage con FK a `product`). Si no existe ese fixture, crea ProductImage desde `MEDIA_ROOT/products/`. Resetea secuencias (incl. `appinventory_productimage`) y marca `seed_inventory_done=True`. Fuente canónica de los fixtures: tenant **jobrhythm_products** (`tenant_id=jobrhythm_products_001`).
+- `InventoryMasterDataImportAPIView` (POST `/api/master-data/import/`): Copia el repo de imágenes (`fixtures/media/products/`) a `MEDIA_ROOT/products/` (preserva subcarpetas), carga `masters_inventory.json` **sin** entradas ProductImage, luego `appschedule/fixtures/masters_absence_reason.json` (fixture aparte, como DocumentType), luego inyecta `masters_productimage.json` (ProductImage con FK a `product`). Si no existe ese fixture de imágenes, crea ProductImage desde `MEDIA_ROOT/products/`. Resetea secuencias (incl. `appinventory_productimage` y `appschedule_absencereason`) y marca `seed_inventory_done=True`. Fuente canónica: tenant **jobrhythm_products** (`tenant_id=jobrhythm_products_001`).
 
 **Management Command (`appinventory/management/commands/generate_masters_inventory_excel.py`):**
 
@@ -1535,6 +1535,11 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 - Incluye: UnitCategory, UnitOfMeasure, Warehouse, ProductCategory, ProductBrand, PriceType, Product, ProductPrice. **Product debe incluir el campo FK `brand`** (ej. `"brand": 1`). Si falta, el backend **inyecta en memoria** el primer ProductBrand del fixture. Ya no existe el modelo intermedio `ProductBrandAssignment`. En la importación se omiten las entradas ProductImage del maestro (van en `masters_productimage.json`).
 - **Fuente canónica:** regenerar desde schema **`jobrhythm_products`** (`tenant_id=jobrhythm_products_001`).
 - **Warehouse con `truck_id`:** En la importación se anula `truck` para evitar la FK `crewsapp_truck` (no existe en el tenant destino). Los warehouses móviles quedan como almacenes normales.
+
+**Fixture de Absence Reasons (`appschedule/fixtures/masters_absence_reason.json`):**
+
+- Fixture **aparte** (mismo patrón que `masters_document_type.json`). Se carga en Inventory Master Data Setup junto con el inventario.
+- Se regenera con `generate_masters_inventory_fixture` desde `jobrhythm_products`.
 
 **Fixture de imágenes de productos (`appinventory/fixtures/masters_productimage.json`):**
 
@@ -1604,6 +1609,7 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
    - El backend:
      - Copia el repo de imágenes `appinventory/fixtures/media/products/` a `MEDIA_ROOT/products/` (en Docker: media_volume en `/app/media`)
      - Carga `masters_inventory.json` sin entradas ProductImage (adapta `brands` → `brand` si hace falta)
+     - Carga `masters_absence_reason.json` (fixture aparte) si existe
      - Carga `masters_productimage.json` (ProductImage con FK a `product`). Si no existe, crea ProductImage desde `MEDIA_ROOT/products/{product_id}/`
      - Resetea las secuencias de las tablas (incl. `appinventory_productimage`)
      - Marca `seed_inventory_done=True` en el tenant
@@ -1755,7 +1761,7 @@ docker compose -f docker-compose.dev.yml exec backend python manage.py generate_
   --schema jobrhythm_products
 ```
 
-Eso genera, en orden: `masters_inventory.json` → export de imágenes → `masters_productimage.json` → `masters_inventory.xlsx`.
+Eso genera, en orden: `masters_inventory.json` → `masters_absence_reason.json` → export de imágenes → `masters_productimage.json` → `masters_inventory.xlsx`.
 
 **Alternativa manual con `dumpdata`:**
 

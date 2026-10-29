@@ -2,7 +2,7 @@
   <JRPage>
     <JRPageHeader
       title="Inventory Master Data Setup"
-      description="Import products, brands, categories, units, price types, warehouses, and product prices into your tenant." />
+      description="Import products, brands, categories, units, price types, warehouses, product prices, and absence reasons into your tenant." />
 
     <div class="jr-master-data-setup">
       <p v-if="loading" class="jr-master-data-setup__status" role="status">
@@ -24,8 +24,8 @@
           :closable="false">
           <strong>Important:</strong> You can download an Excel file with
           inventory master data (products, brands, categories, units, price
-          types, warehouses, product prices). Review and adjust the data if
-          necessary before importing it to your tenant.
+          types, warehouses, product prices, absence reasons). Review and
+          adjust the data if necessary before importing it to your tenant.
         </Message>
 
         <JRSection title="Download Excel file">
@@ -88,9 +88,10 @@
         severity="success"
         :closable="false">
         <strong>Inventory masters imported.</strong>
-        The inventory master data (products, brands, categories, prices, and
-        product images when available) has been successfully imported to this
-        tenant. Import cannot be performed more than once.
+        The inventory master data (products, brands, categories, prices,
+        absence reasons, and product images when available) has been
+        successfully imported to this tenant. Import cannot be performed more
+        than once.
       </Message>
     </div>
   </JRPage>

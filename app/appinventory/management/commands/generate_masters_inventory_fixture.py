@@ -4,6 +4,8 @@ Genera fixtures de inventario maestro desde un tenant canónico.
 
 Incluye: UnitCategory, UnitOfMeasure, Warehouse, ProductCategory, ProductBrand,
 PriceType, Product, ProductPrice (Product.brand FK). ProductImage se genera aparte.
+También genera appschedule/fixtures/masters_absence_reason.json (fixture aparte,
+como masters_document_type) para Inventory Master Data Setup.
 
 Fuente canónica: schema jobrhythm_products (tenant_id=jobrhythm_products_001).
 
@@ -39,8 +41,8 @@ MASTERS_INVENTORY_MODELS = [
 
 class Command(BaseCommand):
     help = (
-        'Genera masters_inventory.json (+ imágenes + Excel) desde el tenant canónico. '
-        f'Default schema: {DEFAULT_SCHEMA}.'
+        'Genera masters_inventory.json (+ absence reasons + imágenes + Excel) '
+        f'desde el tenant canónico. Default schema: {DEFAULT_SCHEMA}.'
     )
 
     def add_arguments(self, parser):
@@ -72,6 +74,9 @@ class Command(BaseCommand):
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
         default_output = os.path.join(base_dir, 'appinventory', 'fixtures', 'masters_inventory.json')
         output_path = options['output'] or default_output
+        absence_output = os.path.join(
+            base_dir, 'appschedule', 'fixtures', 'masters_absence_reason.json'
+        )
 
         with schema_context(schema):
             out = StringIO()
@@ -83,6 +88,15 @@ class Command(BaseCommand):
             )
             json_str = out.getvalue()
 
+            out_abs = StringIO()
+            call_command(
+                'dumpdata',
+                'appschedule.AbsenceReason',
+                indent=2,
+                stdout=out_abs,
+            )
+            absence_json = out_abs.getvalue()
+
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(json_str)
@@ -90,6 +104,15 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 f'masters_inventory.json generado desde schema "{schema}" → {output_path}'
+            )
+        )
+
+        os.makedirs(os.path.dirname(absence_output), exist_ok=True)
+        with open(absence_output, 'w', encoding='utf-8') as f:
+            f.write(absence_json)
+        self.stdout.write(
+            self.style.SUCCESS(
+                f'masters_absence_reason.json generado → {absence_output}'
             )
         )
 
