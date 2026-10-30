@@ -17,8 +17,10 @@ from apptransactions.models import (
     DocumentType,
 )
 from apptransactions.services.document_status import (
+    DEFAULT_DOCUMENT_STATUS_SEEDS,
     ensure_initial_tracking,
     seed_default_document_statuses,
+    seed_default_statuses_for_type,
     transition_document_status,
 )
 
@@ -219,3 +221,94 @@ class DocumentStatusTrackingTests(TenantTestCase):
         self.assertEqual(first.pk, second.pk)
         self.assertEqual(DocumentTracking.objects.filter(document=doc).count(), 1)
         self.assertEqual(DocumentTrackingHistory.objects.filter(document=doc).count(), 1)
+
+    def test_seed_creates_grn_and_pinv_workflows(self):
+        grn, _ = DocumentType.objects.get_or_create(
+            type_code='GRN',
+            defaults={
+                'description': 'Goods Receipt Note',
+                'is_purchase': True,
+                'creates_serialized_items': True,
+                'stock_movement': 1,
+                'uses_status_tracking': False,
+            },
+        )
+        pinv, _ = DocumentType.objects.get_or_create(
+            type_code='PINV',
+            defaults={
+                'description': 'Purchase Invoice',
+                'is_purchase': True,
+                'uses_status_tracking': False,
+            },
+        )
+        DocumentStatus.objects.filter(document_type__in=[grn, pinv]).delete()
+        created = seed_default_document_statuses()
+        self.assertGreaterEqual(created, len(DEFAULT_DOCUMENT_STATUS_SEEDS['GRN']))
+        self.assertTrue(
+            DocumentStatus.objects.filter(
+                document_type=grn, code='received', sequence=2
+            ).exists()
+        )
+        self.assertTrue(
+            DocumentStatus.objects.filter(
+                document_type=pinv, code='posted', is_terminal=False
+            ).exists()
+        )
+        grn.refresh_from_db()
+        pinv.refresh_from_db()
+        self.assertFalse(grn.uses_status_tracking)
+        self.assertFalse(pinv.uses_status_tracking)
+        # Idempotent: second pass creates nothing for types that already have rows.
+        self.assertEqual(seed_default_document_statuses(), 0)
+
+    def test_seed_for_type_rejects_unknown_and_existing(self):
+        custom, _ = DocumentType.objects.get_or_create(
+            type_code='TMP',
+            defaults={'description': 'Temporary'},
+        )
+        from rest_framework.exceptions import ValidationError
+
+        with self.assertRaises(ValidationError):
+            seed_default_statuses_for_type(custom)
+
+        DocumentStatus.objects.filter(document_type=self.po_type).delete()
+        first = seed_default_statuses_for_type(self.po_type)
+        self.assertGreater(first, 0)
+        second = seed_default_statuses_for_type(self.po_type)
+        self.assertEqual(second, 0)
+
+    def test_api_seed_default_statuses_action(self):
+        grn, _ = DocumentType.objects.get_or_create(
+            type_code='GRN',
+            defaults={
+                'description': 'Goods Receipt Note',
+                'is_purchase': True,
+                'uses_status_tracking': False,
+            },
+        )
+        DocumentStatus.objects.filter(document_type=grn).delete()
+        response = self.client.post(
+            f'/api/document-types/{grn.id}/seed-default-statuses/'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreater(response.data.get('statuses_created', 0), 0)
+        self.assertEqual(
+            response.data.get('statuses_count'),
+            DocumentStatus.objects.filter(document_type=grn).count(),
+        )
+        self.assertFalse(response.data.get('uses_status_tracking'))
+
+        again = self.client.post(
+            f'/api/document-types/{grn.id}/seed-default-statuses/'
+        )
+        self.assertEqual(again.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_document_type_list_includes_statuses_count(self):
+        listed = self.client.get('/api/document-types/')
+        self.assertEqual(listed.status_code, status.HTTP_200_OK)
+        rows = listed.data if isinstance(listed.data, list) else listed.data.get('results', [])
+        po_row = next((r for r in rows if r.get('type_code') == 'PO'), None)
+        self.assertIsNotNone(po_row)
+        self.assertIn('statuses_count', po_row)
+        self.assertGreaterEqual(po_row['statuses_count'], 1)
+        self.assertIn('uses_status_tracking', po_row)

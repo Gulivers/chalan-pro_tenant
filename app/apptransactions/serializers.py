@@ -17,6 +17,8 @@ from appinventory.serializers import SerializedItemSerializer
 logger = logging.getLogger(__name__)
 
 class DocumentTypeSerializer(serializers.ModelSerializer):
+    statuses_count = serializers.IntegerField(read_only=True, required=False)
+
     class Meta:
         model = DocumentType
         fields = '__all__'

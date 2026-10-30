@@ -261,6 +261,7 @@
           v-if="id"
           ref="statusEditorRef"
           :documentTypeId="id"
+          :typeCode="form.type_code"
           :readOnly="isProtectedType || isViewMode" />
 
         <p

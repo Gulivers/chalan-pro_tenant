@@ -289,6 +289,18 @@
               :severity="data.allow_negative_sales ? 'warn' : 'secondary'" />
           </template>
         </Column>
+        <Column field="uses_status_tracking" header="Tracking" sortable>
+          <template #body="{ data }">
+            <JRBadge
+              :value="data.uses_status_tracking ? 'On' : 'Off'"
+              :severity="data.uses_status_tracking ? 'info' : 'secondary'" />
+          </template>
+        </Column>
+        <Column field="statuses_count" header="Statuses" sortable>
+          <template #body="{ data }">
+            {{ Number(data.statuses_count) || 0 }}
+          </template>
+        </Column>
         <Column field="is_active" header="Status" sortable>
           <template #body="{ data }">
             <JRBadge

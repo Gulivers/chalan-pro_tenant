@@ -45,6 +45,13 @@ class DocumentTypeViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active', 'uses_status_tracking']
 
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .annotate(statuses_count=Count('statuses', distinct=True))
+        )
+
     def perform_destroy(self, instance):
         if instance.type_code in DocumentType.PROTECTED_TYPE_CODES:
             raise DRFValidationError(
@@ -56,7 +63,51 @@ class DocumentTypeViewSet(viewsets.ModelViewSet):
             raise DRFValidationError(
                 'This document type cannot be deleted while related records exist.'
             ) from exc
-    
+
+    @action(
+        detail=True,
+        methods=['post'],
+        url_path='seed-default-statuses',
+        permission_classes=[IsAuthenticated],
+        authentication_classes=[TenantJWTAuthentication],
+    )
+    def seed_default_statuses(self, request, pk=None):
+        """Aplica el workflow por defecto si el tipo aún no tiene statuses."""
+        from apptransactions.models import DocumentStatus
+        from apptransactions.services.document_status import (
+            DEFAULT_DOCUMENT_STATUS_SEEDS,
+            seed_default_statuses_for_type,
+        )
+
+        if not request.user.has_perm('apptransactions.change_documenttype'):
+            raise PermissionDenied(
+                'You do not have permission to change document types.'
+            )
+        if not request.user.has_perm('apptransactions.add_documentstatus'):
+            raise PermissionDenied(
+                'You do not have permission to add document statuses.'
+            )
+        instance = self.get_object()
+        if instance.type_code in DocumentType.PROTECTED_TYPE_CODES:
+            raise DRFValidationError(
+                'System-managed document types cannot receive default status seeds.'
+            )
+        if instance.type_code not in DEFAULT_DOCUMENT_STATUS_SEEDS:
+            raise DRFValidationError(
+                f'No default status workflow is defined for type code '
+                f'"{instance.type_code}".'
+            )
+        if DocumentStatus.objects.filter(document_type=instance).exists():
+            raise DRFValidationError(
+                'This document type already has statuses. '
+                'Clear them before applying the default workflow.'
+            )
+        created = seed_default_statuses_for_type(instance, force=False)
+        instance = self.get_queryset().get(pk=instance.pk)
+        data = self.get_serializer(instance).data
+        data['statuses_created'] = created
+        return Response(data, status=status.HTTP_200_OK)
+
 class PartyTypeViewSet(viewsets.ModelViewSet):
     queryset = PartyType.objects.all()
     serializer_class = PartyTypeSerializer
