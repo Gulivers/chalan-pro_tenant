@@ -17,6 +17,7 @@ from django.template.loader import render_to_string
 from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 from utils.tenant_branding import get_tenant_logo_url
+from .material_request_api import _line_product_image_pdf_uri
 from .models import (
     DocumentType, PartyType, PartyCategory, Party, Document, DocumentLine,
     PriceType, WorkAccount, TransactionFavorite
@@ -45,6 +46,13 @@ class DocumentTypeViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active', 'uses_status_tracking']
 
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .annotate(statuses_count=Count('statuses', distinct=True))
+        )
+
     def perform_destroy(self, instance):
         if instance.type_code in DocumentType.PROTECTED_TYPE_CODES:
             raise DRFValidationError(
@@ -56,7 +64,51 @@ class DocumentTypeViewSet(viewsets.ModelViewSet):
             raise DRFValidationError(
                 'This document type cannot be deleted while related records exist.'
             ) from exc
-    
+
+    @action(
+        detail=True,
+        methods=['post'],
+        url_path='seed-default-statuses',
+        permission_classes=[IsAuthenticated],
+        authentication_classes=[TenantJWTAuthentication],
+    )
+    def seed_default_statuses(self, request, pk=None):
+        """Aplica el workflow por defecto si el tipo aún no tiene statuses."""
+        from apptransactions.models import DocumentStatus
+        from apptransactions.services.document_status import (
+            DEFAULT_DOCUMENT_STATUS_SEEDS,
+            seed_default_statuses_for_type,
+        )
+
+        if not request.user.has_perm('apptransactions.change_documenttype'):
+            raise PermissionDenied(
+                'You do not have permission to change document types.'
+            )
+        if not request.user.has_perm('apptransactions.add_documentstatus'):
+            raise PermissionDenied(
+                'You do not have permission to add document statuses.'
+            )
+        instance = self.get_object()
+        if instance.type_code in DocumentType.PROTECTED_TYPE_CODES:
+            raise DRFValidationError(
+                'System-managed document types cannot receive default status seeds.'
+            )
+        if instance.type_code not in DEFAULT_DOCUMENT_STATUS_SEEDS:
+            raise DRFValidationError(
+                f'No default status workflow is defined for type code '
+                f'"{instance.type_code}".'
+            )
+        if DocumentStatus.objects.filter(document_type=instance).exists():
+            raise DRFValidationError(
+                'This document type already has statuses. '
+                'Clear them before applying the default workflow.'
+            )
+        created = seed_default_statuses_for_type(instance, force=False)
+        instance = self.get_queryset().get(pk=instance.pk)
+        data = self.get_serializer(instance).data
+        data['statuses_created'] = created
+        return Response(data, status=status.HTTP_200_OK)
+
 class PartyTypeViewSet(viewsets.ModelViewSet):
     queryset = PartyType.objects.all()
     serializer_class = PartyTypeSerializer
@@ -199,7 +251,12 @@ class DocumentViewSet(DocumentStatusActionsMixin, viewsets.ModelViewSet):
         Document.objects
         .select_related("document_type", "builder", "created_by", "work_account")
         .prefetch_related(
-            Prefetch("lines", queryset=DocumentLine.objects.select_related("product", "unit", "price_type", "brand"))
+            Prefetch(
+                "lines",
+                queryset=DocumentLine.objects.select_related(
+                    "product", "product__brand", "unit", "price_type", "brand"
+                ).prefetch_related("product__images"),
+            )
         )
         .order_by("-id")
     )
@@ -583,23 +640,42 @@ def download_transaction_pdf(request, document_id):
                 Prefetch(
                     'lines',
                     queryset=DocumentLine.objects.select_related(
-                        'product', 
-                        'unit', 
-                        'price_type', 
+                        'product',
+                        'product__brand',
+                        'unit',
+                        'price_type',
                         'brand',
-                        'warehouse'
-                    ).prefetch_related('serialized_items_created')
+                        'warehouse',
+                    ).prefetch_related(
+                        'serialized_items_created',
+                        'product__images',
+                    )
                 )
             ),
             id=document_id
         )
 
         logo_url = get_tenant_logo_url(request)
+        show_product_images = bool(
+            getattr(document.document_type, 'is_sales', False)
+        )
+        line_rows = []
+        for line in document.lines.all():
+            line_rows.append({
+                'line': line,
+                'image_url': (
+                    _line_product_image_pdf_uri(line, request)
+                    if show_product_images
+                    else None
+                ),
+            })
 
         # Preparar el contexto para el template
         context = {
             'document': document,
             'logo_url': logo_url,
+            'show_product_images': show_product_images,
+            'line_rows': line_rows,
         }
 
         # Configurar fuentes
