@@ -3068,7 +3068,7 @@ def _copy_fixture_product_images_to_media():
     Copia el repo de imágenes (appinventory/fixtures/media/products/) a MEDIA_ROOT/products/.
     Preserva subcarpetas (p. ej. products/{product_id}/{brand_id}/file.jpg) para que
     coincidan con las rutas de masters_productimage.json.
-    Fuente canónica del repo: tenant jobrhythm_products (export_fixture_product_images).
+    Fuente canónica del repo: tenant division16 (export_fixture_product_images).
     Se llama ANTES de loaddata en el master data import.
     """
     import shutil

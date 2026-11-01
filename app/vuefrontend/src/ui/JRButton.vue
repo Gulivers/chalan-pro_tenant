@@ -4,7 +4,7 @@
     :type="type"
     :severity="primeSeverity"
     :text="variant === 'ghost'"
-    :outlined="variant === 'secondary'"
+    :outlined="variant === 'secondary' || variant === 'primary-outline'"
     :size="primeSize"
     :disabled="disabled"
     :fluid="fluid"
@@ -19,6 +19,7 @@ import Button from 'primevue/button';
 
 const SEVERITY = {
   primary: null,
+  'primary-outline': null,
   secondary: 'secondary',
   danger: 'danger',
   ghost: 'secondary',
@@ -32,7 +33,10 @@ export default {
     variant: {
       type: String,
       default: 'primary',
-      validator: (value) => ['primary', 'secondary', 'danger', 'ghost'].includes(value),
+      validator: (value) =>
+        ['primary', 'primary-outline', 'secondary', 'danger', 'ghost'].includes(
+          value,
+        ),
     },
     size: {
       type: String,
