@@ -17,6 +17,8 @@ from appinventory.serializers import SerializedItemSerializer
 logger = logging.getLogger(__name__)
 
 class DocumentTypeSerializer(serializers.ModelSerializer):
+    statuses_count = serializers.IntegerField(read_only=True, required=False)
+
     class Meta:
         model = DocumentType
         fields = '__all__'
@@ -37,6 +39,21 @@ class DocumentTypeSerializer(serializers.ModelSerializer):
                     'and Purchase return.'
                 ),
             })
+        if self.instance and self.instance.type_code in DocumentType.PROTECTED_TYPE_CODES:
+            raise serializers.ValidationError(
+                'The Material Request document type is required by the system and cannot be edited.'
+            )
+        tracking = attrs.get('uses_status_tracking', None)
+        if tracking is not None and self.instance is not None:
+            # Reuse model validation (enable needs initial status; disable blocks in-progress).
+            previous_flag = self.instance.uses_status_tracking
+            self.instance.uses_status_tracking = tracking
+            try:
+                self.instance._validate_status_tracking_flag()
+            except DjangoValidationError as exc:
+                raise serializers.ValidationError(exc.message_dict) from exc
+            finally:
+                self.instance.uses_status_tracking = previous_flag
         return attrs
 
 class PartyTypeSerializer(serializers.ModelSerializer):
@@ -232,6 +249,33 @@ class PartySerializer(serializers.ModelSerializer):
             instance.types.set(types)
         return instance
 
+def _plain_error_detail(value):
+    """Convierte ErrorDetail / listas anidadas a tipos JSON-friendly."""
+    if isinstance(value, dict):
+        return {k: _plain_error_detail(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_plain_error_detail(v) for v in value]
+    # ErrorDetail y similares se comportan como str
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
+
+
+def _insufficient_stock_payload(product_name, available, requested_ref, document_type_code):
+    return {
+        "error_type": "insufficient_stock",
+        "product_name": product_name,
+        "available": str(available),
+        "requested": str(requested_ref),
+        "document_type": document_type_code,
+        "message": (
+            f"{product_name}: insufficient stock. "
+            f"Available: {available}, requested: {requested_ref}. "
+            f"Document type '{document_type_code}' does not allow negative sales."
+        ),
+    }
+
+
 # ---- Aux: validación de disponibilidad (solo para salidas) ------------------
 def _validate_stock_out(line: "DocumentLine"):
     doc = line.document
@@ -268,16 +312,12 @@ def _validate_stock_out(line: "DocumentLine"):
         if doc.document_type.allow_negative_sales:
             return  # Permitir la transacción
             
-        # Si no permite ventas negativas, rechazar la transacción
+        product_name = getattr(line.product, "name", None) or "Unknown product"
+        type_code = doc.document_type.type_code
         raise serializers.ValidationError({
-            "quantity": {
-                "error_type": "insufficient_stock",
-                "product_name": line.product.name,
-                "available": str(available),
-                "requested": str(requested_ref),
-                "document_type": doc.document_type.type_code,
-                "message": f"{line.product.name}: Stock insuficiente. Disponible: {available}, solicitado(ref): {requested_ref}. El tipo de documento '{doc.document_type.type_code}' no permite ventas sin stock."
-            }
+            "quantity": _insufficient_stock_payload(
+                product_name, available, requested_ref, type_code
+            )
         })
 
 # DocumentLine
@@ -285,17 +325,25 @@ class DocumentLineSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source="product.name", read_only=True)
     unit_code = serializers.CharField(source="unit.code", read_only=True)
     warehouse_name = serializers.CharField(source="warehouse.name", read_only=True)
+    product_image = serializers.SerializerMethodField()
 
     class Meta:
         model = DocumentLine
         fields = [
-            "id", "document", "product", "product_name",
+            "id", "document", "product", "product_name", "product_image",
             "quantity", "unit", "unit_code",
             "unit_price", "discount_percentage", "final_price",
             "warehouse", "warehouse_name", "price_type", "brand",
             "pricing_rule", "margin_percent",
         ]
-        read_only_fields = ["final_price"]
+        read_only_fields = ["final_price", "product_image"]
+
+    def get_product_image(self, obj):
+        from appinventory.serializers import ProductListSerializer
+        product = getattr(obj, "product", None)
+        if not product:
+            return None
+        return ProductListSerializer(context=self.context).get_image(product)
 
     def validate(self, attrs):
         # quantity > 0 y product obligatorio ya se valida en clean(), pero reforzamos acá para 400 consistente
@@ -343,6 +391,7 @@ class DocumentLineInlineSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     unit_code = serializers.SerializerMethodField()
     product_name = serializers.SerializerMethodField()
+    product_image = serializers.SerializerMethodField()
     serialized_items_created_count = serializers.SerializerMethodField()
 
     def get_unit_code(self, obj):
@@ -353,15 +402,25 @@ class DocumentLineInlineSerializer(serializers.ModelSerializer):
         product = getattr(obj, "product", None)
         return getattr(product, "name", None) if product else ""
 
+    def get_product_image(self, obj):
+        from appinventory.serializers import ProductListSerializer
+        product = getattr(obj, "product", None)
+        if not product:
+            return None
+        return ProductListSerializer(context=self.context).get_image(product)
+
     class Meta:
         model = DocumentLine
         fields = [
-            "id", "product", "product_name", "quantity", "unit", "unit_code",
-            "unit_price", "discount_percentage", "final_price", "warehouse",
-            "price_type", "brand", "serialized_items_created_count",
+            "id", "product", "product_name", "product_image", "quantity", "unit",
+            "unit_code", "unit_price", "discount_percentage", "final_price",
+            "warehouse", "price_type", "brand", "serialized_items_created_count",
             "pricing_rule", "margin_percent",
         ]
-        read_only_fields = ["final_price", "unit_code", "product_name", "serialized_items_created_count"]
+        read_only_fields = [
+            "final_price", "unit_code", "product_name", "product_image",
+            "serialized_items_created_count",
+        ]
 
     def get_serialized_items_created_count(self, obj):
         if not obj.pk:
@@ -373,6 +432,12 @@ class DocumentListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for transaction list views (no lines / serialized items)."""
 
     document_type_code = serializers.CharField(source="document_type.type_code", read_only=True)
+    uses_status_tracking = serializers.BooleanField(
+        source="document_type.uses_status_tracking",
+        read_only=True,
+    )
+    status_code = serializers.SerializerMethodField()
+    status_name = serializers.SerializerMethodField()
     builder_name = serializers.SerializerMethodField()
     work_account_display = serializers.SerializerMethodField()
     lines_count = serializers.IntegerField(read_only=True)
@@ -383,6 +448,9 @@ class DocumentListSerializer(serializers.ModelSerializer):
             "id",
             "document_type",
             "document_type_code",
+            "uses_status_tracking",
+            "status_code",
+            "status_name",
             "date",
             "builder",
             "builder_name",
@@ -394,6 +462,21 @@ class DocumentListSerializer(serializers.ModelSerializer):
             "is_active",
             "lines_count",
         ]
+
+    def _tracking_status(self, obj):
+        try:
+            tracking = obj.tracking
+        except Exception:
+            return None
+        return getattr(tracking, "current_status", None)
+
+    def get_status_code(self, obj):
+        status_obj = self._tracking_status(obj)
+        return getattr(status_obj, "code", None) if status_obj else None
+
+    def get_status_name(self, obj):
+        status_obj = self._tracking_status(obj)
+        return getattr(status_obj, "name", None) if status_obj else None
 
     def get_builder_name(self, obj):
         builder = getattr(obj, "builder", None)
@@ -414,6 +497,10 @@ class DocumentSerializer(serializers.ModelSerializer):
     document_type_creates_serialized_items = serializers.BooleanField(
         source="document_type.creates_serialized_items", read_only=True
     )
+    uses_status_tracking = serializers.BooleanField(
+        source="document_type.uses_status_tracking",
+        read_only=True,
+    )
     builder_name = serializers.SerializerMethodField()
     work_account_display = serializers.SerializerMethodField()
     party = serializers.SerializerMethodField()
@@ -424,6 +511,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         model = Document
         fields = [
             "id", "document_type", "document_type_code", "document_type_creates_serialized_items",
+            "uses_status_tracking",
             "date", "builder", "builder_name", "party",
             "work_account", "work_account_display",
             "created_by", "notes",
@@ -627,11 +715,12 @@ class DocumentSerializer(serializers.ModelSerializer):
             if any(all_line_errors):
                 raise serializers.ValidationError({"lines": all_line_errors})
             
-            # Ahora validar stock para TODAS las líneas después de que el documento esté creado
-            stock_errors = []
+            # Validar stock por línea preservando detalle plano JSON-friendly
+            # (product_name, available, requested, …) para el frontend.
+            stock_line_errors = [{} for _ in lines_data]
+            has_stock_error = False
             for idx, ld in enumerate(lines_data):
                 try:
-                    # Crear una instancia temporal para validar stock
                     temp_line = DocumentLine(
                         document=doc,
                         product=ld.get('product'),
@@ -640,12 +729,19 @@ class DocumentSerializer(serializers.ModelSerializer):
                         warehouse=ld.get('warehouse')
                     )
                     _validate_stock_out(temp_line)
+                except serializers.ValidationError as e:
+                    has_stock_error = True
+                    detail = _plain_error_detail(getattr(e, 'detail', None))
+                    if isinstance(detail, dict):
+                        stock_line_errors[idx] = detail
+                    else:
+                        stock_line_errors[idx] = {'quantity': detail}
                 except Exception as e:
-                    stock_errors.append(str(e))
-            
-            # Si hay errores de stock, lanzar todos los errores juntos
-            if stock_errors:
-                raise serializers.ValidationError({"lines": stock_errors})
+                    has_stock_error = True
+                    stock_line_errors[idx] = {'quantity': [str(e)]}
+
+            if has_stock_error:
+                raise serializers.ValidationError({"lines": stock_line_errors})
             
             # Si todas las líneas son válidas, crear todas las líneas
             for idx, ld in enumerate(lines_data):

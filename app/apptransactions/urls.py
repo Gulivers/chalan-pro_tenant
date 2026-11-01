@@ -5,9 +5,12 @@ from .views import (
     DocumentViewSet, DocumentListProviderAPIView, DocumentLineViewSet, WorkAccountViewSet,
     TransactionFavoriteViewSet, download_transaction_pdf,
 )
+from .material_request_api import MaterialRequestViewSet
+from .document_status_api import DocumentStatusViewSet
 
 router = DefaultRouter()
 router.register(r'document-types', DocumentTypeViewSet)
+router.register(r'document-statuses', DocumentStatusViewSet, basename='document-statuses')
 router.register(r'party-types', PartyTypeViewSet)
 router.register(r'party-categories', PartyCategoryViewSet)
 router.register(r'parties', PartyViewSet)
@@ -15,6 +18,7 @@ router.register(r'documents', DocumentViewSet, basename='documents')
 router.register(r'document-lines', DocumentLineViewSet, basename='document-lines')
 router.register(r'work-accounts', WorkAccountViewSet, basename='work-accounts')
 router.register(r'transaction-favorites', TransactionFavoriteViewSet, basename='transaction-favorites')
+router.register(r'material-requests', MaterialRequestViewSet, basename='material-requests')
 
 urlpatterns = [
     path('api/', include(router.urls)),

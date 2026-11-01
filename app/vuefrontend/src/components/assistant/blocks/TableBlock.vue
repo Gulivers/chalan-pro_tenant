@@ -1,14 +1,14 @@
 <template>
   <div class="assistant-table-block">
-    <div v-if="block.title" class="assistant-block-title text-muted small mb-2">
+    <div v-if="block.title" class="assistant-block-title mb-2 text-sm text-jr-muted">
       {{ block.title }}
     </div>
-    <div v-if="!columns.length || !rows.length" class="text-muted small text-start">
+    <div v-if="!columns.length || !rows.length" class="text-start text-sm text-jr-muted">
       No rows to display.
     </div>
-    <div v-else class="table-responsive">
-      <table class="table table-sm table-hover mb-0 assistant-table">
-        <thead class="table-light">
+    <div v-else class="overflow-x-auto">
+      <table class="assistant-table mb-0">
+        <thead>
           <tr>
             <th
               v-for="col in columns"
@@ -31,7 +31,7 @@
         </tbody>
       </table>
     </div>
-    <div v-if="paginationHint" class="text-muted small mt-1 text-start">
+    <div v-if="paginationHint" class="mt-1 text-start text-sm text-jr-muted">
       {{ paginationHint }}
     </div>
   </div>
@@ -83,7 +83,7 @@ export default {
     },
     cellClass(col) {
       return col.format === 'currency' || col.format === 'number'
-        ? 'text-end text-nowrap'
+        ? 'text-end whitespace-nowrap'
         : 'text-start';
     },
   },
@@ -98,9 +98,19 @@ export default {
   font-weight: 600;
 }
 .assistant-table {
-  font-size: 0.85rem;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.assistant-table th,
+.assistant-table td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--color-jr-border);
+  text-align: left;
 }
 .assistant-table th {
+  font-weight: 600;
   white-space: nowrap;
+  background: var(--color-jr-surface-muted);
 }
 </style>

@@ -194,7 +194,7 @@ En `docker-compose.yml` (producción):
 - **Puerto:** `127.0.0.1:5432:5432` — acceso desde el host solo por SSH/túnel; backend y pgAdmin siguen usando `postgres:5432` en la red Docker.
 - **`max_connections=200`** — límite ampliado respecto al default (100).
 - **`idle_in_transaction_session_timeout=300000`** (5 min) — cierra transacciones colgadas.
-- **Backend:** `DJANGO_CONN_MAX_AGE=60` — reutiliza conexiones un minuto como máximo (antes 600 s), para no agotar el pool con Daphne.
+- **Backend:** `DJANGO_CONN_MAX_AGE=0` — obligatorio con Daphne/ASGI. Con `CONN_MAX_AGE>0` cada request puede dejar una conexión idle que no se reutiliza y agota `max_connections`. Override solo vía env; Compose de producción debe quedar en `"0"`.
 
 **Acceso local al VPS (psql / DBeaver):**
 

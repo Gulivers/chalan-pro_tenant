@@ -42,14 +42,20 @@ class Command(BaseCommand):
                 'model_number': getattr(product, 'model_number', '') or '',
                 'category_id': product.category.id if product.category else None,
                 'category_name': product.category.name if product.category else None,
-                'brands': [
+                'brand': (
                     {
-                        'id': brand.id,
-                        'name': brand.name,
-                        'is_default': brand.is_default
+                        'id': product.brand.id,
+                        'name': product.brand.name,
                     }
-                    for brand in product.brands.all()
-                ],
+                    if product.brand_id
+                    else None
+                ),
+                # Compat con backups antiguos
+                'brands': (
+                    [{'id': product.brand.id, 'name': product.brand.name, 'is_default': True}]
+                    if product.brand_id
+                    else []
+                ),
                 'reorder_level': float(product.reorder_level),
                 'unit_default_id': product.unit_default.id if product.unit_default else None,
                 'unit_default_name': product.unit_default.name if product.unit_default else None,

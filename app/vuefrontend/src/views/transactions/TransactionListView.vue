@@ -161,6 +161,13 @@
                 currency(item.total_amount)
               }}</span>
               <JRBadge
+                v-if="item.uses_status_tracking && item.status_name"
+                :value="item.status_name"
+                :severity="workflowStatusSeverity(item)" />
+              <span
+                v-else-if="item.uses_status_tracking"
+                class="jr-tx-row__empty">—</span>
+              <JRBadge
                 :value="item.is_active ? 'Active' : 'Voided'"
                 :severity="item.is_active ? 'success' : 'secondary'" />
             </p>
@@ -260,6 +267,15 @@
             {{ formatDate(data.date) }}
           </template>
         </Column>
+        <Column field="status_name" header="Status">
+          <template #body="{ data }">
+            <JRBadge
+              v-if="data.uses_status_tracking && data.status_name"
+              :value="data.status_name"
+              :severity="workflowStatusSeverity(data)" />
+            <span v-else class="jr-tx-row__empty">—</span>
+          </template>
+        </Column>
         <Column
           field="total_amount"
           header="Total"
@@ -281,7 +297,7 @@
             {{ currency(data.total_discount) }}
           </template>
         </Column>
-        <Column field="is_active" header="Status">
+        <Column field="is_active" header="Active">
           <template #body="{ data }">
             <JRBadge
               :value="data.is_active ? 'Active' : 'Voided'"
@@ -347,6 +363,7 @@ import {
   JREmptyState,
   JRRowActions,
 } from "@ui";
+import { documentStatusSeverity } from "@/utils/documentStatus";
 
 const ENDPOINT = "/api/documents-provider/";
 const PHONE_MQ = "(max-width: 767.98px)";
@@ -497,13 +514,16 @@ export default {
             sortField: sortField.value,
             sortOrder: sortOrder.value,
           }),
+          exclude_type_code: "MR",
         });
         const classicSearch = filter.value.trim();
         if (classicSearch) {
           params.set("search", classicSearch);
         }
         const { data } = await axios.get(`${ENDPOINT}?${params}`);
-        transactions.value = data.items || [];
+        transactions.value = (data.items || []).filter(
+          (item) => item.document_type_code !== "MR"
+        );
         totalRows.value = data.totalRows || 0;
         if (data.stats) stats.value = data.stats;
         loadError.value = false;
@@ -556,6 +576,11 @@ export default {
       item?.document_type_code
         ? `Transaction ${item.document_type_code}`
         : `Transaction ${item?.id ?? ""}`;
+
+    const workflowStatusSeverity = (item) =>
+      documentStatusSeverity(item?.status_code, {
+        isTerminal: String(item?.status_code || "").toLowerCase() === "closed",
+      });
 
     const viewItem = (id) => router.push(transactionViewTo(id));
     const editItem = (id) => router.push(transactionEditTo(id));
@@ -783,6 +808,7 @@ export default {
       transactionLabel,
       formatDate,
       currency,
+      workflowStatusSeverity,
       toolsMenu,
       toolsMenuOpen,
       toolsMenuModel,
@@ -920,6 +946,10 @@ a.jr-tx-row__name--link:hover {
   gap: 0.35rem;
   margin: 0.2rem 0 0;
   font-size: 0.75rem;
+  color: var(--color-jr-muted);
+}
+
+.jr-tx-row__empty {
   color: var(--color-jr-muted);
 }
 

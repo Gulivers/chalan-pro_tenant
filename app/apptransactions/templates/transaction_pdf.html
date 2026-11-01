@@ -115,6 +115,36 @@
             background-color: #f8f9fa;
         }
 
+        .product-cell {
+            display: table;
+            width: 100%;
+        }
+
+        .product-thumb,
+        .product-name {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .product-thumb {
+            width: 44px;
+            padding-right: 8px;
+        }
+
+        .product-thumb img,
+        .product-thumb-ph {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+            display: block;
+        }
+
+        .product-thumb-ph {
+            border-style: dashed;
+        }
+
         .totals-section {
             margin-top: 20px;
             border-top: 2px solid #333;
@@ -291,17 +321,31 @@
             </tr>
         </thead>
         <tbody>
-            {% for line in document.lines.all %}
+            {% for row in line_rows %}
+            {% with line=row.line %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>
-                    {{ line.product.name }}
-                    {% if line.brand %}
-                        <span class="text-muted float-end" style="font-size: 0.8em;">{{ line.brand.name|truncatechars:15 }}</span>
-                    {% endif %}
-                    {% for item in line.serialized_items_created.all %}
-                        <br/><small class="text-muted">Asset tag: {{ item.asset_tag|default:"—" }}</small>
-                    {% endfor %}
+                    <div class="product-cell">
+                        {% if show_product_images %}
+                        <div class="product-thumb">
+                            {% if row.image_url %}
+                                <img src="{{ row.image_url }}" alt="" />
+                            {% else %}
+                                <span class="product-thumb-ph" aria-hidden="true"></span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <div class="product-name">
+                            {{ line.product.name }}
+                            {% if line.brand %}
+                                <span class="text-muted float-end" style="font-size: 0.8em;">{{ line.brand.name|truncatechars:15 }}</span>
+                            {% endif %}
+                            {% for item in line.serialized_items_created.all %}
+                                <br/><small class="text-muted">Asset tag: {{ item.asset_tag|default:"—" }}</small>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </td>
                 <td class="text-center">{{ line.quantity }}</td>
                 <td class="text-center">{{ line.unit.code|default:"-" }}</td>
@@ -311,6 +355,7 @@
                 <td class="text-right">${{ line.final_price|floatformat:2 }}</td>
                 {% endif %}
             </tr>
+            {% endwith %}
             {% endfor %}
         </tbody>
     </table>

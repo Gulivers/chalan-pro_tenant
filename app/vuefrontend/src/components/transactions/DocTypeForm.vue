@@ -12,6 +12,9 @@
         class="jr-doctype-form__form"
         @submit.prevent="handleSubmit"
         novalidate>
+        <p v-if="isProtectedType" class="jr-doctype-form__note" role="status">
+          The Material Request document type is required by the system and cannot be edited or deleted.
+        </p>
         <JRSection title="Basic Information">
           <div class="jr-form-grid">
             <JRField
@@ -72,14 +75,20 @@
             </JRField>
           </div>
           <div class="jr-form-checks">
-            <JRField label="Physical Inventory" inputId="doctype-affects-physical">
+            <JRField
+              label="Physical Inventory"
+              inputId="doctype-affects-physical"
+              hint="Includes this document in the physical on-hand count.">
               <JRCheckbox
                 inputId="doctype-affects-physical"
                 v-model="form.affects_physical"
                 ariaLabel="Physical Inventory"
                 :disabled="isDisabled" />
             </JRField>
-            <JRField label="Logical Inventory" inputId="doctype-affects-logical">
+            <JRField
+              label="Logical Inventory"
+              inputId="doctype-affects-logical"
+              hint="Includes this document in the logical available count.">
               <JRCheckbox
                 inputId="doctype-affects-logical"
                 v-model="form.affects_logical"
@@ -88,7 +97,8 @@
             </JRField>
             <JRField
               label="Affects Accounting"
-              inputId="doctype-affects-accounting">
+              inputId="doctype-affects-accounting"
+              hint="Includes this document in accounting inventory.">
               <JRCheckbox
                 inputId="doctype-affects-accounting"
                 v-model="form.affects_accounting"
@@ -97,7 +107,8 @@
             </JRField>
             <JRField
               label="Warehouse Required"
-              inputId="doctype-warehouse-required">
+              inputId="doctype-warehouse-required"
+              hint="A warehouse must be selected on the document.">
               <JRCheckbox
                 inputId="doctype-warehouse-required"
                 v-model="form.warehouse_required"
@@ -120,21 +131,30 @@
 
         <JRSection title="Business Configuration">
           <div class="jr-form-checks">
-            <JRField label="Purchase Document" inputId="doctype-is-purchase">
+            <JRField
+              label="Purchase Document"
+              inputId="doctype-is-purchase"
+              hint="Marks the document as a purchase (vendor side).">
               <JRCheckbox
                 inputId="doctype-is-purchase"
                 v-model="form.is_purchase"
                 ariaLabel="Purchase Document"
                 :disabled="isDisabled" />
             </JRField>
-            <JRField label="Sales Document" inputId="doctype-is-sales">
+            <JRField
+              label="Sales Document"
+              inputId="doctype-is-sales"
+              hint="Marks the document as a sale (customer side).">
               <JRCheckbox
                 inputId="doctype-is-sales"
                 v-model="form.is_sales"
                 ariaLabel="Sales Document"
                 :disabled="isDisabled" />
             </JRField>
-            <JRField label="Subject to Taxes" inputId="doctype-is-taxable">
+            <JRField
+              label="Subject to Taxes"
+              inputId="doctype-is-taxable"
+              hint="Tax applies to the lines of this document.">
               <JRCheckbox
                 inputId="doctype-is-taxable"
                 v-model="form.is_taxable"
@@ -148,7 +168,8 @@
           <div class="jr-form-checks">
             <JRField
               label="Operational Document"
-              inputId="doctype-is-operational">
+              inputId="doctype-is-operational"
+              hint="Requires a Work Account. Material Request uses this flag.">
               <JRCheckbox
                 inputId="doctype-is-operational"
                 v-model="form.is_operational"
@@ -177,7 +198,8 @@
           <div class="jr-form-checks">
             <JRField
               label="Net invoiced spending"
-              inputId="doctype-net-invoiced">
+              inputId="doctype-net-invoiced"
+              hint="Counts toward Assistant net invoiced spending. Leave off for orders and returns.">
               <JRCheckbox
                 inputId="doctype-net-invoiced"
                 v-model="form.counts_as_net_invoiced_spend"
@@ -185,7 +207,10 @@
                 :disabled="isDisabled"
                 @update:modelValue="onSpendIntentionChange" />
             </JRField>
-            <JRField label="Job material issue" inputId="doctype-job-material">
+            <JRField
+              label="Job material issue"
+              inputId="doctype-job-material"
+              hint="Counts as material issued to a job, such as a picking.">
               <JRCheckbox
                 inputId="doctype-job-material"
                 v-model="form.counts_as_job_material_issue"
@@ -194,7 +219,8 @@
             </JRField>
             <JRField
               label="Purchase return"
-              inputId="doctype-purchase-return">
+              inputId="doctype-purchase-return"
+              hint="Counts as a purchase return, separate from net invoiced spending.">
               <JRCheckbox
                 inputId="doctype-purchase-return"
                 v-model="form.counts_as_purchase_return"
@@ -209,22 +235,48 @@
           <div class="jr-form-checks">
             <JRField
               label="Active Document Type"
-              inputId="doctype-is-active">
+              inputId="doctype-is-active"
+              hint="Inactive types cannot be selected on new documents.">
               <JRCheckbox
                 inputId="doctype-is-active"
                 v-model="form.is_active"
                 ariaLabel="Active Document Type"
                 :disabled="isDisabled" />
             </JRField>
+            <JRField
+              label="Status Tracking"
+              inputId="doctype-uses-status-tracking"
+              hint="When on, new documents of this type get a status workflow. Add an initial status below first."
+              :error="fieldErrors.uses_status_tracking">
+              <JRCheckbox
+                inputId="doctype-uses-status-tracking"
+                v-model="form.uses_status_tracking"
+                ariaLabel="Status Tracking"
+                :disabled="isDisabled" />
+            </JRField>
           </div>
         </JRSection>
+
+        <DocumentStatusEditor
+          v-if="id"
+          ref="statusEditorRef"
+          :documentTypeId="id"
+          :typeCode="form.type_code"
+          :readOnly="isProtectedType || isViewMode" />
+
+        <p
+          v-else-if="!isViewMode"
+          class="jr-doctype-form__note"
+          role="status">
+          Save this document type to define its Document Statuses workflow.
+        </p>
 
         <div
           :class="[
             'jr-doctype-form__actions',
             { 'jr-doctype-form__actions--sticky': !isModal },
           ]">
-          <template v-if="!isViewMode">
+          <template v-if="!isViewMode && !isProtectedType">
             <JRButton type="submit" variant="primary" :disabled="isDisabled">
               {{ submitting ? "Saving..." : "Save" }}
             </JRButton>
@@ -264,6 +316,7 @@ import {
   JRCheckbox,
   JRButton,
 } from "@ui";
+import DocumentStatusEditor from "./DocumentStatusEditor.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -285,11 +338,19 @@ const props = defineProps({
 const submitting = ref(false);
 const loading = ref(false);
 const fieldErrors = ref({});
+const statusEditorRef = ref(null);
 
 const id = computed(() => props.id || route.query.id || null);
 const isViewMode = computed(() => route.query.mode === "view");
 const isEditMode = computed(() => !!id.value && !isViewMode.value);
-const isDisabled = computed(() => isViewMode.value || submitting.value);
+const loadedTypeCode = ref("");
+const PROTECTED_TYPE_CODES = ["MR"];
+const isProtectedType = computed(() =>
+  PROTECTED_TYPE_CODES.includes((loadedTypeCode.value || "").toUpperCase())
+);
+const isDisabled = computed(
+  () => isViewMode.value || submitting.value || isProtectedType.value
+);
 
 const pageTitle = computed(() => {
   if (isViewMode.value) return "View Document Type";
@@ -320,6 +381,7 @@ const form = ref({
   counts_as_net_invoiced_spend: false,
   counts_as_job_material_issue: false,
   counts_as_purchase_return: false,
+  uses_status_tracking: false,
   is_active: true,
 });
 
@@ -414,6 +476,7 @@ onMounted(async () => {
     loading.value = true;
     try {
       const { data } = await axios.get(`/api/document-types/${id.value}/`);
+      loadedTypeCode.value = data.type_code || "";
       form.value = {
         type_code: data.type_code || "",
         description: data.description || "",
@@ -431,6 +494,7 @@ onMounted(async () => {
         counts_as_net_invoiced_spend: !!data.counts_as_net_invoiced_spend,
         counts_as_job_material_issue: !!data.counts_as_job_material_issue,
         counts_as_purchase_return: !!data.counts_as_purchase_return,
+        uses_status_tracking: !!data.uses_status_tracking,
         is_active: !!data.is_active,
       };
     } catch (error) {
@@ -444,7 +508,7 @@ onMounted(async () => {
 });
 
 const handleSubmit = async () => {
-  if (isViewMode.value) return;
+  if (isViewMode.value || isProtectedType.value) return;
 
   try {
     submitting.value = true;
@@ -471,6 +535,7 @@ const handleSubmit = async () => {
       counts_as_net_invoiced_spend: !!form.value.counts_as_net_invoiced_spend,
       counts_as_job_material_issue: !!form.value.counts_as_job_material_issue,
       counts_as_purchase_return: !!form.value.counts_as_purchase_return,
+      uses_status_tracking: !!form.value.uses_status_tracking,
       is_active: form.value.is_active,
     };
 
@@ -501,8 +566,9 @@ const handleSubmit = async () => {
       return;
     }
 
+    const wasEdit = isEditMode.value;
     let savedData;
-    if (isEditMode.value) {
+    if (wasEdit) {
       const response = await axios.put(
         `/api/document-types/${id.value}/`,
         trimmedData
@@ -513,13 +579,44 @@ const handleSubmit = async () => {
       savedData = response.data;
     }
 
+    // Persist Document Statuses with the same Save action (edit form only).
+    let statusesSaved = false;
+    if (wasEdit && statusEditorRef.value?.saveAll) {
+      const statusResult = await statusEditorRef.value.saveAll();
+      if (!statusResult?.ok) {
+        emit("saved", savedData);
+        proxy?.notifyToastError?.(
+          statusResult?.error ||
+            "Document type saved, but statuses could not be saved."
+        );
+        return;
+      }
+      statusesSaved = (statusResult.savedCount || 0) > 0;
+    }
+
     emit("saved", savedData);
     proxy?.notifyToastSuccess?.(
-      isEditMode.value ? "Document type updated." : "Document type created."
+      wasEdit
+        ? statusesSaved
+          ? "Document type and statuses saved."
+          : "Document type updated."
+        : "Document type created."
     );
 
     if (!props.isModal) {
-      goList();
+      // After create, stay on the edit form so statuses can be configured.
+      if (!wasEdit && savedData?.id) {
+        router
+          .push({
+            name: "document-types-form",
+            query: { id: String(savedData.id) },
+          })
+          .catch(() => {
+            router.push(`/document-types/form?id=${savedData.id}`);
+          });
+      } else {
+        goList();
+      }
     }
   } catch (error) {
     console.error("Error saving document type:", error);

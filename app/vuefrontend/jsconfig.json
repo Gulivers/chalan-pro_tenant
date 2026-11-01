@@ -22,6 +22,8 @@
       "@stores/*": ["./src/stores/*"],
       "@utils/*": ["./src/utils/*"],
       "@types/*": ["./src/types/*"],
+      "@ui": ["./src/ui/index.js"],
+      "@ui/*": ["./src/ui/*"],
       "@transactions/*": ["./src/components/transactions/*"],
       "@inventory/*": ["./src/components/inventory/*"]
     }

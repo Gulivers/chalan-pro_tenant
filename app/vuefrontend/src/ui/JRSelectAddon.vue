@@ -13,6 +13,7 @@
       :placeholder="placeholder"
       :showClear="showClear"
       :inputId="inputId"
+      :ariaLabelledby="ariaLabelledby"
       :ariaDescribedby="ariaDescribedby"
       :required="required"
       @update:modelValue="$emit('update:modelValue', $event)"
@@ -124,6 +125,10 @@ export default {
     inputId: {
       type: String,
       default: undefined,
+    },
+    ariaLabelledby: {
+      type: String,
+      default: '',
     },
     ariaDescribedby: {
       type: String,

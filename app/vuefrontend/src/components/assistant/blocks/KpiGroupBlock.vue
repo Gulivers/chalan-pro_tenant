@@ -1,6 +1,6 @@
 <template>
   <div class="assistant-kpi-group">
-    <div v-if="block.title" class="assistant-block-title text-muted small mb-2">
+    <div v-if="block.title" class="assistant-block-title mb-2 text-sm text-jr-muted">
       {{ block.title }}
     </div>
     <div class="assistant-kpi-group-grid">

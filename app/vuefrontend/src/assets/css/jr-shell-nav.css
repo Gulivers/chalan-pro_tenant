@@ -9,8 +9,23 @@
   --jr-shell-topbar-bg-end: #1e40af;
 }
 
+/* Flush chrome to the viewport (UA body margin otherwise insets topbar + rail). */
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  min-height: 100dvh;
+}
+
+/* Shell: sidebar | (topbar + content). Rail fixed + topbar sticky; content scrolls. */
 .jr-app-shell,
 .p-sidebar-layout.jr-app-shell {
+  margin: 0;
+  padding: 0;
+  width: 100%;
   min-height: 100vh;
   min-height: 100dvh;
   text-align: left;
@@ -32,7 +47,7 @@
   min-width: 0;
 }
 
-/* PrimeVue sidebar — JobRhythm tokens (stack above topbar) */
+/* PrimeVue sidebar — JobRhythm tokens */
 .jr-shell-sidebar.p-sidebar {
   --px-sidebar-width: var(--jr-sidebar-width);
   --px-sidebar-icon-width: var(--jr-sidebar-rail);
@@ -47,9 +62,46 @@
   z-index: 1050;
 }
 
-/* Desktop: stretch with layout */
+/*
+ * Desktop fixed rail:
+ * PrimeVue mounts .p-sidebar-aside as position:absolute inside .p-sidebar,
+ * so the rail stretches with the layout column and “jumps” (top gap) when
+ * expand/collapse or focus scroll runs. Pin the aside to the viewport;
+ * the spacer keeps only the horizontal gutter in document flow.
+ */
 .jr-shell-sidebar .p-sidebar-aside {
-  min-height: 100dvh;
+  align-self: stretch;
+  min-height: 100%;
+}
+
+@media (min-width: 1024px) {
+  .jr-shell-sidebar.p-sidebar:not([data-overlay]) {
+    position: relative;
+    z-index: 1040;
+    overflow-anchor: none;
+  }
+
+  .jr-shell-sidebar.p-sidebar:not([data-overlay]) > .p-sidebar-spacer {
+    height: 0;
+    min-height: 0;
+  }
+
+  .jr-shell-sidebar.p-sidebar:not([data-overlay]) .p-sidebar-aside {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    inset-block: 0;
+    margin: 0;
+    height: 100dvh;
+    max-height: 100dvh;
+    z-index: 1040;
+  }
+
+  .jr-shell-sidebar.p-sidebar:not([data-overlay]) .p-sidebar-panel {
+    height: 100%;
+    min-height: 100%;
+  }
 }
 
 /*
@@ -591,7 +643,7 @@
   border: 0;
 }
 
-/* Desktop topbar — primary nav + account menu */
+/* Desktop topbar — beside the sidebar; sticky so it does not scroll away */
 .jr-shell-topbar {
   display: none;
 }
@@ -601,10 +653,12 @@
     position: sticky;
     top: 0;
     z-index: 1010;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
+    width: 100%;
     min-height: var(--jr-shell-topbar);
     padding: 0 1rem 0 0.75rem;
     background: linear-gradient(
@@ -1373,8 +1427,14 @@
     gap: 0.5rem;
     min-height: var(--jr-shell-mobile-bar);
     padding: 0 0.65rem;
-    background: var(--color-jr-surface);
-    border-bottom: 1px solid var(--color-jr-border);
+    background: linear-gradient(
+      135deg,
+      var(--jr-shell-topbar-bg-start) 0%,
+      var(--jr-shell-topbar-bg-end) 100%
+    );
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    border-bottom: 0;
+    color: #ffffff;
   }
 
   .jr-shell-mobile-bar__menu,
@@ -1384,32 +1444,23 @@
     justify-content: center;
     width: 2.25rem;
     height: 2.25rem;
-    border: 1px solid var(--color-jr-border);
+    border: 0;
     border-radius: var(--radius-jr-control, 0);
-    background: var(--color-jr-surface);
-    color: var(--color-jr-text);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
     cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+    transition: background-color 0.15s ease, color 0.15s ease;
   }
 
   .jr-shell-mobile-bar__menu:hover,
   .jr-shell-mobile-bar__action:hover {
-    background: var(--color-jr-surface-muted);
-    border-color: var(--color-jr-hover-border);
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
   }
 
   .jr-shell-mobile-bar__menu[aria-expanded="true"] {
-    background: color-mix(
-      in srgb,
-      var(--color-jr-primary, #2563eb) 12%,
-      var(--color-jr-surface)
-    );
-    border-color: color-mix(
-      in srgb,
-      var(--color-jr-primary, #2563eb) 28%,
-      var(--color-jr-border)
-    );
-    color: var(--color-jr-primary, #2563eb);
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
   }
 
   .jr-shell-mobile-bar__menu {
@@ -1431,7 +1482,25 @@
 
   .jr-shell-mobile-bar__menu:focus-visible,
   .jr-shell-mobile-bar__action:focus-visible {
-    outline: 2px solid var(--color-jr-primary);
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+  }
+
+  /* Messages control inside the blue mobile bar */
+  .jr-shell-mobile-bar .jr-shell-messages {
+    border: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .jr-shell-mobile-bar .jr-shell-messages:hover,
+  .jr-shell-mobile-bar .jr-shell-messages[aria-expanded="true"] {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+  }
+
+  .jr-shell-mobile-bar .jr-shell-messages:focus-visible {
+    outline: 2px solid #ffffff;
     outline-offset: 2px;
   }
 

@@ -269,9 +269,10 @@ export default {
       return this.canView || this.canChange;
     },
     filteredTransactions() {
-      if (!this.search) return this.transactions;
+      const rows = this.transactions.filter((item) => !this.isMaterialRequest(item));
+      if (!this.search) return rows;
       const q = this.search.toLowerCase();
-      return this.transactions.filter((item) => {
+      return rows.filter((item) => {
         const typeCode = this.documentTypesMap[item.document_type] || "";
         const typeName = this.documentTypeNamesMap[item.document_type] || "";
         const notes = item.notes || "";
@@ -318,6 +319,13 @@ export default {
     },
   },
   methods: {
+    isMaterialRequest(item) {
+      const code =
+        item?.document_type_code ||
+        this.documentTypesMap[item?.document_type] ||
+        "";
+      return code === "MR";
+    },
     hasPermission(permission) {
       try {
         const userPermissions = JSON.parse(
@@ -478,6 +486,15 @@ export default {
         currency: "USD",
       });
     },
+    closeOpenJrDialog() {
+      const masks = document.querySelectorAll(".p-dialog-mask");
+      const mask = masks[masks.length - 1];
+      if (!mask) return;
+      const closeBtn = mask.querySelector(
+        ".jr-dialog__close, .p-dialog-close-button"
+      );
+      closeBtn?.click();
+    },
     async goToTransactionForm(transactionId = null, mode = null) {
       if (transactionId !== null && transactionId !== undefined) {
         if (typeof transactionId === "object" || isNaN(Number(transactionId))) {
@@ -492,20 +509,7 @@ export default {
         await this.loadWorkAccountId();
       }
 
-      try {
-        const modalEl = document.querySelector(".modal.show");
-        if (modalEl) {
-          const inst = window.bootstrap?.Modal?.getInstance?.(modalEl);
-          inst?.hide?.();
-        }
-        document
-          .querySelectorAll(".modal-backdrop")
-          .forEach((el) => el.remove());
-        document.body.classList.remove("modal-open");
-        document.body.style.removeProperty("padding-right");
-      } catch (e) {
-        // no-op
-      }
+      this.closeOpenJrDialog();
 
       const queryParams = new URLSearchParams();
 

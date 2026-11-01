@@ -1,6 +1,6 @@
 <template>
   <div class="assistant-text-block">
-    <div v-if="block.title" class="assistant-block-title text-muted small mb-1">
+    <div v-if="block.title" class="assistant-block-title mb-1 text-sm text-jr-muted">
       {{ block.title }}
     </div>
     <p class="mb-0 assistant-text-body">{{ displayText }}</p>
@@ -29,7 +29,7 @@ export default {
 .assistant-text-body {
   white-space: pre-wrap;
   word-break: break-word;
-  font-size: 0.925rem;
+  font-size: 0.9375rem;
   line-height: 1.45;
   text-align: left;
 }

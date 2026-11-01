@@ -2,6 +2,9 @@ from django.contrib import admin
 from .models import Event, EventDraft, AbsenceReason, EventImage
 from django.utils.html import format_html
 
+# Work Order status / progress Admin registrations
+from . import admin_work_order  # noqa: F401
+
 
 class BaseCrewTitleAdmin(admin.ModelAdmin):
     def crew_title(self, obj):

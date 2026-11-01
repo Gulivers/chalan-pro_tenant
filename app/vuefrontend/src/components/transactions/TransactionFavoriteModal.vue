@@ -147,6 +147,7 @@
 
 <script setup>
 import { ref, reactive, computed, watch, getCurrentInstance } from "vue";
+import axios from "axios";
 import Message from "primevue/message";
 import { JRDialog, JRField, JRInput, JRTextarea, JRButton, JRBadge } from "@ui";
 

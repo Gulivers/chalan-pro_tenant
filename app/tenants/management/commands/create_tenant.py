@@ -1,6 +1,21 @@
 """
-Comando de gestión para crear nuevos tenants
-Uso: python manage.py create_tenant --name "Phoenix Electric" --schema phoenix --domain phoenix.chalan-pro.net
+Comando de gestión para crear nuevos tenants.
+
+Uso:
+  Local (ubuntu-house):
+    docker compose -f docker-compose.dev.yml exec backend python manage.py create_tenant \
+      --name "JobRhythm Products" \
+      --schema jobrhythm_products \
+      --domain jobrhythm-products.chalan-pro.net
+
+  Producción (Hostinger VPS):
+    docker compose exec backend python manage.py create_tenant \
+      --name "JobRhythm Products" \
+      --schema jobrhythm_products \
+      --domain jobrhythm-products.jobrhythm.net
+
+  Directo (dentro del contenedor backend o venv):
+    python manage.py create_tenant --name "Phoenix Electric" --schema phoenix --domain phoenix.jobrhythm.net
 """
 import os
 import re
@@ -54,12 +69,12 @@ class Command(BaseCommand):
         on_trial = options.get('trial', False)
 
         # Validar que el schema_name sea válido para PostgreSQL
-        # Ahora permitimos guiones en lugar de guiones bajos
-        if not re.match(r'^[a-z][a-z0-9-]*$', schema_name.lower()):
+        # Permitir letras minúsculas, números y guiones bajos (o guiones)
+        if not re.match(r'^[a-z][a-z0-9_-]*$', schema_name.lower()):
             self.stdout.write(
                 self.style.ERROR(
                     f'Error: El schema "{schema_name}" no es válido. '
-                    'Debe contener solo letras minúsculas, números y guiones, y debe empezar con letra.'
+                    'Debe contener solo letras minúsculas, números y guiones bajos, y debe empezar con letra.'
                 )
             )
             return
@@ -111,7 +126,9 @@ class Command(BaseCommand):
                 self.style.SUCCESS('✓ Migraciones completadas para el nuevo tenant')
             )
 
-            # Seed inicial de tipos de documento (apptransactions.documenttype)
+            # Seed inicial de tipos de documento (apptransactions.documenttype).
+            # MR y sus estados los siembra la migración 0008; no van en el fixture
+            # para no chocar con type_code único después de migrate_schemas.
             try:
                 fixture_doc_types = os.path.join(
                     settings.BASE_DIR,
@@ -123,7 +140,29 @@ class Command(BaseCommand):
                     self.stdout.write('Cargando tipos de documento iniciales desde masters_document_type.json...')
                     with schema_context(schema_name):
                         call_command('loaddata', fixture_doc_types, verbosity=0)
+                        from apptransactions.services.document_status import (
+                            seed_default_document_statuses,
+                        )
+                        from appschedule.services.work_order_status import (
+                            seed_work_order_defaults,
+                        )
+                        seeded = seed_default_document_statuses()
+                        wo_seed = seed_work_order_defaults()
                     self.stdout.write(self.style.SUCCESS('✓ Tipos de documento iniciales cargados.'))
+                    if seeded:
+                        self.stdout.write(
+                            self.style.SUCCESS(
+                                f'✓ Estados predeterminados PO/PK/PR creados ({seeded}). '
+                                'Status tracking permanece deshabilitado.'
+                            )
+                        )
+                    if wo_seed and any(wo_seed.values()):
+                        self.stdout.write(
+                            self.style.SUCCESS(
+                                '✓ Work Order statuses/progress defaults: '
+                                f'{wo_seed}'
+                            )
+                        )
                 else:
                     self.stdout.write(
                         self.style.WARNING(

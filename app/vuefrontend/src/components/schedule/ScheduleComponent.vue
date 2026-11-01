@@ -73,6 +73,7 @@
           type="button"
           :variant="showBntPublishAll ? 'primary' : 'secondary'"
           size="sm"
+          class="jr-schedule__publish-btn"
           :disabled="publishing || !showBntPublishAll"
           :aria-busy="publishing ? 'true' : 'false'"
           :title="
@@ -122,6 +123,7 @@ import resourceTimelinePlugin from "@fullcalendar/resource-timeline";
 import "@assets/css/schedule.css";
 import EventModal from "./ScheduleEventModal.vue";
 import axios from "axios";
+import { withWsTicket } from "@/auth/wsTicket";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import Swal from "sweetalert2";
@@ -130,6 +132,7 @@ import { useAuthStore } from "@stores/auth";
 import { openPdf } from "@helpers";
 import SearchIcon from "@components/icons/searchIcon.vue";
 import { appMixin } from "@mixins/appMixin";
+import { workOrderStatusSeverity } from "@/utils/workOrderStatus";
 import FileExcel from "@primeicons/vue/file-excel";
 import FilePdf from "@primeicons/vue/file-pdf";
 import {
@@ -149,6 +152,19 @@ function escapeScheduleHtml(value) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/** Mini badge with the Work Order status of a published event. */
+function workOrderStatusBadgeHtml(props, isDraftEvent) {
+  if (isDraftEvent || !props || props.is_absence || props.deleted) return "";
+  const name = props.work_order_status_name;
+  if (!name) return "";
+  const severity = workOrderStatusSeverity({
+    status_code: props.work_order_status_code,
+    is_terminal: !!props.work_order_status_is_terminal,
+  });
+  const safeName = escapeScheduleHtml(name);
+  return `<span class="jr-schedule-event-card__status jr-schedule-event-card__status--${severity}" title="Work Order status: ${safeName}">${safeName}</span>`;
 }
 
 export default {
@@ -190,8 +206,15 @@ export default {
       userId: null,
       publishing: false,
       categoryTotals: [],
-      /** Ancho columna crew: 25% móvil/tablet pequeña, 15% desktop / tablet grande (≥992px) */
+      /** Ancho columna crew: estrecho en phone ≤440px, 22% tablet, 15% desktop ≥992px */
       resourceAreaWidthCurrent: "25%",
+      slotMinWidthCurrent: 96,
+      eventMinHeightCurrent: 180,
+      slotLabelFormatCurrent: {
+        weekday: "long",
+        month: "short",
+        day: "numeric",
+      },
       websocket: null,
       wsUrl: null,
       initialCalendarOptions: {
@@ -213,12 +236,10 @@ export default {
         eventResizableFromStart: false,
         droppable: false,
         resourceAreaHeaderContent: "Crew",
-        eventMinHeight: 90,
         height: "100%",
         stickyHeaderDates: true,
         slotLabelInterval: { days: 1 },
         slotDuration: { days: 1 },
-        slotLabelFormat: { weekday: "long", month: "short", day: "numeric" },
         resourceGroupField: "category",
         resourceOrder: "category",
         resources: [],
@@ -236,25 +257,44 @@ export default {
         eventContent: function (arg) {
           const event_date = dayjs(arg.event.extendedProps.updated_at);
           const isAbsence = arg.event.extendedProps?.is_absence;
+          const isDraft =
+            arg.event.extendedProps?.is_draft === true ||
+            arg.event.id?.startsWith("draft_id_") ||
+            arg.event.extendedProps?.deleted === undefined;
           let cardClass = "jr-schedule-event-card";
-          if (arg.event.extendedProps?.deleted !== undefined) {
-            cardClass += arg.event.extendedProps?.deleted
-              ? " jr-schedule-event-card--deleted"
-              : " jr-schedule-event-card--posted";
-          } else {
+          if (isDraft) {
             cardClass += " jr-schedule-event-card--draft";
-          }
-          if (isAbsence) {
-            cardClass =
-              "jr-schedule-event-card jr-schedule-event-card--absence";
+            if (isAbsence) {
+              cardClass += " jr-schedule-event-card--absence";
+            }
+          } else if (
+            arg.event.extendedProps?.deleted !== undefined &&
+            arg.event.extendedProps?.deleted
+          ) {
+            cardClass += " jr-schedule-event-card--deleted";
+            if (isAbsence) {
+              cardClass += " jr-schedule-event-card--absence";
+            }
+          } else if (isAbsence) {
+            cardClass += " jr-schedule-event-card--absence";
+          } else {
+            cardClass += " jr-schedule-event-card--posted";
           }
           const title = escapeScheduleHtml(arg.event.title || "");
           const description = escapeScheduleHtml(
             arg.event.extendedProps.description || ""
           );
-          const extService = arg.event.extendedProps?.extended_service
-            ? `<div class="jr-schedule-event-card__flags"><span class="jr-schedule-event-card__badge">Ext. Service</span></div>`
+          const statusBadge = workOrderStatusBadgeHtml(
+            arg.event.extendedProps,
+            isDraft
+          );
+          const extServiceBadge = arg.event.extendedProps?.extended_service
+            ? `<span class="jr-schedule-event-card__badge">Ext. Service</span>`
             : "";
+          const flags =
+            statusBadge || extServiceBadge
+              ? `<div class="jr-schedule-event-card__flags">${statusBadge}${extServiceBadge}</div>`
+              : "";
           const absencePrefix = isAbsence
             ? `<span class="jr-schedule-event-card__absence-mark" aria-hidden="true"></span>`
             : "";
@@ -262,7 +302,7 @@ export default {
             html: `<div class="${cardClass}">
                      <span class="jr-schedule-event-card__title">${absencePrefix}${title}</span>
                      <div class="jr-schedule-event-card__desc">${description}</div>
-                     ${extService}
+                     ${flags}
                      <div class="jr-schedule-event-card__meta">${escapeScheduleHtml(
                        event_date.format("lll")
                      )}</div>
@@ -312,6 +352,9 @@ export default {
       return {
         ...this.initialCalendarOptions,
         resourceAreaWidth: this.resourceAreaWidthCurrent,
+        slotMinWidth: this.slotMinWidthCurrent,
+        eventMinHeight: this.eventMinHeightCurrent,
+        slotLabelFormat: this.slotLabelFormatCurrent,
         resources: this.resources,
         events: this.filteredEvents,
       };
@@ -322,15 +365,15 @@ export default {
     const authStore = useAuthStore();
     authStore.setUser(data);
     this.userId = data.id;
-    this.updateResourceAreaWidth();
-    window.addEventListener("resize", this.updateResourceAreaWidth);
+    this.updateCalendarDensity();
+    window.addEventListener("resize", this.updateCalendarDensity);
     this.getCrews();
-    this.wsUrl = this.buildWsUrl("ws/calendar-updates/");
+    this.wsUrl = await withWsTicket(this.buildWsUrl("ws/calendar-updates/"));
     this.connectWebSocket();
     this.updateCalendarPermissions();
   },
   beforeUnmount() {
-    window.removeEventListener("resize", this.updateResourceAreaWidth);
+    window.removeEventListener("resize", this.updateCalendarDensity);
     this.disconnectWebSocket();
     this.disconnectResizeObserver();
   },
@@ -350,15 +393,54 @@ export default {
       if (!api) return;
       api.gotoDate(date);
     },
-    /** Alineado con breakpoint Bootstrap lg (992px): ancho útil para iPad Pro y desktop. */
-    updateResourceAreaWidth() {
+    /**
+     * Densidad del timeline según viewport.
+     * ≤440px (iPhone 16 Pro Max logical width e inferior): más compacto para ver más semana;
+     * el pinch-zoom del navegador sigue habilitado (viewport sin maximum-scale=1).
+     */
+    updateCalendarDensity() {
       if (typeof window === "undefined") return;
       const wide = window.matchMedia("(min-width: 992px)").matches;
-      this.resourceAreaWidthCurrent = wide ? "15%" : "25%";
+      const phone = window.matchMedia("(max-width: 440px)").matches;
+
+      if (wide) {
+        this.resourceAreaWidthCurrent = "15%";
+        this.slotMinWidthCurrent = 110;
+        this.eventMinHeightCurrent = 180;
+        this.slotLabelFormatCurrent = {
+          weekday: "long",
+          month: "short",
+          day: "numeric",
+        };
+      } else if (phone) {
+        /* 56px × 1.5 → más letras del nombre del crew */
+        this.resourceAreaWidthCurrent = "84px";
+        /* Días un poco más anchos → tarjetas legibles; el resto se ve con scroll/pinch */
+        this.slotMinWidthCurrent = 80;
+        this.eventMinHeightCurrent = 100;
+        this.slotLabelFormatCurrent = {
+          weekday: "short",
+          day: "numeric",
+        };
+      } else {
+        this.resourceAreaWidthCurrent = "22%";
+        this.slotMinWidthCurrent = 84;
+        this.eventMinHeightCurrent = 120;
+        this.slotLabelFormatCurrent = {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        };
+      }
+
       this.$nextTick(() => {
         const api = this.$refs.calendarRef?.getApi?.();
         if (api) {
           try {
+            api.setOption("resourceAreaWidth", this.resourceAreaWidthCurrent);
+            api.setOption("slotMinWidth", this.slotMinWidthCurrent);
+            api.setOption("eventMinHeight", this.eventMinHeightCurrent);
+            api.setOption("slotLabelFormat", this.slotLabelFormatCurrent);
             api.updateSize();
           } catch (e) {
             // Calendar not ready
@@ -497,7 +579,7 @@ export default {
               start: item.date,
               end: item.end_dt,
               title: item.title,
-              extendedProps: item,
+              extendedProps: { ...item, is_draft: true },
             });
           });
           this.$nextTick(() => {
@@ -571,6 +653,12 @@ export default {
     },
 
     handleEventClick(info) {
+      // Release focus from the FullCalendar event before the modal hides the grid.
+      if (info?.el instanceof HTMLElement) {
+        info.el.blur();
+      } else if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
       const clickedCrewId = parseInt(info.event.getResources()[0].id);
       this.clickedCrewId = clickedCrewId;
       const resource = info.event.getResources()[0];
@@ -868,6 +956,24 @@ export default {
   color: var(--color-jr-danger, #dc2626);
 }
 
+.jr-schedule__publish-btn:not(:disabled) {
+  background-color: var(--color-jr-warning, #d97706) !important;
+  border-color: var(--color-jr-warning, #d97706) !important;
+  color: #ffffff !important;
+}
+
+.jr-schedule__publish-btn:not(:disabled):hover {
+  background-color: var(--color-jr-warning-text, #92400e) !important;
+  border-color: var(--color-jr-warning-text, #92400e) !important;
+  color: #ffffff !important;
+}
+
+.jr-schedule__publish-btn:not(:disabled):focus-visible,
+.jr-schedule__publish-btn:not(:disabled).p-focus {
+  outline: 2px solid var(--color-jr-warning, #d97706) !important;
+  outline-offset: 2px !important;
+}
+
 .jr-schedule {
   margin-top: 0.75rem;
 }
@@ -886,10 +992,10 @@ export default {
   flex-direction: column;
   background: var(--color-jr-surface, #ffffff);
   border: 1px solid var(--color-jr-border, #e5e7eb);
-  border-radius: var(--radius-jr-panel, 0.75rem);
-  height: calc(100vh - var(--jr-shell-topbar, 3.5rem) - 10.5rem);
-  max-height: calc(100vh - var(--jr-shell-topbar, 3.5rem) - 10.5rem);
-  min-height: 22rem;
+  border-radius: 0;
+  height: calc(100vh - var(--jr-shell-topbar, 3.5rem) - 5.25rem);
+  max-height: calc(100vh - var(--jr-shell-topbar, 3.5rem) - 5.25rem);
+  min-height: 44rem;
   overflow: hidden;
 }
 
@@ -902,6 +1008,22 @@ export default {
 .jr-schedule__pane :deep(.fc),
 .jr-schedule__pane :deep(.fc-view-harness) {
   height: 100% !important;
+}
+
+.jr-schedule__pane :deep(.jr-schedule-event-card--draft),
+.jr-schedule__pane :deep(.jr-schedule-event-card--draft.jr-schedule-event-card--absence) {
+  --jr-schedule-accent: var(--color-jr-muted, #4b5563);
+  background: var(--color-jr-page, #f3f4f6);
+  border-color: var(--color-jr-hover-border, #d1d5db);
+  border-left-color: var(--jr-schedule-accent);
+  color: var(--color-jr-text, #111827);
+}
+
+.jr-schedule__pane :deep(.jr-schedule-event-card--draft .jr-schedule-event-card__desc),
+.jr-schedule__pane :deep(.jr-schedule-event-card--draft .jr-schedule-event-card__meta),
+.jr-schedule__pane :deep(.jr-schedule-event-card--draft.jr-schedule-event-card--absence .jr-schedule-event-card__desc),
+.jr-schedule__pane :deep(.jr-schedule-event-card--draft.jr-schedule-event-card--absence .jr-schedule-event-card__meta) {
+  color: var(--color-jr-muted, #4b5563);
 }
 
 .jr-schedule__pane ::selection {
@@ -924,9 +1046,94 @@ export default {
   }
 
   .jr-schedule__pane {
-    height: calc(100dvh - var(--jr-shell-mobile-bar, 3rem) - 13.5rem);
-    max-height: calc(100dvh - var(--jr-shell-mobile-bar, 3rem) - 13.5rem);
-    min-height: 18rem;
+    height: calc(100dvh - var(--jr-shell-mobile-bar, 3rem) - 6.75rem);
+    max-height: calc(100dvh - var(--jr-shell-mobile-bar, 3rem) - 6.75rem);
+    min-height: 36rem;
+  }
+}
+
+/* ≤440px (iPhone 16 logical width e inferior): denser grid; pinch-zoom del browser OK */
+@media (max-width: 440px) {
+  .jr-schedule__pane {
+    min-height: 16rem;
+    touch-action: pan-x pan-y pinch-zoom;
+  }
+
+  .jr-schedule__pane :deep(.fc) {
+    font-size: 0.75rem;
+  }
+
+  .jr-schedule__pane :deep(.fc .fc-toolbar) {
+    padding: 0.4rem 0.5rem;
+    gap: 0.35rem 0.5rem;
+  }
+
+  .jr-schedule__pane :deep(.fc .fc-toolbar-title) {
+    font-size: 0.8125rem;
+  }
+
+  .jr-schedule__pane :deep(.fc .fc-button) {
+    padding: 0.25rem 0.4rem !important;
+    font-size: 0.75rem !important;
+    min-width: 1.75rem !important;
+  }
+
+  .jr-schedule__pane :deep(.fc .fc-resource-timeline .fc-resource) {
+    height: 68px !important;
+  }
+
+  .jr-schedule__pane :deep(.fc .fc-datagrid-cell-cushion),
+  .jr-schedule__pane :deep(.fc .fc-col-header-cell-cushion),
+  .jr-schedule__pane :deep(.fc .fc-timeline-slot-cushion) {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.3rem;
+    line-height: 1.25;
+  }
+
+  .jr-schedule__pane :deep(.jr-schedule-event-card) {
+    padding: 0.3rem 0.4rem 0.3rem 0.45rem;
+    gap: 0.15rem;
+    border-radius: var(--radius-jr-badge, 0.5rem);
+    min-width: 0;
+  }
+
+  .jr-schedule__pane :deep(.jr-schedule-event-card__title) {
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+
+  .jr-schedule__pane :deep(.jr-schedule-event-card__desc) {
+    font-size: 0.625rem;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .jr-schedule__pane :deep(.jr-schedule-event-card__meta) {
+    font-size: 0.625rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .jr-schedule__pane :deep(.jr-schedule-event-card__badge) {
+    font-size: 0.625rem;
+    padding: 0.05rem 0.25rem;
+    line-height: 1.2;
+  }
+
+  .jr-schedule__pane :deep(.jr-schedule-event-card__status) {
+    font-size: 0.5625rem;
+    padding: 0.05rem 0.25rem;
+    line-height: 1.2;
   }
 }
 </style>

@@ -56,6 +56,7 @@ pgadmin_data/
 # Ignore Vue env files
 app/vuefrontend/.env.local
 app/vuefrontend/.env
+app/vuefrontend/.env.*.local
 
 # Ignore workspace files (específicos de máquina/servidor)
 *.code-workspace
@@ -108,3 +109,13 @@ nginx/jobrithm.net.conf
 
 # Salida de collectstatic (build) - no versionar
 app/staticfiles/
+
+# Repo de imágenes de productos (~250MB): no versionar; en VPS subir por FTP a
+# app/appinventory/fixtures/media/products/ (el Import de Master Data las copia a MEDIA_ROOT)
+app/appinventory/fixtures/media/
+
+# Firmas temporales de verificación TikTok (siguen en el servidor, no se versionan)
+landing/src/tiktok*.txt
+landing/dist/tiktok*.txt
+landing/src/tiktok-verify/
+landing/dist/tiktok-verify/

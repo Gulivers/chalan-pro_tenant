@@ -52,12 +52,16 @@ def create_inventory_movement(sender, instance, created, **kwargs):
                 SerializedItem.objects.filter(document_line_id=instance.id).delete()
                 return
 
-            warehouse = instance.warehouse or get_or_create_mobile_warehouse()
             doc_type = instance.document.document_type
             movement_type = doc_type.stock_movement
+            # Neutro (p. ej. Material Request): no crea almacén ni reserva stock.
+            if movement_type == 0:
+                print(f"⏭️ Movimiento neutro para línea {instance.id}")
+                return
 
-            if not warehouse or movement_type == 0:
-                print(f"⏭️ Sin almacén o movimiento neutro para línea {instance.id}")
+            warehouse = instance.warehouse or get_or_create_mobile_warehouse()
+            if not warehouse:
+                print(f"⏭️ Sin almacén para línea {instance.id}")
                 return
 
             # --- Compra de producto SERIALIZED: N SerializedItems + N movimientos (quantity=1 cada uno)
@@ -185,6 +189,24 @@ def track_document_previous_state(sender, instance, **kwargs):
             pass
 
 
+@receiver(post_save, sender=Document, dispatch_uid="document_ensure_status_tracking")
+def ensure_document_status_tracking(sender, instance, created, **kwargs):
+    """
+    Alta genérica (API DocumentSerializer, Admin, etc.): si el tipo tiene
+    uses_status_tracking, crea tracking + historial inicial. Idempotente con MR.
+    No backfillea documentos históricos (solo created=True).
+    """
+    if not created:
+        return
+    from apptransactions.services.document_status import ensure_initial_tracking
+
+    ensure_initial_tracking(
+        document=instance,
+        user=getattr(instance, 'created_by', None),
+        notes='',
+    )
+
+
 @receiver(post_save, sender=Document, dispatch_uid="document_handle_active_status")
 def handle_document_active_status(sender, instance, created, **kwargs):
     """
@@ -224,6 +246,8 @@ def handle_document_active_status(sender, instance, created, **kwargs):
                 print(f"📄 Reactivando documento {instance.id} - Aplicando stock de todas las líneas")
                 doc_type = instance.document_type
                 movement_type = doc_type.stock_movement
+                if movement_type == 0:
+                    return
                 for line in instance.lines.all():
                     warehouse = line.warehouse or get_or_create_mobile_warehouse()
                     if not warehouse or movement_type == 0:

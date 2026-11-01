@@ -1,0 +1,101 @@
+[
+{
+  "model": "appschedule.absencereason",
+  "pk": 1,
+  "fields": {
+    "name": "Hourly",
+    "description": "",
+    "is_active": true
+  }
+},
+{
+  "model": "appschedule.absencereason",
+  "pk": 2,
+  "fields": {
+    "name": "finishing up",
+    "description": "",
+    "is_active": true
+  }
+},
+{
+  "model": "appschedule.absencereason",
+  "pk": 3,
+  "fields": {
+    "name": "Holiday - Office Closed",
+    "description": "",
+    "is_active": true
+  }
+},
+{
+  "model": "appschedule.absencereason",
+  "pk": 4,
+  "fields": {
+    "name": "No Call, No Show",
+    "description": "",
+    "is_active": true
+  }
+},
+{
+  "model": "appschedule.absencereason",
+  "pk": 5,
+  "fields": {
+    "name": "Bereavement Leave",
+    "description": "",
+    "is_active": true
+  }
+},
+{
+  "model": "appschedule.absencereason",
+  "pk": 6,
+  "fields": {
+    "name": "Sick Leave",
+    "description": "",
+    "is_active": true
+  }
+},
+{
+  "model": "appschedule.absencereason",
+  "pk": 7,
+  "fields": {
+    "name": "Personal Leave",
+    "description": "",
+    "is_active": true
+  }
+},
+{
+  "model": "appschedule.absencereason",
+  "pk": 8,
+  "fields": {
+    "name": "Vacation Leave",
+    "description": "",
+    "is_active": true
+  }
+},
+{
+  "model": "appschedule.absencereason",
+  "pk": 9,
+  "fields": {
+    "name": "Unscheduled Day Off",
+    "description": "",
+    "is_active": true
+  }
+},
+{
+  "model": "appschedule.absencereason",
+  "pk": 10,
+  "fields": {
+    "name": "Medical Appointments",
+    "description": "",
+    "is_active": true
+  }
+},
+{
+  "model": "appschedule.absencereason",
+  "pk": 11,
+  "fields": {
+    "name": "Scheduled Day Off",
+    "description": "",
+    "is_active": true
+  }
+}
+]

@@ -1,10 +1,13 @@
 """Simple JWT token classes with mandatory schema_name claim."""
+import logging
 from datetime import datetime, timezone as dt_timezone
 
 from django.db import connection
 from rest_framework_simplejwt.exceptions import InvalidToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+
+logger = logging.getLogger(__name__)
 
 
 def current_schema_name() -> str | None:
@@ -25,13 +28,13 @@ def _register_outstanding(token: RefreshToken, user) -> None:
             defaults={
                 'user': user,
                 'created_at': created_at,
-                'token': str(token),
+                'token': token['jti'],
                 'expires_at': expires_at,
             },
         )
     except Exception:
-        # Blacklist app may not be migrated yet in some management contexts.
-        pass
+        logger.exception('Could not register outstanding refresh token')
+        raise
 
 
 class TenantRefreshToken(RefreshToken):

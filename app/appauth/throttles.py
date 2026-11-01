@@ -10,9 +10,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_client_ip(request) -> str:
-    forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if forwarded_for:
-        return forwarded_for.split(',')[0].strip()
+    """IP Nginx records in X-Real-IP. Ignore the client-supplied forwarded chain."""
+    real_ip = (request.META.get('HTTP_X_REAL_IP') or '').strip()
+    if real_ip:
+        return real_ip.split(',')[0].strip()
     return request.META.get('REMOTE_ADDR', '') or 'unknown'
 
 
@@ -116,6 +117,20 @@ class PasswordForgotEmailThrottle(SimpleRateThrottle):
                 request.path,
             )
         return allowed
+
+
+class AuthSessionIPThrottle(_AuthThrottleBase):
+    """Soft limit for refresh and logout, which are otherwise public POSTs."""
+
+    scope = 'auth_session_ip'
+
+    def get_cache_key(self, request, view):
+        if request.method != 'POST':
+            return None
+        return self.cache_format % {
+            'scope': self.scope,
+            'ident': self.get_ident(request),
+        }
 
 
 class PasswordResetIPThrottle(_AuthThrottleBase):

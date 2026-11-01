@@ -14,7 +14,7 @@ from corsheaders.defaults import default_headers
 from pathlib import Path
 from corsheaders.defaults import default_headers
 import os
-import logging 
+from django.core.exceptions import ImproperlyConfigured 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,7 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-zf^1c+5%cj8m5k%^1(5c06e79xo81tgsapvcp1y6n7o74_q_$#')
+_secret_key = (os.environ.get('DJANGO_SECRET_KEY') or '').strip()
+if not _secret_key:
+    raise ImproperlyConfigured(
+        'DJANGO_SECRET_KEY is required. Refusing to start with a built-in key.'
+    )
+SECRET_KEY = _secret_key
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
@@ -263,6 +268,18 @@ if DEBUG:
             origin = f'http://{subdomain}.{base_domain}:{port}'
             if origin not in CSRF_TRUSTED_ORIGINS:
                 CSRF_TRUSTED_ORIGINS.append(origin)
+
+# Subdominios comodín para tenants (cubren cualquier tenant en puertos de dev y https)
+_base_tenant_domains = ['jobrhythm.net', 'jobrithm.net', 'chalanpro.net', 'chalan-pro.net']
+for _dom in _base_tenant_domains:
+    for _pattern in (f'https://*.{_dom}', f'https://{_dom}', f'http://*.{_dom}', f'http://{_dom}'):
+        if _pattern not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(_pattern)
+    if DEBUG:
+        for _port in ('8000', '8080', '3000'):
+            for _pattern in (f'http://*.{_dom}:{_port}', f'http://{_dom}:{_port}'):
+                if _pattern not in CSRF_TRUSTED_ORIGINS:
+                    CSRF_TRUSTED_ORIGINS.append(_pattern)
     
     # Los dominios se cargarán dinámicamente desde la BD usando:
     # 1. TenantsConfig.ready() - cuando Django inicializa (en tenants/apps.py)
@@ -270,9 +287,9 @@ if DEBUG:
     # Esto elimina la necesidad de agregar dominios manualmente
 
 
-# Permitir todas las solicitudes desde el frontend
-# En producción, usa CORS_ALLOWED_ORIGINS en lugar de CORS_ALLOW_ALL_ORIGINS
-CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'True') == 'True'  # Solo para desarrollo
+# Orígenes explícitos. CORS_ALLOW_ALL_ORIGINS=True reabre cualquier origen y no
+# debe combinarse con CORS_ALLOW_CREDENTIALS.
+CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
 
 _cors_allowed_env = os.environ.get('CORS_ALLOWED_ORIGINS', '').strip()
 if _cors_allowed_env:
@@ -281,8 +298,22 @@ elif not CORS_ALLOW_ALL_ORIGINS:
     CORS_ALLOWED_ORIGINS = [
         'https://getjobrhythm.com',
         'https://www.getjobrhythm.com',
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
+        'https://getjobrithm.com',
+        'https://www.getjobrithm.com',
+    ]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^https://([a-z0-9_-]+\.)*jobrhythm\.net$',
+    r'^https://([a-z0-9_-]+\.)*jobrithm\.net$',
+    r'^https://(www\.)?getjobrhythm\.com$',
+    r'^https://(www\.)?getjobrithm\.com$',
+]
+if DEBUG:
+    CORS_ALLOWED_ORIGIN_REGEXES += [
+        r'^http://([a-z0-9_-]+\.)*chalanpro\.net(:\d+)?$',
+        r'^http://([a-z0-9_-]+\.)*jobrhythm\.net(:\d+)?$',
+        r'^http://([a-z0-9_-]+\.)*jobrithm\.net(:\d+)?$',
+        r'^http://(localhost|127\.0\.0\.1|192\.168\.0\.105|192\.168\.0\.248)(:\d+)?$',
     ]
 
 # CORS_ALLOWED_ORIGINS = [
@@ -354,13 +385,16 @@ REST_FRAMEWORK = {
             'AUTH_PASSWORD_FORGOT_THROTTLE_EMAIL', '3/hour'
         ),
         'auth_password_reset_ip': os.environ.get('AUTH_PASSWORD_RESET_THROTTLE_IP', '10/hour'),
+        'auth_session_ip': os.environ.get('AUTH_SESSION_THROTTLE_IP', '30/minute'),
     },
 }
 
 from datetime import timedelta
 
-# Simple JWT — tenant-bound via custom Token + TenantJWTAuthentication
-_ACCESS_MINUTES = int(os.environ.get('AUTH_ACCESS_TOKEN_MINUTES', '15'))
+# Simple JWT — tenant-bound via custom Token + TenantJWTAuthentication.
+# Access covers a work shift (8 h). Refresh keeps the session for 7 days
+# so the SPA can mint a new access without asking for the password again.
+_ACCESS_MINUTES = int(os.environ.get('AUTH_ACCESS_TOKEN_MINUTES', '480'))
 _REFRESH_DAYS = int(os.environ.get('AUTH_REFRESH_TOKEN_DAYS', '7'))
 
 SIMPLE_JWT = {
@@ -464,9 +498,13 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
     # Use PostgreSQL with Render's DATABASE_URL
+    # ASGI/Daphne: persistent connections must be OFF (Django docs). Each ASGI
+    # request runs in its own task context, so CONN_MAX_AGE>0 leaks one idle
+    # Postgres connection per request until max_connections is exhausted
+    # ("sorry, too many clients already"). Pool with PgBouncer if ever needed.
     db_config = dj_database_url.config(
         default=DATABASE_URL,
-        conn_max_age=int(os.environ.get('DJANGO_CONN_MAX_AGE', '60')),
+        conn_max_age=int(os.environ.get('DJANGO_CONN_MAX_AGE', '0')),
         conn_health_checks=True,
     )
     # Cambiar el ENGINE a django-tenants
@@ -484,6 +522,8 @@ else:
             'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'chalan2024'),
             'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
             'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+            # Ver nota ASGI arriba: sin conexiones persistentes.
+            'CONN_MAX_AGE': int(os.environ.get('DJANGO_CONN_MAX_AGE', '0')),
         }
     }
 
@@ -539,10 +579,6 @@ X_FRAME_OPTIONS = 'SAMEORIGIN'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-logger = logging.getLogger('django.db.backends')
-logger.setLevel(logging.DEBUG)
-logger.addHandler(logging.StreamHandler())
 
 # Configuración para el envío de correos electrónicos (SMTP)
 # Hostinger: smtp.hostinger.com, 465 + SSL o 587 + STARTTLS (ver envs/backend.env)

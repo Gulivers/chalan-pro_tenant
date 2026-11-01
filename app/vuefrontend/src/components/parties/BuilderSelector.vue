@@ -37,6 +37,7 @@
         :api-endpoint="'/api/builder/'"
         :object-id="editId"
         :form-title="dialogHeader"
+        :sections="builderSections"
         :is-modal="true"
         @saved="handleSaved"
         @cancel="closeDialog" />
@@ -48,7 +49,10 @@
 import { ref, computed, watch, onMounted, getCurrentInstance } from "vue";
 import axios from "axios";
 import DynamicForm from "./DynamicForm.vue";
+import { BUILDER_FORM_SECTIONS } from "./builderFormSections";
 import { JRSelectAddon, JRDrawer } from "@ui";
+
+const builderSections = BUILDER_FORM_SECTIONS;
 
 const props = defineProps({
   modelValue: {

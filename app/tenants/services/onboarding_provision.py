@@ -250,6 +250,14 @@ def provision_tenant_workspace(data: OnboardingFormData, logo=None) -> dict[str,
         if os.path.exists(fixture_doc_types):
             try:
                 call_command('loaddata', fixture_doc_types, verbosity=0)
+                from apptransactions.services.document_status import (
+                    seed_default_document_statuses,
+                )
+                from appschedule.services.work_order_status import (
+                    seed_work_order_defaults,
+                )
+                seed_default_document_statuses()
+                seed_work_order_defaults()
             except Exception as exc:
                 logger.error('Error al cargar masters_document_type.json: %s', exc, exc_info=True)
 

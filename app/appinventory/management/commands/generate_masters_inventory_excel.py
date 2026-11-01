@@ -66,6 +66,16 @@ class Command(BaseCommand):
             with open(fixture_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
+            # Fixture aparte de Absence Reasons (como DocumentType)
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+            absence_path = os.path.join(
+                base_dir, 'appschedule', 'fixtures', 'masters_absence_reason.json'
+            )
+            if os.path.exists(absence_path):
+                with open(absence_path, 'r', encoding='utf-8') as f:
+                    data.extend(json.load(f))
+                self.stdout.write(self.style.SUCCESS(f'[INFO] Merged {absence_path}'))
+
             # Mapeo de nombres de modelo en minúsculas a PascalCase
             model_name_mapping = {
                 'unitcategory': 'UnitCategory',
@@ -75,7 +85,8 @@ class Command(BaseCommand):
                 'productbrand': 'ProductBrand',
                 'pricetype': 'PriceType',
                 'product': 'Product',
-                'productprice': 'ProductPrice'
+                'productprice': 'ProductPrice',
+                'absencereason': 'AbsenceReason',
             }
             
             # Organizar datos por modelo
@@ -87,7 +98,8 @@ class Command(BaseCommand):
                 'ProductBrand': [],
                 'PriceType': [],
                 'Product': [],
-                'ProductPrice': []
+                'ProductPrice': [],
+                'AbsenceReason': [],
             }
             
             for item in data:
@@ -118,7 +130,8 @@ class Command(BaseCommand):
                 'ProductBrand': 'Marcas',
                 'PriceType': 'Tipos de Precio',
                 'Product': 'Productos',
-                'ProductPrice': 'Precios de Productos'
+                'ProductPrice': 'Precios de Productos',
+                'AbsenceReason': 'Absence Reasons',
             }
             
             sheets_created = 0

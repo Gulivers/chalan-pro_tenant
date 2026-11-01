@@ -9,30 +9,32 @@
         aria-hidden="true"
         @click="close" />
       <aside
-        class="assistant-panel"
+        class="assistant-panel jr-pilot"
         role="dialog"
         aria-modal="true"
         aria-labelledby="assistant-panel-title"
         @keydown.esc.stop.prevent="close">
         <header class="assistant-panel__header">
-          <div class="text-start flex-grow-1 pe-2">
+          <div class="min-w-0 flex-1 pe-2 text-start">
             <h2 id="assistant-panel-title" class="assistant-panel__title mb-0">
               JobRhythm Assistant
             </h2>
-            <div class="assistant-panel__context text-muted" :title="contextLabel">
+            <div class="assistant-panel__context" :title="contextLabel">
               Context: {{ contextLabel }}
             </div>
           </div>
           <button
             type="button"
-            class="btn-close"
+            class="assistant-panel__close"
             aria-label="Close Assistant"
-            @click="close" />
+            @click="close">
+            Close
+          </button>
         </header>
 
         <div ref="messageList" class="assistant-panel__messages" tabindex="-1">
           <div v-if="!messages.length && status === 'idle'" class="assistant-empty">
-            <p class="mb-2 text-muted small">
+            <p class="mb-2 text-sm text-jr-muted">
               Ask about purchases, vendors, and spending. Results are structured
               (tables, KPIs, charts) — never free HTML.
             </p>
@@ -65,18 +67,20 @@
                 :sources="msg.sources" />
               <div
                 v-if="msg.role === 'assistant' && msg.partial"
-                class="small text-warning mt-1">
+                class="mt-1 text-sm text-jr-warning">
                 Partial result — more rows may exist.
               </div>
               <div v-if="msg.error" class="assistant-msg__error mt-1">
                 {{ msg.error }}
-                <button
+                <JRButton
                   v-if="msg.canRetry"
                   type="button"
-                  class="btn btn-sm btn-outline-secondary ms-2"
+                  size="sm"
+                  variant="secondary"
+                  class="ms-2"
                   @click="retryLast">
                   Retry
-                </button>
+                </JRButton>
               </div>
             </div>
           </div>
@@ -100,11 +104,11 @@
             </div>
           </div>
 
-          <div v-if="status === 'loading'" class="assistant-loading text-muted small">
-            <span
-              class="spinner-border spinner-border-sm me-2"
-              role="status"
-              aria-hidden="true" />
+          <div v-if="status === 'loading'" class="assistant-loading text-sm text-jr-muted">
+            <ProgressSpinner
+              style="width: 1.25rem; height: 1.25rem"
+              strokeWidth="6"
+              aria-label="Analyzing" />
             Analyzing…
           </div>
         </div>
@@ -117,23 +121,25 @@
 
         <footer class="assistant-panel__footer">
           <form class="assistant-input-row" @submit.prevent="submit">
-            <label class="visually-hidden" for="assistant-input">Message</label>
-            <textarea
-              id="assistant-input"
+            <label class="jr-sr-only" for="assistant-input">Message</label>
+            <JRTextarea
+              inputId="assistant-input"
               ref="inputEl"
               v-model="draft"
-              class="form-control form-control-sm assistant-input"
-              rows="2"
+              class="assistant-input"
+              :rows="2"
               maxlength="2000"
               placeholder="Ask about transactions or spending…"
               :disabled="status === 'loading'"
               @keydown.enter.exact.prevent="submit" />
-            <button
+            <JRButton
               type="submit"
-              class="btn btn-primary btn-sm assistant-send"
+              size="sm"
+              variant="primary"
+              class="assistant-send"
               :disabled="!canSend">
               Send
-            </button>
+            </JRButton>
           </form>
         </footer>
       </aside>
@@ -150,6 +156,8 @@ import {
 } from '@/utils/assistantBus';
 import { postQuery, getAssistantErrorInfo } from '@/services/assistantApi';
 import { useAssistantContext } from '@/composables/useAssistantContext';
+import ProgressSpinner from 'primevue/progressspinner';
+import { JRButton, JRTextarea } from '@/ui';
 import ActiveFilterChips from './ActiveFilterChips.vue';
 import BlockRenderer from './BlockRenderer.vue';
 import SourcesBlock from './blocks/SourcesBlock.vue';
@@ -190,6 +198,9 @@ export default {
     ActiveFilterChips,
     BlockRenderer,
     SourcesBlock,
+    ProgressSpinner,
+    JRButton,
+    JRTextarea,
   },
   setup() {
     const { context, contextLabel } = useAssistantContext();
@@ -280,7 +291,9 @@ export default {
       this.isOpen = true;
       this.lockBodyScroll();
       this.$nextTick(() => {
-        this.$refs.inputEl?.focus?.();
+        const field = this.$refs.inputEl;
+        const node = field?.$el || field;
+        node?.focus?.();
         this.scrollToBottom();
       });
     },
@@ -411,7 +424,7 @@ export default {
 .assistant-panel-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: color-mix(in srgb, var(--color-jr-text) 35%, transparent);
   pointer-events: auto;
 }
 
@@ -422,8 +435,8 @@ export default {
   width: min(460px, 100%);
   max-width: 100%;
   height: 100%;
-  background: #fff;
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.18);
+  background: var(--color-jr-surface);
+  box-shadow: var(--shadow-jr-overlay);
   pointer-events: auto;
   text-align: left;
 }
@@ -436,21 +449,22 @@ export default {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  gap: 0.75rem;
   padding: 0.85rem 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  background: #212529;
-  color: #fff;
+  border-bottom: 1px solid var(--color-jr-border);
+  background: var(--color-jr-text);
+  color: var(--color-jr-surface);
 }
 
 .assistant-panel__title {
-  font-size: 1.05rem;
-  font-weight: 650;
-  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-jr-surface);
 }
 
 .assistant-panel__context {
-  font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 0.75rem;
+  color: var(--color-jr-surface-muted);
   margin-top: 0.15rem;
   white-space: nowrap;
   overflow: hidden;
@@ -458,16 +472,27 @@ export default {
   max-width: 340px;
 }
 
-.assistant-panel__header .btn-close {
-  filter: invert(1) grayscale(100%);
-  opacity: 0.85;
+.assistant-panel__close {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--color-jr-surface);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0.35rem;
+}
+
+.assistant-panel__close:focus-visible {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: 2px;
 }
 
 .assistant-panel__messages {
   flex: 1;
   overflow-y: auto;
   padding: 0.85rem 1rem;
-  background: #f4f6f8;
+  background: var(--color-jr-page);
 }
 
 .assistant-empty {
@@ -483,32 +508,32 @@ export default {
 .assistant-followups {
   margin: 0.25rem 0 0.85rem;
   padding: 0.65rem 0.7rem;
-  border-radius: 0.65rem;
-  background: rgba(13, 110, 253, 0.04);
-  border: 1px dashed rgba(13, 110, 253, 0.28);
+  border-radius: var(--radius-jr-panel);
+  background: var(--color-jr-info-subtle);
+  border: 1px dashed var(--color-jr-border);
   text-align: left;
 }
 
 .assistant-followups__label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #495057;
+  color: var(--color-jr-muted);
 }
 
 .assistant-chip {
   text-align: left;
-  border: 1px solid rgba(13, 110, 253, 0.25);
-  background: #fff;
-  color: #0d6efd;
-  border-radius: 0.5rem;
+  border: 1px solid var(--color-jr-border);
+  background: var(--color-jr-surface);
+  color: var(--color-jr-primary);
+  border-radius: var(--radius-jr-control);
   padding: 0.45rem 0.65rem;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   line-height: 1.3;
   cursor: pointer;
 }
 
 .assistant-chip:hover:not(:disabled) {
-  background: rgba(13, 110, 253, 0.06);
+  background: var(--color-jr-surface-muted);
 }
 
 .assistant-chip:disabled {
@@ -532,15 +557,14 @@ export default {
 .assistant-msg__bubble {
   max-width: 100%;
   padding: 0.55rem 0.7rem;
-  border-radius: 0.65rem;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-jr-panel);
+  background: var(--color-jr-surface);
+  border: 1px solid var(--color-jr-border);
 }
 
 .assistant-msg--user .assistant-msg__bubble {
-  background: #0d6efd;
-  color: #fff;
+  background: var(--color-jr-primary);
+  color: var(--color-jr-surface);
   border-color: transparent;
   max-width: 92%;
 }
@@ -548,7 +572,7 @@ export default {
 .assistant-msg__text {
   white-space: pre-wrap;
   word-break: break-word;
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
   line-height: 1.4;
   margin-bottom: 0.25rem;
 }
@@ -558,23 +582,24 @@ export default {
 }
 
 .assistant-msg__error {
-  color: #842029;
-  background: #f8d7da;
-  border-radius: 0.35rem;
+  color: var(--color-jr-danger-text);
+  background: var(--color-jr-danger-subtle);
+  border-radius: var(--radius-jr-control);
   padding: 0.4rem 0.5rem;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
 }
 
 .assistant-loading {
   display: flex;
   align-items: center;
+  gap: 0.5rem;
   padding: 0.35rem 0;
 }
 
 .assistant-panel__footer {
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  border-top: 1px solid var(--color-jr-border);
   padding: 0.65rem 0.75rem;
-  background: #fff;
+  background: var(--color-jr-surface);
 }
 
 .assistant-input-row {
@@ -586,6 +611,7 @@ export default {
 .assistant-input {
   resize: none;
   flex: 1;
+  min-width: 0;
 }
 
 .assistant-send {

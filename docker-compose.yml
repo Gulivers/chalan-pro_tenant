@@ -34,7 +34,8 @@ services:
     env_file:
       - ./envs/backend.env
     environment:
-      DJANGO_CONN_MAX_AGE: "60"
+      # ASGI/Daphne: must stay 0 (persistent conns leak under ASGI). See 6451ed4.
+      DJANGO_CONN_MAX_AGE: "0"
     volumes:
       - ./app:/app
       - staticfiles_volume:/app/staticfiles
@@ -53,6 +54,9 @@ services:
     build:
       context: ./app/vuefrontend
       dockerfile: Dockerfile.frontend
+      args:
+        # Definir en el .env del proyecto en el VPS (junto a docker-compose), no en Git.
+        VITE_PRIMEUI_LICENSE: ${VITE_PRIMEUI_LICENSE:-}
     container_name: chalanpro_frontend
     volumes:
       - ./app/vuefrontend/dist:/app/dist
@@ -90,7 +94,7 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     ports:
-      - "5050:80"  # Acceso web en http://tu-servidor:5050
+      - "127.0.0.1:5050:80"  # Solo localhost; entrar por túnel SSH
     depends_on:
       - postgres
     networks:

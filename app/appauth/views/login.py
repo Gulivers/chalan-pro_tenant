@@ -79,6 +79,8 @@ class LoginView(APIView):
             'user': {
                 'id': user.pk,
                 'username': user.get_username(),
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
             },
         }
         response = Response(payload, status=status.HTTP_200_OK)

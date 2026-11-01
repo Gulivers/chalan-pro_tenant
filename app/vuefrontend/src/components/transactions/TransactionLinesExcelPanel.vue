@@ -132,6 +132,8 @@ async function fetchProductsMaps() {
       id: p.id,
       name: p.name || "",
       sku: (p.sku && String(p.sku)) || "",
+      image: p.image || "",
+      default_brand: p.default_brand || null,
     };
     byId.set(Number(p.id), item);
     const skuKey = String(item.sku || "")
@@ -390,6 +392,7 @@ async function rowsToLines(col, dataRows, productById, productBySku, importMode)
         id: null,
         product: prod.id,
         product_label: prod.name,
+        product_image: prod.image || "",
         quantity: Number.isFinite(qty) ? qty : 1,
         unit: unitId,
         unit_price: Number.isFinite(unitPrice) ? unitPrice : 0,
@@ -397,10 +400,11 @@ async function rowsToLines(col, dataRows, productById, productBySku, importMode)
         final_price: lineFinal(qty, unitPrice, disc),
         warehouse: warehouseId,
         price_type: priceTypeId,
-        brand: brandId,
+        brand: brandId ?? prod.default_brand?.id ?? null,
         brands: [],
         _errors: {},
         _import_resolved_by: resolvedBy,
+        __importHydrateImages: !prod.image,
       });
     } catch (e) {
       rowErrors.push(`Row ${excelRow}: ${e.message || e}`);
@@ -470,9 +474,9 @@ async function onFile(ev) {
         title: "No lines imported",
         html:
           rowErrors.length > 0
-            ? `<ul class="text-start small">${rowErrors
+            ? `<div class="jr-pilot"><ul class="list-disc text-start text-sm">${rowErrors
                 .map((e) => `<li>${e}</li>`)
-                .join("")}</ul>`
+                .join("")}</ul></div>`
             : `No data rows with a valid ${importMode === "id" ? "product_id" : "product_sku"} were found.`,
         confirmButtonText: "OK",
       });
@@ -486,10 +490,10 @@ async function onFile(ev) {
         newLines.length
       }</strong> line(s). Current rows in the grid will be replaced.${
         rowErrors.length
-          ? `<p class="text-warning small mt-2">Some rows were skipped:</p><ul class="text-start small">${rowErrors
+          ? `<div class="jr-pilot"><p class="mt-2 text-sm text-jr-warning">Some rows were skipped:</p><ul class="list-disc text-start text-sm">${rowErrors
               .slice(0, 15)
               .map((e) => `<li>${e}</li>`)
-              .join("")}${rowErrors.length > 15 ? "<li>…</li>" : ""}</ul>`
+              .join("")}${rowErrors.length > 15 ? "<li>…</li>" : ""}</ul></div>`
           : ""
       }`,
       showCancelButton: true,
@@ -502,17 +506,18 @@ async function onFile(ev) {
     emit("import-lines", newLines);
 
     if (rowWarnings.length || rowErrors.length) {
-      let html = `<p>${newLines.length} row(s) loaded.</p>`;
+      let html = `<div class="jr-pilot"><p>${newLines.length} row(s) loaded.</p>`;
       if (rowErrors.length) {
-        html += `<p class="text-start small mt-2 mb-1">Skipped rows:</p><ul class="text-start small">${rowErrors
+        html += `<p class="mb-1 mt-2 text-start text-sm">Skipped rows:</p><ul class="list-disc text-start text-sm">${rowErrors
           .map((e) => `<li>${e}</li>`)
           .join("")}</ul>`;
       }
       if (rowWarnings.length) {
-        html += `<p class="text-start small text-muted mt-2 mb-1">SKU reference (optional):</p><ul class="text-start small">${rowWarnings
+        html += `<p class="mb-1 mt-2 text-start text-sm text-jr-muted">SKU reference (optional):</p><ul class="list-disc text-start text-sm">${rowWarnings
           .map((w) => `<li>${w}</li>`)
           .join("")}</ul>`;
       }
+      html += `</div>`;
       await Swal.fire({
         icon: "info",
         title: "Import finished",

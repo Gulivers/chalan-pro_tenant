@@ -39,6 +39,7 @@
         :user-name="userName"
         :user-initials="userInitials"
         :is-tenant-owner="isTenantOwner"
+        :is-staff="isStaff"
         @navigate="$emit('navigate', $event)"
         @logout="$emit('logout')" />
       <router-link
@@ -87,6 +88,10 @@ export default {
       default: "JR",
     },
     isTenantOwner: {
+      type: Boolean,
+      default: false,
+    },
+    isStaff: {
       type: Boolean,
       default: false,
     },

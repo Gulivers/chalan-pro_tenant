@@ -4,6 +4,7 @@ from appauth.views.password import PasswordForgotView, PasswordResetView
 from appauth.views.session import (
     MeView,
     TenantContextView,
+    WsTicketView,
     permissions_view,
     validate_token_view,
 )
@@ -18,4 +19,5 @@ __all__ = [
     'TenantContextView',
     'permissions_view',
     'validate_token_view',
+    'WsTicketView',
 ]

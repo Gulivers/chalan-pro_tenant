@@ -69,6 +69,8 @@ services:
     build:
       context: ./app/vuefrontend
       dockerfile: Dockerfile.frontend
+      args:
+        VITE_PRIMEUI_LICENSE: ${VITE_PRIMEUI_LICENSE:-}
     container_name: chalanpro_frontend
     volumes:
       - ./app/vuefrontend/dist:/app/dist

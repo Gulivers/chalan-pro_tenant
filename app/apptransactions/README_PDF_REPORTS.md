@@ -1,3 +1,6 @@
+> **Skill para agentes:** `.cursor/skills/transaction-pdf-reports/SKILL.md`  
+> Usar ese skill al cambiar PDFs de transacciones, print-after-save o el endpoint `/api/documents/<id>/pdf/`.
+
 # Sistema de Reportes PDF para Transacciones
 
 ## Descripción

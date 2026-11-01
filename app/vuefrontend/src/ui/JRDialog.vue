@@ -30,7 +30,10 @@
         <JRButton variant="secondary" @click="$emit('update:visible', false)">
           {{ cancelLabel }}
         </JRButton>
-        <JRButton :variant="confirmVariant" @click="$emit('confirm')">
+        <JRButton
+          :variant="confirmVariant"
+          :disabled="confirmDisabled"
+          @click="$emit('confirm')">
           {{ confirmLabel }}
         </JRButton>
       </div>
@@ -55,6 +58,7 @@ export default {
         'jr-dialog',
         this.size === 'wide' ? 'jr-dialog--wide' : '',
         this.size === 'xl' ? 'jr-dialog--xl' : '',
+        this.size === 'square' ? 'jr-dialog--square' : '',
         this.isDanger ? 'jr-dialog--danger' : '',
       ].filter(Boolean);
     },
@@ -97,6 +101,10 @@ export default {
       type: String,
       default: 'primary',
     },
+    confirmDisabled: {
+      type: Boolean,
+      default: false,
+    },
     showFooter: {
       type: Boolean,
       default: true,
@@ -104,7 +112,8 @@ export default {
     size: {
       type: String,
       default: 'default',
-      validator: (value) => ['default', 'wide', 'xl'].includes(value),
+      validator: (value) =>
+        ['default', 'wide', 'xl', 'square'].includes(value),
     },
   },
   emits: ['update:visible', 'confirm'],

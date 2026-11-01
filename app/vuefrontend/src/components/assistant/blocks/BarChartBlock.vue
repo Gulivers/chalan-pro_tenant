@@ -1,9 +1,9 @@
 <template>
   <div class="assistant-chart-block">
-    <div v-if="block.title" class="assistant-block-title text-muted small mb-2">
+    <div v-if="block.title" class="assistant-block-title mb-2 text-sm text-jr-muted">
       {{ block.title }}
     </div>
-    <div v-if="!hasData" class="text-muted small text-start">No chart data.</div>
+    <div v-if="!hasData" class="text-start text-sm text-jr-muted">No chart data.</div>
     <div v-else class="assistant-chart-canvas-wrap">
       <canvas ref="chartCanvas" aria-label="Bar chart" role="img" />
     </div>
@@ -78,8 +78,8 @@ export default {
             {
               label: this.seriesName,
               data: this.values,
-              backgroundColor: 'rgba(13, 110, 253, 0.65)',
-              borderColor: 'rgba(13, 110, 253, 1)',
+              backgroundColor: '#2563eb',
+              borderColor: '#1d4ed8',
               borderWidth: 1,
             },
           ],
@@ -96,7 +96,6 @@ export default {
                 maxRotation: 45,
                 minRotation: 0,
                 autoSkip: true,
-                font: { size: 10 },
               },
             },
             y: { beginAtZero: true },

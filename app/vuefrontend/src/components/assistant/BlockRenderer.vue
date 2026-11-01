@@ -9,14 +9,14 @@
         @navigate="onNavigate" />
       <div
         v-else-if="entry.devSkipped"
-        class="small text-muted text-start mb-2"
+        class="mb-2 text-start text-sm text-jr-muted"
         data-testid="unknown-block">
         Unsupported block type skipped.
       </div>
     </template>
     <div
       v-if="!resolvedBlocks.length && showEmpty"
-      class="small text-muted text-start">
+      class="text-start text-sm text-jr-muted">
       No structured blocks in this response.
     </div>
   </div>
@@ -40,7 +40,7 @@ export default {
   emits: ['navigate'],
   computed: {
     isDev() {
-      return process.env.NODE_ENV === 'development';
+      return import.meta.env.DEV;
     },
     resolvedBlocks() {
       const list = Array.isArray(this.blocks) ? this.blocks : [];

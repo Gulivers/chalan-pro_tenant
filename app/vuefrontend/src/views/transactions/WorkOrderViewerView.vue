@@ -144,7 +144,8 @@
           <WorkOrderViewerTabs
             :work-account-id="effectiveWorkAccountId"
             :event-id="scheduleEventId"
-            :initial-tab="initialTab" />
+            :initial-tab="initialTab"
+            @status-changed="onWorkOrderStatusChanged" />
         </div>
 
         <!-- Desktop Right Sidebar (in-flow on desktop when sidebarOpen is true) -->
@@ -153,6 +154,10 @@
           id="jr-wov-orders-sidebar"
           class="jr-wov__sidebar-col"
           aria-label="Work Orders">
+          <WorkAccountProgressSummary
+            v-if="effectiveWorkAccountId"
+            :work-account-id="effectiveWorkAccountId"
+            :refresh-key="rollupRefreshKey" />
           <WorkOrderSidebar
             :work-account="workAccount"
             :events="events"
@@ -185,6 +190,10 @@
         :block-scroll="true"
         header="Work Orders"
         @update:visible="onSidebarVisible">
+        <WorkAccountProgressSummary
+          v-if="effectiveWorkAccountId"
+          :work-account-id="effectiveWorkAccountId"
+          :refresh-key="rollupRefreshKey" />
         <WorkOrderSidebar
           :work-account="workAccount"
           :events="events"
@@ -209,6 +218,7 @@
 
 <script>
 import { getAccessToken } from '@/auth/tokenHelpers';
+import { withWsTicket } from '@/auth/wsTicket';
 import {
   computed,
   getCurrentInstance,
@@ -220,6 +230,7 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import WorkOrderSidebar from "@components/work-accounts/WorkOrderSidebar.vue";
+import WorkAccountProgressSummary from "@components/work-accounts/WorkAccountProgressSummary.vue";
 import WorkOrderViewerTabs from "@components/work-accounts/WorkOrderViewerTabs.vue";
 import { useChatStore } from "@/stores/chatStore";
 import {
@@ -242,7 +253,7 @@ const stripLeadingSlash = (path) =>
   path.startsWith("/") ? path.slice(1) : path;
 
 const getWsBaseUrl = () => {
-  const envUrl = process.env.VUE_APP_WS_URL || process.env.VUE_APP_API_URL;
+  const envUrl = import.meta.env.VITE_WS_URL || import.meta.env.VITE_API_URL;
   if (envUrl) {
     const withoutProtocol = envUrl
       .replace(/^https?:\/\//i, "")
@@ -252,7 +263,7 @@ const getWsBaseUrl = () => {
     return `${protocol}//${base}`;
   }
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const port = process.env.NODE_ENV === "development" ? ":8000" : "";
+  const port = import.meta.env.DEV ? ":8000" : "";
   return `${protocol}//${window.location.hostname}${port}`;
 };
 
@@ -276,6 +287,7 @@ export default {
     JRDrawer,
     JREmptyState,
     WorkOrderSidebar,
+    WorkAccountProgressSummary,
     WorkOrderViewerTabs,
   },
   setup() {
@@ -297,6 +309,7 @@ export default {
     const hasPrevious = ref(false);
     const hasNext = ref(false);
     const unreadMap = ref({});
+    const rollupRefreshKey = ref(0);
     const ws = ref(null);
     const isMobile = ref(isNarrowViewport());
     const sidebarOpen = ref(!isNarrowViewport());
@@ -328,10 +341,15 @@ export default {
     );
 
     const effectiveWorkAccountId = computed(() => {
+      // En el listado general, el evento elegido trae su work account al instante.
+      // No esperar a loadAccountForEvent: si no, Missing Material pide con la cuenta anterior.
+      if (browseAllWorkOrders.value && selectedEvent.value?.work_account) {
+        return Number(selectedEvent.value.work_account);
+      }
       if (workAccountId.value) return workAccountId.value;
       if (workAccount.value?.id) return workAccount.value.id;
       if (selectedEvent.value?.work_account)
-        return selectedEvent.value.work_account;
+        return Number(selectedEvent.value.work_account);
       return null;
     });
 
@@ -423,6 +441,23 @@ export default {
     const canEdit = computed(() =>
       proxy?.hasPermission?.("apptransactions.change_workaccount")
     );
+
+    const onWorkOrderStatusChanged = (tracking) => {
+      rollupRefreshKey.value += 1;
+      if (!tracking) return;
+      const patch = {
+        work_order_status_code: tracking.status_code ?? null,
+        work_order_status_name: tracking.status_name ?? null,
+        work_order_status_is_terminal: !!tracking.is_terminal,
+      };
+      const eventId = tracking.event ?? scheduleEventId.value;
+      events.value = events.value.map((event) =>
+        event.id === eventId ? { ...event, ...patch } : event
+      );
+      if (selectedEvent.value?.id === eventId) {
+        selectedEvent.value = { ...selectedEvent.value, ...patch };
+      }
+    };
 
     const toggleSidebar = () => {
       sidebarOpen.value = !sidebarOpen.value;
@@ -605,7 +640,7 @@ export default {
         if (!userId) return;
 
         ws.value = new WebSocket(
-          buildWsUrl(`ws/schedule/unread/user/${userId}/`)
+          await withWsTicket(buildWsUrl(`ws/schedule/unread/user/${userId}/`))
         );
 
         ws.value.onmessage = (msgEvent) => {
@@ -703,6 +738,8 @@ export default {
       hasNext,
       currentPage,
       unreadMap,
+      rollupRefreshKey,
+      onWorkOrderStatusChanged,
       goToList,
       goToEdit,
       toggleSidebar,
@@ -903,10 +940,13 @@ export default {
   max-height: calc(100vh - var(--jr-shell-topbar, 3rem) - 2rem);
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
 }
 
 .jr-wov__sidebar-col :deep(.jr-wov-sidebar) {
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 @media (max-width: 1024px) {
@@ -931,6 +971,11 @@ export default {
   flex-direction: column;
   overflow: hidden;
   padding: 0 0.75rem 0.75rem;
+}
+
+.p-drawer.jr-wov__drawer .jr-wa-progress {
+  flex: 0 0 auto;
+  margin-bottom: 0.75rem;
 }
 
 .p-drawer.jr-wov__drawer .jr-wov-sidebar {

@@ -1,10 +1,10 @@
 <template>
   <div v-if="normalizedSources.length" class="assistant-sources-block">
-    <ul class="list-unstyled mb-0">
+    <ul class="m-0 list-none p-0">
       <li
         v-for="(source, index) in normalizedSources"
         :key="source.key || index"
-        class="small text-muted text-start">
+        class="text-start text-sm text-jr-muted">
         {{ source.display }}
       </li>
     </ul>
@@ -80,7 +80,7 @@ export default {
 .assistant-sources-block {
   text-align: left;
   padding-top: 0.25rem;
-  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+  border-top: 1px dashed var(--color-jr-border);
   margin-top: 0.35rem;
 }
 </style>

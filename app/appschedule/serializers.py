@@ -7,8 +7,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError           # oahp
 from rest_framework.validators import ValidationError, UniqueTogetherValidator  # oahp
 from .models import (
-    Event, EventDraft, EventNote, EventChatMessage, 
-    AbsenceReason,EventImage 
+    Event, EventDraft, EventNote, EventChatMessage,
+    AbsenceReason,EventImage, WorkOrderStatus
 )
 
 logger = logging.getLogger("appschedule") 
@@ -24,6 +24,41 @@ class EventSerializer(serializers.ModelSerializer):
     job_name = serializers.SerializerMethodField()
     house_model_name = serializers.SerializerMethodField()
     default_price_type_name = serializers.SerializerMethodField()
+    work_order_status_code = serializers.SerializerMethodField()
+    work_order_status_name = serializers.SerializerMethodField()
+    work_order_status_is_terminal = serializers.SerializerMethodField()
+
+    def _work_order_status(self, obj):
+        """Effective Work Order status for display (read-only, no writes).
+
+        Uses the tracking row when present; a published event without one
+        is effectively at the initial status (the operational endpoint
+        creates the tracking row lazily on first read).
+        """
+        tracking = getattr(obj, 'work_order_tracking', None)
+        if tracking is not None:
+            return tracking.current_status
+        if not obj.pk or obj.is_absence or obj.deleted:
+            return None
+        if not hasattr(self, '_initial_work_order_status'):
+            self._initial_work_order_status = (
+                WorkOrderStatus.objects.filter(is_initial=True, is_active=True)
+                .order_by('sequence', 'id')
+                .first()
+            )
+        return self._initial_work_order_status
+
+    def get_work_order_status_code(self, obj):
+        status = self._work_order_status(obj)
+        return status.code if status else None
+
+    def get_work_order_status_name(self, obj):
+        status = self._work_order_status(obj)
+        return status.name if status else None
+
+    def get_work_order_status_is_terminal(self, obj):
+        status = self._work_order_status(obj)
+        return bool(status and status.is_terminal)
 
     def get_crew_title(self, obj):
         return obj.crew.name
@@ -222,6 +257,17 @@ class EventNoteSerializer(serializers.ModelSerializer):
         fields = ['notes', 'updated_at', 'updated_by', 'work_account', 'event']
         read_only_fields = ['updated_at', 'updated_by', 'event']
 
+    def validate_notes(self, value):
+        from appschedule.note_html import sanitize_note_html
+        return sanitize_note_html(value)
+
+    def to_representation(self, instance):
+        from appschedule.note_html import sanitize_note_html
+        data = super().to_representation(instance)
+        if data.get('notes'):
+            data['notes'] = sanitize_note_html(data['notes'])
+        return data
+
     def create(self, validated_data):
         event = validated_data.pop('event', None)
         work_account = validated_data.pop('work_account', None)
@@ -275,7 +321,7 @@ class EventChatMessageSerializer(serializers.ModelSerializer):
 class AbsenceReasonSerializer(serializers.ModelSerializer):
     class Meta:
         model = AbsenceReason
-        fields = ['id', 'name', 'description']
+        fields = ['id', 'name', 'description', 'is_active']
 
 
 class EventImageSerializer(serializers.ModelSerializer):

@@ -191,6 +191,7 @@
                   :user-name="userName"
                   :user-initials="userInitials"
                   :is-tenant-owner="isTenantOwner"
+                  :is-staff="isStaff"
                   @navigate="navigateTo"
                   @logout="logout" />
                 <SidebarMenuButton
@@ -215,6 +216,7 @@
     </Sidebar>
 
     <SidebarMain class="jr-app-shell__main">
+      <!-- Desktop: topbar sits beside the sidebar and scrolls with the page -->
       <AppShellTopbar
         :dashboard-active="isRouteActive('/')"
         :show-assistant="showAssistantButton"
@@ -222,6 +224,7 @@
         :user-name="userName"
         :user-initials="userInitials"
         :is-tenant-owner="isTenantOwner"
+        :is-staff="isStaff"
         :brand-logo-src="brandLogoSrc"
         :brand-logo-alt="brandLogoAlt"
         @navigate="navigateTo"
@@ -229,7 +232,7 @@
         @open-assistant="openAssistant"
         @brand-logo-error="onTenantLogoError" />
 
-          <header class="jr-shell-mobile-bar" aria-label="App navigation">
+      <header class="jr-shell-mobile-bar" aria-label="App navigation">
         <SidebarTrigger
           class="jr-shell-mobile-bar__menu"
           target="jr-main-sidebar"
@@ -275,12 +278,14 @@
 
 <script>
 import { getAccessToken } from '@/auth/tokenHelpers';
+import { useAuthStore } from '@/stores/auth';
 import Box from "@primeicons/vue/box";
 import Building from "@primeicons/vue/building";
 import BuildingColumns from "@primeicons/vue/building-columns";
 import Bars from "@primeicons/vue/bars";
 import CalendarPlus from "@primeicons/vue/calendar-plus";
 import ChartBar from "@primeicons/vue/chart-bar";
+import Clipboard from "@primeicons/vue/clipboard";
 import ChevronDown from "@primeicons/vue/chevron-down";
 import Eye from "@primeicons/vue/eye";
 import File from "@primeicons/vue/file";
@@ -325,6 +330,7 @@ const NAV_ICONS = {
   contracts: File,
   workAccounts: BuildingColumns,
   workOrderViewer: Eye,
+  missingMaterial: Clipboard,
   reports: ChartBar,
   inventory: Box,
   pricing: File,
@@ -421,6 +427,13 @@ export default {
           route: "/work-accounts/viewer",
           icon: "workOrderViewer",
           permission: "apptransactions.view_workaccount",
+          group: "workflow",
+        },
+        {
+          text: "Missing Material",
+          route: "/material-requests",
+          icon: "missingMaterial",
+          permission: "apptransactions.view_document",
           group: "workflow",
         },
         {
@@ -552,6 +565,11 @@ export default {
               permission: "crewsapp.view_crew",
             },
             {
+              text: "Absence Reasons",
+              route: "/crews/absence-reasons",
+              permission: "appschedule.view_absencereason",
+            },
+            {
               text: "Trucks",
               route: "/crews/trucks",
               permission: "crewsapp.view_truck",
@@ -578,6 +596,7 @@ export default {
       ],
       userName: "",
       isTenantOwner: false,
+      isStaff: false,
       tenantLogoUrl: null,
       tenantName: null,
       tenantLogoFailed: false,
@@ -586,7 +605,7 @@ export default {
   },
   computed: {
     jobrhythmLogoUrl() {
-      const base = process.env.BASE_URL || "/";
+      const base = import.meta.env.BASE_URL || "/";
       return `${base}img/jobrhythm-logo.png`;
     },
     brandLogoSrc() {
@@ -741,6 +760,7 @@ export default {
       if (!this.isLoggedIn) {
         this.userName = "";
         this.isTenantOwner = false;
+        this.isStaff = false;
         this.tenantLogoUrl = null;
         this.tenantName = null;
         this.tenantLogoFailed = false;
@@ -750,6 +770,12 @@ export default {
         if (user) {
           this.userName = user.username;
           this.isTenantOwner = !!user.is_tenant_owner;
+          this.isStaff = !!user.is_staff;
+          try {
+            useAuthStore().setStaff(this.isStaff);
+          } catch (_) {
+            /* ignore */
+          }
           this.tenantLogoUrl = user.tenant_logo_url || null;
           this.tenantName = user.tenant_name || null;
           this.tenantLogoFailed = false;

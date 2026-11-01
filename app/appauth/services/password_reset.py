@@ -36,11 +36,10 @@ def frontend_base_url_for_password_reset(request):
     if not proto:
         proto = 'https' if request.is_secure() else 'http'
 
-    forwarded_host = (meta.get('HTTP_X_FORWARDED_HOST') or '').split(',')[0].strip()
     try:
-        host = forwarded_host or request.get_host()
+        host = request.get_host()
     except Exception:
-        host = forwarded_host
+        host = ''
 
     if not host:
         return settings.FRONT_URL.rstrip('/')

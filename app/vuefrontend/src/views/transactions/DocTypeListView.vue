@@ -289,6 +289,18 @@
               :severity="data.allow_negative_sales ? 'warn' : 'secondary'" />
           </template>
         </Column>
+        <Column field="uses_status_tracking" header="Tracking" sortable>
+          <template #body="{ data }">
+            <JRBadge
+              :value="data.uses_status_tracking ? 'On' : 'Off'"
+              :severity="data.uses_status_tracking ? 'info' : 'secondary'" />
+          </template>
+        </Column>
+        <Column field="statuses_count" header="Statuses" sortable>
+          <template #body="{ data }">
+            {{ Number(data.statuses_count) || 0 }}
+          </template>
+        </Column>
         <Column field="is_active" header="Status" sortable>
           <template #body="{ data }">
             <JRBadge
@@ -578,6 +590,10 @@ export default {
     const viewItem = (id) => router.push(viewTo(id));
     const editItem = (id) => router.push(editTo(id));
 
+    const PROTECTED_TYPE_CODES = new Set(["MR"]);
+    const isProtectedDocType = (item) =>
+      PROTECTED_TYPE_CODES.has(String(item?.type_code || "").toUpperCase());
+
     const getRowActions = (item) => {
       const actions = [];
       if (proxy?.hasPermission?.("apptransactions.view_documenttype")) {
@@ -589,7 +605,10 @@ export default {
           command: () => viewItem(item.id),
         });
       }
-      if (proxy?.hasPermission?.("apptransactions.change_documenttype")) {
+      if (
+        proxy?.hasPermission?.("apptransactions.change_documenttype") &&
+        !isProtectedDocType(item)
+      ) {
         actions.push({
           key: "edit",
           label: "Edit",
@@ -598,7 +617,10 @@ export default {
           command: () => editItem(item.id),
         });
       }
-      if (proxy?.hasPermission?.("apptransactions.delete_documenttype")) {
+      if (
+        proxy?.hasPermission?.("apptransactions.delete_documenttype") &&
+        !isProtectedDocType(item)
+      ) {
         actions.push({
           key: "delete",
           label: "Delete",
@@ -623,7 +645,16 @@ export default {
             );
           } catch (err) {
             console.error("Error deleting document type", err);
-            proxy?.notifyError?.("Error deleting the document type.");
+            const data = err?.response?.data;
+            const detail = Array.isArray(data)
+              ? data.join(" ")
+              : data?.detail ||
+                (Array.isArray(data?.non_field_errors)
+                  ? data.non_field_errors.join(" ")
+                  : data?.non_field_errors);
+            proxy?.notifyError?.(
+              detail || "Error deleting the document type."
+            );
           }
         }
       );

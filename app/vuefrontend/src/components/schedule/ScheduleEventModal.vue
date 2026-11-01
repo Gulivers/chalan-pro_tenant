@@ -60,26 +60,40 @@
 
           <JRField
             v-if="isAbsence"
+            v-slot="{ labelledby }"
             label="Absence reason"
             inputId="jr-schedule-absence-reason"
+            :use-for="false"
             required>
             <JRSelect
               inputId="jr-schedule-absence-reason"
               v-model="localFormData.absence_reason"
+              class="jr-schedule-event__absence-select"
               :options="absenceReasons"
               option-label="name"
               option-value="id"
               :disabled="!isEditing"
+              :ariaLabelledby="labelledby"
               placeholder="Select absence reason"
               filter
               show-clear />
           </JRField>
 
           <div v-if="!isAbsence" class="jr-schedule-event__wa">
-            <WorkAccountSelector
-              v-model="localFormData.work_account"
-              :disabled="!isEditing"
-              :required="!isAbsence" />
+            <JRField
+              v-slot="{ labelledby }"
+              label="Work Account"
+              inputId="jr-schedule-event-wa"
+              :use-for="false"
+              required>
+              <WorkAccountSelector
+                inputId="jr-schedule-event-wa"
+                v-model="localFormData.work_account"
+                :showLabel="false"
+                :disabled="!isEditing"
+                :required="!isAbsence"
+                :ariaLabelledby="labelledby" />
+            </JRField>
           </div>
 
           <JRField label="Title" inputId="jr-schedule-event-title" required>
@@ -519,12 +533,22 @@ export default {
       this.clickedCrewId = eventData?.clickedCrewId || eventData?.crew || null;
 
       this.isEditing = isEditMode;
+      // Blur calendar event (or any) focus before Dialog sets aria-hidden on the page.
+      if (
+        typeof document !== "undefined" &&
+        document.activeElement instanceof HTMLElement
+      ) {
+        document.activeElement.blur();
+      }
       this.visible = true;
       this.loadWorkAccountDetails(this.localFormData.work_account);
     },
 
     hideModal() {
-      if (document.activeElement) {
+      if (
+        typeof document !== "undefined" &&
+        document.activeElement instanceof HTMLElement
+      ) {
         document.activeElement.blur();
       }
       this.visible = false;
@@ -659,8 +683,10 @@ export default {
 
     async loadAbsenceReasons() {
       try {
-        const response = await axios.get("/api/absence-reasons/");
-        this.absenceReasons = response.data;
+        const response = await axios.get("/api/absence-reasons/", {
+          params: { is_active: true },
+        });
+        this.absenceReasons = response.data.results ?? response.data;
       } catch (error) {
         console.error("Error loading absence reasons:", error);
         this.notifyError("Failed to load absence reasons");
@@ -789,6 +815,35 @@ export default {
   padding: 0.75rem;
   border: 1px solid var(--color-jr-border, #e5e7eb);
   background: var(--color-jr-surface, #ffffff);
+}
+
+.jr-schedule-event__absence-select :deep(.p-select),
+.jr-schedule-event__form :deep(.jr-schedule-event__absence-select:not(.p-disabled)) {
+  border-color: var(--color-jr-primary, #2563eb);
+  background-color: color-mix(
+    in srgb,
+    var(--color-jr-primary, #2563eb) 6%,
+    var(--color-jr-surface, #ffffff)
+  );
+}
+
+.jr-schedule-event__form :deep(.jr-schedule-event__absence-select:not(.p-disabled):hover) {
+  border-color: var(--color-jr-primary-hover, #1d4ed8);
+}
+
+.jr-schedule-event__form :deep(.jr-schedule-event__absence-select:not(.p-disabled).p-focus),
+.jr-schedule-event__form :deep(.jr-schedule-event__absence-select:not(.p-disabled):focus-within) {
+  border-color: var(--color-jr-primary-active, #1e40af);
+  box-shadow: 0 0 0 1px var(--color-jr-primary, #2563eb);
+}
+
+.jr-schedule-event__form :deep(.jr-schedule-event__absence-select:not(.p-disabled) .p-select-label:not(.p-placeholder)) {
+  color: var(--color-jr-primary-active, #1e40af);
+  font-weight: 500;
+}
+
+.jr-schedule-event__form :deep(.jr-schedule-event__absence-select:not(.p-disabled) .p-select-dropdown) {
+  color: var(--color-jr-primary, #2563eb);
 }
 
 .jr-schedule-event__wa :deep(.jr-field),

@@ -68,6 +68,7 @@
   - [9.4 Comandos de Gestión](#94-comandos-de-gestión)
     - [9.4.1 Configuración DocumentType: creates_serialized_items](#941-configuración-documenttype-creates_serialized_items)
     - [9.4.2 JobRhythm Assistant: intenciones analíticas en DocumentType](#942-jobrhythm-assistant-intenciones-analíticas-en-documenttype)
+    - [9.4.3 Document Status workflows por tipo](#943-document-status-workflows-por-tipo)
   - [9.5 Generar el Fixture JSON de Datos Maestros](#95-generar-el-fixture-json-de-datos-maestros)
   - [9.6 Workflow: Serialized Items e Inventory Transfers](#96-workflow-serialized-items-e-inventory-transfers)
   - [9.7 Cálculo dinámico de precios en líneas de documento](#97-precios-lineas-documento)
@@ -156,7 +157,7 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 | **Backend**    | `chalanpro_backend`  | 8000 (interno) | API Django REST + Admin, Daphne (ASGI) para soporte WebSocket |
 | **Frontend**   | `chalanpro_frontend` | -              | Build de Vue.js, archivos estáticos servidos por Nginx        |
 | **PostgreSQL** | `chalanpro_postgres` | 5432           | Base de datos multi-tenant con schemas aislados               |
-| **pgAdmin**    | `chalanpro_pgadmin`  | 5050           | Interfaz web para administración de PostgreSQL                |
+| **pgAdmin**    | `chalanpro_pgadmin`  | 127.0.0.1:5050 | PostgreSQL web; solo localhost del VPS (túnel SSH)            |
 
 ### 1.3 Flujo de Peticiones
 
@@ -173,9 +174,10 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
    - `/api/*` → Nginx → Backend (8000) → Middleware detecta tenant → Schema específico
 
 4. **WebSocket (Actualizaciones en tiempo real):**
-   - Cliente → Nginx (443) → `/ws/*` → Backend Daphne (8000)
-   - Middleware `TenantASGIMiddleware` identifica tenant desde hostname
-   - Configura schema del tenant → Conexión WebSocket establecida
+   - El SPA pide `POST /api/auth/ws-ticket/` con el access JWT y abre `/ws/*?ticket=`
+   - El ticket dura 60 s, es de un solo uso y fija el schema. Sin ticket el socket cierra (4401)
+   - Cada grupo de Channels lleva el schema (`{schema}.calendar_updates`, etc.)
+   - Nginx reescribe `X-Forwarded-Host` con `$host`. El origen del handshake se valida contra `ALLOWED_HOSTS`
    - Rutas WebSocket:
      - `/ws/calendar-updates/` - Actualizaciones del calendario
      - `/ws/schedule/event/{id}/` - Notas de eventos
@@ -402,7 +404,7 @@ JobRhythm usa **Simple JWT tenant-bound**. Se retiró `rest_framework.authtoken`
 
 | Pieza | Dónde | Rol |
 | ----- | ----- | --- |
-| Access JWT | Memoria del navegador (`Authorization: Bearer …`) | ~15 min (`AUTH_ACCESS_TOKEN_MINUTES`) |
+| Access JWT | Memoria del navegador (`Authorization: Bearer …`) | 30 min (`AUTH_ACCESS_TOKEN_MINUTES=30`). El SPA lo renueva con el refresh unos 2 min antes de vencer |
 | Refresh JWT | Cookie HttpOnly `jr_refresh` (path `/api/auth/`, host-only) o body si `AUTH_USE_REFRESH_COOKIE=False` | ~7 días (`AUTH_REFRESH_TOKEN_DAYS`); rotación + blacklist |
 | Claim `schema_name` | Dentro del access y del refresh | Debe coincidir con el schema del request; si no → rechazo |
 | `userPermissions` | `localStorage` | Solo UX (menú/rutas); no es secreto ni autoridad |
@@ -415,12 +417,13 @@ JobRhythm usa **Simple JWT tenant-bound**. Se retiró `rest_framework.authtoken`
 | Método | Ruta | Auth | Descripción |
 | ------ | ---- | ---- | ----------- |
 | POST | `/api/auth/login/` | Público (throttle IP/usuario) | Credenciales → access (+ cookie/body refresh) + permisos + branding |
-| POST | `/api/auth/refresh/` | Cookie o body refresh | Nuevo access (y refresh rotado) |
-| POST | `/api/auth/logout/` | Público / sesión | Blacklist refresh + borra cookie |
+| POST | `/api/auth/refresh/` | Cookie `jr_refresh`, mismo origen | Nuevo access. En modo cookie no lee body ni `X-Refresh-Token`. Un fallo no borra la cookie |
+| POST | `/api/auth/logout/` | Cookie o Bearer, mismo origen | Blacklist de los refresh + borra cookie |
+| POST | `/api/auth/ws-ticket/` | Bearer | Ticket de 60 s y un solo uso para el handshake WebSocket |
 | GET | `/api/auth/me/` | Bearer | Usuario + permisos + branding tenant |
 | GET | `/api/auth/permissions/` | Bearer | Lista `user.get_all_permissions()` |
 | GET | `/api/auth/validate/` | Bearer | `{ "valid": true\|false }` (guard del router) |
-| GET | `/api/auth/tenant-context/` | Público | Nombre/logo del workspace (login visual) |
+| GET | `/api/auth/tenant-context/` | Público | Nombre y logo del workspace. No devuelve `schema_name` |
 | POST | `/api/auth/password/forgot/` | Público (throttle) | Email de reset |
 | POST | `/api/auth/password/reset/` | Público | Nueva contraseña; invalida refresh outstanding del usuario |
 
@@ -430,9 +433,9 @@ Prefijo `/api/auth/` está **exento** del enforcement de trial/billing (`TenantA
 
 1. Login → access en memoria + cookie refresh + `jr_session` + permisos UX.
 2. Cada API → `Bearer` access.
-3. 401 → axios intenta `/api/auth/refresh/` con credentials; reintenta; si falla → logout y `/login`.
+3. Unos 2 min antes de que venza el access (30 min), el SPA llama `/api/auth/refresh/` y guarda el access nuevo. `navigator.locks` deja una sola renovación a la vez entre pestañas. Si una petición recibe 401, axios hace el mismo refresh y reintenta; si el refresh falla → logout y `/login`.
 4. Nueva pestaña: lee `jr_session`, llama refresh, rehidrata access.
-5. Logout / reset password → blacklist de refresh del usuario.
+5. Logout / reset password → blacklist de los refresh del usuario. El access ya emitido sigue válido hasta que vence (hasta 30 min).
 
 #### Guard del router (`vuefrontend/src/router/index.js`)
 
@@ -453,13 +456,25 @@ El menú del shell (`NavbarComponent`) **no lista módulos** si no hay sesión (
 
 | Variable | Default | Notas |
 | -------- | ------- | ----- |
-| `AUTH_ACCESS_TOKEN_MINUTES` | `15` | Vida del access |
+| `AUTH_ACCESS_TOKEN_MINUTES` | `30` | Vida del access (30 minutos) |
 | `AUTH_REFRESH_TOKEN_DAYS` | `7` | Vida del refresh / cookie `Max-Age` |
 | `AUTH_USE_REFRESH_COOKIE` | `True` | Preferido multi-tab (mismo origen vía Nginx) |
 | `AUTH_REFRESH_COOKIE_SECURE` | `True` si `DEBUG=False` | En prod HTTPS debe ser `True` |
 | `AUTH_REFRESH_COOKIE_NAME` | `jr_refresh` | |
 | `AUTH_REFRESH_COOKIE_PATH` | `/api/auth/` | |
 | `AUTH_REFRESH_COOKIE_SAMESITE` | `Lax` | |
+| `DJANGO_SECRET_KEY` | obligatoria | Sin esta variable el proceso no arranca. No hay clave de respaldo en el código |
+| `CORS_ALLOW_ALL_ORIGINS` | `False` | Orígenes explícitos (`jobrhythm.net`, landing y, en `DEBUG`, la red local). No combinarlo con credenciales en `True` |
+
+#### Cierres de seguridad (sept. 2026)
+
+Aplican en el VPS al desplegar esta revisión (`deploy-vps.sh`). No cambian solos el servidor que ya está corriendo.
+
+- WebSocket: ticket de un uso y grupos con `schema_name`. Notas de work order: HTML limitado a las etiquetas de Quill.
+- Refresh/logout en modo cookie: solo `jr_refresh`, mismo origen, throttle 30/min. La IP de login sale de `X-Real-IP`.
+- El enlace de restablecimiento usa el host ya validado por Django. Nginx fija `X-Forwarded-Host $host`.
+- Sin sesión: 401 en contratos, constructores, comunidades, documentos y cuadrillas. La lista de contratos exige `view_contract`; transacciones, `view_document`. Leer cuadrillas sigue abierto con solo la sesión; crear o cambiar exige el permiso de modelo.
+- pgAdmin en `docker-compose.yml` publica `127.0.0.1:5050:80`.
 
 #### Migraciones al desplegar
 
@@ -1054,7 +1069,7 @@ psql -h localhost -p 5432 -U chalanpro_user -d chalanpro
 
 ### 5.4 Conexión desde pgAdmin
 
-**URL:** puerto `5050` del VPS (mapear solo si es imprescindible; preferir túnel SSH).
+**URL:** `127.0.0.1:5050` en el VPS. Entrar con túnel SSH (`ssh -L 5050:127.0.0.1:5050`). No está publicado en la interfaz pública.
 
 **Credenciales pgAdmin:** ver `envs/pgadmin.env` (`PGADMIN_DEFAULT_EMAIL`, `PGADMIN_DEFAULT_PASSWORD`).
 
@@ -1077,13 +1092,13 @@ psql -h localhost -p 5432 -U chalanpro_user -d chalanpro
 | ------------------------ | ----------------------- | ----- | ------------------------------------------------- |
 | **HTTPS/SSL**            | ✅ Activo               | Alto  | Certificados Let's Encrypt, renovación automática |
 | **Firewall**             | ⚠️ Parcial              | Medio | Solo puertos 80, 443, 5432, 5050 abiertos         |
-| **Autenticación Django** | ✅ Activo               | Alto  | Simple JWT tenant-bound (`appauth`), cookie refresh HttpOnly, CSRF protection |
+| **Autenticación Django** | ✅ Activo               | Alto  | JWT tenant-bound, cookie HttpOnly, refresh solo mismo origen, WebSocket con ticket |
 | **ALLOWED_HOSTS**        | ✅ Dinámico             | Alto  | Actualización automática vía middleware           |
 | **CSRF Protection**      | ✅ Dinámico             | Alto  | Actualización automática vía middleware           |
 | **DEBUG Mode**           | ✅ Deshabilitado        | Alto  | `DEBUG=False` en producción                       |
 | **Secret Keys**          | ✅ Variables de entorno | Alto  | No hardcodeadas en código                         |
 | **PostgreSQL Acceso**    | ⚠️ Expuesto             | Medio | Puerto 5432 abierto (considerar restringir)       |
-| **pgAdmin Acceso**       | ⚠️ Expuesto             | Bajo  | Puerto 5050 abierto sin autenticación adicional   |
+| **pgAdmin Acceso**       | ✅ Localhost            | Alto  | `127.0.0.1:5050` en compose; entrar por túnel SSH |
 | **Headers de Seguridad** | ✅ Configurados         | Alto  | HSTS, X-Frame-Options, X-Content-Type-Options     |
 | **Backups Automáticos**  | ❌ No configurado       | Bajo  | Requiere configuración de cron job                |
 
@@ -1099,10 +1114,7 @@ psql -h localhost -p 5432 -U chalanpro_user -d chalanpro
    # Editar docker-compose.yml: remover "5432:5432" de ports
    ```
 
-2. **Proteger pgAdmin:**
-   - Configurar autenticación adicional (2FA)
-   - Restringir acceso por IP
-   - O mejor: acceder solo vía túnel SSH
+2. **pgAdmin:** el compose ya publica solo `127.0.0.1:5050`. Tras el despliegue, entrar por túnel SSH. Si el firewall del VPS sigue abriendo 5050 hacia fuera, cerrar esa regla.
 
 3. **Configurar Backups Automáticos:**
    ```bash
@@ -1510,7 +1522,7 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 
 - `InventoryMasterDataPreviewAPIView` (GET `/api/master-data/preview/`): Verifica el estado de `seed_inventory_done` y devuelve información sobre si los datos ya fueron importados.
 - `InventoryMasterDataExcelDownloadAPIView` (GET `/api/master-data/excel/`): Sirve el archivo Excel pre-generado desde `appinventory/static/appinventory/masters_inventory.xlsx`.
-- `InventoryMasterDataImportAPIView` (POST `/api/master-data/import/`): Copia el repo de imágenes a `MEDIA_ROOT/products/`, carga `masters_inventory.json` **sin** entradas ProductImage, luego inyecta `masters_productimage.json` (ProductImage con assignment_id 1,2,3…). Si no existe ese fixture, crea ProductImage desde `MEDIA_ROOT/products/{product_id}/{brand_id}/`. Resetea secuencias (incl. `appinventory_productimage`) y marca `seed_inventory_done=True`.
+- `InventoryMasterDataImportAPIView` (POST `/api/master-data/import/`): Copia el repo de imágenes (`fixtures/media/products/`) a `MEDIA_ROOT/products/` (preserva subcarpetas), carga `masters_inventory.json` **sin** entradas ProductImage, luego `appschedule/fixtures/masters_absence_reason.json` (fixture aparte, como DocumentType), luego inyecta `masters_productimage.json` (ProductImage con FK a `product`). Si no existe ese fixture de imágenes, crea ProductImage desde `MEDIA_ROOT/products/`. Resetea secuencias (incl. `appinventory_productimage` y `appschedule_absencereason`) y marca `seed_inventory_done=True`. Fuente canónica: tenant **jobrhythm_products** (`tenant_id=jobrhythm_products_001`).
 
 **Management Command (`appinventory/management/commands/generate_masters_inventory_excel.py`):**
 
@@ -1521,27 +1533,33 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 **Fixture de Datos (`appinventory/fixtures/masters_inventory.json`):**
 
 - Archivo JSON con todos los datos maestros de inventario.
-- Incluye: UnitCategory, UnitOfMeasure, Warehouse, ProductCategory, ProductBrand, PriceType, Product, ProductPrice. **Product debe incluir el campo `brands`** (ej. `"brands": [1]`) para que al cargar se creen las filas en `appinventory_productbrandassignment`; si falta, el backend **inyecta en memoria** `brands` con el primer ProductBrand del fixture para evitar "No brand assigned" y la FK en ProductImage. En la importación se omiten las entradas ProductImage si las hubiera.
+- Incluye: UnitCategory, UnitOfMeasure, Warehouse, ProductCategory, ProductBrand, PriceType, Product, ProductPrice. **Product debe incluir el campo FK `brand`** (ej. `"brand": 1`). Si falta, el backend **inyecta en memoria** el primer ProductBrand del fixture. Ya no existe el modelo intermedio `ProductBrandAssignment`. En la importación se omiten las entradas ProductImage del maestro (van en `masters_productimage.json`).
+- **Fuente canónica:** regenerar desde schema **`jobrhythm_products`** (`tenant_id=jobrhythm_products_001`).
 - **Warehouse con `truck_id`:** En la importación se anula `truck` para evitar la FK `crewsapp_truck` (no existe en el tenant destino). Los warehouses móviles quedan como almacenes normales.
+
+**Fixture de Absence Reasons (`appschedule/fixtures/masters_absence_reason.json`):**
+
+- Fixture **aparte** (mismo patrón que `masters_document_type.json`). Se carga en Inventory Master Data Setup junto con el inventario.
+- Se regenera con `generate_masters_inventory_fixture` desde `jobrhythm_products`.
 
 **Fixture de imágenes de productos (`appinventory/fixtures/masters_productimage.json`):**
 
-- Se carga **después** de `masters_inventory.json`. Contiene solo ProductImage con **assignment_id 1, 2, 3…** (orden igual al de las asignaciones creadas al cargar el maestro).
-- Se genera con: `python manage.py generate_masters_productimage_fixture --schema test_dominio_local`.
+- Se carga **después** de `masters_inventory.json`. Contiene solo ProductImage con FK a **`product`** (sin `assignment`).
+- Se genera con: `python manage.py generate_masters_productimage_fixture` (default schema `jobrhythm_products`).
 
-**Repo de imágenes a importar (`appinventory/fixtures/media/products/` o `media_volume`):**
+**Repo de imágenes a importar (`appinventory/fixtures/media/products/`):**
 
-- Directorio base con las imágenes de productos. Estructura: `{product_id}/{brand_id}/*.jpg`.
-- Se copia a `MEDIA_ROOT/products/` (en Docker, `media_volume` montado en `/app/media`) **antes** del loaddata; tras loaddata se crean los registros `ProductImage` desde ese directorio por `(product_id, brand_id)`.
-- Se actualiza desde el tenant de desarrollo **test-dominio-local.chalanpro.net** con: `python manage.py export_fixture_product_images --schema test_dominio_local`.
-- Así el repo queda como fuente única; cada tenant que hace Inventory Master Data Setup recibe productos e imágenes desde ese repo.
+- Copia de los archivos referenciados por `ProductImage.image` (ruta relativa preservada, p. ej. `{product_id}/{brand_id}/*.jpg`).
+- Se copia a `MEDIA_ROOT/products/` **antes** del loaddata de `masters_productimage.json`.
+- Se actualiza desde el tenant **jobrhythm-products** (`schema jobrhythm_products`) con: `python manage.py export_fixture_product_images` (o como parte de `generate_masters_inventory_fixture`).
+- Cada tenant que hace Inventory Master Data Setup recibe productos e imágenes desde ese repo + fixtures.
 
 **Dónde se guardan las imágenes de productos (ubicación en runtime):**
 
-- **Ruta física:** `MEDIA_ROOT/products/{product_id}/{brand_id}/{timestamp}_{nombre}.{ext}` (ej. `products/42/3/20260214_133045_imagen_producto.jpg`).
+- **Ruta física:** `MEDIA_ROOT/products/...` según el ImageField (ej. `products/42/60/20261029_002826_imagen.jpg`). Nuevas subidas usan `products/{product_id}/{timestamp}_{nombre}.{ext}`.
 - **En Docker:** `/app/media/products/` (volumen `media_volume` montado en el contenedor backend).
 - **En local:** `app/media/products/` (según `MEDIA_ROOT = BASE_DIR / 'media'` en `settings.py`).
-- **URL pública:** `/media/` (configurada en `MEDIA_URL`). Ejemplo: `http://dominio/media/products/42/3/20260214_133045_imagen.jpg`.
+- **URL pública:** `/media/` (configurada en `MEDIA_URL`).
 
 #### Frontend (Vue.js)
 
@@ -1591,8 +1609,9 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
    - Al confirmar, se envía POST a `/api/master-data/import/`.
    - El backend:
      - Copia el repo de imágenes `appinventory/fixtures/media/products/` a `MEDIA_ROOT/products/` (en Docker: media_volume en `/app/media`)
-     - Carga `masters_inventory.json` sin entradas ProductImage
-     - Carga `masters_productimage.json` (ProductImage con assignment_id 1,2,3…). Si no existe, crea ProductImage desde `MEDIA_ROOT/products/{product_id}/{brand_id}/`
+     - Carga `masters_inventory.json` sin entradas ProductImage (adapta `brands` → `brand` si hace falta)
+     - Carga `masters_absence_reason.json` (fixture aparte) si existe
+     - Carga `masters_productimage.json` (ProductImage con FK a `product`). Si no existe, crea ProductImage desde `MEDIA_ROOT/products/{product_id}/`
      - Resetea las secuencias de las tablas (incl. `appinventory_productimage`)
      - Marca `seed_inventory_done=True` en el tenant
      - Confirma la transacción
@@ -1605,39 +1624,36 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 
 ### 9.4 Comandos de Gestión
 
-**Generar masters_inventory.json, masters_productimage.json y productbrandassignment.json desde un tenant:**
+**Regenerar fixtures maestros desde jobrhythm_products (recomendado):**
 
 ```bash
-# Genera, en este orden: masters_inventory.json, masters_productimage.json y productbrandassignment.json
-# (todos desde el mismo schema para mantener coherencia de IDs)
-docker compose exec backend python manage.py generate_masters_inventory_fixture --schema test_dominio_local
+# Local (ubuntu-house): genera masters_inventory.json + exporta media +
+# masters_productimage.json + masters_inventory.xlsx
+docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_inventory_fixture
 
-# Con ruta de salida distinta para el inventario
-docker compose exec backend python manage.py generate_masters_inventory_fixture --schema test_dominio_local --output /app/appinventory/fixtures/masters_inventory.json
+# Equivalente explícito:
+docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_inventory_fixture \
+  --schema jobrhythm_products
+
+# Solo JSON de inventario (sin imágenes ni Excel):
+docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_inventory_fixture \
+  --schema jobrhythm_products --skip-images --skip-excel
 ```
 
-**Generar el archivo Excel:**
+**Pasos individuales (si hace falta):**
 
 ```bash
-# Desde el contenedor backend
-docker compose exec backend python manage.py generate_masters_inventory_excel
+# Repo de imágenes → fixtures/media/ (preserva ruta relativa del ImageField)
+docker compose -f docker-compose.dev.yml exec backend python manage.py export_fixture_product_images \
+  --schema jobrhythm_products
 
-# El archivo se guarda en: app/appinventory/static/appinventory/masters_inventory.xlsx
-```
+# masters_productimage.json (FK product)
+docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_productimage_fixture \
+  --schema jobrhythm_products
 
-**Actualizar el repo de imágenes desde el tenant de desarrollo (test-dominio-local):**
-
-```bash
-docker compose exec backend python manage.py export_fixture_product_images --schema test_dominio_local
-# Estructura: appinventory/fixtures/media/products/<product_id>/<brand_id>/*.jpg
-```
-
-**Generar masters_productimage.json (inyección tras masters_inventory.json):**
-
-```bash
-# Desde un tenant que tenga ProductImage (ej. test_dominio_local). Asigna assignment_id 1,2,3...
-docker compose exec backend python manage.py generate_masters_productimage_fixture --schema test_dominio_local
-# Salida: appinventory/fixtures/masters_productimage.json
+# Excel de revisión offline
+docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_inventory_excel
+# → app/appinventory/static/appinventory/masters_inventory.xlsx
 ```
 
 **Verificar el estado de un tenant:**
@@ -1680,16 +1696,17 @@ El campo incluye **tooltip** (`v-tt` + `data-title`) según las guías del proye
    docker compose exec backend python manage.py migrate_schemas
    ```
 
-2. **Regenerar el fixture maestro de inventario** (si también se actualizan datos maestros de inventario):
+2. **Regenerar el fixture maestro de inventario** (si también se actualizan datos maestros de inventario; fuente `jobrhythm_products`):
 
    ```bash
-   docker compose exec backend python manage.py generate_masters_inventory_fixture --schema test_dominio_local --output /app/appinventory/fixtures/masters_inventory.json
+   docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_inventory_fixture \
+     --schema jobrhythm_products
    ```
 
 3. **Regenerar el fixture maestro de tipos de documento** (para que los nuevos tenants reciban los tipos actualizados con `creates_serialized_items`):
    ```bash
    docker compose exec backend python manage.py tenant_command dumpdata \
-     --schema test_dominio_local \
+     --schema jobrhythm_products \
      apptransactions.DocumentType \
      --indent 2 \
      --output /app/apptransactions/fixtures/masters_document_type.json
@@ -1734,23 +1751,60 @@ docker compose exec backend python manage.py migrate_schemas
 - Spend QS: `appassistant.services.spend.spend_documents_qs` (filtra por `counts_as_net_invoiced_spend`, no por `type_code='PINV'`)
 - Definición canónica del métrico: `appassistant.spend_definition.SPEND_DEFINITION`
 
-### 9.5 Generar el Fixture JSON de Datos Maestros
+#### 9.4.3 Document Status workflows por tipo
 
-**Importante:** Para generar o actualizar el archivo `masters_inventory.json` desde la base de datos de un tenant, use el comando `dumpdata` de Django. Se recomienda usar el **tenant de desarrollo** (test-dominio-local.chalanpro.net / schema `test_dominio_local`) como fuente principal.
+Cada tipo maestro puede tener un workflow lineal de `DocumentStatus` (`sequence`, un `is_initial`, un terminal). El flag `uses_status_tracking` queda **OFF** por defecto: los statuses se siembran listos, y el admin los activa en `/document-types` cuando quiera tracking en documentos nuevos. **MR** es protegido (siempre trackea; no se siembra desde este catálogo).
 
-**Paso 1 – Actualizar repo de imágenes desde el tenant de desarrollo (opcional):**
+| Tipo | Workflow (codes) |
+|------|------------------|
+| PR | requested → approved → ordered → closed |
+| PO | draft → submitted → approved → ordered → closed |
+| GRN | draft → received → inspected → posted → closed |
+| PINV | draft → submitted → approved → posted → closed |
+| PRN | draft → approved → returned → closed |
+| SQ | draft → sent → accepted → closed |
+| SO | draft → confirmed → allocated → closed |
+| DN | draft → packed → shipped → delivered → closed |
+| INV | draft → submitted → posted → closed |
+| CRN | draft → approved → posted → closed |
+| PK | requested → approved → preparing → picked → closed |
+| MR | requested → approved → preparing → delivered → closed *(sistema)* |
+
+**Sembrar tenants existentes** (idempotente; no sobrescribe si el tipo ya tiene statuses):
 
 ```bash
-docker compose exec backend python manage.py export_fixture_product_images --schema test_dominio_local
+# Un schema
+docker compose -f docker-compose.dev.yml exec backend \
+  python manage.py seed_document_status_workflows --schema jobrhythm_products
+
+# Todos los tenants no-public
+docker compose -f docker-compose.dev.yml exec backend \
+  python manage.py seed_document_status_workflows
 ```
 
-**Paso 2 – Generar o actualizar el fixture JSON:**
+**UI:** en el formulario del tipo, botón **Apply default workflow** (si no hay statuses). Lista `/document-types` muestra Tracking On/Off y conteo de Statuses. API: `POST /api/document-types/<id>/seed-default-statuses/`.
+
+**Código:** `apptransactions.services.document_status.DEFAULT_DOCUMENT_STATUS_SEEDS`, comando `seed_document_status_workflows`, onboarding/`create_tenant` ya llaman `seed_default_document_statuses()`.
+
+### 9.5 Generar el Fixture JSON de Datos Maestros
+
+**Importante:** Fuente canónica = tenant **Jobrhythm Products** (`schema_name=jobrhythm_products`, `tenant_id=jobrhythm_products_001`). Desde ahí se regeneran `masters_inventory.json`, `masters_productimage.json`, el repo `fixtures/media/products/` y el Excel. Los nuevos tenants importan esos masters vía `/inventory-master-data-setup`.
+
+**Comando único (recomendado):**
 
 ```bash
-# Generar el fixture JSON desde el tenant de desarrollo (ProductImage es opcional; en la importación se omiten)
-# Nota: Warehouse con truck_id se anula en la importación (evita FK crewsapp_truck inexistente en tenant destino)
-docker compose exec backend python manage.py tenant_command dumpdata \
-  --schema test_dominio_local \
+docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_inventory_fixture \
+  --schema jobrhythm_products
+```
+
+Eso genera, en orden: `masters_inventory.json` → `masters_absence_reason.json` → export de imágenes → `masters_productimage.json` → `masters_inventory.xlsx`.
+
+**Alternativa manual con `dumpdata`:**
+
+```bash
+# Nota: Warehouse con truck_id se anula en la importación (evita FK crewsapp_truck)
+docker compose -f docker-compose.dev.yml exec backend python manage.py tenant_command dumpdata \
+  --schema jobrhythm_products \
   appinventory.UnitCategory \
   appinventory.UnitOfMeasure \
   appinventory.Warehouse \
@@ -1761,33 +1815,37 @@ docker compose exec backend python manage.py tenant_command dumpdata \
   appinventory.ProductPrice \
   --indent 2 \
   --output /app/appinventory/fixtures/masters_inventory.json
+
+docker compose -f docker-compose.dev.yml exec backend python manage.py export_fixture_product_images \
+  --schema jobrhythm_products
+docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_productimage_fixture \
+  --schema jobrhythm_products
+docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_inventory_excel
 ```
 
-**Nota:** El fixture `masters_inventory.json` debe tener en cada Product el campo **`brands`** (ej. `"brands": [60]`) para que al cargar se creen las filas en `appinventory_productbrandassignment` (assignment_id 1, 2, 3…). Si no, al cargar `masters_productimage.json` fallará la FK. Para generar `masters_productimage.json` (inyección tras el maestro): `python manage.py generate_masters_productimage_fixture --schema test_dominio_local`. Después de cambiar el JSON, ejecute `generate_masters_inventory_excel` para regenerar el Excel.
+**Nota:** Cada Product debe llevar FK **`brand`** (ej. `"brand": 60`). Las imágenes van en `masters_productimage.json` con FK a **`product`** (sin `ProductBrandAssignment`). Tras regenerar, los nuevos tenants pueden importar desde Configuration → Inventory Master Data Setup.
 
--- Productos sin ninguna imagen (en schema test_dominio_local)
+-- Productos sin ninguna imagen (schema jobrhythm_products)
 SELECT p.id AS product_id,
 p.sku AS codigo,
 p.name AS nombre
-FROM test_dominio_local.appinventory_product p
-LEFT JOIN test_dominio_local.appinventory_productimage pi ON pi.product_id = p.id
+FROM jobrhythm_products.appinventory_product p
+LEFT JOIN jobrhythm_products.appinventory_productimage pi ON pi.product_id = p.id
 WHERE pi.id IS NULL
 AND p.is_active = true
 ORDER BY p.sku;
 
--- producto–marca sin imagen
+-- Productos activos con marca y sin imagen
 SELECT p.id AS product_id,
 p.sku AS codigo,
 p.name AS nombre,
-a.id AS assignment_id,
 b.name AS marca
-FROM test_dominio_local.appinventory_product p
-JOIN test_dominio_local.appinventory_productbrandassignment a ON a.product_id = p.id
-JOIN test_dominio_local.appinventory_productbrand b ON b.id = a.brand_id
-LEFT JOIN test_dominio_local.appinventory_productimage pi ON pi.assignment_id = a.id
+FROM jobrhythm_products.appinventory_product p
+LEFT JOIN jobrhythm_products.appinventory_productbrand b ON b.id = p.brand_id
+LEFT JOIN jobrhythm_products.appinventory_productimage pi ON pi.product_id = p.id
 WHERE pi.id IS NULL
 AND p.is_active = true
-ORDER BY p.sku, b.name;
+ORDER BY p.sku;
 
 ### 9.6 Workflow: Serialized Items e Inventory Transfers
 

@@ -51,7 +51,6 @@ const ProductCategoryView = () =>
 const ProductBrandView = () => import("@views/inventory/ProductBrandView.vue");
 const ReportsExportsView = () =>
   import("@views/reports/ReportsExportsView.vue");
-// const ProductUnitView = () => import('@views/inventory/ProductUnitView.vue');
 const UnitOfMeasureView = () =>
   import("@views/inventory/UnitOfMeasureView.vue");
 const UnitCategoryView = () => import("@views/inventory/UnitCategoryView.vue");
@@ -82,6 +81,10 @@ const HouseModelFormView = () =>
 // Transactions
 const DocTypeListView = () => import("@views/transactions/DocTypeListView.vue");
 const DocTypeForm = () => import("@components/transactions/DocTypeForm.vue");
+const UserPermissionsHub = () =>
+  import("@views/auth/UserPermissionsHub.vue");
+const UserAdminForm = () => import("@components/auth/UserForm.vue");
+const GroupAdminForm = () => import("@components/auth/GroupForm.vue");
 const PartyTypeListView = () =>
   import("@views/transactions/PartyTypeListView.vue");
 const PartyTypeForm = () =>
@@ -90,8 +93,6 @@ const PartyCategoryListView = () =>
   import("@views/transactions/PartyCategoryListView.vue");
 const PartyCategoryForm = () =>
   import("@components/transactions/PartyCategoryForm.vue");
-const PartyForm = () => import("@components/transactions/PartyForm.vue");
-const PartyListView = () => import("@views/transactions/PartyListView.vue");
 const TransactionForm = () =>
   import("@components/transactions/TransactionForm.vue");
 const TransactionListView = () =>
@@ -100,15 +101,25 @@ const WorkAccountSelect = () =>
   import("@components/transactions/WorkAccountSelect.vue");
 const WorkAccountListView = () =>
   import("@views/transactions/WorkAccountListView.vue");
+const MissingMaterialView = () =>
+  import("@views/material/MissingMaterialView.vue");
+const MaterialRequestListView = () =>
+  import("@views/material/MaterialRequestListView.vue");
+const MaterialRequestDetailView = () =>
+  import("@views/material/MaterialRequestDetailView.vue");
 
 // Crews and Fleet
 const CategoryListView = () => import("@views/crews/CategoryListView.vue");
 const CrewListView = () => import("@views/crews/CrewListView.vue");
+const AbsenceReasonListView = () =>
+  import("@views/crews/AbsenceReasonListView.vue");
 const TruckListView = () => import("@views/crews/TruckListView.vue");
 const TruckAssignmentListView = () =>
   import("@views/crews/TruckAssignmentListView.vue");
 const CategoryForm = () => import("@components/crews/CategoryForm.vue");
 const CrewForm = () => import("@components/crews/CrewForm.vue");
+const AbsenceReasonForm = () =>
+  import("@components/crews/AbsenceReasonForm.vue");
 const TruckForm = () => import("@components/crews/TruckForm.vue");
 const TruckAssignmentForm = () =>
   import("@components/crews/TruckAssignmentForm.vue");
@@ -968,6 +979,42 @@ const routes = [
     meta: { requiresAuth: true, requiredPermissions: ["crewsapp.change_crew"] },
   },
   {
+    path: "/crews/absence-reasons",
+    name: "absence-reasons",
+    component: AbsenceReasonListView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["appschedule.view_absencereason"],
+    },
+  },
+  {
+    path: "/crews/absence-reasons/form",
+    name: "absence-reason-form",
+    component: AbsenceReasonForm,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["appschedule.add_absencereason"],
+    },
+  },
+  {
+    path: "/crews/absence-reasons/view/:id",
+    name: "absence-reason-view",
+    component: AbsenceReasonForm,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["appschedule.view_absencereason"],
+    },
+  },
+  {
+    path: "/crews/absence-reasons/edit/:id",
+    name: "absence-reason-edit",
+    component: AbsenceReasonForm,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["appschedule.change_absencereason"],
+    },
+  },
+  {
     path: "/crews/trucks",
     name: "crew-trucks",
     component: TruckListView,
@@ -1063,6 +1110,76 @@ const routes = [
     },
   },
   {
+    path: "/user-permissions",
+    name: "user-permissions",
+    component: UserPermissionsHub,
+    meta: {
+      requiresAuth: true,
+      requiresStaff: true,
+      requiredPermissions: [],
+    },
+  },
+  {
+    path: "/user-permissions/users/new",
+    name: "user-permissions-user-new",
+    component: UserAdminForm,
+    meta: {
+      requiresAuth: true,
+      requiresStaff: true,
+      requiredPermissions: [],
+    },
+  },
+  {
+    path: "/user-permissions/users/:id",
+    name: "user-permissions-user-detail",
+    component: UserAdminForm,
+    meta: {
+      requiresAuth: true,
+      requiresStaff: true,
+      requiredPermissions: [],
+    },
+  },
+  {
+    path: "/user-permissions/users/:id/edit",
+    name: "user-permissions-user-edit",
+    component: UserAdminForm,
+    meta: {
+      requiresAuth: true,
+      requiresStaff: true,
+      requiredPermissions: [],
+    },
+  },
+  {
+    path: "/user-permissions/groups/new",
+    name: "user-permissions-group-new",
+    component: GroupAdminForm,
+    meta: {
+      requiresAuth: true,
+      requiresStaff: true,
+      requiredPermissions: [],
+    },
+  },
+  {
+    path: "/user-permissions/groups/:id",
+    name: "user-permissions-group-detail",
+    component: GroupAdminForm,
+    meta: {
+      requiresAuth: true,
+      requiresStaff: true,
+      requiredPermissions: [],
+    },
+  },
+  {
+    path: "/user-permissions/groups/:id/edit",
+    name: "user-permissions-group-edit",
+    component: GroupAdminForm,
+    meta: {
+      requiresAuth: true,
+      requiresStaff: true,
+      requiredPermissions: [],
+    },
+  },
+  {
     path: "/party-types",
     name: "party-types",
     component: PartyTypeListView,
@@ -1096,24 +1213,6 @@ const routes = [
     meta: {
       requiresAuth: true,
       requiredPermissions: ["apptransactions.add_partycategory"],
-    },
-  },
-  {
-    path: "/parties",
-    name: "parties",
-    component: PartyListView,
-    meta: {
-      requiresAuth: true,
-      requiredPermissions: ["apptransactions.view_party"],
-    },
-  },
-  {
-    path: "/parties/form",
-    name: "parties-form",
-    component: PartyForm,
-    meta: {
-      requiresAuth: true,
-      requiredPermissions: ["apptransactions.add_party"],
     },
   },
   {
@@ -1171,6 +1270,33 @@ const routes = [
     },
   },
   {
+    path: "/work-accounts/:workAccountId/orders/:eventId/missing-material",
+    name: "missing-material",
+    component: MissingMaterialView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.add_document"],
+    },
+  },
+  {
+    path: "/material-requests",
+    name: "material-requests",
+    component: MaterialRequestListView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.view_document"],
+    },
+  },
+  {
+    path: "/material-requests/:id",
+    name: "material-request-detail",
+    component: MaterialRequestDetailView,
+    meta: {
+      requiresAuth: true,
+      requiredPermissions: ["apptransactions.view_document"],
+    },
+  },
+  {
     path: "/:pathMatch(.*)*",
     name: "not-found",
     component: () => import("@/views/NotFoundView.vue"),
@@ -1183,7 +1309,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 });
 
@@ -1253,6 +1379,24 @@ router.beforeEach(async (to, from, next) => {
         );
 
       if (hasPermission) {
+        const requiresStaff = to.matched.some((r) => r.meta.requiresStaff);
+        if (requiresStaff) {
+          let staffOk = useAuthStore().isStaff();
+          if (!staffOk) {
+            try {
+              const me = await axios.get("/api/auth/me/");
+              staffOk = !!me.data?.is_staff;
+              useAuthStore().setStaff(staffOk);
+            } catch (_) {
+              staffOk = false;
+            }
+          }
+          if (!staffOk) {
+            alert("Staff access is required for User permissions.");
+            next(false);
+            return;
+          }
+        }
         const accessExempt = to.matched.some(
           (r) => r.meta.billingExempt || r.meta.tenantAccessExempt
         );

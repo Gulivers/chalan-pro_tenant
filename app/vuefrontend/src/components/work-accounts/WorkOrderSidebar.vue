@@ -139,6 +139,14 @@
             </span>
           </div>
         </div>
+
+        <!-- Work Order status -->
+        <div v-if="event.work_order_status_name" class="jr-wov-card__status-row">
+          <span class="jr-wov-card__status-label">Status</span>
+          <JRBadge
+            :value="event.work_order_status_name"
+            :severity="statusSeverity(event)" />
+        </div>
       </div>
     </div>
 
@@ -169,9 +177,12 @@
 import { computed, ref } from "vue";
 import dayjs from "dayjs";
 import { useChatStore } from "@/stores/chatStore";
+import { JRBadge } from "@/ui";
+import { workOrderStatusSeverity } from "@/utils/workOrderStatus";
 
 export default {
   name: "WorkOrderSidebar",
+  components: { JRBadge },
   props: {
     workAccount: {
       type: Object,
@@ -298,6 +309,12 @@ export default {
       emit("search", "");
     };
 
+    const statusSeverity = (event) =>
+      workOrderStatusSeverity({
+        status_code: event?.work_order_status_code,
+        is_terminal: !!event?.work_order_status_is_terminal,
+      });
+
     const onSelectEvent = (event) => {
       emit("select-event", event);
     };
@@ -311,6 +328,7 @@ export default {
       getCategoryClass,
       formatDate,
       unreadCount,
+      statusSeverity,
       triggerSearch,
       clearSearch,
       onSelectEvent,
@@ -703,6 +721,21 @@ export default {
   color: var(--color-jr-warning, #d97706);
   background: color-mix(in srgb, var(--color-jr-warning, #d97706) 20%, var(--color-jr-surface, #fff));
   border-radius: var(--radius-jr-control, 0);
+}
+
+.jr-wov-card__status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.375rem;
+}
+
+.jr-wov-card__status-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-jr-muted, #4b5563);
 }
 
 /* Pagination bar */

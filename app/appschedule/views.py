@@ -20,6 +20,7 @@ from appschedule.models import Event, EventChatMessage, EventChatReadStatus     
 from django.utils import timezone
 from django.utils.timezone import now            # OAHP
 from asgiref.sync import async_to_sync            # OAHP
+from appschedule.ws_groups import tenant_ws_group
 from django.contrib.auth import get_user_model   # OAHP
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
@@ -134,6 +135,21 @@ class EventViewSet(viewsets.ModelViewSet):
                     event.id, _created, draft.id, draft.crew.name if draft.crew else None, 
                     draft.date, draft.title)
 
+        # Work Order status/progress: seed on publish; never reset status on re-publish.
+        from appschedule.services.work_order_status import (
+            ensure_initial_work_order_status,
+            ensure_progress_checks,
+        )
+        from appschedule.models import WorkOrderTracking
+
+        if WorkOrderTracking.objects.filter(event_id=event.pk).exists():
+            ensure_progress_checks(event=event)
+        else:
+            ensure_initial_work_order_status(
+                event=event,
+                user=getattr(draft, 'created_by', None),
+            )
+
         draft.delete()
         return event
 
@@ -247,7 +263,9 @@ class EventsListView(APIView):
               Q(date__gte=start_at, date__lte=end_at) |  # Empieza dentro del rango
               Q(end_dt__gte=start_at, end_dt__lte=end_at))  # Termina dentro del rango
 
-        events = Event.objects.select_related('crew').filter(q, deleted=False)
+        events = Event.objects.select_related(
+            'crew', 'work_order_tracking__current_status'
+        ).filter(q, deleted=False)
         
         # Excluir los eventos que ya tienen draft (solo para usuarios con permiso)
         if request.user.has_perm('appschedule.add_eventdraft'):
@@ -369,7 +387,7 @@ class EventChatViewSet(viewsets.ViewSet):
 
             count = unread_count.count()
 
-            group_name = f"user_{user.id}_unread"
+            group_name = tenant_ws_group(f"user_{user.id}_unread")
             async_to_sync(channel_layer.group_send)(
                 group_name,
                 {
@@ -504,7 +522,9 @@ class MyEventsView(APIView):
 
             pass
 
-        queryset = Event.objects.select_related('crew', 'crew__category').filter(q).distinct()
+        queryset = Event.objects.select_related(
+            'crew', 'crew__category', 'work_order_tracking__current_status'
+        ).filter(q).distinct()
 
         # Subquery para contar mensajes NO leídos por usuario
         unread_subquery = EventChatMessage.objects.filter(
@@ -620,10 +640,18 @@ def export_schedule_excel(request):
     return response
 
 class AbsenceReasonViewSet(viewsets.ModelViewSet):
-    queryset = AbsenceReason.objects.filter(is_active=True)
+    queryset = AbsenceReason.objects.all().order_by('name')
     serializer_class = AbsenceReasonSerializer
     authentication_classes = [TenantJWTAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
+    def get_queryset(self):
+        qs = AbsenceReason.objects.all().order_by('name')
+        is_active = self.request.query_params.get('is_active')
+        if is_active is not None:
+            truthy = str(is_active).lower() in ('1', 'true', 'yes')
+            qs = qs.filter(is_active=truthy)
+        return qs
     
     
 class WeeklySupervisorStatsChartView(APIView):

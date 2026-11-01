@@ -174,6 +174,9 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
+import fileGenericIcon from "@/assets/img/file-generic.svg";
+import filePdfIcon from "@/assets/img/document-pdf.svg";
+import fileAutocadIcon from "@/assets/img/file-autocad.svg";
 import UploadIcon from "@primevue/icons/upload";
 import TrashIcon from "@primevue/icons/trash";
 import { JRBadge, JREmptyState, JRScrollArea } from "@ui";
@@ -352,18 +355,18 @@ export default {
     },
     getFileIcon(fileUrl) {
       if (!fileUrl || typeof fileUrl !== "string")
-        return require("@/assets/img/file-generic.svg");
+        return fileGenericIcon;
       const ext = fileUrl.split(".").pop().toLowerCase();
       switch (ext) {
         case "pdf":
-          return require("@/assets/img/document-pdf.svg");
+          return filePdfIcon;
         case "dwg":
         case "dxf":
         case "dwf":
         case "dwt":
-          return require("@/assets/img/file-autocad.svg");
+          return fileAutocadIcon;
         default:
-          return require("@/assets/img/file-generic.svg");
+          return fileGenericIcon;
       }
     },
     getFileName(fileUrl) {

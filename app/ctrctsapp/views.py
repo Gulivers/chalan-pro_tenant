@@ -4,12 +4,13 @@ import json
 import math
 from decimal import Decimal
 
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView # Importa la clase APIView de Django Rest Framework, que es la base para crear vistas basadas en clases para APIs
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.http import JsonResponse
-from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions, AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from appauth.authentication import TenantJWTAuthentication
 from .models import Contract, WorkPrice, ContractDetails, Builder, Job, HouseModel
 from .serializers import (
@@ -338,16 +339,18 @@ class ContractViewSet(viewsets.ModelViewSet):
     # Lazy Load para DataTable de Contratos con filtros por supervisor
     # Obsoleto: datatable-contracts eliminado en favor de contracts-provider
 
-    @action(detail=False, methods=['get'], url_path='contracts-provider', permission_classes=[AllowAny])
+    @action(detail=False, methods=['get'], url_path='contracts-provider')
     def contracts_provider(self, request):
         """
         Provider endpoint para BootstrapVue Next BTable (server-side):
         - page, per_page, search, ordering
         Devuelve: { items: [...], totalRows: N, stats: {...} }
         """
+        if not request.user.has_perm('ctrctsapp.view_contract'):
+            raise PermissionDenied()
         try:
-            page = int(request.GET.get('page', 1))
-            per_page = int(request.GET.get('per_page', 25))
+            page = max(int(request.GET.get('page', 1) or 1), 1)
+            per_page = min(max(int(request.GET.get('per_page', 25) or 25), 1), 200)
             search = request.GET.get('search', '').strip()
             ordering = request.GET.get('ordering', '-id')
 
@@ -400,9 +403,9 @@ class ContractViewSet(viewsets.ModelViewSet):
                 'totalRows': total_rows,
                 'stats': stats,
             })
-        except Exception as e:
-            logger.exception("contracts_provider error: %s", e)
-            return Response({'detail': str(e)}, status=500)
+        except Exception:
+            logger.exception("contracts_provider error")
+            return Response({'detail': 'Could not load contracts.'}, status=500)
 
 class ContractDetailsViewSet(viewsets.ModelViewSet):
     queryset = ContractDetails.objects.all()
@@ -517,7 +520,7 @@ class HouseModelViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def get_house_model_jobs(request, house_model_id):
     try:
         house_model = HouseModel.objects.get(id=house_model_id)
@@ -606,12 +609,12 @@ class BuilderReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = Builder.objects.all()
     serializer_class = BuilderListSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated]
 
 
 class JobReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = JobListSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         qs = Job.objects.all().select_related('builder')
@@ -633,4 +636,4 @@ class HouseReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = HouseModel.objects.all()
     serializer_class = HouseListSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticated]

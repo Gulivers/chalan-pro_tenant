@@ -1,0 +1,15 @@
+{
+  "include": ["app"],
+  "extraPaths": ["app"],
+  "venvPath": ".",
+  "venv": "venv",
+  "pythonVersion": "3.12",
+  "typeCheckingMode": "off",
+  "exclude": [
+    "venv",
+    "**/node_modules",
+    "**/static",
+    "landing",
+    "postgres_data"
+  ]
+}

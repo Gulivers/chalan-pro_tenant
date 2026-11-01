@@ -108,7 +108,7 @@ import { ref } from "vue";
 import { JRPage, JRSection } from "@ui";
 
 const currentLang = ref("en");
-const base = process.env.BASE_URL || "/";
+const base = import.meta.env.BASE_URL || "/";
 const jobrhythmLogoUrl = `${base}img/jobrhythm-logo.png`;
 
 const copy = {

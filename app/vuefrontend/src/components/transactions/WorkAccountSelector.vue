@@ -11,6 +11,7 @@
       showClear
       :disabled="disabled"
       :invalid="hasError"
+      :ariaLabelledby="ariaLabelledby"
       :ariaDescribedby="ariaDescribedby"
       :showAdd="true"
       :showEdit="!!selectedValue"
@@ -76,6 +77,10 @@ const props = defineProps({
   inputId: {
     type: String,
     default: "work-account",
+  },
+  ariaLabelledby: {
+    type: String,
+    default: "",
   },
   ariaDescribedby: {
     type: String,

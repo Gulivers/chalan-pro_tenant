@@ -177,9 +177,9 @@ async function onFileSelect(event) {
     const errList = Array.isArray(data.errors) ? data.errors : [];
     const errHtml =
       errList.length > 0
-        ? `<p class="text-start small mb-1">Row issues (${
+        ? `<p class="mb-1 text-start text-sm">Row issues (${
             errList.length
-          }):</p><ul class="text-start small" style="max-height:220px;overflow:auto">${errList
+          }):</p><ul class="list-disc text-start text-sm" style="max-height:220px;overflow:auto">${errList
             .slice(0, 40)
             .map(
               (e) =>
@@ -190,13 +190,13 @@ async function onFileSelect(event) {
     await Swal.fire({
       icon: errList.length && !data.rows_applied ? "warning" : "success",
       title: "Inventory prices",
-      html: `<p class="mb-1">Rows applied: <strong>${
+      html: `<div class="jr-pilot"><p class="mb-1">Rows applied: <strong>${
         data.rows_applied ?? 0
       }</strong></p>
-        <p class="mb-1 small">Created: ${data.created ?? 0} · Updated: ${
+        <p class="mb-1 text-sm">Created: ${data.created ?? 0} · Updated: ${
         data.updated ?? 0
       } · Default unit changed: ${data.unit_default_updated ?? 0}</p>
-        ${errHtml}`,
+        ${errHtml}</div>`,
       confirmButtonText: "OK",
     });
     if (data.rows_applied > 0) {
