@@ -1,6 +1,12 @@
 <template>
   <component :is="pageWrapper" v-bind="pageWrapperProps">
-    <JRPageHeader v-if="usePageChrome" :title="cleanFormTitle" />
+    <JRPageHeader v-if="usePageChrome" :title="pageHeading">
+      <template v-if="canEditFromView" #actions>
+        <JRButton variant="primary" size="sm" @click="goToEdit">
+          {{ editButtonLabel }}
+        </JRButton>
+      </template>
+    </JRPageHeader>
 
     <div :class="panelClass">
       <p v-if="loadError" class="jr-form-banner" role="alert">{{ loadError }}</p>
@@ -140,6 +146,8 @@ export default {
     isModal: { type: Boolean, default: false },
     /** Skip page chrome when hosted inside modal/drawer. */
     embedded: { type: Boolean, default: false },
+    /** Named route for Edit from view mode (defaults to `<route>-view` → `<route>-edit`). */
+    editRouteName: { type: String, default: null },
   },
   emits: ["saved", "cancel"],
   data() {
@@ -185,6 +193,29 @@ export default {
         .replace(/^Edit\s+/i, "")
         .replace(/^View\s+/i, "")
         .trim();
+    },
+    pageHeading() {
+      return this.formTitle || this.cleanFormTitle;
+    },
+    resolvedEditRoute() {
+      if (this.editRouteName) return this.editRouteName;
+      const name = this.$route?.name;
+      if (typeof name === "string" && name.endsWith("-view")) {
+        return name.replace(/-view$/, "-edit");
+      }
+      return null;
+    },
+    canEditFromView() {
+      return (
+        this.isViewMode &&
+        !!this.objectId &&
+        !!this.resolvedEditRoute &&
+        this.usePageChrome
+      );
+    },
+    editButtonLabel() {
+      const entity = this.cleanFormTitle || "record";
+      return `Edit ${entity}`;
     },
     showPriceTypePricingGuide() {
       return !!(this.internalSchema && this.internalSchema.pricing_method);
@@ -345,6 +376,14 @@ export default {
       }
       this.fieldErrors = next;
       this.formBanner = leftover.filter(Boolean).join(" ");
+    },
+
+    goToEdit() {
+      if (!this.objectId || !this.resolvedEditRoute) return;
+      this.$router.push({
+        name: this.resolvedEditRoute,
+        params: { id: this.objectId },
+      });
     },
 
     async handleSubmit() {

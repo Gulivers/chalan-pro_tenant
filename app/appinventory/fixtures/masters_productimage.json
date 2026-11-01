@@ -14038,5 +14038,41 @@
       "uploaded_by": null,
       "description": "Migrated from Jpg_products_combinado.csv (ENT-MA-075)"
     }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 1171,
+    "fields": {
+      "product": 1174,
+      "image": "products/1174/20261031_221212_145104_Leviton_WR_GFI.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-10-31T22:12:12.018596+00:00",
+      "uploaded_by": null,
+      "description": ""
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 1172,
+    "fields": {
+      "product": 1169,
+      "image": "products/1169/20261101_155942_20261029_002919_QO115PAFGF.jpg",
+      "is_primary": false,
+      "uploaded_at": "2026-11-01T15:59:42.095802+00:00",
+      "uploaded_by": null,
+      "description": ""
+    }
+  },
+  {
+    "model": "appinventory.productimage",
+    "pk": 1173,
+    "fields": {
+      "product": 1175,
+      "image": "products/1175/20261101_210632_Junction__NDR.jpg",
+      "is_primary": true,
+      "uploaded_at": "2026-11-01T21:06:32.451501+00:00",
+      "uploaded_by": null,
+      "description": ""
+    }
   }
 ]

@@ -2,7 +2,7 @@
   <div class="jr-price-unit">
     <div v-if="!hideToolbar" class="jr-price-unit__toolbar">
       <JRButton
-        variant="secondary"
+        variant="primary-outline"
         size="sm"
         :disabled="readonly"
         @click="addRowFromToolbar">
@@ -17,7 +17,7 @@
         description="Add a row to define purchase or sale prices.">
         <JRButton
           v-if="!readonly"
-          variant="secondary"
+          variant="primary-outline"
           size="sm"
           @click="addRowFromToolbar">
           + Add Row
@@ -84,7 +84,7 @@
         description="Add a row to define purchase or sale prices.">
         <JRButton
           v-if="!readonly"
-          variant="secondary"
+          variant="primary-outline"
           size="sm"
           @click="addRowFromToolbar">
           + Add Row

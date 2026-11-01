@@ -3,7 +3,7 @@
     <JRPageHeader v-if="usePageChrome" :title="pageHeading">
       <template v-if="isViewMode && canEditFromView" #actions>
         <JRButton variant="primary" size="sm" @click="goToEdit">
-          Edit Party
+          {{ editButtonLabel }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -398,11 +398,19 @@ export default {
     isDisabled() {
       return this.isViewMode || this.submitting;
     },
+    resolvedEditRoute() {
+      if (this.editRouteName) return this.editRouteName;
+      const name = this.$route?.name;
+      if (typeof name === "string" && name.endsWith("-view")) {
+        return name.replace(/-view$/, "-edit");
+      }
+      return null;
+    },
     canEditFromView() {
       return (
         this.isViewMode &&
         !!this.objectId &&
-        !!this.editRouteName &&
+        !!this.resolvedEditRoute &&
         !this.isModal
       );
     },
@@ -415,6 +423,10 @@ export default {
     },
     pageHeading() {
       return this.formTitle || this.cleanFormTitle;
+    },
+    editButtonLabel() {
+      const entity = this.cleanFormTitle || "record";
+      return `Edit ${entity}`;
     },
     isCustomerRole() {
       return !!this.form?.customer_rank;
@@ -1099,9 +1111,9 @@ export default {
     },
 
     goToEdit() {
-      if (!this.objectId || !this.editRouteName) return;
+      if (!this.objectId || !this.resolvedEditRoute) return;
       this.$router.push({
-        name: this.editRouteName,
+        name: this.resolvedEditRoute,
         params: { id: this.objectId },
       });
     },

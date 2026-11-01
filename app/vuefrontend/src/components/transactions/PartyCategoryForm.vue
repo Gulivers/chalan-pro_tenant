@@ -1,6 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader :title="pageTitle" />
+    <JRPageHeader :title="pageTitle">
+      <template v-if="canEditFromView" #actions>
+        <JRButton variant="primary" size="sm" @click="goToEdit">
+          Edit party category
+        </JRButton>
+      </template>
+    </JRPageHeader>
 
     <div class="jr-party-form">
       <p v-if="loading" class="jr-party-form__status" role="status">
@@ -83,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, getCurrentInstance } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -100,6 +106,7 @@ import {
 
 const route = useRoute();
 const router = useRouter();
+const { proxy } = getCurrentInstance();
 
 const id = route.query.id;
 const isViewMode = computed(() => route.query.mode === "view");
@@ -120,6 +127,12 @@ const pageTitle = computed(() => {
   if (isEditMode.value) return "Edit Party Category";
   return "New Party Category";
 });
+const canEditFromView = computed(
+  () =>
+    isViewMode.value &&
+    !!id &&
+    !!proxy?.hasPermission?.("apptransactions.change_partycategory")
+);
 
 function clearFieldError(key) {
   if (!fieldErrors.value[key]) return;
@@ -130,6 +143,14 @@ function clearFieldError(key) {
 
 function goList() {
   router.push({ name: "party-categories" });
+}
+
+function goToEdit() {
+  if (!id) return;
+  router.push({
+    name: "party-categories-form",
+    query: { id: String(id) },
+  });
 }
 
 async function loadData() {

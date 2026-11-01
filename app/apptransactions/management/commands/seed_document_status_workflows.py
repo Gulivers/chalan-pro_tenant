@@ -4,7 +4,7 @@ Sembrar DocumentStatus workflows por defecto (PO/PK/PR/GRN/…).
 No activa uses_status_tracking. Idempotente: si el tipo ya tiene statuses, no toca.
 
 Ejemplos:
-  python manage.py seed_document_status_workflows --schema jobrhythm_products
+  python manage.py seed_document_status_workflows --schema division16
   python manage.py seed_document_status_workflows
 """
 

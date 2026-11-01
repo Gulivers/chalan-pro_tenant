@@ -1,6 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader :title="pageTitle" />
+    <JRPageHeader :title="pageTitle">
+      <template v-if="canEditFromView" #actions>
+        <JRButton variant="primary" size="sm" @click="goToEdit">
+          Edit warehouse
+        </JRButton>
+      </template>
+    </JRPageHeader>
 
     <div class="jr-warehouse-form">
       <p v-if="loadError" class="jr-form-banner" role="alert">{{ loadError }}</p>
@@ -159,11 +165,23 @@ export default {
       if (this.isEditMode) return "Edit Warehouse";
       return "New Warehouse";
     },
+    canEditFromView() {
+      return (
+        this.isViewMode &&
+        !!this.id &&
+        !!this.hasPermission?.("appinventory.change_warehouse")
+      );
+    },
   },
   mounted() {
     if (this.id) this.loadWarehouse();
   },
   methods: {
+    goToEdit() {
+      if (!this.id) return;
+      this.$router.push({ name: "warehouse-edit", params: { id: this.id } });
+    },
+
     clearFieldError(key) {
       if (!this.fieldErrors[key]) return;
       const next = { ...this.fieldErrors };

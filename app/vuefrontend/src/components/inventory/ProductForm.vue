@@ -237,19 +237,22 @@
       </JRSection>
 
       <JRSection v-if="!productLoading" title="Price and Unit Settings">
-        <template #actions>
+        <div class="jr-product-form__price-toolbar">
           <JRButton
-            v-if="!isReadOnly && productPriceUnits.length"
-            variant="secondary"
+            v-if="!isReadOnly"
+            type="button"
+            variant="primary-outline"
             size="sm"
+            class="jr-product-form__add-price"
+            title="Add a new price and unit row"
             @click="addPriceRow">
             + Add Row
           </JRButton>
-        </template>
-        <p class="jr-product-form__note">
-          Price rows can use a unit other than the warehouse default. Only a
-          sale price can be the default.
-        </p>
+          <p class="jr-product-form__note">
+            Price rows can use a unit other than the warehouse default. Only a
+            sale price can be the default.
+          </p>
+        </div>
         <ProductPriceUnitTable
           ref="productPriceUnitTable"
           v-model="productPriceUnits"
@@ -1348,8 +1351,24 @@ export default {
   outline-offset: 2px;
 }
 
+.jr-product-form__price-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--color-jr-border);
+}
+
+.jr-product-form__add-price {
+  flex: 0 0 auto;
+}
+
 .jr-product-form__note {
-  margin: 0 0 0.75rem;
+  margin: 0;
+  flex: 1 1 12rem;
+  min-width: 0;
   font-size: 0.75rem;
   line-height: 1.4;
   color: var(--color-jr-muted, #4b5563);
