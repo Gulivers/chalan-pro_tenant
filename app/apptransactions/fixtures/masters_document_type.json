@@ -5,19 +5,23 @@
     "fields": {
       "type_code": "PK",
       "description": "Picking Ticket",
-      "affects_physical": false,
-      "affects_logical": true,
+      "affects_physical": true,
+      "affects_logical": false,
       "affects_accounting": false,
       "is_taxable": false,
       "is_purchase": false,
-      "is_sales": true,
+      "is_sales": false,
       "warehouse_required": true,
       "is_operational": true,
+      "prices_required": false,
       "allow_negative_sales": false,
-      "creates_serialized_items": true,
+      "creates_serialized_items": false,
       "stock_movement": -1,
-      "is_active": true,
-      "uses_status_tracking": false
+      "counts_as_net_invoiced_spend": false,
+      "counts_as_job_material_issue": true,
+      "counts_as_purchase_return": false,
+      "uses_status_tracking": true,
+      "is_active": true
     }
   },
   {
@@ -32,13 +36,17 @@
       "is_taxable": false,
       "is_purchase": true,
       "is_sales": false,
-      "warehouse_required": true,
+      "warehouse_required": false,
       "is_operational": false,
+      "prices_required": true,
       "allow_negative_sales": false,
       "creates_serialized_items": false,
       "stock_movement": 0,
-      "is_active": true,
-      "uses_status_tracking": false
+      "counts_as_net_invoiced_spend": false,
+      "counts_as_job_material_issue": false,
+      "counts_as_purchase_return": false,
+      "uses_status_tracking": true,
+      "is_active": true
     }
   },
   {
@@ -55,11 +63,15 @@
       "is_sales": false,
       "warehouse_required": false,
       "is_operational": false,
+      "prices_required": true,
       "allow_negative_sales": false,
       "creates_serialized_items": false,
       "stock_movement": 0,
-      "is_active": true,
-      "uses_status_tracking": false
+      "counts_as_net_invoiced_spend": true,
+      "counts_as_job_material_issue": false,
+      "counts_as_purchase_return": false,
+      "uses_status_tracking": true,
+      "is_active": true
     }
   },
   {
@@ -76,11 +88,15 @@
       "is_sales": true,
       "warehouse_required": false,
       "is_operational": false,
+      "prices_required": true,
       "allow_negative_sales": false,
       "creates_serialized_items": false,
       "stock_movement": 0,
-      "is_active": true,
-      "uses_status_tracking": false
+      "counts_as_net_invoiced_spend": false,
+      "counts_as_job_material_issue": false,
+      "counts_as_purchase_return": false,
+      "uses_status_tracking": false,
+      "is_active": true
     }
   },
   {
@@ -95,13 +111,17 @@
       "is_taxable": false,
       "is_purchase": false,
       "is_sales": true,
-      "warehouse_required": true,
+      "warehouse_required": false,
       "is_operational": false,
+      "prices_required": true,
       "allow_negative_sales": false,
       "creates_serialized_items": false,
       "stock_movement": 0,
-      "is_active": true,
-      "uses_status_tracking": false
+      "counts_as_net_invoiced_spend": false,
+      "counts_as_job_material_issue": false,
+      "counts_as_purchase_return": false,
+      "uses_status_tracking": true,
+      "is_active": true
     }
   },
   {
@@ -110,19 +130,23 @@
     "fields": {
       "type_code": "DN",
       "description": "Delivery Note / Shipment",
-      "affects_physical": true,
-      "affects_logical": true,
+      "affects_physical": false,
+      "affects_logical": false,
       "affects_accounting": false,
       "is_taxable": false,
       "is_purchase": false,
-      "is_sales": true,
+      "is_sales": false,
       "warehouse_required": true,
-      "is_operational": false,
+      "is_operational": true,
+      "prices_required": false,
       "allow_negative_sales": false,
       "creates_serialized_items": false,
-      "stock_movement": -1,
-      "is_active": true,
-      "uses_status_tracking": false
+      "stock_movement": 0,
+      "counts_as_net_invoiced_spend": false,
+      "counts_as_job_material_issue": false,
+      "counts_as_purchase_return": false,
+      "uses_status_tracking": true,
+      "is_active": true
     }
   },
   {
@@ -139,11 +163,15 @@
       "is_sales": true,
       "warehouse_required": false,
       "is_operational": false,
+      "prices_required": true,
       "allow_negative_sales": false,
       "creates_serialized_items": false,
       "stock_movement": 0,
-      "is_active": true,
-      "uses_status_tracking": false
+      "counts_as_net_invoiced_spend": false,
+      "counts_as_job_material_issue": false,
+      "counts_as_purchase_return": false,
+      "uses_status_tracking": true,
+      "is_active": true
     }
   },
   {
@@ -152,19 +180,23 @@
     "fields": {
       "type_code": "CRN",
       "description": "Sales Credit Note / Return",
-      "affects_physical": true,
-      "affects_logical": true,
+      "affects_physical": false,
+      "affects_logical": false,
       "affects_accounting": true,
       "is_taxable": true,
       "is_purchase": false,
       "is_sales": true,
-      "warehouse_required": true,
+      "warehouse_required": false,
       "is_operational": false,
+      "prices_required": true,
       "allow_negative_sales": false,
       "creates_serialized_items": false,
-      "stock_movement": 1,
-      "is_active": true,
-      "uses_status_tracking": false
+      "stock_movement": 0,
+      "counts_as_net_invoiced_spend": false,
+      "counts_as_job_material_issue": false,
+      "counts_as_purchase_return": false,
+      "uses_status_tracking": true,
+      "is_active": true
     }
   },
   {
@@ -181,11 +213,15 @@
       "is_sales": false,
       "warehouse_required": false,
       "is_operational": false,
+      "prices_required": false,
       "allow_negative_sales": false,
       "creates_serialized_items": false,
       "stock_movement": 0,
-      "is_active": true,
-      "uses_status_tracking": false
+      "counts_as_net_invoiced_spend": false,
+      "counts_as_job_material_issue": false,
+      "counts_as_purchase_return": false,
+      "uses_status_tracking": true,
+      "is_active": true
     }
   },
   {
@@ -195,18 +231,22 @@
       "type_code": "GRN",
       "description": "Goods Receipt Note",
       "affects_physical": true,
-      "affects_logical": true,
+      "affects_logical": false,
       "affects_accounting": false,
       "is_taxable": false,
       "is_purchase": true,
       "is_sales": false,
       "warehouse_required": true,
-      "is_operational": false,
+      "is_operational": true,
+      "prices_required": false,
       "allow_negative_sales": false,
       "creates_serialized_items": true,
-      "stock_movement": 0,
-      "is_active": true,
-      "uses_status_tracking": false
+      "stock_movement": 1,
+      "counts_as_net_invoiced_spend": false,
+      "counts_as_job_material_issue": false,
+      "counts_as_purchase_return": false,
+      "uses_status_tracking": true,
+      "is_active": true
     }
   },
   {
@@ -216,18 +256,646 @@
       "type_code": "PRN",
       "description": "Purchase Return",
       "affects_physical": true,
-      "affects_logical": true,
+      "affects_logical": false,
       "affects_accounting": false,
       "is_taxable": false,
       "is_purchase": true,
       "is_sales": false,
       "warehouse_required": true,
-      "is_operational": false,
+      "is_operational": true,
+      "prices_required": false,
       "allow_negative_sales": false,
       "creates_serialized_items": false,
       "stock_movement": -1,
-      "is_active": true,
-      "uses_status_tracking": false
+      "counts_as_net_invoiced_spend": false,
+      "counts_as_job_material_issue": false,
+      "counts_as_purchase_return": true,
+      "uses_status_tracking": true,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 11,
+    "fields": {
+      "document_type": 1,
+      "code": "requested",
+      "name": "Requested",
+      "sequence": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 12,
+    "fields": {
+      "document_type": 1,
+      "code": "approved",
+      "name": "Approved",
+      "sequence": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 13,
+    "fields": {
+      "document_type": 1,
+      "code": "preparing",
+      "name": "Preparing",
+      "sequence": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 14,
+    "fields": {
+      "document_type": 1,
+      "code": "picked",
+      "name": "Picked",
+      "sequence": 4,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 15,
+    "fields": {
+      "document_type": 1,
+      "code": "closed",
+      "name": "Closed",
+      "sequence": 5,
+      "is_initial": false,
+      "is_terminal": true,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 6,
+    "fields": {
+      "document_type": 2,
+      "code": "draft",
+      "name": "Draft",
+      "sequence": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 7,
+    "fields": {
+      "document_type": 2,
+      "code": "submitted",
+      "name": "Submitted",
+      "sequence": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 8,
+    "fields": {
+      "document_type": 2,
+      "code": "approved",
+      "name": "Approved",
+      "sequence": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 9,
+    "fields": {
+      "document_type": 2,
+      "code": "ordered",
+      "name": "Ordered",
+      "sequence": 4,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 10,
+    "fields": {
+      "document_type": 2,
+      "code": "closed",
+      "name": "Closed",
+      "sequence": 5,
+      "is_initial": false,
+      "is_terminal": true,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 20,
+    "fields": {
+      "document_type": 3,
+      "code": "step1",
+      "name": "Draft",
+      "sequence": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 22,
+    "fields": {
+      "document_type": 3,
+      "code": "step2",
+      "name": "Submitted",
+      "sequence": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 23,
+    "fields": {
+      "document_type": 3,
+      "code": "posted",
+      "name": "Posted",
+      "sequence": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 42,
+    "fields": {
+      "document_type": 3,
+      "code": "closed",
+      "name": "Closed",
+      "sequence": 4,
+      "is_initial": false,
+      "is_terminal": true,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 47,
+    "fields": {
+      "document_type": 4,
+      "code": "draft",
+      "name": "Draft",
+      "sequence": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 48,
+    "fields": {
+      "document_type": 4,
+      "code": "sent",
+      "name": "Sent",
+      "sequence": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 49,
+    "fields": {
+      "document_type": 4,
+      "code": "accepted",
+      "name": "Accepted",
+      "sequence": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 50,
+    "fields": {
+      "document_type": 4,
+      "code": "closed",
+      "name": "Closed",
+      "sequence": 4,
+      "is_initial": false,
+      "is_terminal": true,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 43,
+    "fields": {
+      "document_type": 5,
+      "code": "draft",
+      "name": "Draft",
+      "sequence": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 44,
+    "fields": {
+      "document_type": 5,
+      "code": "confirmed",
+      "name": "Confirmed",
+      "sequence": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 45,
+    "fields": {
+      "document_type": 5,
+      "code": "allocated",
+      "name": "Allocated",
+      "sequence": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 46,
+    "fields": {
+      "document_type": 5,
+      "code": "closed",
+      "name": "Closed",
+      "sequence": 4,
+      "is_initial": false,
+      "is_terminal": true,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 33,
+    "fields": {
+      "document_type": 7,
+      "code": "draft",
+      "name": "Draft",
+      "sequence": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 34,
+    "fields": {
+      "document_type": 7,
+      "code": "packed",
+      "name": "Packed",
+      "sequence": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 35,
+    "fields": {
+      "document_type": 7,
+      "code": "shipped",
+      "name": "Shipped",
+      "sequence": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 36,
+    "fields": {
+      "document_type": 7,
+      "code": "delivered",
+      "name": "Delivered",
+      "sequence": 4,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 37,
+    "fields": {
+      "document_type": 7,
+      "code": "closed",
+      "name": "Closed",
+      "sequence": 5,
+      "is_initial": false,
+      "is_terminal": true,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 38,
+    "fields": {
+      "document_type": 8,
+      "code": "draft",
+      "name": "Draft",
+      "sequence": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 39,
+    "fields": {
+      "document_type": 8,
+      "code": "submitted",
+      "name": "Submitted",
+      "sequence": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 40,
+    "fields": {
+      "document_type": 8,
+      "code": "posted",
+      "name": "Posted",
+      "sequence": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 41,
+    "fields": {
+      "document_type": 8,
+      "code": "closed",
+      "name": "Closed",
+      "sequence": 4,
+      "is_initial": false,
+      "is_terminal": true,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 29,
+    "fields": {
+      "document_type": 9,
+      "code": "draft",
+      "name": "Draft",
+      "sequence": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 30,
+    "fields": {
+      "document_type": 9,
+      "code": "approved",
+      "name": "Approved",
+      "sequence": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 31,
+    "fields": {
+      "document_type": 9,
+      "code": "posted",
+      "name": "Posted",
+      "sequence": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 32,
+    "fields": {
+      "document_type": 9,
+      "code": "closed",
+      "name": "Closed",
+      "sequence": 4,
+      "is_initial": false,
+      "is_terminal": true,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 16,
+    "fields": {
+      "document_type": 10,
+      "code": "requested",
+      "name": "Requested",
+      "sequence": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 17,
+    "fields": {
+      "document_type": 10,
+      "code": "approved",
+      "name": "Approved",
+      "sequence": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 18,
+    "fields": {
+      "document_type": 10,
+      "code": "ordered",
+      "name": "Ordered",
+      "sequence": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 19,
+    "fields": {
+      "document_type": 10,
+      "code": "closed",
+      "name": "Closed",
+      "sequence": 4,
+      "is_initial": false,
+      "is_terminal": true,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 24,
+    "fields": {
+      "document_type": 11,
+      "code": "draft",
+      "name": "Draft",
+      "sequence": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 25,
+    "fields": {
+      "document_type": 11,
+      "code": "received",
+      "name": "Received",
+      "sequence": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 26,
+    "fields": {
+      "document_type": 11,
+      "code": "inspected",
+      "name": "Inspected",
+      "sequence": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 27,
+    "fields": {
+      "document_type": 11,
+      "code": "posted",
+      "name": "Posted",
+      "sequence": 4,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": false
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 28,
+    "fields": {
+      "document_type": 11,
+      "code": "closed",
+      "name": "Closed",
+      "sequence": 5,
+      "is_initial": false,
+      "is_terminal": true,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 51,
+    "fields": {
+      "document_type": 12,
+      "code": "draft",
+      "name": "Draft",
+      "sequence": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 52,
+    "fields": {
+      "document_type": 12,
+      "code": "approved",
+      "name": "Approved",
+      "sequence": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 53,
+    "fields": {
+      "document_type": 12,
+      "code": "returned",
+      "name": "Returned",
+      "sequence": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "is_active": true
+    }
+  },
+  {
+    "model": "apptransactions.documentstatus",
+    "pk": 54,
+    "fields": {
+      "document_type": 12,
+      "code": "closed",
+      "name": "Closed",
+      "sequence": 4,
+      "is_initial": false,
+      "is_terminal": true,
+      "is_active": true
     }
   }
 ]

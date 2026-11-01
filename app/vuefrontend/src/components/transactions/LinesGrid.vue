@@ -2145,14 +2145,27 @@ defineExpose({
 }
 
 .jr-lines__toolbar {
+  position: sticky;
+  /* Mobile shell bar is fixed; stick just below it. */
+  top: var(--jr-shell-mobile-bar, 3rem);
+  z-index: 5;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.65rem;
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0 0.65rem;
+  background: var(--color-jr-page, #f3f4f6);
   border-bottom: 1px solid var(--color-jr-border);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-jr-text) 6%, transparent);
+}
+
+@media (min-width: 1024px) {
+  .jr-lines__toolbar {
+    /* Desktop topbar is sticky in-flow; offset by its height. */
+    top: var(--jr-shell-topbar, 3.5rem);
+  }
 }
 
 .jr-lines__toolbar-actions {

@@ -1522,7 +1522,7 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 
 - `InventoryMasterDataPreviewAPIView` (GET `/api/master-data/preview/`): Verifica el estado de `seed_inventory_done` y devuelve información sobre si los datos ya fueron importados.
 - `InventoryMasterDataExcelDownloadAPIView` (GET `/api/master-data/excel/`): Sirve el archivo Excel pre-generado desde `appinventory/static/appinventory/masters_inventory.xlsx`.
-- `InventoryMasterDataImportAPIView` (POST `/api/master-data/import/`): Copia el repo de imágenes (`fixtures/media/products/`) a `MEDIA_ROOT/products/` (preserva subcarpetas), carga `masters_inventory.json` **sin** entradas ProductImage, luego `appschedule/fixtures/masters_absence_reason.json` (fixture aparte, como DocumentType), luego inyecta `masters_productimage.json` (ProductImage con FK a `product`). Si no existe ese fixture de imágenes, crea ProductImage desde `MEDIA_ROOT/products/`. Resetea secuencias (incl. `appinventory_productimage` y `appschedule_absencereason`) y marca `seed_inventory_done=True`. Fuente canónica: tenant **jobrhythm_products** (`tenant_id=jobrhythm_products_001`).
+- `InventoryMasterDataImportAPIView` (POST `/api/master-data/import/`): Copia el repo de imágenes (`fixtures/media/products/`) a `MEDIA_ROOT/products/` (preserva subcarpetas), carga `masters_inventory.json` **sin** entradas ProductImage, luego `appschedule/fixtures/masters_absence_reason.json` (fixture aparte, como DocumentType), luego inyecta `masters_productimage.json` (ProductImage con FK a `product`). Si no existe ese fixture de imágenes, crea ProductImage desde `MEDIA_ROOT/products/`. Resetea secuencias (incl. `appinventory_productimage` y `appschedule_absencereason`) y marca `seed_inventory_done=True`. Fuente canónica: tenant **division16** (`tenant_id=division16_llc_001`).
 
 **Management Command (`appinventory/management/commands/generate_masters_inventory_excel.py`):**
 
@@ -1534,24 +1534,30 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 
 - Archivo JSON con todos los datos maestros de inventario.
 - Incluye: UnitCategory, UnitOfMeasure, Warehouse, ProductCategory, ProductBrand, PriceType, Product, ProductPrice. **Product debe incluir el campo FK `brand`** (ej. `"brand": 1`). Si falta, el backend **inyecta en memoria** el primer ProductBrand del fixture. Ya no existe el modelo intermedio `ProductBrandAssignment`. En la importación se omiten las entradas ProductImage del maestro (van en `masters_productimage.json`).
-- **Fuente canónica:** regenerar desde schema **`jobrhythm_products`** (`tenant_id=jobrhythm_products_001`).
+- **Fuente canónica:** regenerar desde schema **`division16`** (`tenant_id=division16_llc_001`).
 - **Warehouse con `truck_id`:** En la importación se anula `truck` para evitar la FK `crewsapp_truck` (no existe en el tenant destino). Los warehouses móviles quedan como almacenes normales.
 
 **Fixture de Absence Reasons (`appschedule/fixtures/masters_absence_reason.json`):**
 
 - Fixture **aparte** (mismo patrón que `masters_document_type.json`). Se carga en Inventory Master Data Setup junto con el inventario.
-- Se regenera con `generate_masters_inventory_fixture` desde `jobrhythm_products`.
+- Se regenera con `generate_masters_inventory_fixture` desde `division16`.
+
+**Fixture de Document Types + Statuses (`apptransactions/fixtures/masters_document_type.json`):**
+
+- Contiene `DocumentType` + `DocumentStatus` desde `division16` (**sin MR**; MR lo siembra la migración 0008).
+- Se regenera con: `python manage.py generate_masters_document_type_fixture` (default schema `division16`).
+- Lo cargan `create_tenant` / onboarding; `seed_default_document_statuses()` no sobrescribe si ya hay statuses.
 
 **Fixture de imágenes de productos (`appinventory/fixtures/masters_productimage.json`):**
 
 - Se carga **después** de `masters_inventory.json`. Contiene solo ProductImage con FK a **`product`** (sin `assignment`).
-- Se genera con: `python manage.py generate_masters_productimage_fixture` (default schema `jobrhythm_products`).
+- Se genera con: `python manage.py generate_masters_productimage_fixture` (default schema `division16`).
 
 **Repo de imágenes a importar (`appinventory/fixtures/media/products/`):**
 
 - Copia de los archivos referenciados por `ProductImage.image` (ruta relativa preservada, p. ej. `{product_id}/{brand_id}/*.jpg`).
 - Se copia a `MEDIA_ROOT/products/` **antes** del loaddata de `masters_productimage.json`.
-- Se actualiza desde el tenant **jobrhythm-products** (`schema jobrhythm_products`) con: `python manage.py export_fixture_product_images` (o como parte de `generate_masters_inventory_fixture`).
+- Se actualiza desde el tenant **Division16 LLC** (`schema division16`) con: `python manage.py export_fixture_product_images` (o como parte de `generate_masters_inventory_fixture`).
 - Cada tenant que hace Inventory Master Data Setup recibe productos e imágenes desde ese repo + fixtures.
 
 **Dónde se guardan las imágenes de productos (ubicación en runtime):**
@@ -1624,7 +1630,7 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 
 ### 9.4 Comandos de Gestión
 
-**Regenerar fixtures maestros desde jobrhythm_products (recomendado):**
+**Regenerar fixtures maestros desde division16 (recomendado):**
 
 ```bash
 # Local (ubuntu-house): genera masters_inventory.json + exporta media +
@@ -1633,11 +1639,11 @@ docker compose -f docker-compose.dev.yml exec backend python manage.py generate_
 
 # Equivalente explícito:
 docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_inventory_fixture \
-  --schema jobrhythm_products
+  --schema division16
 
 # Solo JSON de inventario (sin imágenes ni Excel):
 docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_inventory_fixture \
-  --schema jobrhythm_products --skip-images --skip-excel
+  --schema division16 --skip-images --skip-excel
 ```
 
 **Pasos individuales (si hace falta):**
@@ -1645,11 +1651,11 @@ docker compose -f docker-compose.dev.yml exec backend python manage.py generate_
 ```bash
 # Repo de imágenes → fixtures/media/ (preserva ruta relativa del ImageField)
 docker compose -f docker-compose.dev.yml exec backend python manage.py export_fixture_product_images \
-  --schema jobrhythm_products
+  --schema division16
 
 # masters_productimage.json (FK product)
 docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_productimage_fixture \
-  --schema jobrhythm_products
+  --schema division16
 
 # Excel de revisión offline
 docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_inventory_excel
@@ -1696,20 +1702,19 @@ El campo incluye **tooltip** (`v-tt` + `data-title`) según las guías del proye
    docker compose exec backend python manage.py migrate_schemas
    ```
 
-2. **Regenerar el fixture maestro de inventario** (si también se actualizan datos maestros de inventario; fuente `jobrhythm_products`):
+2. **Regenerar el fixture maestro de inventario** (si también se actualizan datos maestros de inventario; fuente `division16`):
 
    ```bash
    docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_inventory_fixture \
-     --schema jobrhythm_products
+     --schema division16
    ```
 
-3. **Regenerar el fixture maestro de tipos de documento** (para que los nuevos tenants reciban los tipos actualizados con `creates_serialized_items`):
+3. **Regenerar el fixture maestro de tipos de documento + Document Statuses** (onboarding / `create_tenant`; **sin MR**, que lo siembra la migración):
    ```bash
-   docker compose exec backend python manage.py tenant_command dumpdata \
-     --schema jobrhythm_products \
-     apptransactions.DocumentType \
-     --indent 2 \
-     --output /app/apptransactions/fixtures/masters_document_type.json
+   docker compose -f docker-compose.dev.yml exec backend \
+     python manage.py generate_masters_document_type_fixture --schema division16
+   # → app/apptransactions/fixtures/masters_document_type.json
+   #    (DocumentType + DocumentStatus; excluye MR)
    ```
 
 #### 9.4.2 JobRhythm Assistant: intenciones analíticas en DocumentType
@@ -1775,7 +1780,7 @@ Cada tipo maestro puede tener un workflow lineal de `DocumentStatus` (`sequence`
 ```bash
 # Un schema
 docker compose -f docker-compose.dev.yml exec backend \
-  python manage.py seed_document_status_workflows --schema jobrhythm_products
+  python manage.py seed_document_status_workflows --schema division16
 
 # Todos los tenants no-public
 docker compose -f docker-compose.dev.yml exec backend \
@@ -1788,23 +1793,30 @@ docker compose -f docker-compose.dev.yml exec backend \
 
 ### 9.5 Generar el Fixture JSON de Datos Maestros
 
-**Importante:** Fuente canónica = tenant **Jobrhythm Products** (`schema_name=jobrhythm_products`, `tenant_id=jobrhythm_products_001`). Desde ahí se regeneran `masters_inventory.json`, `masters_productimage.json`, el repo `fixtures/media/products/` y el Excel. Los nuevos tenants importan esos masters vía `/inventory-master-data-setup`.
+**Importante:** Fuente canónica = tenant **Division16 LLC** (`schema_name=division16`, `tenant_id=division16_llc_001`). Desde ahí se regeneran `masters_inventory.json`, `masters_productimage.json`, el repo `fixtures/media/products/`, el Excel y `masters_document_type.json` (DocumentType + DocumentStatus; sin MR). Los nuevos tenants importan esos masters vía `/inventory-master-data-setup`.
 
 **Comando único (recomendado):**
 
 ```bash
 docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_inventory_fixture \
-  --schema jobrhythm_products
+  --schema division16
 ```
 
 Eso genera, en orden: `masters_inventory.json` → `masters_absence_reason.json` → export de imágenes → `masters_productimage.json` → `masters_inventory.xlsx`.
+
+**Tipos de documento + statuses (onboarding):**
+
+```bash
+docker compose -f docker-compose.dev.yml exec backend \
+  python manage.py generate_masters_document_type_fixture --schema division16
+```
 
 **Alternativa manual con `dumpdata`:**
 
 ```bash
 # Nota: Warehouse con truck_id se anula en la importación (evita FK crewsapp_truck)
 docker compose -f docker-compose.dev.yml exec backend python manage.py tenant_command dumpdata \
-  --schema jobrhythm_products \
+  --schema division16 \
   appinventory.UnitCategory \
   appinventory.UnitOfMeasure \
   appinventory.Warehouse \
@@ -1817,20 +1829,20 @@ docker compose -f docker-compose.dev.yml exec backend python manage.py tenant_co
   --output /app/appinventory/fixtures/masters_inventory.json
 
 docker compose -f docker-compose.dev.yml exec backend python manage.py export_fixture_product_images \
-  --schema jobrhythm_products
+  --schema division16
 docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_productimage_fixture \
-  --schema jobrhythm_products
+  --schema division16
 docker compose -f docker-compose.dev.yml exec backend python manage.py generate_masters_inventory_excel
 ```
 
 **Nota:** Cada Product debe llevar FK **`brand`** (ej. `"brand": 60`). Las imágenes van en `masters_productimage.json` con FK a **`product`** (sin `ProductBrandAssignment`). Tras regenerar, los nuevos tenants pueden importar desde Configuration → Inventory Master Data Setup.
 
--- Productos sin ninguna imagen (schema jobrhythm_products)
+-- Productos sin ninguna imagen (schema division16)
 SELECT p.id AS product_id,
 p.sku AS codigo,
 p.name AS nombre
-FROM jobrhythm_products.appinventory_product p
-LEFT JOIN jobrhythm_products.appinventory_productimage pi ON pi.product_id = p.id
+FROM division16.appinventory_product p
+LEFT JOIN division16.appinventory_productimage pi ON pi.product_id = p.id
 WHERE pi.id IS NULL
 AND p.is_active = true
 ORDER BY p.sku;
@@ -1840,9 +1852,9 @@ SELECT p.id AS product_id,
 p.sku AS codigo,
 p.name AS nombre,
 b.name AS marca
-FROM jobrhythm_products.appinventory_product p
-LEFT JOIN jobrhythm_products.appinventory_productbrand b ON b.id = p.brand_id
-LEFT JOIN jobrhythm_products.appinventory_productimage pi ON pi.product_id = p.id
+FROM division16.appinventory_product p
+LEFT JOIN division16.appinventory_productbrand b ON b.id = p.brand_id
+LEFT JOIN division16.appinventory_productimage pi ON pi.product_id = p.id
 WHERE pi.id IS NULL
 AND p.is_active = true
 ORDER BY p.sku;

@@ -4,7 +4,7 @@
       <div class="jr-transfer-lines__toolbar-actions">
         <JRButton
           type="button"
-          variant="secondary"
+          variant="primary-outline"
           size="sm"
           :disabled="isReadOnly"
           @click="addLine">
@@ -30,7 +30,7 @@
         <JRButton
           v-if="!isReadOnly"
           type="button"
-          variant="secondary"
+          variant="primary-outline"
           size="sm"
           @click="addLine">
           + Add Row

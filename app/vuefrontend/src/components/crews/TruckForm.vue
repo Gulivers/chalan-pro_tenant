@@ -1,6 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader :title="pageTitle" />
+    <JRPageHeader :title="pageTitle">
+      <template v-if="canEditFromView" #actions>
+        <JRButton variant="primary" size="sm" @click="goToEdit">
+          Edit truck
+        </JRButton>
+      </template>
+    </JRPageHeader>
 
     <div class="jr-truck-form">
       <p v-if="loading" class="jr-truck-form__status" role="status">
@@ -142,6 +148,12 @@ const pageTitle = computed(() => {
   if (isEditMode.value) return "Edit Truck";
   return "Add Truck";
 });
+const canEditFromView = computed(
+  () =>
+    isViewMode.value &&
+    !!id &&
+    !!proxy?.hasPermission?.("crewsapp.change_truck")
+);
 
 function clearFieldError(key) {
   if (!fieldErrors.value[key]) return;
@@ -152,6 +164,11 @@ function clearFieldError(key) {
 
 function goList() {
   router.push({ name: "crew-trucks" });
+}
+
+function goToEdit() {
+  if (!id) return;
+  router.push({ name: "crew-truck-edit", params: { id } });
 }
 
 async function loadData() {

@@ -1,6 +1,12 @@
 <template>
   <JRPage :class="{ 'jr-doctype-form--modal': isModal }">
-    <JRPageHeader v-if="!isModal" :title="pageTitle" />
+    <JRPageHeader v-if="!isModal" :title="pageTitle">
+      <template v-if="canEditFromView" #actions>
+        <JRButton variant="primary" size="sm" @click="goToEdit">
+          Edit document type
+        </JRButton>
+      </template>
+    </JRPageHeader>
 
     <div class="jr-doctype-form">
       <p v-if="loading" class="jr-doctype-form__status" role="status">
@@ -352,6 +358,15 @@ const isDisabled = computed(
   () => isViewMode.value || submitting.value || isProtectedType.value
 );
 
+const canEditFromView = computed(
+  () =>
+    !props.isModal &&
+    isViewMode.value &&
+    !!id.value &&
+    !isProtectedType.value &&
+    !!proxy?.hasPermission?.("apptransactions.change_documenttype")
+);
+
 const pageTitle = computed(() => {
   if (isViewMode.value) return "View Document Type";
   if (isEditMode.value) return "Edit Document Type";
@@ -454,6 +469,14 @@ function applyIntentionSuggestions() {
 function goList() {
   router.push({ name: "document-types" }).catch(() => {
     router.push("/document-types");
+  });
+}
+
+function goToEdit() {
+  if (!id.value) return;
+  router.push({
+    name: "document-types-form",
+    query: { id: String(id.value) },
   });
 }
 

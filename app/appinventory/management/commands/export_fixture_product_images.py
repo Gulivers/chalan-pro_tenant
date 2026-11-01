@@ -4,7 +4,7 @@ Exporta imágenes de productos desde MEDIA_ROOT hacia
 appinventory/fixtures/media/ preservando la ruta relativa del ImageField
 (p. ej. products/{product_id}/{brand_id}/{file}.jpg) para Inventory Master Data Setup.
 
-Fuente canónica actual: tenant jobrhythm_products (tenant_id=jobrhythm_products_001).
+Fuente canónica actual: tenant division16 (tenant_id=division16_llc_001).
 """
 import os
 import shutil
@@ -14,7 +14,7 @@ from django_tenants.utils import schema_context
 
 from appinventory.models import ProductImage
 
-DEFAULT_SCHEMA = 'jobrhythm_products'
+DEFAULT_SCHEMA = 'division16'
 
 
 class Command(BaseCommand):

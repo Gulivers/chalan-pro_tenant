@@ -3,6 +3,14 @@
     <JRPageHeader :title="formTitle">
       <template #actions>
         <JRButton
+          v-if="canEditFromView"
+          type="button"
+          variant="primary"
+          size="sm"
+          @click="goToEdit">
+          Edit transfer
+        </JRButton>
+        <JRButton
           type="button"
           variant="secondary"
           size="sm"
@@ -252,6 +260,13 @@ const formTitle = computed(() => {
   if (isEditMode.value) return "Edit Inventory Transfer";
   return "New Inventory Transfer";
 });
+const canEditFromView = computed(
+  () =>
+    isViewMode.value &&
+    !isReverted.value &&
+    !!id &&
+    !!proxy?.hasPermission?.("appinventory.change_inventorytransfer")
+);
 
 function formatDateTime(val) {
   if (!val) return "—";
@@ -271,6 +286,11 @@ function clearFieldError(key) {
 function focusBanner() {
   if (!formBannerEl.value) return;
   formBannerEl.value.focus?.();
+}
+
+function goToEdit() {
+  if (!id) return;
+  router.push({ name: "inventory-transfer-edit", params: { id } });
 }
 
 function goBack() {
