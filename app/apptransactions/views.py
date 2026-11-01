@@ -17,6 +17,7 @@ from django.template.loader import render_to_string
 from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 from utils.tenant_branding import get_tenant_logo_url
+from .material_request_api import _line_product_image_pdf_uri
 from .models import (
     DocumentType, PartyType, PartyCategory, Party, Document, DocumentLine,
     PriceType, WorkAccount, TransactionFavorite
@@ -250,7 +251,12 @@ class DocumentViewSet(DocumentStatusActionsMixin, viewsets.ModelViewSet):
         Document.objects
         .select_related("document_type", "builder", "created_by", "work_account")
         .prefetch_related(
-            Prefetch("lines", queryset=DocumentLine.objects.select_related("product", "unit", "price_type", "brand"))
+            Prefetch(
+                "lines",
+                queryset=DocumentLine.objects.select_related(
+                    "product", "product__brand", "unit", "price_type", "brand"
+                ).prefetch_related("product__images"),
+            )
         )
         .order_by("-id")
     )
@@ -634,23 +640,42 @@ def download_transaction_pdf(request, document_id):
                 Prefetch(
                     'lines',
                     queryset=DocumentLine.objects.select_related(
-                        'product', 
-                        'unit', 
-                        'price_type', 
+                        'product',
+                        'product__brand',
+                        'unit',
+                        'price_type',
                         'brand',
-                        'warehouse'
-                    ).prefetch_related('serialized_items_created')
+                        'warehouse',
+                    ).prefetch_related(
+                        'serialized_items_created',
+                        'product__images',
+                    )
                 )
             ),
             id=document_id
         )
 
         logo_url = get_tenant_logo_url(request)
+        show_product_images = bool(
+            getattr(document.document_type, 'is_sales', False)
+        )
+        line_rows = []
+        for line in document.lines.all():
+            line_rows.append({
+                'line': line,
+                'image_url': (
+                    _line_product_image_pdf_uri(line, request)
+                    if show_product_images
+                    else None
+                ),
+            })
 
         # Preparar el contexto para el template
         context = {
             'document': document,
             'logo_url': logo_url,
+            'show_product_images': show_product_images,
+            'line_rows': line_rows,
         }
 
         # Configurar fuentes

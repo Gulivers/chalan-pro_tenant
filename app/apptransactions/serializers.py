@@ -249,6 +249,33 @@ class PartySerializer(serializers.ModelSerializer):
             instance.types.set(types)
         return instance
 
+def _plain_error_detail(value):
+    """Convierte ErrorDetail / listas anidadas a tipos JSON-friendly."""
+    if isinstance(value, dict):
+        return {k: _plain_error_detail(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_plain_error_detail(v) for v in value]
+    # ErrorDetail y similares se comportan como str
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
+
+
+def _insufficient_stock_payload(product_name, available, requested_ref, document_type_code):
+    return {
+        "error_type": "insufficient_stock",
+        "product_name": product_name,
+        "available": str(available),
+        "requested": str(requested_ref),
+        "document_type": document_type_code,
+        "message": (
+            f"{product_name}: insufficient stock. "
+            f"Available: {available}, requested: {requested_ref}. "
+            f"Document type '{document_type_code}' does not allow negative sales."
+        ),
+    }
+
+
 # ---- Aux: validación de disponibilidad (solo para salidas) ------------------
 def _validate_stock_out(line: "DocumentLine"):
     doc = line.document
@@ -285,16 +312,12 @@ def _validate_stock_out(line: "DocumentLine"):
         if doc.document_type.allow_negative_sales:
             return  # Permitir la transacción
             
-        # Si no permite ventas negativas, rechazar la transacción
+        product_name = getattr(line.product, "name", None) or "Unknown product"
+        type_code = doc.document_type.type_code
         raise serializers.ValidationError({
-            "quantity": {
-                "error_type": "insufficient_stock",
-                "product_name": line.product.name,
-                "available": str(available),
-                "requested": str(requested_ref),
-                "document_type": doc.document_type.type_code,
-                "message": f"{line.product.name}: Stock insuficiente. Disponible: {available}, solicitado(ref): {requested_ref}. El tipo de documento '{doc.document_type.type_code}' no permite ventas sin stock."
-            }
+            "quantity": _insufficient_stock_payload(
+                product_name, available, requested_ref, type_code
+            )
         })
 
 # DocumentLine
@@ -302,17 +325,25 @@ class DocumentLineSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source="product.name", read_only=True)
     unit_code = serializers.CharField(source="unit.code", read_only=True)
     warehouse_name = serializers.CharField(source="warehouse.name", read_only=True)
+    product_image = serializers.SerializerMethodField()
 
     class Meta:
         model = DocumentLine
         fields = [
-            "id", "document", "product", "product_name",
+            "id", "document", "product", "product_name", "product_image",
             "quantity", "unit", "unit_code",
             "unit_price", "discount_percentage", "final_price",
             "warehouse", "warehouse_name", "price_type", "brand",
             "pricing_rule", "margin_percent",
         ]
-        read_only_fields = ["final_price"]
+        read_only_fields = ["final_price", "product_image"]
+
+    def get_product_image(self, obj):
+        from appinventory.serializers import ProductListSerializer
+        product = getattr(obj, "product", None)
+        if not product:
+            return None
+        return ProductListSerializer(context=self.context).get_image(product)
 
     def validate(self, attrs):
         # quantity > 0 y product obligatorio ya se valida en clean(), pero reforzamos acá para 400 consistente
@@ -360,6 +391,7 @@ class DocumentLineInlineSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     unit_code = serializers.SerializerMethodField()
     product_name = serializers.SerializerMethodField()
+    product_image = serializers.SerializerMethodField()
     serialized_items_created_count = serializers.SerializerMethodField()
 
     def get_unit_code(self, obj):
@@ -370,15 +402,25 @@ class DocumentLineInlineSerializer(serializers.ModelSerializer):
         product = getattr(obj, "product", None)
         return getattr(product, "name", None) if product else ""
 
+    def get_product_image(self, obj):
+        from appinventory.serializers import ProductListSerializer
+        product = getattr(obj, "product", None)
+        if not product:
+            return None
+        return ProductListSerializer(context=self.context).get_image(product)
+
     class Meta:
         model = DocumentLine
         fields = [
-            "id", "product", "product_name", "quantity", "unit", "unit_code",
-            "unit_price", "discount_percentage", "final_price", "warehouse",
-            "price_type", "brand", "serialized_items_created_count",
+            "id", "product", "product_name", "product_image", "quantity", "unit",
+            "unit_code", "unit_price", "discount_percentage", "final_price",
+            "warehouse", "price_type", "brand", "serialized_items_created_count",
             "pricing_rule", "margin_percent",
         ]
-        read_only_fields = ["final_price", "unit_code", "product_name", "serialized_items_created_count"]
+        read_only_fields = [
+            "final_price", "unit_code", "product_name", "product_image",
+            "serialized_items_created_count",
+        ]
 
     def get_serialized_items_created_count(self, obj):
         if not obj.pk:
@@ -673,11 +715,12 @@ class DocumentSerializer(serializers.ModelSerializer):
             if any(all_line_errors):
                 raise serializers.ValidationError({"lines": all_line_errors})
             
-            # Ahora validar stock para TODAS las líneas después de que el documento esté creado
-            stock_errors = []
+            # Validar stock por línea preservando detalle plano JSON-friendly
+            # (product_name, available, requested, …) para el frontend.
+            stock_line_errors = [{} for _ in lines_data]
+            has_stock_error = False
             for idx, ld in enumerate(lines_data):
                 try:
-                    # Crear una instancia temporal para validar stock
                     temp_line = DocumentLine(
                         document=doc,
                         product=ld.get('product'),
@@ -686,12 +729,19 @@ class DocumentSerializer(serializers.ModelSerializer):
                         warehouse=ld.get('warehouse')
                     )
                     _validate_stock_out(temp_line)
+                except serializers.ValidationError as e:
+                    has_stock_error = True
+                    detail = _plain_error_detail(getattr(e, 'detail', None))
+                    if isinstance(detail, dict):
+                        stock_line_errors[idx] = detail
+                    else:
+                        stock_line_errors[idx] = {'quantity': detail}
                 except Exception as e:
-                    stock_errors.append(str(e))
-            
-            # Si hay errores de stock, lanzar todos los errores juntos
-            if stock_errors:
-                raise serializers.ValidationError({"lines": stock_errors})
+                    has_stock_error = True
+                    stock_line_errors[idx] = {'quantity': [str(e)]}
+
+            if has_stock_error:
+                raise serializers.ValidationError({"lines": stock_line_errors})
             
             # Si todas las líneas son válidas, crear todas las líneas
             for idx, ld in enumerate(lines_data):

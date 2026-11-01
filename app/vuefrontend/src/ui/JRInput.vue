@@ -2,6 +2,7 @@
   <InputNumber
     v-if="type === 'number'"
     class="jr-control"
+    :class="{ 'jr-control--stepper': showButtons }"
     :modelValue="modelValue"
     :disabled="disabled"
     :invalid="invalid"
@@ -9,9 +10,16 @@
     :inputId="inputId"
     :min="min"
     :max="max"
-    :minFractionDigits="minFractionDigits"
-    :maxFractionDigits="maxFractionDigits"
-    :useGrouping="false"
+    :mode="mode"
+    :currency="currency"
+    :locale="locale"
+    :prefix="prefix"
+    :suffix="suffix"
+    :minFractionDigits="resolvedMinFractionDigits"
+    :maxFractionDigits="resolvedMaxFractionDigits"
+    :showButtons="showButtons"
+    :buttonLayout="buttonLayout"
+    :useGrouping="resolvedUseGrouping"
     :inputProps="numberInputProps"
     fluid
     @update:modelValue="$emit('update:modelValue', $event)"
@@ -74,12 +82,45 @@ export default {
       type: Number,
       default: undefined,
     },
+    /** PrimeVue InputNumber mode: decimal | currency */
+    mode: {
+      type: String,
+      default: 'decimal',
+    },
+    currency: {
+      type: String,
+      default: 'USD',
+    },
+    locale: {
+      type: String,
+      default: 'en-US',
+    },
+    prefix: {
+      type: String,
+      default: undefined,
+    },
+    suffix: {
+      type: String,
+      default: undefined,
+    },
+    showButtons: {
+      type: Boolean,
+      default: false,
+    },
+    buttonLayout: {
+      type: String,
+      default: 'stacked',
+    },
     minFractionDigits: {
       type: Number,
       default: undefined,
     },
     maxFractionDigits: {
       type: Number,
+      default: undefined,
+    },
+    useGrouping: {
+      type: Boolean,
       default: undefined,
     },
     ariaDescribedby: {
@@ -117,6 +158,21 @@ export default {
   },
   emits: ['update:modelValue'],
   computed: {
+    resolvedMinFractionDigits() {
+      if (this.minFractionDigits !== undefined) return this.minFractionDigits;
+      if (this.mode === 'currency') return 2;
+      return undefined;
+    },
+    resolvedMaxFractionDigits() {
+      if (this.maxFractionDigits !== undefined) return this.maxFractionDigits;
+      if (this.mode === 'currency') return 2;
+      return undefined;
+    },
+    resolvedUseGrouping() {
+      if (this.useGrouping !== undefined) return this.useGrouping;
+      // Currency typically shows grouping; plain decimal fields in grids stay quiet.
+      return this.mode === 'currency';
+    },
     textInputAttrs() {
       const attrs = {};
       if (this.autocomplete) attrs.autocomplete = this.autocomplete;

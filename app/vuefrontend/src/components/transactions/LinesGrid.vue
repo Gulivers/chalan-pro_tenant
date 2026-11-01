@@ -76,20 +76,52 @@
           class="jr-lines-item"
           :class="{ 'jr-lines-item--error': rowHasErrors(row) }">
           <div class="jr-lines-item__main">
-            <span class="jr-lines-item__title">
-              {{ row.product_label || (row.product ? `Product #${row.product}` : 'Product') }}
-            </span>
+            <div class="jr-lines-product-cell">
+              <button
+                type="button"
+                class="jr-lines-product-cell__thumb"
+                :disabled="!row.product"
+                :aria-label="
+                  row.product
+                    ? `View images of ${row.product_label || 'product'}`
+                    : 'No product selected'
+                "
+                @click="openImageGallery(row)">
+                <img
+                  v-if="lineImageSrc(row)"
+                  :src="lineImageSrc(row)"
+                  alt=""
+                  class="jr-lines-product-cell__img"
+                  width="40"
+                  height="40"
+                  loading="lazy"
+                  decoding="async"
+                  @error="onLineImageError(row)" />
+                <span v-else class="jr-lines-product-cell__ph" aria-hidden="true" />
+              </button>
+              <span class="jr-lines-item__title">
+                {{
+                  row.product_label ||
+                  (row.product ? `Product #${row.product}` : "Product")
+                }}
+              </span>
+            </div>
             <span class="jr-lines-item__meta">
               <span>{{ row.quantity ?? 0 }} {{ unitLabel(row) }}</span>
               <span class="jr-lines-item__sep" aria-hidden="true">·</span>
-              <span class="jr-lines-item__total">{{ currency(lineTotalAfterDiscount(row)) }}</span>
+              <span class="jr-lines-item__total">
+                {{ currency(lineTotalAfterDiscount(row)) }}
+              </span>
               <JRBadge
                 v-if="isSerializedRow(row)"
                 value="SERIALIZED"
                 severity="info" />
             </span>
             <p
-              v-if="rowErrorText(row._errors?.product) || rowErrorText(row._errors?.quantity)"
+              v-if="
+                rowErrorText(row._errors?.product) ||
+                rowErrorText(row._errors?.quantity)
+              "
               class="jr-lines-item__error"
               role="alert">
               {{
@@ -150,15 +182,15 @@
                   :disabled="disabled || !linesLocal.length"
                   @update:modelValue="onSelectAll" />
               </th>
-              <th>Product</th>
-              <th>Qty</th>
-              <th>Unit</th>
+              <th class="jr-lines-table__thumb">Img</th>
+              <th class="jr-lines-table__product">Product</th>
+              <th class="jr-lines-table__qty">Qty</th>
+              <th class="jr-lines-table__unit">Unit</th>
               <th class="jr-lines-table__price">Unit Price</th>
-              <th>Disc %</th>
+              <th class="jr-lines-table__disc">Disc %</th>
               <th>Warehouse</th>
               <th>Price Type</th>
               <th v-if="documentTypeIsSales">Margin %</th>
-              <th>Brand</th>
               <th class="jr-lines-table__end">Line total</th>
               <th class="jr-lines-table__actions">Actions</th>
             </tr>
@@ -177,6 +209,33 @@
                     ariaLabel="Select line"
                     :disabled="disabled"
                     @update:modelValue="(v) => (row.selected = !!v)" />
+                </td>
+                <td class="jr-lines-table__thumb">
+                  <button
+                    type="button"
+                    class="jr-lines-product-cell__thumb"
+                    :disabled="!row.product"
+                    :aria-label="
+                      row.product
+                        ? `View images of ${row.product_label || 'product'}`
+                        : 'No product selected'
+                    "
+                    @click="openImageGallery(row)">
+                    <img
+                      v-if="lineImageSrc(row)"
+                      :src="lineImageSrc(row)"
+                      alt=""
+                      class="jr-lines-product-cell__img"
+                      width="40"
+                      height="40"
+                      loading="lazy"
+                      decoding="async"
+                      @error="onLineImageError(row)" />
+                    <span
+                      v-else
+                      class="jr-lines-product-cell__ph"
+                      aria-hidden="true" />
+                  </button>
                 </td>
                 <td class="jr-lines-table__product">
                   <Select
@@ -210,19 +269,27 @@
                     {{ rowErrorText(row._errors.product) }}
                   </p>
                 </td>
-                <td>
+                <td class="jr-lines-table__qty">
                   <div @focusout="onQuantityBlurMerge(idx)">
                     <JRInput
                       :inputId="`quantity-${idx}`"
                       type="number"
+                      mode="decimal"
                       :modelValue="emptyToNull(row.quantity)"
                       :min="0"
                       :minFractionDigits="0"
                       :maxFractionDigits="2"
-                      placeholder="0.00"
+                      :showButtons="true"
+                      buttonLayout="stacked"
+                      placeholder="0"
                       :disabled="disabled"
                       :invalid="!!row._errors?.quantity"
-                      @update:modelValue="(v) => { setNumeric(row, 'quantity', v); onQuantityInput(idx); }" />
+                      @update:modelValue="
+                        (v) => {
+                          setNumeric(row, 'quantity', v);
+                          onQuantityInput(idx);
+                        }
+                      " />
                   </div>
                   <p
                     v-if="rowErrorText(row._errors?.quantity)"
@@ -231,7 +298,7 @@
                     {{ rowErrorText(row._errors.quantity) }}
                   </p>
                 </td>
-                <td>
+                <td class="jr-lines-table__unit">
                   <JRSelect
                     :inputId="`unit-${idx}`"
                     v-model="row.unit"
@@ -254,14 +321,22 @@
                   <JRInput
                     :inputId="`unit_price-${idx}`"
                     type="number"
+                    mode="currency"
+                    currency="USD"
+                    locale="en-US"
                     :modelValue="emptyToNull(row.unit_price)"
                     :min="0"
-                    :minFractionDigits="0"
+                    :minFractionDigits="2"
                     :maxFractionDigits="2"
                     placeholder="0.00"
                     :disabled="disabled"
                     :invalid="!!row._errors?.unit_price"
-                    @update:modelValue="(v) => { setNumeric(row, 'unit_price', v); onUnitPriceInput(idx); }" />
+                    @update:modelValue="
+                      (v) => {
+                        setNumeric(row, 'unit_price', v);
+                        onUnitPriceInput(idx);
+                      }
+                    " />
                   <p
                     v-if="rowErrorText(row._errors?.unit_price)"
                     class="jr-lines-field-error"
@@ -269,19 +344,27 @@
                     {{ rowErrorText(row._errors.unit_price) }}
                   </p>
                 </td>
-                <td>
+                <td class="jr-lines-table__disc">
                   <JRInput
                     :inputId="`discount_percentage-${idx}`"
                     type="number"
+                    mode="decimal"
+                    prefix="% "
                     :modelValue="emptyToNull(row.discount_percentage)"
                     :min="0"
                     :max="100"
                     :minFractionDigits="0"
                     :maxFractionDigits="2"
+                    :useGrouping="false"
                     placeholder="0"
                     :disabled="disabled"
                     :invalid="!!row._errors?.discount_percentage"
-                    @update:modelValue="(v) => { setNumeric(row, 'discount_percentage', v); onDiscountPercentageInput(idx); }" />
+                    @update:modelValue="
+                      (v) => {
+                        setNumeric(row, 'discount_percentage', v);
+                        onDiscountPercentageInput(idx);
+                      }
+                    " />
                 </td>
                 <td>
                   <JRSelect
@@ -332,19 +415,13 @@
                     placeholder="0"
                     :disabled="disabled || !canEditLineMargin"
                     :invalid="!!row._errors?.margin_percent"
-                    @update:modelValue="(v) => { row.margin_percent = v == null || v === '' ? null : Number(v); onMarginPercentInput(idx); }" />
-                </td>
-                <td>
-                  <JRSelect
-                    :inputId="`brand-${idx}`"
-                    v-model="row.brand"
-                    :options="brandOptionsForRow(row)"
-                    optionLabel="label"
-                    optionValue="value"
-                    :placeholder="row.product ? 'Brand…' : 'Select product first'"
-                    filter
-                    showClear
-                    :disabled="disabled || !row.product" />
+                    @update:modelValue="
+                      (v) => {
+                        row.margin_percent =
+                          v == null || v === '' ? null : Number(v);
+                        onMarginPercentInput(idx);
+                      }
+                    " />
                 </td>
                 <td class="jr-lines-table__end jr-lines-table__total">
                   {{ currency(lineTotalAfterDiscount(row)) }}
@@ -360,7 +437,9 @@
           </tbody>
         </table>
       </div>
-      <p v-if="hideToolbar && linesLocal.length" class="jr-lines__count jr-lines__count--footer">
+      <p
+        v-if="hideToolbar && linesLocal.length"
+        class="jr-lines__count jr-lines__count--footer">
         Rows: {{ linesLocal.length }}
       </p>
     </div>
@@ -393,9 +472,15 @@
             :invalid="!!sheetRow._errors?.product"
             showClear
             fluid
-            @filter="(e) => sheetIndex != null && onProductFilter(sheetIndex, e)"
-            @show="() => sheetIndex != null && onProductShow(sheetIndex, sheetRow)"
-            @update:modelValue="(val) => sheetIndex != null && onProductModel(sheetIndex, val)" />
+            @filter="
+              (e) => sheetIndex != null && onProductFilter(sheetIndex, e)
+            "
+            @show="
+              () => sheetIndex != null && onProductShow(sheetIndex, sheetRow)
+            "
+            @update:modelValue="
+              (val) => sheetIndex != null && onProductModel(sheetIndex, val)
+            " />
           <JRBadge
             v-if="isSerializedRow(sheetRow)"
             class="jr-lines-sheet__badge"
@@ -404,20 +489,29 @@
         </JRField>
 
         <div class="jr-lines-sheet__grid">
-            <JRField
+          <JRField
             label="Qty"
             inputId="sheet-qty"
             :error="rowErrorText(sheetRow._errors?.quantity)">
-            <div @focusout="sheetIndex != null && onQuantityBlurMerge(sheetIndex)">
+            <div
+              @focusout="sheetIndex != null && onQuantityBlurMerge(sheetIndex)">
               <JRInput
                 inputId="sheet-qty"
                 type="number"
+                mode="decimal"
                 :modelValue="emptyToNull(sheetRow.quantity)"
                 :min="0"
                 :minFractionDigits="0"
                 :maxFractionDigits="2"
+                :showButtons="true"
+                buttonLayout="stacked"
                 :disabled="disabled"
-                @update:modelValue="(v) => { setNumeric(sheetRow, 'quantity', v); if (sheetIndex != null) onQuantityInput(sheetIndex); }" />
+                @update:modelValue="
+                  (v) => {
+                    setNumeric(sheetRow, 'quantity', v);
+                    if (sheetIndex != null) onQuantityInput(sheetIndex);
+                  }
+                " />
             </div>
           </JRField>
           <JRField
@@ -433,7 +527,9 @@
               placeholder="Unit…"
               filter
               :disabled="disabled"
-              @update:modelValue="sheetIndex != null && onUnitUpdated(sheetIndex)" />
+              @update:modelValue="
+                sheetIndex != null && onUnitUpdated(sheetIndex)
+              " />
           </JRField>
           <JRField
             label="Unit Price"
@@ -442,24 +538,40 @@
             <JRInput
               inputId="sheet-unit-price"
               type="number"
+              mode="currency"
+              currency="USD"
+              locale="en-US"
               :modelValue="emptyToNull(sheetRow.unit_price)"
               :min="0"
-              :minFractionDigits="0"
+              :minFractionDigits="2"
               :maxFractionDigits="2"
               :disabled="disabled"
-              @update:modelValue="(v) => { setNumeric(sheetRow, 'unit_price', v); if (sheetIndex != null) onUnitPriceInput(sheetIndex); }" />
+              @update:modelValue="
+                (v) => {
+                  setNumeric(sheetRow, 'unit_price', v);
+                  if (sheetIndex != null) onUnitPriceInput(sheetIndex);
+                }
+              " />
           </JRField>
           <JRField label="Disc %" inputId="sheet-disc">
             <JRInput
               inputId="sheet-disc"
               type="number"
+              mode="decimal"
+              prefix="% "
               :modelValue="emptyToNull(sheetRow.discount_percentage)"
               :min="0"
               :max="100"
               :minFractionDigits="0"
               :maxFractionDigits="2"
+              :useGrouping="false"
               :disabled="disabled"
-              @update:modelValue="(v) => { setNumeric(sheetRow, 'discount_percentage', v); if (sheetIndex != null) onDiscountPercentageInput(sheetIndex); }" />
+              @update:modelValue="
+                (v) => {
+                  setNumeric(sheetRow, 'discount_percentage', v);
+                  if (sheetIndex != null) onDiscountPercentageInput(sheetIndex);
+                }
+              " />
           </JRField>
         </div>
 
@@ -490,7 +602,9 @@
             filter
             showClear
             :disabled="disabled"
-            @update:modelValue="sheetIndex != null && onPriceTypeUpdated(sheetIndex)" />
+            @update:modelValue="
+              sheetIndex != null && onPriceTypeUpdated(sheetIndex)
+            " />
           <p
             v-if="documentTypeIsSales && pricingHint(sheetRow)"
             class="jr-lines-hint">
@@ -511,20 +625,13 @@
             :minFractionDigits="0"
             :maxFractionDigits="2"
             :disabled="disabled || !canEditLineMargin"
-            @update:modelValue="(v) => { sheetRow.margin_percent = v == null || v === '' ? null : Number(v); if (sheetIndex != null) onMarginPercentInput(sheetIndex); }" />
-        </JRField>
-
-        <JRField label="Brand" inputId="sheet-brand">
-          <JRSelect
-            inputId="sheet-brand"
-            v-model="sheetRow.brand"
-            :options="brandOptionsForRow(sheetRow)"
-            optionLabel="label"
-            optionValue="value"
-            :placeholder="sheetRow.product ? 'Brand…' : 'Select product first'"
-            filter
-            showClear
-            :disabled="disabled || !sheetRow.product" />
+            @update:modelValue="
+              (v) => {
+                sheetRow.margin_percent =
+                  v == null || v === '' ? null : Number(v);
+                if (sheetIndex != null) onMarginPercentInput(sheetIndex);
+              }
+            " />
         </JRField>
 
         <p class="jr-lines-sheet__total">
@@ -534,7 +641,9 @@
       </div>
       <template #footer>
         <div class="jr-lines-sheet__footer">
-          <JRButton type="button" variant="primary" @click="closeSheet">Done</JRButton>
+          <JRButton type="button" variant="primary" @click="closeSheet">
+            Done
+          </JRButton>
           <JRRowActions
             v-if="!disabled && sheetIndex != null"
             :compact="false"
@@ -553,453 +662,684 @@
       confirmVariant="danger"
       @update:visible="onDeleteVisible"
       @confirm="confirmPendingDelete" />
+
+    <JRDialog
+      :visible="galleryVisible"
+      :header="galleryHeader"
+      size="square"
+      :showFooter="false"
+      @update:visible="onGalleryVisible">
+      <ProductBrandImages
+        v-if="galleryProductId"
+        :product-id="galleryProductId"
+        :readonly="true" />
+    </JRDialog>
   </div>
 </template>
 
 <script setup>
-  import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
-  import axios from 'axios';
-  import Select from 'primevue/select';
-  import Button from 'primevue/button';
-  import PencilIcon from '@primevue/icons/pencil';
-  import TrashIcon from '@primevue/icons/trash';
-  import Plus from '@primeicons/vue/plus';
-  import Copy from '@primeicons/vue/copy';
-  import Trash from '@primeicons/vue/trash';
-  import {
-    JRButton,
-    JRSelect,
-    JRInput,
-    JRField,
-    JRBadge,
-    JREmptyState,
-    JRDialog,
-    JRDrawer,
-    JRRowActions,
-    JRCheckbox,
-  } from '@ui';
+import {
+  ref,
+  watch,
+  computed,
+  nextTick,
+  onMounted,
+  onBeforeUnmount,
+} from "vue";
+import axios from "axios";
+import Select from "primevue/select";
+import Button from "primevue/button";
+import PencilIcon from "@primevue/icons/pencil";
+import TrashIcon from "@primevue/icons/trash";
+import Plus from "@primeicons/vue/plus";
+import Copy from "@primeicons/vue/copy";
+import Trash from "@primeicons/vue/trash";
+import ProductBrandImages from "@components/inventory/ProductBrandImages.vue";
+import {
+  JRButton,
+  JRSelect,
+  JRInput,
+  JRField,
+  JRBadge,
+  JREmptyState,
+  JRDialog,
+  JRDrawer,
+  JRRowActions,
+  JRCheckbox,
+} from "@ui";
 
-  const PHONE_MQ = '(max-width: 767.98px)';
-  const TABLET_MQ = '(min-width: 768px) and (max-width: 1023.98px)';
+const PHONE_MQ = "(max-width: 767.98px)";
+const TABLET_MQ = "(min-width: 768px) and (max-width: 1023.98px)";
 
-  const props = defineProps({
-    modelValue: { type: Array, default: () => [] }, // not used (legacy)
-    lines: { type: Array, default: () => [] }, // v-model:lines
-    documentId: { type: [Number, null], default: null },
-    documentTypeCreatesSerializedItems: { type: Boolean, default: false },
-    documentTypeId: { type: [Number, null], default: null },
-    workAccountId: { type: [Number, null], default: null },
-    unitsOptions: { type: Array, default: () => [] },
-    warehousesOptions: { type: Array, default: () => [] },
-    priceTypesOptions: { type: Array, default: () => [] },
-    brandsOptions: { type: Array, default: () => [] },
-    mergeDuplicates: { type: Boolean, default: true },
-    /** Solo documentos de venta: precio automático desde costo de compra + tipo de precio */
-    documentTypeIsSales: { type: Boolean, default: false },
-    /** When true, disables Add Row and line inputs only (no full overlay). */
-    disabled: { type: Boolean, default: false },
-    /** When true, parent JRSection owns Add / Serial actions. */
-    hideToolbar: { type: Boolean, default: false },
-  });
-  const emit = defineEmits(['update:lines', 'recalc', 'open-asset-tags']);
+const props = defineProps({
+  modelValue: { type: Array, default: () => [] }, // not used (legacy)
+  lines: { type: Array, default: () => [] }, // v-model:lines
+  documentId: { type: [Number, null], default: null },
+  documentTypeCreatesSerializedItems: { type: Boolean, default: false },
+  documentTypeId: { type: [Number, null], default: null },
+  workAccountId: { type: [Number, null], default: null },
+  unitsOptions: { type: Array, default: () => [] },
+  warehousesOptions: { type: Array, default: () => [] },
+  priceTypesOptions: { type: Array, default: () => [] },
+  brandsOptions: { type: Array, default: () => [] },
+  mergeDuplicates: { type: Boolean, default: true },
+  /** Solo documentos de venta: precio automático desde costo de compra + tipo de precio */
+  documentTypeIsSales: { type: Boolean, default: false },
+  /** When true, disables Add Row and line inputs only (no full overlay). */
+  disabled: { type: Boolean, default: false },
+  /** When true, parent JRSection owns Add / Serial actions. */
+  hideToolbar: { type: Boolean, default: false },
+});
+const emit = defineEmits(["update:lines", "recalc", "open-asset-tags"]);
 
-  const linesLocal = ref([]);
-  const selectAll = ref(false);
-  const productOptions = ref([]);
-  const loading = ref({ products: {} });
-  const isUpdatingFromProps = ref(false);
-  const defaultWarehouse = ref(null);
-  const productFilterTimers = {};
-  const isPhone = ref(false);
-  const isTablet = ref(false);
-  const sheetOpen = ref(false);
-  const sheetIndex = ref(null);
-  const deleteDialogVisible = ref(false);
-  const pendingDeleteIndex = ref(null);
-  const deleteResolved = ref(false);
+const linesLocal = ref([]);
+const selectAll = ref(false);
+const productOptions = ref([]);
+const loading = ref({ products: {} });
+const isUpdatingFromProps = ref(false);
+const defaultWarehouse = ref(null);
+const productFilterTimers = {};
+const isPhone = ref(false);
+const isTablet = ref(false);
+const sheetOpen = ref(false);
+const sheetIndex = ref(null);
+const deleteDialogVisible = ref(false);
+const pendingDeleteIndex = ref(null);
+const deleteResolved = ref(false);
+const galleryVisible = ref(false);
+const galleryProductId = ref(null);
+const galleryProductLabel = ref("");
+const brokenImageIds = ref({});
 
-  const isCompact = computed(() => isPhone.value || isTablet.value);
-  const sheetRow = computed(() =>
-    sheetIndex.value == null ? null : linesLocal.value[sheetIndex.value] || null
-  );
+const isCompact = computed(() => isPhone.value || isTablet.value);
+const sheetRow = computed(() =>
+  sheetIndex.value == null ? null : linesLocal.value[sheetIndex.value] || null,
+);
+const galleryHeader = computed(() =>
+  galleryProductLabel.value
+    ? `Images · ${galleryProductLabel.value}`
+    : "Product images",
+);
 
-  function syncViewport() {
-    if (typeof window === 'undefined' || !window.matchMedia) {
-      isPhone.value = false;
-      isTablet.value = false;
-      return;
-    }
-    isPhone.value = window.matchMedia(PHONE_MQ).matches;
-    isTablet.value = window.matchMedia(TABLET_MQ).matches;
+function syncViewport() {
+  if (typeof window === "undefined" || !window.matchMedia) {
+    isPhone.value = false;
+    isTablet.value = false;
+    return;
   }
+  isPhone.value = window.matchMedia(PHONE_MQ).matches;
+  isTablet.value = window.matchMedia(TABLET_MQ).matches;
+}
 
-  function rowErrorText(err) {
-    if (!err) return '';
-    return Array.isArray(err) ? err[0] : String(err);
-  }
-
-  function rowHasErrors(row) {
-    return Object.keys(row?._errors || {}).length > 0;
-  }
-
-  function isSerializedRow(row) {
-    if (!row?.product) return false;
-    const opt = optionsForProduct(row).find(o => o.value === row.product);
-    return opt?.product?.tracking_mode === 'SERIALIZED';
-  }
-
-  function unitLabel(row) {
-    const opt = props.unitsOptions.find(o => o.value === row?.unit);
-    return opt?.label || '';
-  }
-
-  function optionsForProduct(row) {
-    const opts = [...(productOptions.value || [])];
-    if (row?.product != null) {
-      const exists = opts.some(o => o.value === row.product);
-      if (!exists) {
-        opts.unshift({
-          value: row.product,
-          label: row.product_label || `Product #${row.product}`,
-          product: {
-            id: row.product,
-            name: row.product_label,
-            tracking_mode: row._tracking_mode,
-          },
-        });
+function rowErrorText(err) {
+  if (!err) return "";
+  if (Array.isArray(err)) return rowErrorText(err[0]);
+  if (typeof err === "object") {
+    if (err.message != null) return rowErrorText(err.message);
+    if (err.string != null) return String(err.string);
+    if (err.detail != null) return rowErrorText(err.detail);
+    if (err.error_type === "insufficient_stock" || err.error_type?.string === "insufficient_stock") {
+      const productName = err.product_name?.string ?? err.product_name;
+      const available = err.available?.string ?? err.available;
+      const requested = err.requested?.string ?? err.requested;
+      if (available != null && requested != null) {
+        const prefix = productName ? `${productName}: ` : "";
+        return `${prefix}Insufficient stock (available: ${available}, requested: ${requested})`;
       }
     }
-    return opts;
-  }
-
-  function brandOptionsForRow(row) {
-    return row?.brands?.length ? row.brands : props.brandsOptions;
-  }
-
-  function lineEntityLabel(row) {
-    return row?.product_label || (row?.product ? `Product #${row.product}` : 'Line');
-  }
-
-  function emptyToNull(value) {
-    return value === '' || value === undefined ? null : value;
-  }
-
-  function setNumeric(row, field, value) {
-    row[field] = value === null || value === undefined || value === '' ? 0 : Number(value);
-  }
-
-  function hasPermission(permission) {
     try {
-      const userPermissions = JSON.parse(localStorage.getItem('userPermissions') || '{}');
-      const permissions = Array.isArray(userPermissions?.permissions) ? userPermissions.permissions : [];
-      return permissions.includes(permission);
+      return JSON.stringify(err);
     } catch {
-      return false;
+      return "Invalid value";
     }
   }
+  return String(err);
+}
 
-  const canEditLineMargin = computed(
-    () =>
-      props.documentTypeIsSales &&
-      (hasPermission('appinventory.add_pricetype') ||
-        hasPermission('appinventory.change_pricetype'))
+function rowHasErrors(row) {
+  return Object.keys(row?._errors || {}).length > 0;
+}
+
+function isSerializedRow(row) {
+  if (!row?.product) return false;
+  const opt = optionsForProduct(row).find((o) => o.value === row.product);
+  return opt?.product?.tracking_mode === "SERIALIZED";
+}
+
+function unitLabel(row) {
+  const opt = props.unitsOptions.find((o) => o.value === row?.unit);
+  return opt?.label || "";
+}
+
+function optionsForProduct(row) {
+  const opts = [...(productOptions.value || [])];
+  if (row?.product != null) {
+    const exists = opts.some((o) => o.value === row.product);
+    if (!exists) {
+      opts.unshift({
+        value: row.product,
+        label: row.product_label || `Product #${row.product}`,
+        product: {
+          id: row.product,
+          name: row.product_label,
+          tracking_mode: row._tracking_mode,
+        },
+      });
+    }
+  }
+  return opts;
+}
+
+function lineImageSrc(row) {
+  const productId = row?.product;
+  if (!productId || brokenImageIds.value[productId]) return "";
+  return row.product_image || "";
+}
+
+function onLineImageError(row) {
+  const productId = row?.product;
+  if (!productId) return;
+  brokenImageIds.value = { ...brokenImageIds.value, [productId]: true };
+}
+
+function openImageGallery(row) {
+  if (!row?.product) return;
+  galleryProductId.value = row.product;
+  galleryProductLabel.value =
+    row.product_label || row.product_name || `Product #${row.product}`;
+  galleryVisible.value = true;
+}
+
+function onGalleryVisible(visible) {
+  galleryVisible.value = visible;
+  if (!visible) {
+    galleryProductId.value = null;
+    galleryProductLabel.value = "";
+  }
+}
+
+function applyProductBrandAndImage(row, productLike) {
+  if (!row) return;
+  const brandId =
+    productLike?.brand ??
+    productLike?.default_brand?.id ??
+    productLike?.default_brand ??
+    null;
+  if (brandId != null && brandId !== "") {
+    row.brand = brandId;
+  }
+  if (productLike?.image) {
+    row.product_image = productLike.image;
+    if (row.product && brokenImageIds.value[row.product]) {
+      const next = { ...brokenImageIds.value };
+      delete next[row.product];
+      brokenImageIds.value = next;
+    }
+  }
+}
+
+function lineEntityLabel(row) {
+  return (
+    row?.product_label || (row?.product ? `Product #${row.product}` : "Line")
   );
+}
 
-  function lineStructureKey(l) {
-    const p = l?.product;
-    const prod =
-      p != null && typeof p === 'object' && !Array.isArray(p) && 'id' in p
-        ? p.id
-        : p;
-    return `${l?.id ?? ''}|${l?.__key ?? ''}|${prod ?? ''}`;
+function emptyToNull(value) {
+  return value === "" || value === undefined ? null : value;
+}
+
+function round2(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.round((n + Number.EPSILON) * 100) / 100;
+}
+
+function setNumeric(row, field, value) {
+  if (value === null || value === undefined || value === "") {
+    row[field] = 0;
+    return;
   }
-
-  function linesStructureSignature(rows) {
-    return (rows || []).map(lineStructureKey).join('\n');
+  // Money / qty fields: keep 2 dp so payload never trips Django decimal_places
+  if (
+    field === "unit_price" ||
+    field === "quantity" ||
+    field === "discount_percentage" ||
+    field === "margin_percent"
+  ) {
+    row[field] = round2(value);
+    return;
   }
+  row[field] = Number(value);
+}
 
-  watch(
-    () => props.lines,
-    async val => {
-      isUpdatingFromProps.value = true;
+function hasPermission(permission) {
+  try {
+    const userPermissions = JSON.parse(
+      localStorage.getItem("userPermissions") || "{}",
+    );
+    const permissions = Array.isArray(userPermissions?.permissions)
+      ? userPermissions.permissions
+      : [];
+    return permissions.includes(permission);
+  } catch {
+    return false;
+  }
+}
 
-      const newLines = (val || []).map(x => ({
-        ...x,
-        __key: x.__key || x.id || cryptoRandom(),
-        selected: !!x.selected,
-        brands: x.brands || [],
-        price_manually_edited: x.price_manually_edited ?? x.pricing_rule === 'MANUAL',
-        _purchase_unit_cost: x._purchase_unit_cost ?? null,
-        _suppressPriceEvent: false,
-      }));
+const canEditLineMargin = computed(
+  () =>
+    props.documentTypeIsSales &&
+    (hasPermission("appinventory.add_pricetype") ||
+      hasPermission("appinventory.change_pricetype")),
+);
 
-      // Comparar también contenido cuando todos los ids son null (importar favoritos, etc.)
-      const currentLength = linesLocal.value.length;
-      const newLength = newLines.length;
-      const currentIds = linesLocal.value.map(l => l.id).sort();
-      const newIds = newLines.map(l => l.id).sort();
-      const structureChanged =
-        linesStructureSignature(linesLocal.value) !== linesStructureSignature(newLines);
+function lineStructureKey(l) {
+  const p = l?.product;
+  const prod =
+    p != null && typeof p === "object" && !Array.isArray(p) && "id" in p
+      ? p.id
+      : p;
+  return `${l?.id ?? ""}|${l?.__key ?? ""}|${prod ?? ""}`;
+}
 
-      if (
-        currentLength !== newLength ||
-        JSON.stringify(currentIds) !== JSON.stringify(newIds) ||
-        structureChanged
-      ) {
-        linesLocal.value = newLines;
+function linesStructureSignature(rows) {
+  return (rows || []).map(lineStructureKey).join("\n");
+}
 
-        // If no lines exist, add one empty line for user to start with
-        if (linesLocal.value.length === 0) {
-          addLine();
-        }
-        nextTick(() => {
-          recalcAllRows();
-        });
+watch(
+  () => props.lines,
+  async (val) => {
+    isUpdatingFromProps.value = true;
+
+    const newLines = (val || []).map((x) => ({
+      ...x,
+      __key: x.__key || x.id || cryptoRandom(),
+      selected: !!x.selected,
+      brands: x.brands || [],
+      product_image: x.product_image || "",
+      product_label: x.product_label || x.product_name || "",
+      price_manually_edited:
+        x.price_manually_edited ?? x.pricing_rule === "MANUAL",
+      _purchase_unit_cost: x._purchase_unit_cost ?? null,
+      _suppressPriceEvent: false,
+    }));
+
+    // Comparar también contenido cuando todos los ids son null (importar favoritos, etc.)
+    const currentLength = linesLocal.value.length;
+    const newLength = newLines.length;
+    const currentIds = linesLocal.value.map((l) => l.id).sort();
+    const newIds = newLines.map((l) => l.id).sort();
+    const structureChanged =
+      linesStructureSignature(linesLocal.value) !==
+      linesStructureSignature(newLines);
+
+    if (
+      currentLength !== newLength ||
+      JSON.stringify(currentIds) !== JSON.stringify(newIds) ||
+      structureChanged
+    ) {
+      linesLocal.value = newLines;
+
+      // If no lines exist, add one empty line for user to start with
+      if (linesLocal.value.length === 0) {
+        addLine();
       }
-
       nextTick(() => {
-        isUpdatingFromProps.value = false;
+        recalcAllRows();
       });
-    },
-    { immediate: true, deep: true }
-  );
-
-  watch(
-    linesLocal,
-    val => {
-      // Don't emit if we're updating from props to avoid infinite loops
-      if (!isUpdatingFromProps.value) {
-        nextTick(() => {
-          emit('update:lines', val);
-          emit('recalc');
-        });
-      }
-    },
-    { deep: true }
-  );
-
-  // Watcher para asignar warehouse por defecto cuando esté disponible
-  watch(defaultWarehouse, (newWarehouse) => {
-    if (newWarehouse && linesLocal.value.length > 0) {
-      linesLocal.value.forEach(line => {
-        if (!line.warehouse) {
-          line.warehouse = newWarehouse;
-        }
-      });
-    }
-  });
-
-  // Watch for document type changes to validate warehouse requirements
-  watch(
-    () => props.documentTypeId,
-    async newDocTypeId => {
-      if (newDocTypeId) {
-        try {
-          const { data } = await axios.get(`/api/document-types/${newDocTypeId}/`);
-          const requiresWarehouse = data.warehouse_required;
-
-          // Clear warehouse validation errors if warehouse is no longer required
-          if (!requiresWarehouse) {
-            linesLocal.value.forEach(line => {
-              if (line._errors?.warehouse) {
-                delete line._errors.warehouse;
-              }
-            });
-          }
-        } catch (error) {
-          console.warn('Could not fetch document type info:', error);
-        }
-      }
-    }
-  );
-
-  /** Recalcular totales si cambia venta/no venta (columna Margin y reglas). */
-  watch(
-    () => props.documentTypeIsSales,
-    () => {
-      nextTick(() => recalcAllRows());
-    }
-  );
-
-  function cryptoRandom() {
-    return Math.random().toString(36).slice(2) + Date.now().toString(36);
-  }
-
-  function currency(n) {
-    const num = Number(n || 0);
-    return num.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-  }
-
-  /** Importe de línea con descuento aplicado (única fuente de verdad para mostrar y para final_price) */
-  function lineTotalAfterDiscount(row) {
-    if (!row) return 0;
-    const qty = Number(row.quantity || 0);
-    const price = Number(row.unit_price || 0);
-    const disc = Math.min(100, Math.max(0, Number(row.discount_percentage || 0)));
-    return +(qty * price * (1 - disc / 100)).toFixed(2);
-  }
-
-  function salePriceFromCost(cost, pricingMethod, pct) {
-    const c = Number(cost);
-    const p = Number(pct);
-    if (!Number.isFinite(c) || c <= 0 || !Number.isFinite(p)) return null;
-    const f = p / 100;
-    if (pricingMethod === 'MARKUP') return +(c * (1 + f)).toFixed(2);
-    if (pricingMethod === 'MARGIN') {
-      if (f >= 1) return null;
-      return +(c / (1 - f)).toFixed(2);
-    }
-    return null;
-  }
-
-  function pricingHint(row) {
-    if (!props.documentTypeIsSales) return '';
-    if (row.pricing_rule === 'MANUAL') {
-      if (row.margin_percent != null && row.margin_percent !== '')
-        return `Manual · ref. ${Number(row.margin_percent).toFixed(2)}%`;
-      return 'Manual';
-    }
-    if (row.pricing_rule === 'MARKUP' && row.margin_percent != null && row.margin_percent !== '')
-      return `Mkup ${Number(row.margin_percent).toFixed(2)}%`;
-    if (row.pricing_rule === 'MARGIN' && row.margin_percent != null && row.margin_percent !== '')
-      return `Margen ${Number(row.margin_percent).toFixed(2)}%`;
-    return '';
-  }
-
-  /** Margen/markup por defecto del Price Type seleccionado (solo ventas). */
-  function syncPriceTypeMetadataToRow(idx) {
-    const r = linesLocal.value[idx];
-    if (!r || !props.documentTypeIsSales || !r.price_type) return;
-    const meta = props.priceTypesOptions.find(o => o.value === r.price_type);
-    if (!meta) return;
-
-    if (meta.pricing_method === 'MARKUP' || meta.pricing_method === 'MARGIN') {
-      if (meta.margin_percent != null && meta.margin_percent !== '') {
-        r.margin_percent = Number(meta.margin_percent);
-      }
-      r.pricing_rule = meta.pricing_method;
     } else {
-      r.pricing_rule = null;
+      // Same structure: still sync validation errors from parent (Save 400, etc.)
+      // and adopt product_image if local still lacks one (favorite import race).
+      newLines.forEach((incoming, idx) => {
+        const local = linesLocal.value[idx];
+        if (!local) return;
+        const nextErrors = incoming._errors || {};
+        const prevErrors = local._errors || {};
+        const nextKey = JSON.stringify(nextErrors);
+        const prevKey = JSON.stringify(prevErrors);
+        if (nextKey !== prevKey) {
+          local._errors = { ...nextErrors };
+        }
+        if (!local.product_image && incoming.product_image) {
+          local.product_image = incoming.product_image;
+        }
+      });
     }
-  }
 
-  /**
-   * Precio de catálogo (ProductPrice / default-price) cuando no aplica costo+markup/margen.
-   */
-  async function applyDefaultCatalogPrice(idx) {
-    const r = linesLocal.value[idx];
-    if (!r?.product || !r.unit || r.price_manually_edited) return;
-    try {
-      const params = {};
-      if (props.documentTypeId) params.document_type_id = props.documentTypeId;
-      params.unit = r.unit;
-      const { data } = await axios.get(`/api/products/${r.product}/default-price/`, { params });
-      if (data.unit_price != null && data.unit_price !== undefined) {
-        r._suppressPriceEvent = true;
-        r.unit_price = Number(data.unit_price);
-        nextTick(() => {
-          r._suppressPriceEvent = false;
-        });
-      }
-      // Mismo ProductPrice que fija el precio: reflejar su tipo de precio en el select
-      if (data.price_type != null && data.price_type !== undefined) {
-        r.price_type = data.price_type;
-        syncPriceTypeMetadataToRow(idx);
-      }
-      if (data.purchase_unit_cost != null) {
-        r._purchase_unit_cost = Number(data.purchase_unit_cost);
-      }
-    } catch (e) {
-      console.warn('applyDefaultCatalogPrice:', e);
-    }
-  }
-
-  async function refreshPurchaseCost(idx) {
-    const r = linesLocal.value[idx];
-    if (!r?.product) {
-      r._purchase_unit_cost = null;
-      return;
-    }
-    try {
-      const params = {};
-      if (r.unit) params.unit = r.unit;
-      const { data } = await axios.get(`/api/products/${r.product}/purchase-cost/`, { params });
-      r._purchase_unit_cost = data.unit_cost != null ? Number(data.unit_cost) : null;
-    } catch {
-      r._purchase_unit_cost = null;
-    }
-  }
-
-  /** true si se recalculó unit_price desde costo de compra + tipo de precio. */
-  function tryApplyAutoPricing(idx) {
-    if (!props.documentTypeIsSales) return false;
-    const r = linesLocal.value[idx];
-    if (!r || r.price_manually_edited) return false;
-    if (!r.product || !r.price_type || !r.unit) return false;
-    const meta = props.priceTypesOptions.find(o => o.value === r.price_type);
-    if (!meta || !meta.pricing_method || meta.pricing_method === 'NONE') return false;
-    const cost = r._purchase_unit_cost;
-    if (cost == null || cost <= 0) return false;
-    const pct = r.margin_percent ?? meta.margin_percent;
-    if (pct == null || pct === '') return false;
-    const price = salePriceFromCost(cost, meta.pricing_method, Number(pct));
-    if (price == null) return false;
-    r._suppressPriceEvent = true;
-    r.unit_price = price;
-    r.pricing_rule = meta.pricing_method === 'MARKUP' ? 'MARKUP' : 'MARGIN';
-    r.margin_percent = Number(pct);
     nextTick(() => {
-      r._suppressPriceEvent = false;
+      isUpdatingFromProps.value = false;
     });
-    return true;
+  },
+  { immediate: true, deep: true },
+);
+
+watch(
+  linesLocal,
+  (val) => {
+    // Don't emit if we're updating from props to avoid infinite loops
+    if (!isUpdatingFromProps.value) {
+      nextTick(() => {
+        emit("update:lines", val);
+        emit("recalc");
+      });
+    }
+  },
+  { deep: true },
+);
+
+// Watcher para asignar warehouse por defecto cuando esté disponible
+watch(defaultWarehouse, (newWarehouse) => {
+  if (newWarehouse && linesLocal.value.length > 0) {
+    linesLocal.value.forEach((line) => {
+      if (!line.warehouse) {
+        line.warehouse = newWarehouse;
+      }
+    });
   }
+});
 
-  function onMarginPercentInput(idx) {
-    const r = linesLocal.value[idx];
-    if (!r) return;
+// Watch for document type changes to validate warehouse requirements
+watch(
+  () => props.documentTypeId,
+  async (newDocTypeId) => {
+    if (newDocTypeId) {
+      try {
+        const { data } = await axios.get(
+          `/api/document-types/${newDocTypeId}/`,
+        );
+        const requiresWarehouse = data.warehouse_required;
 
-    if (!props.documentTypeIsSales) {
-      recalcRow(idx);
-      return;
+        // Clear warehouse validation errors if warehouse is no longer required
+        if (!requiresWarehouse) {
+          linesLocal.value.forEach((line) => {
+            if (line._errors?.warehouse) {
+              delete line._errors.warehouse;
+            }
+          });
+        }
+      } catch (error) {
+        console.warn("Could not fetch document type info:", error);
+      }
     }
+  },
+);
 
-    if (!canEditLineMargin.value) {
-      recalcRow(idx);
-      return;
+/** Recalcular totales si cambia venta/no venta (columna Margin y reglas). */
+watch(
+  () => props.documentTypeIsSales,
+  () => {
+    nextTick(() => recalcAllRows());
+  },
+);
+
+function cryptoRandom() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function currency(n) {
+  const num = Number(n || 0);
+  return num.toLocaleString("en-US", { style: "currency", currency: "USD" });
+}
+
+/** Importe de línea con descuento aplicado (única fuente de verdad para mostrar y para final_price) */
+function lineTotalAfterDiscount(row) {
+  if (!row) return 0;
+  const qty = Number(row.quantity || 0);
+  const price = Number(row.unit_price || 0);
+  const disc = Math.min(100, Math.max(0, Number(row.discount_percentage || 0)));
+  return +(qty * price * (1 - disc / 100)).toFixed(2);
+}
+
+function salePriceFromCost(cost, pricingMethod, pct) {
+  const c = Number(cost);
+  const p = Number(pct);
+  if (!Number.isFinite(c) || c <= 0 || !Number.isFinite(p)) return null;
+  const f = p / 100;
+  if (pricingMethod === "MARKUP") return +(c * (1 + f)).toFixed(2);
+  if (pricingMethod === "MARGIN") {
+    if (f >= 1) return null;
+    return +(c / (1 - f)).toFixed(2);
+  }
+  return null;
+}
+
+function pricingHint(row) {
+  if (!props.documentTypeIsSales) return "";
+  if (row.pricing_rule === "MANUAL") {
+    if (row.margin_percent != null && row.margin_percent !== "")
+      return `Manual · ref. ${Number(row.margin_percent).toFixed(2)}%`;
+    return "Manual";
+  }
+  if (
+    row.pricing_rule === "MARKUP" &&
+    row.margin_percent != null &&
+    row.margin_percent !== ""
+  )
+    return `Mkup ${Number(row.margin_percent).toFixed(2)}%`;
+  if (
+    row.pricing_rule === "MARGIN" &&
+    row.margin_percent != null &&
+    row.margin_percent !== ""
+  )
+    return `Margen ${Number(row.margin_percent).toFixed(2)}%`;
+  return "";
+}
+
+/** Margen/markup por defecto del Price Type seleccionado (solo ventas). */
+function syncPriceTypeMetadataToRow(idx) {
+  const r = linesLocal.value[idx];
+  if (!r || !props.documentTypeIsSales || !r.price_type) return;
+  const meta = props.priceTypesOptions.find((o) => o.value === r.price_type);
+  if (!meta) return;
+
+  if (meta.pricing_method === "MARKUP" || meta.pricing_method === "MARGIN") {
+    if (meta.margin_percent != null && meta.margin_percent !== "") {
+      r.margin_percent = Number(meta.margin_percent);
     }
+    r.pricing_rule = meta.pricing_method;
+  } else {
+    r.pricing_rule = null;
+  }
+}
 
-    if (r.margin_percent === '' || r.margin_percent === null || r.margin_percent === undefined) {
-      r.margin_percent = null;
-      recalcRow(idx);
-      return;
+/**
+ * Precio de catálogo (ProductPrice / default-price) cuando no aplica costo+markup/margen.
+ */
+async function applyDefaultCatalogPrice(idx) {
+  const r = linesLocal.value[idx];
+  if (!r?.product || !r.unit || r.price_manually_edited) return;
+  try {
+    const params = {};
+    if (props.documentTypeId) params.document_type_id = props.documentTypeId;
+    params.unit = r.unit;
+    const { data } = await axios.get(
+      `/api/products/${r.product}/default-price/`,
+      { params },
+    );
+    if (data.unit_price != null && data.unit_price !== undefined) {
+      r._suppressPriceEvent = true;
+      r.unit_price = Number(data.unit_price);
+      nextTick(() => {
+        r._suppressPriceEvent = false;
+      });
     }
-
-    const parsed = Number(r.margin_percent);
-    if (!Number.isFinite(parsed)) {
-      r.margin_percent = null;
-      recalcRow(idx);
-      return;
+    // Mismo ProductPrice que fija el precio: reflejar su tipo de precio en el select
+    if (data.price_type != null && data.price_type !== undefined) {
+      r.price_type = data.price_type;
+      syncPriceTypeMetadataToRow(idx);
     }
-
-    r.margin_percent = Math.min(100, Math.max(0, parsed));
-
-    if (r.pricing_rule !== 'MANUAL') {
-      r.price_manually_edited = false;
-      tryApplyAutoPricing(idx);
+    if (data.purchase_unit_cost != null) {
+      r._purchase_unit_cost = Number(data.purchase_unit_cost);
     }
+  } catch (e) {
+    console.warn("applyDefaultCatalogPrice:", e);
+  }
+}
 
+async function refreshPurchaseCost(idx) {
+  const r = linesLocal.value[idx];
+  if (!r?.product) {
+    r._purchase_unit_cost = null;
+    return;
+  }
+  try {
+    const params = {};
+    if (r.unit) params.unit = r.unit;
+    const { data } = await axios.get(
+      `/api/products/${r.product}/purchase-cost/`,
+      { params },
+    );
+    r._purchase_unit_cost =
+      data.unit_cost != null ? Number(data.unit_cost) : null;
+  } catch {
+    r._purchase_unit_cost = null;
+  }
+}
+
+/** true si se recalculó unit_price desde costo de compra + tipo de precio. */
+function tryApplyAutoPricing(idx) {
+  if (!props.documentTypeIsSales) return false;
+  const r = linesLocal.value[idx];
+  if (!r || r.price_manually_edited) return false;
+  if (!r.product || !r.price_type || !r.unit) return false;
+  const meta = props.priceTypesOptions.find((o) => o.value === r.price_type);
+  if (!meta || !meta.pricing_method || meta.pricing_method === "NONE")
+    return false;
+  const cost = r._purchase_unit_cost;
+  if (cost == null || cost <= 0) return false;
+  const pct = r.margin_percent ?? meta.margin_percent;
+  if (pct == null || pct === "") return false;
+  const price = salePriceFromCost(cost, meta.pricing_method, Number(pct));
+  if (price == null) return false;
+  r._suppressPriceEvent = true;
+  r.unit_price = price;
+  r.pricing_rule = meta.pricing_method === "MARKUP" ? "MARKUP" : "MARGIN";
+  r.margin_percent = Number(pct);
+  nextTick(() => {
+    r._suppressPriceEvent = false;
+  });
+  return true;
+}
+
+function onMarginPercentInput(idx) {
+  const r = linesLocal.value[idx];
+  if (!r) return;
+
+  if (!props.documentTypeIsSales) {
     recalcRow(idx);
+    return;
   }
 
-  function onDiscountPercentageInput(idx) {
+  if (!canEditLineMargin.value) {
     recalcRow(idx);
+    return;
   }
 
-  async function onUnitUpdated(idx) {
-    const r = linesLocal.value[idx];
+  if (
+    r.margin_percent === "" ||
+    r.margin_percent === null ||
+    r.margin_percent === undefined
+  ) {
+    r.margin_percent = null;
+    recalcRow(idx);
+    return;
+  }
+
+  const parsed = Number(r.margin_percent);
+  if (!Number.isFinite(parsed)) {
+    r.margin_percent = null;
+    recalcRow(idx);
+    return;
+  }
+
+  r.margin_percent = Math.min(100, Math.max(0, parsed));
+
+  if (r.pricing_rule !== "MANUAL") {
     r.price_manually_edited = false;
+    tryApplyAutoPricing(idx);
+  }
+
+  recalcRow(idx);
+}
+
+function onDiscountPercentageInput(idx) {
+  recalcRow(idx);
+}
+
+async function onUnitUpdated(idx) {
+  const r = linesLocal.value[idx];
+  r.price_manually_edited = false;
+  await refreshPurchaseCost(idx);
+  syncPriceTypeMetadataToRow(idx);
+  if (props.documentTypeIsSales) {
+    const applied = tryApplyAutoPricing(idx);
+    if (!applied) await applyDefaultCatalogPrice(idx);
+  } else {
+    await applyDefaultCatalogPrice(idx);
+  }
+  recalcRow(idx);
+}
+
+/** La cantidad no cambia el precio unitario; sí el importe de línea y totales. */
+function onQuantityInput(idx) {
+  const r = linesLocal.value[idx];
+  if (r?._errors?.quantity) {
+    delete r._errors.quantity;
+  }
+  recalcRow(idx);
+}
+
+/**
+ * Tras escribir cantidad: unificar duplicados al salir del campo (blur).
+ * Comprueba __key para no fusionar con índice equivocado si Enter ya fusionó antes del blur.
+ */
+function onQuantityBlurMerge(idx) {
+  const row = linesLocal.value[idx];
+  if (!row?.__key) return;
+  const keySnapshot = row.__key;
+  queueMicrotask(() => {
+    if (!props.mergeDuplicates) return;
+    const still = linesLocal.value[idx];
+    if (!still || still.__key !== keySnapshot) return;
+    maybeMergeDuplicate(idx);
+  });
+}
+
+/**
+ * Enter en cantidad: intenta unificar y enfoca unidad en la fila que queda (o la actual si no hubo merge).
+ */
+function onQuantityEnterMerge(idx, e) {
+  if (e?.preventDefault) e.preventDefault();
+  if (props.mergeDuplicates) {
+    const survivorIdx = maybeMergeDuplicate(idx);
+    if (survivorIdx !== null && survivorIdx !== undefined) {
+      nextTick(() => focusNextField(survivorIdx, "unit"));
+      return;
+    }
+  }
+  focusNextField(idx, "unit");
+}
+
+function onUnitPriceInput(idx) {
+  const r = linesLocal.value[idx];
+  if (r._errors?.unit_price) {
+    delete r._errors.unit_price;
+  }
+  if (r._suppressPriceEvent) {
+    recalcRow(idx);
+    return;
+  }
+  r.price_manually_edited = true;
+  r.pricing_rule = "MANUAL";
+  recalcRow(idx);
+}
+
+function onPriceTypeUpdated(idx) {
+  const r = linesLocal.value[idx];
+  r.price_manually_edited = false;
+  syncPriceTypeMetadataToRow(idx);
+  nextTick(async () => {
     await refreshPurchaseCost(idx);
-    syncPriceTypeMetadataToRow(idx);
     if (props.documentTypeIsSales) {
       const applied = tryApplyAutoPricing(idx);
       if (!applied) await applyDefaultCatalogPrice(idx);
@@ -1007,764 +1347,791 @@
       await applyDefaultCatalogPrice(idx);
     }
     recalcRow(idx);
-  }
+  });
+}
 
-  /** La cantidad no cambia el precio unitario; sí el importe de línea y totales. */
-  function onQuantityInput(idx) {
-    recalcRow(idx);
+function recalcRow(idx) {
+  const r = linesLocal.value[idx];
+  if (!r) {
+    console.warn(`recalcRow: Line at index ${idx} not found`);
+    return;
   }
+  r.final_price = lineTotalAfterDiscount(r);
+}
 
-  /**
-   * Tras escribir cantidad: unificar duplicados al salir del campo (blur).
-   * Comprueba __key para no fusionar con índice equivocado si Enter ya fusionó antes del blur.
-   */
-  function onQuantityBlurMerge(idx) {
-    const row = linesLocal.value[idx];
-    if (!row?.__key) return;
-    const keySnapshot = row.__key;
-    queueMicrotask(() => {
-      if (!props.mergeDuplicates) return;
-      const still = linesLocal.value[idx];
-      if (!still || still.__key !== keySnapshot) return;
-      maybeMergeDuplicate(idx);
-    });
-  }
+function recalcAllRows() {
+  linesLocal.value.forEach((_, idx) => recalcRow(idx));
+}
 
-  /**
-   * Enter en cantidad: intenta unificar y enfoca unidad en la fila que queda (o la actual si no hubo merge).
-   */
-  function onQuantityEnterMerge(idx, e) {
-    if (e?.preventDefault) e.preventDefault();
-    if (props.mergeDuplicates) {
-      const survivorIdx = maybeMergeDuplicate(idx);
-      if (survivorIdx !== null && survivorIdx !== undefined) {
-        nextTick(() => focusNextField(survivorIdx, 'unit'));
-        return;
-      }
+// Función para cargar el warehouse predeterminado
+async function loadDefaultWarehouse() {
+  try {
+    const { data } = await axios.get("/api/default-warehouse/");
+    if (data.id) {
+      defaultWarehouse.value = data.id;
     }
-    focusNextField(idx, 'unit');
+  } catch (error) {
+    console.warn("Could not fetch default warehouse:", error);
   }
+}
 
-  function onUnitPriceInput(idx) {
-    const r = linesLocal.value[idx];
-    if (r._suppressPriceEvent) {
-      recalcRow(idx);
-      return;
-    }
-    r.price_manually_edited = true;
-    r.pricing_rule = 'MANUAL';
-    recalcRow(idx);
-  }
+function addLine() {
+  const newLine = {
+    __key: cryptoRandom(),
+    selected: false,
+    id: null,
+    product: null,
+    product_label: "",
+    quantity: 1,
+    unit: null,
+    unit_price: 0,
+    discount_percentage: 0,
+    final_price: 0,
+    warehouse: defaultWarehouse.value, // Auto-fill con warehouse predeterminado
+    price_type: null,
+    pricing_rule: null,
+    margin_percent: null,
+    price_manually_edited: false,
+    _purchase_unit_cost: null,
+    _suppressPriceEvent: false,
+    brands: [],
+    brand: null, // Autofill desde Product.brand (sin columna UI)
+    product_image: "",
+    _errors: {},
+  };
 
-  function onPriceTypeUpdated(idx) {
-    const r = linesLocal.value[idx];
-    r.price_manually_edited = false;
-    syncPriceTypeMetadataToRow(idx);
-    nextTick(async () => {
-      await refreshPurchaseCost(idx);
-      if (props.documentTypeIsSales) {
-        const applied = tryApplyAutoPricing(idx);
-        if (!applied) await applyDefaultCatalogPrice(idx);
-      } else {
-        await applyDefaultCatalogPrice(idx);
-      }
-      recalcRow(idx);
-    });
-  }
+  linesLocal.value.push(newLine);
+}
 
-  function recalcRow(idx) {
-    const r = linesLocal.value[idx];
-    if (!r) {
-      console.warn(`recalcRow: Line at index ${idx} not found`);
-      return;
-    }
-    r.final_price = lineTotalAfterDiscount(r);
-  }
+const hasSelection = computed(() => linesLocal.value.some((r) => !!r.selected));
 
-  function recalcAllRows() {
-    linesLocal.value.forEach((_, idx) => recalcRow(idx));
-  }
+function onSelectAll(checked) {
+  selectAll.value = !!checked;
+  linesLocal.value.forEach((r) => {
+    r.selected = !!checked;
+  });
+}
 
-  // Función para cargar el warehouse predeterminado
-  async function loadDefaultWarehouse() {
-    try {
-      const { data } = await axios.get('/api/default-warehouse/');
-      if (data.id) {
-        defaultWarehouse.value = data.id;
-      }
-    } catch (error) {
-      console.warn('Could not fetch default warehouse:', error);
-    }
-  }
+function removeSelected() {
+  if (props.disabled || !hasSelection.value) return;
+  linesLocal.value = linesLocal.value.filter((r) => !r.selected);
+  selectAll.value = false;
+  if (sheetOpen.value) closeSheet();
+}
 
-  function addLine() {
-    const newLine = {
+function duplicateSelected() {
+  if (props.disabled || !hasSelection.value) return;
+  const selectedLines = linesLocal.value.filter((r) => r.selected);
+  const start = linesLocal.value.length;
+  selectedLines.forEach((line) => {
+    linesLocal.value.push({
+      ...line,
       __key: cryptoRandom(),
       selected: false,
       id: null,
-      product: null,
-      product_label: '',
       quantity: 1,
-      unit: null,
-      unit_price: 0,
-      discount_percentage: 0,
       final_price: 0,
-      warehouse: defaultWarehouse.value, // Auto-fill con warehouse predeterminado
-      price_type: null,
-      pricing_rule: null,
-      margin_percent: null,
-      price_manually_edited: false,
-      _purchase_unit_cost: null,
-      _suppressPriceEvent: false,
-      brands: [], // Cambiar a array para múltiples marcas
-      brand: null, // Mantener para compatibilidad y marca seleccionada
       _errors: {},
-    };
-
-    linesLocal.value.push(newLine);
+    });
+  });
+  for (let i = start; i < linesLocal.value.length; i++) {
+    recalcRow(i);
   }
+  selectAll.value = false;
+  linesLocal.value.forEach((r) => {
+    r.selected = false;
+  });
+}
 
-  const hasSelection = computed(() =>
-    linesLocal.value.some((r) => !!r.selected)
+function removeRowAt(idx) {
+  linesLocal.value.splice(idx, 1);
+  if (sheetIndex.value === idx) closeSheet();
+  else if (sheetIndex.value != null && sheetIndex.value > idx) {
+    sheetIndex.value -= 1;
+  }
+}
+
+function rowNeedsDeleteConfirm(row) {
+  if (!row) return false;
+  return !!(
+    row.id ||
+    row.product ||
+    (row.quantity != null && Number(row.quantity) !== 1) ||
+    (row.unit_price != null && Number(row.unit_price) !== 0) ||
+    row.unit ||
+    row.brand
   );
+}
 
-  function onSelectAll(checked) {
-    selectAll.value = !!checked;
-    linesLocal.value.forEach((r) => {
-      r.selected = !!checked;
-    });
+function requestDelete(idx) {
+  if (props.disabled) return;
+  const row = linesLocal.value[idx];
+  if (!rowNeedsDeleteConfirm(row)) {
+    removeRowAt(idx);
+    return;
   }
+  pendingDeleteIndex.value = idx;
+  deleteResolved.value = false;
+  deleteDialogVisible.value = true;
+}
 
-  function removeSelected() {
-    if (props.disabled || !hasSelection.value) return;
-    linesLocal.value = linesLocal.value.filter((r) => !r.selected);
-    selectAll.value = false;
-    if (sheetOpen.value) closeSheet();
-  }
+function confirmPendingDelete() {
+  const index = pendingDeleteIndex.value;
+  deleteResolved.value = true;
+  pendingDeleteIndex.value = null;
+  deleteDialogVisible.value = false;
+  if (index == null) return;
+  removeRowAt(index);
+}
 
-  function duplicateSelected() {
-    if (props.disabled || !hasSelection.value) return;
-    const selectedLines = linesLocal.value.filter((r) => r.selected);
-    const start = linesLocal.value.length;
-    selectedLines.forEach((line) => {
-      linesLocal.value.push({
-        ...line,
-        __key: cryptoRandom(),
-        selected: false,
-        id: null,
-        quantity: 1,
-        final_price: 0,
-        _errors: {},
-      });
-    });
-    for (let i = start; i < linesLocal.value.length; i++) {
-      recalcRow(i);
-    }
-    selectAll.value = false;
-    linesLocal.value.forEach((r) => {
-      r.selected = false;
-    });
-  }
-
-  function removeRowAt(idx) {
-    linesLocal.value.splice(idx, 1);
-    if (sheetIndex.value === idx) closeSheet();
-    else if (sheetIndex.value != null && sheetIndex.value > idx) {
-      sheetIndex.value -= 1;
-    }
-  }
-
-  function rowNeedsDeleteConfirm(row) {
-    if (!row) return false;
-    return !!(
-      row.id ||
-      row.product ||
-      (row.quantity != null && Number(row.quantity) !== 1) ||
-      (row.unit_price != null && Number(row.unit_price) !== 0) ||
-      row.unit ||
-      row.brand
-    );
-  }
-
-  function requestDelete(idx) {
-    if (props.disabled) return;
-    const row = linesLocal.value[idx];
-    if (!rowNeedsDeleteConfirm(row)) {
-      removeRowAt(idx);
-      return;
-    }
-    pendingDeleteIndex.value = idx;
+function onDeleteVisible(visible) {
+  deleteDialogVisible.value = visible;
+  if (visible) return;
+  if (deleteResolved.value) {
     deleteResolved.value = false;
-    deleteDialogVisible.value = true;
+    return;
+  }
+  pendingDeleteIndex.value = null;
+}
+
+function removeRow(idx) {
+  requestDelete(idx);
+}
+
+function duplicateRow(idx) {
+  if (props.disabled) return;
+  const originalLine = linesLocal.value[idx];
+  const duplicatedLine = {
+    ...originalLine,
+    __key: cryptoRandom(),
+    selected: false,
+    id: null,
+    quantity: 1,
+    final_price: 0,
+    _errors: {},
+  };
+  const newIdx = idx + 1;
+  linesLocal.value.splice(newIdx, 0, duplicatedLine);
+  recalcRow(newIdx);
+  if (isCompact.value) openSheet(newIdx);
+}
+
+function openSheet(idx) {
+  sheetIndex.value = idx;
+  sheetOpen.value = true;
+}
+
+function closeSheet() {
+  sheetOpen.value = false;
+  sheetIndex.value = null;
+}
+
+function onSheetVisible(visible) {
+  sheetOpen.value = visible;
+  if (!visible) sheetIndex.value = null;
+}
+
+function addLineFromToolbar() {
+  addLine();
+  if (isCompact.value && !props.disabled) {
+    nextTick(() => openSheet(linesLocal.value.length - 1));
+  }
+}
+
+function rowPrimaryActions(idx) {
+  return [
+    {
+      key: "edit",
+      label: "Edit",
+      severity: "secondary",
+      icon: PencilIcon,
+      command: () => openSheet(idx),
+    },
+  ];
+}
+
+function rowMaintenanceActions(idx) {
+  if (props.disabled) return [];
+  return [
+    {
+      key: "delete",
+      label: "Delete",
+      severity: "danger",
+      icon: TrashIcon,
+      command: () => requestDelete(idx),
+    },
+  ];
+}
+
+function rowLineActions(idx) {
+  return rowMaintenanceActions(idx);
+}
+
+function onProductFilter(idx, event) {
+  const query = event?.value ?? "";
+  if (productFilterTimers[idx]) clearTimeout(productFilterTimers[idx]);
+  productFilterTimers[idx] = setTimeout(() => {
+    searchProducts(idx, query);
+  }, 250);
+}
+
+function onProductShow(idx, row) {
+  if (
+    row?.product_label &&
+    (!productOptions.value || !productOptions.value.length)
+  ) {
+    productOptions.value = optionsForProduct(row);
+  }
+}
+
+async function onProductModel(idx, val) {
+  const r = linesLocal.value[idx];
+  if (!r) return;
+  r.product = val;
+  if (!val) {
+    onProductCleared(idx);
+    return;
+  }
+  const option =
+    optionsForProduct(r).find((o) => o.value === val) ||
+    productOptions.value.find((o) => o.value === val);
+  if (option) {
+    if (option.product?.tracking_mode)
+      r._tracking_mode = option.product.tracking_mode;
+    await onProductSelected(idx, option);
+  } else {
+    await onProductChanged(idx);
+  }
+}
+
+async function searchProducts(idx, query) {
+  if (!query || query.length < 2) {
+    productOptions.value = [];
+    return;
   }
 
-  function confirmPendingDelete() {
-    const index = pendingDeleteIndex.value;
-    deleteResolved.value = true;
-    pendingDeleteIndex.value = null;
-    deleteDialogVisible.value = false;
-    if (index == null) return;
-    removeRowAt(index);
-  }
-
-  function onDeleteVisible(visible) {
-    deleteDialogVisible.value = visible;
-    if (visible) return;
-    if (deleteResolved.value) {
-      deleteResolved.value = false;
-      return;
-    }
-    pendingDeleteIndex.value = null;
-  }
-
-  function removeRow(idx) {
-    requestDelete(idx);
-  }
-
-  function duplicateRow(idx) {
-    if (props.disabled) return;
-    const originalLine = linesLocal.value[idx];
-    const duplicatedLine = {
-      ...originalLine,
-      __key: cryptoRandom(),
-      selected: false,
-      id: null,
-      quantity: 1,
-      final_price: 0,
-      _errors: {},
-    };
-    const newIdx = idx + 1;
-    linesLocal.value.splice(newIdx, 0, duplicatedLine);
-    recalcRow(newIdx);
-    if (isCompact.value) openSheet(newIdx);
-  }
-
-  function openSheet(idx) {
-    sheetIndex.value = idx;
-    sheetOpen.value = true;
-  }
-
-  function closeSheet() {
-    sheetOpen.value = false;
-    sheetIndex.value = null;
-  }
-
-  function onSheetVisible(visible) {
-    sheetOpen.value = visible;
-    if (!visible) sheetIndex.value = null;
-  }
-
-  function addLineFromToolbar() {
-    addLine();
-    if (isCompact.value && !props.disabled) {
-      nextTick(() => openSheet(linesLocal.value.length - 1));
-    }
-  }
-
-  function rowPrimaryActions(idx) {
-    return [
-      {
-        key: 'edit',
-        label: 'Edit',
-        severity: 'secondary',
-        icon: PencilIcon,
-        command: () => openSheet(idx),
+  loading.value.products[idx] = true;
+  try {
+    const { data } = await axios.get("/api/products/", {
+      params: {
+        search: query,
+        page_size: 20,
+        is_active: true,
       },
-    ];
+    });
+    const list = Array.isArray(data) ? data : data?.results || [];
+    productOptions.value = list.map((p) => {
+      const option = {
+        value: p.id,
+        label: `${p.name} (${p.sku})`,
+        product: p,
+      };
+      return option;
+    });
+  } catch (error) {
+    console.error("Error searching products:", error);
+    productOptions.value = [];
+  } finally {
+    loading.value.products[idx] = false;
   }
+}
 
-  function rowMaintenanceActions(idx) {
-    if (props.disabled) return [];
-    return [
-      {
-        key: 'delete',
-        label: 'Delete',
-        severity: 'danger',
-        icon: TrashIcon,
-        command: () => requestDelete(idx),
-      },
-    ];
+// Función para obtener las marcas de un producto
+async function fetchProductBrands(productId) {
+  try {
+    const { data } = await axios.get(`/api/products/${productId}/brands/`);
+    return data.brands || [];
+  } catch (error) {
+    console.warn("Could not fetch product brands:", error);
+    return [];
   }
+}
 
-  function rowLineActions(idx) {
-    return rowMaintenanceActions(idx);
-  }
+// Función para actualizar marcas cuando cambia el producto
+async function updateBrandsForProduct(idx, productId) {
+  if (!productId) return;
 
-  function onProductFilter(idx, event) {
-    const query = event?.value ?? '';
-    if (productFilterTimers[idx]) clearTimeout(productFilterTimers[idx]);
-    productFilterTimers[idx] = setTimeout(() => {
-      searchProducts(idx, query);
-    }, 250);
-  }
-
-  function onProductShow(idx, row) {
-    if (row?.product_label && (!productOptions.value || !productOptions.value.length)) {
-      productOptions.value = optionsForProduct(row);
-    }
-  }
-
-  async function onProductModel(idx, val) {
+  try {
+    const brands = await fetchProductBrands(productId);
     const r = linesLocal.value[idx];
-    if (!r) return;
-    r.product = val;
-    if (!val) {
-      onProductCleared(idx);
-      return;
-    }
-    const option =
-      optionsForProduct(r).find(o => o.value === val) ||
-      productOptions.value.find(o => o.value === val);
-    if (option) {
-      if (option.product?.tracking_mode) r._tracking_mode = option.product.tracking_mode;
-      await onProductSelected(idx, option);
-    } else {
-      await onProductChanged(idx);
-    }
-  }
 
-  async function searchProducts(idx, query) {
-    if (!query || query.length < 2) {
-      productOptions.value = [];
-      return;
-    }
+    if (brands.length > 0) {
+      // Marcas para el select JR (value / label)
+      r.brands = brands.map((b) => ({ value: b.id, label: b.name }));
 
-    loading.value.products[idx] = true;
-    try {
-      const { data } = await axios.get('/api/products/', {
-        params: {
-          search: query,
-          page_size: 20,
-          is_active: true,
-        },
-      });
-      const list = Array.isArray(data) ? data : data?.results || [];
-      productOptions.value = list.map(p => {
-        const option = {
-          value: p.id,
-          label: `${p.name} (${p.sku})`,
-          product: p,
-        };
-        return option;
-      });
-      
-    } catch (error) {
-      console.error('Error searching products:', error);
-      productOptions.value = [];
-    } finally {
-      loading.value.products[idx] = false;
-    }
-  }
-
-  // Función para obtener las marcas de un producto
-  async function fetchProductBrands(productId) {
-    try {
-      const { data } = await axios.get(`/api/products/${productId}/brands/`);
-      return data.brands || [];
-    } catch (error) {
-      console.warn('Could not fetch product brands:', error);
-      return [];
-    }
-  }
-
-  // Función para actualizar marcas cuando cambia el producto
-  async function updateBrandsForProduct(idx, productId) {
-    if (!productId) return;
-    
-    try {
-      const brands = await fetchProductBrands(productId);
-      const r = linesLocal.value[idx];
-      
-      if (brands.length > 0) {
-        // Marcas para el select JR (value / label)
-        r.brands = brands.map(b => ({ value: b.id, label: b.name }));
-        
-        // Si no hay marca seleccionada, usar la default
-        if (!r.brand) {
-          const defaultBrand = brands.find(b => b.is_default) || brands[0];
-          r.brand = defaultBrand.id;
-        }
-        
+      // Si no hay marca seleccionada, usar la default
+      if (!r.brand) {
+        const defaultBrand = brands.find((b) => b.is_default) || brands[0];
+        r.brand = defaultBrand.id;
       }
-    } catch (error) {
-      console.warn('Error updating brands for product:', error);
     }
+  } catch (error) {
+    console.warn("Error updating brands for product:", error);
   }
+}
 
-  // Función para manejar cuando cambia el producto por v-model
-  async function onProductChanged(idx) {
-    const r = linesLocal.value[idx];
-    if (r.product) {
-      await updateBrandsForProduct(idx, r.product);
-    } else {
-      r.brands = [];
-      r.brand = null;
-    }
+// Función para manejar cuando cambia el producto por v-model
+async function onProductChanged(idx) {
+  const r = linesLocal.value[idx];
+  if (r.product) {
+    await updateBrandsForProduct(idx, r.product);
+  } else {
+    r.brands = [];
+    r.brand = null;
   }
+}
 
-  async function onProductSelected(idx, option) {
-    const r = linesLocal.value[idx];
-    r.product_label = option?.product?.name || option?.label || '';
-    r.price_manually_edited = false;
+async function onProductSelected(idx, option) {
+  const r = linesLocal.value[idx];
+  r.product_label = option?.product?.name || option?.label || "";
+  r.price_manually_edited = false;
+  applyProductBrandAndImage(r, option?.product);
 
-    // Auto-fill fields from ProductPrice predeterminado
-    if (option?.value) {
-      try {
-        // Construir params con document_type_id si está disponible
-        const params = {};
-        if (props.documentTypeId) {
-          params.document_type_id = props.documentTypeId;
-        }
-        
-        const { data } = await axios.get(`/api/products/${option.value}/default-price/`, { params });
-        
-        // Auto-fill Unit desde ProductPrice predeterminado
-        if (data.unit) {
-          r.unit = data.unit;
-        }
-        
-        // Auto-fill Unit Price desde ProductPrice predeterminado
-        if (data.unit_price !== undefined) {
-          r.unit_price = data.unit_price;
-        }
-        
-        // Auto-fill Price Type desde ProductPrice predeterminado
-        if (data.price_type) {
-          r.price_type = data.price_type;
-        }
-        
-        // Auto-fill Brand desde Product (usa el default_brand ahora)
-        if (data.default_brand?.id) {
-          r.brand = data.default_brand.id;
-          // Solo establecer brands si no están ya cargadas
-          if (!r.brands || r.brands.length === 0) {
-            await updateBrandsForProduct(idx, option.value);
-          }
-        }
-        
-        if (data.purchase_unit_cost != null) {
-          r._purchase_unit_cost = Number(data.purchase_unit_cost);
-        }
-        
-      } catch (error) {
-        console.warn('Could not fetch product default price:', error);
-        
-        // Fallback: Auto-fill default unit from product if available
-        if (option?.product?.unit_default) {
-          r.unit = option.product.unit_default.id || option.product.unit_default;
-        }
-        
-        // Fallback: obtener marcas disponibles del producto usando la función dedicada
+  // Auto-fill fields from ProductPrice predeterminado
+  if (option?.value) {
+    try {
+      // Construir params con document_type_id si está disponible
+      const params = {};
+      if (props.documentTypeId) {
+        params.document_type_id = props.documentTypeId;
+      }
+
+      const { data } = await axios.get(
+        `/api/products/${option.value}/default-price/`,
+        { params },
+      );
+
+      // Auto-fill Unit desde ProductPrice predeterminado
+      if (data.unit) {
+        r.unit = data.unit;
+      }
+
+      // Auto-fill Unit Price desde ProductPrice predeterminado
+      if (data.unit_price !== undefined) {
+        r.unit_price = data.unit_price;
+      }
+
+      // Auto-fill Price Type desde ProductPrice predeterminado
+      if (data.price_type) {
+        r.price_type = data.price_type;
+      }
+
+      // Brand FK de Product (sin selector en UI)
+      applyProductBrandAndImage(r, {
+        brand: data.default_brand?.id,
+        image: r.product_image || option?.product?.image,
+      });
+      if (!r.brand) {
         await updateBrandsForProduct(idx, option.value);
-        await refreshPurchaseCost(idx);
       }
-    }
 
-    // Auto-fill default price type from work account if available (fallback)
-    if (props.workAccountId && props.workAccountId !== null && !r.price_type) {
-      try {
-        const { data } = await axios.get(`/api/work-accounts/${props.workAccountId}/`);
-        if (data.default_price_type) {
-          r.price_type = data.default_price_type;
-        }
-      } catch (error) {
-        // Manejar específicamente el caso de work account no encontrado (404)
-        if (error.response?.status === 404) {
-          console.warn(`Work account ${props.workAccountId} not found, skipping default price type`);
-        } else {
-          console.warn('Could not fetch work account default price type:', error);
-        }
-        // No mostrar error al usuario, simplemente continuar sin el precio por defecto
+      if (data.purchase_unit_cost != null) {
+        r._purchase_unit_cost = Number(data.purchase_unit_cost);
       }
-    }
 
-    // La unificación de duplicados (product+unit+brand) ocurre al terminar de editar cantidad
-    // (blur o Enter), no aquí, para permitir ajustar cantidad antes de sumar.
+      if (!r.product_image) {
+        await ensureProductImage(idx);
+      }
+    } catch (error) {
+      console.warn("Could not fetch product default price:", error);
 
-    syncPriceTypeMetadataToRow(idx);
-    if (r.product && r.unit) {
+      // Fallback: Auto-fill default unit from product if available
+      if (option?.product?.unit_default) {
+        r.unit = option.product.unit_default.id || option.product.unit_default;
+      }
+
+      await updateBrandsForProduct(idx, option.value);
+      await ensureProductImage(idx);
       await refreshPurchaseCost(idx);
     }
-    if (props.documentTypeIsSales) {
-      const applied = tryApplyAutoPricing(idx);
-      if (!applied) await applyDefaultCatalogPrice(idx);
-    }
-    recalcRow(idx);
   }
 
-  function onProductCleared(idx) {
-    const r = linesLocal.value[idx];
-    r.product_label = '';
-    r.product = null;
-    r.unit = null;
-    r.price_type = null;
-    r.brand = null;
-    r.brands = [];
-    r.pricing_rule = null;
-    r.margin_percent = null;
-    r.price_manually_edited = false;
-    r._purchase_unit_cost = null;
-    recalcRow(idx);
-  }
-
-  /**
-   * Fallback de tipo de precio cuando la línea (p. ej. favorito) no lo trae y hay cuenta operativa.
-   */
-  async function ensureWorkAccountDefaultPriceTypeIfNeeded(idx) {
-    const r = linesLocal.value[idx];
-    if (!r || props.workAccountId === null || props.workAccountId === undefined || r.price_type) return;
+  // Auto-fill default price type from work account if available (fallback)
+  if (props.workAccountId && props.workAccountId !== null && !r.price_type) {
     try {
-      const { data } = await axios.get(`/api/work-accounts/${props.workAccountId}/`);
+      const { data } = await axios.get(
+        `/api/work-accounts/${props.workAccountId}/`,
+      );
       if (data.default_price_type) {
         r.price_type = data.default_price_type;
       }
     } catch (error) {
+      // Manejar específicamente el caso de work account no encontrado (404)
       if (error.response?.status === 404) {
-        console.warn(`Work account ${props.workAccountId} not found, skipping default price type`);
+        console.warn(
+          `Work account ${props.workAccountId} not found, skipping default price type`,
+        );
       } else {
-        console.warn('Could not fetch work account default price type:', error);
+        console.warn("Could not fetch work account default price type:", error);
       }
+      // No mostrar error al usuario, simplemente continuar sin el precio por defecto
     }
   }
 
-  /**
-   * Recalcula precio por línea con las mismas reglas que al elegir producto en el select
-   * (markup/margen desde costo, catalog default-price si aplica).
-   * Uso: import desde favoritos (lines_data puede traer precios obsoletos).
-   */
-  async function rehydratePricingForRow(idx) {
-    const r = linesLocal.value[idx];
-    if (!r?.product) return;
+  // La unificación de duplicados (product+unit+brand) ocurre al terminar de editar cantidad
+  // (blur o Enter), no aquí, para permitir ajustar cantidad antes de sumar.
 
-    r.price_manually_edited = false;
+  syncPriceTypeMetadataToRow(idx);
+  if (r.product && r.unit) {
+    await refreshPurchaseCost(idx);
+  }
+  if (props.documentTypeIsSales) {
+    const applied = tryApplyAutoPricing(idx);
+    if (!applied) await applyDefaultCatalogPrice(idx);
+  }
+  recalcRow(idx);
+}
 
-    await updateBrandsForProduct(idx, r.product);
+async function ensureProductImage(idx) {
+  const r = linesLocal.value[idx];
+  if (!r?.product || r.product_image) return;
+  try {
+    const { data } = await axios.get(`/api/products/${r.product}/images/`);
+    const images = data?.images || [];
+    const primary = images.find((img) => img.is_primary) || images[0] || null;
+    if (primary?.image_url) {
+      r.product_image = primary.image_url;
+      if (brokenImageIds.value[r.product]) {
+        const next = { ...brokenImageIds.value };
+        delete next[r.product];
+        brokenImageIds.value = next;
+      }
+    }
+  } catch (error) {
+    console.warn("Could not load product image:", error);
+  }
+}
 
+function onProductCleared(idx) {
+  const r = linesLocal.value[idx];
+  r.product_label = "";
+  r.product = null;
+  r.product_image = "";
+  r.unit = null;
+  r.price_type = null;
+  r.brand = null;
+  r.brands = [];
+  r.pricing_rule = null;
+  r.margin_percent = null;
+  r.price_manually_edited = false;
+  r._purchase_unit_cost = null;
+  recalcRow(idx);
+}
+
+/**
+ * Fallback de tipo de precio cuando la línea (p. ej. favorito) no lo trae y hay cuenta operativa.
+ */
+async function ensureWorkAccountDefaultPriceTypeIfNeeded(idx) {
+  const r = linesLocal.value[idx];
+  if (
+    !r ||
+    props.workAccountId === null ||
+    props.workAccountId === undefined ||
+    r.price_type
+  )
+    return;
+  try {
+    const { data } = await axios.get(
+      `/api/work-accounts/${props.workAccountId}/`,
+    );
+    if (data.default_price_type) {
+      r.price_type = data.default_price_type;
+    }
+  } catch (error) {
+    if (error.response?.status === 404) {
+      console.warn(
+        `Work account ${props.workAccountId} not found, skipping default price type`,
+      );
+    } else {
+      console.warn("Could not fetch work account default price type:", error);
+    }
+  }
+}
+
+/**
+ * Recalcula precio por línea con las mismas reglas que al elegir producto en el select
+ * (markup/margen desde costo, catalog default-price si aplica).
+ * Uso: import desde favoritos (lines_data puede traer precios obsoletos).
+ */
+async function rehydratePricingForRow(idx) {
+  const r = linesLocal.value[idx];
+  if (!r?.product) return;
+
+  r.price_manually_edited = false;
+
+  await updateBrandsForProduct(idx, r.product);
+
+  try {
+    const params = {};
+    if (props.documentTypeId) params.document_type_id = props.documentTypeId;
+    if (r.unit) params.unit = r.unit;
+    const { data } = await axios.get(
+      `/api/products/${r.product}/default-price/`,
+      { params },
+    );
+
+    if (!r.unit && data.unit) r.unit = data.unit;
+    if (data.price_type != null && data.price_type !== undefined) {
+      r.price_type = data.price_type;
+    }
+    if (data.default_brand?.id != null && (r.brand == null || r.brand === "")) {
+      r.brand = data.default_brand.id;
+    }
+    if (data.purchase_unit_cost != null) {
+      r._purchase_unit_cost = Number(data.purchase_unit_cost);
+    }
+  } catch (e) {
+    console.warn("rehydratePricingForRow default-price:", e);
+  }
+
+  await ensureWorkAccountDefaultPriceTypeIfNeeded(idx);
+
+  syncPriceTypeMetadataToRow(idx);
+
+  if (r.product && r.unit) {
+    await refreshPurchaseCost(idx);
+  }
+
+  if (props.documentTypeIsSales) {
+    const applied = tryApplyAutoPricing(idx);
+    if (!applied) await applyDefaultCatalogPrice(idx);
+  } else {
+    await applyDefaultCatalogPrice(idx);
+  }
+
+  recalcRow(idx);
+}
+
+/**
+ * Tras importar favoritos: repreciar solo líneas marcadas por TransactionForm
+ * (__favoriteImportReprice), sin alterar líneas que ya había antes del append.
+ */
+async function rehydratePricingAfterFavoriteImport() {
+  // Dos ticks: el watch de props deja isUpdatingFromProps=false antes de mutar.
+  await nextTick();
+  await nextTick();
+  for (let i = 0; i < linesLocal.value.length; i++) {
+    const row = linesLocal.value[i];
+    if (!row?.product || !row.__favoriteImportReprice) continue;
     try {
-      const params = {};
-      if (props.documentTypeId) params.document_type_id = props.documentTypeId;
-      if (r.unit) params.unit = r.unit;
-      const { data } = await axios.get(`/api/products/${r.product}/default-price/`, { params });
+      await rehydratePricingForRow(i);
+    } catch (error) {
+      console.warn("rehydratePricingForRow after favorite:", error);
+    }
+    try {
+      await ensureProductImage(i);
+    } finally {
+      delete row.__favoriteImportReprice;
+    }
+  }
+  emit("recalc");
+}
 
-      if (!r.unit && data.unit) r.unit = data.unit;
-      if (data.price_type != null && data.price_type !== undefined) {
-        r.price_type = data.price_type;
-      }
-      if (data.default_brand?.id != null && (r.brand == null || r.brand === '')) {
-        r.brand = data.default_brand.id;
-      }
-      if (data.purchase_unit_cost != null) {
-        r._purchase_unit_cost = Number(data.purchase_unit_cost);
-      }
-    } catch (e) {
-      console.warn('rehydratePricingForRow default-price:', e);
+/** Tras Excel/favoritos: completar miniaturas ausentes vía /images/. */
+async function hydrateImagesAfterImport() {
+  await nextTick();
+  await nextTick();
+  for (let i = 0; i < linesLocal.value.length; i++) {
+    const row = linesLocal.value[i];
+    if (!row?.product) continue;
+    if (row.product_image && !row.__importHydrateImages) {
+      delete row.__importHydrateImages;
+      continue;
+    }
+    try {
+      await ensureProductImage(i);
+    } finally {
+      delete row.__importHydrateImages;
+    }
+  }
+  emit("recalc");
+}
+
+/**
+ * Si hay otra línea con mismo product+unit+brand, suma cantidad ahí y elimina la fila actual.
+ * @returns {number|null} Índice de la fila que permanece (tras splice), o null si no hubo merge.
+ */
+function maybeMergeDuplicate(idx) {
+  const r = linesLocal.value[idx];
+  if (!r?.product) return null;
+
+  for (let i = 0; i < linesLocal.value.length; i++) {
+    if (i === idx) continue;
+    const o = linesLocal.value[i];
+    if (
+      o.product === r.product &&
+      (o.unit || null) === (r.unit || null) &&
+      (o.brand || null) === (r.brand || null)
+    ) {
+      const keepIdx = i;
+      o.quantity = Number(o.quantity || 0) + Number(r.quantity || 0);
+      recalcRow(keepIdx);
+      linesLocal.value.splice(idx, 1);
+      return keepIdx < idx ? keepIdx : keepIdx - 1;
+    }
+  }
+  return null;
+}
+
+// Validation function for lines
+function validateLines() {
+  let isValid = true;
+
+  linesLocal.value.forEach((line, idx) => {
+    line._errors = {};
+
+    // Required fields
+    if (!line.product) {
+      line._errors.product = ["Product is required"];
+      isValid = false;
     }
 
-    await ensureWorkAccountDefaultPriceTypeIfNeeded(idx);
+    if (!line.quantity || line.quantity <= 0) {
+      line._errors.quantity = ["Quantity must be greater than 0"];
+      isValid = false;
+    }
 
-    syncPriceTypeMetadataToRow(idx);
+    // unit es opcional según la estructura de la tabla (unit_id DEFAULT NULL)
+    // if (!line.unit) {
+    //   line._errors.unit = ['Unit is required'];
+    //   isValid = false;
+    // }
 
-    if (r.product && r.unit) {
-      await refreshPurchaseCost(idx);
+    if (
+      line.unit_price === null ||
+      line.unit_price === undefined ||
+      line.unit_price < 0
+    ) {
+      line._errors.unit_price = ["Unit price must be 0 or greater"];
+      isValid = false;
     }
 
     if (props.documentTypeIsSales) {
-      const applied = tryApplyAutoPricing(idx);
-      if (!applied) await applyDefaultCatalogPrice(idx);
+      if (
+        line.margin_percent !== null &&
+        line.margin_percent !== undefined &&
+        line.margin_percent !== ""
+      ) {
+        const mp = Number(line.margin_percent);
+        if (!Number.isFinite(mp) || mp < 0 || mp > 100) {
+          line._errors.margin_percent = ["Margin % must be between 0 and 100"];
+          isValid = false;
+        }
+      }
+    }
+
+    // Warehouse validation based on document type
+    if (props.documentTypeId) {
+      // This validation should be done on the backend based on document type requirements
+      // For now, we'll just ensure warehouse is provided if required
+    }
+  });
+
+  return isValid;
+}
+
+// Función para navegar entre campos con Enter
+function focusNextField(rowIndex, fieldName) {
+  nextTick(() => {
+    const fieldMap = {
+      quantity: "quantity",
+      unit_price: "unit_price",
+      discount_percentage: "discount_percentage",
+      unit: "unit",
+      warehouse: "warehouse",
+      price_type: "price_type",
+      margin_percent: "margin_percent",
+      brand: "brand",
+    };
+    const fieldId = fieldMap[fieldName];
+    if (!fieldId) return;
+    const element = document.getElementById(`${fieldId}-${rowIndex}`);
+    if (!element) return;
+    if (element.tagName === "INPUT") {
+      element.focus();
+      element.select?.();
+      return;
+    }
+    const inner =
+      element.querySelector("input") ||
+      element.closest(".p-select")?.querySelector("input");
+    if (inner) {
+      inner.focus();
+      inner.select?.();
     } else {
-      await applyDefaultCatalogPrice(idx);
+      element.focus?.();
     }
+  });
+}
 
-    recalcRow(idx);
-  }
-
-  /**
-   * Tras importar favoritos: repreciar solo líneas marcadas por TransactionForm
-   * (__favoriteImportReprice), sin alterar líneas que ya había antes del append.
-   */
-  async function rehydratePricingAfterFavoriteImport() {
-    await nextTick();
-    for (let i = 0; i < linesLocal.value.length; i++) {
-      const row = linesLocal.value[i];
-      if (!row?.product || !row.__favoriteImportReprice) continue;
-      await rehydratePricingForRow(i);
-      delete row.__favoriteImportReprice;
-    }
-    emit('recalc');
-  }
-
-  /**
-   * Si hay otra línea con mismo product+unit+brand, suma cantidad ahí y elimina la fila actual.
-   * @returns {number|null} Índice de la fila que permanece (tras splice), o null si no hubo merge.
-   */
-  function maybeMergeDuplicate(idx) {
-    const r = linesLocal.value[idx];
-    if (!r?.product) return null;
-
-    for (let i = 0; i < linesLocal.value.length; i++) {
-      if (i === idx) continue;
-      const o = linesLocal.value[i];
-      if (o.product === r.product && (o.unit || null) === (r.unit || null) && (o.brand || null) === (r.brand || null)) {
-        const keepIdx = i;
-        o.quantity = Number(o.quantity || 0) + Number(r.quantity || 0);
-        recalcRow(keepIdx);
-        linesLocal.value.splice(idx, 1);
-        return keepIdx < idx ? keepIdx : keepIdx - 1;
-      }
-    }
-    return null;
-  }
-
-  // Validation function for lines
-  function validateLines() {
-    let isValid = true;
-
-    linesLocal.value.forEach((line, idx) => {
-      line._errors = {};
-
-      // Required fields
-      if (!line.product) {
-        line._errors.product = ['Product is required'];
-        isValid = false;
-      }
-
-      if (!line.quantity || line.quantity <= 0) {
-        line._errors.quantity = ['Quantity must be greater than 0'];
-        isValid = false;
-      }
-
-      // unit es opcional según la estructura de la tabla (unit_id DEFAULT NULL)
-      // if (!line.unit) {
-      //   line._errors.unit = ['Unit is required'];
-      //   isValid = false;
-      // }
-
-      if (line.unit_price === null || line.unit_price === undefined || line.unit_price < 0) {
-        line._errors.unit_price = ['Unit price must be 0 or greater'];
-        isValid = false;
-      }
-
-      if (props.documentTypeIsSales) {
-        if (line.margin_percent !== null && line.margin_percent !== undefined && line.margin_percent !== '') {
-          const mp = Number(line.margin_percent);
-          if (!Number.isFinite(mp) || mp < 0 || mp > 100) {
-            line._errors.margin_percent = ['Margin % must be between 0 and 100'];
-            isValid = false;
-          }
-        }
-      }
-
-      // Warehouse validation based on document type
-      if (props.documentTypeId) {
-        // This validation should be done on the backend based on document type requirements
-        // For now, we'll just ensure warehouse is provided if required
-      }
-    });
-
-    return isValid;
-  }
-
-  // Función para navegar entre campos con Enter
-  function focusNextField(rowIndex, fieldName) {
-    nextTick(() => {
-      const fieldMap = {
-        quantity: 'quantity',
-        unit_price: 'unit_price',
-        discount_percentage: 'discount_percentage',
-        unit: 'unit',
-        warehouse: 'warehouse',
-        price_type: 'price_type',
-        margin_percent: 'margin_percent',
-        brand: 'brand',
-      };
-      const fieldId = fieldMap[fieldName];
-      if (!fieldId) return;
-      const element = document.getElementById(`${fieldId}-${rowIndex}`);
-      if (!element) return;
-      if (element.tagName === 'INPUT') {
-        element.focus();
-        element.select?.();
-        return;
-      }
+function focusNextRow(currentRowIndex) {
+  nextTick(() => {
+    const nextRowIndex = currentRowIndex + 1;
+    const focusProduct = (idx) => {
+      const el = document.getElementById(`product-${idx}`);
       const inner =
-        element.querySelector('input') ||
-        element.closest('.p-select')?.querySelector('input');
-      if (inner) {
-        inner.focus();
-        inner.select?.();
-      } else {
-        element.focus?.();
-      }
-    });
-  }
-
-  function focusNextRow(currentRowIndex) {
-    nextTick(() => {
-      const nextRowIndex = currentRowIndex + 1;
-      const focusProduct = (idx) => {
-        const el = document.getElementById(`product-${idx}`);
-        const inner =
-          el?.querySelector?.('input') ||
-          el?.closest?.('.p-select')?.querySelector('input');
-        if (inner) inner.focus();
-        else if (isCompact.value) openSheet(idx);
-      };
-      if (nextRowIndex < linesLocal.value.length) {
-        focusProduct(nextRowIndex);
-      } else if (!props.disabled) {
-        addLine();
-        nextTick(() => {
-          if (isCompact.value) openSheet(linesLocal.value.length - 1);
-          else focusProduct(linesLocal.value.length - 1);
-        });
-      }
-    });
-  }
-
-  let _phoneMq = null;
-  let _tabletMq = null;
-  let _onMedia = null;
-
-  // Cargar warehouse predeterminado al montar el componente
-  onMounted(async () => {
-    syncViewport();
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      _phoneMq = window.matchMedia(PHONE_MQ);
-      _tabletMq = window.matchMedia(TABLET_MQ);
-      _onMedia = () => syncViewport();
-      [_phoneMq, _tabletMq].forEach(mq => {
-        if (mq.addEventListener) mq.addEventListener('change', _onMedia);
-        else mq.addListener(_onMedia);
-      });
-    }
-
-    await loadDefaultWarehouse();
-
-    if (linesLocal.value.length > 0 && defaultWarehouse.value) {
-      linesLocal.value.forEach(line => {
-        if (!line.warehouse) {
-          line.warehouse = defaultWarehouse.value;
-        }
+        el?.querySelector?.("input") ||
+        el?.closest?.(".p-select")?.querySelector("input");
+      if (inner) inner.focus();
+      else if (isCompact.value) openSheet(idx);
+    };
+    if (nextRowIndex < linesLocal.value.length) {
+      focusProduct(nextRowIndex);
+    } else if (!props.disabled) {
+      addLine();
+      nextTick(() => {
+        if (isCompact.value) openSheet(linesLocal.value.length - 1);
+        else focusProduct(linesLocal.value.length - 1);
       });
     }
   });
+}
 
-  onBeforeUnmount(() => {
-    [_phoneMq, _tabletMq].forEach(mq => {
-      if (!mq || !_onMedia) return;
-      if (mq.removeEventListener) mq.removeEventListener('change', _onMedia);
-      else mq.removeListener(_onMedia);
+let _phoneMq = null;
+let _tabletMq = null;
+let _onMedia = null;
+
+// Cargar warehouse predeterminado al montar el componente
+onMounted(async () => {
+  syncViewport();
+  if (typeof window !== "undefined" && window.matchMedia) {
+    _phoneMq = window.matchMedia(PHONE_MQ);
+    _tabletMq = window.matchMedia(TABLET_MQ);
+    _onMedia = () => syncViewport();
+    [_phoneMq, _tabletMq].forEach((mq) => {
+      if (mq.addEventListener) mq.addEventListener("change", _onMedia);
+      else mq.addListener(_onMedia);
     });
-    Object.values(productFilterTimers).forEach(t => clearTimeout(t));
-  });
+  }
 
-  defineExpose({
-    validateLines,
-    rehydratePricingAfterFavoriteImport,
-    rehydratePricingForRow,
-    addLine,
-    addLineFromToolbar,
+  await loadDefaultWarehouse();
+
+  if (linesLocal.value.length > 0 && defaultWarehouse.value) {
+    linesLocal.value.forEach((line) => {
+      if (!line.warehouse) {
+        line.warehouse = defaultWarehouse.value;
+      }
+    });
+  }
+});
+
+onBeforeUnmount(() => {
+  [_phoneMq, _tabletMq].forEach((mq) => {
+    if (!mq || !_onMedia) return;
+    if (mq.removeEventListener) mq.removeEventListener("change", _onMedia);
+    else mq.removeListener(_onMedia);
   });
+  Object.values(productFilterTimers).forEach((t) => clearTimeout(t));
+});
+
+defineExpose({
+  validateLines,
+  rehydratePricingAfterFavoriteImport,
+  hydrateImagesAfterImport,
+  rehydratePricingForRow,
+  addLine,
+  addLineFromToolbar,
+});
 </script>
 
 <style scoped>
@@ -1825,7 +2192,11 @@
 }
 
 .jr-lines-table__row--selected {
-  background: color-mix(in srgb, var(--color-jr-primary) 6%, var(--color-jr-surface));
+  background: color-mix(
+    in srgb,
+    var(--color-jr-primary) 6%,
+    var(--color-jr-surface)
+  );
 }
 
 .jr-lines-item__check {
@@ -1864,10 +2235,71 @@
   gap: 0.35rem;
 }
 
+.jr-lines-product-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.jr-lines-product-cell__thumb {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  line-height: 0;
+  cursor: pointer;
+  border-radius: var(--radius-jr-control);
+}
+
+.jr-lines-product-cell__thumb:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.jr-lines-product-cell__thumb:hover:not(:disabled) .jr-lines-product-cell__img,
+.jr-lines-product-cell__thumb:hover:not(:disabled) .jr-lines-product-cell__ph {
+  border-color: var(--color-jr-hover-border);
+}
+
+.jr-lines-product-cell__thumb:focus-visible {
+  outline: 2px solid var(--color-jr-primary);
+  outline-offset: 2px;
+}
+
+.jr-lines-product-cell__img,
+.jr-lines-product-cell__ph {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border: 1px solid var(--color-jr-border);
+  border-radius: var(--radius-jr-control);
+  background: var(--color-jr-surface-muted);
+  object-fit: cover;
+}
+
+.jr-lines-product-cell__ph {
+  display: block;
+  border-style: dashed;
+}
+
+.jr-lines-table__thumb {
+  width: 3.25rem;
+  min-width: 3.25rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
 .jr-lines-item__title {
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--color-jr-text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .jr-lines-item__meta {
@@ -1964,6 +2396,38 @@
   width: 24%;
 }
 
+/* Qty: ####.## (+2 digits) + stacked steppers; tight gap before button-group. */
+.jr-lines-table__qty {
+  min-width: 8rem;
+  width: 8rem;
+}
+
+.jr-lines-table__qty :deep(.p-inputnumber) {
+  min-width: 0;
+  width: 100%;
+}
+
+.jr-lines-table__qty :deep(.p-inputnumber-input) {
+  min-width: 0;
+  width: 100%;
+  padding-inline-end: 0.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.jr-lines-table__qty :deep(.p-inputnumber-button) {
+  width: 1.25rem;
+  border-radius: var(--radius-jr-control, 0);
+}
+
+.jr-lines-table__qty :deep(.p-inputnumber-button-group) {
+  min-width: 1.25rem;
+}
+
+.jr-lines-table__unit {
+  min-width: 5.5rem;
+  width: 6rem;
+}
+
 .jr-lines-table__price {
   min-width: 9.5rem;
   width: 9.5rem;
@@ -1975,25 +2439,54 @@
   width: 100%;
 }
 
+.jr-lines-table__price :deep(.p-inputnumber-input) {
+  font-variant-numeric: tabular-nums;
+}
+
+.jr-lines-table__disc {
+  min-width: 5.75rem;
+  width: 5.75rem;
+}
+
+.jr-lines-table__disc :deep(.p-inputnumber),
+.jr-lines-table__disc :deep(.p-inputtext) {
+  min-width: 5.25rem;
+  width: 100%;
+}
+
+.jr-lines-table__disc :deep(.p-inputnumber-input) {
+  font-variant-numeric: tabular-nums;
+}
+
 .jr-lines-table__product :deep(.p-select) {
   min-width: 0;
   width: 100%;
 }
 
-@media (min-width: 1024px) and (max-width: 1199.98px) {
-  /* iPad Pro portrait (~1032) and small laptops: favor Product + Unit Price. */
+@media (min-width: 1024px) and (max-width: 1399.98px) {
+  /* ThinkPad-class: Qty −1rem vs prior 7rem; Disc % reserved. */
   .jr-lines-table {
-    min-width: 66rem;
+    min-width: 68rem;
   }
 
   .jr-lines-table__product {
-    min-width: 18rem;
-    width: 28%;
+    min-width: 16rem;
+    width: 24%;
+  }
+
+  .jr-lines-table__qty {
+    min-width: 7.25rem;
+    width: 7.25rem;
+  }
+
+  .jr-lines-table__disc {
+    min-width: 5.5rem;
+    width: 5.5rem;
   }
 
   .jr-lines-table__price {
     min-width: 9rem;
-    width: 10rem;
+    width: 9.5rem;
   }
 }
 
