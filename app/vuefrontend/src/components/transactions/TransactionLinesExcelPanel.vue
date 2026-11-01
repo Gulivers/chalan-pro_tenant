@@ -132,6 +132,8 @@ async function fetchProductsMaps() {
       id: p.id,
       name: p.name || "",
       sku: (p.sku && String(p.sku)) || "",
+      image: p.image || "",
+      default_brand: p.default_brand || null,
     };
     byId.set(Number(p.id), item);
     const skuKey = String(item.sku || "")
@@ -390,6 +392,7 @@ async function rowsToLines(col, dataRows, productById, productBySku, importMode)
         id: null,
         product: prod.id,
         product_label: prod.name,
+        product_image: prod.image || "",
         quantity: Number.isFinite(qty) ? qty : 1,
         unit: unitId,
         unit_price: Number.isFinite(unitPrice) ? unitPrice : 0,
@@ -397,10 +400,11 @@ async function rowsToLines(col, dataRows, productById, productBySku, importMode)
         final_price: lineFinal(qty, unitPrice, disc),
         warehouse: warehouseId,
         price_type: priceTypeId,
-        brand: brandId,
+        brand: brandId ?? prod.default_brand?.id ?? null,
         brands: [],
         _errors: {},
         _import_resolved_by: resolvedBy,
+        __importHydrateImages: !prod.image,
       });
     } catch (e) {
       rowErrors.push(`Row ${excelRow}: ${e.message || e}`);

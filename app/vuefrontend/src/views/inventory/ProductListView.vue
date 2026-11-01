@@ -380,7 +380,7 @@
     <JRDialog
       :visible="galleryVisible"
       :header="galleryHeader"
-      size="wide"
+      size="square"
       :showFooter="false"
       @update:visible="onGalleryVisible">
       <ProductBrandImages

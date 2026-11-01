@@ -68,6 +68,7 @@
   - [9.4 Comandos de Gestión](#94-comandos-de-gestión)
     - [9.4.1 Configuración DocumentType: creates_serialized_items](#941-configuración-documenttype-creates_serialized_items)
     - [9.4.2 JobRhythm Assistant: intenciones analíticas en DocumentType](#942-jobrhythm-assistant-intenciones-analíticas-en-documenttype)
+    - [9.4.3 Document Status workflows por tipo](#943-document-status-workflows-por-tipo)
   - [9.5 Generar el Fixture JSON de Datos Maestros](#95-generar-el-fixture-json-de-datos-maestros)
   - [9.6 Workflow: Serialized Items e Inventory Transfers](#96-workflow-serialized-items-e-inventory-transfers)
   - [9.7 Cálculo dinámico de precios en líneas de documento](#97-precios-lineas-documento)
@@ -1749,6 +1750,41 @@ docker compose exec backend python manage.py migrate_schemas
 - Helpers: `apptransactions.assistant_intentions`
 - Spend QS: `appassistant.services.spend.spend_documents_qs` (filtra por `counts_as_net_invoiced_spend`, no por `type_code='PINV'`)
 - Definición canónica del métrico: `appassistant.spend_definition.SPEND_DEFINITION`
+
+#### 9.4.3 Document Status workflows por tipo
+
+Cada tipo maestro puede tener un workflow lineal de `DocumentStatus` (`sequence`, un `is_initial`, un terminal). El flag `uses_status_tracking` queda **OFF** por defecto: los statuses se siembran listos, y el admin los activa en `/document-types` cuando quiera tracking en documentos nuevos. **MR** es protegido (siempre trackea; no se siembra desde este catálogo).
+
+| Tipo | Workflow (codes) |
+|------|------------------|
+| PR | requested → approved → ordered → closed |
+| PO | draft → submitted → approved → ordered → closed |
+| GRN | draft → received → inspected → posted → closed |
+| PINV | draft → submitted → approved → posted → closed |
+| PRN | draft → approved → returned → closed |
+| SQ | draft → sent → accepted → closed |
+| SO | draft → confirmed → allocated → closed |
+| DN | draft → packed → shipped → delivered → closed |
+| INV | draft → submitted → posted → closed |
+| CRN | draft → approved → posted → closed |
+| PK | requested → approved → preparing → picked → closed |
+| MR | requested → approved → preparing → delivered → closed *(sistema)* |
+
+**Sembrar tenants existentes** (idempotente; no sobrescribe si el tipo ya tiene statuses):
+
+```bash
+# Un schema
+docker compose -f docker-compose.dev.yml exec backend \
+  python manage.py seed_document_status_workflows --schema jobrhythm_products
+
+# Todos los tenants no-public
+docker compose -f docker-compose.dev.yml exec backend \
+  python manage.py seed_document_status_workflows
+```
+
+**UI:** en el formulario del tipo, botón **Apply default workflow** (si no hay statuses). Lista `/document-types` muestra Tracking On/Off y conteo de Statuses. API: `POST /api/document-types/<id>/seed-default-statuses/`.
+
+**Código:** `apptransactions.services.document_status.DEFAULT_DOCUMENT_STATUS_SEEDS`, comando `seed_document_status_workflows`, onboarding/`create_tenant` ya llaman `seed_default_document_statuses()`.
 
 ### 9.5 Generar el Fixture JSON de Datos Maestros
 

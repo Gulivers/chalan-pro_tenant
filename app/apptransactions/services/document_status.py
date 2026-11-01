@@ -20,6 +20,7 @@ from apptransactions.models import (
 )
 
 # Semilla idempotente para tenants nuevos / migraciones. Tracking queda OFF.
+# MR no está aquí: lo siembra la migración 0008 y es PROTECTED.
 DEFAULT_DOCUMENT_STATUS_SEEDS = {
     'PO': (
         ('draft', 'Draft', 1, True, False),
@@ -41,6 +42,57 @@ DEFAULT_DOCUMENT_STATUS_SEEDS = {
         ('ordered', 'Ordered', 3, False, False),
         ('closed', 'Closed', 4, False, True),
     ),
+    'GRN': (
+        ('draft', 'Draft', 1, True, False),
+        ('received', 'Received', 2, False, False),
+        ('inspected', 'Inspected', 3, False, False),
+        ('posted', 'Posted', 4, False, False),
+        ('closed', 'Closed', 5, False, True),
+    ),
+    'PINV': (
+        ('draft', 'Draft', 1, True, False),
+        ('submitted', 'Submitted', 2, False, False),
+        ('approved', 'Approved', 3, False, False),
+        ('posted', 'Posted', 4, False, False),
+        ('closed', 'Closed', 5, False, True),
+    ),
+    'PRN': (
+        ('draft', 'Draft', 1, True, False),
+        ('approved', 'Approved', 2, False, False),
+        ('returned', 'Returned', 3, False, False),
+        ('closed', 'Closed', 4, False, True),
+    ),
+    'SQ': (
+        ('draft', 'Draft', 1, True, False),
+        ('sent', 'Sent', 2, False, False),
+        ('accepted', 'Accepted', 3, False, False),
+        ('closed', 'Closed', 4, False, True),
+    ),
+    'SO': (
+        ('draft', 'Draft', 1, True, False),
+        ('confirmed', 'Confirmed', 2, False, False),
+        ('allocated', 'Allocated', 3, False, False),
+        ('closed', 'Closed', 4, False, True),
+    ),
+    'DN': (
+        ('draft', 'Draft', 1, True, False),
+        ('packed', 'Packed', 2, False, False),
+        ('shipped', 'Shipped', 3, False, False),
+        ('delivered', 'Delivered', 4, False, False),
+        ('closed', 'Closed', 5, False, True),
+    ),
+    'INV': (
+        ('draft', 'Draft', 1, True, False),
+        ('submitted', 'Submitted', 2, False, False),
+        ('posted', 'Posted', 3, False, False),
+        ('closed', 'Closed', 4, False, True),
+    ),
+    'CRN': (
+        ('draft', 'Draft', 1, True, False),
+        ('approved', 'Approved', 2, False, False),
+        ('posted', 'Posted', 3, False, False),
+        ('closed', 'Closed', 4, False, True),
+    ),
 }
 
 
@@ -59,13 +111,71 @@ def initial_status_for(document_type):
     return status
 
 
+def seed_default_statuses_for_type(
+    document_type,
+    *,
+    document_status_model=None,
+    force=False,
+):
+    """
+    Crea el workflow por defecto para un DocumentType concreto.
+
+    - Requiere type_code en DEFAULT_DOCUMENT_STATUS_SEEDS.
+    - Si ya hay statuses y force=False: no-op (created=0).
+    - No activa uses_status_tracking.
+    - No aplica a tipos protegidos (MR).
+    """
+    from apptransactions.models import DocumentStatus as LiveStatus
+    from apptransactions.models import DocumentType as LiveType
+
+    DocumentStatusModel = document_status_model or LiveStatus
+    if document_type is None:
+        raise ValidationError({'document_type': 'Document type is required.'})
+    type_code = getattr(document_type, 'type_code', None)
+    if type_code in getattr(LiveType, 'PROTECTED_TYPE_CODES', frozenset()):
+        raise ValidationError({
+            'document_type': (
+                'System-managed document types cannot receive default status seeds.'
+            ),
+        })
+    rows = DEFAULT_DOCUMENT_STATUS_SEEDS.get(type_code)
+    if not rows:
+        raise ValidationError({
+            'document_type': (
+                f'No default status workflow is defined for type code "{type_code}".'
+            ),
+        })
+    existing = DocumentStatusModel.objects.filter(document_type=document_type)
+    if existing.exists():
+        if not force:
+            return 0
+        raise ValidationError({
+            'document_type': (
+                'This document type already has statuses. '
+                'Clear or deactivate them before applying the default workflow.'
+            ),
+        })
+    created = 0
+    for code, name, sequence, is_initial, is_terminal in rows:
+        DocumentStatusModel.objects.create(
+            document_type=document_type,
+            code=code,
+            name=name,
+            sequence=sequence,
+            is_initial=is_initial,
+            is_terminal=is_terminal,
+            is_active=True,
+        )
+        created += 1
+    return created
+
+
 def seed_default_document_statuses(document_type_model=None, document_status_model=None):
     """
-    Crea estados predeterminados para PO/PK/PR si faltan.
+    Crea estados predeterminados para tipos maestros si faltan.
 
-    Idempotente: get_or_create por (document_type, code). No actualiza filas
-    existentes (los admins del tenant conservan personalizaciones).
-    No activa uses_status_tracking.
+    Idempotente: si el tipo ya tiene estados, no toca nada (los admins del
+    tenant conservan personalizaciones). No activa uses_status_tracking.
     """
     from apptransactions.models import DocumentStatus as LiveStatus
     from apptransactions.models import DocumentType as LiveType
@@ -73,24 +183,19 @@ def seed_default_document_statuses(document_type_model=None, document_status_mod
     DocumentType = document_type_model or LiveType
     DocumentStatusModel = document_status_model or LiveStatus
     created = 0
-    for type_code, rows in DEFAULT_DOCUMENT_STATUS_SEEDS.items():
+    for type_code in DEFAULT_DOCUMENT_STATUS_SEEDS:
         document_type = DocumentType.objects.filter(type_code=type_code).first()
         if document_type is None:
             continue
-        # Si el tenant ya tiene estados para este tipo, no tocar nada.
-        if DocumentStatusModel.objects.filter(document_type=document_type).exists():
-            continue
-        for code, name, sequence, is_initial, is_terminal in rows:
-            DocumentStatusModel.objects.create(
-                document_type=document_type,
-                code=code,
-                name=name,
-                sequence=sequence,
-                is_initial=is_initial,
-                is_terminal=is_terminal,
-                is_active=True,
+        try:
+            created += seed_default_statuses_for_type(
+                document_type,
+                document_status_model=DocumentStatusModel,
+                force=False,
             )
-            created += 1
+        except ValidationError:
+            # Plantilla ausente / protegido: omitir en seed masivo.
+            continue
     return created
 
 

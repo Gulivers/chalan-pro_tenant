@@ -73,6 +73,14 @@
       </p>
 
       <JRSection v-if="!loadingDocument" title="Document">
+        <template #actions>
+          <JRCheckbox
+            class="jr-tx-form__doc-active"
+            v-model="form.is_active"
+            inputId="tx-is-active"
+            :label="form.is_active ? 'Active' : 'Voided'"
+            :disabled="isReadOnly" />
+        </template>
         <div class="jr-form-grid jr-form-grid--document">
           <JRField
             v-slot="{ describedby }"
@@ -142,41 +150,14 @@
               placeholder="Select date"
               @update:modelValue="onDateChange" />
           </JRField>
-
-          <JRField
-            :label="form.is_active ? 'Active' : 'Voided'"
-            inputId="tx-is-active">
-            <JRCheckbox
-              v-model="form.is_active"
-              inputId="tx-is-active"
-              :ariaLabel="form.is_active ? 'Active' : 'Voided'"
-              :disabled="isReadOnly" />
-            <Message
-              v-if="!form.is_active"
-              class="jr-tx-form__info"
-              severity="warn"
-              :closable="false">
-              This transaction is voided and will be ignored in reports.
-            </Message>
-          </JRField>
-
-          <JRField
-            class="jr-tx-form__notes"
-            v-slot="{ describedby, invalid }"
-            label="Notes"
-            inputId="tx-notes"
-            :error="fieldError('notes')">
-            <JRTextarea
-              inputId="tx-notes"
-              :modelValue="form.notes"
-              :rows="2"
-              placeholder="Additional notes…"
-              :disabled="isReadOnly"
-              :invalid="invalid"
-              :ariaDescribedby="describedby"
-              @update:modelValue="form.notes = ($event || '').trim()" />
-          </JRField>
         </div>
+        <Message
+          v-if="!form.is_active"
+          class="jr-tx-form__info jr-tx-form__info--voided"
+          severity="warn"
+          :closable="false">
+          This transaction is voided and will be ignored in reports.
+        </Message>
       </JRSection>
 
       <JRSection v-if="!loadingDocument && !isViewMode" title="Import & favorites">
@@ -290,40 +271,59 @@
       </JRSection>
 
       <JRSection v-if="!loadingDocument" title="Totals">
-        <dl class="jr-tx-form__totals">
-          <div class="jr-tx-form__totals-row">
-            <dt>Subtotal</dt>
-            <dd>{{ currency(subtotal_gross) }}</dd>
-          </div>
-          <div class="jr-tx-form__totals-row">
-            <dt>Total discount</dt>
-            <dd class="jr-tx-form__totals-discount">
-              −{{ currency(total_discount) }}
-            </dd>
-          </div>
-          <div class="jr-tx-form__totals-row jr-tx-form__totals-row--grand">
-            <dt>Grand total</dt>
-            <dd>{{ currency(grand_total) }}</dd>
-          </div>
-          <div
-            v-if="currentDocumentTypeIsSales"
-            class="jr-tx-form__totals-row jr-tx-form__totals-row--profit">
-            <dt>
-              Estimated profit
-              <span class="jr-tx-form__totals-hint">
-                Based on purchase cost per line (informational)
-              </span>
-            </dt>
-            <dd
-              :class="
-                estimated_sale_profit >= 0
-                  ? 'jr-tx-form__totals-ok'
-                  : 'jr-tx-form__totals-bad'
-              ">
-              {{ currency(estimated_sale_profit) }}
-            </dd>
-          </div>
-        </dl>
+        <div class="jr-tx-form__totals-wrap">
+          <dl class="jr-tx-form__totals">
+            <div class="jr-tx-form__totals-row">
+              <dt>Subtotal</dt>
+              <dd>{{ currency(subtotal_gross) }}</dd>
+            </div>
+            <div class="jr-tx-form__totals-row">
+              <dt>Total discount</dt>
+              <dd class="jr-tx-form__totals-discount">
+                −{{ currency(total_discount) }}
+              </dd>
+            </div>
+            <div class="jr-tx-form__totals-row jr-tx-form__totals-row--grand">
+              <dt>Grand total</dt>
+              <dd>{{ currency(grand_total) }}</dd>
+            </div>
+            <div
+              v-if="currentDocumentTypeIsSales"
+              class="jr-tx-form__totals-row jr-tx-form__totals-row--profit">
+              <dt>
+                Estimated profit
+                <span class="jr-tx-form__totals-hint">
+                  Based on purchase cost per line (informational)
+                </span>
+              </dt>
+              <dd
+                :class="
+                  estimated_sale_profit >= 0
+                    ? 'jr-tx-form__totals-ok'
+                    : 'jr-tx-form__totals-bad'
+                ">
+                {{ currency(estimated_sale_profit) }}
+              </dd>
+            </div>
+          </dl>
+
+          <JRField
+            class="jr-tx-form__notes"
+            v-slot="{ describedby, invalid }"
+            label="Notes"
+            inputId="tx-notes"
+            :error="fieldError('notes')">
+            <JRTextarea
+              inputId="tx-notes"
+              :modelValue="form.notes"
+              :rows="2"
+              placeholder="Additional notes…"
+              :disabled="isReadOnly"
+              :invalid="invalid"
+              :ariaDescribedby="describedby"
+              @update:modelValue="form.notes = ($event || '').trim()" />
+          </JRField>
+        </div>
       </JRSection>
 
       <div v-if="!loadingDocument" class="jr-tx-form__actions">
@@ -569,10 +569,96 @@ const saveAndAddLabel = computed(() => {
   return "Save & add another";
 });
 
+const FIELD_ERROR_LABELS = {
+  document_type: "Document Type",
+  builder: "Party",
+  work_account: "Work Account",
+  date: "Date",
+  notes: "Notes",
+  detail: "Error",
+  non_field_errors: "Error",
+};
+
+function formatErrorValue(val) {
+  if (val == null || val === "") return "";
+  if (typeof val === "string") return val;
+  if (Array.isArray(val)) return formatErrorValue(val[0]);
+  if (typeof val === "object") {
+    if (val.message != null) return formatErrorValue(val.message);
+    if (val.string != null) return String(val.string);
+    if (val.detail != null) return formatErrorValue(val.detail);
+    if (
+      val.error_type === "insufficient_stock" ||
+      val.error_type?.string === "insufficient_stock"
+    ) {
+      const productName = val.product_name?.string ?? val.product_name;
+      const available = val.available?.string ?? val.available;
+      const requested = val.requested?.string ?? val.requested;
+      if (available != null && requested != null) {
+        const prefix = productName ? `${productName}: ` : "";
+        return `${prefix}Insufficient stock (available: ${available}, requested: ${requested})`;
+      }
+    }
+    try {
+      return JSON.stringify(val);
+    } catch {
+      return "Invalid value";
+    }
+  }
+  return String(val);
+}
+
+function collectValidationSummary(errData) {
+  const parts = [];
+  if (!errData || typeof errData !== "object" || Array.isArray(errData)) {
+    return parts;
+  }
+  for (const [key, label] of Object.entries(FIELD_ERROR_LABELS)) {
+    if (key === "lines") continue;
+    if (errData[key] == null || errData[key] === "") continue;
+    const msg = formatErrorValue(errData[key]);
+    if (msg) parts.push(`${label}: ${msg}`);
+  }
+  for (const key of Object.keys(errData)) {
+    if (key === "lines" || FIELD_ERROR_LABELS[key]) continue;
+    const msg = formatErrorValue(errData[key]);
+    if (msg) parts.push(`${key}: ${msg}`);
+  }
+  const lineErrors = errData.lines;
+  const pushLine = (item, idx) => {
+    if (!item || (typeof item === "object" && !Object.keys(item).length)) return;
+    if (typeof item !== "object") {
+      const msg = formatErrorValue(item);
+      if (msg) parts.push(`Line ${idx + 1}: ${msg}`);
+      return;
+    }
+    Object.entries(item).forEach(([field, val]) => {
+      const msg = formatErrorValue(val);
+      if (msg) parts.push(`Line ${idx + 1} · ${field}: ${msg}`);
+    });
+  };
+  if (Array.isArray(lineErrors)) {
+    lineErrors.forEach((item, idx) => pushLine(item, idx));
+  } else if (lineErrors && typeof lineErrors === "object") {
+    Object.entries(lineErrors).forEach(([key, item]) => {
+      const idx = parseInt(key, 10);
+      pushLine(item, Number.isFinite(idx) ? idx : 0);
+    });
+  }
+  return parts;
+}
+
 const formBannerMessage = computed(() => {
-  const nf = errors.non_field_errors;
-  if (!nf) return "";
-  return Array.isArray(nf) ? nf.filter(Boolean).join(" ") : String(nf);
+  const summary = collectValidationSummary(errors);
+  const lineHits = (lines.value || []).filter(
+    (l) => l?._errors && Object.keys(l._errors).length > 0
+  ).length;
+  if (lineHits && !summary.some((s) => s.startsWith("Line "))) {
+    summary.push(
+      `${lineHits} line item(s) need attention — see highlighted rows below.`
+    );
+  }
+  return summary.filter(Boolean).join(" · ");
 });
 
 function hasPermission(permission) {
@@ -582,7 +668,28 @@ function hasPermission(permission) {
 function fieldError(key) {
   const value = errors[key];
   if (!value) return "";
-  return Array.isArray(value) ? value[0] || "" : String(value);
+  return formatErrorValue(value);
+}
+
+async function focusFirstValidationIssue() {
+  await nextTick();
+  const banner = formBanner.value;
+  if (banner && formBannerMessage.value) {
+    try {
+      banner.focus?.({ preventScroll: false });
+      banner.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+    } catch {
+      /* ignore */
+    }
+  }
+  const root = banner?.closest?.("form") || document.querySelector(".jr-tx-form");
+  const target =
+    root?.querySelector?.(
+      ".jr-field__error, .jr-lines-table__row--error, .jr-lines-item--error, .p-invalid"
+    ) || null;
+  if (target?.scrollIntoView) {
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 }
 
 function isoToDate(value) {
@@ -723,6 +830,9 @@ function mergeDuplicateTransactionLines(rows) {
       if (row.__favoriteImportReprice) {
         existing.__favoriteImportReprice = true;
       }
+      if (!existing.product_image && row.product_image) {
+        existing.product_image = row.product_image;
+      }
     } else {
       out.push(row);
     }
@@ -813,8 +923,11 @@ const favoriteModalEditMode = ref(false);
 const favoriteToEdit = ref(null);
 const favoriteSelectorRef = ref(null);
 const linesGridRef = ref(null);
+const formBanner = ref(null);
 /** Permite usar la rejilla sin tipo de documento tras importar líneas desde un favorito */
 const linesGridUnlockedByFavoriteImport = ref(false);
+/** Índices UI de las líneas enviadas en el último submit (payload filtra vacías). */
+const lastSubmittedLineIndexMap = ref([]);
 
 const linesGridDisabled = computed(
   () =>
@@ -869,9 +982,20 @@ async function loadHasInventoryProducts() {
   }
 }
 
-function onTransactionLinesImported(newLines) {
-  lines.value = newLines;
+async function onTransactionLinesImported(newLines) {
+  lines.value = newLines || [];
   syncTotals();
+  await nextTick();
+  try {
+    if (
+      linesGridRef.value?.hydrateImagesAfterImport &&
+      typeof linesGridRef.value.hydrateImagesAfterImport === "function"
+    ) {
+      await linesGridRef.value.hydrateImagesAfterImport();
+    }
+  } catch (e) {
+    console.warn("hydrateImagesAfterImport after Excel:", e);
+  }
 }
 
 function countLinesWithProduct(rows) {
@@ -931,7 +1055,8 @@ async function onFavoriteSelected(favoriteData) {
     selected: false,
     id: null, // Nueva línea, no ID
     product: line.product,
-    product_label: line.product_label || "",
+    product_label: line.product_label || line.product_name || "",
+    product_image: line.product_image || "",
     quantity: line.quantity || 1,
     unit: line.unit,
     // Precios desde JSON pueden estar desfasados — se reprecian con reglas vigentes antes de usar
@@ -954,7 +1079,7 @@ async function onFavoriteSelected(favoriteData) {
   const hasExistingLineProducts = lines.value.some((line) => line.product);
   const hasIncomingLines = importedLines.length > 0;
 
-  /** Si true: solo se concatenan líneas; cabecera del documento no se sobrescribe */
+  /** Si true: se concatenan líneas; si false: se reemplazan. Nunca se toca el encabezado. */
   let appendLinesOnly = false;
 
   if (hasExistingLineProducts && hasIncomingLines) {
@@ -962,9 +1087,9 @@ async function onFavoriteSelected(favoriteData) {
       title: "Lines already loaded",
       html:
         "This transaction already has line items.<br><br>" +
-        "<strong>Add to existing lines</strong> appends this favorite’s lines (e.g. combine kits on one pick ticket). " +
-        "Header fields stay as they are.<br><br>" +
-        "<strong>Replace all lines</strong> loads this favorite’s header and replaces every line.",
+        "Favorites import <strong>lines only</strong> (Document Type, Work Account, and Date stay as you set them).<br><br>" +
+        "<strong>Add to existing lines</strong> appends this favorite’s lines (e.g. combine kits on one pick ticket).<br><br>" +
+        "<strong>Replace all lines</strong> replaces every line with this favorite’s lines.",
       icon: "question",
       showCancelButton: true,
       showDenyButton: true,
@@ -984,17 +1109,7 @@ async function onFavoriteSelected(favoriteData) {
     appendLinesOnly = Boolean(result.isConfirmed);
   }
 
-  if (!appendLinesOnly && favoriteData.document_data) {
-    const docData = favoriteData.document_data;
-
-    form.document_type = docData.document_type;
-    form.builder = docData.builder;
-    form.work_account = docData.work_account;
-    form.date = toDateInputValue(docData.date);
-    form.notes = docData.notes || "";
-    form.is_active = docData.is_active !== undefined ? docData.is_active : true;
-  }
-
+  // Import favorite: solo líneas — no Document Type / Work Account / Date / Party / notes
   if (hasIncomingLines) {
     if (appendLinesOnly) {
       const combined = [...lines.value, ...importedLines];
@@ -1187,16 +1302,25 @@ async function handleSaveAndAddAnother() {
     const data = err?.response?.data;
     if (data) applyServerErrors(data);
 
-    // Mostrar error (reutilizar la lógica de handleSubmit)
-    let errorMessage = "Please review highlighted fields.";
-    let errorTitle = "Validation Error";
+    const summary = collectValidationSummary(data || errors);
+    const errorTitle = "Validation Error";
+    const errorMessage =
+      summary.length > 0
+        ? `<div class="jr-pilot text-start"><p class="mb-2 text-sm">Please review the highlighted fields:</p><ul class="m-0 list-disc ps-4 text-sm">${summary
+            .slice(0, 12)
+            .map((s) => `<li>${s}</li>`)
+            .join("")}${
+            summary.length > 12 ? "<li>…</li>" : ""
+          }</ul></div>`
+        : "Please review the highlighted fields on the form.";
 
     await Swal.fire({
       icon: "error",
       title: errorTitle,
-      text: errorMessage,
+      html: errorMessage,
       confirmButtonText: "OK",
     });
+    await focusFirstValidationIssue();
   } finally {
     submitting.value = false;
   }
@@ -1497,6 +1621,7 @@ async function loadDocument(id) {
         selected: false,
         product: extractId(l.product),
         product_label: l.product_name || "",
+        product_image: l.product_image || "",
         quantity: l.quantity,
         unit: extractId(l.unit),
         unit_price: l.unit_price,
@@ -1528,6 +1653,7 @@ async function loadDocument(id) {
         id: null,
         product: null,
         product_label: "",
+        product_image: "",
         quantity: 1,
         unit: null,
         unit_price: 0,
@@ -1601,40 +1727,47 @@ function normalizePayload() {
 
   const workAccountId = extractId(workAccountToUse);
 
-  // 🔍 DEBUG: Log para verificar work_account
-  const normalizedPayload = {
+  /** Round to 2 dp and return a decimal string so JSON never reintroduces float noise. */
+  function money2(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "0.00";
+    return (Math.round((n + Number.EPSILON) * 100) / 100).toFixed(2);
+  }
+
+  // Solo líneas con producto; mapear índices payload → UI para errores del servidor
+  const submittedLineIndexMap = [];
+  const normalizedLines = [];
+  lines.value.forEach((l, originalIdx) => {
+    if (!l.product) return;
+    submittedLineIndexMap.push(originalIdx);
+    normalizedLines.push({
+      id: l.id,
+      product: extractId(l.product),
+      quantity: money2(l.quantity || 0),
+      unit: extractId(l.unit),
+      unit_price: money2(l.unit_price || 0),
+      discount_percentage: money2(l.discount_percentage || 0),
+      warehouse: extractId(l.warehouse),
+      price_type: extractId(l.price_type),
+      brand: extractId(l.brand),
+      pricing_rule: l.pricing_rule ?? null,
+      margin_percent:
+        l.margin_percent != null && l.margin_percent !== ""
+          ? money2(l.margin_percent)
+          : null,
+    });
+  });
+  lastSubmittedLineIndexMap.value = submittedLineIndexMap;
+
+  return {
     document_type: form.document_type,
     builder: builderToSend ? extractId(builderToSend) : null,
     work_account: workAccountId,
     date: form.date,
     notes: form.notes?.trim() || "",
     is_active: form.is_active,
-    lines: lines.value
-      .filter((l) => l.product) // Solo enviar líneas que tengan producto
-      .map((l) => {
-        const normalizedLine = {
-          id: l.id,
-          product: extractId(l.product),
-          quantity: Number(l.quantity || 0),
-          unit: extractId(l.unit),
-          unit_price: Number(l.unit_price || 0),
-          discount_percentage: Number(l.discount_percentage || 0),
-          warehouse: extractId(l.warehouse),
-          price_type: extractId(l.price_type),
-          brand: extractId(l.brand),
-          pricing_rule: l.pricing_rule ?? null,
-          margin_percent:
-            l.margin_percent != null && l.margin_percent !== ""
-              ? Number(l.margin_percent)
-              : null,
-        };
-
-        // 🔍 DEBUG: Log de la línea normalizada
-        return normalizedLine;
-      }),
+    lines: normalizedLines,
   };
-
-  return normalizedPayload;
 }
 
 function clearErrors() {
@@ -1665,20 +1798,28 @@ function applyServerErrors(errData) {
     }
   }
 
-  // Per-line errors (DRF devuelve lista alineada con índices)
+  // Per-line errors: índices del payload (solo líneas con producto) → índice UI
+  const mapPayloadIdx = (payloadIdx) => {
+    const mapped = lastSubmittedLineIndexMap.value?.[payloadIdx];
+    return mapped != null ? mapped : payloadIdx;
+  };
+
   if (Array.isArray(errData.lines)) {
-    errData.lines.forEach((item, idx) => {
-      if (!item) return;
-      const target = lines.value[idx];
+    errData.lines.forEach((item, payloadIdx) => {
+      if (!item || (typeof item === "object" && !Object.keys(item).length)) {
+        return;
+      }
+      const target = lines.value[mapPayloadIdx(payloadIdx)];
       if (!target) return;
       target._errors = { ...(item || {}) };
     });
   } else if (errData.lines && typeof errData.lines === "object") {
     // Formato objeto { "0": {...}, "1": {...} }
     Object.entries(errData.lines).forEach(([key, item]) => {
-      const idx = parseInt(key, 10);
-      if (isNaN(idx) || !item) return;
-      const target = lines.value[idx];
+      const payloadIdx = parseInt(key, 10);
+      if (isNaN(payloadIdx) || !item) return;
+      if (typeof item === "object" && !Object.keys(item).length) return;
+      const target = lines.value[mapPayloadIdx(payloadIdx)];
       if (!target) return;
       target._errors = {
         ...(typeof item === "object" ? item : { _: String(item) }),
@@ -1763,9 +1904,10 @@ async function handleSubmit() {
 
     if (data) applyServerErrors(data);
 
-    let errorMessage = "Please review highlighted fields.";
+    let errorMessage = "Please review the highlighted fields on the form.";
     let errorTitle = "Validation Error";
     const stockErrors = [];
+    const validationSummary = collectValidationSummary(data || errors);
 
     // Mensaje claro cuando falta Party (builder) o Work Account
     const builderError =
@@ -1785,6 +1927,13 @@ async function handleSubmit() {
         errorMessage = "Please select a Work Account before saving.";
         errorTitle = "Work Account required";
       }
+    } else if (validationSummary.length > 0) {
+      errorMessage = `<div class="jr-pilot text-start"><p class="mb-2 text-sm">Please review the highlighted fields:</p><ul class="m-0 list-disc ps-4 text-sm">${validationSummary
+        .slice(0, 12)
+        .map((s) => `<li>${s}</li>`)
+        .join("")}${
+        validationSummary.length > 12 ? "<li>…</li>" : ""
+      }</ul></div>`;
     }
 
     // Verificar si hay non_field_errors primero
@@ -1792,7 +1941,10 @@ async function handleSubmit() {
       const nonFieldErrors = Array.isArray(data.non_field_errors)
         ? data.non_field_errors
         : [data.non_field_errors];
-      errorMessage = nonFieldErrors.join("<br>");
+      errorMessage = nonFieldErrors
+        .map((e) => formatErrorValue(e))
+        .filter(Boolean)
+        .join("<br>");
       errorTitle = "Server Error";
       console.error(
         "🔍 Frontend: non_field_errors encontrados:",
@@ -1800,131 +1952,205 @@ async function handleSubmit() {
       );
     }
 
-    // Función para extraer información del producto del mensaje de error
-    function extractProductInfo(errorMsg, lineIndex = null) {
-      // Extraer directamente del errorMsg
-      try {
-        if (errorMsg && errorMsg.quantity && errorMsg.quantity.product_name) {
-          const productName =
-            errorMsg.quantity.product_name.string ||
-            errorMsg.quantity.product_name;
-          return productName;
-        }
-      } catch (e) {
-        // Error silencioso
+    function unwrapErr(val) {
+      if (Array.isArray(val)) return unwrapErr(val[0]);
+      return val;
+    }
+
+    function errField(obj, key) {
+      if (!obj || typeof obj !== "object") return null;
+      let v = obj[key];
+      if (v == null) return null;
+      v = unwrapErr(v);
+      if (v == null) return null;
+      if (typeof v === "object" && v.string != null) return String(v.string);
+      if (typeof v === "object") return null;
+      return v;
+    }
+
+    function isInsufficientStockPayload(payload) {
+      if (!payload || typeof payload !== "object") return false;
+      return errField(payload, "error_type") === "insufficient_stock";
+    }
+
+    function looksLikeRawErrorDump(text) {
+      return (
+        typeof text === "string" &&
+        (/ErrorDetail\s*\(/.test(text) ||
+          /'error_type'\s*:/.test(text) ||
+          /"error_type"\s*:/.test(text))
+      );
+    }
+
+    function parseStockDump(text) {
+      if (typeof text !== "string") return null;
+      const productName =
+        text.match(/product_name['"]?\s*[:=]\s*(?:ErrorDetail\(string=)?['"]([^'"]+)['"]/i)?.[1] ||
+        text.match(/^(.+?):\s*(?:Stock insuficiente|Insufficient stock)/i)?.[1] ||
+        null;
+      const available =
+        text.match(/available['"]?\s*[:=]\s*(?:ErrorDetail\(string=)?['"]([^'"]+)['"]/i)?.[1] ||
+        text.match(/Disponible:\s*([0-9]+(?:\.[0-9]+)?)/i)?.[1] ||
+        text.match(/Available:\s*([0-9]+(?:\.[0-9]+)?)/i)?.[1] ||
+        null;
+      const requested =
+        text.match(/requested['"]?\s*[:=]\s*(?:ErrorDetail\(string=)?['"]([^'"]+)['"]/i)?.[1] ||
+        text.match(/solicitado(?:\(ref\))?:\s*([0-9]+(?:\.[0-9]+)?)/i)?.[1] ||
+        text.match(/Requested:\s*([0-9]+(?:\.[0-9]+)?)/i)?.[1] ||
+        null;
+      const documentType =
+        text.match(/document_type['"]?\s*[:=]\s*(?:ErrorDetail\(string=)?['"]([^'"]+)['"]/i)?.[1] ||
+        text.match(/tipo de documento\s*'([^']+)'/i)?.[1] ||
+        text.match(/Document type\s*'([^']+)'/i)?.[1] ||
+        null;
+      if (!productName && available == null && requested == null) return null;
+      return { productName, available, requested, documentType };
+    }
+
+    function productNameFromLineIndex(lineIndex) {
+      const uiIdx =
+        lastSubmittedLineIndexMap.value?.[lineIndex] != null
+          ? lastSubmittedLineIndexMap.value[lineIndex]
+          : lineIndex;
+      const line = lines.value?.[uiIdx];
+      return (
+        line?.product_label ||
+        line?.product_name ||
+        (line?.product != null ? `Product #${line.product}` : null)
+      );
+    }
+
+    function resolveStockProductName(payload, lineIndex, fallbackMessage) {
+      const fromPayload = errField(payload, "product_name");
+      if (fromPayload && String(fromPayload).trim()) {
+        return String(fromPayload).trim();
       }
 
-      return "Product";
+      const msg =
+        errField(payload, "message") ||
+        (typeof fallbackMessage === "string" ? fallbackMessage : "") ||
+        (typeof payload === "string" ? payload : "");
+      if (typeof msg === "string" && msg.trim()) {
+        const fromDump = parseStockDump(msg);
+        if (fromDump?.productName) return fromDump.productName.trim();
+        const named = msg.match(
+          /^(.+?):\s*(?:Stock insuficiente|Insufficient stock)/i
+        );
+        if (named?.[1]?.trim() && named[1].trim().toLowerCase() !== "product") {
+          return named[1].trim();
+        }
+      }
+
+      return productNameFromLineIndex(lineIndex) || "Unknown product";
+    }
+
+    function pushFriendlyStockError({
+      productName,
+      available,
+      requested,
+      documentType,
+      lineIndex,
+    }) {
+      stockErrors.push({
+        productName:
+          (productName && String(productName).trim()) ||
+          productNameFromLineIndex(lineIndex) ||
+          "Unknown product",
+        available: available != null ? String(available) : null,
+        requested: requested != null ? String(requested) : null,
+        documentType: documentType != null ? String(documentType) : null,
+      });
+    }
+
+    function pushStructuredStockError(payload, lineIndex) {
+      pushFriendlyStockError({
+        productName: resolveStockProductName(payload, lineIndex),
+        available: errField(payload, "available"),
+        requested: errField(payload, "requested"),
+        documentType: errField(payload, "document_type"),
+        lineIndex,
+      });
+    }
+
+    function pushFromStockText(text, lineIndex) {
+      const parsed = parseStockDump(text) || {};
+      pushFriendlyStockError({
+        productName:
+          parsed.productName ||
+          resolveStockProductName(null, lineIndex, text),
+        available: parsed.available,
+        requested: parsed.requested,
+        documentType: parsed.documentType,
+        lineIndex,
+      });
     }
 
     // Verificar si hay errores de stock insuficiente
     if (data?.lines) {
       if (Array.isArray(data.lines)) {
         data.lines.forEach((lineError, idx) => {
-          const quantityError = lineError?.quantity;
+          if (!lineError) return;
 
-          // Caso 1: Error estructurado del backend (nuevo formato)
           if (
-            typeof quantityError === "object" &&
-            quantityError.error_type === "insufficient_stock"
+            typeof lineError === "string" &&
+            (/Stock insuficiente|Insufficient stock|error_type/i.test(
+              lineError
+            ) ||
+              looksLikeRawErrorDump(lineError))
           ) {
-            stockErrors.push({
-              productName: quantityError.product_name,
-              available: quantityError.available,
-              requested: quantityError.requested,
-              documentType: quantityError.document_type,
-              message: quantityError.message,
-            });
+            pushFromStockText(lineError, idx);
+            return;
           }
-          // Caso 1b: Error estructurado anidado en quantity (formato DRF)
-          else if (
-            typeof quantityError === "object" &&
-            quantityError.error_type &&
-            quantityError.error_type.string === "insufficient_stock"
-          ) {
-            stockErrors.push({
-              productName:
-                quantityError.product_name.string || quantityError.product_name,
-              available:
-                quantityError.available.string || quantityError.available,
-              requested:
-                quantityError.requested.string || quantityError.requested,
-              documentType:
-                quantityError.document_type.string ||
-                quantityError.document_type,
-              message: quantityError.message.string || quantityError.message,
-            });
+
+          const quantityError = unwrapErr(lineError?.quantity);
+          if (isInsufficientStockPayload(quantityError)) {
+            pushStructuredStockError(quantityError, idx);
+            return;
           }
-          // Caso 2: ErrorDetail con string (formato anterior)
-          else if (
-            typeof quantityError === "object" &&
-            quantityError.string &&
-            quantityError.string.includes("Stock insuficiente")
-          ) {
-            const productName = extractProductInfo(quantityError, idx);
-            stockErrors.push(`• ${productName}: ${quantityError.string}`);
+          if (isInsufficientStockPayload(lineError)) {
+            pushStructuredStockError(lineError, idx);
+            return;
           }
-          // Caso 3: String directo (formato anterior)
-          else if (
-            typeof quantityError === "string" &&
-            quantityError.includes("Stock insuficiente")
+
+          const qtyText =
+            typeof quantityError === "string"
+              ? quantityError
+              : quantityError?.string;
+          if (
+            typeof qtyText === "string" &&
+            (/Stock insuficiente|Insufficient stock/i.test(qtyText) ||
+              looksLikeRawErrorDump(qtyText))
           ) {
-            const productName = extractProductInfo(quantityError, idx);
-            stockErrors.push(`• ${productName}: ${quantityError}`);
+            pushFromStockText(qtyText, idx);
           }
         });
       } else {
-        // Si es un objeto, buscar errores de cantidad
         Object.keys(data.lines).forEach((field) => {
-          const errorData = data.lines[field];
+          const errorData = unwrapErr(data.lines[field]);
+          const lineIndex = Number.isFinite(Number(field))
+            ? Number(field)
+            : null;
 
-          // Caso 1: Error estructurado del backend (nuevo formato)
-          if (
-            typeof errorData === "object" &&
-            errorData.error_type === "insufficient_stock"
-          ) {
-            stockErrors.push({
-              productName: errorData.product_name,
-              available: errorData.available,
-              requested: errorData.requested,
-              documentType: errorData.document_type,
-              message: errorData.message,
-            });
+          if (typeof errorData === "string") {
+            if (
+              /Stock insuficiente|Insufficient stock|error_type/i.test(
+                errorData
+              ) ||
+              looksLikeRawErrorDump(errorData)
+            ) {
+              pushFromStockText(errorData, lineIndex);
+            }
+            return;
           }
-          // Caso 1b: Error estructurado anidado (formato DRF)
-          else if (
-            typeof errorData === "object" &&
-            errorData.error_type &&
-            errorData.error_type.string === "insufficient_stock"
-          ) {
-            stockErrors.push({
-              productName:
-                errorData.product_name.string || errorData.product_name,
-              available: errorData.available.string || errorData.available,
-              requested: errorData.requested.string || errorData.requested,
-              documentType:
-                errorData.document_type.string || errorData.document_type,
-              message: errorData.message.string || errorData.message,
-            });
+
+          if (isInsufficientStockPayload(errorData)) {
+            pushStructuredStockError(errorData, lineIndex);
+            return;
           }
-          // Caso 2: ErrorDetail con string (formato anterior)
-          else if (
-            field === "quantity" &&
-            typeof errorData === "object" &&
-            errorData.string &&
-            errorData.string.includes("Stock insuficiente")
-          ) {
-            const productName = extractProductInfo(errorData);
-            stockErrors.push(`• ${productName}: ${errorData.string}`);
-          }
-          // Caso 3: String directo (formato anterior)
-          else if (
-            field === "quantity" &&
-            typeof errorData === "string" &&
-            errorData.includes("Stock insuficiente")
-          ) {
-            const productName = extractProductInfo(errorData);
-            stockErrors.push(`• ${productName}: ${errorData}`);
+
+          const quantityError = unwrapErr(errorData?.quantity);
+          if (isInsufficientStockPayload(quantityError)) {
+            pushStructuredStockError(quantityError, lineIndex);
           }
         });
       }
@@ -1932,24 +2158,22 @@ async function handleSubmit() {
 
     // También verificar errores directos en el nivel principal (no en lines)
     if (data && stockErrors.length === 0) {
-      // Buscar errores de stock en cualquier campo del nivel principal
       Object.keys(data).forEach((field) => {
         if (
           data[field] &&
           typeof data[field] === "string" &&
-          data[field].includes("Stock insuficiente")
+          (/Stock insuficiente|Insufficient stock/i.test(data[field]) ||
+            looksLikeRawErrorDump(data[field]))
         ) {
-          const productName = extractProductInfo(data[field]);
-          stockErrors.push(`• ${productName}: ${data[field]}`);
+          pushFromStockText(data[field], null);
         } else if (Array.isArray(data[field])) {
-          // Si es un array de errores
           data[field].forEach((errorMsg) => {
             if (
               typeof errorMsg === "string" &&
-              errorMsg.includes("Stock insuficiente")
+              (/Stock insuficiente|Insufficient stock/i.test(errorMsg) ||
+                looksLikeRawErrorDump(errorMsg))
             ) {
-              const productName = extractProductInfo(errorMsg);
-              stockErrors.push(`• ${productName}: ${errorMsg}`);
+              pushFromStockText(errorMsg, null);
             }
           });
         }
@@ -1958,70 +2182,38 @@ async function handleSubmit() {
 
     if (stockErrors.length > 0) {
       errorTitle = "Insufficient Stock";
-      // Crear HTML para mejor formato con información más específica
       const stockErrorsHTML = stockErrors
         .map((error) => {
-          // Caso 1: Error estructurado del backend (nuevo formato)
-          if (typeof error === "object" && error.productName) {
-            return `
+          const name = error.productName || "Unknown product";
+          const available = error.available ?? "—";
+          const requested = error.requested ?? "—";
+          const docType = error.documentType
+            ? `<br>Document type <strong>${error.documentType}</strong> does not allow negative sales.`
+            : "";
+          return `
             <div class="mb-2 border-s-2 border-jr-danger p-2 text-start">
-              <p class="m-0 text-sm text-jr-danger">${error.productName}</p>
+              <p class="m-0 text-sm font-medium text-jr-danger">${name}</p>
               <p class="m-0 text-sm text-jr-muted">
-                Available: ${error.available} | 
-                Requested: ${error.requested}<br>
-                Document Type: ${error.documentType} (does not allow negative sales)
+                Available: <strong>${available}</strong>
+                &nbsp;·&nbsp;
+                Requested: <strong>${requested}</strong>${docType}
               </p>
             </div>
           `;
-          }
-          // Caso 2: Error en formato string (formato anterior)
-          else if (typeof error === "string") {
-            // Intentar extraer información del mensaje de error
-            const match = error.match(
-              /Stock insuficiente\. Disponible: (\d+(?:\.\d+)?), solicitado\(ref\): (\d+(?:\.\d+)?)\. El tipo de documento '([^']+)' no permite ventas sin stock\./
-            );
-            if (match) {
-              const [, available, requested, docType] = match;
-              const productName = error.split(":")[0].replace("• ", "");
-              return `
-              <div class="mb-2 border-s-2 border-jr-danger p-2 text-start">
-                <p class="m-0 text-sm text-jr-danger">${productName}</p>
-                <p class="m-0 text-sm text-jr-muted">
-                  Available: ${available} | 
-                  Requested: ${requested}<br>
-                  Document Type: ${docType} (does not allow negative sales)
-                </p>
-              </div>
-            `;
-            }
-            // Si no se puede parsear, mostrar el error tal como está
-            return `
-            <div class="mb-1 text-start">
-              <p class="m-0 text-sm text-jr-danger">${error}</p>
-            </div>
-          `;
-          }
-          // Caso 3: Fallback
-          return `
-          <div class="mb-1 text-start">
-            <p class="m-0 text-sm text-jr-danger">${String(error)}</p>
-          </div>
-        `;
         })
         .join("");
 
       errorMessage = `
         <div class="jr-pilot">
           <div class="text-start">
-          <p class="mb-3 text-sm">⚠️ The following products have insufficient stock:</p>
+          <p class="mb-3 text-sm">The following products do not have enough stock:</p>
           ${stockErrorsHTML}
           <div class="mt-3 rounded-jr-panel bg-jr-surface-muted p-2">
             <p class="m-0 text-sm text-jr-muted">
-              ℹ️ 
-              Solutions:<br>
+              What you can do:<br>
               • Check inventory in other warehouses<br>
-              • Adjust quantities to available stock<br>
-              • Enable "Allow Negative Sales" in document type settings
+              • Lower the quantity to the available stock<br>
+              • Enable “Allow Negative Sales” on the document type
             </p>
           </div>
           </div>
@@ -2037,6 +2229,7 @@ async function handleSubmit() {
       confirmButtonText: "OK",
       confirmButtonColor: "#dc2626",
     });
+    await focusFirstValidationIssue();
   } finally {
     submitting.value = false;
   }
@@ -2089,10 +2282,6 @@ onMounted(async () => {
 
   .jr-form-grid--import {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .jr-tx-form__notes {
-    grid-column: 1 / -1;
   }
 }
 
@@ -2207,8 +2396,39 @@ onMounted(async () => {
   color: var(--color-jr-text);
 }
 
+.jr-tx-form__doc-active {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-jr-text);
+}
+
+.jr-tx-form__info--voided {
+  margin-top: 0.75rem;
+}
+
+.jr-tx-form__totals-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.jr-tx-form__notes {
+  min-width: 0;
+  width: 100%;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--color-jr-border);
+}
+
+.jr-tx-form__notes :deep(textarea) {
+  min-height: 0;
+  resize: vertical;
+}
+
 .jr-tx-form__totals {
   margin: 0;
+  width: 100%;
   max-width: 24rem;
   margin-left: auto;
   display: flex;

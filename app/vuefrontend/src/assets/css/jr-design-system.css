@@ -603,6 +603,14 @@
     border-radius: var(--radius-jr-control);
   }
 
+  .jr-pilot .p-inputnumber-button {
+    border-radius: var(--radius-jr-control);
+  }
+
+  .jr-pilot .jr-control--stepper.p-inputnumber {
+    align-items: stretch;
+  }
+
   .jr-pilot .p-button {
     width: auto;
     min-height: 2.75rem;
@@ -940,6 +948,84 @@
   width: min(56rem, calc(100vw - 2rem));
 }
 
+/* Product image gallery: large square viewport (single-brand products). */
+.p-dialog.jr-dialog.jr-dialog--square {
+  width: min(90vmin, calc(100vw - 1.5rem));
+  height: min(90vmin, calc(100dvh - 1.5rem));
+  max-width: min(90vmin, calc(100vw - 1.5rem));
+  max-height: min(90vmin, calc(100dvh - 1.5rem));
+  display: flex;
+  flex-direction: column;
+}
+
+.p-dialog.jr-dialog.jr-dialog--square .p-dialog-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.p-dialog.jr-dialog.jr-dialog--square .jr-brand-images {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.p-dialog.jr-dialog.jr-dialog--square .jr-brand-images__tabs,
+.p-dialog.jr-dialog.jr-dialog--square .p-tabpanels,
+.p-dialog.jr-dialog.jr-dialog--square .p-tabpanel,
+.p-dialog.jr-dialog.jr-dialog--square .jr-brand-gallery {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.p-dialog.jr-dialog.jr-dialog--square .jr-brand-images__grid {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  align-content: start;
+  gap: 0.75rem;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.p-dialog.jr-dialog.jr-dialog--square .jr-brand-images__item {
+  width: min(100%, 32rem);
+  height: 100%;
+  min-height: 0;
+}
+
+.p-dialog.jr-dialog.jr-dialog--square .jr-brand-images__frame {
+  flex: 1 1 auto;
+  aspect-ratio: auto;
+  min-height: min(52vmin, 28rem);
+  max-height: min(70vmin, 36rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--color-jr-surface-muted);
+}
+
+.p-dialog.jr-dialog.jr-dialog--square .jr-brand-images__thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.p-dialog.jr-dialog.jr-dialog--square .jr-brand-images__img {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  background: var(--color-jr-surface-muted);
+}
+
 .p-dialog.jr-dialog.jr-dialog--xl {
   width: min(75rem, calc(100vw - 1.5rem));
   max-height: calc(100dvh - 2rem);
@@ -1152,12 +1238,35 @@
 
 .p-select-overlay,
 .p-multiselect-overlay,
-.p-datepicker-panel {
+.p-datepicker-panel,
+.p-autocomplete-overlay {
   --p-select-overlay-border-radius: var(--radius-jr-control);
   --p-multiselect-overlay-border-radius: var(--radius-jr-control);
   --p-datepicker-panel-border-radius: var(--radius-jr-control);
   --p-overlay-popover-border-radius: var(--radius-jr-control);
   border-radius: var(--radius-jr-control);
+  /* Overlays teleport to body — force JR Inter (not browser UI font). */
+  font-family: var(--font-jr-sans);
+  font-size: 0.875rem;
+  color: var(--color-jr-text);
+}
+
+.p-select-overlay .p-select-list,
+.p-select-overlay .p-select-option,
+.p-select-overlay .p-select-option-label,
+.p-select-overlay .p-select-filter,
+.p-select-overlay .p-select-filter-input,
+.p-select-overlay .p-select-empty-message,
+.p-multiselect-overlay .p-multiselect-list,
+.p-multiselect-overlay .p-multiselect-option,
+.p-multiselect-overlay .p-multiselect-option-label,
+.p-multiselect-overlay .p-multiselect-filter,
+.p-multiselect-overlay .p-multiselect-filter-input,
+.p-multiselect-overlay .p-multiselect-empty-message,
+.p-autocomplete-overlay .p-autocomplete-list,
+.p-autocomplete-overlay .p-autocomplete-option {
+  font-family: var(--font-jr-sans);
+  font-size: 0.875rem;
 }
 
 /* Catalog / entity drawers (ProductForm, Work Account, parties) */

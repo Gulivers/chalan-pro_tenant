@@ -34,6 +34,18 @@
           v-for="section in formSections"
           :key="section.title"
           :title="section.title">
+          <Message
+            v-if="
+              !isViewMode &&
+              section.gridClass?.includes('pricing') &&
+              pricingGuidanceText
+            "
+            class="jr-dynamic-form__info"
+            severity="info"
+            :closable="false">
+            {{ pricingGuidanceText }}
+          </Message>
+
           <div
             class="jr-form-grid"
             :class="section.gridClass">
@@ -74,7 +86,7 @@
                     decimalInputProps(
                       describedby,
                       invalid,
-                      !!internalSchema[key].required
+                      isPricingAmountRequired(key)
                     )
                   "
                   fluid
@@ -91,6 +103,30 @@
                   :disabled="isDisabled"
                   :invalid="invalid"
                   :ariaDescribedby="describedby" />
+
+                <JRSelectAddon
+                  v-else-if="isCatalogSelectField(key)"
+                  :inputId="`dyn-${key}`"
+                  v-model="form[key]"
+                  :options="optionsMap[key] || []"
+                  optionLabel="label"
+                  optionValue="value"
+                  :disabled="isDisabled"
+                  :multiple="internalSchema[key].multiple || false"
+                  filter
+                  :placeholder="`Select ${fieldLabel(key)}`"
+                  :showClear="true"
+                  :invalid="invalid"
+                  :required="!!internalSchema[key].required"
+                  :ariaDescribedby="describedby"
+                  :showAdd="true"
+                  :showEdit="hasCatalogEditValue(key)"
+                  :addDisabled="isDisabled || !canAddCatalog(key)"
+                  :editDisabled="isDisabled || !canEditCatalog(key)"
+                  :addLabel="catalogAddLabel(key)"
+                  :editLabel="catalogEditLabel(key)"
+                  @add="openCatalogDrawer(key, 'add')"
+                  @edit="openCatalogDrawer(key, 'edit')" />
 
                 <JRSelect
                   v-else-if="internalSchema[key].type === 'select'"
@@ -169,13 +205,30 @@
         </div>
       </form>
     </div>
+
+    <JRDrawer
+      class="jr-catalog-drawer"
+      :visible="catalogDrawerVisible"
+      :header="catalogDrawerHeader"
+      position="right"
+      @update:visible="onCatalogDrawerVisible">
+      <PartyCatalogForm
+        v-if="catalogDrawerVisible && catalogKind"
+        :key="catalogFormKey"
+        :kind="catalogKind"
+        :object-id="catalogObjectId"
+        @saved="onCatalogSaved"
+        @cancel="closeCatalogDrawer" />
+    </JRDrawer>
   </component>
 </template>
 
 <script>
 import axios from "axios";
 import InputNumber from "primevue/inputnumber";
+import Message from "primevue/message";
 import selectMixin from "@/helpers/useSelectOptions";
+import PartyCatalogForm from "@/components/parties/PartyCatalogForm.vue";
 import {
   JRPage,
   JRPageHeader,
@@ -185,7 +238,9 @@ import {
   JRTextarea,
   JRCheckbox,
   JRSelect,
+  JRSelectAddon,
   JRButton,
+  JRDrawer,
 } from "@ui";
 
 /** Known money amount fields on Party/Builder (schema may still say string). */
@@ -201,8 +256,6 @@ const LABEL_OVERRIDES = {
 
 const HINT_OVERRIDES = {
   name: "Must be unique within this organization.",
-  trim_amount:
-    "At least one of Trim, Rough, or Travel Amount must be greater than 0.",
   crews: "Assign supervisor crews that own this community.",
 };
 
@@ -213,6 +266,27 @@ const PRICING_AMOUNT_KEYS = [
   "rough_amount",
   "travel_price_amount",
 ];
+
+const CATALOG_FIELDS = {
+  types: {
+    kind: "type",
+    addPerm: "apptransactions.add_partytype",
+    changePerm: "apptransactions.change_partytype",
+    addLabel: "Add a new party type",
+    editLabel: "Edit the selected party type",
+    addHeader: "Add Party Type",
+    editHeader: "Edit Party Type",
+  },
+  category: {
+    kind: "category",
+    addPerm: "apptransactions.add_partycategory",
+    changePerm: "apptransactions.change_partycategory",
+    addLabel: "Add a new party category",
+    editLabel: "Edit the selected party category",
+    addHeader: "Add Party Category",
+    editHeader: "Edit Party Category",
+  },
+};
 
 function toMoney(value) {
   if (value === null || value === undefined || value === "") return 0.0;
@@ -245,6 +319,8 @@ export default {
   name: "DynamicForm",
   components: {
     InputNumber,
+    Message,
+    PartyCatalogForm,
     JRPage,
     JRPageHeader,
     JRSection,
@@ -253,7 +329,9 @@ export default {
     JRTextarea,
     JRCheckbox,
     JRSelect,
+    JRSelectAddon,
     JRButton,
+    JRDrawer,
   },
   mixins: [selectMixin],
   props: {
@@ -288,6 +366,10 @@ export default {
       validationErrors: {},
       formBanner: "",
       schemaReady: false,
+      catalogDrawerVisible: false,
+      catalogFieldKey: null,
+      catalogMode: "add",
+      catalogFormNonce: 0,
     };
   },
   computed: {
@@ -333,6 +415,38 @@ export default {
     },
     pageHeading() {
       return this.formTitle || this.cleanFormTitle;
+    },
+    isCustomerRole() {
+      return !!this.form?.customer_rank;
+    },
+    isSupplierOnly() {
+      return !!this.form?.supplier_rank && !this.form?.customer_rank;
+    },
+    pricingGuidanceText() {
+      if (!this.hasBuilderPricingFields()) return "";
+      if (this.isCustomerRole) {
+        return "Customer parties need at least one of Trim, Rough, or Travel Amount greater than 0.";
+      }
+      if (this.isSupplierOnly) {
+        return "Supplier-only parties can leave Trim, Rough, and Travel at 0.";
+      }
+      return "Choose Is Customer and/or Is Supplier. Pricing amounts are required only when the party is a customer.";
+    },
+    catalogKind() {
+      return CATALOG_FIELDS[this.catalogFieldKey]?.kind || null;
+    },
+    catalogObjectId() {
+      if (this.catalogMode !== "edit" || !this.catalogFieldKey) return null;
+      return this.resolveCatalogEditId(this.catalogFieldKey);
+    },
+    catalogDrawerHeader() {
+      const cfg = CATALOG_FIELDS[this.catalogFieldKey];
+      if (!cfg) return "";
+      return this.catalogMode === "edit" ? cfg.editHeader : cfg.addHeader;
+    },
+    catalogFormKey() {
+      const id = this.catalogObjectId || "new";
+      return `party-catalog-${this.catalogFieldKey}-${this.catalogMode}-${id}-${this.catalogFormNonce}`;
     },
     formSections() {
       const keys = Object.keys(this.internalSchema || {});
@@ -432,10 +546,109 @@ export default {
       if (this.isPartyRoleField(key)) {
         return "At least one role is required.";
       }
+      // One pricing hint only (Message already teaches the rule).
+      if (key === "trim_amount" && this.hasBuilderPricingFields()) {
+        if (this.isCustomerRole) {
+          return "At least one of Trim, Rough, or Travel Amount must be greater than 0.";
+        }
+        if (this.isSupplierOnly) {
+          return "Optional for supplier-only parties (defaults to 0).";
+        }
+      }
       return HINT_OVERRIDES[key] || "";
     },
     isPartyRoleField(key) {
       return this.hasPartyRoleFields() && PARTY_ROLE_KEYS.includes(key);
+    },
+    isCatalogSelectField(key) {
+      return (
+        !!CATALOG_FIELDS[key] && this.internalSchema[key]?.type === "select"
+      );
+    },
+    hasCatalogEditValue(key) {
+      return this.resolveCatalogEditId(key) != null;
+    },
+    canAddCatalog(key) {
+      const perm = CATALOG_FIELDS[key]?.addPerm;
+      return !!perm && !!this.hasPermission?.(perm);
+    },
+    canEditCatalog(key) {
+      const perm = CATALOG_FIELDS[key]?.changePerm;
+      return !!perm && !!this.hasPermission?.(perm);
+    },
+    catalogAddLabel(key) {
+      return CATALOG_FIELDS[key]?.addLabel || "Add";
+    },
+    catalogEditLabel(key) {
+      return CATALOG_FIELDS[key]?.editLabel || "Edit";
+    },
+    resolveCatalogEditId(key) {
+      const value = this.form?.[key];
+      if (Array.isArray(value)) {
+        if (!value.length) return null;
+        const last = value[value.length - 1];
+        return last && typeof last === "object"
+          ? last.id ?? last.value ?? null
+          : last;
+      }
+      if (value && typeof value === "object") {
+        return value.id ?? value.value ?? null;
+      }
+      if (value === null || value === undefined || value === "") return null;
+      return value;
+    },
+    openCatalogDrawer(key, mode) {
+      if (!CATALOG_FIELDS[key]) return;
+      if (mode === "edit" && this.resolveCatalogEditId(key) == null) return;
+      this.catalogFieldKey = key;
+      this.catalogMode = mode;
+      this.catalogFormNonce += 1;
+      this.catalogDrawerVisible = true;
+    },
+    closeCatalogDrawer() {
+      this.catalogDrawerVisible = false;
+    },
+    onCatalogDrawerVisible(visible) {
+      this.catalogDrawerVisible = visible;
+      if (!visible) {
+        this.catalogFieldKey = null;
+        this.catalogMode = "add";
+      }
+    },
+    async onCatalogSaved(saved) {
+      const key = this.catalogFieldKey;
+      this.closeCatalogDrawer();
+      if (!key || !saved?.id) return;
+
+      const option = {
+        value: saved.id,
+        label: saved.name || `#${saved.id}`,
+      };
+      const current = Array.isArray(this.optionsMap[key])
+        ? [...this.optionsMap[key]]
+        : [];
+      const idx = current.findIndex((opt) => opt.value === saved.id);
+      if (idx >= 0) {
+        current.splice(idx, 1, option);
+      } else {
+        current.push(option);
+      }
+      current.sort((a, b) =>
+        String(a.label || "").localeCompare(String(b.label || ""))
+      );
+      this.optionsMap = { ...this.optionsMap, [key]: current };
+
+      if (this.internalSchema[key]?.multiple) {
+        const selected = Array.isArray(this.form[key])
+          ? [...this.form[key]]
+          : [];
+        if (!selected.map(String).includes(String(saved.id))) {
+          selected.push(saved.id);
+        }
+        this.form = { ...this.form, [key]: selected };
+      } else {
+        this.form = { ...this.form, [key]: saved.id };
+      }
     },
     fieldClass(key, section) {
       if (section.gridClass?.includes("address") && key === "street") {
@@ -444,7 +657,17 @@ export default {
       if (key === "crews" && this.internalSchema[key]?.multiple) {
         return "jr-form-grid__full";
       }
+      if (key === "types" && this.internalSchema[key]?.multiple) {
+        return "jr-form-grid__full";
+      }
       return undefined;
+    },
+    isPricingAmountRequired(key) {
+      return (
+        PRICING_AMOUNT_KEYS.includes(key) &&
+        this.hasBuilderPricingFields() &&
+        this.isCustomerRole
+      );
     },
     isDecimalField(config, key) {
       return (
@@ -560,6 +783,8 @@ export default {
 
     validatePricingAmounts() {
       if (!this.hasBuilderPricingFields()) return true;
+      // Supplier-only (or no customer role): amounts may stay at 0.
+      if (!this.form.customer_rank) return true;
 
       const hasPositive = PRICING_AMOUNT_KEYS.some(
         (key) => toMoney(this.form[key]) > 0
@@ -583,24 +808,38 @@ export default {
 
       if (this.form.customer_rank || this.form.supplier_rank) return true;
 
+      const message = "At least one role is required.";
       PARTY_ROLE_KEYS.forEach((key) => {
-        this.validationErrors[key] = `${this.fieldLabel(key)} is required.`;
+        this.validationErrors[key] = message;
       });
       return false;
     },
 
     onPartyRoleChange() {
       if (!this.hasPartyRoleFields()) return;
-      if (!this.form.customer_rank && !this.form.supplier_rank) return;
 
       const next = { ...this.validationErrors };
       let changed = false;
-      PARTY_ROLE_KEYS.forEach((key) => {
-        if (next[key]) {
-          delete next[key];
-          changed = true;
-        }
-      });
+
+      if (this.form.customer_rank || this.form.supplier_rank) {
+        PARTY_ROLE_KEYS.forEach((key) => {
+          if (next[key]) {
+            delete next[key];
+            changed = true;
+          }
+        });
+      }
+
+      // Clearing customer removes pricing requirement errors.
+      if (!this.form.customer_rank) {
+        PRICING_AMOUNT_KEYS.forEach((key) => {
+          if (next[key]) {
+            delete next[key];
+            changed = true;
+          }
+        });
+      }
+
       if (changed) {
         this.validationErrors = next;
         if (this.formBanner) {
@@ -919,7 +1158,7 @@ export default {
   }
 
   .jr-form-grid--flags {
-    grid-template-columns: repeat(2, max-content);
+    grid-template-columns: repeat(3, max-content);
     column-gap: 1.5rem;
   }
 }
@@ -938,9 +1177,13 @@ export default {
   }
 
   .jr-form-grid--flags {
-    grid-template-columns: repeat(2, max-content);
+    grid-template-columns: repeat(3, max-content);
     column-gap: 2rem;
   }
+}
+
+.jr-dynamic-form__info {
+  margin: 0 0 1rem;
 }
 
 .jr-dynamic-form--drawer .jr-form-grid {

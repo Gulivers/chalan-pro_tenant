@@ -137,10 +137,19 @@
 
       <div v-if="canAdd" class="jr-doc-status-editor__toolbar">
         <JRButton
+          v-if="canApplyDefault"
           type="button"
           variant="secondary"
           size="sm"
-          :disabled="saving || hasDraft"
+          :disabled="saving || applyingDefault"
+          @click="applyDefaultWorkflow">
+          Apply default workflow
+        </JRButton>
+        <JRButton
+          type="button"
+          variant="secondary"
+          size="sm"
+          :disabled="saving || applyingDefault || hasDraft"
           @click="addDraft">
           + Add status
         </JRButton>
@@ -186,6 +195,10 @@ export default {
       type: [Number, String],
       required: true,
     },
+    typeCode: {
+      type: String,
+      default: '',
+    },
     readOnly: {
       type: Boolean,
       default: false,
@@ -196,9 +209,24 @@ export default {
       rows: [],
       loading: false,
       saving: false,
+      applyingDefault: false,
       error: '',
       rowError: '',
       alive: true,
+      // Keep in sync with DEFAULT_DOCUMENT_STATUS_SEEDS (backend).
+      defaultWorkflowCodes: [
+        'PO',
+        'PK',
+        'PR',
+        'GRN',
+        'PINV',
+        'PRN',
+        'SQ',
+        'SO',
+        'DN',
+        'INV',
+        'CRN',
+      ],
     };
   },
   computed: {
@@ -230,6 +258,20 @@ export default {
     },
     hasDraft() {
       return this.rows.some((row) => this.isDraft(row));
+    },
+    persistedCount() {
+      return this.rows.filter((row) => !!row.id).length;
+    },
+    canApplyDefault() {
+      const code = (this.typeCode || '').toString().trim().toUpperCase();
+      return (
+        this.canAdd &&
+        !this.readOnly &&
+        this.persistedCount === 0 &&
+        !this.hasDraft &&
+        !!code &&
+        this.defaultWorkflowCodes.includes(code)
+      );
     },
     nextSequence() {
       return (
@@ -284,6 +326,24 @@ export default {
       if (!this.rows.length) draft.is_initial = true;
       this.rows = [...this.rows, draft];
       this.rowError = '';
+    },
+    async applyDefaultWorkflow() {
+      if (!this.canApplyDefault || !this.documentTypeId) return;
+      this.applyingDefault = true;
+      this.rowError = '';
+      try {
+        await axios.post(
+          `/api/document-types/${this.documentTypeId}/seed-default-statuses/`
+        );
+        await this.load();
+      } catch (err) {
+        this.rowError = readApiError(
+          err,
+          'Could not apply the default status workflow.'
+        );
+      } finally {
+        this.applyingDefault = false;
+      }
     },
     async load() {
       if (!this.documentTypeId) {
