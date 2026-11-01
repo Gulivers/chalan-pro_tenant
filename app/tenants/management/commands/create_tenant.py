@@ -126,9 +126,11 @@ class Command(BaseCommand):
                 self.style.SUCCESS('✓ Migraciones completadas para el nuevo tenant')
             )
 
-            # Seed inicial de tipos de documento (apptransactions.documenttype).
+            # Seed inicial de DocumentType + DocumentStatus (masters_document_type.json).
             # MR y sus estados los siembra la migración 0008; no van en el fixture
             # para no chocar con type_code único después de migrate_schemas.
+            # seed_default_document_statuses es idempotente: si el fixture ya trae
+            # statuses, no los sobrescribe.
             try:
                 fixture_doc_types = os.path.join(
                     settings.BASE_DIR,
@@ -152,8 +154,7 @@ class Command(BaseCommand):
                     if seeded:
                         self.stdout.write(
                             self.style.SUCCESS(
-                                f'✓ Estados predeterminados PO/PK/PR creados ({seeded}). '
-                                'Status tracking permanece deshabilitado.'
+                                f'✓ Estados predeterminados adicionales creados ({seeded}).'
                             )
                         )
                     if wo_seed and any(wo_seed.values()):

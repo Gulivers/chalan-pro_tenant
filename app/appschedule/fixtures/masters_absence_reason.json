@@ -3,8 +3,8 @@
   "model": "appschedule.absencereason",
   "pk": 1,
   "fields": {
-    "name": "Hourly",
-    "description": "",
+    "name": "Scheduled Day Off",
+    "description": "Scheduled Day Off",
     "is_active": true
   }
 },
@@ -12,8 +12,8 @@
   "model": "appschedule.absencereason",
   "pk": 2,
   "fields": {
-    "name": "finishing up",
-    "description": "",
+    "name": "Medical Appointments",
+    "description": "Medical Appointments",
     "is_active": true
   }
 },
@@ -21,8 +21,8 @@
   "model": "appschedule.absencereason",
   "pk": 3,
   "fields": {
-    "name": "Holiday - Office Closed",
-    "description": "",
+    "name": "Unscheduled Day Off",
+    "description": "Unscheduled Day Off",
     "is_active": true
   }
 },
@@ -30,8 +30,8 @@
   "model": "appschedule.absencereason",
   "pk": 4,
   "fields": {
-    "name": "No Call, No Show",
-    "description": "",
+    "name": "Vacation Leave",
+    "description": "Vacation Leave",
     "is_active": true
   }
 },
@@ -39,8 +39,8 @@
   "model": "appschedule.absencereason",
   "pk": 5,
   "fields": {
-    "name": "Bereavement Leave",
-    "description": "",
+    "name": "Personal Leave",
+    "description": "Personal Leave",
     "is_active": true
   }
 },
@@ -49,7 +49,7 @@
   "pk": 6,
   "fields": {
     "name": "Sick Leave",
-    "description": "",
+    "description": "Sick Leave",
     "is_active": true
   }
 },
@@ -57,8 +57,8 @@
   "model": "appschedule.absencereason",
   "pk": 7,
   "fields": {
-    "name": "Personal Leave",
-    "description": "",
+    "name": "Bereavement Leave",
+    "description": "Bereavement Leave",
     "is_active": true
   }
 },
@@ -66,7 +66,7 @@
   "model": "appschedule.absencereason",
   "pk": 8,
   "fields": {
-    "name": "Vacation Leave",
+    "name": "No Call, No Show",
     "description": "",
     "is_active": true
   }
@@ -75,7 +75,7 @@
   "model": "appschedule.absencereason",
   "pk": 9,
   "fields": {
-    "name": "Unscheduled Day Off",
+    "name": "Holiday - Office Closed",
     "description": "",
     "is_active": true
   }
@@ -84,7 +84,7 @@
   "model": "appschedule.absencereason",
   "pk": 10,
   "fields": {
-    "name": "Medical Appointments",
+    "name": "Finishing up",
     "description": "",
     "is_active": true
   }
@@ -93,7 +93,7 @@
   "model": "appschedule.absencereason",
   "pk": 11,
   "fields": {
-    "name": "Scheduled Day Off",
+    "name": "Hourly",
     "description": "",
     "is_active": true
   }

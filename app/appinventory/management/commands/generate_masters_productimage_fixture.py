@@ -3,7 +3,7 @@
 Genera appinventory/fixtures/masters_productimage.json desde un tenant.
 
 Incluye todas las ProductImage del tenant con FK a product (sin assignment).
-Fuente canónica: jobrhythm_products (tenant_id=jobrhythm_products_001).
+Fuente canónica: division16 (tenant_id=division16_llc_001).
 """
 import json
 import os
@@ -12,7 +12,7 @@ from django_tenants.utils import schema_context
 
 from appinventory.models import ProductImage
 
-DEFAULT_SCHEMA = 'jobrhythm_products'
+DEFAULT_SCHEMA = 'division16'
 
 
 class Command(BaseCommand):

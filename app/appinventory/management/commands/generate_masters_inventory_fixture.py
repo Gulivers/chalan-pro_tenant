@@ -7,14 +7,14 @@ PriceType, Product, ProductPrice (Product.brand FK). ProductImage se genera apar
 También genera appschedule/fixtures/masters_absence_reason.json (fixture aparte,
 como masters_document_type) para Inventory Master Data Setup.
 
-Fuente canónica: schema jobrhythm_products (tenant_id=jobrhythm_products_001).
+Fuente canónica: schema division16 (tenant_id=division16_llc_001).
 
 Uso (ubuntu-house):
   docker compose -f docker-compose.dev.yml exec backend python manage.py \\
     generate_masters_inventory_fixture
 
 Opciones:
-  --schema jobrhythm_products   (default)
+  --schema division16           (default)
   --skip-images                 no exportar media ni masters_productimage.json
   --skip-excel                  no regenerar masters_inventory.xlsx
 """
@@ -25,7 +25,7 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django_tenants.utils import schema_context
 
-DEFAULT_SCHEMA = 'jobrhythm_products'
+DEFAULT_SCHEMA = 'division16'
 
 MASTERS_INVENTORY_MODELS = [
     'appinventory.UnitCategory',

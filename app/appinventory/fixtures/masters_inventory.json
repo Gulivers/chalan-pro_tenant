@@ -54,15 +54,6 @@
   }
 },
 {
-  "model": "appinventory.unitcategory",
-  "pk": 7,
-  "fields": {
-    "name": "Test Cetegoria",
-    "description": "",
-    "is_active": false
-  }
-},
-{
   "model": "appinventory.unitofmeasure",
   "pk": 1,
   "fields": {
@@ -453,6 +444,39 @@
   }
 },
 {
+  "model": "appinventory.warehouse",
+  "pk": 1,
+  "fields": {
+    "name": "Main Warehouse",
+    "location": "Cape Coral",
+    "is_active": true,
+    "is_default": true,
+    "truck": null
+  }
+},
+{
+  "model": "appinventory.warehouse",
+  "pk": 2,
+  "fields": {
+    "name": "Mobile Warehouse",
+    "location": "Mobile Warehouse Stock",
+    "is_active": true,
+    "is_default": false,
+    "truck": null
+  }
+},
+{
+  "model": "appinventory.warehouse",
+  "pk": 3,
+  "fields": {
+    "name": "Truck 1 Stock",
+    "location": "Truck 1 like stock mobile",
+    "is_active": true,
+    "is_default": false,
+    "truck": null
+  }
+},
+{
   "model": "appinventory.productcategory",
   "pk": 1,
   "fields": {
@@ -474,7 +498,7 @@
   "model": "appinventory.productcategory",
   "pk": 3,
   "fields": {
-    "name": "Boxes and Connectors",
+    "name": "Connectors",
     "description": "Classification Boxes and Connectors",
     "is_active": true
   }
@@ -989,7 +1013,7 @@
   "fields": {
     "name": "SQUARE D",
     "is_active": true,
-    "is_default": true
+    "is_default": false
   }
 },
 {
@@ -1149,7 +1173,7 @@
   "model": "appinventory.productbrand",
   "pk": 69,
   "fields": {
-    "name": "Test Interfaz produc",
+    "name": "NDR",
     "is_active": true,
     "is_default": true
   }
@@ -1161,8 +1185,8 @@
     "name": "RETAIL",
     "description": "Standard price list",
     "is_active": true,
-    "pricing_method": "MARGIN",
-    "margin_percent": "32.0000"
+    "pricing_method": "NONE",
+    "margin_percent": null
   }
 },
 {
@@ -1172,8 +1196,8 @@
     "name": "COST",
     "description": "Purchase cost",
     "is_active": true,
-    "pricing_method": "MARKUP",
-    "margin_percent": "25.0000"
+    "pricing_method": "NONE",
+    "margin_percent": null
   }
 },
 {
@@ -1183,8 +1207,8 @@
     "name": "PURCHASE",
     "description": "Sale price",
     "is_active": true,
-    "pricing_method": "MARGIN",
-    "margin_percent": "35.0000"
+    "pricing_method": "NONE",
+    "margin_percent": null
   }
 },
 {
@@ -1195,7 +1219,7 @@
     "description": "Wholesale price",
     "is_active": true,
     "pricing_method": "NONE",
-    "margin_percent": "32.0000"
+    "margin_percent": null
   }
 },
 {
@@ -1205,8 +1229,8 @@
     "name": "CONTRACTOR",
     "description": "Contractor price",
     "is_active": true,
-    "pricing_method": "MARKUP",
-    "margin_percent": "30.0000"
+    "pricing_method": "NONE",
+    "margin_percent": null
   }
 },
 {
@@ -7880,7 +7904,7 @@
     "brand": 60,
     "reorder_level": "0.00",
     "unit_default": 14,
-    "created_at": "2026-10-29T00:28:49.000Z",
+    "created_at": "2026-10-29T00:28:49Z",
     "is_active": true,
     "tracking_mode": "QUANTITY",
     "alert": null,
@@ -20077,7 +20101,7 @@
   "model": "appinventory.product",
   "pk": 1049,
   "fields": {
-    "name": "Square D WR GFI",
+    "name": "Square D 20 Amp GFI Weather-Resistant Outlet",
     "sku": "SQR51103WH",
     "model_number": "168",
     "category": 7,
@@ -20095,7 +20119,7 @@
   "model": "appinventory.product",
   "pk": 1050,
   "fields": {
-    "name": "Square D TR GFI",
+    "name": "Square D 20 Amp GFI Tamper-Resistant Outlet",
     "sku": "SQR51101WH",
     "model_number": "167",
     "category": 7,
@@ -20599,7 +20623,7 @@
   "model": "appinventory.product",
   "pk": 1078,
   "fields": {
-    "name": "Legrand TR GFI",
+    "name": "Legrand 20 Amp GFI Tamper-Resistant Outlet",
     "sku": "1597TRW",
     "model_number": "133",
     "category": 7,
@@ -20653,7 +20677,7 @@
   "model": "appinventory.product",
   "pk": 1081,
   "fields": {
-    "name": "Legrand WR GFI",
+    "name": "Legrand 20 Amp GFI Weather-Resistant Outlet",
     "sku": "1597TRWRW",
     "model_number": "130",
     "category": 7,
@@ -22317,6 +22341,42 @@
     "reorder_level": "0.00",
     "unit_default": 14,
     "created_at": "2026-10-29T00:29:24.437Z",
+    "is_active": true,
+    "tracking_mode": "QUANTITY",
+    "alert": null,
+    "notes": null
+  }
+},
+{
+  "model": "appinventory.product",
+  "pk": 1174,
+  "fields": {
+    "name": "Leviton 20 Amp Slim WR GFI Outlet with LED Indicator Light",
+    "sku": "GFWT1-W",
+    "model_number": "GFWT1-W",
+    "category": 1,
+    "brand": 28,
+    "reorder_level": "50.00",
+    "unit_default": 14,
+    "created_at": "2026-10-30T14:51:04.054Z",
+    "is_active": true,
+    "tracking_mode": "QUANTITY",
+    "alert": null,
+    "notes": null
+  }
+},
+{
+  "model": "appinventory.product",
+  "pk": 1175,
+  "fields": {
+    "name": "Junction Box for Mini Driver (NDR)",
+    "sku": "JBX-TLD-MINI",
+    "model_number": "",
+    "category": 2,
+    "brand": 69,
+    "reorder_level": "30.00",
+    "unit_default": 14,
+    "created_at": "2026-11-01T21:06:31.631Z",
     "is_active": true,
     "tracking_mode": "QUANTITY",
     "alert": null,
@@ -71692,6 +71752,70 @@
     "unit": 15,
     "price": "3.26",
     "is_default": false,
+    "is_sale": true,
+    "is_purchase": false,
+    "valid_from": null,
+    "valid_until": null,
+    "is_active": true
+  }
+},
+{
+  "model": "appinventory.productprice",
+  "pk": 3089,
+  "fields": {
+    "product": 1174,
+    "price_type": 2,
+    "unit": 14,
+    "price": "12.50",
+    "is_default": false,
+    "is_sale": true,
+    "is_purchase": true,
+    "valid_from": null,
+    "valid_until": null,
+    "is_active": true
+  }
+},
+{
+  "model": "appinventory.productprice",
+  "pk": 3090,
+  "fields": {
+    "product": 1174,
+    "price_type": 5,
+    "unit": 14,
+    "price": "15.81",
+    "is_default": true,
+    "is_sale": true,
+    "is_purchase": false,
+    "valid_from": null,
+    "valid_until": null,
+    "is_active": true
+  }
+},
+{
+  "model": "appinventory.productprice",
+  "pk": 3091,
+  "fields": {
+    "product": 1175,
+    "price_type": 2,
+    "unit": 14,
+    "price": "7.25",
+    "is_default": false,
+    "is_sale": false,
+    "is_purchase": true,
+    "valid_from": null,
+    "valid_until": null,
+    "is_active": true
+  }
+},
+{
+  "model": "appinventory.productprice",
+  "pk": 3092,
+  "fields": {
+    "product": 1175,
+    "price_type": 5,
+    "unit": 14,
+    "price": "11.35",
+    "is_default": true,
     "is_sale": true,
     "is_purchase": false,
     "valid_from": null,
