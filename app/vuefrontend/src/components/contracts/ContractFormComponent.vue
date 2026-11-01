@@ -2,8 +2,15 @@
   <JRPage>
     <JRPageHeader :title="pageTitle" :description="pageDescription">
       <template #actions>
+        <JRButton
+          v-if="canEditFromView"
+          variant="primary"
+          size="sm"
+          @click="goToEdit">
+          Edit contract
+        </JRButton>
         <div
-          v-if="hasPermission('ctrctsapp.add_contract')"
+          v-if="hasPermission('ctrctsapp.add_contract') && !isReadOnly"
           class="jr-contract-form__bid">
           <JRCheckbox
             inputId="docTypeCheckbox"
@@ -656,6 +663,14 @@ export default {
       isReadOnly() {
           return this.$route.name === 'contract-view';
       },
+      canEditFromView() {
+          const id = this.$route.params.id;
+          return (
+              this.isReadOnly &&
+              !!id &&
+              this.hasPermission('ctrctsapp.change_contract')
+          );
+      },
       pageTitle() {
           const doc = this.newContract.doc_type || 'Contract';
           if (this.$route.path === '/contract-form') return `New ${doc}`;
@@ -810,6 +825,12 @@ export default {
   },
 
   methods: {
+      goToEdit() {
+          const id = this.$route.params.id;
+          if (!id) return;
+          this.$router.push({ name: 'contract-edit', params: { id } });
+      },
+
       async loadTenantClientType() {
           try {
               const user = await this.getAuthenticatedUser();

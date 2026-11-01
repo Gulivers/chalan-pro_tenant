@@ -1,6 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader :title="pageTitle" />
+    <JRPageHeader :title="pageTitle">
+      <template v-if="canEditFromView" #actions>
+        <JRButton variant="primary" size="sm" @click="goToEdit">
+          Edit crew
+        </JRButton>
+      </template>
+    </JRPageHeader>
 
     <div class="jr-crew-form">
       <p v-if="loading" class="jr-crew-form__status" role="status">
@@ -287,6 +293,12 @@ const form = ref({
 });
 
 const isDisabled = computed(() => isViewMode.value || submitting.value);
+const canEditFromView = computed(
+  () =>
+    isViewMode.value &&
+    !!id &&
+    !!proxy?.hasPermission?.("crewsapp.change_crew")
+);
 const buildersById = computed(() => {
   const map = new Map();
   for (const b of builders.value || []) {
@@ -343,6 +355,11 @@ function clearFieldError(key) {
 
 function goList() {
   router.push({ name: "crew-list" });
+}
+
+function goToEdit() {
+  if (!id) return;
+  router.push({ name: "crew-edit", params: { id } });
 }
 
 function builderLabel(builderId) {

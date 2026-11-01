@@ -195,7 +195,7 @@ JRPage → JRPageHeader → form
 - Desktop ≥1024: secciones de campos en **tres columnas**.
 - Catálogo add/edit: un `JRDrawer` JR. Sin apilar drawers.
 - Create: sembrar la primera fila vacía si el dominio lo espera (p. ej. precios); las filas vírgenes no bloquean Save.
-- Tablas embebidas (precios, líneas): **Add** en el header de sección. **Duplicate** y **Delete** por fila (`JRRowActions`), no multi-select ni “Duplicate Selected”. Duplicate clona type/unit/precio/flags; `id` vacío y `is_default` false. Delete usa `JRDialog` (las vírgenes se van sin confirm). En compacto: Edit visible + overflow para Duplicate/Delete. Un primary de sección; ghost en la fila; danger solo en Delete.
+- Tablas embebidas (precios, líneas): **Add Row** a la izquierda del toolbar de la sección (no en `#actions` del título), estilo **Action Blue outlined** (`JRButton` `variant="primary-outline"`). **Duplicate** y **Delete** por fila (`JRRowActions`), no multi-select ni “Duplicate Selected” (salvo líneas de transacción). Duplicate clona type/unit/precio/flags; `id` vacío y `is_default` false. Delete usa `JRDialog` (las vírgenes se van sin confirm). En compacto: Edit visible + overflow para Duplicate/Delete. Un primary-outline de Add Row; ghost en la fila; danger solo en Delete.
 - Imágenes por marca: `ProductBrandImages` (Tabs + `FileUpload` basic + `Image` preview). Ver es libre si hay ficha. Subir / primary: `add_product` o `change_product` **y** el permiso de `productimage`. **Borrar** exige `change_product` (editar producto) **y** `delete_productimage`. En View del form (`readonly`) no hay CRUD. En create, el empty state pide guardar primero. Delete confirma con `JRDialog`. En la lista, el thumb abre el mismo componente en `JRDialog` `size="wide"` sin footer — no modal Bootstrap.
 
 ### Botones
@@ -205,10 +205,13 @@ Un botón de form, drawer o diálogo es `JRButton` → PrimeVue `Button` con cla
 | Superficie | Tipo | Icono |
 |---|---|---|
 | Form, footer de `JRDrawer`, footer de `JRDialog` | `JRButton` sólido (`primary` / `secondary` outlined) | **No.** Save, Cancel, Done, Update, Upload |
+| **Add Row** / **+ Add Row** (líneas, precios, transfers) | `JRButton` `variant="primary-outline"` (Action Blue outlined) | Opcional `Plus`; referencia `LinesGrid` |
 | Delete en esas superficies | `JRButton` `variant="danger"` (rojo relleno) | **No.** |
 | `FileUpload` basic | `chooseButtonProps.class`: `p-button p-component jr-button` | El `+` nativo del FileUpload |
 | `JRRowActions` en **lista / tabla** | Ghost (`text`) | **Sí.** Icono + label |
 | `JRRowActions` en **`p-drawer`** | Sólido (`jr-button`; auto o `solid`) | **No.** Solo label |
+
+**The Add Row Rule.** Todo **Add Row** es azul outlined (`primary-outline`), nunca `secondary` gris. Toolbar a la izquierda; no en el slot `#actions` del título de sección salvo patrón explícito distinto.
 
 Severities de fila: View `success` (texto `#166534`, no el fill `#16a34a`), Edit `primary`, Duplicate `secondary`, Delete `danger`.  
 Familia de iconos (solo ghost de lista): `@primevue/icons` + `CopyIcon` para Duplicate. Nunca icon-only en desktop. Si la columna no cabe: overflow, no quitar el texto.

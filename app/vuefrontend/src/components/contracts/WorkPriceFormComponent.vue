@@ -1,6 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader :title="pageTitle" />
+    <JRPageHeader :title="pageTitle">
+      <template v-if="canEditFromView" #actions>
+        <JRButton variant="primary" size="sm" @click="goToEdit">
+          Edit piece work price
+        </JRButton>
+      </template>
+    </JRPageHeader>
 
     <form class="jr-workprice-form" @submit.prevent="createOrUpdatePrice" novalidate>
       <JRSection title="Details">
@@ -229,6 +235,14 @@ export default {
     isReadOnly() {
       return this.$route.name === "work-prices-view";
     },
+    canEditFromView() {
+      const id = this.$route.params.id;
+      return (
+        this.isReadOnly &&
+        !!id &&
+        !!this.hasPermission?.("ctrctsapp.change_workprice")
+      );
+    },
     pageTitle() {
       if (this.isReadOnly) return "View Piece Work Price";
       return this.isNewPrice ? "New Piece Work Price" : "Edit Piece Work Price";
@@ -269,6 +283,11 @@ export default {
     },
     goList() {
       this.$router.push({ name: "work-prices" });
+    },
+    goToEdit() {
+      const id = this.$route.params.id;
+      if (!id) return;
+      this.$router.push({ name: "work-prices-edit", params: { id } });
     },
     isSelected(id) {
       return this.selectedIds.includes(id);

@@ -1,6 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader :title="pageTitle" />
+    <JRPageHeader :title="pageTitle">
+      <template v-if="canEditFromView" #actions>
+        <JRButton variant="primary" size="sm" @click="goToEdit">
+          Edit truck assignment
+        </JRButton>
+      </template>
+    </JRPageHeader>
 
     <div class="jr-truck-assignment-form">
       <p
@@ -205,6 +211,12 @@ const pageTitle = computed(() => {
   if (isEditMode.value) return "Edit Truck Assignment";
   return "Add Truck Assignment";
 });
+const canEditFromView = computed(
+  () =>
+    isViewMode.value &&
+    !!id &&
+    !!proxy?.hasPermission?.("crewsapp.change_truckassignment")
+);
 
 function clearFieldError(key) {
   if (!fieldErrors.value[key]) return;
@@ -234,6 +246,11 @@ function toISOString(dateStr, timeStr) {
   const time = timeStr.length === 5 ? `${timeStr}:00` : timeStr;
   const dt = new Date(`${dateStr}T${time}`);
   return isNaN(dt.getTime()) ? null : dt.toISOString();
+}
+
+function goToEdit() {
+  if (!id) return;
+  router.push({ name: "crew-truck-assignment-edit", params: { id } });
 }
 
 function goList() {

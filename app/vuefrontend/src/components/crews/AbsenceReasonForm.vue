@@ -1,6 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader :title="pageTitle" />
+    <JRPageHeader :title="pageTitle">
+      <template v-if="canEditFromView" #actions>
+        <JRButton variant="primary" size="sm" @click="goToEdit">
+          Edit absence reason
+        </JRButton>
+      </template>
+    </JRPageHeader>
 
     <div class="jr-absence-reason-form">
       <p v-if="loading" class="jr-absence-reason-form__status" role="status">
@@ -123,6 +129,12 @@ const pageTitle = computed(() => {
   if (isEditMode.value) return "Edit Absence Reason";
   return "Add Absence Reason";
 });
+const canEditFromView = computed(
+  () =>
+    isViewMode.value &&
+    !!id &&
+    !!proxy?.hasPermission?.("appschedule.change_absencereason")
+);
 
 function clearFieldError(key) {
   if (!fieldErrors.value[key]) return;
@@ -139,6 +151,11 @@ function focusFirstError() {
 
 function goList() {
   router.push({ name: "absence-reasons" });
+}
+
+function goToEdit() {
+  if (!id) return;
+  router.push({ name: "absence-reason-edit", params: { id } });
 }
 
 async function loadData() {

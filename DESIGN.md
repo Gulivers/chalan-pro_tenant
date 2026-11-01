@@ -77,6 +77,11 @@ components:
     textColor: "#ffffff"
     rounded: "{rounded.control}"
     padding: "0.5rem 1rem"
+  button-primary-outline:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.control}"
+    padding: "0.5rem 1rem"
   button-secondary:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.text}"
@@ -233,10 +238,13 @@ Stack: JR primitives (`@/ui`) wrap PrimeVue styled mode with `JobRhythmPreset`. 
 
 - **Shape:** rectangular (`0`)
 - **Primary:** Action Blue fill, white label — page create / form submit
-- **Secondary:** outlined / muted surface
+- **Primary outline** (`variant="primary-outline"`): Action Blue outlined — **Add Row** / `+ Add Row` on line grids and embedded tables (reference: transaction Lines toolbar)
+- **Secondary:** outlined / muted surface — Cancel and non-primary tools
 - **Ghost:** text/ghost for Refresh and secondary tools
 - **Danger:** filled danger, **label only** (Delete in forms/drawers)
 - **Focus:** visible; icon buttons may use 2px offset outline
+
+**The Add Row Rule.** Every **Add Row** / **+ Add Row** control uses Action Blue outlined (`JRButton` `variant="primary-outline"` / PrimeVue `severity="primary" outlined`), size `sm`/`small`, left in the section toolbar. Do not use gray secondary for Add Row.
 
 ### Badges / Chips (`JRBadge`)
 
@@ -294,6 +302,7 @@ Stack: JR primitives (`@/ui`) wrap PrimeVue styled mode with `JobRhythmPreset`. 
 - **Do** use a single primary border for field focus — never a double ring.
 - **Do** use light-background badges with dark text for status chips.
 - **Do** treat App Shell (Navbar / Footer) as JR/PrimeVue — part of the same system.
+- **Do** style every **Add Row** / **+ Add Row** as Action Blue outlined (`primary-outline`), matching transaction Lines.
 
 ### Don't
 
@@ -307,5 +316,6 @@ Stack: JR primitives (`@/ui`) wrap PrimeVue styled mode with `JobRhythmPreset`. 
 - **Don't** apply `--radius-jr-panel` to dialogs.
 - **Don't** stack outline + border (or a focus shadow) on the same field.
 - **Don't** use ghost icon+label `JRRowActions` inside a drawer, or a text-link Delete there.
+- **Don't** use gray `secondary` outlined for **Add Row** — that affordance is always primary outline.
 - **Don't** enable Tailwind Preflight without a deliberate global reset plan.
 - **Don't** invent a second cascade `@layer` order; keep `theme, base, primevue, components, utilities`.
