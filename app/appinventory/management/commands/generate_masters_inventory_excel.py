@@ -76,6 +76,14 @@ class Command(BaseCommand):
                     data.extend(json.load(f))
                 self.stdout.write(self.style.SUCCESS(f'[INFO] Merged {absence_path}'))
 
+            favorites_path = os.path.join(
+                base_dir, 'apptransactions', 'fixtures', 'masters_transaction_favorite.json'
+            )
+            if os.path.exists(favorites_path):
+                with open(favorites_path, 'r', encoding='utf-8') as f:
+                    data.extend(json.load(f))
+                self.stdout.write(self.style.SUCCESS(f'[INFO] Merged {favorites_path}'))
+
             # Mapeo de nombres de modelo en minúsculas a PascalCase
             model_name_mapping = {
                 'unitcategory': 'UnitCategory',
@@ -87,6 +95,7 @@ class Command(BaseCommand):
                 'product': 'Product',
                 'productprice': 'ProductPrice',
                 'absencereason': 'AbsenceReason',
+                'transactionfavorite': 'TransactionFavorite',
             }
             
             # Organizar datos por modelo
@@ -100,6 +109,7 @@ class Command(BaseCommand):
                 'Product': [],
                 'ProductPrice': [],
                 'AbsenceReason': [],
+                'TransactionFavorite': [],
             }
             
             for item in data:
@@ -132,7 +142,10 @@ class Command(BaseCommand):
                 'Product': 'Productos',
                 'ProductPrice': 'Precios de Productos',
                 'AbsenceReason': 'Absence Reasons',
+                'TransactionFavorite': 'Import Favorites',
             }
+            # Favorites: Excel de revisión sin JSON pesado
+            favorite_excel_keys = ('name', 'description', 'is_active', 'created_by')
             
             sheets_created = 0
             for model_name, items in model_data.items():
@@ -147,9 +160,12 @@ class Command(BaseCommand):
                 sheets_created += 1
                 
                 # Obtener todas las claves únicas de todos los items
-                all_keys = set()
-                for item in items:
-                    all_keys.update(key for key in item.keys() if key != 'pk')
+                if model_name == 'TransactionFavorite':
+                    all_keys = set(favorite_excel_keys)
+                else:
+                    all_keys = set()
+                    for item in items:
+                        all_keys.update(key for key in item.keys() if key != 'pk')
                 
                 headers = ['ID'] + sorted(all_keys)
                 

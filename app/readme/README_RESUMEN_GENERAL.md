@@ -1522,7 +1522,7 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 
 - `InventoryMasterDataPreviewAPIView` (GET `/api/master-data/preview/`): Verifica el estado de `seed_inventory_done` y devuelve información sobre si los datos ya fueron importados.
 - `InventoryMasterDataExcelDownloadAPIView` (GET `/api/master-data/excel/`): Sirve el archivo Excel pre-generado desde `appinventory/static/appinventory/masters_inventory.xlsx`.
-- `InventoryMasterDataImportAPIView` (POST `/api/master-data/import/`): Copia el repo de imágenes (`fixtures/media/products/`) a `MEDIA_ROOT/products/` (preserva subcarpetas), carga `masters_inventory.json` **sin** entradas ProductImage, luego `appschedule/fixtures/masters_absence_reason.json` (fixture aparte, como DocumentType), luego inyecta `masters_productimage.json` (ProductImage con FK a `product`). Si no existe ese fixture de imágenes, crea ProductImage desde `MEDIA_ROOT/products/`. Resetea secuencias (incl. `appinventory_productimage` y `appschedule_absencereason`) y marca `seed_inventory_done=True`. Fuente canónica: tenant **division16** (`tenant_id=division16_llc_001`).
+- `InventoryMasterDataImportAPIView` (POST `/api/master-data/import/`): Copia el repo de imágenes (`fixtures/media/products/`) a `MEDIA_ROOT/products/` (preserva subcarpetas), carga `masters_inventory.json` **sin** entradas ProductImage, luego `appschedule/fixtures/masters_absence_reason.json`, opcionalmente `masters_transaction_favorite.json` si `include_favorites=true` (reasigna `created_by` al usuario del request), luego inyecta `masters_productimage.json` (ProductImage con FK a `product`). Si no existe ese fixture de imágenes, crea ProductImage desde `MEDIA_ROOT/products/`. Resetea secuencias y marca `seed_inventory_done=True`. Fuente canónica: tenant **division16** (`tenant_id=division16_llc_001`).
 
 **Management Command (`appinventory/management/commands/generate_masters_inventory_excel.py`):**
 
@@ -1547,6 +1547,12 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 - Contiene `DocumentType` + `DocumentStatus` desde `division16` (**sin MR**; MR lo siembra la migración 0008).
 - Se regenera con: `python manage.py generate_masters_document_type_fixture` (default schema `division16`).
 - Lo cargan `create_tenant` / onboarding; `seed_default_document_statuses()` no sobrescribe si ya hay statuses.
+
+**Fixture de Import Favorites (`apptransactions/fixtures/masters_transaction_favorite.json`):**
+
+- Contiene `TransactionFavorite` activos desde `division16`.
+- Se regenera con `generate_masters_inventory_fixture`.
+- En `/inventory-master-data-setup` es **opcional** (checkbox). Al importar se reasigna `created_by` al usuario que ejecuta el import.
 
 **Fixture de imágenes de productos (`appinventory/fixtures/masters_productimage.json`):**
 
