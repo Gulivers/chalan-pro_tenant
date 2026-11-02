@@ -2,7 +2,7 @@
   <JRPage>
     <JRPageHeader
       title="Inventory Master Data Setup"
-      description="Import products, brands, categories, units, price types, warehouses, product prices, and absence reasons into your tenant." />
+      description="Import products, brands, categories, units, price types, warehouses, product prices, absence reasons, and optionally Import Favorites into your tenant." />
 
     <div class="jr-master-data-setup">
       <p v-if="loading" class="jr-master-data-setup__status" role="status">
@@ -24,8 +24,9 @@
           :closable="false">
           <strong>Important:</strong> You can download an Excel file with
           inventory master data (products, brands, categories, units, price
-          types, warehouses, product prices, absence reasons). Review and
-          adjust the data if necessary before importing it to your tenant.
+          types, warehouses, product prices, absence reasons, and import
+          Transaction Favorites). Review and adjust the data if necessary
+          before importing it to your tenant.
         </Message>
 
         <JRSection title="Download Excel file">
@@ -55,13 +56,23 @@
             not from the downloaded Excel file. The Excel file is for review only.
           </p>
 
-          <JRCheckbox
-            v-model="confirmCheck"
-            inputId="confirm-import-masters"
-            class="jr-master-data-setup__confirm"
-            :disabled="importing">
-            I confirm: import masters into my tenant
-          </JRCheckbox>
+          <div class="jr-master-data-setup__checks">
+            <JRCheckbox
+              v-model="confirmCheck"
+              inputId="confirm-import-masters"
+              class="jr-master-data-setup__confirm"
+              :disabled="importing">
+              I confirm: import masters into my tenant
+            </JRCheckbox>
+
+            <JRCheckbox
+              v-model="includeFavorites"
+              inputId="include-import-favorites"
+              class="jr-master-data-setup__confirm"
+              :disabled="importing">
+              Also import Transaction Favorites (Import Favorites)
+            </JRCheckbox>
+          </div>
 
           <div class="jr-master-data-setup__actions">
             <JRButton
@@ -89,9 +100,9 @@
         :closable="false">
         <strong>Inventory masters imported.</strong>
         The inventory master data (products, brands, categories, prices,
-        absence reasons, and product images when available) has been
-        successfully imported to this tenant. Import cannot be performed more
-        than once.
+        absence reasons, product images when available, and Import Favorites
+        if selected) has been successfully imported to this tenant. Import
+        cannot be performed more than once.
       </Message>
     </div>
   </JRPage>
@@ -127,6 +138,7 @@ export default defineComponent({
       error: null,
       seedDone: false,
       confirmCheck: false,
+      includeFavorites: true,
       importing: false,
       downloading: false,
     };
@@ -220,7 +232,10 @@ export default defineComponent({
         const token = getAccessToken();
         const response = await axios.post(
           "/api/master-data/import/",
-          { confirm: true },
+          {
+            confirm: true,
+            include_favorites: this.includeFavorites,
+          },
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -238,6 +253,7 @@ export default defineComponent({
           });
           this.seedDone = true;
           this.confirmCheck = false;
+          this.includeFavorites = true;
         }
       } catch (error) {
         console.error("Error importing master data:", error);
@@ -291,8 +307,16 @@ export default defineComponent({
   color: var(--color-jr-text);
 }
 
-.jr-master-data-setup__confirm {
+.jr-master-data-setup__checks {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.65rem;
   margin-bottom: 0.75rem;
+}
+
+.jr-master-data-setup__confirm {
+  margin: 0;
 }
 
 .jr-master-data-setup :deep(.jr-checkbox) {

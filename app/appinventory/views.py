@@ -3198,6 +3198,8 @@ class InventoryMasterDataImportAPIView(APIView):
                     {'error': 'Debe confirmar la importación de los datos maestros.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+
+            include_favorites = bool(request.data.get('include_favorites', False))
             
             # Ruta del archivo de fixtures
             from django.conf import settings
@@ -3298,6 +3300,44 @@ class InventoryMasterDataImportAPIView(APIView):
                         from appschedule.models import AbsenceReason
                         absence_synced = AbsenceReason.objects.count()
 
+                    favorites_synced = 0
+                    if include_favorites:
+                        fixture_favorites_path = os.path.join(
+                            settings.BASE_DIR,
+                            'apptransactions',
+                            'fixtures',
+                            'masters_transaction_favorite.json',
+                        )
+                        if os.path.exists(fixture_favorites_path):
+                            with open(fixture_favorites_path, 'r', encoding='utf-8') as f:
+                                favorites_fixture = json.load(f)
+                            owner_id = getattr(request.user, 'pk', None)
+                            cleaned_favorites = []
+                            for item in favorites_fixture:
+                                if item.get('model') != 'apptransactions.transactionfavorite':
+                                    continue
+                                fields = item.setdefault('fields', {})
+                                if owner_id:
+                                    fields['created_by'] = owner_id
+                                cleaned_favorites.append(item)
+                            if cleaned_favorites:
+                                with tempfile.NamedTemporaryFile(
+                                    mode='w', suffix='.json', delete=False, encoding='utf-8'
+                                ) as tmp_fav:
+                                    json.dump(cleaned_favorites, tmp_fav, indent=2, ensure_ascii=False)
+                                    tmp_fav_path = tmp_fav.name
+                                try:
+                                    call_command('loaddata', tmp_fav_path, verbosity=0)
+                                finally:
+                                    try:
+                                        os.unlink(tmp_fav_path)
+                                    except OSError:
+                                        pass
+                                from apptransactions.models import TransactionFavorite
+                                favorites_synced = TransactionFavorite.objects.filter(
+                                    is_active=True
+                                ).count()
+
                     if os.path.exists(fixture_productimage_path):
                         with open(fixture_productimage_path, 'r', encoding='utf-8') as f:
                             image_fixture = json.load(f)
@@ -3338,6 +3378,7 @@ class InventoryMasterDataImportAPIView(APIView):
                             'appinventory_productprice',
                             'appinventory_productimage',
                             'appschedule_absencereason',
+                            'apptransactions_transactionfavorite',
                         ]
                         for table in tables:
                             try:
@@ -3358,12 +3399,16 @@ class InventoryMasterDataImportAPIView(APIView):
                         msg += f' Imágenes de productos creadas: {images_synced}.'
                     if absence_synced:
                         msg += f' Absence reasons: {absence_synced}.'
+                    if include_favorites:
+                        msg += f' Transaction favorites: {favorites_synced}.'
                     return Response({
                         'success': True,
                         'message': msg,
                         'images_copied': images_copied,
                         'images_synced': images_synced,
                         'absence_reasons_synced': absence_synced,
+                        'favorites_synced': favorites_synced,
+                        'include_favorites': include_favorites,
                     })
                 
                 except Exception as e:

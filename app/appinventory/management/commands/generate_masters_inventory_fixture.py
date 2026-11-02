@@ -4,8 +4,9 @@ Genera fixtures de inventario maestro desde un tenant canónico.
 
 Incluye: UnitCategory, UnitOfMeasure, Warehouse, ProductCategory, ProductBrand,
 PriceType, Product, ProductPrice (Product.brand FK). ProductImage se genera aparte.
-También genera appschedule/fixtures/masters_absence_reason.json (fixture aparte,
-como masters_document_type) para Inventory Master Data Setup.
+También genera:
+  - appschedule/fixtures/masters_absence_reason.json
+  - apptransactions/fixtures/masters_transaction_favorite.json (solo is_active)
 
 Fuente canónica: schema division16 (tenant_id=division16_llc_001).
 
@@ -18,11 +19,13 @@ Opciones:
   --skip-images                 no exportar media ni masters_productimage.json
   --skip-excel                  no regenerar masters_inventory.xlsx
 """
+import json
 import os
 from io import StringIO
 
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
+from django.core.serializers import serialize
 from django_tenants.utils import schema_context
 
 DEFAULT_SCHEMA = 'division16'
@@ -41,7 +44,7 @@ MASTERS_INVENTORY_MODELS = [
 
 class Command(BaseCommand):
     help = (
-        'Genera masters_inventory.json (+ absence reasons + imágenes + Excel) '
+        'Genera masters_inventory.json (+ absence + favorites + imágenes + Excel) '
         f'desde el tenant canónico. Default schema: {DEFAULT_SCHEMA}.'
     )
 
@@ -77,6 +80,9 @@ class Command(BaseCommand):
         absence_output = os.path.join(
             base_dir, 'appschedule', 'fixtures', 'masters_absence_reason.json'
         )
+        favorites_output = os.path.join(
+            base_dir, 'apptransactions', 'fixtures', 'masters_transaction_favorite.json'
+        )
 
         with schema_context(schema):
             out = StringIO()
@@ -97,6 +103,12 @@ class Command(BaseCommand):
             )
             absence_json = out_abs.getvalue()
 
+            from apptransactions.models import TransactionFavorite
+            favorites_qs = TransactionFavorite.objects.filter(is_active=True).order_by('pk')
+            favorites_payload = json.loads(
+                serialize('json', favorites_qs, indent=2)
+            )
+
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(json_str)
@@ -113,6 +125,17 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 f'masters_absence_reason.json generado → {absence_output}'
+            )
+        )
+
+        os.makedirs(os.path.dirname(favorites_output), exist_ok=True)
+        with open(favorites_output, 'w', encoding='utf-8') as f:
+            json.dump(favorites_payload, f, indent=2, ensure_ascii=False)
+            f.write('\n')
+        self.stdout.write(
+            self.style.SUCCESS(
+                f'masters_transaction_favorite.json generado → {favorites_output} '
+                f'({len(favorites_payload)} activos)'
             )
         )
 
