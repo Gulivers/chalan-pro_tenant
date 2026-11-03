@@ -59,6 +59,9 @@ class TenantsConfig(AppConfig):
         Se ejecuta cuando Django ha cargado todas las apps.
         Aquí podemos acceder a los modelos y la base de datos de forma segura.
         """
+        # Seed de DocumentType/Status tras crear schema (create_tenant / onboarding).
+        from tenants import signals  # noqa: F401
+
         # Solo cargar dominios si no estamos ejecutando migraciones
         import sys
         if 'migrate' not in sys.argv and 'makemigrations' not in sys.argv:

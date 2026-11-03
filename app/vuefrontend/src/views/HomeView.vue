@@ -41,6 +41,7 @@ import AreaChart from "@components/contracts/AreaChart.vue";
 import BarChart from "@components/contracts/BarChart.vue";
 import WeeklySupervisorChart from "@components/schedule/WeeklySupervisorChart.vue";
 import CustomersSuppliersComparison from "@components/inventory/dashboard/components/CustomersSuppliersComparison.vue";
+import { useTenantSetup } from "@/composables/useTenantSetup";
 
 export default defineComponent({
   name: "HomeView",
@@ -74,6 +75,9 @@ export default defineComponent({
       }
     });
     this.loadComparison();
+    useTenantSetup()
+      .load({ force: true })
+      .catch(() => {});
   },
 
   methods: {

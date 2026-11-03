@@ -102,26 +102,29 @@
               v-if="canView"
               class="jr-master-row__name jr-master-row__name--link"
               :to="viewTo(item.id)"
-              :aria-label="`View ${item.plate_number}`">
-              {{ item.plate_number }}
+              :aria-label="`View ${item.unit_number || item.plate_number}`">
+              {{ item.unit_number || item.plate_number }}
             </router-link>
             <span v-else class="jr-master-row__name">{{
-              item.plate_number
+              item.unit_number || item.plate_number
             }}</span>
             <p class="jr-master-row__meta">
-              {{ item.model || "—" }}
+              {{ item.plate_number || "—" }}
+              <template v-if="item.make || item.model">
+                · {{ [item.make, item.model].filter(Boolean).join(" ") }}
+              </template>
               <template v-if="item.year"> · {{ item.year }}</template>
             </p>
           </div>
           <div class="jr-master-row__aside">
             <JRBadge
-              :value="item.status ? 'Active' : 'Inactive'"
-              :severity="item.status ? 'success' : 'secondary'" />
+              :value="fleetStatusLabel(item.fleet_status)"
+              :severity="fleetStatusSeverity(item.fleet_status)" />
             <JRRowActions
               v-if="hasRowActions"
               :actions="getRowActions(item)"
               :compact="true"
-              :entity-label="item.plate_number" />
+              :entity-label="item.unit_number || item.plate_number" />
           </div>
         </li>
       </ul>
@@ -180,20 +183,29 @@
             </JRButton>
           </JREmptyState>
         </template>
-        <Column field="id" header="ID" sortable style="width: 4.5rem" />
-        <Column field="plate_number" header="Plate Number" sortable>
+        <Column field="unit_number" header="Unit #" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
               class="jr-master-row__name jr-master-row__name--link"
               :to="viewTo(data.id)"
-              :aria-label="`View ${data.plate_number}`">
-              {{ data.plate_number }}
+              :aria-label="`View ${data.unit_number || data.plate_number}`">
+              {{ data.unit_number || "—" }}
             </router-link>
-            <span v-else>{{ data.plate_number }}</span>
+            <span v-else>{{ data.unit_number || "—" }}</span>
           </template>
         </Column>
-        <Column field="model" header="Truck Model" sortable>
+        <Column field="plate_number" header="Plate" sortable>
+          <template #body="{ data }">
+            {{ data.plate_number || "—" }}
+          </template>
+        </Column>
+        <Column field="make" header="Make" sortable>
+          <template #body="{ data }">
+            {{ data.make || "—" }}
+          </template>
+        </Column>
+        <Column field="model" header="Model" sortable>
           <template #body="{ data }">
             {{ data.model || "—" }}
           </template>
@@ -203,7 +215,24 @@
             {{ data.year || "—" }}
           </template>
         </Column>
-        <Column field="status" header="Status" sortable>
+        <Column field="fleet_status" header="Status" sortable>
+          <template #body="{ data }">
+            <JRBadge
+              :value="fleetStatusLabel(data.fleet_status)"
+              :severity="fleetStatusSeverity(data.fleet_status)" />
+          </template>
+        </Column>
+        <Column field="current_mileage_display" header="Mileage" sortable>
+          <template #body="{ data }">
+            {{
+              data.current_mileage_display === "Not recorded" ||
+              data.current_mileage == null
+                ? "Not recorded"
+                : `${data.current_mileage} mi`
+            }}
+          </template>
+        </Column>
+        <Column field="status" header="Active" sortable>
           <template #body="{ data }">
             <JRBadge
               :value="data.status ? 'Active' : 'Inactive'"
@@ -271,6 +300,25 @@ const ENDPOINT = "/api/trucks/";
 const PHONE_MQ = "(max-width: 767.98px)";
 const TABLET_MQ = "(min-width: 768px) and (max-width: 1023.98px)";
 
+const FLEET_STATUS_LABELS = {
+  available: "Available",
+  maintenance: "Maintenance",
+  out_of_service: "Out of Service",
+  sold: "Sold",
+};
+
+function fleetStatusLabel(code) {
+  return FLEET_STATUS_LABELS[code] || code || "—";
+}
+
+function fleetStatusSeverity(code) {
+  if (code === "available") return "success";
+  if (code === "maintenance") return "warn";
+  if (code === "out_of_service") return "danger";
+  if (code === "sold") return "secondary";
+  return "secondary";
+}
+
 function readViewport() {
   if (typeof window === "undefined" || !window.matchMedia) {
     return { isMobile: false, isTablet: false };
@@ -306,7 +354,7 @@ const loadError = ref(false);
 const currentPage = ref(1);
 const perPage = ref(25);
 const filter = ref("");
-const sortField = ref("plate_number");
+const sortField = ref("unit_number");
 const sortOrder = ref(1);
 let searchTimer = null;
 
@@ -330,12 +378,15 @@ const filteredItems = computed(() => {
   if (q) {
     list = list.filter(
       (item) =>
+        (item.unit_number || "").toLowerCase().includes(q) ||
         (item.plate_number || "").toLowerCase().includes(q) ||
+        (item.vin || "").toLowerCase().includes(q) ||
+        (item.make || "").toLowerCase().includes(q) ||
         (item.model || "").toLowerCase().includes(q) ||
         String(item.year || "").includes(q)
     );
   }
-  const field = sortField.value || "plate_number";
+  const field = sortField.value || "unit_number";
   const order = sortOrder.value === -1 ? -1 : 1;
   return [...list].sort((a, b) => compareValues(a, b, field) * order);
 });
@@ -413,7 +464,7 @@ const onTablePage = (event) => {
 };
 
 const onTableSort = (event) => {
-  sortField.value = event.sortField || "plate_number";
+  sortField.value = event.sortField || "unit_number";
   sortOrder.value = event.sortOrder ?? 1;
   currentPage.value = 1;
 };

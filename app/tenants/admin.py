@@ -14,9 +14,13 @@ class TenantAdmin(PublicSchemaOnlyAdminMixin, TenantAdminMixin, admin.ModelAdmin
 
     list_display = (
         'name', 'logo_thumbnail', 'schema_name', 'tenant_id', 'get_domain',
-        'email', 'client_type', 'paid_until', 'on_trial', 'is_active', 'created_on',
+        'email', 'client_type', 'paid_until', 'on_trial', 'setup_completed',
+        'seed_inventory_done', 'is_active', 'created_on',
     )
-    list_filter = ('is_active', 'on_trial', 'client_type', 'created_on')
+    list_filter = (
+        'is_active', 'on_trial', 'client_type', 'setup_completed',
+        'seed_inventory_done', 'created_on',
+    )
     search_fields = ('name', 'schema_name', 'tenant_id', 'email')
     readonly_fields = ('schema_name', 'tenant_id', 'created_on', 'logo_preview')
 
@@ -29,6 +33,13 @@ class TenantAdmin(PublicSchemaOnlyAdminMixin, TenantAdminMixin, admin.ModelAdmin
         }),
         ('Billing & trial', {
             'fields': ('trial_start', 'trial_end', 'paid_until', 'on_trial'),
+        }),
+        ('Company setup', {
+            'fields': (
+                'seed_inventory_done',
+                'setup_completed',
+                'setup_progress',
+            ),
         }),
         ('Metadata', {
             'fields': ('created_on',),
