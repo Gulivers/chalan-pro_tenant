@@ -1546,7 +1546,8 @@ El sistema de **Inventory Master Data Setup** permite a los administradores de t
 
 - Contiene `DocumentType` + `DocumentStatus` desde `division16` (**sin MR**; MR lo siembra la migración 0008).
 - Se regenera con: `python manage.py generate_masters_document_type_fixture` (default schema `division16`).
-- Lo cargan `create_tenant` / onboarding; `seed_default_document_statuses()` no sobrescribe si ya hay statuses.
+- **Carga:** `seed_tenant_document_masters()` (por `type_code`, no `loaddata`/PKs). Se dispara en `post_schema_sync` al crear el tenant y de nuevo en onboarding (idempotente). Reparar un tenant: `python manage.py seed_masters_document_type --schema <schema>`.
+- Nota: `manage.py create_tenant` de **django-tenants** sombrea el comando custom en `tenants/`; el seed no depende de ese Command.
 
 **Fixture de Import Favorites (`apptransactions/fixtures/masters_transaction_favorite.json`):**
 
@@ -1715,12 +1716,14 @@ El campo incluye **tooltip** (`v-tt` + `data-title`) según las guías del proye
      --schema division16
    ```
 
-3. **Regenerar el fixture maestro de tipos de documento + Document Statuses** (onboarding / `create_tenant`; **sin MR**, que lo siembra la migración):
+3. **Regenerar el fixture maestro de tipos de documento + Document Statuses** (onboarding / `post_schema_sync`; **sin MR**, que lo siembra la migración):
    ```bash
    docker compose -f docker-compose.dev.yml exec backend \
      python manage.py generate_masters_document_type_fixture --schema division16
    # → app/apptransactions/fixtures/masters_document_type.json
    #    (DocumentType + DocumentStatus; excluye MR)
+   # Reparar tenant ya creado sin masters:
+   # python manage.py seed_masters_document_type --schema <schema>
    ```
 
 #### 9.4.2 JobRhythm Assistant: intenciones analíticas en DocumentType

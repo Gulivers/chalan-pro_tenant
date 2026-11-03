@@ -29,6 +29,7 @@
 <script>
 import ChevronDown from "@primeicons/vue/chevron-down";
 import Menu from "primevue/menu";
+import { useTenantSetup } from "@/composables/useTenantSetup";
 
 export default {
   name: "AppShellUserMenu",
@@ -97,6 +98,16 @@ export default {
         items.push({
           label: "Billing",
           command: () => this.$emit("navigate", "/billing"),
+        });
+        items.push({
+          label: "Initial Setup Assistant",
+          command: () => {
+            const setup = useTenantSetup();
+            setup.reopen().catch(() => {
+              setup.openPanel();
+            });
+            this.$emit("navigate", "/");
+          },
         });
       }
 

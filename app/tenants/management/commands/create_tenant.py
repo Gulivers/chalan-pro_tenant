@@ -17,10 +17,8 @@ Uso:
   Directo (dentro del contenedor backend o venv):
     python manage.py create_tenant --name "Phoenix Electric" --schema phoenix --domain phoenix.jobrhythm.net
 """
-import os
 import re
 
-from django.conf import settings
 from django.core.management import BaseCommand, call_command
 from django_tenants.utils import schema_context
 
@@ -127,53 +125,32 @@ class Command(BaseCommand):
             )
 
             # Seed inicial de DocumentType + DocumentStatus (masters_document_type.json).
-            # MR y sus estados los siembra la migración 0008; no van en el fixture
-            # para no chocar con type_code único después de migrate_schemas.
-            # seed_default_document_statuses es idempotente: si el fixture ya trae
-            # statuses, no los sobrescribe.
+            # IMPORTANTE: manage.py create_tenant suele resolver al comando de
+            # django_tenants (INSTALLED_APPS lo pone primero), no a este archivo.
+            # El seed real en ese camino lo hace post_schema_sync →
+            # seed_tenant_document_masters. Aquí se mantiene por si se invoca
+            # este Command directamente. No usar loaddata (colisión de PKs con MR).
             try:
-                fixture_doc_types = os.path.join(
-                    settings.BASE_DIR,
-                    'apptransactions',
-                    'fixtures',
-                    'masters_document_type.json',
+                self.stdout.write(
+                    'Cargando tipos de documento iniciales desde masters_document_type.json...'
                 )
-                if os.path.exists(fixture_doc_types):
-                    self.stdout.write('Cargando tipos de documento iniciales desde masters_document_type.json...')
-                    with schema_context(schema_name):
-                        call_command('loaddata', fixture_doc_types, verbosity=0)
-                        from apptransactions.services.document_status import (
-                            seed_default_document_statuses,
-                        )
-                        from appschedule.services.work_order_status import (
-                            seed_work_order_defaults,
-                        )
-                        seeded = seed_default_document_statuses()
-                        wo_seed = seed_work_order_defaults()
-                    self.stdout.write(self.style.SUCCESS('✓ Tipos de documento iniciales cargados.'))
-                    if seeded:
-                        self.stdout.write(
-                            self.style.SUCCESS(
-                                f'✓ Estados predeterminados adicionales creados ({seeded}).'
-                            )
-                        )
-                    if wo_seed and any(wo_seed.values()):
-                        self.stdout.write(
-                            self.style.SUCCESS(
-                                '✓ Work Order statuses/progress defaults: '
-                                f'{wo_seed}'
-                            )
-                        )
-                else:
-                    self.stdout.write(
-                        self.style.WARNING(
-                            'Fixture masters_document_type.json no encontrado; se omite seed de tipos de documento.'
-                        )
+                with schema_context(schema_name):
+                    from apptransactions.services.masters_document_type import (
+                        seed_tenant_document_masters,
                     )
+
+                    result = seed_tenant_document_masters()
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f'✓ Tipos de documento iniciales cargados: {result}'
+                    )
+                )
             except Exception as e:
                 # No abortar la creación del tenant si falla el seed; solo informar.
                 self.stdout.write(
-                    self.style.ERROR(f'Error al cargar masters_document_type.json para el nuevo tenant: {e}')
+                    self.style.ERROR(
+                        f'Error al cargar masters_document_type.json para el nuevo tenant: {e}'
+                    )
                 )
 
         except Exception as e:
