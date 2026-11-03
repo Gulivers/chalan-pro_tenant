@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Truck, Crew, TruckAssignment, Category
+from .models import Truck, Crew, TruckAssignment, TruckAssignmentTruck, Category
 
 
 def _periods_overlap(a1, u1, a2, u2):
@@ -19,19 +19,9 @@ class TruckAssignmentAdminForm(forms.ModelForm):
         model = TruckAssignment
         fields = '__all__'
 
-    def clean_trucks(self):
-        trucks = self.cleaned_data.get('trucks')
-        if not trucks:
-            return trucks
-        ids = [t.id for t in trucks]
-        if len(ids) != len(set(ids)):
-            raise ValidationError("Duplicate trucks are not allowed.")
-        return trucks
-
     def clean(self):
         cleaned_data = super().clean()
         crew = cleaned_data.get('crew')
-        trucks = cleaned_data.get('trucks')
         assigned_at = cleaned_data.get('assigned_at')
         unassigned_at = cleaned_data.get('unassigned_at')
         instance = self.instance
@@ -39,35 +29,50 @@ class TruckAssignmentAdminForm(forms.ModelForm):
         if not crew or not assigned_at:
             return cleaned_data
 
-        truck_ids = list(trucks.values_list('id', flat=True)) if trucks else []
-
         # No overlapping assignments for the same crew
-        qs = TruckAssignment.objects.filter(crew=crew).exclude(pk=instance.pk if instance else 0)
+        qs = TruckAssignment.objects.filter(crew=crew).exclude(
+            pk=instance.pk if instance else 0
+        )
         for other in qs:
-            if _periods_overlap(assigned_at, unassigned_at, other.assigned_at, other.unassigned_at):
+            if _periods_overlap(
+                assigned_at, unassigned_at, other.assigned_at, other.unassigned_at
+            ):
                 raise ValidationError(
                     f"Crew '{crew.name}' already has an overlapping assignment "
                     f"({other.assigned_at} - {other.unassigned_at or 'ongoing'})."
                 )
 
-        # No overlapping assignments for the same truck
-        for truck in trucks or []:
-            others = TruckAssignment.objects.filter(trucks=truck).exclude(pk=instance.pk if instance else 0)
-            for other in others:
-                if _periods_overlap(assigned_at, unassigned_at, other.assigned_at, other.unassigned_at):
-                    raise ValidationError(
-                        f"Truck '{truck}' is already assigned to another crew during this period."
-                    )
-
         return cleaned_data
+
+
+class TruckAssignmentTruckInline(admin.TabularInline):
+    model = TruckAssignmentTruck
+    extra = 1
+    autocomplete_fields = ['truck']
+    fields = ['truck', 'starting_mileage', 'ending_mileage']
 
 
 @admin.register(Truck)
 class TruckAdmin(admin.ModelAdmin):
-    list_display = ['plate_number', 'model', 'year', 'status', 'mobile_warehouse_link']
-    list_filter = ('model', 'year', 'status')
-    search_fields = ['plate_number', 'model', 'year', 'status']
+    list_display = [
+        'unit_number',
+        'plate_number',
+        'make',
+        'model',
+        'year',
+        'fleet_status',
+        'status',
+        'current_mileage_display',
+        'mobile_warehouse_link',
+    ]
+    list_filter = ('fleet_status', 'make', 'year', 'status')
+    search_fields = ['unit_number', 'plate_number', 'vin', 'make', 'model']
     actions = ['create_mobile_warehouse']
+
+    @admin.display(description='Current Mileage')
+    def current_mileage_display(self, obj):
+        miles = obj.current_mileage()
+        return f'{miles} mi' if miles is not None else 'Not recorded'
 
     @admin.display(description='Mobile Warehouse')
     def mobile_warehouse_link(self, obj):
@@ -83,29 +88,34 @@ class TruckAdmin(admin.ModelAdmin):
     @admin.action(description='Create mobile warehouse for selected trucks')
     def create_mobile_warehouse(self, request, queryset):
         from appinventory.models import Warehouse
+        from django.contrib import messages
         created = 0
         errors = []
         for truck in queryset:
             if not truck.plate_number or not truck.model:
-                errors.append(f"Truck {truck}: missing plate_number or model")
+                errors.append(f'Truck {truck}: missing plate_number or model')
                 continue
             try:
                 if truck.mobile_warehouse:
                     continue
             except Exception:
                 pass
-            name = f"Truck {truck.plate_number} - {truck.model} Stock"
-            location = f"Mobile inventory Truck {truck.plate_number} - {truck.model}"
+            name = f'Truck {truck.plate_number} - {truck.model} Stock'
+            location = (
+                f'Mobile inventory Truck {truck.plate_number} - {truck.model}'
+            )
             existing = Warehouse.objects.filter(name=name).first()
             if existing and existing.truck_id != truck.id:
                 errors.append(f"Warehouse '{name}' already exists")
                 continue
             Warehouse.objects.create(
-                name=name, location=location, truck=truck,
-                is_active=True, is_default=False,
+                name=name,
+                location=location,
+                truck=truck,
+                is_active=True,
+                is_default=False,
             )
             created += 1
-        from django.contrib import messages
         if created:
             messages.success(request, f'{created} mobile warehouse(s) created.')
         if errors:
@@ -143,6 +153,7 @@ class CrewAdmin(admin.ModelAdmin):
     list_filter = ['category']
     search_fields = ['name']
 
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name']
@@ -156,8 +167,8 @@ class TruckAssignmentAdmin(admin.ModelAdmin):
     list_display = ['id', 'crew', 'trucks_display', 'assigned_at', 'unassigned_at']
     list_filter = ['crew', 'assigned_at']
     search_fields = ['crew__name']
-    filter_horizontal = ['trucks']
     autocomplete_fields = ['crew']
+    inlines = [TruckAssignmentTruckInline]
 
     @admin.display(description='Trucks')
     def trucks_display(self, obj):

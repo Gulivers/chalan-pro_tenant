@@ -127,7 +127,12 @@ class CrewViewSet(viewsets.ModelViewSet):
 
 # ViewSet para TruckAssignment
 class TruckAssignmentViewSet(viewsets.ModelViewSet):
-    queryset = TruckAssignment.objects.all().order_by('-assigned_at')
+    queryset = (
+        TruckAssignment.objects.all()
+        .select_related('crew')
+        .prefetch_related('truck_links__truck')
+        .order_by('-assigned_at')
+    )
     serializer_class = TruckAssignmentSerializer
     permission_classes = [IsAuthenticated, AuthenticatedReadModelWrite]
 
