@@ -79,12 +79,24 @@ class ProductListSerializerImageTests(TenantTestCase):
         product = self._create_product('IMG-PRIMARY-001')
         self._create_image(product, is_primary=False, filename='secondary.png')
         primary = self._create_image(product, is_primary=True, filename='primary.png')
-        self.assertEqual(self._serialized_image(product), primary.image.url)
+        url = self._serialized_image(product)
+        self.assertIsNotNone(url)
+        self.assertIn('/media/s/', url)
+        from project.media_access import unsign_media_token
+        token = url.rstrip('/').rsplit('/', 1)[-1]
+        _schema, path = unsign_media_token(token)
+        self.assertEqual(path, primary.image.name)
 
     def test_falls_back_to_first_image(self):
         product = self._create_product('IMG-FALLBACK-001')
         first = self._create_image(product, is_primary=False, filename='fallback.png')
-        self.assertEqual(self._serialized_image(product), first.image.url)
+        url = self._serialized_image(product)
+        self.assertIsNotNone(url)
+        self.assertIn('/media/s/', url)
+        from project.media_access import unsign_media_token
+        token = url.rstrip('/').rsplit('/', 1)[-1]
+        _schema, path = unsign_media_token(token)
+        self.assertEqual(path, first.image.name)
 
 
 class ProductListSerializerStockTests(TenantTestCase):

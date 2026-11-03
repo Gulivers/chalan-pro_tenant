@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.utils.text import slugify
 from django_tenants.models import TenantMixin, DomainMixin
+from project.media_access import tenant_logo_upload_to
 import re
 import uuid
 
@@ -49,7 +50,7 @@ class Tenant(TenantMixin):
     # Django guarda el archivo en tenant_logos/; si ya existe otro con el mismo nombre,
     # añade un sufijo aleatorio (p. ej. logito3_tP9LURy.PNG) — ver FileSystemStorage.get_available_name.
     logo = models.ImageField(
-        upload_to='tenant_logos/',
+        upload_to=tenant_logo_upload_to,
         blank=True,
         null=True,
         verbose_name="Client logo"
@@ -280,8 +281,8 @@ class Tenant(TenantMixin):
     def __str__(self):
         return f"{self.name} ({self.schema_name})"
     
-    def get_logo_url(self):
-        """Retorna la URL pública del logo o None si no hay archivo o no existe en el storage."""
+    def get_logo_url(self, request=None):
+        """URL firmada del logo (vida corta) o None si no hay archivo."""
         if not self.logo:
             return None
         try:
@@ -289,7 +290,9 @@ class Tenant(TenantMixin):
                 return None
         except Exception:
             return None
-        return self.logo.url
+        from project.media_access import build_signed_media_url
+
+        return build_signed_media_url(request, self.logo)
 
 
 class OnboardingPendingRegistration(models.Model):

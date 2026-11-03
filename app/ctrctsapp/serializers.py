@@ -385,6 +385,28 @@ class ContractSerializer(serializers.ModelSerializer):
                 return None
         return value
 
+    def validate_file(self, value):
+        if not value:
+            return value
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        from project.media_access import validate_upload_file
+
+        try:
+            validate_upload_file(value, images_only=False)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(
+                '; '.join(exc.messages) if hasattr(exc, 'messages') else 'Invalid file.'
+            ) from exc
+        return value
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.file:
+            request = self.context.get('request')
+            path = f'/api/contract/{instance.pk}/download-file/'
+            data['file'] = request.build_absolute_uri(path) if request else path
+        return data
+
     # Create a new Contract instance with validated data
     # Crear una nueva instancia de Contract con datos validados
     def create(self, validated_data):

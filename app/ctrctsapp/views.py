@@ -206,6 +206,19 @@ class ContractViewSet(viewsets.ModelViewSet):
         logger.error("Serializer errors: %s", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=True, methods=['get'], url_path='download-file')
+    def download_file(self, request, pk=None):
+        """Descarga autenticada del adjunto (no imagen pública)."""
+        if not request.user.has_perm('ctrctsapp.view_contract'):
+            raise PermissionDenied('You do not have permission to view contracts.')
+        contract = self.get_object()
+        if not contract.file:
+            return Response({'detail': 'No file attached.'}, status=status.HTTP_404_NOT_FOUND)
+        from project.media_access import attachment_file_response, resolve_safe_media_path
+
+        full_path = resolve_safe_media_path(contract.file.name)
+        return attachment_file_response(full_path, download_name=contract.file.name.split('/')[-1])
+
     @action(detail=False, methods=['get'], url_path='validate-lot')
     def validate_contract(self, request):
         lot = request.GET.get('lot')
@@ -549,7 +562,10 @@ def lighting_circuits(sqft):
   return math.ceil(num)  # Siempre redondea hacia arriba
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def download_contract_pdf(request, contract_id):
+    if not request.user.has_perm('ctrctsapp.view_contract'):
+        raise PermissionDenied('You do not have permission to view contracts.')
     try:
         contract = Contract.objects.get(id=contract_id)
 
@@ -596,11 +612,11 @@ def download_contract_pdf(request, contract_id):
         }
         return Response(response_data, status=status.HTTP_200_OK)
     except Contract.DoesNotExist:
-        logger.error(f"Contract with id {contract_id} not found")
+        logger.error("Contract with id %s not found", contract_id)
         return JsonResponse({"error": "Contract not found"}, status=404)
-    except Exception as e:
-        logger.error(f"Error generating PDF for contract {contract_id}: {str(e)}", exc_info=True)
-        return JsonResponse({"error": f"Error generating PDF: {str(e)}"}, status=500)
+    except Exception:
+        logger.exception("Error generating PDF for contract %s", contract_id)
+        return JsonResponse({"detail": "An unexpected error occurred."}, status=500)
 
 
 class BuilderReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):

@@ -95,10 +95,10 @@ def create_tenant_onboarding(request):
         return Response({'success': False, 'error': exc.message}, status=exc.status_code)
     except OnboardingProvisionError as exc:
         return Response({'success': False, 'error': exc.message}, status=exc.status_code)
-    except Exception as exc:
-        logger.error('Error inesperado en create_tenant_onboarding: %s', exc, exc_info=True)
+    except Exception:
+        logger.exception('Error inesperado en create_tenant_onboarding')
         return Response(
-            {'success': False, 'error': f'Unexpected error while creating account: {exc}'},
+            {'success': False, 'error': 'Unexpected error while creating account.'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 

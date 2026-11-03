@@ -7,7 +7,7 @@ from rest_framework.permissions import (
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from appauth.authentication import TenantJWTAuthentication
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.decorators import action, api_view, permission_classes
 from django.db.models import (
     Q, Count, OuterRef, Subquery, DateTimeField, ExpressionWrapper, F, 
@@ -190,13 +190,20 @@ class EventViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
-        deleted = request.query_params.get('deleted', False)
-        if deleted:
+        deleted_raw = request.query_params.get('deleted')
+        soft_delete = str(deleted_raw).lower() in ('true', '1') if deleted_raw is not None else False
+        if soft_delete:
+            if not request.user.has_perm('appschedule.delete_event'):
+                raise PermissionDenied('You do not have permission to delete events.')
             event = get_object_or_404(Event, pk=kwargs['pk'])
             event.raise_if_deletion_blocked()
             event.deleted = True
-            event.save()
-            return Response({'message': f'Event with ID {event.id} has been deleted'}, status=status.HTTP_200_OK)
+            event.save(update_fields=['deleted'])
+            return Response(
+                {'message': f'Event with ID {event.id} has been deleted'},
+                status=status.HTTP_200_OK,
+            )
+        # Borrado de borrador: DjangoModelPermissions exige delete_eventdraft.
         instance = self.get_object()
         if hasattr(instance, 'raise_if_deletion_blocked'):
             instance.raise_if_deletion_blocked()
@@ -302,36 +309,37 @@ class EventNoteViewSet(viewsets.ViewSet):
     lookup_field = 'event_id'
 
     def retrieve(self, request, event_id=None):
-        try:
-            event = get_object_or_404(Event, pk=event_id)
-            # Notes are scoped per event (work order), same as chat.
-            note = EventNote.objects.filter(event=event).first()
-            if note:
-                serializer = self.serializer_class(note)
-                return Response(serializer.data)
-            return Response({'notes': ''}, status=status.HTTP_200_OK)
-        except Event.DoesNotExist:
-            return Response({'error': f'Event with ID {event_id} not found.'}, status=status.HTTP_404_NOT_FOUND)
+        if not request.user.has_perm('appschedule.view_eventnote'):
+            raise PermissionDenied('You do not have permission to view event notes.')
+        event = get_object_or_404(Event, pk=event_id)
+        note = EventNote.objects.filter(event=event).first()
+        if note:
+            serializer = self.serializer_class(note)
+            return Response(serializer.data)
+        return Response({'notes': ''}, status=status.HTTP_200_OK)
 
     def create(self, request, event_id=None):
-        try:
-            event = get_object_or_404(Event, pk=event_id)
-            work_account = event.work_account
-            event_note = EventNote.objects.filter(event=event).first()
-
-            if event_note:
-                serializer = self.serializer_class(
-                    event_note, data=request.data, context={'request': request}
-                )
-            else:
-                serializer = self.serializer_class(
-                    data=request.data, context={'request': request}
-                )
-            serializer.is_valid(raise_exception=True)
-            serializer.save(event=event, work_account=work_account)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        event = get_object_or_404(Event, pk=event_id)
+        work_account = event.work_account
+        event_note = EventNote.objects.filter(event=event).first()
+        if event_note:
+            if not request.user.has_perm('appschedule.change_eventnote'):
+                raise PermissionDenied('You do not have permission to change event notes.')
+            serializer = self.serializer_class(
+                event_note, data=request.data, context={'request': request}
+            )
+        else:
+            if not (
+                request.user.has_perm('appschedule.add_eventnote')
+                or request.user.has_perm('appschedule.change_eventnote')
+            ):
+                raise PermissionDenied('You do not have permission to add event notes.')
+            serializer = self.serializer_class(
+                data=request.data, context={'request': request}
+            )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(event=event, work_account=work_account)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 User = get_user_model()
@@ -343,13 +351,17 @@ class EventChatViewSet(viewsets.ViewSet):
     def list(self, request, event_id=None):
         if not event_id:
             return Response({"error": "Event ID is required."}, status=400)
+        if not request.user.has_perm('appschedule.view_eventchatmessage'):
+            raise PermissionDenied('You do not have permission to view event chat.')
 
         event = get_object_or_404(Event, pk=event_id)
-        
+
         # Filtrar mensajes por event (con fallback a work_account para chats legacy)
         queryset = EventChatMessage.objects.filter(event=event).order_by('timestamp')
         if not queryset.exists() and event.work_account:
-            queryset = EventChatMessage.objects.filter(work_account=event.work_account, event__isnull=True).order_by('timestamp')
+            queryset = EventChatMessage.objects.filter(
+                work_account=event.work_account, event__isnull=True
+            ).order_by('timestamp')
 
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
@@ -357,13 +369,21 @@ class EventChatViewSet(viewsets.ViewSet):
     def create(self, request, event_id=None):
         if not event_id:
             return Response({"error": "Event ID is required."}, status=400)
+        if not (
+            request.user.has_perm('appschedule.add_eventchatmessage')
+            or request.user.has_perm('appschedule.change_eventchatmessage')
+        ):
+            raise PermissionDenied('You do not have permission to post chat messages.')
 
         event = get_object_or_404(Event, pk=event_id)
         work_account = event.work_account
-        
+
         if not work_account:
-            return Response({"error": "Event does not have a work_account associated."}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {"error": "Event does not have a work_account associated."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         message = serializer.save(work_account=work_account, event=event)
@@ -957,9 +977,24 @@ class EventImageViewSet(viewsets.ModelViewSet):
         if not images:
             return Response({'error': 'No images uploaded'}, status=status.HTTP_400_BAD_REQUEST)
 
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        from project.media_access import validate_upload_file
+
         created_images = []
         for img in images:
-            instance = EventImage.objects.create(event=event, work_account=work_account, image=img, uploaded_by=request.user)
+            try:
+                validate_upload_file(img, images_only=True)
+            except DjangoValidationError as exc:
+                return Response(
+                    {'detail': '; '.join(exc.messages) if hasattr(exc, 'messages') else 'Invalid image.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            instance = EventImage.objects.create(
+                event=event,
+                work_account=work_account,
+                image=img,
+                uploaded_by=request.user,
+            )
             created_images.append(instance)
 
         serializer = EventImageSerializer(created_images, many=True, context={'request': request})

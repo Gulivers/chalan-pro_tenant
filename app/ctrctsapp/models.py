@@ -5,6 +5,7 @@ from django.db.models import UniqueConstraint
 from django.db.models.functions import Lower
 from ctrctsapp.utils import geocode_address
 from appinventory.models import PriceType
+from project.media_access import contract_file_upload_to
 
 # Modelo de Builder.
 class Builder(models.Model):
@@ -145,7 +146,13 @@ class Contract(models.Model):
     total_options = models.DecimalField(null=True, max_digits=10, decimal_places=2, verbose_name='Total Options', default=0)
     total = models.DecimalField(null=True, max_digits=10, decimal_places=2, verbose_name='Total', default=0)
     comment = models.TextField(null=True, verbose_name='Comment', default='Required to finish at 100%')
-    file = models.FileField(null=True, upload_to='contract', default=None, blank=True, verbose_name='File')
+    file = models.FileField(
+        null=True,
+        upload_to=contract_file_upload_to,
+        default=None,
+        blank=True,
+        verbose_name='File',
+    )
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_contracts', verbose_name='Created By')
     needs_reprint = models.BooleanField(default=False)
     schedule = models.ForeignKey('appschedule.Event', on_delete=models.PROTECT, blank=True, null=True, related_name='contracts', verbose_name='Schedule')

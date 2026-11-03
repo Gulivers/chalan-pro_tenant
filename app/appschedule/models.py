@@ -312,25 +312,9 @@ class EventChatReadStatus(models.Model):
 @deconstructible
 class EventImageUploadTo:
     def __call__(self, instance, filename):
-        from django.conf import settings
-        # Guarda en: event_images/<work_account_id o event_id o 'unassigned'>/filename
-        if instance.work_account_id:
-            work_account_id = instance.work_account_id
-            base, ext = os.path.splitext(filename)
-            subdir = f'event_images/work_account_{work_account_id}'
-        elif instance.event_id:
-            event_id = instance.event_id
-            base, ext = os.path.splitext(filename)
-            subdir = f'event_images/event_{event_id}'
-        else:
-            base, ext = os.path.splitext(filename)
-            subdir = f'event_images/unassigned'
-        
-        # Crear el directorio si no existe
-        full_path = os.path.join(settings.MEDIA_ROOT, subdir)
-        os.makedirs(full_path, exist_ok=True)
-        
-        return f'{subdir}/{base}{ext}'
+        from project.media_access import event_image_upload_to
+
+        return event_image_upload_to(instance, filename)
 
 class EventImage(models.Model):
     event = models.ForeignKey(Event, on_delete=models.PROTECT, related_name='images', null=True, blank=True)
