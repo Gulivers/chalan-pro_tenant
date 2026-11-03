@@ -1,4 +1,5 @@
 import base64
+import logging
 from datetime import datetime
 from django.db.models import Q, Prefetch, Count, ProtectedError
 from django.utils.dateparse import parse_datetime
@@ -30,6 +31,8 @@ from .serializers import (
 from appauth.authentication import TenantJWTAuthentication
 from rest_framework.pagination import PageNumberPagination
 from .document_status_api import DocumentStatusActionsMixin
+
+logger = logging.getLogger(__name__)
 
 
 class WorkAccountPagination(PageNumberPagination):
@@ -625,6 +628,8 @@ def download_transaction_pdf(request, document_id):
     Vista para generar y descargar el PDF de una transacción.
     Similar a download_contract_pdf pero para documentos de transacciones.
     """
+    if not request.user.has_perm('apptransactions.view_document'):
+        raise PermissionDenied('You do not have permission to view documents.')
     try:
         # Obtener el documento con todas las relaciones necesarias
         document = get_object_or_404(
@@ -698,11 +703,12 @@ def download_transaction_pdf(request, document_id):
 
     except Document.DoesNotExist:
         return JsonResponse(
-            {"error": "Documento no encontrado"}, 
+            {"error": "Documento no encontrado"},
             status=404
         )
-    except Exception as e:
+    except Exception:
+        logger.exception('Error generating transaction PDF for document_id=%s', document_id)
         return JsonResponse(
-            {"error": f"Error al generar PDF: {str(e)}"}, 
+            {"detail": "An unexpected error occurred."},
             status=500
         )

@@ -13,7 +13,7 @@ def resolve_request_tenant(request):
     return _resolve_tenant(request)
 
 
-def tenant_branding_payload(tenant) -> dict:
+def tenant_branding_payload(tenant, request=None) -> dict:
     """Public branding fields derived from the active tenant."""
     if tenant is None:
         return {
@@ -26,7 +26,10 @@ def tenant_branding_payload(tenant) -> dict:
     logo_url = None
     get_logo = getattr(tenant, 'get_logo_url', None)
     if callable(get_logo):
-        logo_url = get_logo()
+        try:
+            logo_url = get_logo(request=request)
+        except TypeError:
+            logo_url = get_logo()
 
     return {
         'tenant_name': tenant.name,

@@ -30,6 +30,11 @@ def _user_from_ticket(ticket: str):
     return user, schema
 
 
+@database_sync_to_async
+def _user_has_perm(user, perm: str) -> bool:
+    return bool(user and user.has_perm(perm))
+
+
 async def authorize_ws(scope):
     ticket = _ticket_from_scope(scope)
     if not ticket:
@@ -38,6 +43,10 @@ async def authorize_ws(scope):
         return await _user_from_ticket(ticket)
     except (signing.BadSignature, signing.SignatureExpired, ObjectDoesNotExist, ValueError, TypeError):
         return None
+
+
+async def _require_ws_perm(user, perm: str) -> bool:
+    return await _user_has_perm(user, perm)
 
 
 class EventConsumer(AsyncWebsocketConsumer):
@@ -96,12 +105,14 @@ class EventNoteConsumer(AsyncWebsocketConsumer):
             await self.close(code=4401)
             return
         self.ws_user, self.ws_schema = authorized
+        if not await _require_ws_perm(self.ws_user, 'appschedule.view_eventnote'):
+            await self.close(code=4403)
+            return
         self.event_id = self.scope['url_route']['kwargs']['pk']
         self.event_group_name = tenant_ws_group(
             f"event_{self.event_id}_notes", self.ws_schema
         )
 
-        # Join a group specific to the event
         await self.channel_layer.group_add(self.event_group_name, self.channel_name)
         await self.accept()
 
@@ -126,12 +137,14 @@ class WorkAccountNoteConsumer(AsyncWebsocketConsumer):
             await self.close(code=4401)
             return
         self.ws_user, self.ws_schema = authorized
+        if not await _require_ws_perm(self.ws_user, 'appschedule.view_eventnote'):
+            await self.close(code=4403)
+            return
         self.work_account_id = self.scope['url_route']['kwargs']['work_account_id']
         self.work_account_group_name = tenant_ws_group(
             f"work_account_{self.work_account_id}_notes", self.ws_schema
         )
 
-        # Join a group specific to the work_account
         await self.channel_layer.group_add(self.work_account_group_name, self.channel_name)
         await self.accept()
 
@@ -156,6 +169,9 @@ class EventChatConsumer(AsyncWebsocketConsumer):
             await self.close(code=4401)
             return
         self.ws_user, self.ws_schema = authorized
+        if not await _require_ws_perm(self.ws_user, 'appschedule.view_eventchatmessage'):
+            await self.close(code=4403)
+            return
         self.event_id = self.scope['url_route']['kwargs']['event_id']
         self.room_group_name = tenant_ws_group(
             f"schedule_{self.event_id}_chat", self.ws_schema
@@ -195,6 +211,9 @@ class WorkAccountChatConsumer(AsyncWebsocketConsumer):
             await self.close(code=4401)
             return
         self.ws_user, self.ws_schema = authorized
+        if not await _require_ws_perm(self.ws_user, 'appschedule.view_eventchatmessage'):
+            await self.close(code=4403)
+            return
         self.work_account_id = self.scope['url_route']['kwargs']['work_account_id']
         self.room_group_name = tenant_ws_group(
             f"work_account_{self.work_account_id}_chat", self.ws_schema
