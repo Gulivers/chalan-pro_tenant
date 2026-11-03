@@ -19,6 +19,8 @@ from django.contrib import admin
 from django.conf import settings
 from django.urls import path, include
 
+from tenants.views_setup import TenantSetupView
+
 urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
     path('', include('appauth.urls')),
@@ -31,6 +33,7 @@ urlpatterns = [
     path('', include('apptransactions.urls')),
     path('', include('appassistant.urls')),
     path('', include('appbilling.urls')),
+    path('api/tenant-setup/', TenantSetupView.as_view(), name='tenant-setup'),
 ]
 
 # Configurar archivos media (imágenes y PDFs) para desarrollo y producción

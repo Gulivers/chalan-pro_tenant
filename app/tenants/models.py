@@ -136,6 +136,19 @@ class Tenant(TenantMixin):
         verbose_name="Datos Maestros de Inventario Importados",
         help_text="Indica si los datos maestros de inventario han sido importados para este tenant"
     )
+
+    # Post-login admin setup (Welcome assistant) — tenant-wide, public schema
+    setup_completed = models.BooleanField(
+        default=False,
+        verbose_name="Admin setup completed",
+        help_text="True when the tenant owner finished the post-login company setup assistant.",
+    )
+    setup_progress = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name="Admin setup progress",
+        help_text="Step statuses, panel/banner dismiss flags for the Welcome assistant.",
+    )
     
     # Configuración de django-tenants
     auto_create_schema = True

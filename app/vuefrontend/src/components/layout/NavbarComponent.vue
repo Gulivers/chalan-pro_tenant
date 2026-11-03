@@ -269,6 +269,7 @@
       </header>
 
       <main class="jr-app-shell__content">
+        <SetupReminderBanner />
         <slot />
       </main>
       <FooterComponent />
@@ -320,6 +321,7 @@ import SidebarTrigger from "primevue/sidebartrigger";
 import VirtualScroller from "primevue/virtualscroller";
 import FooterComponent from "./FooterComponent.vue";
 import NavbarMessagesDropdown from "./NavbarMessagesDropdown.vue";
+import SetupReminderBanner from "@components/setup/SetupReminderBanner.vue";
 import { openAssistant } from "@/utils/assistantBus";
 import authService from "@/auth/authService";
 
@@ -362,6 +364,7 @@ export default {
     List,
     MapMarker,
     NavbarMessagesDropdown,
+    SetupReminderBanner,
     Sidebar,
     SidebarAside,
     SidebarBackdrop,

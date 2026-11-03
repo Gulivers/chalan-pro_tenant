@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import secrets
 import string
 from typing import Any, Optional
@@ -241,25 +240,25 @@ def provision_tenant_workspace(data: OnboardingFormData, logo=None) -> dict[str,
     email_sent = False
 
     with schema_context(tenant.schema_name):
-        fixture_doc_types = os.path.join(
-            settings.BASE_DIR,
-            'apptransactions',
-            'fixtures',
-            'masters_document_type.json',
-        )
-        if os.path.exists(fixture_doc_types):
-            try:
-                call_command('loaddata', fixture_doc_types, verbosity=0)
-                from apptransactions.services.document_status import (
-                    seed_default_document_statuses,
-                )
-                from appschedule.services.work_order_status import (
-                    seed_work_order_defaults,
-                )
-                seed_default_document_statuses()
-                seed_work_order_defaults()
-            except Exception as exc:
-                logger.error('Error al cargar masters_document_type.json: %s', exc, exc_info=True)
+        # Idempotente: post_schema_sync ya puede haber sembrado al hacer tenant.save().
+        # No usar loaddata (PKs del fixture chocan con MR creado por migración 0008).
+        try:
+            from apptransactions.services.masters_document_type import (
+                seed_tenant_document_masters,
+            )
+
+            result = seed_tenant_document_masters()
+            logger.info(
+                'masters_document_type en onboarding (%s): %s',
+                tenant.schema_name,
+                result,
+            )
+        except Exception as exc:
+            logger.error(
+                'Error al cargar masters_document_type.json: %s',
+                exc,
+                exc_info=True,
+            )
 
         while User.objects.filter(username=username).exists():
             username = f'{original_username}{counter}'

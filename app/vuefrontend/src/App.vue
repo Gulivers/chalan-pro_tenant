@@ -3,6 +3,7 @@ import { computed } from "vue";
 import { useRoute } from "vue-router";
 import * as Layout from "@components/layout";
 import AssistantPanel from "@/components/assistant/AssistantPanel.vue";
+import SetupAssistantWizard from "@/components/setup/SetupAssistantWizard.vue";
 
 const route = useRoute();
 const showShellNav = computed(() => !route.meta.hideNavbar);
@@ -21,6 +22,7 @@ const showShellFooter = computed(() => !route.meta.hideFooter);
     <Layout.FooterComponent v-if="showShellFooter" />
   </div>
   <AssistantPanel />
+  <SetupAssistantWizard />
 </template>
 
 <style>
