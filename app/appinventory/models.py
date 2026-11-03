@@ -480,21 +480,10 @@ class InventoryMovement(models.Model):
 
 
 def product_image_upload_to(instance, filename):
-    """
-    Ruta de subida de imágenes de productos.
-    Estructura: products/{product_id}/{timestamp}_{filename}
-    """
-    import os
-    from django.utils import timezone
+    """Ruta de subida: products/{product_id}/{uuid}{ext}."""
+    from project.media_access import product_image_upload_to_secure
 
-    ext = os.path.splitext(filename)[1]
-    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
-    base_name = os.path.splitext(filename)[0]
-    base_name = "".join(c for c in base_name if c.isalnum() or c in (' ', '-', '_')).strip()
-    base_name = base_name.replace(' ', '_')
-
-    product_id = instance.product_id if instance.product_id else 'unknown'
-    return f'products/{product_id}/{timestamp}_{base_name}{ext}'
+    return product_image_upload_to_secure(instance, filename)
 
 
 class ProductImage(models.Model):

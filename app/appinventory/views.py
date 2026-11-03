@@ -20,6 +20,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from appauth.authentication import TenantJWTAuthentication
+from project.api_permissions import HasDjangoPerm, fixed_server_error, require_user_perm
 from rest_framework.decorators import permission_classes, action, api_view
 from rest_framework.permissions import (
     IsAuthenticated,
@@ -200,7 +201,7 @@ class InventoryTransferListProviderAPIView(APIView):
         except (ValueError, TypeError) as e:
             return Response({'error': 'Invalid parameters.', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return fixed_server_error(e)
 
 
 class ProductCategoryViewSet(viewsets.ModelViewSet):
@@ -397,7 +398,7 @@ class SerializedItemListProviderAPIView(APIView):
         except (ValueError, TypeError) as e:
             return Response({'error': 'Invalid parameters.', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return fixed_server_error(e)
 
 
 class ProductImagesByBrandAPIView(APIView):
@@ -449,14 +450,14 @@ class ProductImagesByBrandAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return fixed_server_error(e)
 
 
-@permission_classes([AllowAny])
 class ProductListAPIView(APIView):
+    authentication_classes = [TenantJWTAuthentication]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'appinventory.view_product'
+
     def get(self, request):
         # Filtrar solo productos activos por defecto
         is_active = request.query_params.get('is_active', 'true')
@@ -479,8 +480,11 @@ class UnitOfMeasureViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active']
 
-@permission_classes([AllowAny])
 class UnitOfMeasureListAPIView(APIView):
+    authentication_classes = [TenantJWTAuthentication]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'appinventory.view_unitofmeasure'
+
     def get(self, request):
         units = UnitOfMeasure.objects.all()
         return Response([
@@ -603,7 +607,7 @@ class ProductListProviderAPIView(APIView):
             })
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 def _provider_response(queryset, serializer_class, page, per_page, count_active=None, count_inactive=None):
@@ -656,7 +660,7 @@ class WarehouseListProviderAPIView(APIView):
                 count_inactive=lambda q: q.filter(is_active=False).count()
             )
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class ProductCategoryListProviderAPIView(APIView):
@@ -686,7 +690,7 @@ class ProductCategoryListProviderAPIView(APIView):
                 count_inactive=lambda q: q.filter(is_active=False).count()
             )
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class PriceTypeListProviderAPIView(APIView):
@@ -724,7 +728,7 @@ class PriceTypeListProviderAPIView(APIView):
                 count_inactive=lambda q: q.filter(is_active=False).count()
             )
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class UnitOfMeasureListProviderAPIView(APIView):
@@ -761,7 +765,7 @@ class UnitOfMeasureListProviderAPIView(APIView):
                 count_inactive=lambda q: q.filter(is_active=False).count()
             )
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class UnitCategoryListProviderAPIView(APIView):
@@ -791,7 +795,7 @@ class UnitCategoryListProviderAPIView(APIView):
                 count_inactive=lambda q: q.filter(is_active=False).count()
             )
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class ProductListDirectAPIView(APIView):
@@ -852,7 +856,7 @@ class ProductListDirectAPIView(APIView):
             return Response(serializer.data)
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 class ProductBrandsListAPIView(APIView):
     """
@@ -884,7 +888,7 @@ class ProductBrandsListAPIView(APIView):
         except Product.DoesNotExist:
             return Response({'error': 'Producto no encontrado'}, status=404)
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 class ProductBrandsUpdateAPIView(APIView):
     """
@@ -892,7 +896,8 @@ class ProductBrandsUpdateAPIView(APIView):
     Acepta `brand` (int) o `brands` ([id]) por compatibilidad.
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'appinventory.change_product'
 
     def post(self, request, product_id):
         try:
@@ -924,7 +929,7 @@ class ProductBrandsUpdateAPIView(APIView):
         except Product.DoesNotExist:
             return Response({'error': 'Producto no encontrado'}, status=404)
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 def _purchase_unit_cost_for_product(product, unit_id=None):
@@ -949,7 +954,8 @@ class ProductPurchaseCostAPIView(APIView):
     GET /api/products/<id>/purchase-cost/?unit=<unit_id>
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'appinventory.view_product'
 
     def get(self, request, product_id):
         try:
@@ -974,7 +980,8 @@ class ProductDefaultPriceAPIView(APIView):
     Soporta selección de precio según tipo de documento (compra/venta)
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'appinventory.view_product'
 
     def get(self, request, product_id):
         try:
@@ -1069,7 +1076,7 @@ class ProductDefaultPriceAPIView(APIView):
         except Product.DoesNotExist:
             return Response({'error': 'Product not found'}, status=404)
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 class DefaultWarehouseAPIView(APIView):
     """
@@ -1094,7 +1101,7 @@ class DefaultWarehouseAPIView(APIView):
                 })
                 
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 # ===== NUEVAS VISTAS PARA DASHBOARD MEJORADO =====
@@ -1167,7 +1174,7 @@ class InventoryDashboardMetricsAPIView(APIView):
             })
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class TopSellingProductsAPIView(APIView):
@@ -1216,7 +1223,7 @@ class TopSellingProductsAPIView(APIView):
             return Response(result)
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class SalesAnalysisAPIView(APIView):
@@ -1224,7 +1231,8 @@ class SalesAnalysisAPIView(APIView):
     Análisis completo de ventas con métricas y top productos
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'apptransactions.view_document'
 
     def get(self, request):
         try:
@@ -1301,7 +1309,7 @@ class SalesAnalysisAPIView(APIView):
             })
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class LowStockProductsAPIView(APIView):
@@ -1354,7 +1362,7 @@ class LowStockProductsAPIView(APIView):
             return Response(result)
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class LowestStockProductsAPIView(APIView):
@@ -1408,7 +1416,7 @@ class LowestStockProductsAPIView(APIView):
             return Response(result)
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class TopCustomersAPIView(APIView):
@@ -1416,7 +1424,8 @@ class TopCustomersAPIView(APIView):
     Top 10 clientes por volumen de compras
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'apptransactions.view_document'
 
     def get(self, request):
         try:
@@ -1464,7 +1473,7 @@ class TopCustomersAPIView(APIView):
             })
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class TopSuppliersAPIView(APIView):
@@ -1472,7 +1481,8 @@ class TopSuppliersAPIView(APIView):
     Top 10 proveedores por volumen de compras
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'apptransactions.view_document'
 
     def get(self, request):
         try:
@@ -1520,7 +1530,7 @@ class TopSuppliersAPIView(APIView):
             })
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class CustomersSuppliersComparisonAPIView(APIView):
@@ -1528,7 +1538,8 @@ class CustomersSuppliersComparisonAPIView(APIView):
     Comparación de volumen entre clientes y proveedores por mes
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'apptransactions.view_document'
 
     def get(self, request):
         try:
@@ -1582,7 +1593,7 @@ class CustomersSuppliersComparisonAPIView(APIView):
             return Response(result)
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class ProductMovementsReportAPIView(APIView):
@@ -1679,7 +1690,7 @@ class ProductMovementsReportAPIView(APIView):
             return Response(result)
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class ProductMovementsExportAPIView(APIView):
@@ -1687,7 +1698,8 @@ class ProductMovementsExportAPIView(APIView):
     Export product movements report to Excel
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'appinventory.view_product'
 
     def get(self, request):
         try:
@@ -1797,7 +1809,7 @@ class ProductMovementsExportAPIView(APIView):
             return response
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 # ===== EXPORT VIEWS =====
@@ -1807,7 +1819,8 @@ class SalesByProductExportAPIView(APIView):
     Export sales data by product to Excel
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'apptransactions.view_document'
 
     def get(self, request):
         try:
@@ -1876,7 +1889,7 @@ class SalesByProductExportAPIView(APIView):
             return response
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class SalesByCustomerExportAPIView(APIView):
@@ -1884,7 +1897,8 @@ class SalesByCustomerExportAPIView(APIView):
     Export sales data by customer to Excel
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'apptransactions.view_document'
 
     def get(self, request):
         try:
@@ -1952,7 +1966,7 @@ class SalesByCustomerExportAPIView(APIView):
             return response
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class SalesByPeriodExportAPIView(APIView):
@@ -1960,7 +1974,8 @@ class SalesByPeriodExportAPIView(APIView):
     Export sales data by period to Excel
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'apptransactions.view_document'
 
     def get(self, request):
         try:
@@ -2026,7 +2041,7 @@ class SalesByPeriodExportAPIView(APIView):
             return response
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class FinancialSummaryExportAPIView(APIView):
@@ -2034,7 +2049,8 @@ class FinancialSummaryExportAPIView(APIView):
     Export financial summary to Excel
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'apptransactions.view_document'
 
     def get(self, request):
         try:
@@ -2107,7 +2123,7 @@ class FinancialSummaryExportAPIView(APIView):
             return response
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 # ===== STOCK EXPORT VIEWS =====
@@ -2117,7 +2133,8 @@ class StockByWarehouseExportAPIView(APIView):
     Export stock data by warehouse to Excel
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'appinventory.view_product'
 
     def get(self, request):
         try:
@@ -2195,7 +2212,7 @@ class StockByWarehouseExportAPIView(APIView):
             return response
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class CompleteStockExportAPIView(APIView):
@@ -2203,7 +2220,8 @@ class CompleteStockExportAPIView(APIView):
     Export complete stock inventory to Excel
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'appinventory.view_product'
 
     def get(self, request):
         try:
@@ -2283,7 +2301,7 @@ class CompleteStockExportAPIView(APIView):
             return response
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class LowStockProductsExportAPIView(APIView):
@@ -2291,7 +2309,8 @@ class LowStockProductsExportAPIView(APIView):
     Export low stock products to Excel
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'appinventory.view_product'
 
     def get(self, request):
         try:
@@ -2377,7 +2396,7 @@ class LowStockProductsExportAPIView(APIView):
             return response
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class StockReportExportAPIView(APIView):
@@ -2385,7 +2404,8 @@ class StockReportExportAPIView(APIView):
     Export comprehensive stock report to Excel
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'appinventory.view_product'
 
     def get(self, request):
         try:
@@ -2504,7 +2524,7 @@ class StockReportExportAPIView(APIView):
             return response
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 # ===== CUSTOMERS & SUPPLIERS EXPORT VIEWS =====
@@ -2514,7 +2534,8 @@ class CustomersListExportAPIView(APIView):
     Export customers list to Excel
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'apptransactions.view_document'
 
     def get(self, request):
         try:
@@ -2583,7 +2604,7 @@ class CustomersListExportAPIView(APIView):
             return response
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class SuppliersListExportAPIView(APIView):
@@ -2591,7 +2612,8 @@ class SuppliersListExportAPIView(APIView):
     Export suppliers list to Excel
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'apptransactions.view_document'
 
     def get(self, request):
         try:
@@ -2660,7 +2682,7 @@ class SuppliersListExportAPIView(APIView):
             return response
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class ComparativeAnalysisExportAPIView(APIView):
@@ -2668,7 +2690,8 @@ class ComparativeAnalysisExportAPIView(APIView):
     Export comparative analysis between customers and suppliers to Excel
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'apptransactions.view_document'
 
     def get(self, request):
         try:
@@ -2838,7 +2861,7 @@ class ComparativeAnalysisExportAPIView(APIView):
             return response
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class TrendsExportAPIView(APIView):
@@ -2846,7 +2869,8 @@ class TrendsExportAPIView(APIView):
     Export monthly trends analysis to Excel
     """
     authentication_classes = [TenantJWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDjangoPerm]
+    required_perm = 'apptransactions.view_document'
 
     def get(self, request):
         try:
@@ -2965,7 +2989,7 @@ class TrendsExportAPIView(APIView):
             return response
             
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return fixed_server_error(e)
 
 
 class InventoryMasterDataExcelDownloadAPIView(APIView):
