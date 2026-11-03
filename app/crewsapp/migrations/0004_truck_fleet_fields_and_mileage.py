@@ -12,6 +12,9 @@ def clear_trucks(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
+    # Postgres: DELETE in RunPython + ALTER TABLE in the same txn →
+    # "cannot ALTER TABLE because it has pending trigger events".
+    atomic = False
 
     dependencies = [
         ('crewsapp', '0003_work_order_status_progress'),
