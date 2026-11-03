@@ -333,9 +333,8 @@ class EventImageSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'uploaded_at', 'uploaded_by', 'image_url']
 
     def get_image_url(self, obj):
-        request = self.context.get('request')
-        if obj.image and request:
-            return request.build_absolute_uri(obj.image.url)
-        elif obj.image:
-            return obj.image.url
-        return None
+        if not obj.image:
+            return None
+        from project.media_access import build_signed_media_url
+
+        return build_signed_media_url(self.context.get('request'), obj.image)

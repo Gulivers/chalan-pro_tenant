@@ -30,7 +30,7 @@ class TenantContextView(APIView):
 
     def get(self, request):
         tenant = resolve_request_tenant(request)
-        payload = tenant_branding_payload(tenant)
+        payload = tenant_branding_payload(tenant, request=request)
         payload.pop('schema_name', None)
         return Response(payload)
 
@@ -48,7 +48,7 @@ class MeView(APIView):
     def get(self, request):
         user = request.user
         tenant = resolve_request_tenant(request)
-        branding = tenant_branding_payload(tenant)
+        branding = tenant_branding_payload(tenant, request=request)
         return Response(
             {
                 'id': user.pk,

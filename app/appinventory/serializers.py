@@ -189,7 +189,11 @@ class ProductListSerializer(serializers.ModelSerializer):
             return None
 
         def image_url(image):
-            return image.image.url if image.image else None
+            if not image.image:
+                return None
+            from project.media_access import build_signed_media_url
+
+            return build_signed_media_url(self.context.get('request'), image.image)
 
         for image in images:
             if image.is_primary:
@@ -299,10 +303,25 @@ class ProductImageSerializer(serializers.ModelSerializer):
         read_only_fields = ['uploaded_at', 'uploaded_by']
 
     def get_image_url(self, obj):
-        """Returns the image URL (relative path for frontend proxy compatibility)"""
-        if obj.image:
-            return obj.image.url
-        return None
+        if not obj.image:
+            return None
+        from project.media_access import build_signed_media_url
+
+        return build_signed_media_url(self.context.get('request'), obj.image)
+
+    def validate_image(self, value):
+        if not value:
+            return value
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        from project.media_access import validate_upload_file
+
+        try:
+            validate_upload_file(value, images_only=True)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(
+                '; '.join(exc.messages) if hasattr(exc, 'messages') else 'Invalid image.'
+            ) from exc
+        return value
 
     def validate(self, attrs):
         product = attrs.get('product') or (self.instance.product if self.instance else None)

@@ -36,22 +36,23 @@ urlpatterns = [
     path('api/tenant-setup/', TenantSetupView.as_view(), name='tenant-setup'),
 ]
 
-# Configurar archivos media (imágenes y PDFs) para desarrollo y producción
-from django.conf.urls.static import static
-from django.views.static import serve
-from django.urls import re_path
-
-# Asegurar que el directorio media existe
+# Media: solo URLs firmadas (sin listado público de MEDIA_ROOT).
 import os
+from django.http import Http404
+from django.urls import re_path
+from django.views.decorators.http import require_GET
+
+from project.media_access import serve_signed_media
+
 os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
 
-# Servir archivos media en desarrollo
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-else:
-    # En producción (Render), servir archivos media usando django.views.static.serve
-    # Nota: Esto funciona pero no es ideal para alta carga. Para producción a gran escala,
-    # considera usar un servicio de almacenamiento en la nube como AWS S3
-    urlpatterns += [
-        re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
-    ]
+
+@require_GET
+def _media_unauthenticated(request, path=''):
+    raise Http404('Not found')
+
+
+urlpatterns += [
+    path('media/s/<str:token>/', serve_signed_media, name='signed-media'),
+    re_path(r'^media/(?P<path>.*)$', _media_unauthenticated),
+]
