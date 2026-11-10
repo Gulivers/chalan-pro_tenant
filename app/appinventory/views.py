@@ -536,7 +536,15 @@ class ProductListProviderAPIView(APIView):
             search = request.query_params.get('search', '').strip()
             category = request.query_params.get('category', '').strip()
             brand = request.query_params.get('brand', '').strip()
-            ordering = request.query_params.get('ordering', '-id')  # Descendente por ID
+            ordering = _safe_ordering(
+                request.query_params.get('ordering', '-id'),
+                {
+                    'id', 'name', 'sku', 'model_number', 'is_active',
+                    'tracking_mode', 'category', 'brand', 'unit_default',
+                    'total_stock',
+                },
+                '-id',
+            )
             
             # Construir queryset base
             queryset = Product.objects.select_related('category', 'unit_default', 'brand').prefetch_related(
@@ -811,8 +819,14 @@ class ProductListDirectAPIView(APIView):
             # Parámetros de filtrado
             is_active = request.query_params.get('is_active')
             search = request.query_params.get('search', '').strip()
-            #ordering = request.query_params.get('ordering', 'id')
-            ordering = request.query_params.get('ordering', '-id')  # Descendente por ID
+            ordering = _safe_ordering(
+                request.query_params.get('ordering', '-id'),
+                {
+                    'id', 'name', 'sku', 'model_number', 'is_active',
+                    'tracking_mode', 'category', 'brand', 'unit_default',
+                },
+                '-id',
+            )
             
             # Construir queryset
             queryset = Product.objects.select_related('category', 'unit_default', 'brand')

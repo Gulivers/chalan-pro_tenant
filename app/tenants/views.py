@@ -14,6 +14,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from .throttles import (
+    LandingContactIPThrottle,
     OnboardingCreateEmailThrottle,
     OnboardingCreateIPThrottle,
     OnboardingVerifyIPThrottle,
@@ -135,12 +136,24 @@ def verify_onboarding_email(request):
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([AllowAny])
+@throttle_classes([LandingContactIPThrottle])
 def landing_contact(request):
     """
     Public landing contact form (getjobrhythm.com). Sends email to LANDING_CONTACT_TO_EMAIL.
+    Requires Turnstile and IP throttle (same abuse controls as onboarding).
     """
     from django.core.validators import validate_email
     from django.core.exceptions import ValidationError as DjangoValidationError
+
+    ok, captcha_error = verify_turnstile_token(
+        _get_turnstile_token(request),
+        remote_ip=get_client_ip(request),
+    )
+    if not ok:
+        return Response(
+            {'success': False, 'error': captcha_error or 'CAPTCHA verification failed.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     if not getattr(settings, 'EMAIL_HOST_PASSWORD', None):
         logger.warning('landing_contact: SMTP not configured (EMAIL_HOST_PASSWORD empty)')
