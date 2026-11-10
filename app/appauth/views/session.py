@@ -9,6 +9,10 @@ from django.core import signing
 
 from appauth.authentication import TenantJWTAuthentication
 from appauth.errors import TOKEN_INVALID, error_payload
+from appauth.services.preferences import (
+    preferred_language_for,
+    set_preferred_language,
+)
 from appauth.ws_tickets import issue_ws_ticket
 from appauth.services.tenant import (
     is_tenant_owner,
@@ -38,29 +42,45 @@ class TenantContextView(APIView):
 class MeView(APIView):
     """
     GET /api/auth/me/
+    PATCH /api/auth/me/
 
     Authenticated user context for the current tenant schema.
+    PATCH currently supports preferred_language (en|es).
     """
 
     permission_classes = [IsAuthenticated]
     authentication_classes = [TenantJWTAuthentication]
 
-    def get(self, request):
+    def _payload(self, request):
         user = request.user
         tenant = resolve_request_tenant(request)
         branding = tenant_branding_payload(tenant, request=request)
-        return Response(
-            {
-                'id': user.pk,
-                'username': user.get_username(),
-                'email': user.email or '',
-                'is_staff': user.is_staff,
-                'is_superuser': user.is_superuser,
-                'is_tenant_owner': is_tenant_owner(user, tenant),
-                'permissions': list(user.get_all_permissions()),
-                **branding,
-            }
-        )
+        return {
+            'id': user.pk,
+            'username': user.get_username(),
+            'email': user.email or '',
+            'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser,
+            'is_tenant_owner': is_tenant_owner(user, tenant),
+            'preferred_language': preferred_language_for(user),
+            'permissions': list(user.get_all_permissions()),
+            **branding,
+        }
+
+    def get(self, request):
+        return Response(self._payload(request))
+
+    def patch(self, request):
+        if 'preferred_language' not in request.data:
+            return Response(
+                {'detail': 'No updatable fields provided.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            set_preferred_language(request.user, request.data.get('preferred_language'))
+        except ValueError as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(self._payload(request))
 
 
 @api_view(['GET'])

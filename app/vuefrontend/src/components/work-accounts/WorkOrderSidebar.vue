@@ -1,10 +1,16 @@
 <template>
-  <aside class="jr-wov-sidebar" aria-label="Work orders selection sidebar">
+  <aside
+    class="jr-wov-sidebar"
+    :aria-label="$t('workOrderViewer.sidebarAria')">
     <!-- Header -->
     <div class="jr-wov-sidebar__header">
       <div class="jr-wov-sidebar__header-text">
         <span class="jr-wov-sidebar__eyebrow">
-          {{ workAccountFilterActive ? 'Work Account' : (workAccount && !isGeneralMode ? 'Work Account' : 'Operations') }}
+          {{
+            workAccountFilterActive || (workAccount && !isGeneralMode)
+              ? $t("workOrderViewer.workAccount")
+              : $t("workOrderViewer.operations")
+          }}
         </span>
         <h2 class="jr-wov-sidebar__title" :title="headerTitle">
           {{ headerTitle }}
@@ -21,13 +27,13 @@
       class="jr-wov-sidebar__filter"
       role="status">
       <span class="jr-wov-sidebar__filter-text">
-        Filtered by this work account
+        {{ $t("workOrderViewer.filteredByWa") }}
       </span>
       <button
         type="button"
         class="jr-wov-sidebar__filter-clear"
         @click="$emit('clear-work-account-filter')">
-        Show all
+        {{ $t("workOrderViewer.showAll") }}
       </button>
     </div>
 
@@ -38,21 +44,21 @@
           v-model="searchQuery"
           type="text"
           class="jr-wov-sidebar__search-input"
-          placeholder="Search work orders, crew…"
-          aria-label="Search work orders"
+          :placeholder="$t('workOrderViewer.searchPlaceholder')"
+          :aria-label="$t('workOrderViewer.searchAria')"
           @keydown.enter="triggerSearch" />
         <button
           v-if="searchQuery"
           type="button"
           class="jr-wov-sidebar__search-clear"
-          aria-label="Clear search"
+          :aria-label="$t('common.clearSearch')"
           @click="clearSearch">
           ✕
         </button>
         <button
           type="button"
           class="jr-wov-sidebar__search-submit"
-          aria-label="Submit search"
+          :aria-label="$t('workOrderViewer.submitSearch')"
           @click="triggerSearch">
           <svg class="jr-wov-sidebar__icon-search" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
@@ -64,7 +70,7 @@
     <!-- Loading State -->
     <div v-if="loading && !events.length" class="jr-wov-sidebar__state">
       <span class="jr-wov-sidebar__spinner" aria-hidden="true"></span>
-      <span>Loading work orders…</span>
+      <span>{{ $t("workOrderViewer.loadingOrders") }}</span>
     </div>
 
     <!-- Empty State -->
@@ -72,14 +78,24 @@
       <svg class="jr-wov-sidebar__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
       </svg>
-      <p class="jr-wov-sidebar__empty-title">No work orders found</p>
+      <p class="jr-wov-sidebar__empty-title">
+        {{ $t("workOrderViewer.noWorkOrders") }}
+      </p>
       <p class="jr-wov-sidebar__empty-desc">
-        {{ searchQuery ? 'Try adjusting your search criteria.' : 'No orders scheduled for this view.' }}
+        {{
+          searchQuery
+            ? $t("workOrderViewer.emptySearchDesc")
+            : $t("workOrderViewer.emptyNoneDesc")
+        }}
       </p>
     </div>
 
     <!-- Event List -->
-    <div v-else class="jr-wov-sidebar__list" role="listbox" aria-label="Work order list">
+    <div
+      v-else
+      class="jr-wov-sidebar__list"
+      role="listbox"
+      :aria-label="$t('workOrderViewer.ordersListAria')">
       <div
         v-for="event in events"
         :key="event.id"
@@ -122,7 +138,7 @@
           <!-- Col 3: Crew Name -->
           <div class="jr-wov-card__col-crew">
             <span class="jr-wov-card__crew" :title="event.crew_title">
-              {{ event.crew_title || 'Unassigned' }}
+              {{ event.crew_title || $t("workOrderViewer.unassigned") }}
             </span>
           </div>
 
@@ -134,7 +150,11 @@
             <span
               v-if="!isGeneralMode && unreadCount(event.id) > 0"
               class="jr-wov-card__unread-dot"
-              :title="`${unreadCount(event.id)} unread messages`">
+              :title="
+                $t('workOrderViewer.unreadTitle', {
+                  count: unreadCount(event.id),
+                })
+              ">
               {{ unreadCount(event.id) }}
             </span>
           </div>
@@ -142,7 +162,9 @@
 
         <!-- Work Order status -->
         <div v-if="event.work_order_status_name" class="jr-wov-card__status-row">
-          <span class="jr-wov-card__status-label">Status</span>
+          <span class="jr-wov-card__status-label">
+            {{ $t("workOrderViewer.status") }}
+          </span>
           <JRBadge
             :value="event.work_order_status_name"
             :severity="statusSeverity(event)" />
@@ -157,17 +179,17 @@
         class="jr-wov-sidebar__page-btn"
         :disabled="!hasPrevious || loading"
         @click="$emit('prev-page')">
-        Previous
+        {{ $t("workOrderViewer.previous") }}
       </button>
       <span class="jr-wov-sidebar__page-info">
-        Page {{ currentPage }}
+        {{ $t("workOrderViewer.page", { page: currentPage }) }}
       </span>
       <button
         type="button"
         class="jr-wov-sidebar__page-btn"
         :disabled="!hasNext || loading"
         @click="$emit('next-page')">
-        Next
+        {{ $t("common.next") }}
       </button>
     </div>
   </aside>
@@ -175,6 +197,7 @@
 
 <script>
 import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import dayjs from "dayjs";
 import { useChatStore } from "@/stores/chatStore";
 import { JRBadge } from "@/ui";
@@ -237,28 +260,34 @@ export default {
     "clear-work-account-filter",
   ],
   setup(props, { emit }) {
+    const { t } = useI18n({ useScope: "global" });
     const chatStore = useChatStore();
     const searchQuery = ref("");
 
     const headerTitle = computed(() => {
-      if (props.workAccountFilterActive && props.workAccount) {
-        return `WO ${props.workAccount.id} – ${props.workAccount.title}`;
+      if (
+        (props.workAccountFilterActive || !props.isGeneralMode) &&
+        props.workAccount
+      ) {
+        return t("workOrderViewer.woTitle", {
+          id: props.workAccount.id,
+          title: props.workAccount.title,
+        });
       }
-      if (props.isGeneralMode) {
-        return "Work Orders";
-      }
-      if (props.workAccount) {
-        return `WO ${props.workAccount.id} – ${props.workAccount.title}`;
-      }
-      return "Work Orders";
+      return t("workOrderViewer.workOrders");
     });
 
     const eventsCountLabel = computed(() => {
       if (props.isGeneralMode && props.totalCount > 0) {
-        return `${props.totalCount} orders`;
+        return t("workOrderViewer.ordersCount", {
+          count: props.totalCount,
+        });
       }
       if (props.events.length > 0) {
-        return `${props.events.length} ${props.events.length === 1 ? "order" : "orders"}`;
+        const count = props.events.length;
+        return count === 1
+          ? t("workOrderViewer.orderCountOne", { count })
+          : t("workOrderViewer.orderCountMany", { count });
       }
       return "";
     });
@@ -266,7 +295,7 @@ export default {
     const hasPagination = computed(() => props.hasPrevious || props.hasNext);
 
     const formatCategory = (cat) => {
-      if (!cat) return "General";
+      if (!cat) return t("workOrderViewer.generalCategory");
       const cleaned = String(cat).replace(/^[\p{Emoji}\s\d]+/u, "").trim();
       if (!cleaned) return String(cat);
       return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();

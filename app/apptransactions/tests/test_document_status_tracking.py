@@ -77,6 +77,10 @@ class DocumentStatusTrackingTests(TenantTestCase):
                 'uses_status_tracking': False,
             },
         )
+        # Tenant seed/fixture may leave tracking on; tests assert opt-in behavior.
+        if self.po_type.uses_status_tracking:
+            self.po_type.uses_status_tracking = False
+            self.po_type.save(update_fields=['uses_status_tracking'])
         seed_default_document_statuses()
 
     def test_seed_is_idempotent_and_leaves_tracking_off(self):
@@ -109,6 +113,7 @@ class DocumentStatusTrackingTests(TenantTestCase):
             type_code='SQ',
             defaults={'description': 'Sales Quotation', 'is_sales': True},
         )
+        DocumentStatus.objects.filter(document_type=other).delete()
         DocumentStatus.objects.create(
             document_type=other,
             code='open',
@@ -241,6 +246,10 @@ class DocumentStatusTrackingTests(TenantTestCase):
                 'uses_status_tracking': False,
             },
         )
+        for doc_type in (grn, pinv):
+            if doc_type.uses_status_tracking:
+                doc_type.uses_status_tracking = False
+                doc_type.save(update_fields=['uses_status_tracking'])
         DocumentStatus.objects.filter(document_type__in=[grn, pinv]).delete()
         created = seed_default_document_statuses()
         self.assertGreaterEqual(created, len(DEFAULT_DOCUMENT_STATUS_SEEDS['GRN']))
@@ -286,6 +295,9 @@ class DocumentStatusTrackingTests(TenantTestCase):
                 'uses_status_tracking': False,
             },
         )
+        if grn.uses_status_tracking:
+            grn.uses_status_tracking = False
+            grn.save(update_fields=['uses_status_tracking'])
         DocumentStatus.objects.filter(document_type=grn).delete()
         response = self.client.post(
             f'/api/document-types/{grn.id}/seed-default-statuses/'

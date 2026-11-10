@@ -1,5 +1,5 @@
 arabic-reshaper==3.0.0
-asgiref==3.7.2
+asgiref>=3.8.1,<4
 asn1crypto==1.5.1
 Brotli==1.1.0
 certifi==2024.7.4
@@ -14,11 +14,11 @@ cryptography==42.0.8
 cssselect2==0.7.0
 daphne==4.1.2
 dj-database-url==2.1.0
-Django==5.0.3
+Django==5.2.19
 django-adminlte3==0.1.6
 django-cors-headers==4.3.1
 django-filter==24.1
-django-tenants>=3.5.0
+django-tenants>=3.14,<4
 djangorestframework==3.14.0
 djangorestframework-simplejwt>=5.3,<6
 fonttools==4.52.4

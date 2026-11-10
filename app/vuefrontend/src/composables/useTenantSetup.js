@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue';
 import { fetchTenantSetup, patchTenantSetup } from '@/services/tenantSetupApi';
+import i18n from '@/i18n';
 
 const state = ref(null);
 const loading = ref(false);
@@ -11,102 +12,87 @@ let loadPromise = null;
 const STEP_META = {
   inventory: {
     phase: 1,
-    title: 'Import Florida inventory masters',
-    description:
-      'Load products, brands, categories, units, warehouses, prices, absence reasons, and optional house-model favorites in one step.',
+    i18nKey: 'inventory',
     routeName: 'inventory-master-data-setup',
-    cta: 'Import Florida inventory masters',
     critical: false,
   },
   crew_categories: {
     phase: 2,
-    title: 'Crew categories',
-    description: 'Define categories such as Rough, Trim, Undergrounds, or Slabs for field crews.',
+    i18nKey: 'crew_categories',
     routeName: 'crew-category-form',
-    cta: 'Add crew category',
     critical: false,
   },
   crews: {
     phase: 2,
-    title: 'Crews',
-    description: 'Create the crews that will run work in the field.',
+    i18nKey: 'crews',
     routeName: 'crew-form',
-    cta: 'Add crew',
     critical: false,
   },
   party_types: {
     phase: 2,
-    title: 'Party types',
-    description: 'Set profile types for builders, suppliers, and other companies you work with.',
+    i18nKey: 'party_types',
     routeName: 'party-types-form',
-    cta: 'Add party type',
     critical: false,
   },
   party_categories: {
     phase: 2,
-    title: 'Party categories',
-    description: 'Group parties into corporate categories used on documents and purchases.',
+    i18nKey: 'party_categories',
     routeName: 'party-categories-form',
-    cta: 'Add party category',
     critical: false,
   },
   builder: {
     phase: 2,
-    title: 'Builders',
-    description: 'Register at least one builder before you can schedule residential work.',
+    i18nKey: 'builder',
     routeName: 'builder-form',
-    cta: 'Add builder',
     critical: true,
   },
   communities: {
     phase: 2,
-    title: 'Communities',
-    description: 'Add at least one community (subdivision / job site) where crews will work.',
+    i18nKey: 'communities',
     routeName: 'job-form',
-    cta: 'Add community',
     critical: true,
   },
   house_models: {
     phase: 2,
-    title: 'House models',
-    description: 'Register standard house models or electrical plan sets used on contracts.',
+    i18nKey: 'house_models',
     routeName: 'house-model-form',
-    cta: 'Add house model',
     critical: false,
   },
   first_event: {
     phase: 3,
-    title: 'Schedule your first event',
-    description: 'Put the first job on the calendar — learn by scheduling real work.',
+    i18nKey: 'first_event',
     routeName: 'schedule',
-    cta: 'Open schedule',
     critical: false,
   },
   pick_ticket: {
     phase: 3,
-    title: 'Assign materials',
-    description: 'After an event exists, create a Material Request (pick ticket) for the crew.',
+    i18nKey: 'pick_ticket',
     routeName: 'material-requests',
-    cta: 'Open material requests',
     critical: false,
   },
   work_prices: {
     phase: 3,
-    title: 'Piece-work prices',
-    description: 'Set destajo / piece rates so contracts and crew pay line up.',
+    i18nKey: 'work_prices',
     routeName: 'work-prices-form',
-    cta: 'Add work prices',
     critical: false,
   },
   first_contract: {
     phase: 3,
-    title: 'Generate your first contract',
-    description: 'Create a contract from scheduled work when pricing is ready.',
+    i18nKey: 'first_contract',
     routeName: 'contract-form',
-    cta: 'Create contract',
     critical: false,
   },
 };
+
+function stepCopy(i18nKey) {
+  const t = i18n.global.t;
+  const base = `setup.steps.${i18nKey}`;
+  return {
+    title: t(`${base}.title`),
+    description: t(`${base}.description`),
+    cta: t(`${base}.cta`),
+  };
+}
 
 export function useTenantSetup() {
   const isOwner = computed(() => !!state.value?.is_tenant_owner);
@@ -141,44 +127,58 @@ export function useTenantSetup() {
   );
 
   const stepList = computed(() => {
+    // Depend on locale so labels re-resolve when language changes.
+    void i18n.global.locale.value;
     const order = state.value?.step_order || Object.keys(STEP_META);
     return order.map((key) => {
-      const meta = STEP_META[key] || {
-        phase: 2,
-        title: key,
-        description: '',
-        routeName: 'home',
-        cta: 'Open',
-        critical: false,
-      };
+      const meta = STEP_META[key];
       const status = steps.value[key] || 'pending';
+      if (!meta) {
+        return {
+          key,
+          status,
+          phase: 2,
+          title: key,
+          description: '',
+          routeName: 'home',
+          cta: i18n.global.t('common.open'),
+          critical: false,
+          canSkip: skippable.value.has(key) && status === 'pending',
+        };
+      }
+      const copy = stepCopy(meta.i18nKey);
       return {
         key,
         status,
-        ...meta,
+        phase: meta.phase,
+        routeName: meta.routeName,
+        critical: meta.critical,
+        ...copy,
         canSkip: skippable.value.has(key) && status === 'pending',
       };
     });
   });
 
   const phaseGroups = computed(() => {
+    void i18n.global.locale.value;
+    const t = i18n.global.t;
     const groups = [
       {
         phase: 1,
-        title: 'Inventory starters',
-        blurb: 'Get materials ready with the Florida master template.',
+        title: t('setup.stepInventory'),
+        blurb: t('setup.step1Message'),
         steps: [],
       },
       {
         phase: 2,
-        title: 'Essential masters',
-        blurb: 'Builders and communities are required before Schedule can run.',
+        title: t('setup.stepMasters'),
+        blurb: t('setup.step2Message'),
         steps: [],
       },
       {
         phase: 3,
-        title: 'Operate in the field',
-        blurb: 'Schedule work, assign materials, set piece rates, then contract.',
+        title: t('setup.stepOperate'),
+        blurb: t('setup.step3Message'),
         steps: [],
       },
     ];

@@ -1,12 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Contracts">
+    <JRPageHeader :title="$t('contracts.title')">
       <template #actions>
         <JRButton
           v-if="hasPermission('ctrctsapp.add_contract')"
           type="button"
           @click="goToCreateForm">
-          + New Contract
+          {{ $t("contracts.new") }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -15,7 +15,7 @@
       <template #start>
         <div class="jr-contract-list__search">
           <label class="jr-sr-only" for="contract-filter-input">
-            Search contracts
+            {{ $t("contracts.searchLabel") }}
           </label>
           <span class="jr-contract-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -24,7 +24,7 @@
             inputId="contract-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search contracts..."
+            :placeholder="$t('contracts.searchPlaceholder')"
             autocomplete="off"
             :spellcheck="false"
             autocapitalize="none"
@@ -35,12 +35,14 @@
 
       <template v-if="!isMobile" #stats>
         <div class="jr-contract-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
           <JRBadge
-            :value="`${stats.active} Active`"
+            :value="$t('common.badgeTotal', { count: stats.total })"
+            severity="secondary" />
+          <JRBadge
+            :value="$t('common.badgeActive', { count: stats.active })"
             :severity="stats.active > 0 ? 'success' : 'secondary'" />
           <JRBadge
-            :value="`${stats.inactive} Inactive`"
+            :value="$t('common.badgeInactive', { count: stats.inactive })"
             severity="secondary" />
         </div>
       </template>
@@ -50,7 +52,7 @@
           <JRSelect
             class="jr-contract-list__entries"
             inputId="contract-per-page"
-            ariaLabel="Entries per page"
+            :ariaLabel="$t('common.entriesPerPage')"
             v-model="perPage"
             :options="pageOptions"
             optionLabel="label"
@@ -62,7 +64,7 @@
             class="jr-contract-list__refresh"
             @click="refreshTable">
             <RefreshIcon />
-            Refresh
+            {{ $t("common.refresh") }}
           </JRButton>
         </template>
         <template v-else>
@@ -70,7 +72,7 @@
             id="contract-list-tools-trigger"
             type="button"
             class="jr-icon-btn"
-            aria-label="List tools"
+            :aria-label="$t('common.listTools')"
             aria-haspopup="menu"
             :aria-expanded="toolsMenuOpen ? 'true' : 'false'"
             aria-controls="contract-list-tools-menu"
@@ -92,7 +94,7 @@
             class="jr-overlay jr-row-menu"
             :model="toolsMenuModel"
             :popup="true"
-            ariaLabel="List tools"
+            :ariaLabel="$t('common.listTools')"
             @show="toolsMenuOpen = true"
             @hide="toolsMenuOpen = false" />
         </template>
@@ -110,7 +112,7 @@
           variant="ghost"
           size="sm"
           @click="refreshTable">
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
         <JRButton
           v-else-if="hasSearch"
@@ -118,17 +120,17 @@
           variant="ghost"
           size="sm"
           @click="clearSearch">
-          Clear search
+          {{ $t("common.clearSearch") }}
         </JRButton>
       </JREmptyState>
       <p v-if="isLoading && !contracts.length" class="jr-contract-list__loading">
-        Loading contracts…
+        {{ $t("common.loadingLabel", { label: $t("contracts.title") }) }}
       </p>
       <p
         v-else-if="isLoading && contracts.length"
         class="jr-contract-list__loading"
         aria-live="polite">
-        Updating…
+        {{ $t("common.updating") }}
       </p>
       <ul
         v-if="contracts.length"
@@ -216,7 +218,7 @@
               variant="ghost"
               size="sm"
               @click="refreshTable">
-              Refresh
+              {{ $t("common.refresh") }}
             </JRButton>
             <JRButton
               v-else-if="hasSearch"
@@ -224,11 +226,11 @@
               variant="ghost"
               size="sm"
               @click="clearSearch">
-              Clear search
+              {{ $t("common.clearSearch") }}
             </JRButton>
           </JREmptyState>
         </template>
-        <Column field="id" header="ID" sortable>
+        <Column field="id" :header="$t('contracts.colId')" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
@@ -240,37 +242,37 @@
             <strong v-else>{{ data.id }}</strong>
           </template>
         </Column>
-        <Column v-if="!isTablet" field="doc_type" header="Doc" sortable>
+        <Column v-if="!isTablet" field="doc_type" :header="$t('contracts.colDoc')" sortable>
           <template #body="{ data }">
             {{ data.doc_type || "—" }}
           </template>
         </Column>
-        <Column field="type" header="Type" sortable>
+        <Column field="type" :header="$t('contracts.colType')" sortable>
           <template #body="{ data }">
             {{ data.type || "—" }}
           </template>
         </Column>
-        <Column field="date_created" header="Date" sortable>
+        <Column field="date_created" :header="$t('contracts.colDate')" sortable>
           <template #body="{ data }">
             {{ formatDate(data.date_created) }}
           </template>
         </Column>
-        <Column field="builder" header="Builder">
+        <Column field="builder" :header="$t('contracts.colBuilder')">
           <template #body="{ data }">
             {{ data.builder?.name || "—" }}
           </template>
         </Column>
-        <Column field="job" header="Job">
+        <Column field="job" :header="$t('contracts.colCommunity')">
           <template #body="{ data }">
             {{ data.job?.name || "—" }}
           </template>
         </Column>
-        <Column v-if="!isTablet" field="house_model" header="Model">
+        <Column v-if="!isTablet" field="house_model" :header="$t('contracts.colModel')">
           <template #body="{ data }">
             {{ data.house_model?.name || "—" }}
           </template>
         </Column>
-        <Column field="lot" header="Lot" sortable>
+        <Column field="lot" :header="$t('contracts.colLot')" sortable>
           <template #body="{ data }">
             {{ data.lot || "—" }}
           </template>
@@ -278,7 +280,7 @@
         <Column
           v-if="!isTablet"
           field="address"
-          header="Address"
+          :header="$t('contracts.colAddress')"
           sortable
           headerClass="jr-col-address"
           bodyClass="jr-col-address">
@@ -289,7 +291,7 @@
         <Column
           v-if="!isTablet"
           field="sqft"
-          header="SqFt"
+          :header="$t('contracts.colSqFt')"
           sortable
           headerClass="jr-col-num"
           bodyClass="jr-col-num">
@@ -300,7 +302,7 @@
         <Column
           v-if="!isTablet"
           field="total"
-          header="Total"
+          :header="$t('contracts.colTotal')"
           sortable
           headerClass="jr-col-num"
           bodyClass="jr-col-num">
@@ -308,16 +310,16 @@
             {{ formatMoney(data.total) }}
           </template>
         </Column>
-        <Column field="needs_reprint" header="Need Print" sortable>
+        <Column field="needs_reprint" :header="$t('contracts.colNeedPrint')" sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.needs_reprint ? 'Yes' : 'No'"
+              :value="data.needs_reprint ? $t('common.yes') : $t('common.no')"
               :severity="data.needs_reprint ? 'danger' : 'success'" />
           </template>
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="
             isTablet
@@ -449,15 +451,17 @@ export default {
       Boolean(filter.value && filter.value.trim())
     );
     const emptyTitle = computed(() => {
-      if (loadError.value) return "Could not load contracts";
-      if (hasSearch.value) return "No matching contracts";
-      return "No contracts";
+      if (loadError.value) return proxy?.$t?.("contracts.emptyLoadError");
+      if (hasSearch.value) return proxy?.$t?.("contracts.emptySearch");
+      return proxy?.$t?.("contracts.emptyNone");
     });
     const emptyDescription = computed(() => {
-      if (loadError.value) return "Try Refresh.";
+      if (loadError.value) return proxy?.$t?.("common.tryRefresh");
       const query = filter.value.trim();
-      if (query) return `No contracts match “${query}”.`;
-      return "No contracts yet.";
+      if (query) {
+        return proxy?.$t?.("contracts.emptySearchDesc", { query });
+      }
+      return proxy?.$t?.("contracts.emptyNoneDesc");
     });
 
     const canView = computed(() =>
@@ -615,8 +619,8 @@ export default {
 
     const deleteItem = (id) => {
       proxy?.confirmDelete?.(
-        "Are you sure?",
-        `Delete contract #${id}? This action cannot be undone.`,
+        proxy?.$t?.("common.confirmDeleteTitle"),
+        proxy?.$t?.("contracts.deleteConfirm", { id }),
         async () => {
           try {
             await axios.delete(`/api/contract/${id}/`);
@@ -649,7 +653,7 @@ export default {
       if (proxy?.hasPermission?.("ctrctsapp.view_contract")) {
         actions.push({
           key: "view",
-          label: "View",
+          label: proxy?.$t?.("common.view"),
           severity: "success",
           icon: EyeIcon,
           command: () => viewItem(item.id),
@@ -658,7 +662,7 @@ export default {
       if (proxy?.hasPermission?.("ctrctsapp.change_contract")) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: proxy?.$t?.("common.edit"),
           severity: "primary",
           icon: PencilIcon,
           command: () => editItem(item.id),
@@ -677,7 +681,7 @@ export default {
       if (proxy?.hasPermission?.("ctrctsapp.delete_contract")) {
         actions.push({
           key: "delete",
-          label: "Delete",
+          label: proxy?.$t?.("common.delete"),
           severity: "danger",
           icon: TrashIcon,
           command: () => deleteItem(item.id),
@@ -688,7 +692,7 @@ export default {
 
     const toolsMenuModel = computed(() => [
       {
-        label: "Refresh",
+        label: proxy?.$t?.("common.refresh"),
         icon: "pi pi-refresh",
         command: () => refreshTable(),
       },

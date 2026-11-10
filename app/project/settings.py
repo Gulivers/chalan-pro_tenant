@@ -378,7 +378,9 @@ REST_FRAMEWORK = {
         'onboarding_create_ip': os.environ.get('ONBOARDING_THROTTLE_IP', '5/hour'),
         'onboarding_create_email': os.environ.get('ONBOARDING_THROTTLE_EMAIL', '3/day'),
         'onboarding_verify_ip': os.environ.get('ONBOARDING_VERIFY_THROTTLE_IP', '20/hour'),
+        'landing_contact_ip': os.environ.get('LANDING_CONTACT_THROTTLE_IP', '10/hour'),
         'auth_login_ip': os.environ.get('AUTH_LOGIN_THROTTLE_IP', '10/minute'),
+
         'auth_login_username': os.environ.get('AUTH_LOGIN_THROTTLE_USERNAME', '5/minute'),
         'auth_password_forgot_ip': os.environ.get('AUTH_PASSWORD_FORGOT_THROTTLE_IP', '5/hour'),
         'auth_password_forgot_email': os.environ.get(

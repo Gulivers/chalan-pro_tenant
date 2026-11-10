@@ -7,6 +7,8 @@ import App from "./App.vue";
 import router from "./router";
 import { createPinia } from "pinia"; // OAHP
 import store from "./store";
+import i18n from "./i18n";
+import { primeLocaleFor } from "./i18n/primeLocale";
 
 import "leaflet/dist/leaflet.css";
 
@@ -131,6 +133,7 @@ app.use(router);
 const pinia = createPinia();
 app.use(pinia);
 app.use(store);
+app.use(i18n);
 app.use(TooltipDirective);
 const primeUiLicense = (import.meta.env.VITE_PRIMEUI_LICENSE || "").trim();
 
@@ -138,6 +141,7 @@ app.use(PrimeVue, {
   // PrimeVue 5 / PrimeUI: signed community or commercial key (offline verify).
   // Without it the console shows: [PrimeUI] PrimeUI license is not configured.
   license: primeUiLicense || undefined,
+  locale: primeLocaleFor(i18n.global.locale.value),
   theme: {
     preset: JobRhythmPreset,
     options: {

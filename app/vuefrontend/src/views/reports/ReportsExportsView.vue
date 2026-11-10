@@ -1,9 +1,9 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Measure the Operation">
+    <JRPageHeader :title="$t('reports.title')">
       <template #actions>
         <JRButton type="button" variant="primary" @click="reportsOpen = true">
-          Reports & exports
+          {{ $t("reports.reportsExports") }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -12,8 +12,10 @@
       Sales and customer analysis for operational review, plus Excel exports.
     </p>
 
-    <section class="jr-reports-sales" aria-label="Sales and customers">
-      <h2 class="jr-reports-sales__title">Sales &amp; customers</h2>
+    <section
+      class="jr-reports-sales"
+      :aria-label="$t('reports.salesCustomers')">
+      <h2 class="jr-reports-sales__title">{{ $t("reports.salesCustomers") }}</h2>
       <SalesAnalysisSection
         :sales-data="salesData"
         :loading="loading"

@@ -1,12 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Work Accounts">
+    <JRPageHeader :title="$t('workAccounts.title')">
       <template #actions>
         <JRButton
           v-if="hasPermission('apptransactions.add_workaccount')"
           type="button"
           @click="goToCreateForm">
-          + New Work Account
+          {{ $t("workAccounts.new") }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -15,7 +15,7 @@
       <template #start>
         <div class="jr-wa-list__search">
           <label class="jr-sr-only" for="wa-filter-input">
-            Search work accounts
+            {{ $t("workAccounts.searchLabel") }}
           </label>
           <span class="jr-wa-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -24,7 +24,7 @@
             inputId="wa-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search by title, builder, community, lot, address…"
+            :placeholder="$t('workAccounts.searchPlaceholder')"
             autocomplete="off"
             :spellcheck="false"
             autocapitalize="none"
@@ -35,12 +35,14 @@
 
       <template v-if="!isMobile" #stats>
         <div class="jr-wa-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
           <JRBadge
-            :value="`${stats.active} Active`"
+            :value="$t('common.badgeTotal', { count: stats.total })"
+            severity="secondary" />
+          <JRBadge
+            :value="$t('common.badgeActive', { count: stats.active })"
             :severity="stats.active > 0 ? 'success' : 'secondary'" />
           <JRBadge
-            :value="`${stats.inactive} Inactive`"
+            :value="$t('common.badgeInactive', { count: stats.inactive })"
             severity="secondary" />
         </div>
       </template>
@@ -50,7 +52,7 @@
           <JRSelect
             class="jr-wa-list__entries"
             inputId="wa-per-page"
-            ariaLabel="Entries per page"
+            :ariaLabel="$t('common.entriesPerPage')"
             v-model="perPage"
             :options="pageOptions"
             optionLabel="label"
@@ -62,7 +64,7 @@
             class="jr-wa-list__refresh"
             @click="refreshTable">
             <RefreshIcon />
-            Refresh
+            {{ $t("common.refresh") }}
           </JRButton>
         </template>
         <template v-else>
@@ -70,7 +72,7 @@
             id="wa-list-tools-trigger"
             type="button"
             class="jr-icon-btn"
-            aria-label="List tools"
+            :aria-label="$t('common.listTools')"
             aria-haspopup="menu"
             :aria-expanded="toolsMenuOpen ? 'true' : 'false'"
             aria-controls="wa-list-tools-menu"
@@ -92,7 +94,7 @@
             class="jr-overlay jr-row-menu"
             :model="toolsMenuModel"
             :popup="true"
-            ariaLabel="List tools"
+            :ariaLabel="$t('common.listTools')"
             @show="toolsMenuOpen = true"
             @hide="toolsMenuOpen = false" />
         </template>
@@ -111,7 +113,7 @@
           variant="ghost"
           size="sm"
           @click="refreshTable">
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
         <JRButton
           v-else-if="hasSearch"
@@ -119,17 +121,17 @@
           variant="ghost"
           size="sm"
           @click="clearSearch">
-          Clear search
+          {{ $t("common.clearSearch") }}
         </JRButton>
       </JREmptyState>
       <p v-if="isLoading && !pageItems.length" class="jr-wa-list__loading">
-        Loading work accounts…
+        {{ $t("workAccounts.loading") }}
       </p>
       <p
         v-else-if="isLoading && pageItems.length"
         class="jr-wa-list__loading"
         aria-live="polite">
-        Updating…
+        {{ $t("common.updating") }}
       </p>
       <ul
         v-if="pageItems.length"
@@ -141,7 +143,7 @@
               v-if="canView"
               class="jr-wa-row__name jr-wa-row__name--link"
               :to="waViewTo(item.id)"
-              :aria-label="`View ${item.title}`">
+              :aria-label="viewWorkAccountAria(item)">
               {{ item.title }}
             </router-link>
             <span v-else class="jr-wa-row__name">{{ item.title }}</span>
@@ -154,9 +156,11 @@
             </p>
             <p class="jr-wa-row__meta">
               <JRBadge
-                :value="item.is_active ? 'Active' : 'Inactive'"
+                :value="item.is_active ? $t('common.active') : $t('common.inactive')"
                 :severity="item.is_active ? 'success' : 'secondary'" />
-              <span v-if="item.lot">Lot {{ item.lot }}</span>
+              <span v-if="item.lot">{{
+                $t("workAccounts.lotValue", { lot: item.lot })
+              }}</span>
               <span v-else-if="item.address">{{ item.address }}</span>
               <span v-if="item.house_model_name" aria-hidden="true"> · </span>
               <span v-if="item.house_model_name">{{ item.house_model_name }}</span>
@@ -218,7 +222,7 @@
               variant="ghost"
               size="sm"
               @click="refreshTable">
-              Refresh
+              {{ $t("common.refresh") }}
             </JRButton>
             <JRButton
               v-else-if="hasSearch"
@@ -226,39 +230,43 @@
               variant="ghost"
               size="sm"
               @click="clearSearch">
-              Clear search
+              {{ $t("common.clearSearch") }}
             </JRButton>
           </JREmptyState>
         </template>
 
-        <Column field="title" header="Title" sortable>
+        <Column field="title" :header="$t('workAccounts.colTitle')" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
               class="jr-wa-row__name jr-wa-row__name--link"
               :to="waViewTo(data.id)"
-              :aria-label="`View ${data.title}`">
+              :aria-label="viewWorkAccountAria(data)">
               {{ data.title }}
             </router-link>
             <strong v-else>{{ data.title }}</strong>
           </template>
         </Column>
-        <Column field="builder_name" header="Builder" sortable>
+        <Column field="builder_name" :header="$t('workAccounts.colBuilder')" sortable>
           <template #body="{ data }">
             {{ data.builder_name || "—" }}
           </template>
         </Column>
-        <Column field="job_name" header="Community" sortable>
+        <Column field="job_name" :header="$t('workAccounts.colCommunity')" sortable>
           <template #body="{ data }">
             {{ data.job_name || "—" }}
           </template>
         </Column>
-        <Column v-if="!isTablet" field="house_model_name" header="Model" sortable>
+        <Column
+          v-if="!isTablet"
+          field="house_model_name"
+          :header="$t('contracts.colModel')"
+          sortable>
           <template #body="{ data }">
             {{ data.house_model_name || "—" }}
           </template>
         </Column>
-        <Column field="lot" header="Lot" sortable>
+        <Column field="lot" :header="$t('workAccounts.colLot')" sortable>
           <template #body="{ data }">
             {{ data.lot || "—" }}
           </template>
@@ -266,7 +274,7 @@
         <Column
           v-if="!isTablet"
           field="address"
-          header="Address"
+          :header="$t('workAccounts.colAddress')"
           sortable
           headerClass="jr-col-address"
           bodyClass="jr-col-address">
@@ -274,21 +282,25 @@
             {{ data.address || "—" }}
           </template>
         </Column>
-        <Column v-if="!isTablet" field="city" header="City" sortable>
+        <Column
+          v-if="!isTablet"
+          field="city"
+          :header="$t('workAccounts.colCity')"
+          sortable>
           <template #body="{ data }">
             {{ data.city || "—" }}
           </template>
         </Column>
-        <Column field="is_active" header="Status" sortable>
+        <Column field="is_active" :header="$t('workAccounts.colStatus')" sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.is_active ? 'Active' : 'Inactive'"
+              :value="data.is_active ? $t('common.active') : $t('common.inactive')"
               :severity="data.is_active ? 'success' : 'secondary'" />
           </template>
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="
             isTablet
@@ -425,16 +437,21 @@ export default {
       Boolean(filter.value && filter.value.trim())
     );
     const emptyTitle = computed(() => {
-      if (loadError.value) return "Could not load work accounts";
-      if (hasSearch.value) return "No matching work accounts";
-      return "No work accounts";
+      if (loadError.value) return proxy?.$t?.("workAccounts.emptyLoadError");
+      if (hasSearch.value) return proxy?.$t?.("workAccounts.emptySearch");
+      return proxy?.$t?.("workAccounts.emptyNone");
     });
     const emptyDescription = computed(() => {
-      if (loadError.value) return "Try Refresh.";
+      if (loadError.value) return proxy?.$t?.("common.tryRefresh");
       const query = filter.value.trim();
-      if (query) return `No work accounts match “${query}”.`;
-      return "No work accounts yet.";
+      if (query) {
+        return proxy?.$t?.("workAccounts.emptySearchDesc", { query });
+      }
+      return proxy?.$t?.("workAccounts.emptyNoneDesc");
     });
+
+    const viewWorkAccountAria = (item) =>
+      proxy?.$t?.("common.viewItem", { label: item?.title ?? "" });
 
     const canView = computed(() =>
       !!proxy?.hasPermission?.("apptransactions.view_workaccount")
@@ -447,7 +464,7 @@ export default {
     );
 
     const toolsMenuModel = computed(() => [
-      { label: "Refresh", command: () => refreshTable() },
+      { label: proxy?.$t?.("common.refresh"), command: () => refreshTable() },
     ]);
 
     const clearSearch = () => {
@@ -504,7 +521,7 @@ export default {
         workAccounts.value = [];
         totalRows.value = 0;
         stats.value = { total: 0, active: 0, inactive: 0 };
-        proxy?.notifyError?.("Error loading work accounts.");
+        proxy?.notifyError?.(proxy?.$t?.("workAccounts.loadError"));
       } finally {
         if (seq === fetchSeq) isLoading.value = false;
       }
@@ -561,7 +578,7 @@ export default {
       if (proxy?.hasPermission?.("apptransactions.view_workaccount")) {
         actions.push({
           key: "view",
-          label: "View",
+          label: proxy?.$t?.("common.view"),
           severity: "success",
           icon: EyeIcon,
           command: () => viewItem(item.id),
@@ -570,7 +587,7 @@ export default {
       if (proxy?.hasPermission?.("apptransactions.change_workaccount")) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: proxy?.$t?.("common.edit"),
           severity: "primary",
           icon: PencilIcon,
           command: () => editItem(item.id),
@@ -579,7 +596,7 @@ export default {
       if (proxy?.hasPermission?.("apptransactions.delete_workaccount")) {
         actions.push({
           key: "delete",
-          label: "Delete",
+          label: proxy?.$t?.("common.delete"),
           severity: "danger",
           icon: TrashIcon,
           command: () => deleteWorkAccount(item),
@@ -590,15 +607,15 @@ export default {
 
     const deleteWorkAccount = (item) => {
       const id = item?.id;
-      const title = item?.title ? `“${item.title}”` : `#${id}`;
+      const title = item?.title || `#${id}`;
       proxy?.confirmDelete?.(
-        "Are you sure?",
-        `Delete ${title}? This action cannot be undone.`,
+        proxy?.$t?.("common.confirmDeleteTitle"),
+        proxy?.$t?.("workAccounts.deleteConfirm", { title }),
         async () => {
           try {
             await axios.delete(`${ENDPOINT}${id}/`);
             proxy?.notifyToastSuccess?.(
-              "The work account has been deleted."
+              proxy?.$t?.("workAccounts.deletedToast")
             );
             await fetchWorkAccounts();
           } catch (err) {
@@ -607,11 +624,11 @@ export default {
             const data = err?.response?.data;
             if (status === 403) {
               proxy?.notifyError?.(
-                "You do not have permission for this action."
+                proxy?.$t?.("workAccounts.deleteForbidden")
               );
             } else {
               const detail =
-                data?.detail || "Error deleting the work account.";
+                data?.detail || proxy?.$t?.("workAccounts.deleteError");
               proxy?.notifyError?.(detail);
             }
           }
@@ -706,6 +723,7 @@ export default {
       toolsMenuOpen,
       toolsMenuModel,
       toggleToolsMenu,
+      viewWorkAccountAria,
     };
   },
 };

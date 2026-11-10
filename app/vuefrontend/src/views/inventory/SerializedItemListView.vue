@@ -1,6 +1,6 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Serialized Items">
+    <JRPageHeader :title="$t('nav.serializedItems')">
       <template
         v-if="
           features.showNewSerializedItemButton &&
@@ -8,7 +8,7 @@
         "
         #actions>
         <JRButton type="button" :fluid="isMobile" @click="goToCreateForm">
-          + New Serialized Item
+          {{ $t('inventory.serializedItemsNew') }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -17,7 +17,7 @@
       <template #start>
         <div class="jr-serialized-list__search">
           <label class="jr-sr-only" for="serialized-filter-input">
-            Search serialized items
+            {{ $t('inventory.serializedItemsSearchLabel') }}
           </label>
           <span class="jr-serialized-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -26,19 +26,19 @@
             inputId="serialized-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search by serial, product, warehouse, crew, notes…" />
+            :placeholder="$t('inventory.serializedItemsSearchPlaceholder')" />
         </div>
       </template>
 
       <template #stats>
         <div class="jr-serialized-list__summary" aria-live="polite">
-          <JRBadge :value="`${totalRows} Total`" severity="secondary" />
+          <JRBadge :value="$t('common.badgeTotal', { count: totalRows })" severity="secondary" />
         </div>
       </template>
 
       <template #actions>
         <label class="jr-sr-only" for="serialized-per-page">
-          Entries per page
+          {{ $t('common.entriesPerPage') }}
         </label>
         <JRSelect
           class="jr-serialized-list__entries"
@@ -54,7 +54,7 @@
           class="jr-serialized-list__refresh"
           @click="refreshTable">
           <RefreshIcon />
-          Refresh
+          {{ $t('common.refresh') }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -64,14 +64,11 @@
         v-if="!items.length && !isLoading"
         :title="emptyTitle"
         :description="emptyDescription" />
-      <p v-if="isLoading && !items.length" class="jr-serialized-list__loading">
-        Loading serialized items…
-      </p>
+      <p v-if="isLoading && !items.length" class="jr-serialized-list__loading">{{ $t('common.loadingLabel', { label: $t('nav.serializedItems') }) }}</p>
       <p
         v-else-if="isLoading && items.length"
         class="jr-serialized-list__loading"
-        aria-live="polite">
-        Updating…
+        aria-live="polite">{{ $t('common.updating') }}
       </p>
       <ul
         v-if="items.length"
@@ -146,7 +143,7 @@
         :emptyDescription="emptyDescription"
         @page="onTablePage"
         @sort="onTableSort">
-        <Column field="asset_tag" header="Serial Number" sortable>
+        <Column field="asset_tag" :header="$t('inventory.colSerialNumber')" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
@@ -158,12 +155,12 @@
             <span v-else>{{ primaryLabel(data) }}</span>
           </template>
         </Column>
-        <Column field="product_name" header="Product" sortable>
+        <Column field="product_name" :header="$t('inventory.colProduct')" sortable>
           <template #body="{ data }">
             {{ data.product_name || "—" }}
           </template>
         </Column>
-        <Column field="status" header="Status" sortable>
+        <Column field="status" :header="$t('common.status')" sortable>
           <template #body="{ data }">
             <JRBadge
               v-if="data.status"
@@ -172,7 +169,7 @@
             <span v-else>—</span>
           </template>
         </Column>
-        <Column field="condition" header="Condition" sortable>
+        <Column field="condition" :header="$t('inventory.colCondition')" sortable>
           <template #body="{ data }">
             <JRBadge
               v-if="conditionLabel(data.condition) !== '—'"
@@ -181,7 +178,7 @@
             <span v-else>—</span>
           </template>
         </Column>
-        <Column field="current_warehouse_name" header="Warehouse" :sortable="false">
+        <Column field="current_warehouse_name" :header="$t('inventory.colWarehouse')" :sortable="false">
           <template #body="{ data }">
             {{ data.current_warehouse_name || "—" }}
           </template>
@@ -189,7 +186,7 @@
         <Column
           v-if="!isTablet"
           field="warehouse_crew_name"
-          header="Crew"
+          :header="$t('inventory.colCrew')"
           :sortable="false">
           <template #body="{ data }">
             {{ data.warehouse_crew_name || "—" }}
@@ -198,7 +195,7 @@
         <Column
           v-if="!isTablet"
           field="purchase_date"
-          header="Purchase Date"
+          :header="$t('inventory.colPurchaseDate')"
           sortable>
           <template #body="{ data }">
             {{ formatDate(data.purchase_date) }}
@@ -207,20 +204,20 @@
         <Column
           v-if="!isTablet"
           field="document_id"
-          header="Document"
+          :header="$t('inventory.colDocument')"
           :sortable="false">
           <template #body="{ data }">
             {{ data.document_id || "—" }}
           </template>
         </Column>
-        <Column v-if="!isTablet" field="created_at" header="Created" sortable>
+        <Column v-if="!isTablet" field="created_at" :header="$t('inventory.colCreated')" sortable>
           <template #body="{ data }">
             {{ formatDateTime(data.created_at) }}
           </template>
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="
             isTablet
@@ -342,16 +339,29 @@ export default {
     const tableMinWidth = computed(() =>
       isTablet.value ? "min-width: 40rem" : "min-width: 56rem"
     );
-    const emptyTitle = computed(() =>
-      loadError.value ? "Could not load serialized items" : "No serialized items"
+    const hasSearch = computed(() =>
+      Boolean(filter.value && filter.value.trim())
     );
-    const emptyDescription = computed(() =>
-      loadError.value
-        ? "Try Refresh."
-        : "No serialized items match the current search."
-    );
+    const emptyTitle = computed(() => {
+      if (loadError.value) return proxy?.$t?.("inventory.serializedItemsEmptyLoadError");
+      if (hasSearch.value) return proxy?.$t?.("inventory.serializedItemsEmptySearch");
+      return proxy?.$t?.("inventory.serializedItemsEmptyNone");
+    });
+    const emptyDescription = computed(() => {
+      if (loadError.value) return proxy?.$t?.("common.tryRefresh");
+      const query = (filter.value || "").trim();
+      if (query) return proxy?.$t?.("inventory.serializedItemsEmptySearchDesc", { query });
+      return proxy?.$t?.("inventory.serializedItemsEmptyNoneDesc");
+    });
 
-    const canView = computed(() =>
+    const clearSearch = () => {
+      filter.value = "";
+      if (typeof document !== "undefined") {
+        document.getElementById("serialized-filter-input")?.focus();
+      }
+    };
+
+const canView = computed(() =>
       !!proxy?.hasPermission?.("appinventory.view_serializeditem")
     );
 
@@ -525,7 +535,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.view_serializeditem")) {
         actions.push({
           key: "view",
-          label: "View",
+          label: proxy?.$t?.("common.view"),
           severity: "success",
           icon: EyeIcon,
           command: () => viewItem(item.id),
@@ -534,7 +544,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.change_serializeditem")) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: proxy?.$t?.("common.edit"),
           severity: "primary",
           icon: PencilIcon,
           command: () => editItem(item.id),
@@ -543,7 +553,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.delete_serializeditem")) {
         actions.push({
           key: "delete",
-          label: "Delete",
+          label: proxy?.$t?.("common.delete"),
           severity: "danger",
           icon: TrashIcon,
           command: () => deleteItem(item.id),
@@ -638,6 +648,8 @@ export default {
       sortOrder,
       tableFirst,
       pageOptions,
+      hasSearch,
+      clearSearch,
       emptyTitle,
       emptyDescription,
       isMobile,

@@ -2,6 +2,7 @@
  * Formulario de contacto de la landing → POST /api/landing/contact/
  * - getjobrhythm.com: mismo origen (nginx → api.jobrhythm.net / schema public)
  * - Local: api.chalanpro.net:8000 o ?api_base=
+ * Incluye Cloudflare Turnstile (site key desde /api/onboarding/config/).
  */
 (function () {
   /** Cuenta dígitos antes de la posición del cursor (para restaurar selección). */
@@ -120,24 +121,59 @@
     );
   }
 
-  function resolveContactUrl() {
+  function resolveApiBase() {
     var params = new URLSearchParams(window.location.search);
     var override = params.get("api_base");
     if (override) {
-      return override.replace(/\/$/, "") + "/api/landing/contact/";
+      return override.replace(/\/$/, "");
     }
     var host = window.location.hostname;
     if (isMarketingHost(host)) {
-      return "/api/landing/contact/";
+      return "";
     }
     if (isLocalDevHost(host)) {
-      return "http://api.chalanpro.net:8000/api/landing/contact/";
+      return "http://api.chalanpro.net:8000";
     }
     var meta = document.querySelector('meta[name="jobrhythm-api-base"]');
     if (meta && meta.content) {
-      return meta.content.replace(/\/$/, "") + "/api/landing/contact/";
+      return meta.content.replace(/\/$/, "");
     }
-    return "https://api.jobrhythm.net/api/landing/contact/";
+    return "https://api.jobrhythm.net";
+  }
+
+  function resolveContactUrl() {
+    return resolveApiBase() + "/api/landing/contact/";
+  }
+
+  function resolveConfigUrl() {
+    return resolveApiBase() + "/api/onboarding/config/";
+  }
+
+  function loadTurnstileScript() {
+    return new Promise(function (resolve, reject) {
+      if (window.turnstile) {
+        resolve();
+        return;
+      }
+      var existing = document.querySelector('script[data-turnstile="1"]');
+      if (existing) {
+        existing.addEventListener("load", function () {
+          resolve();
+        });
+        existing.addEventListener("error", reject);
+        return;
+      }
+      var script = document.createElement("script");
+      script.src =
+        "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async = true;
+      script.dataset.turnstile = "1";
+      script.onload = function () {
+        resolve();
+      };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
   }
 
   function initContactForm() {
@@ -147,6 +183,7 @@
 
     var okEl = document.getElementById("contact-form-success");
     var errEl = document.getElementById("contact-form-error");
+    var turnstileHost = document.getElementById("contact-turnstile");
     var endpoint = resolveContactUrl();
     var locale =
       (form.getAttribute("data-locale") || document.documentElement.lang || "en")
@@ -162,16 +199,74 @@
           "No se pudo enviar el mensaje. Inténtalo de nuevo más tarde.",
         networkError:
           "Error de red. Comprueba tu conexión e inténtalo de nuevo.",
+        captchaRequired: "Completa la verificación CAPTCHA.",
+        captchaUnavailable:
+          "La verificación CAPTCHA no está disponible. Inténtalo más tarde.",
       },
       en: {
         success: "Message sent. We will get back to you soon.",
         genericError: "Could not send your message. Please try again later.",
         networkError: "Network error. Check your connection and try again.",
+        captchaRequired: "Please complete the CAPTCHA verification.",
+        captchaUnavailable:
+          "CAPTCHA verification is unavailable. Please try again later.",
       },
     };
     var copy = messages[locale] || messages.en;
 
+    var turnstileToken = "";
+    var turnstileWidgetId = null;
+    var turnstileSiteKey = "";
+
     initPhoneFormatting(form);
+
+    function resetTurnstile() {
+      turnstileToken = "";
+      if (
+        turnstileWidgetId != null &&
+        window.turnstile &&
+        typeof window.turnstile.reset === "function"
+      ) {
+        try {
+          window.turnstile.reset(turnstileWidgetId);
+        } catch (_e) {
+          /* ignore */
+        }
+      }
+    }
+
+    function mountTurnstile(siteKey) {
+      if (!turnstileHost || !siteKey || !window.turnstile) return;
+      turnstileSiteKey = siteKey;
+      turnstileWidgetId = window.turnstile.render(turnstileHost, {
+        sitekey: siteKey,
+        theme: "dark",
+        callback: function (token) {
+          turnstileToken = token || "";
+        },
+        "expired-callback": function () {
+          turnstileToken = "";
+        },
+        "error-callback": function () {
+          turnstileToken = "";
+        },
+      });
+    }
+
+    fetch(resolveConfigUrl(), { method: "GET", credentials: "omit" })
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (cfg) {
+        var key = (cfg && cfg.turnstile_site_key) || "";
+        if (!key) return;
+        return loadTurnstileScript().then(function () {
+          mountTurnstile(key);
+        });
+      })
+      .catch(function () {
+        /* El backend rechazará sin token en producción. */
+      });
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -182,6 +277,14 @@
       if (errEl) {
         errEl.classList.add("hidden");
         errEl.textContent = "";
+      }
+
+      if (turnstileSiteKey && !turnstileToken) {
+        if (errEl) {
+          errEl.textContent = copy.captchaRequired;
+          errEl.classList.remove("hidden");
+        }
+        return;
       }
 
       var submitBtn = form.querySelector('button[type="submit"]');
@@ -196,6 +299,7 @@
         team_size: fd.get("team_size"),
         message: fd.get("message"),
         locale: locale,
+        turnstile_token: turnstileToken || "",
       };
 
       fetch(endpoint, {
@@ -220,10 +324,12 @@
               okEl.classList.remove("hidden");
             }
             form.reset();
+            resetTurnstile();
           } else if (errEl) {
             errEl.textContent =
               (res.data && res.data.error) || copy.genericError;
             errEl.classList.remove("hidden");
+            resetTurnstile();
           }
         })
         .catch(function () {
@@ -231,6 +337,7 @@
             errEl.textContent = copy.networkError;
             errEl.classList.remove("hidden");
           }
+          resetTurnstile();
         })
         .finally(function () {
           if (submitBtn) submitBtn.disabled = false;

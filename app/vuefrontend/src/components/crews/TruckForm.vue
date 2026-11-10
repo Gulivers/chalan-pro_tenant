@@ -3,14 +3,14 @@
     <JRPageHeader :title="pageTitle">
       <template v-if="canEditFromView" #actions>
         <JRButton variant="primary" size="sm" @click="goToEdit">
-          Edit truck
+          {{ $t('crews.form.editTruck') }}
         </JRButton>
       </template>
     </JRPageHeader>
 
     <div class="jr-truck-form">
       <p v-if="loading" class="jr-truck-form__status" role="status">
-        Loading truck…
+        {{ $t('crews.form.loadingTruck') }}
       </p>
 
       <form
@@ -18,7 +18,7 @@
         class="jr-truck-form__form"
         @submit.prevent="handleSubmit"
         novalidate>
-        <JRSection title="Details">
+        <JRSection :title="$t('common.sectionDetails')">
           <div class="jr-form-grid">
             <JRField
               v-slot="{ describedby, invalid }"
@@ -204,14 +204,14 @@
         <div class="jr-truck-form__actions jr-truck-form__actions--sticky">
           <template v-if="!isViewMode">
             <JRButton type="submit" variant="primary" :disabled="isDisabled">
-              {{ submitting ? "Saving..." : "Save" }}
+              {{ submitting ? $t('common.saving') : $t('common.save') }}
             </JRButton>
             <JRButton
               type="button"
               variant="secondary"
               :disabled="submitting"
               @click="goList">
-              Cancel
+              {{ $t('common.cancel') }}
             </JRButton>
           </template>
           <JRButton
@@ -220,7 +220,7 @@
             variant="secondary"
             :disabled="submitting"
             @click="goList">
-            Back
+            {{ $t('common.back') }}
           </JRButton>
         </div>
       </form>
@@ -233,6 +233,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { onMounted, ref, computed, getCurrentInstance } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import {
   JRPage,
   JRPageHeader,
@@ -248,6 +249,7 @@ import {
 const { proxy } = getCurrentInstance();
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n({ useScope: "global" });
 const id = route.params.id;
 const isViewMode = computed(() => route.name === "crew-truck-view");
 const isEditMode = computed(() => !!id && !isViewMode.value);
@@ -278,9 +280,9 @@ const form = ref({
 
 const isDisabled = computed(() => isViewMode.value || submitting.value);
 const pageTitle = computed(() => {
-  if (isViewMode.value) return "View Truck";
-  if (isEditMode.value) return "Edit Truck";
-  return "Add Truck";
+  if (isViewMode.value) return t("crews.form.viewTruckTitle");
+  if (isEditMode.value) return t("crews.form.editTruckTitle");
+  return t("crews.form.addTruckTitle");
 });
 const canEditFromView = computed(
   () =>
@@ -361,7 +363,11 @@ async function loadData() {
       (data.current_mileage == null ? "Not recorded" : data.current_mileage);
   } catch (err) {
     console.error("Load error:", err);
-    await Swal.fire("Oops!", "Error loading the truck.", "error");
+    await Swal.fire(
+      t("common.error"),
+      t("crews.form.swalLoadTruckError"),
+      "error"
+    );
   } finally {
     loading.value = false;
   }
@@ -429,11 +435,11 @@ async function handleSubmit() {
     };
     if (id) {
       await axios.patch(`/api/trucks/${id}/`, payload);
-      proxy?.notifyToastSuccess?.("Truck updated.");
+      proxy?.notifyToastSuccess?.(t("crews.form.swalTruckUpdated"));
       router.push({ name: "crew-trucks" });
     } else {
       const { data } = await axios.post("/api/trucks/", payload);
-      proxy?.notifyToastSuccess?.("Truck created.");
+      proxy?.notifyToastSuccess?.(t("crews.form.swalTruckCreated"));
 
       const result = await Swal.fire({
         title: "Create mobile warehouse for this truck?",

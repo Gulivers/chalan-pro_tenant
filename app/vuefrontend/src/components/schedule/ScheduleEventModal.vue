@@ -10,12 +10,18 @@
         <div class="jr-schedule-event__header-main">
           <div class="jr-schedule-event__header-text">
             <span class="jr-schedule-event__label">
-              {{ is_draft ? "Draft Work Order" : "Work Account" }}
+              {{
+                is_draft
+                  ? $t("schedule.event.draftWorkOrder")
+                  : $t("schedule.event.workAccount")
+              }}
             </span>
             <h2 class="jr-schedule-event__title">{{ displayHeaderTitle }}</h2>
           </div>
           <JRBadge
-            :value="is_draft ? 'Draft' : 'Posted'"
+            :value="
+              is_draft ? $t('status.draft') : $t('schedule.event.posted')
+            "
             :severity="is_draft ? 'secondary' : 'success'" />
         </div>
 
@@ -38,22 +44,25 @@
           @submit.prevent="submitEvent(false)">
           <JRField
             v-if="isEditing && hasPermission('appschedule.add_absencereason')"
-            label="Absence"
+            :label="$t('schedule.event.absence')"
             inputId="jr-schedule-absence-switch"
-            hint="Marks this slot as an absence instead of a work account.">
+            :hint="$t('schedule.event.absenceHint')">
             <JRCheckbox
               inputId="jr-schedule-absence-switch"
               v-model="isAbsence"
-              label="Mark as absence"
+              :label="$t('schedule.event.markAbsence')"
               :disabled="!isEditing" />
           </JRField>
 
-          <JRField label="Date" inputId="jr-schedule-event-date" required>
+          <JRField
+            :label="$t('schedule.event.date')"
+            inputId="jr-schedule-event-date"
+            required>
             <JRDatePicker
               inputId="jr-schedule-event-date"
               :model-value="isoToDate(localFormData.date)"
               :disabled="!isEditing"
-              placeholder="Select a date"
+              :placeholder="$t('schedule.event.selectDate')"
               :show-button-bar="true"
               @update:model-value="onDateChange" />
           </JRField>
@@ -61,7 +70,7 @@
           <JRField
             v-if="isAbsence"
             v-slot="{ labelledby }"
-            label="Absence reason"
+            :label="$t('schedule.event.absenceReason')"
             inputId="jr-schedule-absence-reason"
             :use-for="false"
             required>
@@ -74,7 +83,7 @@
               option-value="id"
               :disabled="!isEditing"
               :ariaLabelledby="labelledby"
-              placeholder="Select absence reason"
+              :placeholder="$t('schedule.event.selectAbsenceReason')"
               filter
               show-clear />
           </JRField>
@@ -82,7 +91,7 @@
           <div v-if="!isAbsence" class="jr-schedule-event__wa">
             <JRField
               v-slot="{ labelledby }"
-              label="Work Account"
+              :label="$t('schedule.event.workAccount')"
               inputId="jr-schedule-event-wa"
               :use-for="false"
               required>
@@ -96,33 +105,38 @@
             </JRField>
           </div>
 
-          <JRField label="Title" inputId="jr-schedule-event-title" required>
+          <JRField
+            :label="$t('schedule.event.title')"
+            inputId="jr-schedule-event-title"
+            required>
             <JRInput
               inputId="jr-schedule-event-title"
               v-model="localFormData.title"
               class="jr-schedule-event__title-input"
               :disabled="!isEditing"
-              placeholder="Enter event title"
+              :placeholder="$t('schedule.event.titlePlaceholder')"
               @update:model-value="titleManuallyEdited = true" />
           </JRField>
 
-          <JRField label="Description" inputId="jr-schedule-event-description">
+          <JRField
+            :label="$t('schedule.event.description')"
+            inputId="jr-schedule-event-description">
             <JRTextarea
               inputId="jr-schedule-event-description"
               v-model="localFormData.description"
               :rows="3"
               :disabled="!isEditing"
-              placeholder="Optional notes for this work order" />
+              :placeholder="$t('schedule.event.descriptionPlaceholder')" />
           </JRField>
 
           <JRField
             v-if="isEditing && hasPermission('appschedule.add_event')"
-            label="Extended service"
+            :label="$t('schedule.event.extendedService')"
             inputId="jr-schedule-extended-service">
             <JRCheckbox
               inputId="jr-schedule-extended-service"
               v-model="localFormData.extended_service"
-              label="Extended service"
+              :label="$t('schedule.event.extendedService')"
               :disabled="!isEditing" />
           </JRField>
 
@@ -139,7 +153,11 @@
                 variant="primary"
                 :disabled="loading || offLine"
                 @click="submitEvent(true)">
-                {{ loading || offLine ? "Saving…" : "Save and Post" }}
+                {{
+                  loading || offLine
+                    ? $t("common.saving")
+                    : $t("schedule.event.saveAndPost")
+                }}
               </JRButton>
               <JRButton
                 v-if="
@@ -149,7 +167,9 @@
                 type="submit"
                 variant="secondary"
                 :disabled="loading || offLine">
-                {{ loading || offLine ? "Saving…" : "Save" }}
+                {{
+                  loading || offLine ? $t("common.saving") : $t("common.save")
+                }}
               </JRButton>
               <JRButton
                 v-if="
@@ -161,7 +181,7 @@
                 variant="danger"
                 :disabled="loading || offLine"
                 @click="deleteEvent">
-                Delete
+                {{ $t("common.delete") }}
               </JRButton>
               <JRButton
                 v-if="
@@ -172,7 +192,7 @@
                 variant="danger"
                 :disabled="loading || offLine"
                 @click="deleteEvent">
-                Discard draft
+                {{ $t("schedule.event.discardDraft") }}
               </JRButton>
             </template>
             <JRButton
@@ -180,7 +200,7 @@
               type="button"
               variant="secondary"
               @click="toggleEdit">
-              Edit
+              {{ $t("common.edit") }}
             </JRButton>
           </div>
 
@@ -188,7 +208,7 @@
             v-if="isEditing && offLine"
             class="jr-schedule-event__offline"
             role="alert">
-            No internet connection. Reconnect to save changes.
+            {{ $t("schedule.event.offline") }}
           </p>
         </form>
 
@@ -203,8 +223,8 @@
           <JREmptyState
             v-else
             class="jr-schedule-event__discussion-empty"
-            title="Discussion unavailable"
-            description="Save and post this work order to open chat, notes, folder, contracts, and transactions for this event." />
+            :title="$t('schedule.event.discussionUnavailableTitle')"
+            :description="$t('schedule.event.discussionUnavailableDesc')" />
         </div>
       </div>
     </div>
@@ -286,9 +306,13 @@ export default {
     },
     dialogHeader() {
       if (this.workOrderDisplayId) {
-        return `Work Order # ${this.workOrderDisplayId}`;
+        return this.$t("schedule.event.workOrderNumber", {
+          id: this.workOrderDisplayId,
+        });
       }
-      return this.is_draft ? "New draft work order" : "Work Order";
+      return this.is_draft
+        ? this.$t("schedule.event.newDraft")
+        : this.$t("schedule.event.workOrder");
     },
     displayHeaderTitle() {
       const title = (this.localFormData?.title || this.event_data?.title || "")
@@ -307,31 +331,33 @@ export default {
 
       const items = [
         {
-          label: "Area Supervisor",
+          label: this.$t("schedule.event.areaSupervisor"),
           value: wa.supervisor || ev.supervisor || null,
         },
         {
-          label: "Builder",
+          label: this.$t("schedule.event.builder"),
           value: wa.builder_name || ev.builder_name || null,
         },
         {
-          label: "Community",
+          label: this.$t("schedule.event.community"),
           value: wa.job_name || ev.job_name || null,
         },
         {
-          label: "Lot",
-          value: lotValue ? `Lot ${lotValue}` : null,
+          label: this.$t("schedule.event.lot"),
+          value: lotValue
+            ? this.$t("schedule.event.lotValue", { lot: lotValue })
+            : null,
         },
         {
-          label: "House Model",
+          label: this.$t("schedule.event.houseModel"),
           value: wa.house_model_name || ev.house_model_name || null,
         },
         {
-          label: "Address",
+          label: this.$t("schedule.event.address"),
           value: isAddrRedundant ? null : addr || null,
         },
         {
-          label: "Default Price Type",
+          label: this.$t("schedule.event.defaultPriceType"),
           value:
             wa.default_price_type_name || ev.default_price_type_name || null,
         },
@@ -435,7 +461,9 @@ export default {
         const reason = this.absenceReasons.find(
           (r) => r.id === this.localFormData.absence_reason
         );
-        this.localFormData.title = reason ? reason.name : "Absence";
+        this.localFormData.title = reason
+          ? reason.name
+          : this.$t("schedule.event.absenceTitleFallback");
         return;
       }
 
@@ -588,8 +616,8 @@ export default {
       if (!this.isAbsence) {
         if (!this.localFormData.work_account) {
           Swal.fire(
-            "Missing Fields",
-            "Please select a Work Account before saving.",
+            this.$t("schedule.event.missingFieldsTitle"),
+            this.$t("schedule.event.missingWorkAccount"),
             "warning"
           );
           this.loading = false;
@@ -619,15 +647,15 @@ export default {
                 );
               } else {
                 Swal.fire(
-                  "Duplicate Event Detected",
-                  "An event with the same Lot and Community or Address already exists in this Crew Category.",
+                  this.$t("schedule.event.duplicateTitle"),
+                  this.$t("schedule.event.duplicateText"),
                   "error"
                 );
                 return;
               }
             } else {
               Swal.fire(
-                "Error Detected",
+                this.$t("schedule.event.errorTitle"),
                 err.non_field_errors.join(", "),
                 "error"
               );
@@ -639,13 +667,17 @@ export default {
           for (const item in err) {
             msg.push(`${item}: ${err[item].join(", ")}`);
           }
-          Swal.fire("Validation Error", msg.join(", "), "error");
+          Swal.fire(
+            this.$t("schedule.event.validationTitle"),
+            msg.join(", "),
+            "error"
+          );
           return;
         }
 
         Swal.fire(
-          "Error Detected",
-          "An error occurred while saving the data.",
+          this.$t("schedule.event.errorTitle"),
+          this.$t("schedule.event.saveError"),
           "error"
         );
       }
@@ -660,7 +692,7 @@ export default {
         await axios.delete(url);
         this.$emit("delete-event", this.localFormData.id);
         this.hideModal();
-        this.notifyToastSuccess("Event deleted successfully.");
+        this.notifyToastSuccess(this.$t("schedule.event.deletedToast"));
       } catch (e) {
         console.error(e);
       }
@@ -672,12 +704,8 @@ export default {
         await this.deleteApi();
         return;
       }
-      const title = `Are you sure you want to delete this event${
-        this.is_draft ? " draft" : ""
-      }?`;
-      const text = this.is_draft
-        ? "This action cannot be undone."
-        : "This event will no longer be public";
+      const title = this.$t("schedule.event.deleteEventTitle");
+      const text = this.$t("schedule.event.deleteEventText");
       this.confirmDelete(title, text, this.deleteApi);
     },
 
@@ -689,7 +717,7 @@ export default {
         this.absenceReasons = response.data.results ?? response.data;
       } catch (error) {
         console.error("Error loading absence reasons:", error);
-        this.notifyError("Failed to load absence reasons");
+        this.notifyError(this.$t("schedule.event.loadAbsenceError"));
       }
     },
     updateOnlineStatus() {

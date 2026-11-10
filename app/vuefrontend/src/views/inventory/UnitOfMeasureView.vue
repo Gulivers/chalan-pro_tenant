@@ -1,13 +1,13 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Unit of Measure">
+    <JRPageHeader :title="$t('nav.unitMeasures')">
       <template #actions>
         <JRButton
           v-if="hasPermission('appinventory.add_unitofmeasure')"
           type="button"
           :fluid="isMobile"
           @click="goToCreateForm">
-          + New Unit
+          {{ $t('inventory.unitMeasuresNew') }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -16,8 +16,7 @@
       <template #start>
         <div class="jr-master-list__search">
           <label class="jr-sr-only" for="uom-filter-input">
-            Search units
-          </label>
+            {{ $t('inventory.unitMeasuresSearchLabel') }}</label>
           <span class="jr-master-list__search-icon" aria-hidden="true">
             <SearchIcon />
           </span>
@@ -25,22 +24,22 @@
             inputId="uom-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search units..." />
+            :placeholder="$t('inventory.unitMeasuresSearchPlaceholder')" />
         </div>
       </template>
 
       <template #stats>
         <div class="jr-master-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
-          <JRBadge :value="`${stats.active} Active`" severity="success" />
+          <JRBadge :value="$t('common.badgeTotal', { count: stats.total })" severity="secondary" />
+          <JRBadge :value="$t('common.badgeActive', { count: stats.active })" severity="success" />
           <JRBadge
-            :value="`${stats.inactive} Inactive`"
+            :value="$t('common.badgeInactive', { count: stats.inactive })"
             severity="secondary" />
         </div>
       </template>
 
       <template #actions>
-        <label class="jr-sr-only" for="uom-per-page">Entries per page</label>
+        <label class="jr-sr-only" for="uom-per-page">{{ $t('common.entriesPerPage') }}</label>
         <JRSelect
           class="jr-master-list__entries"
           inputId="uom-per-page"
@@ -55,7 +54,7 @@
           class="jr-master-list__refresh"
           @click="refreshTable">
           <RefreshIcon />
-          Refresh
+          {{ $t('common.refresh') }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -65,14 +64,11 @@
         v-if="!items.length && !isLoading"
         :title="emptyTitle"
         :description="emptyDescription" />
-      <p v-if="isLoading && !items.length" class="jr-master-list__loading">
-        Loading units…
-      </p>
+      <p v-if="isLoading && !items.length" class="jr-master-list__loading">{{ $t('common.loadingLabel', { label: $t('nav.unitMeasures') }) }}</p>
       <p
         v-else-if="isLoading && items.length"
         class="jr-master-list__loading"
-        aria-live="polite">
-        Updating…
+        aria-live="polite">{{ $t('common.updating') }}
       </p>
       <ul
         v-if="items.length"
@@ -96,7 +92,7 @@
           </div>
           <div class="jr-master-row__aside">
             <JRBadge
-              :value="item.is_active ? 'Active' : 'Inactive'"
+              :value="item.is_active ? $t('common.active') : $t('common.inactive')"
               :severity="item.is_active ? 'success' : 'secondary'" />
             <JRRowActions
               v-if="hasRowActions"
@@ -138,7 +134,7 @@
         :emptyDescription="emptyDescription"
         @page="onTablePage"
         @sort="onTableSort">
-        <Column field="name" header="Name" sortable>
+        <Column field="name" :header="$t('common.name')" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
@@ -150,13 +146,13 @@
             <span v-else>{{ data.name }}</span>
           </template>
         </Column>
-        <Column field="code" header="Code" sortable />
-        <Column field="category_name" header="Category" sortable>
+        <Column field="code" :header="$t('inventory.colCode')" sortable />
+        <Column field="category_name" :header="$t('inventory.colCategory')" sortable>
           <template #body="{ data }">
             {{ data.category_name || "—" }}
           </template>
         </Column>
-        <Column v-if="!isTablet" field="reference_unit" header="Ref. unit" sortable>
+        <Column v-if="!isTablet" field="reference_unit" :header="$t('inventory.colRefUnit')" sortable>
           <template #body="{ data }">
             {{ data.reference_unit ? "Yes" : "No" }}
           </template>
@@ -164,25 +160,25 @@
         <Column
           v-if="!isTablet"
           field="conversion_sign"
-          header="Sign"
+          :header="$t('inventory.colSign')"
           sortable />
         <Column
           v-if="!isTablet"
           field="conversion_factor"
-          header="Factor"
+          :header="$t('inventory.colFactor')"
           sortable
           headerClass="jr-col-num"
           bodyClass="jr-col-num" />
-        <Column field="is_active" header="Status" sortable>
+        <Column field="is_active" :header="$t('common.status')" sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.is_active ? 'Active' : 'Inactive'"
+              :value="data.is_active ? $t('common.active') : $t('common.inactive')"
               :severity="data.is_active ? 'success' : 'secondary'" />
           </template>
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="isTablet ? 'jr-col-actions jr-col-actions--compact' : 'jr-col-actions'"
           :bodyClass="isTablet ? 'jr-col-actions jr-col-actions--compact' : 'jr-col-actions'">
@@ -293,14 +289,29 @@ export default {
     ];
 
     const tableFirst = computed(() => (currentPage.value - 1) * perPage.value);
-    const emptyTitle = computed(() =>
-      loadError.value ? "Could not load units" : "No units"
+    const hasSearch = computed(() =>
+      Boolean(filter.value && filter.value.trim())
     );
-    const emptyDescription = computed(() =>
-      loadError.value ? "Try Refresh." : "No units match the current search."
-    );
+    const emptyTitle = computed(() => {
+      if (loadError.value) return proxy?.$t?.("inventory.unitMeasuresEmptyLoadError");
+      if (hasSearch.value) return proxy?.$t?.("inventory.unitMeasuresEmptySearch");
+      return proxy?.$t?.("inventory.unitMeasuresEmptyNone");
+    });
+    const emptyDescription = computed(() => {
+      if (loadError.value) return proxy?.$t?.("common.tryRefresh");
+      const query = (filter.value || "").trim();
+      if (query) return proxy?.$t?.("inventory.unitMeasuresEmptySearchDesc", { query });
+      return proxy?.$t?.("inventory.unitMeasuresEmptyNoneDesc");
+    });
 
-    const canView = computed(() =>
+    const clearSearch = () => {
+      filter.value = "";
+      if (typeof document !== "undefined") {
+        document.getElementById("uom-filter-input")?.focus();
+      }
+    };
+
+const canView = computed(() =>
       !!proxy?.hasPermission?.("appinventory.view_unitofmeasure")
     );
     const hasRowActions = computed(
@@ -396,7 +407,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.view_unitofmeasure")) {
         actions.push({
           key: "view",
-          label: "View",
+          label: proxy?.$t?.("common.view"),
           severity: "success",
           icon: EyeIcon,
           command: () => viewItem(item.id),
@@ -405,7 +416,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.change_unitofmeasure")) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: proxy?.$t?.("common.edit"),
           severity: "primary",
           icon: PencilIcon,
           command: () => editItem(item.id),
@@ -414,7 +425,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.delete_unitofmeasure")) {
         actions.push({
           key: "delete",
-          label: "Delete",
+          label: proxy?.$t?.("common.delete"),
           severity: "danger",
           icon: TrashIcon,
           command: () => deleteItem(item.id),
@@ -510,6 +521,8 @@ export default {
       sortOrder,
       tableFirst,
       pageOptions,
+      hasSearch,
+      clearSearch,
       emptyTitle,
       emptyDescription,
       isMobile,

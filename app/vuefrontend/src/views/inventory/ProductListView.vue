@@ -1,12 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Products">
+    <JRPageHeader :title="$t('products.title')">
       <template #actions>
         <JRButton
           v-if="hasPermission('appinventory.add_product')"
           type="button"
           @click="goToCreateForm">
-          + New Product
+          {{ $t("products.new") }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -15,7 +15,7 @@
       <template #start>
         <div class="jr-product-list__search">
           <label class="jr-sr-only" for="filter-input">
-            Search products
+            {{ $t("products.searchLabel") }}
           </label>
           <span class="jr-product-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -24,7 +24,7 @@
             inputId="filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search products..."
+            :placeholder="$t('products.searchPlaceholder')"
             autocomplete="off"
             :spellcheck="false"
             autocapitalize="none"
@@ -35,12 +35,12 @@
 
       <template v-if="!isMobile" #stats>
         <div class="jr-product-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
+          <JRBadge :value="$t('common.badgeTotal', { count: stats.total })" severity="secondary" />
           <JRBadge
-            :value="`${stats.active} Active`"
+            :value="$t('common.badgeActive', { count: stats.active })"
             :severity="stats.active > 0 ? 'success' : 'secondary'" />
           <JRBadge
-            :value="`${stats.inactive} Inactive`"
+            :value="$t('common.badgeInactive', { count: stats.inactive })"
             severity="secondary" />
         </div>
       </template>
@@ -50,7 +50,7 @@
           <JRSelect
             class="jr-product-list__entries"
             inputId="per-page-select"
-            ariaLabel="Entries per page"
+            :ariaLabel="$t('common.entriesPerPage')"
             v-model="perPage"
             :options="pageOptions"
             optionLabel="label"
@@ -64,9 +64,9 @@
             aria-controls="product-bulk-prices-panel"
             :aria-expanded="showBulkPricesPanel ? 'true' : 'false'"
             v-tt
-            data-title="Updates product prices and units from Excel. This can overwrite existing values."
+            :data-title="$t('products.bulkExcelHint')"
             @click="showBulkPricesPanel = true">
-            Bulk Excel
+            {{ $t("products.bulkExcel") }}
           </JRButton>
 
           <JRButton
@@ -76,7 +76,7 @@
             class="jr-product-list__refresh"
             @click="refreshTable">
             <RefreshIcon />
-            Refresh
+            {{ $t("common.refresh") }}
           </JRButton>
         </template>
         <template v-else>
@@ -84,7 +84,7 @@
             id="product-list-tools-trigger"
             type="button"
             class="jr-icon-btn"
-            aria-label="List tools"
+            :aria-label="$t('common.listTools')"
             aria-haspopup="menu"
             :aria-expanded="toolsMenuOpen ? 'true' : 'false'"
             aria-controls="product-list-tools-menu"
@@ -106,7 +106,7 @@
             class="jr-overlay jr-row-menu"
             :model="toolsMenuModel"
             :popup="true"
-            ariaLabel="List tools"
+            :ariaLabel="$t('common.listTools')"
             @show="toolsMenuOpen = true"
             @hide="toolsMenuOpen = false" />
         </template>
@@ -117,7 +117,7 @@
       v-if="canBulkUpdate"
       class="jr-product-list__bulk-drawer"
       :visible="showBulkPricesPanel"
-      header="Bulk Excel"
+      :header="$t('products.bulkExcel')"
       position="right"
       @update:visible="showBulkPricesPanel = $event">
       <ProductPricesBulkExcelPanel @updated="refreshTable" />
@@ -135,7 +135,7 @@
           variant="ghost"
           size="sm"
           @click="refreshTable">
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
         <JRButton
           v-else-if="hasSearch"
@@ -143,17 +143,17 @@
           variant="ghost"
           size="sm"
           @click="clearSearch">
-          Clear search
+          {{ $t("common.clearSearch") }}
         </JRButton>
       </JREmptyState>
       <p v-if="isLoading && !products.length" class="jr-product-list__loading">
-        Loading products…
+        {{ $t("common.loadingLabel", { label: $t("products.title") }) }}
       </p>
       <p
         v-else-if="isLoading && products.length"
         class="jr-product-list__loading"
         aria-live="polite">
-        Updating…
+        {{ $t("common.updating") }}
       </p>
       <ul
         v-if="products.length"
@@ -177,7 +177,7 @@
                 class="jr-product-cell__thumb"
                 :aria-label="`View images of ${item.name}`"
                 v-tt
-                data-title="View product images"
+                :data-title="$t('products.viewImages')"
                 @click="openImageGallery(item.id)">
                 <img
                   v-if="productImageSrc(item)"
@@ -206,7 +206,7 @@
             <span
               class="jr-product-row__stock"
               :class="{ 'jr-product-row__stock--low': isLowStock(item) }"
-              :title="isLowStock(item) ? 'Below reorder level' : undefined"
+              :title="isLowStock(item) ? $t('products.belowReorder') : undefined"
               :aria-label="onHandAriaLabel(item)">
               {{ formatQuantity(item.total_stock) }}
             </span>
@@ -265,7 +265,7 @@
               variant="ghost"
               size="sm"
               @click="refreshTable">
-              Refresh
+              {{ $t("common.refresh") }}
             </JRButton>
             <JRButton
               v-else-if="hasSearch"
@@ -273,11 +273,11 @@
               variant="ghost"
               size="sm"
               @click="clearSearch">
-              Clear search
+              {{ $t("common.clearSearch") }}
             </JRButton>
           </JREmptyState>
         </template>
-        <Column field="name" header="Name" sortable>
+        <Column field="name" :header="$t('products.colName')" sortable>
           <template #body="{ data }">
             <div class="jr-product-cell">
               <span class="jr-product-cell__text">
@@ -304,7 +304,7 @@
                 class="jr-product-cell__thumb"
                 :aria-label="`View images of ${data.name}`"
                 v-tt
-                data-title="View product images"
+                :data-title="$t('products.viewImages')"
                 @click="openImageGallery(data.id)">
                 <img
                   v-if="productImageSrc(data)"
@@ -321,12 +321,12 @@
             </div>
           </template>
         </Column>
-        <Column field="category_name" header="Category" sortable>
+        <Column field="category_name" :header="$t('products.colCategory')" sortable>
           <template #body="{ data }">
             {{ data.category_name || "—" }}
           </template>
         </Column>
-        <Column v-if="!isTablet" field="default_brand" header="Brand">
+        <Column v-if="!isTablet" field="default_brand" :header="$t('products.colBrand')">
           <template #body="{ data }">
             <span v-if="data.default_brand?.name || data.brand_name">
               {{ data.default_brand?.name || data.brand_name }}
@@ -337,7 +337,7 @@
         <Column
           v-if="!isTablet"
           field="reorder_level"
-          header="Reorder"
+          :header="$t('products.colReorder')"
           sortable
           headerClass="jr-col-num"
           bodyClass="jr-col-num">
@@ -345,17 +345,17 @@
             {{ formatQuantity(data.reorder_level) }}
           </template>
         </Column>
-        <Column field="unit_name" header="Unit" sortable />
+        <Column field="unit_name" :header="$t('products.colUnit')" sortable />
         <Column
           field="total_stock"
-          header="On hand"
+          :header="$t('products.colOnHand')"
           sortable
           headerClass="jr-col-num"
           bodyClass="jr-col-num">
           <template #body="{ data }">
             <span
               :class="{ 'jr-product-list__stock--low': isLowStock(data) }"
-              :title="isLowStock(data) ? 'Below reorder level' : undefined"
+              :title="isLowStock(data) ? $t('products.belowReorder') : undefined"
               :aria-label="onHandAriaLabel(data)">
               {{ formatQuantity(data.total_stock) }}
             </span>
@@ -363,7 +363,7 @@
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="isTablet ? 'jr-col-actions jr-col-actions--compact' : 'jr-col-actions'"
           :bodyClass="isTablet ? 'jr-col-actions jr-col-actions--compact' : 'jr-col-actions'">
@@ -540,15 +540,17 @@ export default {
     );
     const hasSearch = computed(() => Boolean(filter.value && filter.value.trim()));
     const emptyTitle = computed(() => {
-      if (loadError.value) return "Could not load products";
-      if (hasSearch.value) return "No matching products";
-      return "No products";
+      if (loadError.value) return proxy?.$t?.("products.emptyLoadError");
+      if (hasSearch.value) return proxy?.$t?.("products.emptySearch");
+      return proxy?.$t?.("products.emptyNone");
     });
     const emptyDescription = computed(() => {
-      if (loadError.value) return "Try Refresh.";
+      if (loadError.value) return proxy?.$t?.("common.tryRefresh");
       const query = filter.value.trim();
-      if (query) return `No products match “${query}”.`;
-      return "No products yet.";
+      if (query) {
+        return proxy?.$t?.("products.emptySearchDesc", { query });
+      }
+      return proxy?.$t?.("products.emptyNoneDesc");
     });
 
     const clearSearch = () => {
@@ -587,7 +589,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.view_product")) {
         actions.push({
           key: "view",
-          label: "View",
+          label: proxy?.$t?.("common.view"),
           severity: "success",
           icon: EyeIcon,
           command: () => viewItem(product.id),
@@ -596,7 +598,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.change_product")) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: proxy?.$t?.("common.edit"),
           severity: "primary",
           icon: PencilIcon,
           command: () => editItem(product.id),
@@ -605,7 +607,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.delete_product")) {
         actions.push({
           key: "delete",
-          label: "Delete",
+          label: proxy?.$t?.("common.delete"),
           severity: "danger",
           icon: TrashIcon,
           command: () => deleteItem(product),
@@ -710,11 +712,11 @@ export default {
 
     const toolsMenuModel = computed(() => {
       const items = [
-        { label: "Refresh", command: () => refreshTable() },
+        { label: proxy?.$t?.("common.refresh"), command: () => refreshTable() },
       ];
       if (canBulkUpdate.value) {
         items.unshift({
-          label: "Bulk Excel",
+          label: proxy?.$t?.("products.bulkExcel"),
           command: () => {
             showBulkPricesPanel.value = true;
           },
@@ -751,8 +753,8 @@ export default {
       const id = product?.id;
       const name = product?.name ? `“${product.name}”` : `#${id}`;
       proxy?.confirmDelete?.(
-        "Are you sure?",
-        `Delete ${name}? This action cannot be undone.`,
+        proxy?.$t?.("common.confirmDeleteTitle"),
+        proxy?.$t?.("products.deleteConfirm", { name }),
         async () => {
           try {
             await axios.delete(`/api/products/${id}/`);

@@ -1,5 +1,7 @@
 # App: transactions (documentos, detalles, clientes, proveedores)
 
+from decimal import Decimal
+
 from django.db import models
 from django.db.models import ProtectedError, UniqueConstraint, Q
 from django.db.models.functions import Lower
@@ -517,13 +519,14 @@ class DocumentLine(models.Model):
             raise ValidationError(errors)
         
     def save(self, *args, **kwargs):
-        discount = self.discount_percentage / 100
-        adjusted_price = self.unit_price
+        discount = (self.discount_percentage or Decimal('0')) / Decimal('100')
+        adjusted_price = self.unit_price or Decimal('0')
+        qty = self.quantity or Decimal('0')
 
         # El precio se mantiene tal cual viene del formulario (por unidad seleccionada)
         # No se aplica conversión aquí — solo se usa la unidad seleccionada
 
-        self.final_price = adjusted_price * self.quantity * (1 - discount)
+        self.final_price = adjusted_price * qty * (Decimal('1') - discount)
 
         # Si el usuario no seleccionó el tipo de precio, se usa el default del cliente o proveedor.
         if not self.price_type and self.document and self.document.builder and self.document.builder.default_price_type:

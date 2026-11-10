@@ -1,28 +1,28 @@
 <template>
   <JRPage class="jr-user-admin jr-user-admin-hub">
     <JRPageHeader
-      title="User permissions"
+      :title="$t('permissions.title')"
       :description="isMobile ? '' : pageDescription">
       <template #actions>
         <JRButton
           v-if="activeTab === 'users'"
           type="button"
           @click="goCreateUser">
-          + New user
+          {{ $t("permissions.newUser") }}
         </JRButton>
         <JRButton
           v-else
           type="button"
           @click="goCreateGroup">
-          + New role
+          {{ $t("permissions.newRole") }}
         </JRButton>
       </template>
     </JRPageHeader>
 
     <Tabs v-model:value="activeTab" class="jr-user-admin-hub__tabs">
       <TabList>
-        <Tab value="users">Users</Tab>
-        <Tab value="groups">Roles (Groups)</Tab>
+        <Tab value="users">{{ $t("permissions.tabUsers") }}</Tab>
+        <Tab value="groups">{{ $t("permissions.tabRoles") }}</Tab>
       </TabList>
       <TabPanels>
         <TabPanel value="users">
@@ -30,7 +30,7 @@
             <template #start>
               <div class="jr-user-admin-hub__search">
                 <label class="jr-sr-only" for="user-admin-user-filter">
-                  Search users
+                  {{ $t("permissions.searchUsers") }}
                 </label>
                 <span class="jr-user-admin-hub__search-icon" aria-hidden="true">
                   <SearchIcon />
@@ -39,7 +39,7 @@
                   inputId="user-admin-user-filter"
                   v-model="userFilter"
                   type="search"
-                  placeholder="Search users…"
+                  :placeholder="$t('permissions.searchUsersPlaceholder')"
                   autocomplete="off"
                   :spellcheck="false"
                   autocapitalize="none"
@@ -49,12 +49,12 @@
             </template>
             <template v-if="!isMobile" #stats>
               <div class="jr-user-admin-hub__summary" aria-live="polite">
-                <JRBadge :value="`${userStats.total} Total`" severity="secondary" />
+                <JRBadge :value="$t('common.badgeTotal', { count: userStats.total })" severity="secondary" />
                 <JRBadge
-                  :value="`${userStats.active} Active`"
+                  :value="$t('common.badgeActive', { count: userStats.active })"
                   :severity="userStats.active > 0 ? 'success' : 'secondary'" />
                 <JRBadge
-                  :value="`${userStats.staff} Staff`"
+                  :value="$t('permissions.badgeStaff', { count: userStats.staff })"
                   :severity="userStats.staff > 0 ? 'info' : 'secondary'" />
               </div>
             </template>
@@ -67,7 +67,7 @@
                   class="jr-user-admin-hub__refresh"
                   @click="loadUsers">
                   <RefreshIcon />
-                  Refresh
+                  {{ $t("common.refresh") }}
                 </JRButton>
               </template>
               <template v-else>
@@ -75,7 +75,7 @@
                   id="user-admin-users-tools-trigger"
                   type="button"
                   class="jr-icon-btn"
-                  aria-label="List tools"
+                  :aria-label="$t('common.listTools')"
                   aria-haspopup="menu"
                   :aria-expanded="usersToolsOpen ? 'true' : 'false'"
                   aria-controls="user-admin-users-tools-menu"
@@ -97,7 +97,7 @@
                   class="jr-overlay jr-row-menu"
                   :model="usersToolsModel"
                   :popup="true"
-                  ariaLabel="List tools"
+                  :ariaLabel="$t('common.listTools')"
                   @show="usersToolsOpen = true"
                   @hide="usersToolsOpen = false" />
               </template>
@@ -124,13 +124,13 @@
                 variant="ghost"
                 size="sm"
                 @click="loadUsers">
-                Refresh
+                {{ $t("common.refresh") }}
               </JRButton>
             </JREmptyState>
             <p
               v-if="usersLoading && !filteredUsers.length"
               class="jr-user-admin-hub__loading">
-              Loading users…
+              {{ $t("permissions.loadingUsers") }}
             </p>
             <p
               v-else-if="usersLoading && filteredUsers.length"
@@ -201,7 +201,7 @@
               :tableStyle="usersTableStyle"
               emptyTitle="No users found"
               emptyDescription="Create a user or adjust your search.">
-              <Column field="username" header="Username" sortable>
+              <Column field="username" :header="$t('permissions.colUsername')" sortable>
                 <template #body="{ data }">
                   <router-link
                     class="jr-master-row__name jr-master-row__name--link"
@@ -213,17 +213,17 @@
               <Column
                 v-if="!isTablet"
                 field="email"
-                header="Email"
+                :header="$t('permissions.colEmail')"
                 sortable>
                 <template #body="{ data }">
                   {{ data.email || '—' }}
                 </template>
               </Column>
-              <Column field="group_count" header="Roles" sortable />
+              <Column field="group_count" :header="$t('permissions.colRoles')" sortable />
               <Column
                 v-if="!isTablet"
                 field="is_staff"
-                header="Staff"
+                :header="$t('permissions.colStaff')"
                 sortable>
                 <template #body="{ data }">
                   <JRBadge
@@ -231,7 +231,7 @@
                     :severity="data.is_staff ? 'info' : 'secondary'" />
                 </template>
               </Column>
-              <Column field="is_active" header="Status" sortable>
+              <Column field="is_active" :header="$t('parties.colStatus')" sortable>
                 <template #body="{ data }">
                   <JRBadge
                     :value="data.is_active ? 'Active' : 'Inactive'"
@@ -239,7 +239,7 @@
                 </template>
               </Column>
               <Column
-                header="Actions"
+                :header="$t('common.actions')"
                 :sortable="false"
                 :headerClass="actionsHeaderClass"
                 :bodyClass="actionsBodyClass">
@@ -259,7 +259,7 @@
             <template #start>
               <div class="jr-user-admin-hub__search">
                 <label class="jr-sr-only" for="user-admin-group-filter">
-                  Search roles
+                  {{ $t("permissions.searchRoles") }}
                 </label>
                 <span class="jr-user-admin-hub__search-icon" aria-hidden="true">
                   <SearchIcon />
@@ -268,7 +268,7 @@
                   inputId="user-admin-group-filter"
                   v-model="groupFilter"
                   type="search"
-                  placeholder="Search roles…"
+                  :placeholder="$t('permissions.searchRolesPlaceholder')"
                   autocomplete="off"
                   :spellcheck="false"
                   autocapitalize="none"
@@ -278,7 +278,7 @@
             </template>
             <template v-if="!isMobile" #stats>
               <div class="jr-user-admin-hub__summary" aria-live="polite">
-                <JRBadge :value="`${groupStats.total} Total`" severity="secondary" />
+                <JRBadge :value="$t('common.badgeTotal', { count: groupStats.total })" severity="secondary" />
               </div>
             </template>
             <template #actions>
@@ -290,7 +290,7 @@
                   class="jr-user-admin-hub__refresh"
                   @click="loadGroups">
                   <RefreshIcon />
-                  Refresh
+                  {{ $t("common.refresh") }}
                 </JRButton>
               </template>
               <template v-else>
@@ -298,7 +298,7 @@
                   id="user-admin-groups-tools-trigger"
                   type="button"
                   class="jr-icon-btn"
-                  aria-label="List tools"
+                  :aria-label="$t('common.listTools')"
                   aria-haspopup="menu"
                   :aria-expanded="groupsToolsOpen ? 'true' : 'false'"
                   aria-controls="user-admin-groups-tools-menu"
@@ -320,7 +320,7 @@
                   class="jr-overlay jr-row-menu"
                   :model="groupsToolsModel"
                   :popup="true"
-                  ariaLabel="List tools"
+                  :ariaLabel="$t('common.listTools')"
                   @show="groupsToolsOpen = true"
                   @hide="groupsToolsOpen = false" />
               </template>
@@ -346,13 +346,13 @@
                 variant="ghost"
                 size="sm"
                 @click="loadGroups">
-                Refresh
+                {{ $t("common.refresh") }}
               </JRButton>
             </JREmptyState>
             <p
               v-if="groupsLoading && !filteredGroups.length"
               class="jr-user-admin-hub__loading">
-              Loading roles…
+              {{ $t("permissions.loadingRoles") }}
             </p>
             <p
               v-else-if="groupsLoading && filteredGroups.length"
@@ -427,7 +427,7 @@
               :tableStyle="groupsTableStyle"
               emptyTitle="No roles found"
               emptyDescription="Create a role to bundle permissions for your team.">
-              <Column field="name" header="Role" sortable>
+              <Column field="name" :header="$t('permissions.colRole')" sortable>
                 <template #body="{ data }">
                   <router-link
                     class="jr-master-row__name jr-master-row__name--link"
@@ -436,10 +436,10 @@
                   </router-link>
                 </template>
               </Column>
-              <Column field="permission_count" header="Permissions" sortable />
-              <Column field="user_count" header="Users" sortable />
+              <Column field="permission_count" :header="$t('permissions.colPermissionsCount')" sortable />
+              <Column field="user_count" :header="$t('permissions.colUsersCount')" sortable />
               <Column
-                header="Actions"
+                :header="$t('common.actions')"
                 :sortable="false"
                 :headerClass="actionsHeaderClass"
                 :bodyClass="actionsBodyClass">
@@ -524,11 +524,12 @@ export default {
       isTablet: false,
       usersToolsOpen: false,
       groupsToolsOpen: false,
-      pageDescription:
-        'Manage users, roles (groups), and permissions for this company.',
     };
   },
   computed: {
+    pageDescription() {
+      return this.$t("permissions.pageDescription");
+    },
     actionsHeaderClass() {
       return this.isTablet
         ? 'jr-col-actions jr-col-actions--compact'
@@ -573,28 +574,28 @@ export default {
       return { total: this.groups.length };
     },
     usersEmptyTitle() {
-      return this.userFilter.trim() ? 'No users found' : 'No users yet';
+      return this.userFilter.trim() ? this.$t("permissions.usersEmptySearch") : this.$t("permissions.usersEmptyNone");
     },
     usersEmptyDescription() {
       if (this.userFilter.trim()) {
-        return `No users match “${this.userFilter.trim()}”.`;
+        return this.$t("permissions.usersEmptySearchDesc", { query: this.userFilter.trim() });
       }
-      return 'Create a user to grant access for this company.';
+      return this.$t("permissions.usersEmptyNoneDesc");
     },
     groupsEmptyTitle() {
-      return this.groupFilter.trim() ? 'No roles found' : 'No roles yet';
+      return this.groupFilter.trim() ? this.$t("permissions.groupsEmptySearch") : this.$t("permissions.groupsEmptyNone");
     },
     groupsEmptyDescription() {
       if (this.groupFilter.trim()) {
-        return `No roles match “${this.groupFilter.trim()}”.`;
+        return this.$t("permissions.groupsEmptySearchDesc", { query: this.groupFilter.trim() });
       }
-      return 'Create a role to bundle permissions for your team.';
+      return this.$t("permissions.groupsEmptyNoneDesc");
     },
     usersToolsModel() {
-      return [{ label: 'Refresh', command: () => this.loadUsers() }];
+      return [{ label: this.$t('common.refresh'), command: () => this.loadUsers() }];
     },
     groupsToolsModel() {
-      return [{ label: 'Refresh', command: () => this.loadGroups() }];
+      return [{ label: this.$t('common.refresh'), command: () => this.loadGroups() }];
     },
   },
   watch: {
@@ -701,7 +702,7 @@ export default {
       const actions = [
         {
           key: 'view',
-          label: 'View',
+          label: this.$t('common.view'),
           severity: 'success',
           icon: EyeIcon,
           command: () =>
@@ -714,7 +715,7 @@ export default {
       if (!lockedSuper) {
         actions.push({
           key: 'edit',
-          label: 'Edit',
+          label: this.$t('common.edit'),
           severity: 'primary',
           icon: PencilIcon,
           command: () =>
@@ -727,7 +728,7 @@ export default {
       } else if (!this.isMobile) {
         actions.push({
           key: 'edit-placeholder',
-          label: 'Edit',
+          label: this.$t('common.edit'),
           severity: 'primary',
           icon: PencilIcon,
           buttonClass: 'jr-row-actions__btn--placeholder',
@@ -738,20 +739,20 @@ export default {
       if (!isSelf && !lockedSuper) {
         actions.push({
           key: 'delete',
-          label: 'Delete',
+          label: this.$t('common.delete'),
           severity: 'danger',
           icon: TrashIcon,
           command: () =>
             this.confirmDelete(
-              'Delete this user?',
-              `${row.username} will be permanently removed.`,
+              this.$t('permissions.deleteUserTitle'),
+              this.$t('permissions.deleteUserText', { username: row.username }),
               () => this.deleteUser(row.id),
             ),
         });
       } else if (!this.isMobile) {
         actions.push({
           key: 'delete-placeholder',
-          label: 'Delete',
+          label: this.$t('common.delete'),
           severity: 'danger',
           icon: TrashIcon,
           buttonClass: 'jr-row-actions__btn--placeholder',
@@ -765,7 +766,7 @@ export default {
       return [
         {
           key: 'view',
-          label: 'View',
+          label: this.$t('common.view'),
           severity: 'success',
           icon: EyeIcon,
           command: () =>
@@ -776,7 +777,7 @@ export default {
         },
         {
           key: 'edit',
-          label: 'Edit',
+          label: this.$t('common.edit'),
           severity: 'primary',
           icon: PencilIcon,
           command: () =>
@@ -788,13 +789,13 @@ export default {
         },
         {
           key: 'delete',
-          label: 'Delete',
+          label: this.$t('common.delete'),
           severity: 'danger',
           icon: TrashIcon,
           command: () =>
             this.confirmDelete(
-              'Delete this role?',
-              `Users in “${row.name}” will lose its permissions.`,
+              this.$t('permissions.deleteRoleTitle'),
+              this.$t('permissions.deleteRoleText', { name: row.name }),
               () => this.deleteGroup(row.id),
             ),
         },

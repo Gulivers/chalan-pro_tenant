@@ -1,13 +1,13 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Inventory Transfers">
+    <JRPageHeader :title="$t('nav.inventoryTransfers')">
       <template #actions>
         <JRButton
           v-if="hasPermission('appinventory.add_inventorytransfer')"
           type="button"
           :fluid="isMobile"
           @click="goToCreateForm">
-          + New Inventory Transfer
+          {{ $t('inventory.transfersNew') }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -16,7 +16,7 @@
       <template #start>
         <div class="jr-transfer-list__search">
           <label class="jr-sr-only" for="transfer-filter-input">
-            Search inventory transfers
+            {{ $t('inventory.transfersSearchLabel') }}
           </label>
           <span class="jr-transfer-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -25,19 +25,19 @@
             inputId="transfer-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search by description, warehouses, crew…" />
+            :placeholder="$t('inventory.transfersSearchPlaceholder')" />
         </div>
       </template>
 
       <template #stats>
         <div class="jr-transfer-list__summary" aria-live="polite">
-          <JRBadge :value="`${totalRows} Total`" severity="secondary" />
+          <JRBadge :value="$t('common.badgeTotal', { count: totalRows })" severity="secondary" />
         </div>
       </template>
 
       <template #actions>
         <label class="jr-sr-only" for="transfer-per-page">
-          Entries per page
+          {{ $t('common.entriesPerPage') }}
         </label>
         <JRSelect
           class="jr-transfer-list__entries"
@@ -53,7 +53,7 @@
           class="jr-transfer-list__refresh"
           @click="refreshTable">
           <RefreshIcon />
-          Refresh
+          {{ $t('common.refresh') }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -63,14 +63,11 @@
         v-if="!items.length && !isLoading"
         :title="emptyTitle"
         :description="emptyDescription" />
-      <p v-if="isLoading && !items.length" class="jr-transfer-list__loading">
-        Loading inventory transfers…
-      </p>
+      <p v-if="isLoading && !items.length" class="jr-transfer-list__loading">{{ $t('common.loadingLabel', { label: $t('nav.inventoryTransfers') }) }}</p>
       <p
         v-else-if="isLoading && items.length"
         class="jr-transfer-list__loading"
-        aria-live="polite">
-        Updating…
+        aria-live="polite">{{ $t('common.updating') }}
       </p>
       <ul
         v-if="items.length"
@@ -139,7 +136,7 @@
         :emptyDescription="emptyDescription"
         @page="onTablePage"
         @sort="onTableSort">
-        <Column field="description" header="Description" sortable>
+        <Column field="description" :header="$t('inventory.colDescription')" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
@@ -151,12 +148,12 @@
             <span v-else>{{ primaryLabel(data) }}</span>
           </template>
         </Column>
-        <Column field="from_warehouse_name" header="From" sortable>
+        <Column field="from_warehouse_name" :header="$t('inventory.colFrom')" sortable>
           <template #body="{ data }">
             {{ data.from_warehouse_name || "—" }}
           </template>
         </Column>
-        <Column field="to_warehouse_name" header="To" sortable>
+        <Column field="to_warehouse_name" :header="$t('inventory.colTo')" sortable>
           <template #body="{ data }">
             {{ data.to_warehouse_name || "—" }}
           </template>
@@ -164,13 +161,13 @@
         <Column
           v-if="!isTablet"
           field="truck_crew_name"
-          header="Truck Crew"
+          :header="$t('inventory.colTruckCrew')"
           :sortable="false">
           <template #body="{ data }">
             {{ data.truck_crew_name || "—" }}
           </template>
         </Column>
-        <Column field="status" header="Status" :sortable="false">
+        <Column field="status" :header="$t('common.status')" :sortable="false">
           <template #body="{ data }">
             <JRBadge
               v-if="data.status"
@@ -179,7 +176,7 @@
             <span v-else class="jr-transfer-list__muted">—</span>
           </template>
         </Column>
-        <Column field="created_at" header="Created" sortable>
+        <Column field="created_at" :header="$t('inventory.colCreated')" sortable>
           <template #body="{ data }">
             {{ formatDateTime(data.created_at) }}
           </template>
@@ -187,7 +184,7 @@
         <Column
           v-if="!isTablet"
           field="last_updated"
-          header="Updated"
+          :header="$t('inventory.colUpdated')"
           :sortable="false">
           <template #body="{ data }">
             {{ formatDateTime(data.last_updated) }}
@@ -196,7 +193,7 @@
         <Column
           v-if="!isTablet"
           field="created_by_username"
-          header="Created By"
+          :header="$t('inventory.colCreatedBy')"
           :sortable="false">
           <template #body="{ data }">
             {{ data.created_by_username || "—" }}
@@ -204,7 +201,7 @@
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="
             isTablet
@@ -325,18 +322,29 @@ export default {
     const tableMinWidth = computed(() =>
       isTablet.value ? "min-width: 40rem" : "min-width: 56rem"
     );
-    const emptyTitle = computed(() =>
-      loadError.value
-        ? "Could not load inventory transfers"
-        : "No inventory transfers"
+    const hasSearch = computed(() =>
+      Boolean(filter.value && filter.value.trim())
     );
-    const emptyDescription = computed(() =>
-      loadError.value
-        ? "Try Refresh."
-        : "No inventory transfers match the current search."
-    );
+    const emptyTitle = computed(() => {
+      if (loadError.value) return proxy?.$t?.("inventory.transfersEmptyLoadError");
+      if (hasSearch.value) return proxy?.$t?.("inventory.transfersEmptySearch");
+      return proxy?.$t?.("inventory.transfersEmptyNone");
+    });
+    const emptyDescription = computed(() => {
+      if (loadError.value) return proxy?.$t?.("common.tryRefresh");
+      const query = (filter.value || "").trim();
+      if (query) return proxy?.$t?.("inventory.transfersEmptySearchDesc", { query });
+      return proxy?.$t?.("inventory.transfersEmptyNoneDesc");
+    });
 
-    const canView = computed(() =>
+    const clearSearch = () => {
+      filter.value = "";
+      if (typeof document !== "undefined") {
+        document.getElementById("transfer-filter-input")?.focus();
+      }
+    };
+
+const canView = computed(() =>
       !!proxy?.hasPermission?.("appinventory.view_inventorytransfer")
     );
     const hasRowActions = computed(
@@ -479,7 +487,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.view_inventorytransfer")) {
         actions.push({
           key: "view",
-          label: "View",
+          label: proxy?.$t?.("common.view"),
           severity: "success",
           icon: EyeIcon,
           command: () => viewItem(item.id),
@@ -491,7 +499,7 @@ export default {
       ) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: proxy?.$t?.("common.edit"),
           severity: "primary",
           icon: PencilIcon,
           command: () => editItem(item.id),
@@ -500,7 +508,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.delete_inventorytransfer")) {
         actions.push({
           key: "delete",
-          label: "Delete",
+          label: proxy?.$t?.("common.delete"),
           severity: "danger",
           icon: TrashIcon,
           command: () => deleteItem(item.id),
@@ -586,6 +594,8 @@ export default {
       sortOrder,
       tableFirst,
       pageOptions,
+      hasSearch,
+      clearSearch,
       emptyTitle,
       emptyDescription,
       isMobile,

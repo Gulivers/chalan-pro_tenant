@@ -51,16 +51,17 @@ export const appMixin = {
     // ───────────────────────────────────────────────────────────────
     // CONFIRMATIONS
     // ───────────────────────────────────────────────────────────────
-    confirmDelete(title = 'Are you sure?', text = 'This action cannot be undone.', callback = null) {
+    confirmDelete(title, text, callback = null) {
+      const t = this.$t?.bind(this);
       Swal.fire({
-        title,
-        text,
+        title: title || t?.('common.confirmDeleteTitle') || 'Are you sure?',
+        text: text || t?.('common.confirmDeleteText') || 'This action cannot be undone.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel',
+        confirmButtonText: t?.('common.confirmDeleteButton') || 'Yes, delete it!',
+        cancelButtonText: t?.('common.cancel') || 'Cancel',
       }).then(result => {
         if (result.isConfirmed && typeof callback === 'function') {
           callback();
@@ -71,37 +72,50 @@ export const appMixin = {
     // ───────────────────────────────────────────────────────────────
     // NOTIFICATIONS
     // ───────────────────────────────────────────────────────────────
-    notifySuccess(message = 'Operation completed successfully.') {
-      Swal.fire('Success!', message, 'success');
+    notifySuccess(message) {
+      const t = this.$t?.bind(this);
+      Swal.fire(
+        t?.('common.success') || 'Success!',
+        message || t?.('common.operationSuccess') || 'Operation completed successfully.',
+        'success'
+      );
     },
 
-    notifyError(message = 'Something went wrong.') {
-      Swal.fire('Error', message, 'error');
+    notifyError(message) {
+      const t = this.$t?.bind(this);
+      Swal.fire(
+        t?.('common.error') || 'Error',
+        message || t?.('common.somethingWrong') || 'Something went wrong.',
+        'error'
+      );
     },
 
-    notifyWarning(message = 'Warning') {
+    notifyWarning(message) {
+      const t = this.$t?.bind(this);
       Swal.fire({
         icon: 'warning',
-        title: 'Warning',
-        text: message,
-        confirmButtonText: 'Got it!',
+        title: t?.('common.warning') || 'Warning',
+        text: message || t?.('common.warning') || 'Warning',
+        confirmButtonText: t?.('common.gotIt') || 'Got it!',
       });
     },
 
     notifyFieldErrors(errors = {}) {
+      const t = this.$t?.bind(this);
       const messages = Object.entries(errors)
         .map(([field, msgs]) => `<strong>${field}</strong>: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
         .join('<br>');
 
       Swal.fire({
         icon: 'error',
-        title: 'Validation Error',
-        html: messages || 'There were errors in your form submission.',
-        confirmButtonText: 'OK',
+        title: t?.('common.validationError') || 'Validation Error',
+        html: messages || t?.('common.validationErrorText') || 'There were errors in your form submission.',
+        confirmButtonText: t?.('common.ok') || 'OK',
       });
     },
 
-    notifyConfirm(title, text, confirmCallback, confirmButtonText = 'Yes, confirm', cancelButtonText = 'Cancel') {
+    notifyConfirm(title, text, confirmCallback, confirmButtonText, cancelButtonText) {
+      const t = this.$t?.bind(this);
       import('sweetalert2').then(Swal => {
         Swal.default
           .fire({
@@ -111,8 +125,10 @@ export const appMixin = {
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: confirmButtonText,
-            cancelButtonText: cancelButtonText,
+            confirmButtonText:
+              confirmButtonText || t?.('common.yesConfirm') || 'Yes, confirm',
+            cancelButtonText:
+              cancelButtonText || t?.('common.cancel') || 'Cancel',
           })
           .then(result => {
             if (result.isConfirmed && typeof confirmCallback === 'function') {
@@ -125,37 +141,40 @@ export const appMixin = {
     // ───────────────────────────────────────────────────────────────
     //  toast NOTIFICATIONS
     // ───────────────────────────────────────────────────────────────
-    notifyToastSuccess(message = 'Operation completed successfully.') {
+    notifyToastSuccess(message) {
+      const t = this.$t?.bind(this);
       Swal.fire({
         toast: true,
         position: 'bottom-end',
         icon: 'success',
-        title: message,
+        title: message || t?.('common.operationSuccess') || 'Operation completed successfully.',
         showConfirmButton: false,
         timer: 3500,
         timerProgressBar: true,
       });
     },
 
-    notifyToastError(message = 'Something went wrong.') {
+    notifyToastError(message) {
+      const t = this.$t?.bind(this);
       Swal.fire({
         toast: true,
         position: 'bottom-end',
         icon: 'error',
-        title: message,
+        title: message || t?.('common.somethingWrong') || 'Something went wrong.',
         showConfirmButton: false,
         timer: 4000,
         timerProgressBar: true,
       });
     },
     
-    notifyToasWarning(message = 'Warning') {
+    notifyToasWarning(message) {
+      const t = this.$t?.bind(this);
       Swal.fire({
         toast: true,
         icon: 'warning',
-        title: 'Warning',
-        text: message,
-        confirmButtonText: 'Got it!',
+        title: t?.('common.warning') || 'Warning',
+        text: message || t?.('common.warning') || 'Warning',
+        confirmButtonText: t?.('common.gotIt') || 'Got it!',
       });
     },
   },

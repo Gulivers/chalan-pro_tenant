@@ -1,12 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Transactions">
+    <JRPageHeader :title="$t('transactions.title')">
       <template #actions>
         <JRButton
           v-if="hasPermission('apptransactions.add_document')"
           type="button"
           @click="goToCreateForm">
-          + New Transaction
+          {{ $t("transactions.new") }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -15,7 +15,7 @@
       <template #start>
         <div class="jr-tx-list__search">
           <label class="jr-sr-only" for="tx-filter-input">
-            Search transactions
+            {{ $t("transactions.searchLabel") }}
           </label>
           <span class="jr-tx-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -24,7 +24,7 @@
             inputId="tx-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search by document type, party, notes…"
+            :placeholder="$t('transactions.searchPlaceholder')"
             autocomplete="off"
             :spellcheck="false"
             autocapitalize="none"
@@ -35,12 +35,14 @@
 
       <template v-if="!isMobile" #stats>
         <div class="jr-tx-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
           <JRBadge
-            :value="`${stats.active} Active`"
+            :value="$t('common.badgeTotal', { count: stats.total })"
+            severity="secondary" />
+          <JRBadge
+            :value="$t('common.badgeActive', { count: stats.active })"
             :severity="stats.active > 0 ? 'success' : 'secondary'" />
           <JRBadge
-            :value="`${stats.inactive} Voided`"
+            :value="$t('common.badgeVoided', { count: stats.inactive })"
             severity="secondary" />
         </div>
       </template>
@@ -50,7 +52,7 @@
           <JRSelect
             class="jr-tx-list__entries"
             inputId="tx-per-page"
-            ariaLabel="Entries per page"
+            :ariaLabel="$t('common.entriesPerPage')"
             v-model="perPage"
             :options="pageOptions"
             optionLabel="label"
@@ -62,7 +64,7 @@
             class="jr-tx-list__refresh"
             @click="refreshTable">
             <RefreshIcon />
-            Refresh
+            {{ $t("common.refresh") }}
           </JRButton>
         </template>
         <template v-else>
@@ -70,7 +72,7 @@
             id="tx-list-tools-trigger"
             type="button"
             class="jr-icon-btn"
-            aria-label="List tools"
+            :aria-label="$t('common.listTools')"
             aria-haspopup="menu"
             :aria-expanded="toolsMenuOpen ? 'true' : 'false'"
             aria-controls="tx-list-tools-menu"
@@ -92,7 +94,7 @@
             class="jr-overlay jr-row-menu"
             :model="toolsMenuModel"
             :popup="true"
-            ariaLabel="List tools"
+            :ariaLabel="$t('common.listTools')"
             @show="toolsMenuOpen = true"
             @hide="toolsMenuOpen = false" />
         </template>
@@ -110,7 +112,7 @@
           variant="ghost"
           size="sm"
           @click="refreshTable">
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
         <JRButton
           v-else-if="hasSearch"
@@ -118,17 +120,17 @@
           variant="ghost"
           size="sm"
           @click="clearSearch">
-          Clear search
+          {{ $t("common.clearSearch") }}
         </JRButton>
       </JREmptyState>
       <p v-if="isLoading && !transactions.length" class="jr-tx-list__loading">
-        Loading transactions…
+        {{ $t("transactions.loading") }}
       </p>
       <p
         v-else-if="isLoading && transactions.length"
         class="jr-tx-list__loading"
         aria-live="polite">
-        Updating…
+        {{ $t("common.updating") }}
       </p>
       <ul
         v-if="transactions.length"
@@ -140,7 +142,7 @@
               v-if="canView"
               class="jr-tx-row__name jr-tx-row__name--link"
               :to="transactionViewTo(item.id)"
-              :aria-label="`View transaction ${item.id}`">
+              :aria-label="viewTransactionAria(item)">
               {{ item.document_type_code || "—" }}
             </router-link>
             <span v-else class="jr-tx-row__name">
@@ -161,14 +163,14 @@
                 currency(item.total_amount)
               }}</span>
               <JRBadge
-                v-if="item.uses_status_tracking && item.status_name"
-                :value="item.status_name"
+                v-if="item.uses_status_tracking && item.status_code"
+                :value="statusLabel(item)"
                 :severity="workflowStatusSeverity(item)" />
               <span
                 v-else-if="item.uses_status_tracking"
                 class="jr-tx-row__empty">—</span>
               <JRBadge
-                :value="item.is_active ? 'Active' : 'Voided'"
+                :value="item.is_active ? $t('common.active') : $t('common.voided')"
                 :severity="item.is_active ? 'success' : 'secondary'" />
             </p>
           </div>
@@ -227,7 +229,7 @@
               variant="ghost"
               size="sm"
               @click="refreshTable">
-              Refresh
+              {{ $t("common.refresh") }}
             </JRButton>
             <JRButton
               v-else-if="hasSearch"
@@ -235,50 +237,53 @@
               variant="ghost"
               size="sm"
               @click="clearSearch">
-              Clear search
+              {{ $t("common.clearSearch") }}
             </JRButton>
           </JREmptyState>
         </template>
 
-        <Column field="document_type_code" header="Type">
+        <Column field="document_type_code" :header="$t('transactions.colType')">
           <template #body="{ data }">
             <router-link
               v-if="canView"
               class="jr-tx-row__name jr-tx-row__name--link"
               :to="transactionViewTo(data.id)"
-              :aria-label="`View transaction ${data.id}`">
+              :aria-label="viewTransactionAria(data)">
               {{ data.document_type_code || "—" }}
             </router-link>
             <strong v-else>{{ data.document_type_code || "—" }}</strong>
           </template>
         </Column>
-        <Column field="builder_name" header="Party">
+        <Column field="builder_name" :header="$t('transactions.colParty')">
           <template #body="{ data }">
             {{ data.builder_name || "—" }}
           </template>
         </Column>
-        <Column v-if="!isTablet" field="work_account_display" header="Work Account">
+        <Column
+          v-if="!isTablet"
+          field="work_account_display"
+          :header="$t('transactions.colWorkAccount')">
           <template #body="{ data }">
             {{ data.work_account_display || "—" }}
           </template>
         </Column>
-        <Column field="date" header="Date" sortable>
+        <Column field="date" :header="$t('transactions.colDate')" sortable>
           <template #body="{ data }">
             {{ formatDate(data.date) }}
           </template>
         </Column>
-        <Column field="status_name" header="Status">
+        <Column field="status_name" :header="$t('transactions.colStatus')">
           <template #body="{ data }">
             <JRBadge
-              v-if="data.uses_status_tracking && data.status_name"
-              :value="data.status_name"
+              v-if="data.uses_status_tracking && data.status_code"
+              :value="statusLabel(data)"
               :severity="workflowStatusSeverity(data)" />
             <span v-else class="jr-tx-row__empty">—</span>
           </template>
         </Column>
         <Column
           field="total_amount"
-          header="Total"
+          :header="$t('transactions.colTotal')"
           sortable
           headerClass="jr-col-num"
           bodyClass="jr-col-num">
@@ -289,7 +294,7 @@
         <Column
           v-if="!isTablet"
           field="total_discount"
-          header="Discount"
+          :header="$t('transactions.colDiscount')"
           sortable
           headerClass="jr-col-num"
           bodyClass="jr-col-num">
@@ -297,16 +302,16 @@
             {{ currency(data.total_discount) }}
           </template>
         </Column>
-        <Column field="is_active" header="Active">
+        <Column field="is_active" :header="$t('transactions.colActive')">
           <template #body="{ data }">
             <JRBadge
-              :value="data.is_active ? 'Active' : 'Voided'"
+              :value="data.is_active ? $t('common.active') : $t('common.voided')"
               :severity="data.is_active ? 'success' : 'secondary'" />
           </template>
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="
             isTablet
@@ -364,6 +369,7 @@ import {
   JRRowActions,
 } from "@ui";
 import { documentStatusSeverity } from "@/utils/documentStatus";
+import { tStatus } from "@/utils/statusI18n";
 
 const ENDPOINT = "/api/documents-provider/";
 const PHONE_MQ = "(max-width: 767.98px)";
@@ -439,16 +445,26 @@ export default {
       Boolean(filter.value && filter.value.trim())
     );
     const emptyTitle = computed(() => {
-      if (loadError.value) return "Could not load transactions";
-      if (hasSearch.value) return "No matching transactions";
-      return "No transactions";
+      if (loadError.value) return proxy?.$t?.("transactions.emptyLoadError");
+      if (hasSearch.value) return proxy?.$t?.("transactions.emptySearch");
+      return proxy?.$t?.("transactions.emptyNone");
     });
     const emptyDescription = computed(() => {
-      if (loadError.value) return "Try Refresh.";
+      if (loadError.value) return proxy?.$t?.("common.tryRefresh");
       const query = filter.value.trim();
-      if (query) return `No transactions match “${query}”.`;
-      return "No transactions yet.";
+      if (query) {
+        return proxy?.$t?.("transactions.emptySearchDesc", { query });
+      }
+      return proxy?.$t?.("transactions.emptyNoneDesc");
     });
+
+    const statusLabel = (item) =>
+      tStatus(item?.status_code, item?.status_name);
+
+    const viewTransactionAria = (item) =>
+      proxy?.$t?.("common.viewItem", {
+        label: item?.document_type_code || `#${item?.id ?? ""}`,
+      });
 
     const canView = computed(() =>
       !!proxy?.hasPermission?.("apptransactions.view_document")
@@ -654,8 +670,8 @@ export default {
     const deleteItem = (item) => {
       const label = item?.document_type_code || `#${item?.id}`;
       proxy?.confirmDelete?.(
-        "Are you sure?",
-        `Delete transaction "${label}"? This action cannot be undone.`,
+        proxy?.$t?.("common.confirmDeleteTitle"),
+        proxy?.$t?.("transactions.deleteConfirm", { label }),
         async () => {
           try {
             await axios.delete(`/api/documents/${item.id}/`);
@@ -676,7 +692,7 @@ export default {
       if (proxy?.hasPermission?.("apptransactions.view_document")) {
         actions.push({
           key: "view",
-          label: "View",
+          label: proxy?.$t?.("common.view"),
           severity: "success",
           icon: EyeIcon,
           command: () => viewItem(item.id),
@@ -695,7 +711,7 @@ export default {
       if (proxy?.hasPermission?.("apptransactions.change_document")) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: proxy?.$t?.("common.edit"),
           severity: "primary",
           icon: PencilIcon,
           command: () => editItem(item.id),
@@ -704,7 +720,7 @@ export default {
       if (proxy?.hasPermission?.("apptransactions.delete_document")) {
         actions.push({
           key: "delete",
-          label: "Delete",
+          label: proxy?.$t?.("common.delete"),
           severity: "danger",
           icon: TrashIcon,
           command: () => deleteItem(item),
@@ -715,7 +731,7 @@ export default {
 
     const toolsMenuModel = computed(() => [
       {
-        label: "Refresh",
+        label: proxy?.$t?.("common.refresh"),
         icon: "pi pi-refresh",
         command: () => refreshTable(),
       },
@@ -809,6 +825,8 @@ export default {
       formatDate,
       currency,
       workflowStatusSeverity,
+      statusLabel,
+      viewTransactionAria,
       toolsMenu,
       toolsMenuOpen,
       toolsMenuModel,

@@ -5,7 +5,7 @@ from django.db.models import Q, Prefetch, Count, ProtectedError
 from django.utils.dateparse import parse_datetime
 from django.shortcuts import render, get_object_or_404
 from django.db import IntegrityError
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from rest_framework import viewsets, status, filters, permissions
 from rest_framework.exceptions import PermissionDenied, ValidationError as DRFValidationError
 from rest_framework.views import APIView
@@ -452,9 +452,10 @@ class TransactionFavoriteViewSet(viewsets.ModelViewSet):
     filterset_fields = ['is_active']
     
     def get_queryset(self):
-        """Obtener todos los favoritos activos"""
+        """Solo favoritos activos del usuario autenticado."""
         return TransactionFavorite.objects.filter(
-            is_active=True
+            is_active=True,
+            created_by=self.request.user,
         ).order_by('-created_at')
     
     def perform_create(self, serializer):
@@ -701,6 +702,8 @@ def download_transaction_pdf(request, document_id):
 
         return Response(response, status=status.HTTP_200_OK)
 
+    except Http404:
+        raise
     except Document.DoesNotExist:
         return JsonResponse(
             {"error": "Documento no encontrado"},

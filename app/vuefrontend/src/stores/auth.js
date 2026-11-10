@@ -8,6 +8,7 @@
  */
 import { ref, computed } from 'vue'
 import axios from 'axios'
+import i18n, { normalizeLocale, DEFAULT_LOCALE } from '@/i18n'
 
 const ACCESS_KEY = 'jr_access' // legacy clear only
 const REFRESH_SESSION_KEY = 'jr_refresh'
@@ -98,10 +99,33 @@ export function useAuthStore() {
     }
   }
 
-  function setUser(newUser) {
+  function applyPreferredLanguage(lang) {
+    const next = normalizeLocale(lang || DEFAULT_LOCALE)
+    // Avoid no-op locale writes — they re-render the whole shell and can
+    // stall <router-view> updates mid-navigation.
+    if (normalizeLocale(i18n.global.locale.value) === next) {
+      return next
+    }
+    i18n.global.locale.value = next
+    try {
+      document.documentElement.lang = next
+    } catch (_) {
+      /* ignore */
+    }
+    return next
+  }
+
+  function setUser(newUser, { syncLocale = true } = {}) {
     user.value = newUser
     if (newUser && Object.prototype.hasOwnProperty.call(newUser, 'is_staff')) {
       setStaff(!!newUser.is_staff)
+    }
+    if (
+      syncLocale &&
+      newUser &&
+      Object.prototype.hasOwnProperty.call(newUser, 'preferred_language')
+    ) {
+      applyPreferredLanguage(newUser.preferred_language)
     }
   }
 
@@ -155,6 +179,7 @@ export function useAuthStore() {
     setStaff,
     isStaff,
     setUser,
+    applyPreferredLanguage,
     applyLoginResponse,
     clearSession,
     logout,

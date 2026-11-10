@@ -1,13 +1,13 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Price Types">
+    <JRPageHeader :title="$t('nav.priceTypes')">
       <template #actions>
         <JRButton
           v-if="hasPermission('appinventory.add_pricetype')"
           type="button"
           :fluid="isMobile"
           @click="goToCreateForm">
-          + New Price Type
+          {{ $t('inventory.priceTypesNew') }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -16,8 +16,7 @@
       <template #start>
         <div class="jr-master-list__search">
           <label class="jr-sr-only" for="price-type-filter-input">
-            Search price types
-          </label>
+            {{ $t('inventory.priceTypesSearchLabel') }}</label>
           <span class="jr-master-list__search-icon" aria-hidden="true">
             <SearchIcon />
           </span>
@@ -25,23 +24,23 @@
             inputId="price-type-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search price types..." />
+            :placeholder="$t('inventory.priceTypesSearchPlaceholder')" />
         </div>
       </template>
 
       <template #stats>
         <div class="jr-master-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
-          <JRBadge :value="`${stats.active} Active`" severity="success" />
+          <JRBadge :value="$t('common.badgeTotal', { count: stats.total })" severity="secondary" />
+          <JRBadge :value="$t('common.badgeActive', { count: stats.active })" severity="success" />
           <JRBadge
-            :value="`${stats.inactive} Inactive`"
+            :value="$t('common.badgeInactive', { count: stats.inactive })"
             severity="secondary" />
         </div>
       </template>
 
       <template #actions>
         <label class="jr-sr-only" for="price-type-per-page">
-          Entries per page
+          {{ $t('common.entriesPerPage') }}
         </label>
         <JRSelect
           class="jr-master-list__entries"
@@ -57,7 +56,7 @@
           class="jr-master-list__refresh"
           @click="refreshTable">
           <RefreshIcon />
-          Refresh
+          {{ $t('common.refresh') }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -67,14 +66,11 @@
         v-if="!items.length && !isLoading"
         :title="emptyTitle"
         :description="emptyDescription" />
-      <p v-if="isLoading && !items.length" class="jr-master-list__loading">
-        Loading price types…
-      </p>
+      <p v-if="isLoading && !items.length" class="jr-master-list__loading">{{ $t('common.loadingLabel', { label: $t('nav.priceTypes') }) }}</p>
       <p
         v-else-if="isLoading && items.length"
         class="jr-master-list__loading"
-        aria-live="polite">
-        Updating…
+        aria-live="polite">{{ $t('common.updating') }}
       </p>
       <ul
         v-if="items.length"
@@ -100,7 +96,7 @@
           </div>
           <div class="jr-master-row__aside">
             <JRBadge
-              :value="item.is_active ? 'Active' : 'Inactive'"
+              :value="item.is_active ? $t('common.active') : $t('common.inactive')"
               :severity="item.is_active ? 'success' : 'secondary'" />
             <JRRowActions
               v-if="hasRowActions"
@@ -142,7 +138,7 @@
         :emptyDescription="emptyDescription"
         @page="onTablePage"
         @sort="onTableSort">
-        <Column field="name" header="Name" sortable>
+        <Column field="name" :header="$t('common.name')" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
@@ -154,19 +150,19 @@
             <span v-else>{{ data.name }}</span>
           </template>
         </Column>
-        <Column v-if="!isTablet" field="description" header="Description" sortable>
+        <Column v-if="!isTablet" field="description" :header="$t('inventory.colDescription')" sortable>
           <template #body="{ data }">
             {{ data.description || "—" }}
           </template>
         </Column>
-        <Column field="pricing_method" header="Pricing method" sortable>
+        <Column field="pricing_method" :header="$t('inventory.colPricingMethod')" sortable>
           <template #body="{ data }">
             {{ pricingMethodLabel(data.pricing_method) }}
           </template>
         </Column>
         <Column
           field="margin_percent"
-          header="Margin %"
+          :header="$t('inventory.colMarginPct')"
           sortable
           headerClass="jr-col-num"
           bodyClass="jr-col-num">
@@ -174,16 +170,16 @@
             {{ formatMarginPercent(data.margin_percent, data.pricing_method) }}
           </template>
         </Column>
-        <Column field="is_active" header="Status" sortable>
+        <Column field="is_active" :header="$t('common.status')" sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.is_active ? 'Active' : 'Inactive'"
+              :value="data.is_active ? $t('common.active') : $t('common.inactive')"
               :severity="data.is_active ? 'success' : 'secondary'" />
           </template>
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="isTablet ? 'jr-col-actions jr-col-actions--compact' : 'jr-col-actions'"
           :bodyClass="isTablet ? 'jr-col-actions jr-col-actions--compact' : 'jr-col-actions'">
@@ -300,16 +296,29 @@ export default {
     ];
 
     const tableFirst = computed(() => (currentPage.value - 1) * perPage.value);
-    const emptyTitle = computed(() =>
-      loadError.value ? "Could not load price types" : "No price types"
+    const hasSearch = computed(() =>
+      Boolean(filter.value && filter.value.trim())
     );
-    const emptyDescription = computed(() =>
-      loadError.value
-        ? "Try Refresh."
-        : "No price types match the current search."
-    );
+    const emptyTitle = computed(() => {
+      if (loadError.value) return proxy?.$t?.("inventory.priceTypesEmptyLoadError");
+      if (hasSearch.value) return proxy?.$t?.("inventory.priceTypesEmptySearch");
+      return proxy?.$t?.("inventory.priceTypesEmptyNone");
+    });
+    const emptyDescription = computed(() => {
+      if (loadError.value) return proxy?.$t?.("common.tryRefresh");
+      const query = (filter.value || "").trim();
+      if (query) return proxy?.$t?.("inventory.priceTypesEmptySearchDesc", { query });
+      return proxy?.$t?.("inventory.priceTypesEmptyNoneDesc");
+    });
 
-    const canView = computed(() =>
+    const clearSearch = () => {
+      filter.value = "";
+      if (typeof document !== "undefined") {
+        document.getElementById("pricetype-filter-input")?.focus();
+      }
+    };
+
+const canView = computed(() =>
       !!proxy?.hasPermission?.("appinventory.view_pricetype")
     );
     const hasRowActions = computed(
@@ -418,7 +427,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.view_pricetype")) {
         actions.push({
           key: "view",
-          label: "View",
+          label: proxy?.$t?.("common.view"),
           severity: "success",
           icon: EyeIcon,
           command: () => viewItem(item.id),
@@ -427,7 +436,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.change_pricetype")) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: proxy?.$t?.("common.edit"),
           severity: "primary",
           icon: PencilIcon,
           command: () => editItem(item.id),
@@ -436,7 +445,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.delete_pricetype")) {
         actions.push({
           key: "delete",
-          label: "Delete",
+          label: proxy?.$t?.("common.delete"),
           severity: "danger",
           icon: TrashIcon,
           command: () => deleteItem(item.id),
@@ -534,6 +543,8 @@ export default {
       sortOrder,
       tableFirst,
       pageOptions,
+      hasSearch,
+      clearSearch,
       emptyTitle,
       emptyDescription,
       isMobile,

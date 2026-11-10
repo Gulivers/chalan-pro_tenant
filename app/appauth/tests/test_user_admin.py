@@ -106,6 +106,8 @@ class UserAdminApiTests(TenantTestCase):
                 'password': 'ValidPass123!',
                 'password_confirm': 'OtherPass123!',
                 'email': 'mismatch@example.com',
+                'first_name': 'Mis',
+                'last_name': 'Match',
             },
             format='json',
         )
@@ -121,6 +123,8 @@ class UserAdminApiTests(TenantTestCase):
                 'password': '12345678',
                 'password_confirm': '12345678',
                 'email': 'weak@example.com',
+                'first_name': 'Weak',
+                'last_name': 'User',
             },
             format='json',
         )

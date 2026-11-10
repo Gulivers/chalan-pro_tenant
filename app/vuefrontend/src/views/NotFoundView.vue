@@ -16,7 +16,7 @@
   <div class="jr-not-found">
     <div class="jr-not-found__card" role="alert">
       <p class="jr-not-found__code">404</p>
-      <p class="jr-not-found__message">Route is not found.</p>
+      <p class="jr-not-found__message">{{ $t("notFound.title") }}</p>
       <router-link
         :to="ctaTo"
         class="jr-not-found__link">
@@ -31,14 +31,17 @@
  * Vista pública de ruta no encontrada (catch-all del router).
  * El CTA depende de si hay access JWT en memoria o flag/sesión de refresh.
  */
-import { computed } from 'vue';
-import { hasAuthSession, getAccessToken } from '@/auth/tokenHelpers';
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
+import { hasAuthSession, getAccessToken } from "@/auth/tokenHelpers";
+
+const { t } = useI18n();
 
 const isSignedIn = computed(() => Boolean(getAccessToken() || hasAuthSession()));
 
-const ctaTo = computed(() => (isSignedIn.value ? '/' : '/login'));
+const ctaTo = computed(() => (isSignedIn.value ? "/" : "/login"));
 const ctaLabel = computed(() =>
-  isSignedIn.value ? 'Back to home' : 'Back to log in form'
+  isSignedIn.value ? t("notFound.backHome") : t("notFound.backLogin")
 );
 </script>
 
