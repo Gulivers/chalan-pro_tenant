@@ -3,15 +3,15 @@
   <SidebarMenuItem v-if="shouldShow && variant === 'sidebar'">
     <SidebarMenuButton
       :is-active="isMessagesActive || isDropdownOpen"
-      aria-label="Notifications"
+      :aria-label="$t('messages.notifications')"
       :aria-expanded="isDropdownOpen"
       @click="toggleDropdown">
       <Comments />
-      <span>Messages</span>
+      <span>{{ $t("messages.title") }}</span>
     </SidebarMenuButton>
     <SidebarMenuBadge v-if="chatStore.unreadTotal > 0">
       {{ chatStore.unreadTotal }}
-      <span class="jr-shell-sidebar__sr-only">unread messages</span>
+      <span class="jr-shell-sidebar__sr-only">{{ $t("messages.unread") }}</span>
     </SidebarMenuBadge>
   </SidebarMenuItem>
 
@@ -25,16 +25,16 @@
       :class="{
         'jr-shell-topbar__nav-link--active': isMessagesActive || isDropdownOpen,
       }"
-      aria-label="Notifications"
+      :aria-label="$t('messages.notifications')"
       :aria-expanded="isDropdownOpen"
       @click="toggleDropdown">
       <Comments class="jr-shell-topbar__nav-icon" aria-hidden="true" />
-      <span>Messages</span>
+      <span>{{ $t("messages.title") }}</span>
       <span
         v-if="chatStore.unreadTotal > 0"
         class="jr-shell-topbar__nav-badge jr-shell-topbar__nav-badge--unread">
         {{ chatStore.unreadTotal }}
-        <span class="jr-shell-sidebar__sr-only">unread messages</span>
+        <span class="jr-shell-sidebar__sr-only">{{ $t("messages.unread") }}</span>
       </span>
     </button>
   </div>
@@ -48,7 +48,7 @@
       type="button"
       class="jr-shell-messages"
       :class="variantClass"
-      aria-label="Notifications"
+      :aria-label="$t('messages.notifications')"
       :aria-expanded="isDropdownOpen"
       @click="toggleDropdown">
       <Comments />
@@ -57,7 +57,7 @@
         class="jr-shell-sidebar__badge"
         :class="{ 'jr-shell-sidebar__badge--rail': variant === 'rail' }">
         {{ chatStore.unreadTotal }}
-        <span class="jr-shell-sidebar__sr-only">unread messages</span>
+        <span class="jr-shell-sidebar__sr-only">{{ $t("messages.unread") }}</span>
       </span>
     </button>
   </div>
@@ -74,7 +74,9 @@
       <!-- Header -->
       <div class="jr-notif-dropdown__header">
         <div class="jr-notif-dropdown__title-wrap">
-          <span class="jr-notif-dropdown__title">Notifications</span>
+          <span class="jr-notif-dropdown__title">{{
+            $t("messages.notifications")
+          }}</span>
           <span
             v-if="chatStore.unreadTotal > 0"
             class="jr-notif-dropdown__total-badge">
@@ -86,7 +88,7 @@
           type="button"
           class="jr-notif-dropdown__mark-all"
           @click="handleMarkAllAsRead">
-          Mark all read
+          {{ $t("messages.markAllRead") }}
         </button>
       </div>
 
@@ -99,7 +101,7 @@
             'jr-notif-dropdown__tab--active': selectedCategory === 'ALL',
           }"
           @click="selectedCategory = 'ALL'">
-          All ({{ chatStore.unreadTotal }})
+          {{ $t("messages.all", { count: chatStore.unreadTotal }) }}
         </button>
         <button
           v-for="cat in categoryList"
@@ -122,7 +124,7 @@
           v-if="chatStore.loadingDetails && !filteredNotifications.length"
           class="jr-notif-dropdown__loading">
           <span class="jr-notif-dropdown__spinner"></span>
-          <span>Loading notifications...</span>
+          <span>{{ $t("messages.loading") }}</span>
         </div>
 
         <!-- Empty State -->
@@ -131,10 +133,10 @@
           class="jr-notif-dropdown__empty">
           <Comments class="jr-notif-dropdown__empty-icon" aria-hidden="true" />
           <span class="jr-notif-dropdown__empty-title">
-            No unread notifications
+            {{ $t("messages.empty") }}
           </span>
           <span class="jr-notif-dropdown__empty-sub">
-            You're all caught up!
+            {{ $t("messages.emptySub") }}
           </span>
         </div>
 

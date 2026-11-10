@@ -1,13 +1,15 @@
 <template>
   <JRPage>
     <JRPageHeader
-      title="Schedule"
-      description="Plan crew work by day or week. Search, jump to a date, or publish drafts in view." />
+      :title="$t('schedule.title')"
+      :description="$t('schedule.description')" />
 
     <JRToolbar>
       <template #start>
         <div class="jr-schedule__search">
-          <label class="jr-sr-only" for="schedule-search">Search schedule</label>
+          <label class="jr-sr-only" for="schedule-search">{{
+            $t("common.search")
+          }}</label>
           <span class="jr-schedule__search-icon" aria-hidden="true">
             <SearchIcon />
           </span>
@@ -15,7 +17,7 @@
             inputId="schedule-search"
             v-model="search"
             type="search"
-            placeholder="Search crew, address, title…"
+            :placeholder="$t('schedule.searchPlaceholder')"
             autocomplete="off"
             :spellcheck="false"
             enterkeyhint="search" />
@@ -24,7 +26,9 @@
 
       <template v-if="categoryTotals.length" #stats>
         <div class="jr-schedule__totals" aria-live="polite">
-          <span class="jr-schedule__totals-label">Weekly Totals</span>
+          <span class="jr-schedule__totals-label">{{
+            $t("schedule.weeklyTotals")
+          }}</span>
           <JRBadge
             v-for="(item, index) in categoryTotals"
             :key="index"
@@ -35,11 +39,13 @@
 
       <template #actions>
         <div class="jr-schedule__jump">
-          <label class="jr-sr-only" for="schedule-jump-date">Go to date</label>
+          <label class="jr-sr-only" for="schedule-jump-date">{{
+            $t("schedule.goToDate")
+          }}</label>
           <JRDatePicker
             inputId="schedule-jump-date"
             :model-value="jumpDate"
-            placeholder="Go to date"
+            :placeholder="$t('schedule.goToDate')"
             :show-button-bar="true"
             @update:model-value="onJumpDate" />
         </div>
@@ -53,7 +59,7 @@
           <FileExcel
             class="jr-schedule__excel-icon"
             aria-hidden="true" />
-          Excel
+          {{ $t("schedule.downloadExcel") }}
         </JRButton>
 
         <JRButton
@@ -65,7 +71,7 @@
           <FilePdf
             class="jr-schedule__pdf-icon"
             aria-hidden="true" />
-          Print PDF
+          {{ $t("schedule.downloadPdf") }}
         </JRButton>
 
         <JRButton
@@ -78,13 +84,17 @@
           :aria-busy="publishing ? 'true' : 'false'"
           :title="
             publishing
-              ? 'Publishing drafts…'
+              ? $t('schedule.publishTitleBusy')
               : showBntPublishAll
-                ? 'Publish all drafts in view'
-                : 'No drafts to publish'
+                ? $t('schedule.publishTitleReady')
+                : $t('schedule.publishTitleEmpty')
           "
           @click="publishAllDrafts">
-          {{ publishing ? "Publishing…" : "Publish All Drafts" }}
+          {{
+            publishing
+              ? $t("schedule.publishing")
+              : $t("schedule.publishAll")
+          }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -95,12 +105,12 @@
         class="jr-schedule__loading"
         role="status"
         aria-live="polite">
-        Loading schedule…
+        {{ $t("schedule.loading") }}
       </p>
       <JREmptyState
         v-else-if="!allResources.length"
-        title="No crews to schedule"
-        description="Active crews with a category appear here as rows. Add or activate a crew, then refresh." />
+        :title="$t('schedule.emptyCrewsTitle')"
+        :description="$t('schedule.emptyCrewsDesc')" />
       <div v-else class="jr-schedule__pane">
         <FullCalendar
           ref="calendarRef"
@@ -120,21 +130,26 @@
 import FullCalendar from "@fullcalendar/vue3";
 import interactionPlugin from "@fullcalendar/interaction";
 import resourceTimelinePlugin from "@fullcalendar/resource-timeline";
+import esLocale from "@fullcalendar/core/locales/es";
 import "@assets/css/schedule.css";
 import EventModal from "./ScheduleEventModal.vue";
 import axios from "axios";
 import { withWsTicket } from "@/auth/wsTicket";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
+import "dayjs/locale/es";
 import Swal from "sweetalert2";
-dayjs.extend(localizedFormat);
 import { useAuthStore } from "@stores/auth";
 import { openPdf } from "@helpers";
 import SearchIcon from "@components/icons/searchIcon.vue";
 import { appMixin } from "@mixins/appMixin";
 import { workOrderStatusSeverity } from "@/utils/workOrderStatus";
+import { tStatus } from "@/utils/statusI18n";
+import i18n, { normalizeLocale } from "@/i18n";
 import FileExcel from "@primeicons/vue/file-excel";
 import FilePdf from "@primeicons/vue/file-pdf";
+
+dayjs.extend(localizedFormat);
 import {
   JRPage,
   JRPageHeader,
@@ -158,13 +173,17 @@ function escapeScheduleHtml(value) {
 function workOrderStatusBadgeHtml(props, isDraftEvent) {
   if (isDraftEvent || !props || props.is_absence || props.deleted) return "";
   const name = props.work_order_status_name;
-  if (!name) return "";
+  if (!name && !props.work_order_status_code) return "";
   const severity = workOrderStatusSeverity({
     status_code: props.work_order_status_code,
     is_terminal: !!props.work_order_status_is_terminal,
   });
-  const safeName = escapeScheduleHtml(name);
-  return `<span class="jr-schedule-event-card__status jr-schedule-event-card__status--${severity}" title="Work Order status: ${safeName}">${safeName}</span>`;
+  const label = tStatus(props.work_order_status_code, name);
+  const safeName = escapeScheduleHtml(label);
+  const title = escapeScheduleHtml(
+    i18n.global.t("schedule.workOrderStatus", { name: label })
+  );
+  return `<span class="jr-schedule-event-card__status jr-schedule-event-card__status--${severity}" title="${title}">${safeName}</span>`;
 }
 
 export default {
@@ -232,6 +251,8 @@ export default {
           resourceTimelineDay: "Day",
           resourceTimelineWeek: "Week",
         },
+        locales: [esLocale],
+        locale: "en",
         editable: false,
         eventResizableFromStart: false,
         droppable: false,
@@ -348,9 +369,24 @@ export default {
     showBntPublishAll() {
       return this.events.some((e) => e?.extendedProps?.event !== undefined);
     },
+    uiLocale() {
+      return normalizeLocale(
+        this.$i18n?.locale?.value ?? this.$i18n?.locale ?? "en"
+      );
+    },
     calendarOptions() {
+      const lang = this.uiLocale;
       return {
         ...this.initialCalendarOptions,
+        locales: [esLocale],
+        locale: lang === "es" ? "es" : "en",
+        firstDay: lang === "es" ? 1 : 0,
+        buttonText: {
+          today: this.$t("schedule.today"),
+          resourceTimelineDay: this.$t("schedule.day"),
+          resourceTimelineWeek: this.$t("schedule.week"),
+        },
+        resourceAreaHeaderContent: this.$t("schedule.crewColumn"),
         resourceAreaWidth: this.resourceAreaWidthCurrent,
         slotMinWidth: this.slotMinWidthCurrent,
         eventMinHeight: this.eventMinHeightCurrent,
@@ -360,7 +396,23 @@ export default {
       };
     },
   },
+  watch: {
+    uiLocale(lang) {
+      dayjs.locale(lang === "es" ? "es" : "en");
+      const api = this.$refs.calendarRef?.getApi?.();
+      if (!api) return;
+      api.setOption("locale", lang === "es" ? "es" : "en");
+      api.setOption("firstDay", lang === "es" ? 1 : 0);
+      api.setOption("resourceAreaHeaderContent", this.$t("schedule.crewColumn"));
+      api.setOption("buttonText", {
+        today: this.$t("schedule.today"),
+        resourceTimelineDay: this.$t("schedule.day"),
+        resourceTimelineWeek: this.$t("schedule.week"),
+      });
+    },
+  },
   async mounted() {
+    dayjs.locale(this.uiLocale === "es" ? "es" : "en");
     const data = await this.getAuthenticatedUser();
     const authStore = useAuthStore();
     authStore.setUser(data);
@@ -807,7 +859,7 @@ export default {
           this.publishing = false;
           if (typeof this.notifyToastError === "function") {
             this.notifyToastError(
-              "Publish timed out after 30s. Please try again."
+              this.$t("schedule.publishTimeout")
             );
           }
         }
@@ -875,7 +927,11 @@ export default {
         link.download = `schedule-${this.calendar_start}_to_${formattedEnd}.xlsx`;
         link.click();
       } catch (err) {
-        Swal.fire("Error", "Could not download the Excel file.", "error");
+        Swal.fire(
+          this.$t("common.error"),
+          this.$t("schedule.excelError"),
+          "error"
+        );
         console.error("Excel Download Error:", err);
       }
     },

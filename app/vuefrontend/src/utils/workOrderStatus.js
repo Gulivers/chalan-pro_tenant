@@ -4,6 +4,7 @@
  * Document Status, there is no next/previous (sequence ±1) rule here.
  */
 import { readApiError } from './documentStatus';
+import { workAccountStateLabelI18n } from './statusI18n';
 
 export { formatStatusWhen, readApiError } from './documentStatus';
 
@@ -29,10 +30,7 @@ export function workOrderStatusSeverity(status) {
 }
 
 export function workAccountStateLabel(state) {
-  const key = String(state || '').toLowerCase();
-  if (key === 'completed') return 'Completed';
-  if (key === 'in_progress') return 'In progress';
-  return 'Not started';
+  return workAccountStateLabelI18n(state);
 }
 
 export function workAccountStateSeverity(state) {

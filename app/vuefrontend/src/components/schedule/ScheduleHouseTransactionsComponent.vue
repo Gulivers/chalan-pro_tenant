@@ -1,13 +1,15 @@
 <template>
   <div class="jr-pilot jr-house-transactions">
     <div class="jr-house-transactions__header">
-      <h3 class="jr-house-transactions__title">Transactions</h3>
+      <h3 class="jr-house-transactions__title">
+        {{ $t("transactions.title") }}
+      </h3>
       <JRButton
         v-if="canAdd"
         type="button"
         size="sm"
         @click="() => goToTransactionForm()">
-        + New Transaction
+        {{ $t("transactions.new") }}
       </JRButton>
     </div>
 
@@ -15,7 +17,7 @@
       <template #start>
         <div class="jr-house-transactions__search">
           <label class="jr-sr-only" for="house-transactions-search">
-            Search transactions
+            {{ $t("transactions.searchLabel") }}
           </label>
           <span class="jr-house-transactions__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -24,7 +26,7 @@
             inputId="house-transactions-search"
             v-model="search"
             type="search"
-            placeholder="Search by type, notes, ID…"
+            :placeholder="$t('transactions.houseSearchPlaceholder')"
             autocomplete="off"
             :spellcheck="false"
             enterkeyhint="search" />
@@ -34,13 +36,15 @@
       <template #stats>
         <div class="jr-house-transactions__summary" aria-live="polite">
           <JRBadge
-            :value="`${filteredTransactions.length} Total`"
+            :value="
+              $t('common.badgeTotal', { count: filteredTransactions.length })
+            "
             severity="secondary" />
           <JRBadge
-            :value="`${activeCount} Active`"
+            :value="$t('common.badgeActive', { count: activeCount })"
             :severity="activeCount > 0 ? 'success' : 'secondary'" />
           <JRBadge
-            :value="`${voidedCount} Voided`"
+            :value="$t('common.badgeVoided', { count: voidedCount })"
             severity="secondary" />
         </div>
       </template>
@@ -53,7 +57,7 @@
           class="jr-house-transactions__refresh"
           @click="refreshTable">
           <RefreshIcon />
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -92,7 +96,7 @@
                 variant="ghost"
                 size="sm"
                 @click="refreshTable">
-                Refresh
+                {{ $t("common.refresh") }}
               </JRButton>
               <JRButton
                 v-else-if="search.trim()"
@@ -100,19 +104,23 @@
                 variant="ghost"
                 size="sm"
                 @click="search = ''">
-                Clear search
+                {{ $t("common.clearSearch") }}
               </JRButton>
               <JRButton
                 v-else-if="canAdd"
                 type="button"
                 size="sm"
                 @click="() => goToTransactionForm()">
-                + New Transaction
+                {{ $t("transactions.new") }}
               </JRButton>
             </JREmptyState>
           </template>
 
-          <Column field="id" header="ID" sortable style="width: 4rem">
+          <Column
+            field="id"
+            :header="$t('transactions.colId')"
+            sortable
+            style="width: 4rem">
             <template #body="{ data }">
               {{ data.id }}
             </template>
@@ -120,73 +128,81 @@
 
           <Column
             field="document_type"
-            header="Type"
-          sortable
-          style="width: 7rem">
-          <template #body="{ data }">
-            <span
-              v-tt
-              :data-title="
-                documentTypeDescriptionsMap[data.document_type] || ''
-              ">
+            :header="$t('transactions.colType')"
+            sortable
+            style="width: 7rem">
+            <template #body="{ data }">
+              <span
+                v-tt
+                :data-title="
+                  documentTypeDescriptionsMap[data.document_type] || ''
+                ">
+                <JRBadge
+                  :value="documentTypeNamesMap[data.document_type] || '—'"
+                  severity="info" />
+              </span>
+            </template>
+          </Column>
+
+          <Column
+            field="date"
+            :header="$t('transactions.colDate')"
+            sortable
+            style="width: 8rem">
+            <template #body="{ data }">
+              {{ formatDate(data.date) }}
+            </template>
+          </Column>
+
+          <Column
+            field="total_amount"
+            :header="$t('transactions.colTotal')"
+            sortable
+            headerClass="jr-col-num"
+            bodyClass="jr-col-num">
+            <template #body="{ data }">
+              <strong>{{ currency(data.total_amount) }}</strong>
+            </template>
+          </Column>
+
+          <Column field="notes" :header="$t('transactions.colNotes')">
+            <template #body="{ data }">
+              <span
+                class="jr-house-transactions__notes"
+                :title="data.notes || undefined">
+                {{ data.notes || "—" }}
+              </span>
+            </template>
+          </Column>
+
+          <Column
+            field="is_active"
+            :header="$t('transactions.colStatus')"
+            sortable
+            style="width: 6rem">
+            <template #body="{ data }">
               <JRBadge
-                :value="documentTypeNamesMap[data.document_type] || '—'"
-                severity="info" />
-            </span>
-          </template>
-        </Column>
+                :value="
+                  data.is_active ? $t('common.active') : $t('common.voided')
+                "
+                :severity="data.is_active ? 'success' : 'secondary'" />
+            </template>
+          </Column>
 
-        <Column field="date" header="Date" sortable style="width: 8rem">
-          <template #body="{ data }">
-            {{ formatDate(data.date) }}
-          </template>
-        </Column>
-
-        <Column
-          field="total_amount"
-          header="Total"
-          sortable
-          headerClass="jr-col-num"
-          bodyClass="jr-col-num">
-          <template #body="{ data }">
-            <strong>{{ currency(data.total_amount) }}</strong>
-          </template>
-        </Column>
-
-        <Column field="notes" header="Notes">
-          <template #body="{ data }">
-            <span
-              class="jr-house-transactions__notes"
-              :title="data.notes || undefined">
-              {{ data.notes || "—" }}
-            </span>
-          </template>
-        </Column>
-
-        <Column
-          field="is_active"
-          header="Status"
-          sortable
-          style="width: 6rem">
-          <template #body="{ data }">
-            <JRBadge
-              :value="data.is_active ? 'Active' : 'Voided'"
-              :severity="data.is_active ? 'success' : 'secondary'" />
-          </template>
-        </Column>
-
-        <Column
-          v-if="hasRowActions"
-          header="Actions"
-          :sortable="false"
-          headerClass="jr-col-actions"
-          bodyClass="jr-col-actions">
-          <template #body="{ data }">
-            <JRRowActions
-              :actions="getRowActions(data)"
-              :entity-label="`Transaction ${data.id}`" />
-          </template>
-        </Column>
+          <Column
+            v-if="hasRowActions"
+            :header="$t('common.actions')"
+            :sortable="false"
+            headerClass="jr-col-actions"
+            bodyClass="jr-col-actions">
+            <template #body="{ data }">
+              <JRRowActions
+                :actions="getRowActions(data)"
+                :entity-label="
+                  $t('transactions.entityLabel', { id: data.id })
+                " />
+            </template>
+          </Column>
       </JRDataTable>
       </div>
     </JRScrollArea>
@@ -291,14 +307,14 @@ export default {
       return this.filteredTransactions.filter((t) => !t.is_active).length;
     },
     emptyTitle() {
-      if (this.loadError) return "Could not load transactions";
-      if (this.search.trim()) return "No matching transactions";
-      return "No transactions yet";
+      if (this.loadError) return this.$t("transactions.emptyLoadError");
+      if (this.search.trim()) return this.$t("transactions.emptySearch");
+      return this.$t("transactions.emptyYet");
     },
     emptyDescription() {
-      if (this.loadError) return "Check your connection and try Refresh.";
-      if (this.search.trim()) return "Try a different search term.";
-      return "No transactions found for this work account.";
+      if (this.loadError) return this.$t("transactions.emptyLoadHint");
+      if (this.search.trim()) return this.$t("transactions.emptySearchHint");
+      return this.$t("transactions.emptyForWorkAccount");
     },
   },
   watch: {
@@ -345,14 +361,14 @@ export default {
       if (this.canView) {
         actions.push({
           key: "view",
-          label: "View",
+          label: this.$t("common.view"),
           severity: "success",
           icon: EyeIcon,
           command: () => this.goToTransactionForm(item.id, "view"),
         });
         actions.push({
           key: "print",
-          label: "Print",
+          label: this.$t("common.print"),
           severity: "secondary",
           command: () => this.printTransaction(item.id),
         });
@@ -360,7 +376,7 @@ export default {
       if (this.canChange) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: this.$t("common.edit"),
           severity: "primary",
           icon: PencilIcon,
           command: () => this.goToTransactionForm(item.id),

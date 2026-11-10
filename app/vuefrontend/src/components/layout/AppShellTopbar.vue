@@ -17,7 +17,7 @@
         class="jr-shell-topbar__nav-link"
         :class="{ 'jr-shell-topbar__nav-link--active': dashboardActive }">
         <Home class="jr-shell-topbar__nav-icon" aria-hidden="true" />
-        <span>Dashboard</span>
+        <span>{{ $t("common.dashboard") }}</span>
       </router-link>
 
       <button
@@ -26,13 +26,14 @@
         class="jr-shell-topbar__nav-link"
         @click="$emit('open-assistant')">
         <Sparkles class="jr-shell-topbar__nav-icon" aria-hidden="true" />
-        <span>Assistant</span>
+        <span>{{ $t("common.assistant") }}</span>
       </button>
 
       <NavbarMessagesDropdown variant="topbar" />
     </nav>
 
     <div class="jr-shell-topbar__actions">
+      <LocaleToggle v-if="isLoggedIn" class="jr-shell-topbar__locale" />
       <AppShellUserMenu
         v-if="isLoggedIn"
         surface="topbar"
@@ -46,7 +47,7 @@
         v-else
         to="/login"
         class="jr-shell-topbar__login">
-        Log In
+        {{ $t("common.logIn") }}
       </router-link>
     </div>
   </header>
@@ -55,6 +56,7 @@
 <script>
 import Home from "@primeicons/vue/home";
 import Sparkles from "@primeicons/vue/sparkles";
+import LocaleToggle from "@/components/LocaleToggle.vue";
 import AppShellUserMenu from "./AppShellUserMenu.vue";
 import NavbarMessagesDropdown from "./NavbarMessagesDropdown.vue";
 
@@ -63,6 +65,7 @@ export default {
   components: {
     AppShellUserMenu,
     Home,
+    LocaleToggle,
     NavbarMessagesDropdown,
     Sparkles,
   },
