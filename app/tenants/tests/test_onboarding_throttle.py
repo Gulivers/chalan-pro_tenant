@@ -1,6 +1,9 @@
+from django.core.cache import cache
 from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
+
+from tenants.throttles import OnboardingCreateEmailThrottle, OnboardingCreateIPThrottle
 
 
 THROTTLE_SETTINGS = {
@@ -22,8 +25,16 @@ THROTTLE_SETTINGS = {
 @override_settings(**THROTTLE_SETTINGS, DEBUG=True, TURNSTILE_SECRET_KEY='')
 class OnboardingThrottleTests(APITestCase):
     def setUp(self):
+        cache.clear()
+        OnboardingCreateIPThrottle.rate = '2/minute'
+        OnboardingCreateEmailThrottle.rate = '2/minute'
         self.client = APIClient()
         self.url = '/api/onboarding/'
+
+    def tearDown(self):
+        OnboardingCreateIPThrottle.rate = None
+        OnboardingCreateEmailThrottle.rate = None
+        cache.clear()
 
     def test_post_only_is_throttled_by_ip(self):
         payload = {
@@ -45,6 +56,8 @@ class OnboardingThrottleTests(APITestCase):
             self.assertNotEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
     def test_email_throttle_blocks_repeated_addresses(self):
+        OnboardingCreateIPThrottle.rate = '100/minute'
+        OnboardingCreateEmailThrottle.rate = '2/minute'
         with override_settings(
             REST_FRAMEWORK={
                 **THROTTLE_SETTINGS['REST_FRAMEWORK'],
