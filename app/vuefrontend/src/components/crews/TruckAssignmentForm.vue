@@ -3,7 +3,7 @@
     <JRPageHeader :title="pageTitle">
       <template v-if="canEditFromView" #actions>
         <JRButton variant="primary" size="sm" @click="goToEdit">
-          Edit truck assignment
+          {{ $t('crews.form.editTruckAssignmentLabel') }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -13,7 +13,7 @@
         v-if="loading"
         class="jr-truck-assignment-form__status"
         role="status">
-        Loading truck assignment…
+        {{ $t('crews.form.loadingAssignment') }}
       </p>
 
       <form
@@ -237,14 +237,14 @@
           class="jr-truck-assignment-form__actions jr-truck-assignment-form__actions--sticky">
           <template v-if="!isViewMode">
             <JRButton type="submit" variant="primary" :disabled="isDisabled">
-              {{ submitting ? "Saving..." : "Save" }}
+              {{ submitting ? $t('common.saving') : $t('common.save') }}
             </JRButton>
             <JRButton
               type="button"
               variant="secondary"
               :disabled="submitting"
               @click="goList">
-              Cancel
+              {{ $t('common.cancel') }}
             </JRButton>
           </template>
           <JRButton
@@ -253,7 +253,7 @@
             variant="secondary"
             :disabled="submitting"
             @click="goList">
-            Back
+            {{ $t('common.back') }}
           </JRButton>
         </div>
       </form>
@@ -267,6 +267,7 @@ import Swal from "sweetalert2";
 import Message from "primevue/message";
 import { onMounted, ref, computed, getCurrentInstance, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import {
   JRPage,
   JRPageHeader,
@@ -280,6 +281,7 @@ import {
 const { proxy } = getCurrentInstance();
 const route = useRoute();
 const router = useRouter();
+const { t: $t } = useI18n({ useScope: "global" });
 const id = route.params.id;
 const isViewMode = computed(
   () => route.name === "crew-truck-assignment-view"
@@ -353,9 +355,9 @@ function truckViewTo(truckId) {
 
 const isDisabled = computed(() => isViewMode.value || submitting.value);
 const pageTitle = computed(() => {
-  if (isViewMode.value) return "View Truck Assignment";
-  if (isEditMode.value) return "Edit Truck Assignment";
-  return "Add Truck Assignment";
+  if (isViewMode.value) return $t("crews.form.viewTruckAssignmentTitle");
+  if (isEditMode.value) return $t("crews.form.editTruckAssignmentTitle");
+  return $t("crews.form.newTruckAssignmentTitle");
 });
 const canEditFromView = computed(
   () =>
@@ -496,7 +498,11 @@ async function loadData() {
     syncMileageRows(truckIds, data.truck_readings || []);
   } catch (err) {
     console.error("Load error:", err);
-    await Swal.fire("Oops!", "Error loading the truck assignment.", "error");
+    await Swal.fire(
+      $t("common.error"),
+      $t("crews.form.swalLoadAssignmentError"),
+      "error"
+    );
   }
 }
 
@@ -514,12 +520,20 @@ function validate() {
   });
   if (!form.value.crew) {
     fieldErrors.value = { crew: "Assigned crew is required." };
-    Swal.fire("Validation", "Assigned crew is required.", "warning");
+    Swal.fire(
+      $t("common.validationError"),
+      $t("crews.form.swalCrewRequired"),
+      "warning"
+    );
     return false;
   }
   if (!form.value.trucks?.length || !mileageRows.value.length) {
     fieldErrors.value = { trucks: "At least one truck is required." };
-    Swal.fire("Validation", "At least one truck is required.", "warning");
+    Swal.fire(
+      $t("common.validationError"),
+      $t("crews.form.swalTruckRequired"),
+      "warning"
+    );
     return false;
   }
   if (!form.value.assigned_date || !form.value.assigned_time) {
@@ -621,10 +635,10 @@ async function handleSubmit() {
     };
     if (id) {
       await axios.patch(`/api/truck-assignments/${id}/`, payload);
-      proxy?.notifyToastSuccess?.("Truck assignment updated.");
+      proxy?.notifyToastSuccess?.($t("crews.form.swalAssignmentUpdated"));
     } else {
       await axios.post("/api/truck-assignments/", payload);
-      proxy?.notifyToastSuccess?.("Truck assignment created.");
+      proxy?.notifyToastSuccess?.($t("crews.form.swalAssignmentCreated"));
     }
     router.push({ name: "crew-truck-assignments" });
   } catch (err) {
@@ -646,7 +660,7 @@ async function handleSubmit() {
         fieldErrors.value = next;
       }
     }
-    await Swal.fire("Validation Error", msg, "error");
+    await Swal.fire($t("common.validationError"), msg, "error");
   } finally {
     submitting.value = false;
   }

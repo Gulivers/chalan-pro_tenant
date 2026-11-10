@@ -1,12 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Absence Reasons">
+    <JRPageHeader :title="$t('crews.absenceReasonsTitle')">
       <template #actions>
         <JRButton
           v-if="hasPermission('appschedule.add_absencereason')"
           type="button"
           @click="goToCreateForm">
-          + New Absence Reason
+          {{ $t("crews.absenceReasonsNew") }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -15,7 +15,7 @@
       <template #start>
         <div class="jr-master-list__search">
           <label class="jr-sr-only" for="absence-reason-filter-input">
-            Search absence reasons
+            {{ $t("crews.absenceReasonsSearchLabel") }}
           </label>
           <span class="jr-master-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -24,20 +24,20 @@
             inputId="absence-reason-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search by name or description..." />
+            :placeholder="$t('crews.absenceReasonsSearchPlaceholder')" />
         </div>
       </template>
 
       <template #stats>
         <div class="jr-master-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
-          <JRBadge :value="`${stats.active} Active`" severity="success" />
+          <JRBadge :value="$t('common.badgeTotal', { count: stats.total })" severity="secondary" />
+          <JRBadge :value="$t('common.badgeActive', { count: stats.active })" severity="success" />
         </div>
       </template>
 
       <template #actions>
         <label class="jr-sr-only" for="absence-reason-per-page">
-          Entries per page
+          {{ $t("common.entriesPerPage") }}
         </label>
         <JRSelect
           class="jr-master-list__entries"
@@ -53,7 +53,7 @@
           class="jr-master-list__refresh"
           @click="refreshTable">
           <RefreshIcon />
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -69,7 +69,7 @@
           variant="ghost"
           size="sm"
           @click="refreshTable">
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
         <JRButton
           v-else-if="hasSearch"
@@ -77,17 +77,17 @@
           variant="ghost"
           size="sm"
           @click="clearSearch">
-          Clear search
+          {{ $t("common.clearSearch") }}
         </JRButton>
       </JREmptyState>
       <p v-if="isLoading && !pagedItems.length" class="jr-master-list__loading">
-        Loading absence reasons…
+        {{ $t("common.loadingLabel", { label: $t("crews.absenceReasonsTitle") }) }}
       </p>
       <p
         v-else-if="isLoading && pagedItems.length"
         class="jr-master-list__loading"
         aria-live="polite">
-        Updating…
+        {{ $t("common.updating") }}
       </p>
       <ul
         v-if="pagedItems.length"
@@ -162,7 +162,7 @@
               variant="ghost"
               size="sm"
               @click="refreshTable">
-              Refresh
+              {{ $t("common.refresh") }}
             </JRButton>
             <JRButton
               v-else-if="hasSearch"
@@ -170,16 +170,16 @@
               variant="ghost"
               size="sm"
               @click="clearSearch">
-              Clear search
+              {{ $t("common.clearSearch") }}
             </JRButton>
           </JREmptyState>
         </template>
-        <Column field="id" header="ID" sortable style="width: 4.5rem">
+        <Column field="id" :header="$t('crews.colId')" sortable style="width: 4.5rem">
           <template #body="{ data }">
             {{ data.id }}
           </template>
         </Column>
-        <Column field="name" header="Name" sortable>
+        <Column field="name" :header="$t('parties.colName')" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
@@ -191,12 +191,12 @@
             <span v-else>{{ data.name }}</span>
           </template>
         </Column>
-        <Column field="description" header="Description" sortable>
+        <Column field="description" :header="$t('crews.colDescription')" sortable>
           <template #body="{ data }">
             <span class="jr-master-row__desc">{{ data.description || "—" }}</span>
           </template>
         </Column>
-        <Column field="is_active" header="Status" sortable style="width: 7rem">
+        <Column field="is_active" :header="$t('crews.colStatus')" sortable style="width: 7rem">
           <template #body="{ data }">
             <JRBadge
               :value="data.is_active !== false ? 'Active' : 'Inactive'"
@@ -205,7 +205,7 @@
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="
             isTablet
@@ -240,6 +240,7 @@ import {
   getCurrentInstance,
 } from "vue";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import Column from "primevue/column";
 import Paginator from "primevue/paginator";
 import EyeIcon from "@primevue/icons/eye";
@@ -291,6 +292,7 @@ function compareValues(a, b, field) {
 }
 
 const router = useRouter();
+const { t } = useI18n();
 const { proxy } = getCurrentInstance();
 
 const items = ref([]);
@@ -348,15 +350,15 @@ const pagedItems = computed(() => {
 
 const hasSearch = computed(() => Boolean(filter.value && filter.value.trim()));
 const emptyTitle = computed(() => {
-  if (loadError.value) return "Could not load absence reasons";
-  if (hasSearch.value) return "No matching absence reasons";
-  return "No absence reasons";
+  if (loadError.value) return t("crews.absenceReasonsEmptyLoadError");
+  if (hasSearch.value) return t("crews.absenceReasonsEmptySearch");
+  return t("crews.absenceReasonsEmptyNone");
 });
 const emptyDescription = computed(() => {
-  if (loadError.value) return "Try Refresh.";
+  if (loadError.value) return t("common.tryRefresh");
   const query = filter.value.trim();
-  if (query) return `No absence reasons match “${query}”.`;
-  return "No absence reasons yet.";
+  if (query) return t("crews.absenceReasonsEmptySearchDesc", { query });
+  return t("crews.absenceReasonsEmptyNoneDesc");
 });
 
 const clearSearch = () => {
@@ -429,7 +431,7 @@ const getRowActions = (item) => {
   if (proxy?.hasPermission?.("appschedule.view_absencereason")) {
     actions.push({
       key: "view",
-      label: "View",
+      label: t("common.view"),
       severity: "success",
       icon: EyeIcon,
       command: () => viewItem(item.id),
@@ -438,7 +440,7 @@ const getRowActions = (item) => {
   if (proxy?.hasPermission?.("appschedule.change_absencereason")) {
     actions.push({
       key: "edit",
-      label: "Edit",
+      label: t("common.edit"),
       severity: "primary",
       icon: PencilIcon,
       command: () => editItem(item.id),
@@ -447,7 +449,7 @@ const getRowActions = (item) => {
   if (proxy?.hasPermission?.("appschedule.delete_absencereason")) {
     actions.push({
       key: "delete",
-      label: "Delete",
+      label: t("common.delete"),
       severity: "danger",
       icon: TrashIcon,
       command: () => deleteItem(item),
@@ -460,8 +462,8 @@ const deleteItem = (item) => {
   const id = item?.id;
   const name = item?.name ? `“${item.name}”` : `#${id}`;
   proxy?.confirmDelete?.(
-    "Are you sure?",
-    `Delete ${name}? This action cannot be undone.`,
+    t("common.confirmDeleteTitle"),
+    t("crews.absenceReasonsDeleteConfirm", { name: item?.name ?? String(id) }),
     async () => {
       try {
         await axios.delete(`${ENDPOINT}${id}/`);

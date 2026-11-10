@@ -1,18 +1,22 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Dashboard" />
+    <JRPageHeader :title="$t('dashboard.title')" />
 
-    <JRSection title="Weekly Contract Totals" class="jr-home-section">
+    <JRSection
+      :title="$t('dashboard.weeklyContractTotals')"
+      class="jr-home-section">
       <AreaChart />
     </JRSection>
 
-    <JRSection title="Monthly Contract Totals" class="jr-home-section">
+    <JRSection
+      :title="$t('dashboard.monthlyContractTotals')"
+      class="jr-home-section">
       <BarChart />
     </JRSection>
 
     <JRSection
       v-if="hasPermission('apptransactions.add_workaccount')"
-      title="Weekly Supervisor Stats"
+      :title="$t('dashboard.weeklySupervisorStats')"
       class="jr-home-section"
     >
       <WeeklySupervisorChart />

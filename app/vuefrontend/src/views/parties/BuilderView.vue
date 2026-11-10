@@ -1,12 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Parties">
+    <JRPageHeader :title="$t('parties.title')">
       <template #actions>
         <JRButton
           v-if="hasPermission('ctrctsapp.add_builder')"
           type="button"
           @click="goToCreateForm">
-          + New Party
+          {{ $t("parties.newParty") }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -15,7 +15,7 @@
       <template #start>
         <div class="jr-master-list__search">
           <label class="jr-sr-only" for="builder-filter-input">
-            Search parties
+            {{ $t("parties.searchLabel") }}
           </label>
           <span class="jr-master-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -24,25 +24,25 @@
             inputId="builder-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search by name, email, phone, city..." />
+            :placeholder="$t('parties.searchPlaceholder')" />
         </div>
       </template>
 
       <template #stats>
         <div class="jr-master-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
+          <JRBadge :value="$t('common.badgeTotal', { count: stats.total })" severity="secondary" />
           <JRBadge
-            :value="`${stats.active} Active`"
+            :value="$t('common.badgeActive', { count: stats.active })"
             :severity="stats.active > 0 ? 'success' : 'secondary'" />
           <JRBadge
-            :value="`${stats.inactive} Inactive`"
+            :value="$t('common.badgeInactive', { count: stats.inactive })"
             severity="secondary" />
         </div>
       </template>
 
       <template #actions>
         <label class="jr-sr-only" for="builder-per-page">
-          Entries per page
+          {{ $t("common.entriesPerPage") }}
         </label>
         <JRSelect
           class="jr-master-list__entries"
@@ -58,7 +58,7 @@
           class="jr-master-list__refresh"
           @click="refreshTable">
           <RefreshIcon />
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -74,7 +74,7 @@
           variant="ghost"
           size="sm"
           @click="refreshTable">
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
         <JRButton
           v-else-if="hasSearch"
@@ -82,17 +82,17 @@
           variant="ghost"
           size="sm"
           @click="clearSearch">
-          Clear search
+          {{ $t("common.clearSearch") }}
         </JRButton>
       </JREmptyState>
       <p v-if="isLoading && !pagedItems.length" class="jr-master-list__loading">
-        Loading parties…
+        {{ $t("common.loadingLabel", { label: $t("parties.title") }) }}
       </p>
       <p
         v-else-if="isLoading && pagedItems.length"
         class="jr-master-list__loading"
         aria-live="polite">
-        Updating…
+        {{ $t("common.updating") }}
       </p>
       <ul
         v-if="pagedItems.length"
@@ -114,7 +114,9 @@
           </div>
           <div class="jr-master-row__aside">
             <JRBadge
-              :value="item.is_active ? 'Active' : 'Inactive'"
+              :value="
+                item.is_active ? $t('common.active') : $t('common.inactive')
+              "
               :severity="item.is_active ? 'success' : 'secondary'" />
             <JRRowActions
               v-if="hasRowActions"
@@ -167,7 +169,7 @@
               variant="ghost"
               size="sm"
               @click="refreshTable">
-              Refresh
+              {{ $t("common.refresh") }}
             </JRButton>
             <JRButton
               v-else-if="hasSearch"
@@ -175,11 +177,11 @@
               variant="ghost"
               size="sm"
               @click="clearSearch">
-              Clear search
+              {{ $t("common.clearSearch") }}
             </JRButton>
           </JREmptyState>
         </template>
-        <Column field="name" header="Name" sortable>
+        <Column field="name" :header="$t('parties.colName')" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
@@ -191,52 +193,52 @@
             <span v-else>{{ data.name }}</span>
           </template>
         </Column>
-        <Column field="email" header="Email" sortable>
+        <Column field="email" :header="$t('parties.colEmail')" sortable>
           <template #body="{ data }">
             {{ data.email || "—" }}
           </template>
         </Column>
-        <Column field="phone" header="Phone" sortable>
+        <Column field="phone" :header="$t('parties.colPhone')" sortable>
           <template #body="{ data }">
             {{ data.phone || "—" }}
           </template>
         </Column>
-        <Column field="city" header="City" sortable>
+        <Column field="city" :header="$t('parties.colCity')" sortable>
           <template #body="{ data }">
             {{ data.city || "—" }}
           </template>
         </Column>
-        <Column field="state" header="State" sortable>
+        <Column field="state" :header="$t('parties.colState')" sortable>
           <template #body="{ data }">
             {{ data.state || "—" }}
           </template>
         </Column>
-        <Column field="category" header="Category" sortable>
+        <Column field="category" :header="$t('parties.colCategory')" sortable>
           <template #body="{ data }">
             {{ categoryLabel(data) }}
           </template>
         </Column>
-        <Column field="customer_rank" header="Customer" sortable>
+        <Column field="customer_rank" :header="$t('parties.colCustomer')" sortable>
           <template #body="{ data }">
             <JRBadge
               v-if="data.customer_rank"
-              value="Customer"
+              :value="$t('parties.badgeCustomer')"
               severity="info" />
             <span v-else class="jr-master-list__muted">—</span>
           </template>
         </Column>
-        <Column field="supplier_rank" header="Supplier" sortable>
+        <Column field="supplier_rank" :header="$t('parties.colSupplier')" sortable>
           <template #body="{ data }">
             <JRBadge
               v-if="data.supplier_rank"
-              value="Supplier"
+              :value="$t('parties.badgeSupplier')"
               severity="info" />
             <span v-else class="jr-master-list__muted">—</span>
           </template>
         </Column>
         <Column
           field="trim_amount"
-          header="Trim Price"
+          :header="$t('parties.colTrimPrice')"
           sortable
           headerClass="jr-col-num"
           bodyClass="jr-col-num">
@@ -246,7 +248,7 @@
         </Column>
         <Column
           field="rough_amount"
-          header="Rough Price"
+          :header="$t('parties.colRoughPrice')"
           sortable
           headerClass="jr-col-num"
           bodyClass="jr-col-num">
@@ -254,16 +256,18 @@
             {{ formatAmount(data.rough_amount) }}
           </template>
         </Column>
-        <Column field="is_active" header="Status" sortable>
+        <Column field="is_active" :header="$t('parties.colStatus')" sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.is_active ? 'Active' : 'Inactive'"
+              :value="
+                data.is_active ? $t('common.active') : $t('common.inactive')
+              "
               :severity="data.is_active ? 'success' : 'secondary'" />
           </template>
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="
             isTablet
@@ -454,15 +458,15 @@ export default {
       Boolean(filter.value && filter.value.trim())
     );
     const emptyTitle = computed(() => {
-      if (loadError.value) return "Could not load parties";
-      if (hasSearch.value) return "No matching parties";
-      return "No parties";
+      if (loadError.value) return proxy?.$t?.("parties.emptyLoadError");
+      if (hasSearch.value) return proxy?.$t?.("parties.emptySearch");
+      return proxy?.$t?.("parties.emptyNone");
     });
     const emptyDescription = computed(() => {
-      if (loadError.value) return "Try Refresh.";
+      if (loadError.value) return proxy?.$t?.("common.tryRefresh");
       const query = filter.value.trim();
-      if (query) return `No parties match “${query}”.`;
-      return "No parties yet.";
+      if (query) return proxy?.$t?.("parties.emptySearchDesc", { query });
+      return proxy?.$t?.("parties.emptyNoneDesc");
     });
 
     const clearSearch = () => {
@@ -546,7 +550,7 @@ export default {
       if (proxy?.hasPermission?.("ctrctsapp.view_builder")) {
         actions.push({
           key: "view",
-          label: "View",
+          label: proxy?.$t?.("common.view"),
           severity: "success",
           icon: EyeIcon,
           command: () => viewItem(item.id),
@@ -555,7 +559,7 @@ export default {
       if (proxy?.hasPermission?.("ctrctsapp.change_builder")) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: proxy?.$t?.("common.edit"),
           severity: "primary",
           icon: PencilIcon,
           command: () => editItem(item.id),
@@ -564,7 +568,7 @@ export default {
       if (proxy?.hasPermission?.("ctrctsapp.delete_builder")) {
         actions.push({
           key: "delete",
-          label: "Delete",
+          label: proxy?.$t?.("common.delete"),
           severity: "danger",
           icon: TrashIcon,
           command: () => deleteBuilder(item.id, item.name),
@@ -575,8 +579,8 @@ export default {
 
     const deleteBuilder = (id, name) => {
       proxy?.confirmDelete?.(
-        "Are you sure?",
-        `Delete "${name}"? This action cannot be undone.`,
+        proxy?.$t?.("common.confirmDeleteTitle"),
+        proxy?.$t?.("parties.deleteConfirm", { name }),
         async () => {
           try {
             await axios.delete(`${ENDPOINT}${id}/`);

@@ -3,14 +3,14 @@
     <JRPageHeader v-if="!isModal" :title="pageTitle">
       <template v-if="canEditFromView" #actions>
         <JRButton variant="primary" size="sm" @click="goToEdit">
-          Edit document type
+          {{ $t('transactions.docTypeForm.editDocType') }}
         </JRButton>
       </template>
     </JRPageHeader>
 
     <div class="jr-doctype-form">
       <p v-if="loading" class="jr-doctype-form__status" role="status">
-        Loading document type…
+        {{ $t('transactions.docTypeForm.loading') }}
       </p>
 
       <form
@@ -19,9 +19,9 @@
         @submit.prevent="handleSubmit"
         novalidate>
         <p v-if="isProtectedType" class="jr-doctype-form__note" role="status">
-          The Material Request document type is required by the system and cannot be edited or deleted.
+          {{ $t('transactions.docTypeForm.protectedNote') }}
         </p>
-        <JRSection title="Basic Information">
+        <JRSection :title="$t('transactions.docTypeForm.sectionBasic')">
           <div class="jr-form-grid">
             <JRField
               v-slot="{ describedby, invalid }"
@@ -63,7 +63,7 @@
           </div>
         </JRSection>
 
-        <JRSection title="Inventory Configuration">
+        <JRSection :title="$t('transactions.docTypeForm.sectionInventory')">
           <div class="jr-form-grid">
             <JRField
               v-slot="{ describedby }"
@@ -135,7 +135,7 @@
           </div>
         </JRSection>
 
-        <JRSection title="Business Configuration">
+        <JRSection :title="$t('transactions.docTypeForm.sectionBusiness')">
           <div class="jr-form-checks">
             <JRField
               label="Purchase Document"
@@ -170,7 +170,7 @@
           </div>
         </JRSection>
 
-        <JRSection title="Operational Configuration">
+        <JRSection :title="$t('transactions.docTypeForm.sectionOperational')">
           <div class="jr-form-checks">
             <JRField
               label="Operational Document"
@@ -284,14 +284,14 @@
           ]">
           <template v-if="!isViewMode && !isProtectedType">
             <JRButton type="submit" variant="primary" :disabled="isDisabled">
-              {{ submitting ? "Saving..." : "Save" }}
+              {{ submitting ? $t('common.saving') : $t('common.save') }}
             </JRButton>
             <JRButton
               type="button"
               variant="secondary"
               :disabled="submitting"
               @click="handleCancel">
-              Cancel
+              {{ $t('common.cancel') }}
             </JRButton>
           </template>
           <JRButton
@@ -300,7 +300,7 @@
             variant="secondary"
             :disabled="submitting"
             @click="handleCancel">
-            Back
+            {{ $t('common.back') }}
           </JRButton>
         </div>
       </form>
@@ -311,6 +311,7 @@
 <script setup>
 import { ref, computed, onMounted, getCurrentInstance } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import {
   JRPage,
@@ -367,10 +368,12 @@ const canEditFromView = computed(
     !!proxy?.hasPermission?.("apptransactions.change_documenttype")
 );
 
+const { t } = useI18n({ useScope: "global" });
+
 const pageTitle = computed(() => {
-  if (isViewMode.value) return "View Document Type";
-  if (isEditMode.value) return "Edit Document Type";
-  return "New Document Type";
+  if (isViewMode.value) return t("transactions.docTypeForm.viewTitle");
+  if (isEditMode.value) return t("transactions.docTypeForm.editTitle");
+  return t("transactions.docTypeForm.newTitle");
 });
 
 const stockMovementOptions = [

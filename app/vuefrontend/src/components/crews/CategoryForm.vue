@@ -3,14 +3,14 @@
     <JRPageHeader :title="pageTitle">
       <template v-if="canEditFromView" #actions>
         <JRButton variant="primary" size="sm" @click="goToEdit">
-          Edit category
+          {{ $t('crews.form.editCategory') }}
         </JRButton>
       </template>
     </JRPageHeader>
 
     <div class="jr-category-form">
       <p v-if="loading" class="jr-category-form__status" role="status">
-        Loading crew category…
+        {{ $t('crews.form.loadingCategory') }}
       </p>
 
       <form
@@ -18,11 +18,11 @@
         class="jr-category-form__form"
         @submit.prevent="handleSubmit"
         novalidate>
-        <JRSection title="Details">
+        <JRSection :title="$t('common.sectionDetails')">
           <div class="jr-form-grid">
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Name"
+              :label="$t('common.name')"
               inputId="crew-category-name"
               required
               :error="fieldErrors.name">
@@ -43,14 +43,14 @@
           class="jr-category-form__actions jr-category-form__actions--sticky">
           <template v-if="!isViewMode">
             <JRButton type="submit" variant="primary" :disabled="isDisabled">
-              {{ submitting ? "Saving..." : "Save" }}
+              {{ submitting ? $t('common.saving') : $t('common.save') }}
             </JRButton>
             <JRButton
               type="button"
               variant="secondary"
               :disabled="submitting"
               @click="goList">
-              Cancel
+              {{ $t('common.cancel') }}
             </JRButton>
           </template>
           <JRButton
@@ -59,7 +59,7 @@
             variant="secondary"
             :disabled="submitting"
             @click="goList">
-            Back
+            {{ $t('common.back') }}
           </JRButton>
         </div>
       </form>
@@ -72,6 +72,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { onMounted, ref, computed, getCurrentInstance } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import {
   JRPage,
   JRPageHeader,
@@ -84,6 +85,7 @@ import {
 const { proxy } = getCurrentInstance();
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n({ useScope: "global" });
 const id = route.params.id;
 const isViewMode = computed(() => route.name === "crew-category-view");
 const isEditMode = computed(() => !!id && !isViewMode.value);
@@ -95,9 +97,9 @@ const form = ref({ name: "" });
 
 const isDisabled = computed(() => isViewMode.value || submitting.value);
 const pageTitle = computed(() => {
-  if (isViewMode.value) return "View Category";
-  if (isEditMode.value) return "Edit Category";
-  return "Add Category";
+  if (isViewMode.value) return t("crews.form.viewCategory");
+  if (isEditMode.value) return t("crews.form.editCategoryTitle");
+  return t("crews.form.newCategory");
 });
 const canEditFromView = computed(
   () =>
@@ -130,7 +132,11 @@ async function loadData() {
     form.value = { name: data.name || "" };
   } catch (err) {
     console.error("Load error:", err);
-    await Swal.fire("Oops!", "Error loading the category.", "error");
+    await Swal.fire(
+      t("common.error"),
+      t("crews.form.swalLoadCategoryError"),
+      "error"
+    );
   } finally {
     loading.value = false;
   }
@@ -141,12 +147,20 @@ function validate() {
   form.value.name = name;
   if (!name) {
     fieldErrors.value = { name: "Name is required." };
-    Swal.fire("Validation", "Name is required.", "warning");
+    Swal.fire(
+      t("common.validationError"),
+      t("crews.form.swalNameRequiredShort"),
+      "warning"
+    );
     return false;
   }
   if (name.length > 100) {
     fieldErrors.value = { name: "Name must be at most 100 characters." };
-    Swal.fire("Validation", "Name must be at most 100 characters.", "warning");
+    Swal.fire(
+      t("common.validationError"),
+      t("crews.form.swalNameMax100"),
+      "warning"
+    );
     return false;
   }
   return true;
@@ -159,17 +173,21 @@ async function handleSubmit() {
   try {
     if (id) {
       await axios.patch(`/api/categories/${id}/`, form.value);
-      proxy?.notifyToastSuccess?.("Category updated.");
+      proxy?.notifyToastSuccess?.(t("crews.form.swalCategoryUpdated"));
     } else {
       await axios.post("/api/categories/", form.value);
-      proxy?.notifyToastSuccess?.("Category created.");
+      proxy?.notifyToastSuccess?.(t("crews.form.swalCategoryCreated"));
     }
     router.push({ name: "crew-categories" });
   } catch (err) {
     console.error("Save error:", err);
     const nameErr = err.response?.data?.name?.[0];
     if (nameErr) fieldErrors.value = { name: nameErr };
-    Swal.fire("Error", nameErr || "Error saving category.", "error");
+    Swal.fire(
+      t("common.error"),
+      nameErr || t("crews.form.swalSaveCategoryError"),
+      "error"
+    );
   } finally {
     submitting.value = false;
   }

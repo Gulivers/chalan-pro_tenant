@@ -1,21 +1,25 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Transaction Types">
+    <JRPageHeader :title="$t('transactions.typesTitle')">
       <template #actions>
         <JRButton
           v-if="hasPermission('apptransactions.add_documenttype')"
           type="button"
           @click="goToCreateForm">
-          + New Transaction Type
+          {{ $t("transactions.newType") }}
         </JRButton>
       </template>
     </JRPageHeader>
 
-    <JRSection title="Administrative Process Flows">
+    <JRSection :title="$t('transactions.adminFlows')">
       <div class="jr-doctype-flows">
         <div class="jr-doctype-flow">
-          <h3 class="jr-doctype-flow__title">Sales Flow</h3>
-          <div class="jr-doctype-flow__sequence" aria-label="Sales process flow">
+          <h3 class="jr-doctype-flow__title">
+            {{ $t("transactions.salesFlow") }}
+          </h3>
+          <div
+            class="jr-doctype-flow__sequence"
+            :aria-label="$t('transactions.salesFlowAria')">
             <template v-for="(node, i) in salesFlow" :key="node.code">
               <JRBadge
                 :value="node.code"
@@ -31,10 +35,12 @@
           </div>
         </div>
         <div class="jr-doctype-flow">
-          <h3 class="jr-doctype-flow__title">Purchase Flow</h3>
+          <h3 class="jr-doctype-flow__title">
+            {{ $t("transactions.purchaseFlow") }}
+          </h3>
           <div
             class="jr-doctype-flow__sequence"
-            aria-label="Purchase process flow">
+            :aria-label="$t('transactions.purchaseFlowAria')">
             <template v-for="(node, i) in purchaseFlow" :key="node.code">
               <JRBadge
                 :value="node.code"
@@ -56,7 +62,7 @@
       <template #start>
         <div class="jr-master-list__search">
           <label class="jr-sr-only" for="doctype-filter-input">
-            Search transaction types
+            {{ $t("transactions.typesSearchLabel") }}
           </label>
           <span class="jr-master-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -65,25 +71,27 @@
             inputId="doctype-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search by code or description..." />
+            :placeholder="$t('transactions.typesSearchPlaceholder')" />
         </div>
       </template>
 
       <template #stats>
         <div class="jr-master-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
           <JRBadge
-            :value="`${stats.active} Active`"
+            :value="$t('common.badgeTotal', { count: stats.total })"
+            severity="secondary" />
+          <JRBadge
+            :value="$t('common.badgeActive', { count: stats.active })"
             :severity="stats.active > 0 ? 'success' : 'secondary'" />
           <JRBadge
-            :value="`${stats.inactive} Inactive`"
+            :value="$t('common.badgeInactive', { count: stats.inactive })"
             severity="secondary" />
         </div>
       </template>
 
       <template #actions>
         <label class="jr-sr-only" for="doctype-per-page">
-          Entries per page
+          {{ $t("common.entriesPerPage") }}
         </label>
         <JRSelect
           class="jr-master-list__entries"
@@ -99,7 +107,7 @@
           class="jr-master-list__refresh"
           @click="refreshTable">
           <RefreshIcon />
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -115,7 +123,7 @@
           variant="ghost"
           size="sm"
           @click="refreshTable">
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
         <JRButton
           v-else-if="hasSearch"
@@ -123,17 +131,17 @@
           variant="ghost"
           size="sm"
           @click="clearSearch">
-          Clear search
+          {{ $t("common.clearSearch") }}
         </JRButton>
       </JREmptyState>
       <p v-if="isLoading && !pagedItems.length" class="jr-master-list__loading">
-        Loading transaction types…
+        {{ $t("transactions.typesLoading") }}
       </p>
       <p
         v-else-if="isLoading && pagedItems.length"
         class="jr-master-list__loading"
         aria-live="polite">
-        Updating…
+        {{ $t("common.updating") }}
       </p>
       <ul
         v-if="pagedItems.length"
@@ -158,7 +166,9 @@
           </div>
           <div class="jr-master-row__aside">
             <JRBadge
-              :value="item.is_active ? 'Active' : 'Inactive'"
+              :value="
+                item.is_active ? $t('common.active') : $t('common.inactive')
+              "
               :severity="item.is_active ? 'success' : 'secondary'" />
             <JRRowActions
               v-if="hasRowActions"
@@ -211,7 +221,7 @@
               variant="ghost"
               size="sm"
               @click="refreshTable">
-              Refresh
+              {{ $t("common.refresh") }}
             </JRButton>
             <JRButton
               v-else-if="hasSearch"
@@ -219,11 +229,14 @@
               variant="ghost"
               size="sm"
               @click="clearSearch">
-              Clear search
+              {{ $t("common.clearSearch") }}
             </JRButton>
           </JREmptyState>
         </template>
-        <Column field="type_code" header="Code" sortable>
+        <Column
+          field="type_code"
+          :header="$t('transactions.colCode')"
+          sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
@@ -235,82 +248,115 @@
             <span v-else>{{ data.type_code }}</span>
           </template>
         </Column>
-        <Column field="description" header="Description" sortable>
+        <Column
+          field="description"
+          :header="$t('transactions.colDescription')"
+          sortable>
           <template #body="{ data }">
             {{ data.description || "—" }}
           </template>
         </Column>
-        <Column field="stock_movement" header="Stock" sortable>
+        <Column
+          field="stock_movement"
+          :header="$t('transactions.colStock')"
+          sortable>
           <template #body="{ data }">
             <JRBadge
               :value="stockMovementLabel(data.stock_movement)"
               :severity="stockMovementSeverity(data.stock_movement)" />
           </template>
         </Column>
-        <Column field="affects_physical" header="INVFIS" sortable>
+        <Column
+          field="affects_physical"
+          :header="$t('transactions.colInvfis')"
+          sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.affects_physical ? 'Yes' : 'No'"
+              :value="data.affects_physical ? $t('common.yes') : $t('common.no')"
               :severity="data.affects_physical ? 'success' : 'secondary'" />
           </template>
         </Column>
-        <Column field="affects_logical" header="INVLOG" sortable>
+        <Column
+          field="affects_logical"
+          :header="$t('transactions.colInvlog')"
+          sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.affects_logical ? 'Yes' : 'No'"
+              :value="data.affects_logical ? $t('common.yes') : $t('common.no')"
               :severity="data.affects_logical ? 'success' : 'secondary'" />
           </template>
         </Column>
-        <Column field="is_purchase" header="Purchase" sortable>
+        <Column
+          field="is_purchase"
+          :header="$t('transactions.colPurchase')"
+          sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.is_purchase ? 'Yes' : 'No'"
+              :value="data.is_purchase ? $t('common.yes') : $t('common.no')"
               :severity="data.is_purchase ? 'success' : 'secondary'" />
           </template>
         </Column>
-        <Column field="is_sales" header="Sales" sortable>
+        <Column field="is_sales" :header="$t('transactions.colSales')" sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.is_sales ? 'Yes' : 'No'"
+              :value="data.is_sales ? $t('common.yes') : $t('common.no')"
               :severity="data.is_sales ? 'success' : 'secondary'" />
           </template>
         </Column>
-        <Column field="is_operational" header="Operational" sortable>
+        <Column
+          field="is_operational"
+          :header="$t('transactions.colOperational')"
+          sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.is_operational ? 'Yes' : 'No'"
+              :value="data.is_operational ? $t('common.yes') : $t('common.no')"
               :severity="data.is_operational ? 'info' : 'secondary'" />
           </template>
         </Column>
-        <Column field="allow_negative_sales" header="Neg. Sales" sortable>
+        <Column
+          field="allow_negative_sales"
+          :header="$t('transactions.colNegSales')"
+          sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.allow_negative_sales ? 'Yes' : 'No'"
+              :value="
+                data.allow_negative_sales ? $t('common.yes') : $t('common.no')
+              "
               :severity="data.allow_negative_sales ? 'warn' : 'secondary'" />
           </template>
         </Column>
-        <Column field="uses_status_tracking" header="Tracking" sortable>
+        <Column
+          field="uses_status_tracking"
+          :header="$t('transactions.colTracking')"
+          sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.uses_status_tracking ? 'On' : 'Off'"
+              :value="
+                data.uses_status_tracking ? $t('common.on') : $t('common.off')
+              "
               :severity="data.uses_status_tracking ? 'info' : 'secondary'" />
           </template>
         </Column>
-        <Column field="statuses_count" header="Statuses" sortable>
+        <Column
+          field="statuses_count"
+          :header="$t('transactions.colStatuses')"
+          sortable>
           <template #body="{ data }">
             {{ Number(data.statuses_count) || 0 }}
           </template>
         </Column>
-        <Column field="is_active" header="Status" sortable>
+        <Column field="is_active" :header="$t('common.status')" sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.is_active ? 'Active' : 'Inactive'"
+              :value="
+                data.is_active ? $t('common.active') : $t('common.inactive')
+              "
               :severity="data.is_active ? 'success' : 'secondary'" />
           </template>
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="
             isTablet
@@ -509,15 +555,17 @@ export default {
       Boolean(filter.value && filter.value.trim())
     );
     const emptyTitle = computed(() => {
-      if (loadError.value) return "Could not load transaction types";
-      if (hasSearch.value) return "No matching transaction types";
-      return "No transaction types";
+      if (loadError.value) return proxy?.$t?.("transactions.typesEmptyLoadError");
+      if (hasSearch.value) return proxy?.$t?.("transactions.typesEmptySearch");
+      return proxy?.$t?.("transactions.typesEmptyNone");
     });
     const emptyDescription = computed(() => {
-      if (loadError.value) return "Try Refresh.";
+      if (loadError.value) return proxy?.$t?.("common.tryRefresh");
       const query = filter.value.trim();
-      if (query) return `No transaction types match “${query}”.`;
-      return "No transaction types yet.";
+      if (query) {
+        return proxy?.$t?.("transactions.typesEmptySearchDesc", { query });
+      }
+      return proxy?.$t?.("transactions.typesEmptyNoneDesc");
     });
 
     const clearSearch = () => {
@@ -599,7 +647,7 @@ export default {
       if (proxy?.hasPermission?.("apptransactions.view_documenttype")) {
         actions.push({
           key: "view",
-          label: "View",
+          label: proxy?.$t?.("common.view") || "View",
           severity: "success",
           icon: EyeIcon,
           command: () => viewItem(item.id),
@@ -611,7 +659,7 @@ export default {
       ) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: proxy?.$t?.("common.edit") || "Edit",
           severity: "primary",
           icon: PencilIcon,
           command: () => editItem(item.id),
@@ -623,7 +671,7 @@ export default {
       ) {
         actions.push({
           key: "delete",
-          label: "Delete",
+          label: proxy?.$t?.("common.delete") || "Delete",
           severity: "danger",
           icon: TrashIcon,
           command: () => deleteDocType(item.id),
@@ -634,8 +682,9 @@ export default {
 
     const deleteDocType = (id) => {
       proxy?.confirmDelete?.(
-        "Are you sure?",
-        "This action cannot be undone.",
+        proxy?.$t?.("common.confirmDeleteTitle") || "Are you sure?",
+        proxy?.$t?.("common.confirmDeleteText") ||
+          "This action cannot be undone.",
         async () => {
           try {
             await axios.delete(`${ENDPOINT}${id}/`);

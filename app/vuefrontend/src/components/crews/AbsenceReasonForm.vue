@@ -3,14 +3,14 @@
     <JRPageHeader :title="pageTitle">
       <template v-if="canEditFromView" #actions>
         <JRButton variant="primary" size="sm" @click="goToEdit">
-          Edit absence reason
+          {{ $t('crews.form.editAbsenceReason') }}
         </JRButton>
       </template>
     </JRPageHeader>
 
     <div class="jr-absence-reason-form">
       <p v-if="loading" class="jr-absence-reason-form__status" role="status">
-        Loading absence reason…
+        {{ $t('crews.form.loadingAbsenceReason') }}
       </p>
 
       <form
@@ -18,11 +18,11 @@
         class="jr-absence-reason-form__form"
         @submit.prevent="handleSubmit"
         novalidate>
-        <JRSection title="Details">
+        <JRSection :title="$t('common.sectionDetails')">
           <div class="jr-form-grid">
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Name"
+              :label="$t('common.name')"
               inputId="absence-reason-name"
               required
               :error="fieldErrors.name">
@@ -37,18 +37,18 @@
                 @update:modelValue="clearFieldError('name')" />
             </JRField>
 
-            <JRField label="Active" inputId="absence-reason-active">
+            <JRField :label="$t('common.active')" inputId="absence-reason-active">
               <JRCheckbox
                 v-model="form.is_active"
                 inputId="absence-reason-active"
-                ariaLabel="Active"
+                :ariaLabel="$t('common.active')"
                 :disabled="isDisabled" />
             </JRField>
 
             <JRField
               class="jr-form-grid__full"
               v-slot="{ describedby, invalid }"
-              label="Description"
+              :label="$t('crews.colDescription')"
               inputId="absence-reason-description"
               :error="fieldErrors.description">
               <JRTextarea
@@ -67,14 +67,14 @@
           class="jr-absence-reason-form__actions jr-absence-reason-form__actions--sticky">
           <template v-if="!isViewMode">
             <JRButton type="submit" variant="primary" :disabled="isDisabled">
-              {{ submitting ? "Saving..." : "Save" }}
+              {{ submitting ? $t('common.saving') : $t('common.save') }}
             </JRButton>
             <JRButton
               type="button"
               variant="secondary"
               :disabled="submitting"
               @click="goList">
-              Cancel
+              {{ $t('common.cancel') }}
             </JRButton>
           </template>
           <JRButton
@@ -83,7 +83,7 @@
             variant="secondary"
             :disabled="submitting"
             @click="goList">
-            Back
+            {{ $t('common.back') }}
           </JRButton>
         </div>
       </form>
@@ -95,6 +95,7 @@
 import axios from "axios";
 import { onMounted, ref, computed, getCurrentInstance } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import {
   JRPage,
   JRPageHeader,
@@ -110,6 +111,7 @@ const ENDPOINT = "/api/absence-reasons/";
 const { proxy } = getCurrentInstance();
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n({ useScope: "global" });
 const id = route.params.id;
 const isViewMode = computed(() => route.name === "absence-reason-view");
 const isEditMode = computed(() => !!id && !isViewMode.value);
@@ -125,9 +127,9 @@ const form = ref({
 
 const isDisabled = computed(() => isViewMode.value || submitting.value);
 const pageTitle = computed(() => {
-  if (isViewMode.value) return "View Absence Reason";
-  if (isEditMode.value) return "Edit Absence Reason";
-  return "Add Absence Reason";
+  if (isViewMode.value) return t("crews.form.viewAbsenceReasonTitle");
+  if (isEditMode.value) return t("crews.form.editAbsenceReasonTitle");
+  return t("crews.form.addAbsenceReasonTitle");
 });
 const canEditFromView = computed(
   () =>
@@ -170,7 +172,7 @@ async function loadData() {
     };
   } catch (err) {
     console.error("Load error:", err);
-    proxy?.notifyError?.("Error loading the absence reason.");
+    proxy?.notifyError?.(t("crews.form.swalLoadAbsenceError"));
   } finally {
     loading.value = false;
   }
@@ -182,13 +184,13 @@ function validate() {
   form.value.description = (form.value.description || "").trim();
   if (!name) {
     fieldErrors.value = { name: "Name is required." };
-    proxy?.notifyError?.("Name is required.");
+    proxy?.notifyError?.(t("crews.form.swalNameRequiredShort"));
     focusFirstError();
     return false;
   }
   if (name.length > 100) {
     fieldErrors.value = { name: "Name must be at most 100 characters." };
-    proxy?.notifyError?.("Name must be at most 100 characters.");
+    proxy?.notifyError?.(t("crews.form.swalNameMax100"));
     focusFirstError();
     return false;
   }
@@ -207,10 +209,10 @@ async function handleSubmit() {
   try {
     if (id) {
       await axios.patch(`${ENDPOINT}${id}/`, payload);
-      proxy?.notifyToastSuccess?.("Absence reason updated.");
+      proxy?.notifyToastSuccess?.(t("crews.form.swalAbsenceUpdated"));
     } else {
       await axios.post(ENDPOINT, payload);
-      proxy?.notifyToastSuccess?.("Absence reason created.");
+      proxy?.notifyToastSuccess?.(t("crews.form.swalAbsenceCreated"));
     }
     router.push({ name: "absence-reasons" });
   } catch (err) {
