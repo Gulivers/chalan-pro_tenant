@@ -43,6 +43,20 @@ Este documento da contexto a los agentes de IA (Cursor, Copilot, etc.) en el pro
 
 Flujo: commit en `dev_local_status` → merge a `main_deploy` → push → en VPS `sudo ./scripts/deploy-vps.sh`.
 
+## i18n (English / Español)
+
+- Preferencia de usuario: `UserPreference.preferred_language` (`en`|`es`) vía `GET/PATCH /api/auth/me/`.
+- SPA: **vue-i18n** en `app/vuefrontend/src/i18n/`; catálogos `src/locales/en.json` y `es.json`.
+- Composable: `useLocale()` (`composables/useLocale.js`). Helper de estados: `tStatus(code, fallback)` en `utils/statusI18n.js`.
+- Al tocar UI visible: **no** literales nuevos en pantallas migradas; añadir keys en ambos catálogos y usar `$t` / `t()`.
+- Glosario obligatorio:
+  - Modelo técnico `Job` → UI **Community** / **Comunidad** (nunca “Job” como urbanización).
+  - Trabajo genérico / faena → **Job/work** / **Trabajo**.
+  - **Piece Work Contracts** / **Contratos Piece Work**; **Piece Work Prices** / **Precios Piece Work**.
+  - No renombrar rutas ni API (`/job/form`, `ctrctsapp.Job`).
+- Estados: traducir por **código** (`status.<code>`), no por el `name` crudo del API.
+- Selector: topbar (`LocaleToggle`) + menú de cuenta. Fase 1 cubre shell + oleada core; el resto se traduce por oleadas.
+
 ## Documentación útil
 
 - Skill UI JobRhythm (JR): `.cursor/skills/jobrhythm-ui/SKILL.md` — contrato visual para agentes al implementar/migrar pantallas Vue (tokens, primitivos `@/ui`, sin Bootstrap). Detalle humano: `app/vuefrontend/src/ui/README.md`, listas en `LIST_VIEWS.md`, mundo visual en `DESIGN.md`.

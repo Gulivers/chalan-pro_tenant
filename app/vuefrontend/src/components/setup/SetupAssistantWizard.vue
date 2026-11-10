@@ -1,7 +1,7 @@
 <template>
   <JRDialog
     :visible="panelOpen"
-    header="Initial Setup Assistant"
+    :header="$t('setup.wizardHeader')"
     size="xl"
     :show-footer="false"
     @update:visible="onVisible">
@@ -10,7 +10,7 @@
         <img
           v-if="tenantLogoUrl && !tenantLogoFailed"
           :src="tenantLogoUrl"
-          :alt="tenantName || 'Company logo'"
+          :alt="tenantName || $t('setup.companyLogoAlt')"
           class="jr-setup-wizard__logo"
           @error="tenantLogoFailed = true" />
         <div class="jr-setup-wizard__brand-copy">
@@ -18,16 +18,13 @@
             {{ tenantName || 'JobRhythm' }}
           </p>
           <p class="jr-setup-wizard__lead">
-            Welcome to JobRhythm{{ greetName }}. The Admin Assistant will guide
-            you through configuring the system for Residential Trade
-            Contractors. Start with inventory, then essential masters, then
-            your first field workflow.
+            {{ $t('setup.welcomeLead', { name: greetName }) }}
           </p>
         </div>
       </header>
 
       <p v-if="loading" class="jr-setup-wizard__status" role="status">
-        Loading setup…
+        {{ $t('setup.loading') }}
       </p>
 
       <Message
@@ -51,25 +48,22 @@
         v-model:value="phase"
         class="jr-setup-wizard__stepper">
         <StepList>
-          <Step value="1">Inventory starters</Step>
-          <Step value="2">Essential masters</Step>
-          <Step value="3">Operate in the field</Step>
+          <Step value="1">{{ $t('setup.stepInventory') }}</Step>
+          <Step value="2">{{ $t('setup.stepMasters') }}</Step>
+          <Step value="3">{{ $t('setup.stepOperate') }}</Step>
         </StepList>
 
         <StepPanels>
           <StepPanel value="1">
             <div class="jr-setup-wizard__panel">
               <h3 class="jr-setup-wizard__step-title">
-                Step 1: Inventory Master Data Setup
+                {{ $t('setup.step1Title') }}
               </h3>
               <p class="jr-setup-wizard__step-message">
-                Prepare your inventory for Florida residential electrical
-                projects automatically.
+                {{ $t('setup.step1Message') }}
               </p>
               <p class="jr-setup-wizard__step-desc">
-                Import the Florida master catalog in one step — products,
-                brands, categories, units, warehouses, prices, absence reasons,
-                and optional Transaction Favorites by house model.
+                {{ $t('setup.step1Desc') }}
               </p>
 
               <InventoryMasterDataSetupContent
@@ -84,21 +78,20 @@
                     type="button"
                     variant="ghost"
                     @click="onSkipInventory">
-                    Configure later
+                    {{ $t('setup.configureLater') }}
                   </JRButton>
                 </div>
                 <JRButton
                   type="button"
                   variant="primary"
                   @click="onNextInventory">
-                  Next
+                  {{ $t('common.next') }}
                 </JRButton>
               </div>
               <p
                 v-if="inventoryPending"
                 class="jr-setup-wizard__hint">
-                Inventory is optional here. Import now, or continue and
-                configure it later.
+                {{ $t('setup.inventoryOptionalHint') }}
               </p>
             </div>
           </StepPanel>
@@ -106,15 +99,13 @@
           <StepPanel value="2">
             <div class="jr-setup-wizard__panel">
               <h3 class="jr-setup-wizard__step-title">
-                Step 2: Essential masters
+                {{ $t('setup.step2Title') }}
               </h3>
               <p class="jr-setup-wizard__step-message">
-                Set up the companies, crews, and places your jobs depend on.
+                {{ $t('setup.step2Message') }}
               </p>
               <p class="jr-setup-wizard__step-desc">
-                Builders and communities are required before Schedule can run.
-                Crew categories, parties, and house models can be completed now
-                or configured later.
+                {{ $t('setup.step2Desc') }}
               </p>
 
               <Message
@@ -122,8 +113,7 @@
                 severity="warn"
                 :closable="false"
                 class="jr-setup-wizard__msg">
-                Add at least one builder and one community before you finish
-                setup.
+                {{ $t('setup.step2Warn') }}
               </Message>
 
               <ul class="jr-setup-wizard__list" role="list">
@@ -146,7 +136,7 @@
                       :variant="step.status === 'pending' ? 'primary' : 'secondary'"
                       size="sm"
                       @click="goStep(step)">
-                      {{ step.status === 'pending' ? step.cta : 'Review' }}
+                      {{ step.status === 'pending' ? step.cta : $t('common.review') }}
                     </JRButton>
                     <JRButton
                       v-if="step.canSkip"
@@ -154,7 +144,7 @@
                       variant="ghost"
                       size="sm"
                       @click="onSkip(step.key)">
-                      Configure later
+                      {{ $t('setup.configureLater') }}
                     </JRButton>
                   </div>
                 </li>
@@ -165,18 +155,17 @@
                   type="button"
                   variant="secondary"
                   @click="goPhase('1')">
-                  Back
+                  {{ $t('common.back') }}
                 </JRButton>
                 <JRButton
                   type="button"
                   variant="primary"
                   @click="goPhase('3')">
-                  Next
+                  {{ $t('common.next') }}
                 </JRButton>
               </div>
               <p v-if="!criticalReady" class="jr-setup-wizard__hint">
-                You can explore the next step now. Finishing setup still needs
-                a builder and a community.
+                {{ $t('setup.step2Hint') }}
               </p>
             </div>
           </StepPanel>
@@ -184,15 +173,13 @@
           <StepPanel value="3">
             <div class="jr-setup-wizard__panel">
               <h3 class="jr-setup-wizard__step-title">
-                Step 3: Operate in the field
+                {{ $t('setup.step3Title') }}
               </h3>
               <p class="jr-setup-wizard__step-message">
-                Put your first job in motion — from schedule to contract.
+                {{ $t('setup.step3Message') }}
               </p>
               <p class="jr-setup-wizard__step-desc">
-                Learn by doing: schedule an event, assign materials with a
-                Material Request, set piece-work prices, then generate your
-                first contract.
+                {{ $t('setup.step3Desc') }}
               </p>
 
               <ul class="jr-setup-wizard__list" role="list">
@@ -215,7 +202,7 @@
                       :variant="step.status === 'pending' ? 'primary' : 'secondary'"
                       size="sm"
                       @click="goStep(step)">
-                      {{ step.status === 'pending' ? step.cta : 'Review' }}
+                      {{ step.status === 'pending' ? step.cta : $t('common.review') }}
                     </JRButton>
                     <JRButton
                       v-if="step.canSkip"
@@ -223,7 +210,7 @@
                       variant="ghost"
                       size="sm"
                       @click="onSkip(step.key)">
-                      Configure later
+                      {{ $t('setup.configureLater') }}
                     </JRButton>
                   </div>
                 </li>
@@ -234,18 +221,18 @@
                   type="button"
                   variant="secondary"
                   @click="goPhase('2')">
-                  Back
+                  {{ $t('common.back') }}
                 </JRButton>
                 <JRButton
                   type="button"
                   variant="primary"
                   :disabled="!criticalReady || finishing"
                   @click="onFinish">
-                  {{ finishing ? 'Saving…' : 'Mark setup complete' }}
+                  {{ finishing ? $t('common.saving') : $t('setup.markComplete') }}
                 </JRButton>
               </div>
               <p v-if="!criticalReady" class="jr-setup-wizard__hint">
-                Add a builder and a community before marking setup complete.
+                {{ $t('setup.step3Hint') }}
               </p>
             </div>
           </StepPanel>
@@ -267,6 +254,7 @@ import StepPanels from 'primevue/steppanels';
 import StepPanel from 'primevue/steppanel';
 import { JRBadge, JRButton, JRDialog } from '@/ui';
 import InventoryMasterDataSetupContent from '@/components/inventory/InventoryMasterDataSetupContent.vue';
+import { useI18n } from 'vue-i18n';
 import { useTenantSetup } from '@/composables/useTenantSetup';
 import { useAuthStore } from '@/stores/auth';
 
@@ -311,6 +299,7 @@ export default {
   },
   setup() {
     const router = useRouter();
+    const { t } = useI18n({ useScope: 'global' });
     const setup = useTenantSetup();
     const auth = useAuthStore();
     const phase = ref('1');
@@ -344,10 +333,10 @@ export default {
     }
 
     function badgeLabel(step) {
-      if (step.status === 'done') return 'Done';
-      if (step.status === 'skipped') return 'Later';
-      if (step.critical) return 'Required';
-      return 'Optional';
+      if (step.status === 'done') return t('common.done');
+      if (step.status === 'skipped') return t('common.later');
+      if (step.critical) return t('common.required');
+      return t('common.optional');
     }
 
     function syncPhase() {
@@ -458,8 +447,7 @@ export default {
         await setup.finish();
       } catch (err) {
         actionError.value =
-          err?.response?.data?.detail ||
-          'Add a builder and a community before marking setup complete.';
+          err?.response?.data?.detail || t('setup.finishBlocked');
       } finally {
         finishing.value = false;
       }

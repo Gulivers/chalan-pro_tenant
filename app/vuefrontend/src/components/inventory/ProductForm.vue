@@ -11,7 +11,7 @@
           variant="primary"
           size="sm"
           @click="goToEdit">
-          Edit product
+          {{ $t('products.form.editProduct') }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -25,17 +25,21 @@
         tabindex="-1">
         {{
           formBannerMessage ||
-          `${attentionCount} ${
-            attentionCount === 1 ? "field needs" : "fields need"
-          } attention`
+          (attentionCount === 1
+            ? $t('products.form.fieldsNeedAttention', { count: attentionCount })
+            : $t('products.form.fieldsNeedAttentionPlural', {
+                count: attentionCount,
+              }))
         }}
       </div>
 
       <p v-if="productLoading" class="jr-product-form__loading" role="status">
-        Loading product…
+        {{ $t('products.form.loading') }}
       </p>
 
-      <JRSection v-if="!productLoading" title="Identity">
+      <JRSection
+        v-if="!productLoading"
+        :title="$t('products.form.sectionIdentity')">
         <div class="jr-form-grid jr-form-grid--identity">
           <JRField
             v-slot="{ describedby, invalid }"
@@ -81,7 +85,9 @@
         </div>
       </JRSection>
 
-      <JRSection v-if="!productLoading" title="Classification">
+      <JRSection
+        v-if="!productLoading"
+        :title="$t('products.form.sectionClassification')">
         <div class="jr-form-grid jr-form-grid--classification">
           <JRField
             v-slot="{ describedby, invalid }"
@@ -267,7 +273,9 @@
           @refresh-units="loadUnits" />
       </JRSection>
 
-      <JRSection v-if="!productLoading" title="Product images">
+      <JRSection
+        v-if="!productLoading"
+        :title="$t('products.form.sectionProductImages')">
         <ProductBrandImages
           ref="brandImages"
           :product-id="currentProductId"
@@ -278,21 +286,21 @@
       </JRSection>
 
       <div v-if="!productLoading" class="jr-product-form__actions">
-        <span v-if="formIsDirty" class="jr-unsaved">Unsaved</span>
+        <span v-if="formIsDirty" class="jr-unsaved">{{ $t('common.unsaved') }}</span>
         <JRButton
           type="submit"
           variant="primary"
           :disabled="isReadOnly || submitting">
           {{
             submitting
-              ? "Saving..."
+              ? $t('common.saving')
               : $route?.query?.id || $route?.params?.id || objectId
-              ? "Update"
-              : "Save"
+              ? $t('common.update')
+              : $t('common.save')
           }}
         </JRButton>
         <JRButton type="button" variant="secondary" @click="cancelForm">
-          {{ isReadOnly ? "Back to list" : "Cancel" }}
+          {{ isReadOnly ? $t('common.backToList') : $t('common.cancel') }}
         </JRButton>
       </div>
     </form>
@@ -466,19 +474,21 @@ export default {
       return brand ? [brand] : [];
     },
     pageTitle() {
-      if (this.isReadOnly) return "View Product";
+      if (this.isReadOnly) return this.$t("products.form.viewTitle");
       const id =
         this.objectId || this.$route?.params?.id || this.$route?.query?.id;
-      return id ? "Edit Product" : "Create Product";
+      return id
+        ? this.$t("products.form.editTitle")
+        : this.$t("products.form.createTitle");
     },
     pageDescription() {
       if (this.isReadOnly) {
-        return "Read-only. Use Edit product to change this SKU.";
+        return this.$t("products.form.viewDescription");
       }
       if (this.currentProductId) {
-        return "Update identity, stock settings, and prices.";
+        return this.$t("products.form.editDescription");
       }
-      return "Create a SKU the crew can buy and sell.";
+      return this.$t("products.form.createDescription");
     },
     attentionCount() {
       const fields = Object.values(this.fieldErrors).filter(Boolean).length;

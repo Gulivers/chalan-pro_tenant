@@ -121,12 +121,12 @@ def provision_tenant_workspace(data: OnboardingFormData, logo=None) -> dict[str,
         tenant.save()
         logger.info('Tenant guardado: %s (%s)', tenant.name, tenant.schema_name)
     except Exception as exc:
-        logger.error('Error al crear tenant: %s', exc, exc_info=True)
+        logger.exception('Error al crear tenant')
         import traceback
 
-        details = traceback.format_exc() if settings.DEBUG else str(exc)
+        details = traceback.format_exc() if settings.DEBUG else None
         raise OnboardingProvisionError(
-            f'Could not create tenant: {exc}',
+            'Could not create tenant.',
             status_code=400,
             details=details,
         ) from exc
@@ -144,14 +144,18 @@ def provision_tenant_workspace(data: OnboardingFormData, logo=None) -> dict[str,
     try:
         Domain.objects.create(domain=domain_name, tenant=tenant, is_primary=True)
     except Exception as exc:
-        logger.error('Error al crear dominio: %s', exc, exc_info=True)
+        logger.exception('Error al crear dominio')
         try:
             tenant.delete()
         except Exception:
             pass
+        import traceback
+
+        details = traceback.format_exc() if settings.DEBUG else None
         raise OnboardingProvisionError(
-            f'Could not create domain: {exc}',
+            'Could not create domain.',
             status_code=500,
+            details=details,
         ) from exc
 
     try:
@@ -188,9 +192,14 @@ def provision_tenant_workspace(data: OnboardingFormData, logo=None) -> dict[str,
             with connection.cursor() as cursor:
                 cursor.execute(f'CREATE SCHEMA IF NOT EXISTS "{tenant.schema_name}"')
     except Exception as exc:
+        logger.exception('Error al verificar schema del tenant')
+        import traceback
+
+        details = traceback.format_exc() if settings.DEBUG else None
         raise OnboardingProvisionError(
-            f'Could not verify tenant schema: {exc}',
+            'Could not verify tenant schema.',
             status_code=500,
+            details=details,
         ) from exc
 
     try:
@@ -213,17 +222,25 @@ def provision_tenant_workspace(data: OnboardingFormData, logo=None) -> dict[str,
                         tenant.delete()
                     except Exception:
                         pass
+                    import traceback
+
+                    details = traceback.format_exc() if settings.DEBUG else None
                     raise OnboardingProvisionError(
                         'Could not run migrations for the new tenant.',
                         status_code=500,
-                        details=f'migrate_schemas ({e1}); schema_context ({e2}); create_schema ({e3})',
+                        details=details,
                     ) from e3
     except OnboardingProvisionError:
         raise
     except Exception as exc:
+        logger.exception('Error inesperado al migrar tenant')
+        import traceback
+
+        details = traceback.format_exc() if settings.DEBUG else None
         raise OnboardingProvisionError(
-            f'Unexpected error while running migrations: {exc}',
+            'Unexpected error while running migrations.',
             status_code=500,
+            details=details,
         ) from exc
 
     username = email.split('@')[0]

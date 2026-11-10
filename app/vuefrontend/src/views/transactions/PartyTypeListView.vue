@@ -1,12 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Party Types">
+    <JRPageHeader :title="$t('nav.partyTypes')">
       <template #actions>
         <JRButton
           v-if="hasPermission('apptransactions.add_partytype')"
           type="button"
           @click="goToCreateForm">
-          + New Party Type
+          {{ $t('parties.partyTypesNew') }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -15,7 +15,7 @@
       <template #start>
         <div class="jr-master-list__search">
           <label class="jr-sr-only" for="ptype-filter-input">
-            Search party types
+            {{ $t('parties.partyTypesSearchLabel') }}
           </label>
           <span class="jr-master-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -24,25 +24,25 @@
             inputId="ptype-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search by name or description..." />
+            :placeholder="$t('parties.partyTypesSearchPlaceholder')" />
         </div>
       </template>
 
       <template #stats>
         <div class="jr-master-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
+          <JRBadge :value="$t('common.badgeTotal', { count: stats.total })" severity="secondary" />
           <JRBadge
-            :value="`${stats.active} Active`"
+            :value="$t('common.badgeActive', { count: stats.active })"
             :severity="stats.active > 0 ? 'success' : 'secondary'" />
           <JRBadge
-            :value="`${stats.inactive} Inactive`"
+            :value="$t('common.badgeInactive', { count: stats.inactive })"
             severity="secondary" />
         </div>
       </template>
 
       <template #actions>
         <label class="jr-sr-only" for="ptype-per-page">
-          Entries per page
+          {{ $t('common.entriesPerPage') }}
         </label>
         <JRSelect
           class="jr-master-list__entries"
@@ -58,7 +58,7 @@
           class="jr-master-list__refresh"
           @click="refreshTable">
           <RefreshIcon />
-          Refresh
+          {{ $t('common.refresh') }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -74,7 +74,7 @@
           variant="ghost"
           size="sm"
           @click="refreshTable">
-          Refresh
+          {{ $t('common.refresh') }}
         </JRButton>
         <JRButton
           v-else-if="hasSearch"
@@ -82,17 +82,17 @@
           variant="ghost"
           size="sm"
           @click="clearSearch">
-          Clear search
+          {{ $t('common.clearSearch') }}
         </JRButton>
       </JREmptyState>
       <p v-if="isLoading && !pagedItems.length" class="jr-master-list__loading">
-        Loading party types…
+        {{ $t('common.loadingLabel', { label: $t('nav.partyTypes') }) }}
       </p>
       <p
         v-else-if="isLoading && pagedItems.length"
         class="jr-master-list__loading"
         aria-live="polite">
-        Updating…
+        {{ $t('common.updating') }}
       </p>
       <ul
         v-if="pagedItems.length"
@@ -114,7 +114,7 @@
           </div>
           <div class="jr-master-row__aside">
             <JRBadge
-              :value="item.is_active ? 'Active' : 'Inactive'"
+              :value="item.is_active ? $t('common.active') : $t('common.inactive')"
               :severity="item.is_active ? 'success' : 'secondary'" />
             <JRRowActions
               v-if="hasRowActions"
@@ -167,7 +167,7 @@
               variant="ghost"
               size="sm"
               @click="refreshTable">
-              Refresh
+              {{ $t('common.refresh') }}
             </JRButton>
             <JRButton
               v-else-if="hasSearch"
@@ -175,11 +175,11 @@
               variant="ghost"
               size="sm"
               @click="clearSearch">
-              Clear search
+              {{ $t('common.clearSearch') }}
             </JRButton>
           </JREmptyState>
         </template>
-        <Column field="name" header="Name" sortable>
+        <Column field="name" :header="$t('common.name')" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
@@ -191,21 +191,21 @@
             <span v-else>{{ data.name }}</span>
           </template>
         </Column>
-        <Column field="description" header="Description" sortable>
+        <Column field="description" :header="$t('inventory.colDescription')" sortable>
           <template #body="{ data }">
             {{ data.description || "—" }}
           </template>
         </Column>
-        <Column field="is_active" header="Status" sortable>
+        <Column field="is_active" :header="$t('common.status')" sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.is_active ? 'Active' : 'Inactive'"
+              :value="data.is_active ? $t('common.active') : $t('common.inactive')"
               :severity="data.is_active ? 'success' : 'secondary'" />
           </template>
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="
             isTablet
@@ -366,15 +366,15 @@ export default {
       Boolean(filter.value && filter.value.trim())
     );
     const emptyTitle = computed(() => {
-      if (loadError.value) return "Could not load party types";
-      if (hasSearch.value) return "No matching party types";
-      return "No party types";
+      if (loadError.value) return proxy?.$t?.("parties.partyTypesEmptyLoadError");
+      if (hasSearch.value) return proxy?.$t?.("parties.partyTypesEmptySearch");
+      return proxy?.$t?.("parties.partyTypesEmptyNone");
     });
     const emptyDescription = computed(() => {
-      if (loadError.value) return "Try Refresh.";
+      if (loadError.value) return proxy?.$t?.("common.tryRefresh");
       const query = filter.value.trim();
-      if (query) return `No party types match “${query}”.`;
-      return "No party types yet.";
+      if (query) return proxy?.$t?.("parties.partyTypesEmptySearchDesc", { query });
+      return proxy?.$t?.("parties.partyTypesEmptyNoneDesc");
     });
 
     const clearSearch = () => {
@@ -452,7 +452,7 @@ export default {
       if (proxy?.hasPermission?.("apptransactions.view_partytype")) {
         actions.push({
           key: "view",
-          label: "View",
+          label: proxy?.$t?.("common.view"),
           severity: "success",
           icon: EyeIcon,
           command: () => viewItem(item.id),
@@ -461,7 +461,7 @@ export default {
       if (proxy?.hasPermission?.("apptransactions.change_partytype")) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: proxy?.$t?.("common.edit"),
           severity: "primary",
           icon: PencilIcon,
           command: () => editItem(item.id),
@@ -470,7 +470,7 @@ export default {
       if (proxy?.hasPermission?.("apptransactions.delete_partytype")) {
         actions.push({
           key: "delete",
-          label: "Delete",
+          label: proxy?.$t?.("common.delete"),
           severity: "danger",
           icon: TrashIcon,
           command: () => deletePartyType(item.id),
@@ -481,8 +481,8 @@ export default {
 
     const deletePartyType = (id) => {
       proxy?.confirmDelete?.(
-        "Are you sure?",
-        "This action cannot be undone.",
+        proxy?.$t?.("common.confirmDeleteTitle") || "Are you sure?",
+        proxy?.$t?.("common.confirmDeleteText") || "This action cannot be undone.",
         async () => {
           try {
             await axios.delete(`${ENDPOINT}${id}/`);

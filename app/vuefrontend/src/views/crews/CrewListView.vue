@@ -1,12 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Crews">
+    <JRPageHeader :title="$t('crews.title')">
       <template #actions>
         <JRButton
           v-if="hasPermission('crewsapp.add_crew')"
           type="button"
           @click="goToCreateForm">
-          + New Crew
+          {{ $t("crews.new") }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -15,7 +15,7 @@
       <template #start>
         <div class="jr-master-list__search">
           <label class="jr-sr-only" for="crew-filter-input">
-            Search crews
+            {{ $t("crews.searchLabel") }}
           </label>
           <span class="jr-master-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -24,24 +24,24 @@
             inputId="crew-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search by name or category..." />
+            :placeholder="$t('crews.searchPlaceholder')" />
         </div>
       </template>
 
       <template #stats>
         <div class="jr-master-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
+          <JRBadge :value="$t('common.badgeTotal', { count: stats.total })" severity="secondary" />
           <JRBadge
-            :value="`${stats.active} Active`"
+            :value="$t('common.badgeActive', { count: stats.active })"
             :severity="stats.active > 0 ? 'success' : 'secondary'" />
           <JRBadge
-            :value="`${stats.inactive} Inactive`"
+            :value="$t('common.badgeInactive', { count: stats.inactive })"
             severity="secondary" />
         </div>
       </template>
 
       <template #actions>
-        <label class="jr-sr-only" for="crew-per-page">Entries per page</label>
+        <label class="jr-sr-only" for="crew-per-page">{{ $t("common.entriesPerPage") }}</label>
         <JRSelect
           class="jr-master-list__entries"
           inputId="crew-per-page"
@@ -56,7 +56,7 @@
           class="jr-master-list__refresh"
           @click="refreshTable">
           <RefreshIcon />
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -72,7 +72,7 @@
           variant="ghost"
           size="sm"
           @click="refreshTable">
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
         <JRButton
           v-else-if="hasSearch"
@@ -80,17 +80,17 @@
           variant="ghost"
           size="sm"
           @click="clearSearch">
-          Clear search
+          {{ $t("common.clearSearch") }}
         </JRButton>
       </JREmptyState>
       <p v-if="isLoading && !pagedItems.length" class="jr-master-list__loading">
-        Loading crews…
+        {{ $t("common.loadingLabel", { label: $t("crews.title") }) }}
       </p>
       <p
         v-else-if="isLoading && pagedItems.length"
         class="jr-master-list__loading"
         aria-live="polite">
-        Updating…
+        {{ $t("common.updating") }}
       </p>
       <ul
         v-if="pagedItems.length"
@@ -107,18 +107,18 @@
             </router-link>
             <span v-else class="jr-master-row__name">{{ item.name }}</span>
             <p class="jr-master-row__meta">
-              {{ item.category_name || "No category" }}
+              {{ item.category_name || t("crews.noCategory") }}
               ·
               {{
                 item.permission_create_event
-                  ? "Can schedule"
-                  : "No schedule permission"
+                  ? t("crews.canSchedule")
+                  : t("crews.noSchedulePermission")
               }}
             </p>
           </div>
           <div class="jr-master-row__aside">
             <JRBadge
-              :value="item.status ? 'Active' : 'Inactive'"
+              :value="item.status ? t('common.active') : t('common.inactive')"
               :severity="item.status ? 'success' : 'secondary'" />
             <JRRowActions
               v-if="hasRowActions"
@@ -171,7 +171,7 @@
               variant="ghost"
               size="sm"
               @click="refreshTable">
-              Refresh
+              {{ $t("common.refresh") }}
             </JRButton>
             <JRButton
               v-else-if="hasSearch"
@@ -179,12 +179,12 @@
               variant="ghost"
               size="sm"
               @click="clearSearch">
-              Clear search
+              {{ $t("common.clearSearch") }}
             </JRButton>
           </JREmptyState>
         </template>
-        <Column field="id" header="ID" sortable style="width: 4.5rem" />
-        <Column field="name" header="Crew Name" sortable>
+        <Column field="id" :header="$t('crews.colId')" sortable style="width: 4.5rem" />
+        <Column field="name" :header="$t('crews.colCrewName')" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
@@ -196,25 +196,25 @@
             <span v-else>{{ data.name }}</span>
           </template>
         </Column>
-        <Column field="category_name" header="Category" sortable>
+        <Column field="category_name" :header="$t('crews.colCategory')" sortable>
           <template #body="{ data }">
             {{ data.category_name || "—" }}
           </template>
         </Column>
-        <Column field="status" header="Status" sortable>
+        <Column field="status" :header="$t('crews.colStatus')" sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.status ? 'Active' : 'Inactive'"
+              :value="data.status ? t('common.active') : t('common.inactive')"
               :severity="data.status ? 'success' : 'secondary'" />
           </template>
         </Column>
         <Column
           field="permission_create_event"
-          header="Can Create/Update Schedule?"
+          :header="$t('crews.colCanSchedule')"
           sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.permission_create_event ? 'Yes' : 'No'"
+              :value="data.permission_create_event ? t('common.yes') : t('common.no')"
               :severity="
                 data.permission_create_event ? 'success' : 'secondary'
               " />
@@ -222,7 +222,7 @@
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="
             isTablet
@@ -257,6 +257,7 @@ import {
   getCurrentInstance,
 } from "vue";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import Column from "primevue/column";
 import Paginator from "primevue/paginator";
 import EyeIcon from "@primevue/icons/eye";
@@ -308,6 +309,7 @@ function compareValues(a, b, field) {
 }
 
 const router = useRouter();
+const { t } = useI18n();
 const { proxy } = getCurrentInstance();
 
 const items = ref([]);
@@ -364,15 +366,15 @@ const pagedItems = computed(() => {
 
 const hasSearch = computed(() => Boolean(filter.value && filter.value.trim()));
 const emptyTitle = computed(() => {
-  if (loadError.value) return "Could not load crews";
-  if (hasSearch.value) return "No matching crews";
-  return "No crews";
+  if (loadError.value) return t("crews.emptyLoadError");
+  if (hasSearch.value) return t("crews.emptySearch");
+  return t("crews.emptyNone");
 });
 const emptyDescription = computed(() => {
-  if (loadError.value) return "Try Refresh.";
+  if (loadError.value) return t("common.tryRefresh");
   const query = filter.value.trim();
-  if (query) return `No crews match “${query}”.`;
-  return "No crews yet.";
+  if (query) return t("crews.emptySearchDesc", { query });
+  return t("crews.emptyNoneDesc");
 });
 
 const clearSearch = () => {
@@ -443,7 +445,7 @@ const getRowActions = (item) => {
   if (proxy?.hasPermission?.("crewsapp.view_crew")) {
     actions.push({
       key: "view",
-      label: "View",
+      label: t("common.view"),
       severity: "success",
       icon: EyeIcon,
       command: () => viewItem(item.id),
@@ -452,7 +454,7 @@ const getRowActions = (item) => {
   if (proxy?.hasPermission?.("crewsapp.change_crew")) {
     actions.push({
       key: "edit",
-      label: "Edit",
+      label: t("common.edit"),
       severity: "primary",
       icon: PencilIcon,
       command: () => editItem(item.id),
@@ -461,7 +463,7 @@ const getRowActions = (item) => {
   if (proxy?.hasPermission?.("crewsapp.delete_crew")) {
     actions.push({
       key: "delete",
-      label: "Delete",
+      label: t("common.delete"),
       severity: "danger",
       icon: TrashIcon,
       command: () => deleteItem(item.id),
@@ -472,8 +474,8 @@ const getRowActions = (item) => {
 
 const deleteItem = (id) => {
   proxy?.confirmDelete?.(
-    "Are you sure?",
-    "This action cannot be undone.",
+    t("common.confirmDeleteTitle"),
+    t("crews.deleteConfirm", { name: (items.value.find((i) => i.id === id)?.name ?? String(id)) }),
     async () => {
       try {
         await axios.delete(`${ENDPOINT}${id}/`);

@@ -3,7 +3,7 @@
     <JRPageHeader :title="headerTitle">
       <template #actions>
         <JRButton type="button" variant="ghost" size="sm" @click="goBack">
-          Back
+          {{ $t("common.back") }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -11,31 +11,33 @@
 
     <JRToolbar>
       <template #start>
-        <label class="jr-sr-only" for="mr-search">Search material</label>
+        <label class="jr-sr-only" for="mr-search">{{
+          $t("materialRequests.searchMaterialLabel")
+        }}</label>
         <JRInput
           inputId="mr-search"
           v-model="search"
           type="search"
-          placeholder="Search material..."
+          :placeholder="$t('materialRequests.searchMaterialPlaceholder')"
           autocomplete="off" />
       </template>
       <template #actions>
         <JRSelect
           inputId="mr-category"
-          ariaLabel="Category"
+          :ariaLabel="$t('materialRequests.category')"
           v-model="categoryId"
           :options="categoryOptions"
           optionLabel="label"
           optionValue="value"
-          placeholder="Category" />
+          :placeholder="$t('materialRequests.category')" />
         <JRSelect
           inputId="mr-brand"
-          ariaLabel="Brand"
+          :ariaLabel="$t('materialRequests.brand')"
           v-model="brandId"
           :options="brandOptions"
           optionLabel="label"
           optionValue="value"
-          placeholder="Brand" />
+          :placeholder="$t('materialRequests.brand')" />
       </template>
     </JRToolbar>
 
@@ -190,8 +192,8 @@
 
         <template #empty>
           <JREmptyState
-            title="No materials"
-            description="Try another search, category, or brand." />
+            :title="$t('materialRequests.noMaterials')"
+            :description="$t('materialRequests.noMaterials')" />
         </template>
       </DataView>
     </div>
@@ -211,17 +213,29 @@
         type="button"
         class="jr-mr-float"
         @click="summaryOpen = true">
-        Request ({{ itemCount }} {{ itemCount === 1 ? 'item' : 'items' }})
+        {{
+          $t("materialRequests.requestFloat", {
+            count: itemCount,
+            items:
+              itemCount === 1
+                ? $t("materialRequests.item")
+                : $t("materialRequests.items"),
+          })
+        }}
       </button>
     </div>
 
     <JRDialog
       :visible="summaryOpen"
-      header="Material Request"
+      :header="$t('materialRequests.drawerTitle')"
       size="wide"
-      :confirm-label="submitting ? 'Submitting...' : 'Submit Material Request'"
+      :confirm-label="
+        submitting
+          ? $t('materialRequests.submitting')
+          : $t('materialRequests.submit')
+      "
       :confirm-disabled="submitting || !selectedLines.length"
-      cancel-label="Cancel"
+      :cancel-label="$t('common.cancel')"
       @update:visible="summaryOpen = $event"
       @confirm="submit">
       <p class="jr-mr-summary__meta">
@@ -232,9 +246,11 @@
       <table class="jr-mr-summary__table">
         <thead>
           <tr>
-            <th>Material</th>
-            <th>Qty</th>
-            <th><span class="jr-sr-only">Remove</span></th>
+            <th>{{ $t("materialRequests.material") }}</th>
+            <th>{{ $t("materialRequests.qty") }}</th>
+            <th>
+              <span class="jr-sr-only">{{ $t("materialRequests.remove") }}</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -259,33 +275,49 @@
             </td>
             <td>
               <div class="jr-mr-summary__qty">
-                <button type="button" aria-label="Decrease quantity" @click="adjustLine(line, -1)">−</button>
+                <button
+                  type="button"
+                  :aria-label="$t('materialRequests.decreaseQty')"
+                  @click="adjustLine(line, -1)">
+                  −
+                </button>
                 <input
                   type="number"
                   min="1"
-                  :aria-label="`Quantity for ${line.name}`"
+                  :aria-label="$t('materialRequests.qtyFor', { name: line.name })"
                   :value="line.quantity"
                   @change="setLineQty(line, $event.target.value)" />
-                <button type="button" aria-label="Increase quantity" @click="adjustLine(line, 1)">+</button>
+                <button
+                  type="button"
+                  :aria-label="$t('materialRequests.increaseQty')"
+                  @click="adjustLine(line, 1)">
+                  +
+                </button>
               </div>
             </td>
             <td>
-              <JRButton type="button" variant="ghost" size="sm" @click="removeLine(line)">
-                Remove
+              <JRButton
+                type="button"
+                variant="ghost"
+                size="sm"
+                @click="removeLine(line)">
+                {{ $t("materialRequests.remove") }}
               </JRButton>
             </td>
           </tr>
           <tr v-if="!selectedLines.length">
-            <td colspan="3">No materials in this request.</td>
+            <td colspan="3">
+              {{ $t("materialRequests.noMaterialsInRequest") }}
+            </td>
           </tr>
         </tbody>
       </table>
-      <JRField label="Notes" inputId="mr-notes">
+      <JRField :label="$t('materialRequests.notes')" inputId="mr-notes">
         <JRTextarea
           inputId="mr-notes"
           v-model="notes"
           rows="3"
-          placeholder="Need material to finish master bedroom." />
+          :placeholder="$t('materialRequests.notesExample')" />
       </JRField>
       <p v-if="error" class="jr-mr-summary__error" role="alert">{{ error }}</p>
     </JRDialog>
@@ -360,9 +392,10 @@ export default {
   },
   computed: {
     headerTitle() {
+      const base = this.$t("materialRequests.missingTitle");
       return this.workAccountTitle
-        ? `Missing Material — ${this.workAccountTitle}`
-        : 'Missing Material';
+        ? `${base} — ${this.workAccountTitle}`
+        : base;
     },
     contextLine() {
       return [this.phase, this.requestedBy].filter(Boolean).join(' · ');

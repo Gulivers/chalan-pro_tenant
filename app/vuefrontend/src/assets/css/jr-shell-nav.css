@@ -781,7 +781,31 @@ body {
   .jr-shell-topbar__actions {
     display: flex;
     align-items: center;
+    gap: 0.5rem;
     flex-shrink: 0;
+  }
+
+  .jr-shell-topbar__locale.jr-locale-toggle {
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .jr-shell-topbar__locale .jr-locale-toggle__btn {
+    color: #ffffff;
+  }
+
+  .jr-shell-topbar__locale .jr-locale-toggle__btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .jr-shell-topbar__locale .jr-locale-toggle__btn--active {
+    background: #ffffff;
+    color: var(--color-jr-primary, #2563eb);
+  }
+
+  .jr-shell-topbar__locale .jr-locale-toggle__btn--active:hover {
+    background: #f8fafc;
+    color: var(--color-jr-primary, #2563eb);
   }
 
   .jr-shell-topbar__user {

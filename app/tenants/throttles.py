@@ -90,3 +90,9 @@ class OnboardingVerifyIPThrottle(_OnboardingThrottleBase):
 
     scope = 'onboarding_verify_ip'
 
+
+class LandingContactIPThrottle(_OnboardingThrottleBase):
+    """Limit public landing contact form submissions per client IP."""
+
+    scope = 'landing_contact_ip'
+

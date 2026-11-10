@@ -1,13 +1,13 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Inventory">
+    <JRPageHeader :title="$t('inventoryDashboard.title')">
       <template #actions>
         <JRButton
           v-if="canOpenReports"
           type="button"
           variant="primary"
           @click="reportsOpen = true">
-          Reports & exports
+          {{ $t("reports.reportsExports") }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -26,7 +26,7 @@
         @refresh-stock="loadStockData"
       />
 
-      <JRSection title="Inventory snapshot">
+      <JRSection :title="$t('inventoryDashboard.snapshot')">
         <InventoryMetricsCards :metrics="metrics" :loading="loading" />
       </JRSection>
     </template>

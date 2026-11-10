@@ -3,14 +3,14 @@
     <JRPageHeader :title="pageTitle">
       <template v-if="canEditFromView" #actions>
         <JRButton variant="primary" size="sm" @click="goToEdit">
-          Edit party category
+          {{ $t('parties.partyCategoryForm.editPartyCategory') }}
         </JRButton>
       </template>
     </JRPageHeader>
 
     <div class="jr-party-form">
       <p v-if="loading" class="jr-party-form__status" role="status">
-        Loading party category…
+        {{ $t('parties.partyCategoryForm.loading') }}
       </p>
 
       <form
@@ -18,11 +18,11 @@
         class="jr-party-form__form"
         @submit.prevent="handleSubmit"
         novalidate>
-        <JRSection title="Details">
+        <JRSection :title="$t('common.sectionDetails')">
           <div class="jr-form-grid">
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Name"
+              :label="$t('common.name')"
               inputId="party-category-name"
               required
               :error="fieldErrors.name">
@@ -39,23 +39,23 @@
 
             <JRField
               v-slot="{ describedby }"
-              label="Description"
+              :label="$t('transactions.colDescription')"
               inputId="party-category-description"
               class="jr-form-grid__full">
               <JRTextarea
                 inputId="party-category-description"
                 v-model="form.description"
                 :rows="3"
-                placeholder="Optional description..."
+                :placeholder="$t('parties.partyCategoryForm.descriptionPlaceholder')"
                 :disabled="isDisabled"
                 :ariaDescribedby="describedby" />
             </JRField>
 
-            <JRField label="Active" inputId="party-category-is-active">
+            <JRField :label="$t('common.active')" inputId="party-category-is-active">
               <JRCheckbox
                 inputId="party-category-is-active"
                 v-model="form.is_active"
-                ariaLabel="Active"
+                :ariaLabel="$t('common.active')"
                 :disabled="isDisabled" />
             </JRField>
           </div>
@@ -64,14 +64,14 @@
         <div class="jr-party-form__actions">
           <template v-if="!isViewMode">
             <JRButton type="submit" variant="primary" :disabled="isDisabled">
-              {{ submitting ? "Saving..." : "Save" }}
+              {{ submitting ? $t('common.saving') : $t('common.save') }}
             </JRButton>
             <JRButton
               type="button"
               variant="secondary"
               :disabled="submitting"
               @click="goList">
-              Cancel
+              {{ $t('common.cancel') }}
             </JRButton>
           </template>
           <JRButton
@@ -80,7 +80,7 @@
             variant="secondary"
             :disabled="submitting"
             @click="goList">
-            Back
+            {{ $t('common.back') }}
           </JRButton>
         </div>
       </form>
@@ -91,6 +91,7 @@
 <script setup>
 import { ref, computed, onMounted, getCurrentInstance } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import Swal from "sweetalert2";
 import {
@@ -106,6 +107,7 @@ import {
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n({ useScope: "global" });
 const { proxy } = getCurrentInstance();
 
 const id = route.query.id;
@@ -123,9 +125,9 @@ const form = ref({
 
 const isDisabled = computed(() => isViewMode.value || submitting.value);
 const pageTitle = computed(() => {
-  if (isViewMode.value) return "View Party Category";
-  if (isEditMode.value) return "Edit Party Category";
-  return "New Party Category";
+  if (isViewMode.value) return t("parties.partyCategoryForm.viewTitle");
+  if (isEditMode.value) return t("parties.partyCategoryForm.editTitle");
+  return t("parties.partyCategoryForm.newTitle");
 });
 const canEditFromView = computed(
   () =>
@@ -165,7 +167,11 @@ async function loadData() {
     };
   } catch (error) {
     console.error("Load error:", error);
-    await Swal.fire("Oops!", "Error loading the category.", "error");
+    await Swal.fire(
+      t("common.error"),
+      t("parties.partyCategoryForm.swalLoadError"),
+      "error"
+    );
   } finally {
     loading.value = false;
   }
@@ -177,7 +183,11 @@ function validateLocal() {
   form.value.description = (form.value.description || "").trim();
   if (!name) {
     fieldErrors.value = { name: "Name is required." };
-    Swal.fire("Validation", "Name is required.", "warning");
+    Swal.fire(
+      t("common.validationError"),
+      t("parties.partyCategoryForm.swalNameRequired"),
+      "warning"
+    );
     return false;
   }
   if (name.length > 150) {

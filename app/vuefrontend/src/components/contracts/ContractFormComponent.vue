@@ -7,7 +7,7 @@
           variant="primary"
           size="sm"
           @click="goToEdit">
-          Edit contract
+          {{ $t('contracts.form.editContract') }}
         </JRButton>
         <div
           v-if="hasPermission('ctrctsapp.add_contract') && !isReadOnly"
@@ -15,10 +15,12 @@
           <JRCheckbox
             inputId="docTypeCheckbox"
             v-model="isBid"
-            ariaLabel="Bid"
+            :ariaLabel="$t('contracts.form.bid')"
             :disabled="isReadOnly"
             @update:modelValue="toggleDocType" />
-          <label class="jr-contract-form__bid-label" for="docTypeCheckbox">Bid</label>
+          <label class="jr-contract-form__bid-label" for="docTypeCheckbox">{{
+            $t('contracts.form.bid')
+          }}</label>
         </div>
       </template>
     </JRPageHeader>
@@ -41,13 +43,13 @@
         v-if="event"
         class="jr-contract-form__event"
         role="note">
-        <strong>Event:</strong> {{ event.title }}
+        <strong>{{ $t('contracts.form.eventLabel') }}</strong> {{ event.title }}
         <span aria-hidden="true"> · </span>
-        <strong>Crew:</strong> {{ event.crew_title }}
+        <strong>{{ $t('contracts.form.crewLabel') }}</strong> {{ event.crew_title }}
       </div>
 
       <div class="jr-contract-form__split">
-        <JRSection title="Job details">
+        <JRSection :title="$t('contracts.form.sectionJobDetails')">
           <div class="jr-contract-form__identity">
             <div class="jr-form-grid jr-contract-form__grid--identity">
               <!-- 1. Job Type -->
@@ -193,7 +195,7 @@
           </div>
         </JRSection>
 
-        <JRSection title="Pricing">
+        <JRSection :title="$t('contracts.form.sectionPricing')">
           <div class="jr-form-grid jr-contract-form__grid--pricing">
             <JRField
               v-slot="{ describedby, invalid }"
@@ -311,7 +313,7 @@
 
       <JRSection
         v-if="($route.path == '/contract-form' && (newContract.work_account || newContract.builder)) || $route.path !== '/contract-form'"
-        title="Options">
+        :title="$t('contracts.form.sectionOptions')">
         <!-- Create: work price qty grid — two columns -->
         <div v-if="$route.path == '/contract-form'" class="jr-contract-form__options-split">
           <div
@@ -466,14 +468,14 @@
       <div class="jr-contract-form__actions">
         <template v-if="!isReadOnly">
           <JRButton type="submit" variant="primary">
-            Save Contract
+            {{ $t('contracts.form.saveContract') }}
           </JRButton>
           <JRButton type="button" variant="secondary" @click="$router.push('/contracts')">
-            Cancel
+            {{ $t('common.cancel') }}
           </JRButton>
         </template>
         <JRButton v-else type="button" variant="secondary" @click="$router.push('/contracts')">
-          Back to list
+          {{ $t('common.backToList') }}
         </JRButton>
       </div>
     </form>
@@ -553,7 +555,7 @@ export default {
           errorMessage: "",
           isEditedRough: false, // OAHP: flag detalles con 0 al inicio
           isEditedTrim: false,
-          loading_text: 'Loading contracts',
+          loading_text: '',
           savedContractId: null,
           savedNeedsReprint: false,
           sqftConfirmVisible: false,
@@ -673,9 +675,13 @@ export default {
       },
       pageTitle() {
           const doc = this.newContract.doc_type || 'Contract';
-          if (this.$route.path === '/contract-form') return `New ${doc}`;
-          if (this.isReadOnly) return `View ${doc}`;
-          return `Edit ${doc}`;
+          if (this.$route.path === '/contract-form') {
+              return this.$t('contracts.form.pageNew', { doc });
+          }
+          if (this.isReadOnly) {
+              return this.$t('contracts.form.pageView', { doc });
+          }
+          return this.$t('contracts.form.pageEdit', { doc });
       },
       pageDescription() {
           if (this.$route.path === '/contract-form' || !this.newContract.date_created) {
@@ -798,6 +804,7 @@ export default {
       },
   },
   mounted() {
+      this.loading_text = this.$t('contracts.form.loadingDefault');
       // Fetch initial data when component is mounted
       // Obtener datos iniciales cuando el componente se monta
       this.loading = true; // Show loading state while fetching data
@@ -1770,7 +1777,7 @@ export default {
 
       createOrUpdateContract() {
           const idToUpdate = this.$route.params.id;
-          this.loading_text = 'Saving contract';
+          this.loading_text = this.$t('contracts.form.saving');
           this.getAuthenticatedUser().then(user => {
               if (user && !idToUpdate) {
                   this.newContract.created_by = user.id;
@@ -2039,16 +2046,16 @@ export default {
               return;
           }
           const html =
-              '<p style="margin:0 0 0.5rem;text-align:left">Please fix the following:</p>' +
+              `<p style="margin:0 0 0.5rem;text-align:left">${this.$t('contracts.form.swalFixFollowing')}</p>` +
               '<ul style="text-align:left;margin:0;padding-left:1.25rem;line-height:1.45">' +
               messages.map((m) => `<li>${this.escapeHtml(m)}</li>`).join('') +
               '</ul>';
           import('sweetalert2').then((Swal) => {
               Swal.default.fire({
                   icon: 'error',
-                  title: 'Validation Error',
+                  title: this.$t('common.validationError'),
                   html,
-                  confirmButtonText: 'OK',
+                  confirmButtonText: this.$t('common.ok'),
               });
           }).catch(() => {
               this.notifyError?.(messages.join('\n'));
@@ -2065,7 +2072,7 @@ export default {
 
       downloadContract(id) {
           this.loading = true; // Activa el spinner
-          this.loading_text = `Downloading contract ${id} as PDF`;
+          this.loading_text = this.$t('contracts.form.downloadingPdf', { id });
           axios.get(`/api/contract-pdf/${id}/`)
               .then((response) => {
                   openPdf(response.data);

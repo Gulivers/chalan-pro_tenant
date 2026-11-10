@@ -26,9 +26,11 @@
                   as="button"
                   class="jr-shell-sidebar__trigger"
                   target="jr-main-sidebar"
-                  aria-label="Toggle navigation sidebar">
+                  :aria-label="$t('common.toggleSidebar')">
                   <Bars />
-                  <span class="jr-shell-sidebar__trigger-label">MENU</span>
+                  <span class="jr-shell-sidebar__trigger-label">{{
+                    $t("common.menu")
+                  }}</span>
                 </SidebarTrigger>
                 <!-- Mobile: tenant brand (unchanged) -->
                 <SidebarMenuButton
@@ -55,7 +57,7 @@
           <!-- Desktop: native sidebar groups -->
           <SidebarContent v-if="!isMobile" class="jr-shell-sidebar__content">
             <SidebarGroup v-if="workflowMenuItems.length">
-              <SidebarGroupLabel>Workflow</SidebarGroupLabel>
+              <SidebarGroupLabel>{{ $t("common.workflow") }}</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem
@@ -65,7 +67,7 @@
                       :is-active="isSubRouteActive(item, workflowMenuItems)"
                       @click="navigateTo(item.route)">
                       <component :is="iconFor(item.icon)" />
-                      <span>{{ item.text }}</span>
+                      <span>{{ navLabel(item.text) }}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
@@ -73,7 +75,7 @@
             </SidebarGroup>
 
             <SidebarGroup v-if="moduleMenuItems.length">
-              <SidebarGroupLabel>Modules</SidebarGroupLabel>
+              <SidebarGroupLabel>{{ $t("common.modules") }}</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem
@@ -94,7 +96,7 @@
                         v-bind="moduleButtonAttrs(a11yAttrs)"
                         @click="onModuleButtonClick(item)">
                         <component :is="iconFor(item.icon)" />
-                        <span>{{ item.text }}</span>
+                        <span>{{ navLabel(item.text) }}</span>
                         <ChevronDown class="jr-shell-sidebar__chevron" />
                       </button>
                     </SidebarMenuButton>
@@ -107,7 +109,7 @@
                             isSubRouteActive(subItem, visibleChildren(item))
                           "
                           @click="navigateTo(subItem.route)">
-                          <span>{{ subItem.text }}</span>
+                          <span>{{ navLabel(subItem.text) }}</span>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     </SidebarMenuSub>
@@ -138,7 +140,9 @@
                     v-if="item.type === 'label'"
                     class="jr-shell-sidebar__vs-label"
                     role="presentation">
-                    {{ item.text }}
+                    {{
+                      item.textKey ? $t(item.textKey) : navLabel(item.text)
+                    }}
                   </div>
                   <button
                     v-else-if="item.type === 'link'"
@@ -148,7 +152,7 @@
                     :aria-current="item.active ? 'page' : null"
                     @click="navigateTo(item.route)">
                     <component :is="iconFor(item.icon)" aria-hidden="true" />
-                    <span>{{ item.text }}</span>
+                    <span>{{ navLabel(item.text) }}</span>
                   </button>
                   <button
                     v-else-if="item.type === 'module'"
@@ -158,7 +162,7 @@
                     :aria-expanded="item.open"
                     @click="onModuleButtonClick(item.source)">
                     <component :is="iconFor(item.icon)" aria-hidden="true" />
-                    <span>{{ item.text }}</span>
+                    <span>{{ navLabel(item.text) }}</span>
                     <ChevronDown
                       class="jr-shell-sidebar__chevron"
                       :class="{
@@ -173,7 +177,7 @@
                     :data-active="item.active ? 'true' : null"
                     :aria-current="item.active ? 'page' : null"
                     @click="navigateTo(item.route)">
-                    <span>{{ item.text }}</span>
+                    <span>{{ navLabel(item.text) }}</span>
                   </button>
                 </div>
               </template>
@@ -203,7 +207,7 @@
                     v-bind="a11yAttrs"
                     :class="[btnClass, 'jr-shell-topbar__login--sidebar']"
                     @click="closeSidebar">
-                    Log In
+                    {{ $t("common.logIn") }}
                   </router-link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -237,11 +241,13 @@
           class="jr-shell-mobile-bar__menu"
           target="jr-main-sidebar"
           :aria-label="
-            sidebarOpen ? 'Close navigation menu' : 'Open navigation menu'
+            sidebarOpen ? $t('common.closeNav') : $t('common.openNav')
           "
           :aria-expanded="sidebarOpen">
           <Bars />
-          <span class="jr-shell-mobile-bar__menu-label">MENU</span>
+          <span class="jr-shell-mobile-bar__menu-label">{{
+            $t("common.menu")
+          }}</span>
         </SidebarTrigger>
 
         <router-link
@@ -270,7 +276,12 @@
 
       <main class="jr-app-shell__content">
         <SetupReminderBanner />
-        <slot />
+        <!--
+          router-view must live here (owned by the shell), not as a slot from App.
+          Passing <router-view> through App → Navbar → PrimeVue SidebarMain slots
+          stalls page updates after an i18n locale change (URL changes, view does not).
+        -->
+        <router-view :key="$route.fullPath" />
       </main>
       <FooterComponent />
     </SidebarMain>
@@ -324,6 +335,7 @@ import NavbarMessagesDropdown from "./NavbarMessagesDropdown.vue";
 import SetupReminderBanner from "@components/setup/SetupReminderBanner.vue";
 import { openAssistant } from "@/utils/assistantBus";
 import authService from "@/auth/authService";
+import { navLabelKey } from "@/i18n/navKeys";
 
 const NAV_ICONS = {
   home: Home,
@@ -666,7 +678,7 @@ export default {
         rows.push({
           type: "label",
           key: "label-workflow",
-          text: "Workflow",
+          textKey: "common.workflow",
         });
         for (const item of this.workflowMenuItems) {
           rows.push({
@@ -684,7 +696,7 @@ export default {
         rows.push({
           type: "label",
           key: "label-modules",
-          text: "Modules",
+          textKey: "common.modules",
         });
         for (const item of this.moduleMenuItems) {
           const children = this.visibleChildren(item);
@@ -729,6 +741,10 @@ export default {
     document.body.style.overflow = "";
   },
   methods: {
+    navLabel(englishText) {
+      const key = navLabelKey(englishText);
+      return key ? this.$t(key) : englishText;
+    },
     iconFor(name) {
       return NAV_ICONS[name] || Home;
     },
@@ -775,7 +791,8 @@ export default {
           this.isTenantOwner = !!user.is_tenant_owner;
           this.isStaff = !!user.is_staff;
           try {
-            useAuthStore().setStaff(this.isStaff);
+            // syncLocale skips when language is unchanged (avoids shell remount).
+            useAuthStore().setUser(user, { syncLocale: true });
           } catch (_) {
             /* ignore */
           }

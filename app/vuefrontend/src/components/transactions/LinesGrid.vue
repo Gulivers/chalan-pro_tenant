@@ -9,10 +9,10 @@
           outlined
           size="small"
           :disabled="disabled"
-          title="Add a new line to the document"
+          :title="$t('transactions.lines.addRowTitle')"
           @click="addLineFromToolbar">
           <Plus class="jr-lines__maint-icon" aria-hidden="true" />
-          <span class="p-button-label">Add Row</span>
+          <span class="p-button-label">{{ $t('transactions.lines.addRow') }}</span>
         </Button>
         <Button
           type="button"
@@ -21,10 +21,10 @@
           outlined
           size="small"
           :disabled="disabled || !hasSelection"
-          title="Duplicate the selected lines"
+          :title="$t('transactions.lines.duplicateSelectedTitle')"
           @click="duplicateSelected">
           <Copy class="jr-lines__maint-icon" aria-hidden="true" />
-          <span class="p-button-label">Duplicate Selected</span>
+          <span class="p-button-label">{{ $t('transactions.lines.duplicateSelected') }}</span>
         </Button>
         <Button
           type="button"
@@ -33,10 +33,10 @@
           outlined
           size="small"
           :disabled="disabled || !hasSelection"
-          title="Remove the selected lines"
+          :title="$t('transactions.lines.deleteSelectedTitle')"
           @click="removeSelected">
           <Trash class="jr-lines__maint-icon" aria-hidden="true" />
-          <span class="p-button-label">Delete Selected</span>
+          <span class="p-button-label">{{ $t('transactions.lines.deleteSelected') }}</span>
         </Button>
         <JRButton
           v-if="documentId && documentTypeCreatesSerializedItems"
@@ -44,19 +44,21 @@
           variant="secondary"
           size="sm"
           :disabled="disabled"
-          title="Assign serial numbers for serialized items of this document"
+          :title="$t('transactions.lines.assignSerialTitle')"
           @click="$emit('open-asset-tags')">
-          Assign Serial Numbers
+          {{ $t('transactions.lines.assignSerialNumbers') }}
         </JRButton>
       </div>
-      <span class="jr-lines__count">Rows: {{ linesLocal?.length || 0 }}</span>
+      <span class="jr-lines__count">{{
+        $t('transactions.lines.rowsCount', { count: linesLocal?.length || 0 })
+      }}</span>
     </div>
 
     <div v-if="isCompact" class="jr-lines__compact">
       <JREmptyState
         v-if="!linesLocal.length"
-        title="No lines"
-        description="Add a row to enter products for this transaction.">
+        :title="$t('transactions.lines.noLinesTitle')"
+        :description="$t('transactions.lines.noLinesDesc')">
         <Button
           v-if="!disabled && !hideToolbar"
           type="button"
@@ -66,7 +68,7 @@
           size="small"
           @click="addLineFromToolbar">
           <Plus class="jr-lines__maint-icon" aria-hidden="true" />
-          <span class="p-button-label">Add Row</span>
+          <span class="p-button-label">{{ $t('transactions.lines.addRow') }}</span>
         </Button>
       </JREmptyState>
       <ul v-else class="jr-lines-list">
@@ -156,8 +158,8 @@
     <div v-else class="jr-lines__table-wrap">
       <JREmptyState
         v-if="!linesLocal.length"
-        title="No lines"
-        description="Add a row to enter products for this transaction.">
+        :title="$t('transactions.lines.noLinesTitle')"
+        :description="$t('transactions.lines.noLinesDesc')">
         <Button
           v-if="!disabled && !hideToolbar"
           type="button"
@@ -167,7 +169,7 @@
           size="small"
           @click="addLineFromToolbar">
           <Plus class="jr-lines__maint-icon" aria-hidden="true" />
-          <span class="p-button-label">Add Row</span>
+          <span class="p-button-label">{{ $t('transactions.lines.addRow') }}</span>
         </Button>
       </JREmptyState>
       <div v-else class="jr-lines-table-scroll">
@@ -182,17 +184,17 @@
                   :disabled="disabled || !linesLocal.length"
                   @update:modelValue="onSelectAll" />
               </th>
-              <th class="jr-lines-table__thumb">Img</th>
-              <th class="jr-lines-table__product">Product</th>
-              <th class="jr-lines-table__qty">Qty</th>
-              <th class="jr-lines-table__unit">Unit</th>
-              <th class="jr-lines-table__price">Unit Price</th>
-              <th class="jr-lines-table__disc">Disc %</th>
-              <th>Warehouse</th>
-              <th>Price Type</th>
-              <th v-if="documentTypeIsSales">Margin %</th>
-              <th class="jr-lines-table__end">Line total</th>
-              <th class="jr-lines-table__actions">Actions</th>
+              <th class="jr-lines-table__thumb">{{ $t('transactions.lines.colImg') }}</th>
+              <th class="jr-lines-table__product">{{ $t('transactions.lines.colProduct') }}</th>
+              <th class="jr-lines-table__qty">{{ $t('transactions.lines.colQty') }}</th>
+              <th class="jr-lines-table__unit">{{ $t('transactions.lines.colUnit') }}</th>
+              <th class="jr-lines-table__price">{{ $t('transactions.lines.colUnitPrice') }}</th>
+              <th class="jr-lines-table__disc">{{ $t('transactions.lines.colDisc') }}</th>
+              <th>{{ $t('transactions.lines.colWarehouse') }}</th>
+              <th>{{ $t('transactions.lines.colPriceType') }}</th>
+              <th v-if="documentTypeIsSales">{{ $t('transactions.lines.colMargin') }}</th>
+              <th class="jr-lines-table__end">{{ $t('transactions.lines.colLineTotal') }}</th>
+              <th class="jr-lines-table__actions">{{ $t('transactions.lines.colActions') }}</th>
             </tr>
           </thead>
           <tbody>

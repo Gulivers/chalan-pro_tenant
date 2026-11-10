@@ -1,13 +1,13 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Warehouses">
+    <JRPageHeader :title="$t('nav.warehouses')">
       <template #actions>
         <JRButton
           v-if="hasPermission('appinventory.add_warehouse')"
           type="button"
           :fluid="isMobile"
           @click="goToCreateForm">
-          + New Warehouse
+          {{ $t('inventory.warehousesNew') }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -16,7 +16,7 @@
       <template #start>
         <div class="jr-master-list__search">
           <label class="jr-sr-only" for="warehouse-filter-input">
-            Search warehouses
+            {{ $t("inventory.warehousesSearchLabel") }}
           </label>
           <span class="jr-master-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -25,23 +25,23 @@
             inputId="warehouse-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search by name, location..." />
+            :placeholder="$t('inventory.warehousesSearchPlaceholder')" />
         </div>
       </template>
 
       <template #stats>
         <div class="jr-master-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
-          <JRBadge :value="`${stats.active} Active`" severity="success" />
+          <JRBadge :value="$t('common.badgeTotal', { count: stats.total })" severity="secondary" />
+          <JRBadge :value="$t('common.badgeActive', { count: stats.active })" severity="success" />
           <JRBadge
-            :value="`${stats.inactive} Inactive`"
+            :value="$t('common.badgeInactive', { count: stats.inactive })"
             severity="secondary" />
         </div>
       </template>
 
       <template #actions>
         <label class="jr-sr-only" for="warehouse-per-page">
-          Entries per page
+          {{ $t('common.entriesPerPage') }}
         </label>
         <JRSelect
           class="jr-master-list__entries"
@@ -57,7 +57,7 @@
           class="jr-master-list__refresh"
           @click="refreshTable">
           <RefreshIcon />
-          Refresh
+          {{ $t('common.refresh') }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -67,14 +67,11 @@
         v-if="!items.length && !isLoading"
         :title="emptyTitle"
         :description="emptyDescription" />
-      <p v-if="isLoading && !items.length" class="jr-master-list__loading">
-        Loading warehouses…
-      </p>
+      <p v-if="isLoading && !items.length" class="jr-master-list__loading">{{ $t('common.loadingLabel', { label: $t('nav.warehouses') }) }}</p>
       <p
         v-else-if="isLoading && items.length"
         class="jr-master-list__loading"
-        aria-live="polite">
-        Updating…
+        aria-live="polite">{{ $t('common.updating') }}
       </p>
       <ul
         v-if="items.length"
@@ -93,11 +90,11 @@
             <p v-if="item.location" class="jr-master-row__meta">
               {{ item.location }}
             </p>
-            <p v-if="item.is_default" class="jr-master-row__meta">Default</p>
+            <p v-if="item.is_default" class="jr-master-row__meta">{{ $t('inventory.badgeDefault') }}</p>
           </div>
           <div class="jr-master-row__aside">
             <JRBadge
-              :value="item.is_active ? 'Active' : 'Inactive'"
+              :value="item.is_active ? $t('common.active') : $t('common.inactive')"
               :severity="item.is_active ? 'success' : 'secondary'" />
             <JRRowActions
               v-if="hasRowActions"
@@ -139,7 +136,7 @@
         :emptyDescription="emptyDescription"
         @page="onTablePage"
         @sort="onTableSort">
-        <Column field="name" header="Name" sortable>
+        <Column field="name" :header="$t('common.name')" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
@@ -151,30 +148,30 @@
             <span v-else>{{ data.name }}</span>
           </template>
         </Column>
-        <Column field="location" header="Location" sortable>
+        <Column field="location" :header="$t('inventory.colLocation')" sortable>
           <template #body="{ data }">
             {{ data.location || "—" }}
           </template>
         </Column>
-        <Column field="is_active" header="Status" sortable>
+        <Column field="is_active" :header="$t('common.status')" sortable>
           <template #body="{ data }">
             <JRBadge
-              :value="data.is_active ? 'Active' : 'Inactive'"
+              :value="data.is_active ? $t('common.active') : $t('common.inactive')"
               :severity="data.is_active ? 'success' : 'secondary'" />
           </template>
         </Column>
-        <Column field="is_default" header="Default" sortable>
+        <Column field="is_default" :header="$t('inventory.colDefault')" sortable>
           <template #body="{ data }">
             <JRBadge
               v-if="data.is_default"
-              value="Default"
+              :value="$t('inventory.badgeDefault')"
               severity="info" />
             <span v-else class="jr-master-list__muted">—</span>
           </template>
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="
             isTablet
@@ -293,16 +290,29 @@ export default {
     ];
 
     const tableFirst = computed(() => (currentPage.value - 1) * perPage.value);
-    const emptyTitle = computed(() =>
-      loadError.value ? "Could not load warehouses" : "No warehouses"
+    const hasSearch = computed(() =>
+      Boolean(filter.value && filter.value.trim())
     );
-    const emptyDescription = computed(() =>
-      loadError.value
-        ? "Try Refresh."
-        : "No warehouses match the current search."
-    );
+    const emptyTitle = computed(() => {
+      if (loadError.value) return proxy?.$t?.("inventory.warehousesEmptyLoadError");
+      if (hasSearch.value) return proxy?.$t?.("inventory.warehousesEmptySearch");
+      return proxy?.$t?.("inventory.warehousesEmptyNone");
+    });
+    const emptyDescription = computed(() => {
+      if (loadError.value) return proxy?.$t?.("common.tryRefresh");
+      const query = (filter.value || "").trim();
+      if (query) return proxy?.$t?.("inventory.warehousesEmptySearchDesc", { query });
+      return proxy?.$t?.("inventory.warehousesEmptyNoneDesc");
+    });
 
-    const canView = computed(() =>
+    const clearSearch = () => {
+      filter.value = "";
+      if (typeof document !== "undefined") {
+        document.getElementById("warehouse-filter-input")?.focus();
+      }
+    };
+
+const canView = computed(() =>
       !!proxy?.hasPermission?.("appinventory.view_warehouse")
     );
     const hasRowActions = computed(
@@ -398,7 +408,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.view_warehouse")) {
         actions.push({
           key: "view",
-          label: "View",
+          label: proxy?.$t?.("common.view"),
           severity: "success",
           icon: EyeIcon,
           command: () => viewItem(item.id),
@@ -407,7 +417,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.change_warehouse")) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: proxy?.$t?.("common.edit"),
           severity: "primary",
           icon: PencilIcon,
           command: () => editItem(item.id),
@@ -416,7 +426,7 @@ export default {
       if (proxy?.hasPermission?.("appinventory.delete_warehouse")) {
         actions.push({
           key: "delete",
-          label: "Delete",
+          label: proxy?.$t?.("common.delete"),
           severity: "danger",
           icon: TrashIcon,
           command: () => deleteItem(item.id),
@@ -514,6 +524,8 @@ export default {
       sortOrder,
       tableFirst,
       pageOptions,
+      hasSearch,
+      clearSearch,
       emptyTitle,
       emptyDescription,
       isMobile,

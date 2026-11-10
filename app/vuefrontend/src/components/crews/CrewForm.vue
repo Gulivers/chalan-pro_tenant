@@ -3,14 +3,14 @@
     <JRPageHeader :title="pageTitle">
       <template v-if="canEditFromView" #actions>
         <JRButton variant="primary" size="sm" @click="goToEdit">
-          Edit crew
+          {{ $t('crews.form.editCrew') }}
         </JRButton>
       </template>
     </JRPageHeader>
 
     <div class="jr-crew-form">
       <p v-if="loading" class="jr-crew-form__status" role="status">
-        Loading crew…
+        {{ $t('crews.form.loadingCrew') }}
       </p>
 
       <form
@@ -18,11 +18,11 @@
         class="jr-crew-form__form"
         @submit.prevent="handleSubmit"
         novalidate>
-        <JRSection title="Details">
+        <JRSection :title="$t('common.sectionDetails')">
           <div class="jr-form-grid">
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Crew Name"
+              :label="$t('crews.form.crewName')"
               inputId="crew-name"
               required
               :error="fieldErrors.name">
@@ -39,7 +39,7 @@
 
             <JRField
               v-slot="{ describedby }"
-              label="Category"
+              :label="$t('crews.colCategory')"
               inputId="crew-category">
               <JRSelect
                 inputId="crew-category"
@@ -47,7 +47,7 @@
                 :options="categories"
                 optionLabel="name"
                 optionValue="id"
-                placeholder="Select Category"
+                :placeholder="$t('crews.form.selectCategory')"
                 filter
                 showClear
                 :disabled="isDisabled"
@@ -56,7 +56,7 @@
 
             <JRField
               v-slot="{ describedby }"
-              label="Crew Members"
+              :label="$t('crews.form.crewMembers')"
               inputId="crew-members"
               class="jr-form-grid__full">
               <JRSelect
@@ -65,7 +65,7 @@
                 :options="users"
                 optionLabel="username"
                 optionValue="id"
-                placeholder="Select Crew Members"
+                :placeholder="$t('crews.form.selectCrewMembers')"
                 multiple
                 filter
                 showClear
@@ -73,28 +73,28 @@
                 :ariaDescribedby="describedby" />
             </JRField>
 
-            <JRField label="Active" inputId="crew-status">
+            <JRField :label="$t('common.active')" inputId="crew-status">
               <JRCheckbox
                 inputId="crew-status"
                 v-model="form.status"
-                ariaLabel="Active"
+                :ariaLabel="$t('common.active')"
                 :disabled="isDisabled" />
             </JRField>
 
             <JRField
-              label="Can Create/Update Schedule?"
+              :label="$t('crews.form.canCreateSchedule')"
               inputId="crew-permission-create-event"
-              hint="Allows this crew to create and update schedule events">
+              :hint="$t('crews.form.canCreateScheduleHint')">
               <JRCheckbox
                 inputId="crew-permission-create-event"
                 v-model="form.permission_create_event"
-                ariaLabel="Can Create/Update Schedule?"
+                :ariaLabel="$t('crews.form.canCreateSchedule')"
                 :disabled="isDisabled" />
             </JRField>
           </div>
         </JRSection>
 
-        <JRSection title="Crew type">
+        <JRSection :title="$t('crews.form.sectionCrewType')">
           <div class="jr-form-grid">
             <JRField
               v-slot="{ describedby }"
@@ -206,14 +206,14 @@
         <div class="jr-crew-form__actions jr-crew-form__actions--sticky">
           <template v-if="!isViewMode">
             <JRButton type="submit" variant="primary" :disabled="isDisabled">
-              {{ submitting ? "Saving..." : "Save" }}
+              {{ submitting ? $t('common.saving') : $t('common.save') }}
             </JRButton>
             <JRButton
               type="button"
               variant="secondary"
               :disabled="submitting"
               @click="goList">
-              Cancel
+              {{ $t('common.cancel') }}
             </JRButton>
           </template>
           <JRButton
@@ -222,7 +222,7 @@
             variant="secondary"
             :disabled="submitting"
             @click="goList">
-            Back
+            {{ $t('common.back') }}
           </JRButton>
         </div>
       </form>
@@ -230,10 +230,10 @@
 
     <JRDialog
       :visible="pieceWorkConfirmVisible"
-      header="Switch to piece work?"
-      message="This will clear the selected communities. Piece-work crews do not own communities."
-      confirmLabel="Clear and switch"
-      cancelLabel="Cancel"
+      :header="$t('crews.form.pieceWorkConfirmHeader')"
+      :message="$t('crews.form.pieceWorkConfirmMessage')"
+      :confirmLabel="$t('crews.form.clearAndSwitch')"
+      :cancelLabel="$t('common.cancel')"
       confirmVariant="danger"
       @update:visible="onPieceWorkConfirmVisible"
       @confirm="confirmPieceWorkSwitch" />
@@ -247,6 +247,7 @@ import Message from "primevue/message";
 import PickList from "primevue/picklist";
 import { onMounted, ref, computed, watch, getCurrentInstance } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import {
   JRPage,
   JRPageHeader,
@@ -262,6 +263,7 @@ import {
 const { proxy } = getCurrentInstance();
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n({ useScope: "global" });
 const id = route.params.id;
 const isViewMode = computed(() => route.name === "crew-view");
 const isEditMode = computed(() => !!id && !isViewMode.value);
@@ -311,9 +313,9 @@ const customerBuilders = computed(() =>
   (builders.value || []).filter((b) => !!b?.customer_rank)
 );
 const pageTitle = computed(() => {
-  if (isViewMode.value) return "View Crew";
-  if (isEditMode.value) return "Edit Crew";
-  return "Add Crew";
+  if (isViewMode.value) return t("crews.form.viewCrew");
+  if (isEditMode.value) return t("crews.form.editCrewTitle");
+  return t("crews.form.addCrew");
 });
 function deriveCrewTypeFromJobs(jobIds) {
   return (jobIds || []).length > 0 ? "supervisor" : "piece_work";
@@ -338,7 +340,7 @@ function confirmPieceWorkSwitch() {
   rebuildJobsPickList();
   crewType.value = "piece_work";
   pieceWorkConfirmVisible.value = false;
-  proxy?.notifyToastSuccess?.("Communities cleared.");
+  proxy?.notifyToastSuccess?.(t("crews.form.communitiesCleared"));
 }
 
 function onPieceWorkConfirmVisible(visible) {
@@ -456,7 +458,11 @@ async function loadData() {
     crewType.value = deriveCrewTypeFromJobs(form.value.jobs);
   } catch (err) {
     console.error("Load error:", err);
-    await Swal.fire("Oops!", "Error loading the crew.", "error");
+    await Swal.fire(
+      t("common.error"),
+      t("crews.form.swalLoadCrewError"),
+      "error"
+    );
   }
 }
 
@@ -465,7 +471,11 @@ function validate() {
   form.value.name = name;
   if (!name) {
     fieldErrors.value = { name: "Crew name is required." };
-    Swal.fire("Validation", "Crew name is required.", "warning");
+    Swal.fire(
+      t("common.validationError"),
+      t("crews.form.swalNameRequired"),
+      "warning"
+    );
     return false;
   }
   return true;
@@ -492,10 +502,10 @@ async function handleSubmit() {
     };
     if (id) {
       await axios.patch(`/api/crews/${id}/`, payload);
-      proxy?.notifyToastSuccess?.("Crew updated.");
+      proxy?.notifyToastSuccess?.(t("crews.form.swalCrewUpdated"));
     } else {
       await axios.post("/api/crews/", payload);
-      proxy?.notifyToastSuccess?.("Crew created.");
+      proxy?.notifyToastSuccess?.(t("crews.form.swalCrewCreated"));
     }
     router.push({ name: "crew-list" });
   } catch (err) {
@@ -515,7 +525,7 @@ async function handleSubmit() {
       });
       fieldErrors.value = next;
     }
-    await Swal.fire("Validation Error", msg, "error");
+    await Swal.fire(t("common.validationError"), msg, "error");
   } finally {
     submitting.value = false;
   }

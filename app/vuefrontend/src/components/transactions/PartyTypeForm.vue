@@ -3,14 +3,14 @@
     <JRPageHeader :title="pageTitle">
       <template v-if="canEditFromView" #actions>
         <JRButton variant="primary" size="sm" @click="goToEdit">
-          Edit party type
+          {{ $t('parties.partyTypeForm.editPartyType') }}
         </JRButton>
       </template>
     </JRPageHeader>
 
     <div class="jr-party-form">
       <p v-if="loading" class="jr-party-form__status" role="status">
-        Loading party type…
+        {{ $t('parties.partyTypeForm.loading') }}
       </p>
 
       <form
@@ -18,11 +18,11 @@
         class="jr-party-form__form"
         @submit.prevent="handleSubmit"
         novalidate>
-        <JRSection title="Details">
+        <JRSection :title="$t('common.sectionDetails')">
           <div class="jr-form-grid">
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Name"
+              :label="$t('common.name')"
               inputId="party-type-name"
               required
               :error="fieldErrors.name">
@@ -39,23 +39,23 @@
 
             <JRField
               v-slot="{ describedby }"
-              label="Description"
+              :label="$t('transactions.colDescription')"
               inputId="party-type-description"
               class="jr-form-grid__full">
               <JRTextarea
                 inputId="party-type-description"
                 v-model="form.description"
                 :rows="3"
-                placeholder="Optional description..."
+                :placeholder="$t('parties.partyTypeForm.descriptionPlaceholder')"
                 :disabled="isDisabled"
                 :ariaDescribedby="describedby" />
             </JRField>
 
-            <JRField label="Active" inputId="party-type-is-active">
+            <JRField :label="$t('common.active')" inputId="party-type-is-active">
               <JRCheckbox
                 inputId="party-type-is-active"
                 v-model="form.is_active"
-                ariaLabel="Active"
+                :ariaLabel="$t('common.active')"
                 :disabled="isDisabled" />
             </JRField>
           </div>
@@ -64,14 +64,14 @@
         <div class="jr-party-form__actions">
           <template v-if="!isViewMode">
             <JRButton type="submit" variant="primary" :disabled="isDisabled">
-              {{ submitting ? "Saving..." : "Save" }}
+              {{ submitting ? $t('common.saving') : $t('common.save') }}
             </JRButton>
             <JRButton
               type="button"
               variant="secondary"
               :disabled="submitting"
               @click="goList">
-              Cancel
+              {{ $t('common.cancel') }}
             </JRButton>
           </template>
           <JRButton
@@ -80,7 +80,7 @@
             variant="secondary"
             :disabled="submitting"
             @click="goList">
-            Back
+            {{ $t('common.back') }}
           </JRButton>
         </div>
       </form>
@@ -91,6 +91,7 @@
 <script setup>
 import { ref, computed, onMounted, getCurrentInstance } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import Swal from "sweetalert2";
 import {
@@ -106,6 +107,7 @@ import {
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n({ useScope: "global" });
 const { proxy } = getCurrentInstance();
 
 const id = route.query.id || null;
@@ -123,9 +125,9 @@ const form = ref({
 
 const isDisabled = computed(() => isViewMode.value || submitting.value);
 const pageTitle = computed(() => {
-  if (isViewMode.value) return "View Party Type";
-  if (isEditMode.value) return "Edit Party Type";
-  return "New Party Type";
+  if (isViewMode.value) return t("parties.partyTypeForm.viewTitle");
+  if (isEditMode.value) return t("parties.partyTypeForm.editTitle");
+  return t("parties.partyTypeForm.newTitle");
 });
 const canEditFromView = computed(
   () =>
@@ -157,7 +159,11 @@ function goToEdit() {
 
 onMounted(async () => {
   if (isViewMode.value && !id) {
-    await Swal.fire("Info", "No record to view.", "info");
+    await Swal.fire(
+      t("common.warning"),
+      t("parties.partyTypeForm.swalNoRecord"),
+      "info"
+    );
     goList();
     return;
   }
@@ -173,7 +179,11 @@ onMounted(async () => {
       };
     } catch (error) {
       console.error("Error loading party type:", error);
-      await Swal.fire("Oops!", "Error loading the party type.", "error");
+      await Swal.fire(
+        t("common.error"),
+        t("parties.partyTypeForm.swalLoadError"),
+        "error"
+      );
       goList();
     } finally {
       loading.value = false;
@@ -193,7 +203,11 @@ const handleSubmit = async () => {
 
     if (!form.value.name) {
       fieldErrors.value = { name: "Name is required." };
-      await Swal.fire("Validation", "Name is required.", "warning");
+      await Swal.fire(
+        t("common.validationError"),
+        t("parties.partyTypeForm.swalNameRequired"),
+        "warning"
+      );
       return;
     }
     if (form.value.name.length > 150) {

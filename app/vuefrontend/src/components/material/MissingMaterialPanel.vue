@@ -4,9 +4,11 @@
       v-if="canRequest"
       type="button"
       @click="openRequest">
-      Request Material
+      {{ $t("materialRequests.requestMaterial") }}
     </JRButton>
-    <p v-if="loading" class="jr-mm-panel__status">Loading requests…</p>
+    <p v-if="loading" class="jr-mm-panel__status">
+      {{ $t("materialRequests.loadingRequests") }}
+    </p>
     <DataTable
       v-else-if="requests.length"
       :key="`${workAccountId}-${eventId}`"
@@ -18,7 +20,11 @@
       rowGroupMode="subheader"
       groupRowsBy="id"
       :rowClass="hiddenGroupRow"
-      :pt="{ rowToggleButton: { 'aria-label': 'Show or hide this request' } }">
+      :pt="{
+        rowToggleButton: {
+          'aria-label': $t('materialRequests.toggleRequestAria'),
+        },
+      }">
       <template #groupheader="{ data }">
         <span class="jr-mm-group">
           <router-link
@@ -42,7 +48,9 @@
           :editable="canEdit" />
       </template>
     </DataTable>
-    <p v-else class="jr-mm-panel__status">No material requests for this work order yet.</p>
+    <p v-else class="jr-mm-panel__status">
+      {{ $t("materialRequests.noRequestsForWo") }}
+    </p>
   </section>
 </template>
 

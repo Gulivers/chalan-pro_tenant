@@ -1,11 +1,11 @@
 <template>
   <div class="jr-chart-block">
     <div v-if="!hasData" class="jr-dash-state">
-      <div v-if="loading">Loading…</div>
+      <div v-if="loading">{{ $t("common.loading") }}</div>
       <JREmptyState
         v-else
-        title="No comparison data available"
-        description="There is no comparison data to chart right now."
+        :title="$t('inventoryDashboard.noComparison')"
+        :description="$t('inventoryDashboard.noComparison')"
       />
     </div>
 
@@ -15,7 +15,9 @@
           <p class="jr-chart-controls__title">Sales vs Purchases Comparison</p>
           <span class="jr-chart-controls__hint">Last 12 months</span>
         </div>
-        <JRButton variant="secondary" size="sm" @click="refreshChart">Refresh</JRButton>
+        <JRButton variant="secondary" size="sm" @click="refreshChart">{{
+          $t("common.refresh")
+        }}</JRButton>
       </div>
 
       <div class="jr-chart-container">

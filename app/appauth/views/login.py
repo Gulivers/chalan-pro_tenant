@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from appauth.cookies import set_refresh_cookie, use_refresh_cookie
 from appauth.errors import INVALID_CREDENTIALS, TENANT_INACTIVE, THROTTLED, error_payload
 from appauth.jwt_tokens import issue_tokens_for_user
+from appauth.services.preferences import preferred_language_for
 from appauth.services.tenant import resolve_request_tenant
 from appauth.throttles import LoginIPThrottle, LoginUsernameThrottle
 from tenants.services.access import assert_login_allowed
@@ -81,6 +82,7 @@ class LoginView(APIView):
                 'username': user.get_username(),
                 'is_staff': user.is_staff,
                 'is_superuser': user.is_superuser,
+                'preferred_language': preferred_language_for(user),
             },
         }
         response = Response(payload, status=status.HTTP_200_OK)

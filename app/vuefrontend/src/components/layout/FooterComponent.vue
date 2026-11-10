@@ -27,10 +27,12 @@
           <nav
             v-if="!$route.meta.hideNavbar"
             class="jr-footer__flow"
-            aria-label="Operational flow">
+            :aria-label="$t('about.flowTitle')">
             <header class="jr-footer__flow-header">
-              <h2 class="jr-footer__flow-title">Operational flow</h2>
-              <p class="jr-footer__flow-lead">Follow these steps in order.</p>
+              <h2 class="jr-footer__flow-title">{{ $t("about.flowTitle") }}</h2>
+              <p class="jr-footer__flow-lead">
+                {{ $t("footer.followSteps") }}
+              </p>
             </header>
 
             <ol class="jr-footer__steps">
@@ -42,7 +44,7 @@
                   :to="step.route"
                   class="jr-footer__step-link"
                   active-class="jr-footer__step-link--active"
-                  :aria-label="`Step ${index + 1}: ${step.label}`"
+                  :aria-label="`${index + 1}: ${stepLabel(step)}`"
                   :aria-current="
                     isActiveRoute(step.route) ? 'page' : undefined
                   ">
@@ -52,7 +54,9 @@
                   <span class="jr-footer__step-icon-wrap" aria-hidden="true">
                     <component :is="step.icon" class="jr-footer__step-icon" />
                   </span>
-                  <span class="jr-footer__step-label">{{ step.label }}</span>
+                  <span class="jr-footer__step-label">{{
+                    stepLabel(step)
+                  }}</span>
                 </router-link>
                 <span
                   v-if="index < operationalFlowSteps.length - 1"
@@ -180,27 +184,27 @@ const FlowIconDashboard = createFlowIcon([
 
 const OPERATIONAL_FLOW_STEPS = Object.freeze([
   {
-    label: "Schedule",
+    labelKey: "nav.schedule",
     route: "/schedule",
     icon: FlowIconCalendar,
   },
   {
-    label: "Prepare Material Packing",
+    labelKey: "footer.prepareMaterial",
     route: "/transactions",
     icon: FlowIconBox,
   },
   {
-    label: "Piece Work Contract",
+    labelKey: "glossary.pieceWorkContract",
     route: "/contracts",
     icon: FlowIconContract,
   },
   {
-    label: "Track Work Order",
+    labelKey: "footer.trackWorkOrder",
     route: "/work-accounts",
     icon: FlowIconChat,
   },
   {
-    label: "Measure the Operation",
+    labelKey: "footer.measureOperation",
     route: "/reports-exports",
     icon: FlowIconDashboard,
   },
@@ -244,6 +248,9 @@ export default {
     },
   },
   methods: {
+    stepLabel(step) {
+      return step?.labelKey ? this.$t(step.labelKey) : step?.label || "";
+    },
     isActiveRoute(route) {
       return (
         this.$route.path === route || this.$route.path.startsWith(`${route}/`)

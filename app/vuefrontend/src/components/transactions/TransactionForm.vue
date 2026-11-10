@@ -7,7 +7,9 @@
           class="jr-tx-form__status-badge-btn"
           :aria-expanded="statusDrawerOpen ? 'true' : 'false'"
           aria-controls="jr-doc-status-drawer"
-          :aria-label="`Open status panel: ${statusBadgeLabel}`"
+          :aria-label="
+            $t('transactions.form.openStatusPanel', { label: statusBadgeLabel })
+          "
           @click="openStatusDrawer">
           <JRBadge
             :value="statusBadgeLabel"
@@ -53,7 +55,7 @@
           variant="primary"
           size="sm"
           @click="goToEdit">
-          Edit transaction
+          {{ $t('transactions.form.editTransaction') }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -69,22 +71,26 @@
       </div>
 
       <p v-if="loadingDocument" class="jr-tx-form__loading" role="status">
-        Loading transaction…
+        {{ $t('transactions.form.loadingDocument') }}
       </p>
 
-      <JRSection v-if="!loadingDocument" title="Document">
+      <JRSection
+        v-if="!loadingDocument"
+        :title="$t('transactions.form.sectionDocument')">
         <template #actions>
           <JRCheckbox
             class="jr-tx-form__doc-active"
             v-model="form.is_active"
             inputId="tx-is-active"
-            :label="form.is_active ? 'Active' : 'Voided'"
+            :label="
+              form.is_active ? $t('common.active') : $t('common.voided')
+            "
             :disabled="isReadOnly" />
         </template>
         <div class="jr-form-grid jr-form-grid--document">
           <JRField
             v-slot="{ describedby }"
-            label="Document Type"
+            :label="$t('transactions.form.documentType')"
             required
             inputId="tx-document-type"
             :error="fieldError('document_type')">
@@ -99,9 +105,9 @@
 
           <JRField
             v-if="isFromSchedule && workAccountTitle"
-            label="Work Account"
+            :label="$t('transactions.form.workAccount')"
             inputId="tx-work-account-ro"
-            hint="Work account selected from the schedule">
+            :hint="$t('transactions.form.workAccountFromScheduleHint')">
             <p class="jr-tx-form__readonly" id="tx-work-account-ro">
               {{ workAccountTitle }}
             </p>
@@ -110,7 +116,7 @@
           <JRField
             v-else-if="!isOperationalDocument && !isFromSchedule"
             v-slot="{ describedby }"
-            label="Party"
+            :label="$t('transactions.form.party')"
             inputId="tx-party"
             :error="fieldError('builder')">
             <BuilderSelector
@@ -124,7 +130,7 @@
           <JRField
             v-else-if="isOperationalDocument && !isFromSchedule"
             v-slot="{ describedby }"
-            label="Work Account"
+            :label="$t('transactions.form.workAccount')"
             inputId="tx-work-account"
             :error="fieldError('work_account')">
             <WorkAccountSelector
@@ -138,7 +144,7 @@
 
           <JRField
             v-slot="{ describedby, invalid }"
-            label="Date"
+            :label="$t('common.date')"
             required
             inputId="tx-date"
             :error="fieldError('date')">
@@ -147,7 +153,7 @@
               :modelValue="isoToDate(form.date)"
               :disabled="isReadOnly"
               :invalid="invalid"
-              placeholder="Select date"
+              :placeholder="$t('transactions.form.selectDate')"
               @update:modelValue="onDateChange" />
           </JRField>
         </div>
@@ -156,17 +162,19 @@
           class="jr-tx-form__info jr-tx-form__info--voided"
           severity="warn"
           :closable="false">
-          This transaction is voided and will be ignored in reports.
+          {{ $t('transactions.form.voidedIgnoredReports') }}
         </Message>
       </JRSection>
 
-      <JRSection v-if="!loadingDocument && !isViewMode" title="Import & favorites">
+      <JRSection
+        v-if="!loadingDocument && !isViewMode"
+        :title="$t('transactions.form.sectionImportFavorites')">
         <div class="jr-form-grid jr-form-grid--import">
           <div class="jr-tx-form__import-col jr-tx-form__import-col--favorites">
             <JRField
-              label="Add to favorites"
+              :label="$t('transactions.form.addToFavorites')"
               inputId="tx-add-favorite"
-              hint="Requires at least 2 lines with a product.">
+              :hint="$t('transactions.form.favoritesMinLinesHint')">
               <JRButton
                 type="button"
                 variant="secondary"
@@ -175,13 +183,13 @@
                 :disabled="!canSaveAsFavorite"
                 @click="openFavoriteModal">
                 <Star class="jr-tx-form__fav-star" aria-hidden="true" />
-                Save as favorite
+                {{ $t('transactions.form.saveAsFavorite') }}
               </JRButton>
             </JRField>
 
             <div class="jr-tx-form__favorites">
               <JRField
-                label="Import favorite"
+                :label="$t('transactions.form.importFavorite')"
                 inputId="favorite-transaction-select">
                 <FavoriteTransactionSelector
                   ref="favoriteSelectorRef"
@@ -199,31 +207,31 @@
                 class="jr-tx-form__update-fav"
                 :disabled="!canUpdateFavorite"
                 @click="updateFavoriteFromCurrentTransaction">
-                Update favorite
+                {{ $t('transactions.form.updateFavorite') }}
               </JRButton>
             </div>
           </div>
 
           <div class="jr-tx-form__import-col jr-tx-form__import-col--excel">
             <JRField
-              label="Import from Excel"
+              :label="$t('transactions.form.importFromExcel')"
               inputId="tx-excel-import"
               :hint="
                 hasInventoryProducts
-                  ? 'Download the template and import lines from Excel.'
+                  ? $t('transactions.form.excelImportHint')
                   : ''
               ">
               <JRCheckbox
                 v-model="showExcelImportPanel"
                 inputId="tx-excel-import"
-                ariaLabel="Import from Excel"
+                :ariaLabel="$t('transactions.form.importFromExcel')"
                 :disabled="inventoryProductsLoading || !hasInventoryProducts" />
               <Message
                 v-if="!inventoryProductsLoading && !hasInventoryProducts"
                 class="jr-tx-form__info"
                 severity="info"
                 :closable="false">
-                Import requires at least one active product in inventory.
+                {{ $t('transactions.form.excelRequiresProducts') }}
               </Message>
             </JRField>
 
@@ -239,13 +247,15 @@
         </div>
       </JRSection>
 
-      <JRSection v-if="!loadingDocument" title="Lines">
+      <JRSection
+        v-if="!loadingDocument"
+        :title="$t('transactions.form.sectionLines')">
         <Message
           v-if="linesGridDisabled && !isViewMode"
           class="jr-tx-form__info"
           severity="info"
           :closable="false">
-          Select a document type or import a favorite to edit lines.
+          {{ $t('transactions.form.linesDisabledHint') }}
         </Message>
         <div class="jr-tx-form__lines">
           <LinesGrid
@@ -270,30 +280,32 @@
         </div>
       </JRSection>
 
-      <JRSection v-if="!loadingDocument" title="Totals">
+      <JRSection
+        v-if="!loadingDocument"
+        :title="$t('transactions.form.sectionTotals')">
         <div class="jr-tx-form__totals-wrap">
           <dl class="jr-tx-form__totals">
             <div class="jr-tx-form__totals-row">
-              <dt>Subtotal</dt>
+              <dt>{{ $t('transactions.form.subtotal') }}</dt>
               <dd>{{ currency(subtotal_gross) }}</dd>
             </div>
             <div class="jr-tx-form__totals-row">
-              <dt>Total discount</dt>
+              <dt>{{ $t('transactions.form.totalDiscount') }}</dt>
               <dd class="jr-tx-form__totals-discount">
                 −{{ currency(total_discount) }}
               </dd>
             </div>
             <div class="jr-tx-form__totals-row jr-tx-form__totals-row--grand">
-              <dt>Grand total</dt>
+              <dt>{{ $t('transactions.form.grandTotal') }}</dt>
               <dd>{{ currency(grand_total) }}</dd>
             </div>
             <div
               v-if="currentDocumentTypeIsSales"
               class="jr-tx-form__totals-row jr-tx-form__totals-row--profit">
               <dt>
-                Estimated profit
+                {{ $t('transactions.form.estimatedProfit') }}
                 <span class="jr-tx-form__totals-hint">
-                  Based on purchase cost per line (informational)
+                  {{ $t('transactions.form.estimatedProfitHint') }}
                 </span>
               </dt>
               <dd
@@ -310,14 +322,14 @@
           <JRField
             class="jr-tx-form__notes"
             v-slot="{ describedby, invalid }"
-            label="Notes"
+            :label="$t('transactions.form.notes')"
             inputId="tx-notes"
             :error="fieldError('notes')">
             <JRTextarea
               inputId="tx-notes"
               :modelValue="form.notes"
               :rows="2"
-              placeholder="Additional notes…"
+              :placeholder="$t('transactions.form.notesPlaceholder')"
               :disabled="isReadOnly"
               :invalid="invalid"
               :ariaDescribedby="describedby"
@@ -343,7 +355,9 @@
           {{ saveAndAddLabel }}
         </JRButton>
         <JRButton type="button" variant="secondary" @click="goBack">
-          {{ isViewMode ? "Back to list" : "Cancel" }}
+          {{
+            isViewMode ? $t('common.backToList') : $t('common.cancel')
+          }}
         </JRButton>
       </div>
     </form>
@@ -401,8 +415,10 @@ import {
   h,
 } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import Swal from "sweetalert2";
+import i18n from "@/i18n";
 
 import Message from "primevue/message";
 import Star from "@primeicons/vue/star";
@@ -438,7 +454,7 @@ const ExcelPanelLoading = defineComponent({
           class: "jr-tx-form__loading",
           role: "status",
         },
-        "Loading Excel import…"
+        i18n.global.t("transactions.form.loadingExcelImport")
       );
   },
 });
@@ -453,6 +469,7 @@ const TransactionLinesExcelPanel = defineAsyncComponent({
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n({ useScope: "global" });
 const { proxy } = getCurrentInstance();
 
 /** Local calendar date as YYYY-MM-DD (avoids UTC shift from toISOString). */
@@ -489,15 +506,15 @@ const formBusy = computed(() => submitting.value || loadingDocument.value);
 const isReadOnly = computed(() => isViewMode.value || loadingDocument.value);
 
 const pageTitle = computed(() => {
-  if (isViewMode.value) return "View Transaction";
-  if (isEditMode.value) return "Edit Transaction";
-  return "New Transaction";
+  if (isViewMode.value) return t("transactions.form.viewTitle");
+  if (isEditMode.value) return t("transactions.form.editTitle");
+  return t("transactions.form.newTitle");
 });
 
 const pageDescription = computed(() => {
-  if (isViewMode.value) return "Review this transaction. Switch to Edit to make changes.";
-  if (isEditMode.value) return "Update document header, lines, and totals.";
-  return "Create a document with lines, parties or work account, and totals.";
+  if (isViewMode.value) return t("transactions.form.viewDescription");
+  if (isEditMode.value) return t("transactions.form.editDescription");
+  return t("transactions.form.newDescription");
 });
 
 const documentUsesStatusTracking = ref(false);
@@ -522,11 +539,13 @@ const statusDrawerTriggerVisible = computed(
   () => !!idParam && documentUsesStatusTracking.value
 );
 const statusTriggerLabel = computed(
-  () => documentTracking.value?.status_name || "Status"
+  () => documentTracking.value?.status_name || t("transactions.form.statusDefault")
 );
 const statusDrawerHeader = computed(() => {
   const name = documentTracking.value?.status_name;
-  return name ? `Status · ${name}` : "Document Status";
+  return name
+    ? t("transactions.form.statusDrawerHeaderNamed", { name })
+    : t("transactions.form.statusDrawerHeader");
 });
 
 function openStatusDrawer() {
@@ -558,26 +577,28 @@ async function loadDocumentStatus(documentId) {
 }
 
 const saveButtonLabel = computed(() => {
-  if (loadingDocument.value) return "Loading...";
-  if (submitting.value) return "Saving...";
-  return isEditMode.value ? "Update" : "Save";
+  if (loadingDocument.value) return t("transactions.form.loadingEllipsis");
+  if (submitting.value) return t("common.saving");
+  return isEditMode.value ? t("common.update") : t("common.save");
 });
 
 const saveAndAddLabel = computed(() => {
-  if (loadingDocument.value) return "Loading...";
-  if (submitting.value) return "Saving...";
-  return "Save & add another";
+  if (loadingDocument.value) return t("transactions.form.loadingEllipsis");
+  if (submitting.value) return t("common.saving");
+  return t("common.saveAndAddAnother");
 });
 
-const FIELD_ERROR_LABELS = {
-  document_type: "Document Type",
-  builder: "Party",
-  work_account: "Work Account",
-  date: "Date",
-  notes: "Notes",
-  detail: "Error",
-  non_field_errors: "Error",
-};
+function fieldErrorLabels() {
+  return {
+    document_type: t("transactions.form.documentType"),
+    builder: t("transactions.form.party"),
+    work_account: t("transactions.form.workAccount"),
+    date: t("common.date"),
+    notes: t("transactions.form.notes"),
+    detail: t("common.error"),
+    non_field_errors: t("common.error"),
+  };
+}
 
 function formatErrorValue(val) {
   if (val == null || val === "") return "";
@@ -613,14 +634,14 @@ function collectValidationSummary(errData) {
   if (!errData || typeof errData !== "object" || Array.isArray(errData)) {
     return parts;
   }
-  for (const [key, label] of Object.entries(FIELD_ERROR_LABELS)) {
+  for (const [key, label] of Object.entries(fieldErrorLabels())) {
     if (key === "lines") continue;
     if (errData[key] == null || errData[key] === "") continue;
     const msg = formatErrorValue(errData[key]);
     if (msg) parts.push(`${label}: ${msg}`);
   }
   for (const key of Object.keys(errData)) {
-    if (key === "lines" || FIELD_ERROR_LABELS[key]) continue;
+    if (key === "lines" || fieldErrorLabels()[key]) continue;
     const msg = formatErrorValue(errData[key]);
     if (msg) parts.push(`${key}: ${msg}`);
   }
@@ -655,7 +676,7 @@ const formBannerMessage = computed(() => {
   ).length;
   if (lineHits && !summary.some((s) => s.startsWith("Line "))) {
     summary.push(
-      `${lineHits} line item(s) need attention — see highlighted rows below.`
+      t("transactions.form.linesNeedAttention", { count: lineHits })
     );
   }
   return summary.filter(Boolean).join(" · ");
@@ -1084,18 +1105,14 @@ async function onFavoriteSelected(favoriteData) {
 
   if (hasExistingLineProducts && hasIncomingLines) {
     const result = await Swal.fire({
-      title: "Lines already loaded",
-      html:
-        "This transaction already has line items.<br><br>" +
-        "Favorites import <strong>lines only</strong> (Document Type, Work Account, and Date stay as you set them).<br><br>" +
-        "<strong>Add to existing lines</strong> appends this favorite’s lines (e.g. combine kits on one pick ticket).<br><br>" +
-        "<strong>Replace all lines</strong> replaces every line with this favorite’s lines.",
+      title: t("transactions.form.swalLinesAlreadyLoadedTitle"),
+      html: t("transactions.form.swalLinesAlreadyLoadedHtml"),
       icon: "question",
       showCancelButton: true,
       showDenyButton: true,
-      confirmButtonText: "Add to existing lines",
-      denyButtonText: "Replace all lines",
-      cancelButtonText: "Cancel",
+      confirmButtonText: t("transactions.form.swalAddToExistingLines"),
+      denyButtonText: t("transactions.form.swalReplaceAllLines"),
+      cancelButtonText: t("common.cancel"),
       confirmButtonColor: "#16a34a",
       denyButtonColor: "#4b5563",
       cancelButtonColor: "#d1d5db",
@@ -1217,8 +1234,8 @@ async function updateFavoriteFromCurrentTransaction() {
     if (response.status === 200) {
       await Swal.fire({
         icon: "success",
-        title: "Favorite Updated",
-        text: "The favorite has been updated with current transaction data.",
+        title: t("transactions.form.swalFavoriteUpdatedTitle"),
+        text: t("transactions.form.swalFavoriteUpdatedText"),
         timer: 2000,
         showConfirmButton: false,
       });
@@ -1229,9 +1246,9 @@ async function updateFavoriteFromCurrentTransaction() {
 
     await Swal.fire({
       icon: "error",
-      title: "Update Failed",
-      text: "Failed to update the favorite. Please try again.",
-      confirmButtonText: "OK",
+      title: t("transactions.form.swalUpdateFailedTitle"),
+      text: t("transactions.form.swalUpdateFailedText"),
+      confirmButtonText: t("common.ok"),
     });
   }
 }
@@ -1288,8 +1305,8 @@ async function handleSaveAndAddAnother() {
 
     const { data } = await axios.post("/api/documents/", payload);
     await Swal.fire({
-      title: "Transaction Saved Successfully!",
-      text: "The transaction has been saved. You can now create another one.",
+      title: t("transactions.form.swalSavedTitle"),
+      text: t("transactions.form.swalSavedAddAnotherText"),
       icon: "success",
       timer: 2000,
       showConfirmButton: false,
@@ -1303,22 +1320,22 @@ async function handleSaveAndAddAnother() {
     if (data) applyServerErrors(data);
 
     const summary = collectValidationSummary(data || errors);
-    const errorTitle = "Validation Error";
+    const errorTitle = t("common.validationError");
     const errorMessage =
       summary.length > 0
-        ? `<div class="jr-pilot text-start"><p class="mb-2 text-sm">Please review the highlighted fields:</p><ul class="m-0 list-disc ps-4 text-sm">${summary
+        ? `<div class="jr-pilot text-start"><p class="mb-2 text-sm">${t("transactions.form.swalReviewHighlightedListIntro")}</p><ul class="m-0 list-disc ps-4 text-sm">${summary
             .slice(0, 12)
             .map((s) => `<li>${s}</li>`)
             .join("")}${
             summary.length > 12 ? "<li>…</li>" : ""
           }</ul></div>`
-        : "Please review the highlighted fields on the form.";
+        : t("transactions.form.swalReviewHighlightedFields");
 
     await Swal.fire({
       icon: "error",
       title: errorTitle,
       html: errorMessage,
-      confirmButtonText: "OK",
+      confirmButtonText: t("common.ok"),
     });
     await focusFirstValidationIssue();
   } finally {
@@ -1355,21 +1372,21 @@ function onAssetTagModalClose() {
 }
 
 function onAssetTagModalSaved() {
-  proxy?.notifyToastSuccess?.("Serial numbers saved.");
+  proxy?.notifyToastSuccess?.(t("transactions.form.serialNumbersSaved"));
   onAssetTagModalClose();
 }
 
 // Prompt PDF and redirect (after save)
 async function promptPrintAndRedirect(documentId) {
   const { value: shouldPrint } = await Swal.fire({
-    title: "Transaction Saved Successfully!",
-    text: "Do you want to print the PDF?",
+    title: t("transactions.form.swalSavedTitle"),
+    text: t("transactions.form.swalPrintPromptText"),
     icon: "success",
     showCancelButton: true,
     confirmButtonColor: "#2563eb",
     cancelButtonColor: "#4b5563",
-    confirmButtonText: "Yes, Print",
-    cancelButtonText: "No, Continue",
+    confirmButtonText: t("common.yesPrint"),
+    cancelButtonText: t("common.noContinue"),
     reverseButtons: true,
   });
   if (shouldPrint && documentId) {
@@ -1443,9 +1460,9 @@ async function downloadTransactionPDF(documentId) {
     console.error("Error al descargar PDF:", error);
     await Swal.fire({
       icon: "error",
-      title: "Error",
-      text: "Could not generate the document PDF. Please try again.",
-      confirmButtonText: "OK",
+      title: t("common.error"),
+      text: t("transactions.form.swalPdfFailedText"),
+      confirmButtonText: t("common.ok"),
     });
     return false;
   }
@@ -1681,9 +1698,9 @@ async function loadDocument(id) {
     console.error("Error loading document:", error);
     await Swal.fire({
       icon: "error",
-      title: "Error",
-      text: "Document not found or has invalid references. Please check the data.",
-      confirmButtonText: "OK",
+      title: t("common.error"),
+      text: t("transactions.form.swalDocumentNotFound"),
+      confirmButtonText: t("common.ok"),
     });
     router.push({ name: "transactions" }).catch(() => {});
     return;
@@ -1877,12 +1894,12 @@ async function handleSubmit() {
       applyServerErrors(null); // no procesar
       await Swal.fire({
         icon: "error",
-        title: "Server Error",
+        title: t("common.serverError"),
         text:
           status >= 500
-            ? "An error occurred on the server. Please try again or contact support."
-            : "Unexpected response from server.",
-        confirmButtonText: "OK",
+            ? t("transactions.form.swalServerErrorText")
+            : t("transactions.form.swalUnexpectedResponse"),
+        confirmButtonText: t("common.ok"),
       });
       return;
     }
@@ -1904,8 +1921,8 @@ async function handleSubmit() {
 
     if (data) applyServerErrors(data);
 
-    let errorMessage = "Please review the highlighted fields on the form.";
-    let errorTitle = "Validation Error";
+    let errorMessage = t("transactions.form.swalReviewHighlightedFields");
+    let errorTitle = t("common.validationError");
     const stockErrors = [];
     const validationSummary = collectValidationSummary(data || errors);
 
@@ -1920,15 +1937,14 @@ async function handleSubmit() {
         : data.work_account);
     if (status === 400 && (builderError || workAccountError)) {
       if (builderError) {
-        errorMessage =
-          "Please select a Party (supplier for purchases, customer for sales) before saving. The Serial Numbers modal will appear after a successful save when the transaction has serialized items.";
-        errorTitle = "Party required";
+        errorMessage = t("transactions.form.swalPartyRequiredText");
+        errorTitle = t("transactions.form.swalPartyRequiredTitle");
       } else if (workAccountError) {
-        errorMessage = "Please select a Work Account before saving.";
-        errorTitle = "Work Account required";
+        errorMessage = t("transactions.form.swalWorkAccountRequiredText");
+        errorTitle = t("transactions.form.swalWorkAccountRequiredTitle");
       }
     } else if (validationSummary.length > 0) {
-      errorMessage = `<div class="jr-pilot text-start"><p class="mb-2 text-sm">Please review the highlighted fields:</p><ul class="m-0 list-disc ps-4 text-sm">${validationSummary
+      errorMessage = `<div class="jr-pilot text-start"><p class="mb-2 text-sm">${t("transactions.form.swalReviewHighlightedListIntro")}</p><ul class="m-0 list-disc ps-4 text-sm">${validationSummary
         .slice(0, 12)
         .map((s) => `<li>${s}</li>`)
         .join("")}${
@@ -1945,7 +1961,7 @@ async function handleSubmit() {
         .map((e) => formatErrorValue(e))
         .filter(Boolean)
         .join("<br>");
-      errorTitle = "Server Error";
+      errorTitle = t("common.serverError");
       console.error(
         "🔍 Frontend: non_field_errors encontrados:",
         nonFieldErrors
@@ -2181,22 +2197,25 @@ async function handleSubmit() {
     }
 
     if (stockErrors.length > 0) {
-      errorTitle = "Insufficient Stock";
+      errorTitle = t("transactions.form.swalInsufficientStockTitle");
       const stockErrorsHTML = stockErrors
         .map((error) => {
           const name = error.productName || "Unknown product";
           const available = error.available ?? "—";
           const requested = error.requested ?? "—";
           const docType = error.documentType
-            ? `<br>Document type <strong>${error.documentType}</strong> does not allow negative sales.`
+            ? `<br>${t("transactions.form.swalNoNegativeSales", {
+                docType: error.documentType,
+              })}`
             : "";
           return `
             <div class="mb-2 border-s-2 border-jr-danger p-2 text-start">
               <p class="m-0 text-sm font-medium text-jr-danger">${name}</p>
               <p class="m-0 text-sm text-jr-muted">
-                Available: <strong>${available}</strong>
-                &nbsp;·&nbsp;
-                Requested: <strong>${requested}</strong>${docType}
+                ${t("transactions.form.swalStockAvailableRequested", {
+                  available,
+                  requested,
+                })}${docType}
               </p>
             </div>
           `;
@@ -2206,14 +2225,11 @@ async function handleSubmit() {
       errorMessage = `
         <div class="jr-pilot">
           <div class="text-start">
-          <p class="mb-3 text-sm">The following products do not have enough stock:</p>
+          <p class="mb-3 text-sm">${t("transactions.form.swalInsufficientStockIntro")}</p>
           ${stockErrorsHTML}
           <div class="mt-3 rounded-jr-panel bg-jr-surface-muted p-2">
             <p class="m-0 text-sm text-jr-muted">
-              What you can do:<br>
-              • Check inventory in other warehouses<br>
-              • Lower the quantity to the available stock<br>
-              • Enable “Allow Negative Sales” on the document type
+              ${t("transactions.form.swalInsufficientStockHelp")}
             </p>
           </div>
           </div>
@@ -2226,7 +2242,7 @@ async function handleSubmit() {
       title: errorTitle,
       html: errorMessage,
       width: "700px",
-      confirmButtonText: "OK",
+      confirmButtonText: t("common.ok"),
       confirmButtonColor: "#dc2626",
     });
     await focusFirstValidationIssue();
@@ -2245,7 +2261,9 @@ async function loadWorkAccountTitle(workAccountId) {
     }
   } catch (error) {
     console.error("Error loading work account title:", error);
-    workAccountTitle.value = `Work Account #${workAccountId}`;
+    workAccountTitle.value = t("transactions.form.workAccountFallback", {
+      id: workAccountId,
+    });
   }
 }
 
