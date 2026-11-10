@@ -124,6 +124,36 @@ class AuthLoginJWTTests(TenantTestCase):
         response = self.client.get('/api/auth/me/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['username'], 'jwtuser')
+        self.assertEqual(response.data['preferred_language'], 'en')
+        self.assertEqual(login.data['user']['preferred_language'], 'en')
+
+    def test_me_patch_preferred_language(self):
+        with override_settings(DEBUG=True, AUTH_USE_REFRESH_COOKIE=False):
+            login = self.client.post(
+                self.login_url,
+                {'username': 'jwtuser', 'password': 'ValidPass123!'},
+                format='json',
+            )
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {login.data['access']}")
+
+        bad = self.client.patch(
+            '/api/auth/me/',
+            {'preferred_language': 'fr'},
+            format='json',
+        )
+        self.assertEqual(bad.status_code, status.HTTP_400_BAD_REQUEST)
+
+        response = self.client.patch(
+            '/api/auth/me/',
+            {'preferred_language': 'es'},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['preferred_language'], 'es')
+
+        again = self.client.get('/api/auth/me/')
+        self.assertEqual(again.status_code, status.HTTP_200_OK)
+        self.assertEqual(again.data['preferred_language'], 'es')
 
     def test_refresh_rotates(self):
         with override_settings(DEBUG=True, AUTH_USE_REFRESH_COOKIE=False):

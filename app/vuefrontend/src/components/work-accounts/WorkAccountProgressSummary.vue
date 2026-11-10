@@ -1,12 +1,17 @@
 <template>
-  <section v-if="show" class="jr-wa-progress" aria-label="Project progress">
+  <section
+    v-if="show"
+    class="jr-wa-progress"
+    :aria-label="$t('workOrderViewer.progressTitle')">
     <button
       type="button"
       class="jr-wa-progress__toggle"
       :aria-expanded="expanded ? 'true' : 'false'"
       aria-controls="jr-wa-progress-body"
       @click="expanded = !expanded">
-      <span class="jr-wa-progress__label">Project progress</span>
+      <span class="jr-wa-progress__label">
+        {{ $t("workOrderViewer.progressTitle") }}
+      </span>
       <span class="jr-wa-progress__toggle-side">
         <JRBadge
           v-if="summary"
@@ -31,7 +36,7 @@
 
     <div v-if="expanded" id="jr-wa-progress-body" class="jr-wa-progress__body">
       <p v-if="loading" class="jr-wa-progress__muted" role="status">
-        Loading project progress…
+        {{ $t("workOrderViewer.progressLoading") }}
       </p>
       <p v-else-if="error" class="jr-wa-progress__muted" role="status">
         {{ error }}
@@ -39,8 +44,12 @@
 
       <template v-else-if="summary">
         <p class="jr-wa-progress__meta">
-          {{ summary.expected_phases_completed }} of
-          {{ summary.expected_phases_total }} expected phases completed
+          {{
+            $t("workOrderViewer.progressMeta", {
+              completed: summary.expected_phases_completed,
+              total: summary.expected_phases_total,
+            })
+          }}
         </p>
         <ul v-if="summary.phases?.length" class="jr-wa-progress__phases">
           <li v-for="phase in summary.phases" :key="phase.template_id || phase.category_id">
@@ -51,7 +60,7 @@
           </li>
         </ul>
         <p v-if="summary.overall_state !== 'completed' && hasMissingPhase" class="jr-wa-progress__muted">
-          This project is not complete yet — some expected phases have not finished.
+          {{ $t("workOrderViewer.progressIncomplete") }}
         </p>
       </template>
     </div>
@@ -143,7 +152,7 @@ export default {
           this.hidden = true;
           this.summary = null;
         } else {
-          this.error = 'Project progress could not be loaded.';
+          this.error = this.$t('workOrderViewer.progressError');
         }
       } finally {
         if (this.alive && workAccountId === this.workAccountId) this.loading = false;

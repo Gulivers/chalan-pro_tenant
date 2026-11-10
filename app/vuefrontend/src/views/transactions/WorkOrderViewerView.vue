@@ -6,12 +6,14 @@
       role="status"
       aria-live="polite">
       <div class="jr-wov__loading-spinner" aria-hidden="true"></div>
-      <p class="jr-wov__loading-text">Loading work account…</p>
+      <p class="jr-wov__loading-text">{{ $t("workOrderViewer.loading") }}</p>
     </div>
 
     <template v-else-if="loadError">
-      <JRPageHeader title="Work Order Viewer" />
-      <JREmptyState title="Work account not found" :description="loadError">
+      <JRPageHeader :title="$t('workOrderViewer.title')" />
+      <JREmptyState
+        :title="$t('workOrderViewer.notFound')"
+        :description="loadError">
         <JRButton type="button" variant="ghost" size="sm" @click="goToList">
           <svg
             class="jr-wov__btn-icon"
@@ -26,7 +28,7 @@
             aria-hidden="true">
             <path d="M10 12L6 8l4-4" />
           </svg>
-          Back to Work Accounts
+          {{ $t("workOrderViewer.backToWorkAccounts") }}
         </JRButton>
       </JREmptyState>
     </template>
@@ -38,7 +40,9 @@
           <div class="jr-wov__header-text">
             <span class="jr-wov__label">
               {{
-                isGeneralMode && !workAccount ? "Operations" : "Work Account"
+                isGeneralMode && !workAccount
+                  ? $t("workOrderViewer.operations")
+                  : $t("workOrderViewer.workAccount")
               }}
             </span>
             <h1 class="jr-wov__title">{{ displayHeaderTitle }}</h1>
@@ -69,7 +73,7 @@
                 aria-hidden="true">
                 <path d="M10 12L6 8l4-4" />
               </svg>
-              Back to list
+              {{ $t("common.backToList") }}
             </JRButton>
             <JRButton
               v-if="canEdit && effectiveWorkAccountId"
@@ -77,7 +81,7 @@
               variant="secondary"
               size="sm"
               @click="goToEdit">
-              Edit
+              {{ $t("common.edit") }}
             </JRButton>
           </div>
         </div>
@@ -123,7 +127,7 @@
                   :opacity="sidebarOpen ? '0.35' : '0'"
                   stroke="none" />
               </svg>
-              Work Orders
+              {{ $t("workOrderViewer.workOrders") }}
               <JRBadge
                 v-if="ordersBadgeCount"
                 class="jr-wov__orders-badge"
@@ -153,7 +157,7 @@
           v-if="!isMobile && sidebarOpen"
           id="jr-wov-orders-sidebar"
           class="jr-wov__sidebar-col"
-          aria-label="Work Orders">
+          :aria-label="$t('workOrderViewer.workOrders')">
           <WorkAccountProgressSummary
             v-if="effectiveWorkAccountId"
             :work-account-id="effectiveWorkAccountId"
@@ -188,7 +192,7 @@
         :modal="true"
         :dismissable="true"
         :block-scroll="true"
-        header="Work Orders"
+        :header="$t('workOrderViewer.workOrders')"
         @update:visible="onSidebarVisible">
         <WorkAccountProgressSummary
           v-if="effectiveWorkAccountId"
@@ -358,12 +362,16 @@ export default {
       return WORK_ORDER_VIEWER_TAB_IDS.includes(tab) ? tab : "chat";
     });
 
+    const t = (key, values) => proxy?.$t?.(key, values) ?? key;
+
     const workAccountSubtitle = computed(() => {
       if (!workAccount.value) return "";
       const parts = [
         workAccount.value.builder_name,
         workAccount.value.job_name,
-        workAccount.value.lot ? `Lot ${workAccount.value.lot}` : null,
+        workAccount.value.lot
+          ? t("workOrderViewer.lotValue", { lot: workAccount.value.lot })
+          : null,
         workAccount.value.address,
       ].filter(Boolean);
       return parts.join(" · ");
@@ -376,7 +384,7 @@ export default {
       if (selectedEvent.value?.title) {
         return selectedEvent.value.title;
       }
-      return "Work Order Viewer";
+      return t("workOrderViewer.title");
     });
 
     const displayHeaderSubtitle = computed(() => {
@@ -391,7 +399,7 @@ export default {
         ].filter(Boolean);
         return parts.join(" · ");
       }
-      return "Browse and collaborate on work orders";
+      return t("workOrderViewer.browseSubtitle");
     });
 
     /** Supervisor: miembros (Crew Members) de las cuadrillas con la comunidad asignada (Assigned Jobs). */
@@ -413,17 +421,34 @@ export default {
         addr && title && addr.toLowerCase() === title.toLowerCase();
 
       const items = [
-        { label: "Area Supervisor", value: supervisorLabel.value },
-        { label: "Builder", value: wa?.builder_name || ev?.builder_name },
-        { label: "Community", value: wa?.job_name || ev?.job_name },
-        { label: "Lot", value: wa?.lot ? `Lot ${wa.lot}` : null },
         {
-          label: "House Model",
+          label: t("workOrderViewer.areaSupervisor"),
+          value: supervisorLabel.value,
+        },
+        {
+          label: t("workOrderViewer.builder"),
+          value: wa?.builder_name || ev?.builder_name,
+        },
+        {
+          label: t("workOrderViewer.community"),
+          value: wa?.job_name || ev?.job_name,
+        },
+        {
+          label: t("workOrderViewer.lot"),
+          value: wa?.lot
+            ? t("workOrderViewer.lotValue", { lot: wa.lot })
+            : null,
+        },
+        {
+          label: t("workOrderViewer.houseModel"),
           value: wa?.house_model_name || ev?.house_model_name,
         },
-        { label: "Address", value: isAddrRedundant ? null : addr },
         {
-          label: "Default Price Type",
+          label: t("workOrderViewer.address"),
+          value: isAddrRedundant ? null : addr,
+        },
+        {
+          label: t("workOrderViewer.defaultPriceType"),
           value:
             wa?.default_price_type_name || ev?.default_price_type_name || null,
         },
@@ -498,14 +523,11 @@ export default {
         console.error("Failed to load work account", err);
         workAccount.value = null;
         if (err?.response?.status === 404) {
-          loadError.value =
-            "The requested work account does not exist or you do not have access.";
+          loadError.value = t("workOrderViewer.loadErrorNotFound");
         } else if (err?.response?.status === 403) {
-          loadError.value =
-            "You do not have permission to view this work account.";
+          loadError.value = t("workOrderViewer.loadErrorForbidden");
         } else {
-          loadError.value =
-            "Could not load this work account. Please try again.";
+          loadError.value = t("workOrderViewer.loadErrorGeneric");
         }
       }
     };

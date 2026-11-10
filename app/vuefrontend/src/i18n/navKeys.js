@@ -1,0 +1,42 @@
+/** Map stable English nav labels → i18n keys (ids stay English for openModuleKey). */
+export const NAV_LABEL_KEYS = {
+  Schedule: 'nav.schedule',
+  Transactions: 'nav.transactions',
+  'Piece Work Contracts': 'nav.pieceWorkContracts',
+  'Work Accounts': 'nav.workAccounts',
+  'Work Order Viewer': 'nav.workOrderViewer',
+  'Missing Material': 'nav.missingMaterial',
+  'Measure the Operation': 'nav.measureOperation',
+  Inventory: 'nav.inventory',
+  Dashboard: 'nav.inventoryDashboard',
+  Products: 'nav.products',
+  'Serialized Items': 'nav.serializedItems',
+  'Inventory Transfers': 'nav.inventoryTransfers',
+  Warehouses: 'nav.warehouses',
+  'Product Categories': 'nav.productCategories',
+  'Product Brands': 'nav.productBrands',
+  'Price Types': 'nav.priceTypes',
+  'Unit Measures': 'nav.unitMeasures',
+  'Unit Categories': 'nav.unitCategories',
+  'Piece Work Pricing': 'nav.pieceWorkPricing',
+  'Piece Work Prices': 'nav.pieceWorkPrices',
+  'Work Prices per Builder': 'nav.workPricesBuilders',
+  Entities: 'nav.entities',
+  'Builders & Parties': 'nav.buildersParties',
+  Communities: 'nav.communities',
+  'House Models': 'nav.houseModels',
+  'Party Types': 'nav.partyTypes',
+  'Party Categories': 'nav.partyCategories',
+  'Crews and Fleet': 'nav.crewsFleet',
+  Categories: 'nav.categories',
+  Crews: 'nav.crews',
+  'Absence Reasons': 'nav.absenceReasons',
+  Trucks: 'nav.trucks',
+  'Truck Assignments': 'nav.truckAssignments',
+  'Communities Map': 'nav.communitiesMap',
+  'Supervisor Communities': 'nav.supervisorCommunities',
+}
+
+export function navLabelKey(englishText) {
+  return NAV_LABEL_KEYS[englishText] || null
+}

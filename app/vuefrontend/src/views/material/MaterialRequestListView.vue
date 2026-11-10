@@ -1,11 +1,13 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Material Requests" />
+    <JRPageHeader :title="$t('materialRequests.title')" />
 
     <JRToolbar>
       <template #start>
         <div class="jr-master-list__search">
-          <label class="jr-sr-only" for="mr-filter-input">Search material requests</label>
+          <label class="jr-sr-only" for="mr-filter-input">{{
+            $t("materialRequests.searchLabel")
+          }}</label>
           <span class="jr-master-list__search-icon" aria-hidden="true">
             <SearchIcon />
           </span>
@@ -13,32 +15,38 @@
             inputId="mr-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search by number, work account, or requester..." />
+            :placeholder="$t('materialRequests.searchPlaceholder')" />
         </div>
       </template>
 
       <template #stats>
         <div class="jr-master-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
           <JRBadge
-            :value="`${stats.open} Open`"
+            :value="$t('common.badgeTotal', { count: stats.total })"
+            severity="secondary" />
+          <JRBadge
+            :value="`${stats.open} ${$t('common.open')}`"
             :severity="stats.open > 0 ? 'info' : 'secondary'" />
           <JRBadge
-            :value="`${stats.closed} Closed`"
+            :value="`${stats.closed} ${$t('status.closed')}`"
             :severity="stats.closed > 0 ? 'success' : 'secondary'" />
         </div>
       </template>
 
       <template #actions>
-        <label class="jr-sr-only" for="mr-status-filter">Status</label>
+        <label class="jr-sr-only" for="mr-status-filter">{{
+          $t("common.status")
+        }}</label>
         <JRSelect
           inputId="mr-status-filter"
-          ariaLabel="Status"
+          :ariaLabel="$t('common.status')"
           v-model="status"
           :options="statusOptions"
           optionLabel="label"
           optionValue="value" />
-        <label class="jr-sr-only" for="mr-per-page">Entries per page</label>
+        <label class="jr-sr-only" for="mr-per-page">{{
+          $t("common.entriesPerPage")
+        }}</label>
         <JRSelect
           class="jr-master-list__entries"
           inputId="mr-per-page"
@@ -53,7 +61,7 @@
           class="jr-master-list__refresh"
           @click="refreshTable">
           <RefreshIcon />
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -69,7 +77,7 @@
           variant="ghost"
           size="sm"
           @click="refreshTable">
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
         <JRButton
           v-else-if="hasSearch"
@@ -77,11 +85,11 @@
           variant="ghost"
           size="sm"
           @click="clearSearch">
-          Clear search
+          {{ $t("common.clearSearch") }}
         </JRButton>
       </JREmptyState>
       <p v-if="isLoading && !rows.length" class="jr-master-list__loading">
-        Loading material requests…
+        {{ $t("materialRequests.loading") }}
       </p>
       <ul
         v-if="rows.length"
@@ -102,7 +110,9 @@
               <span v-if="item.phase"> · {{ item.phase }}</span>
             </p>
             <p class="jr-master-row__meta">
-              <JRBadge :value="item.status_name || '—'" :severity="statusSeverity(item.status)" />
+              <JRBadge
+                :value="statusLabel(item)"
+                :severity="statusSeverity(item.status)" />
             </p>
           </div>
           <div class="jr-master-row__aside">
@@ -157,7 +167,7 @@
               variant="ghost"
               size="sm"
               @click="refreshTable">
-              Refresh
+              {{ $t("common.refresh") }}
             </JRButton>
             <JRButton
               v-else-if="hasSearch"
@@ -165,11 +175,11 @@
               variant="ghost"
               size="sm"
               @click="clearSearch">
-              Clear search
+              {{ $t("common.clearSearch") }}
             </JRButton>
           </JREmptyState>
         </template>
-        <Column field="document_number" header="Number" sortable>
+        <Column field="document_number" :header="$t('transactions.colId')" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
@@ -181,18 +191,21 @@
             <span v-else>{{ data.document_number }}</span>
           </template>
         </Column>
-        <Column field="work_account_title" header="Work account" sortable />
-        <Column v-if="!isTablet" field="phase" header="Phase" sortable />
-        <Column v-if="!isTablet" field="requested_by" header="Requested by" sortable />
-        <Column field="status_name" header="Status" sortable>
+        <Column
+          field="work_account_title"
+          :header="$t('transactions.colWorkAccount')"
+          sortable />
+        <Column field="status_name" :header="$t('common.status')" sortable>
           <template #body="{ data }">
-            <JRBadge :value="data.status_name || '—'" :severity="statusSeverity(data.status)" />
+            <JRBadge
+              :value="statusLabel(data)"
+              :severity="statusSeverity(data.status)" />
           </template>
         </Column>
-        <Column field="date" header="Date" sortable />
+        <Column field="date" :header="$t('common.date')" sortable />
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="isTablet ? 'jr-col-actions jr-col-actions--compact' : 'jr-col-actions'"
           :bodyClass="isTablet ? 'jr-col-actions jr-col-actions--compact' : 'jr-col-actions'">
@@ -233,6 +246,7 @@ import {
   JREmptyState,
   JRRowActions,
 } from "@ui";
+import { tStatus } from "@/utils/statusI18n";
 
 const ENDPOINT = "/api/material-requests/";
 const PHONE_MQ = "(max-width: 767.98px)";
@@ -255,14 +269,14 @@ const sortOrder = ref(-1);
 const isMobile = ref(false);
 const isTablet = ref(false);
 
-const statusOptions = [
-  { label: "All statuses", value: "" },
-  { label: "Requested", value: "requested" },
-  { label: "Approved", value: "approved" },
-  { label: "Preparing", value: "preparing" },
-  { label: "Delivered", value: "delivered" },
-  { label: "Closed", value: "closed" },
-];
+const statusOptions = computed(() => [
+  { label: proxy?.$t?.("common.status"), value: "" },
+  { label: tStatus("requested"), value: "requested" },
+  { label: tStatus("approved"), value: "approved" },
+  { label: tStatus("preparing"), value: "preparing" },
+  { label: tStatus("delivered"), value: "delivered" },
+  { label: tStatus("closed"), value: "closed" },
+]);
 const pageOptions = [
   { label: "10", value: 10 },
   { label: "25", value: 25 },
@@ -300,19 +314,27 @@ function statusSeverity(code) {
   return "info";
 }
 
+function statusLabel(item) {
+  return tStatus(item?.status, item?.status_name) || "—";
+}
+
 const tableFirst = computed(() => (currentPage.value - 1) * perPage.value);
 const tableMinWidth = computed(() => (isTablet.value ? "min-width: 40rem" : "min-width: 56rem"));
 
 const emptyTitle = computed(() => {
-  if (loadError.value) return "Could not load material requests";
-  if (hasSearch.value || status.value) return "No matching material requests";
-  return "No material requests";
+  if (loadError.value) return proxy?.$t?.("materialRequests.emptyLoadError");
+  if (hasSearch.value || status.value) return proxy?.$t?.("materialRequests.emptySearch");
+  return proxy?.$t?.("materialRequests.emptyNone");
 });
 const emptyDescription = computed(() => {
-  if (loadError.value) return "Try Refresh.";
-  if (hasSearch.value) return `No material requests match “${filter.value.trim()}”.`;
-  if (status.value) return "No material requests with this status.";
-  return "Requests submitted from a work order show up here.";
+  if (loadError.value) return proxy?.$t?.("common.tryRefresh");
+  if (hasSearch.value) {
+    return proxy?.$t?.("materialRequests.emptySearchDesc", {
+      query: filter.value.trim(),
+    });
+  }
+  if (status.value) return proxy?.$t?.("materialRequests.emptySearch");
+  return proxy?.$t?.("materialRequests.emptyNoneDesc");
 });
 
 watch(status, () => {
@@ -410,7 +432,7 @@ function getRowActions(item) {
   if (proxy?.hasPermission?.("apptransactions.view_document")) {
     actions.push({
       key: "view",
-      label: "View",
+      label: proxy?.$t?.("common.view"),
       severity: "success",
       icon: EyeIcon,
       command: () => router.push(viewTo(item.id)),
@@ -427,7 +449,7 @@ function getRowActions(item) {
   if (proxy?.hasPermission?.("apptransactions.change_document")) {
     actions.push({
       key: "edit",
-      label: "Edit",
+      label: proxy?.$t?.("common.edit"),
       severity: "primary",
       icon: PencilIcon,
       command: () => router.push(editTo(item.id)),
@@ -438,7 +460,7 @@ function getRowActions(item) {
       // Keep vertical slot so View/Print/Edit stay column-aligned with open rows.
       actions.push({
         key: "delete-placeholder",
-        label: "Delete",
+        label: proxy?.$t?.("common.delete"),
         severity: "danger",
         icon: TrashIcon,
         buttonClass: "jr-row-actions__btn--placeholder",
@@ -448,7 +470,7 @@ function getRowActions(item) {
     } else {
       actions.push({
         key: "delete",
-        label: "Delete",
+        label: proxy?.$t?.("common.delete"),
         severity: "danger",
         icon: TrashIcon,
         command: () => deleteRequest(item),
@@ -460,8 +482,8 @@ function getRowActions(item) {
 
 function deleteRequest(item) {
   proxy?.confirmDelete?.(
-    "Delete this material request?",
-    "This action cannot be undone.",
+    proxy?.$t?.("common.confirmDeleteTitle"),
+    proxy?.$t?.("materialRequests.deleteConfirm"),
     async () => {
       try {
         await axios.delete(`${ENDPOINT}${item.id}/`);

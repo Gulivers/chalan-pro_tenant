@@ -4,17 +4,17 @@
     class="jr-setup-banner"
     role="status">
     <div class="jr-setup-banner__copy">
-      <p class="jr-setup-banner__title">Setup still open</p>
+      <p class="jr-setup-banner__title">{{ $t('setup.bannerTitle') }}</p>
       <p class="jr-setup-banner__text">
-        Finish your company infrastructure or schedule your first job when you are ready.
+        {{ $t('setup.bannerText') }}
       </p>
     </div>
     <div class="jr-setup-banner__actions">
       <JRButton type="button" variant="primary" size="sm" @click="onContinue">
-        Continue setup
+        {{ $t('setup.bannerContinue') }}
       </JRButton>
       <JRButton type="button" variant="ghost" size="sm" @click="onDismiss">
-        Dismiss
+        {{ $t('common.dismiss') }}
       </JRButton>
     </div>
   </div>

@@ -377,6 +377,7 @@ El sistema incluye un manejador personalizado de excepciones (`project/api/excep
 #### Regla de Protección para Cuentas de Trabajo (`WorkAccount`)
 
 Una cuenta de obra (`WorkAccount`) no puede ser eliminada si tiene alguno de los siguientes datos relacionados:
+
 - **Chat**: Mensajes globales de chat vinculados a la obra (`EventChatMessage.work_account`, `on_delete=models.PROTECT`).
 - **Notes**: Notas de obra (`EventNote.work_account`) si contienen texto o apuntes registrados.
 - **Folder**: Imágenes o planos subidos en el folder de la obra (`EventImage.work_account`, `on_delete=models.PROTECT`).
@@ -389,6 +390,7 @@ La validación se ejecuta tanto en cascada relacional de PostgreSQL (`PROTECT`) 
 #### Regla de Protección para Eventos del Calendario (`Event`)
 
 Un evento del calendario (`Event`) no puede ser eliminado (ni mediante borrado físico ni mediante soft-delete `?deleted=true` desde `/api/schedule/{id}/`) si tiene alguno de los siguientes datos relacionados:
+
 - **Chat**: Mensajes de chat asociados al evento (`EventChatMessage.event`, `on_delete=models.PROTECT`).
 - **Notes**: Notas del evento (`EventNote.event`) cuando contienen anotaciones.
 - **Folder**: Imágenes o fotografías asociadas al evento (`EventImage.event`, `on_delete=models.PROTECT`).
@@ -402,30 +404,30 @@ JobRhythm usa **Simple JWT tenant-bound**. Se retiró `rest_framework.authtoken`
 
 #### Modelo
 
-| Pieza | Dónde | Rol |
-| ----- | ----- | --- |
-| Access JWT | Memoria del navegador (`Authorization: Bearer …`) | 30 min (`AUTH_ACCESS_TOKEN_MINUTES=30`). El SPA lo renueva con el refresh unos 2 min antes de vencer |
-| Refresh JWT | Cookie HttpOnly `jr_refresh` (path `/api/auth/`, host-only) o body si `AUTH_USE_REFRESH_COOKIE=False` | ~7 días (`AUTH_REFRESH_TOKEN_DAYS`); rotación + blacklist |
-| Claim `schema_name` | Dentro del access y del refresh | Debe coincidir con el schema del request; si no → rechazo |
-| `userPermissions` | `localStorage` | Solo UX (menú/rutas); no es secreto ni autoridad |
-| `jr_session` | `localStorage` (`'1'`) | Flag no secreto para que otras pestañas sepan llamar a `/api/auth/refresh/` |
+| Pieza               | Dónde                                                                                                 | Rol                                                                                                  |
+| ------------------- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Access JWT          | Memoria del navegador (`Authorization: Bearer …`)                                                     | 30 min (`AUTH_ACCESS_TOKEN_MINUTES=30`). El SPA lo renueva con el refresh unos 2 min antes de vencer |
+| Refresh JWT         | Cookie HttpOnly `jr_refresh` (path `/api/auth/`, host-only) o body si `AUTH_USE_REFRESH_COOKIE=False` | ~7 días (`AUTH_REFRESH_TOKEN_DAYS`); rotación + blacklist                                            |
+| Claim `schema_name` | Dentro del access y del refresh                                                                       | Debe coincidir con el schema del request; si no → rechazo                                            |
+| `userPermissions`   | `localStorage`                                                                                        | Solo UX (menú/rutas); no es secreto ni autoridad                                                     |
+| `jr_session`        | `localStorage` (`'1'`)                                                                                | Flag no secreto para que otras pestañas sepan llamar a `/api/auth/refresh/`                          |
 
 `DEFAULT_AUTHENTICATION_CLASSES` = `appauth.authentication.TenantJWTAuthentication`. Apps tenant: `appauth` + `rest_framework_simplejwt.token_blacklist`.
 
 #### Endpoints (`/api/auth/*`, URLconf de tenant)
 
-| Método | Ruta | Auth | Descripción |
-| ------ | ---- | ---- | ----------- |
-| POST | `/api/auth/login/` | Público (throttle IP/usuario) | Credenciales → access (+ cookie/body refresh) + permisos + branding |
-| POST | `/api/auth/refresh/` | Cookie `jr_refresh`, mismo origen | Nuevo access. En modo cookie no lee body ni `X-Refresh-Token`. Un fallo no borra la cookie |
-| POST | `/api/auth/logout/` | Cookie o Bearer, mismo origen | Blacklist de los refresh + borra cookie |
-| POST | `/api/auth/ws-ticket/` | Bearer | Ticket de 60 s y un solo uso para el handshake WebSocket |
-| GET | `/api/auth/me/` | Bearer | Usuario + permisos + branding tenant |
-| GET | `/api/auth/permissions/` | Bearer | Lista `user.get_all_permissions()` |
-| GET | `/api/auth/validate/` | Bearer | `{ "valid": true\|false }` (guard del router) |
-| GET | `/api/auth/tenant-context/` | Público | Nombre y logo del workspace. No devuelve `schema_name` |
-| POST | `/api/auth/password/forgot/` | Público (throttle) | Email de reset |
-| POST | `/api/auth/password/reset/` | Público | Nueva contraseña; invalida refresh outstanding del usuario |
+| Método | Ruta                         | Auth                              | Descripción                                                                                |
+| ------ | ---------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------ |
+| POST   | `/api/auth/login/`           | Público (throttle IP/usuario)     | Credenciales → access (+ cookie/body refresh) + permisos + branding                        |
+| POST   | `/api/auth/refresh/`         | Cookie `jr_refresh`, mismo origen | Nuevo access. En modo cookie no lee body ni `X-Refresh-Token`. Un fallo no borra la cookie |
+| POST   | `/api/auth/logout/`          | Cookie o Bearer, mismo origen     | Blacklist de los refresh + borra cookie                                                    |
+| POST   | `/api/auth/ws-ticket/`       | Bearer                            | Ticket de 60 s y un solo uso para el handshake WebSocket                                   |
+| GET    | `/api/auth/me/`              | Bearer                            | Usuario + permisos + branding tenant                                                       |
+| GET    | `/api/auth/permissions/`     | Bearer                            | Lista `user.get_all_permissions()`                                                         |
+| GET    | `/api/auth/validate/`        | Bearer                            | `{ "valid": true\|false }` (guard del router)                                              |
+| GET    | `/api/auth/tenant-context/`  | Público                           | Nombre y logo del workspace. No devuelve `schema_name`                                     |
+| POST   | `/api/auth/password/forgot/` | Público (throttle)                | Email de reset                                                                             |
+| POST   | `/api/auth/password/reset/`  | Público                           | Nueva contraseña; invalida refresh outstanding del usuario                                 |
 
 Prefijo `/api/auth/` está **exento** del enforcement de trial/billing (`TenantAccessEnforcementMiddleware`) para permitir login y refresh.
 
@@ -439,14 +441,14 @@ Prefijo `/api/auth/` está **exento** del enforcement de trial/billing (`TenantA
 
 #### Guard del router (`vuefrontend/src/router/index.js`)
 
-| Caso | Comportamiento |
-| ---- | -------------- |
-| Ruta pública (`login`, `onboarding`, reset, `about`, `not-found`) | Entra sin JWT |
-| Ruta protegida sin access JWT | Redirect a `/login?redirect=<ruta>` |
-| Path desconocido | `NotFoundView` (404; sin navbar/footer) |
-| Alias `/home` | Redirect a `/` (home autenticado) |
-| JWT ok + sin permiso UX | Alerta y se cancela la navegación |
-| JWT ok + tenant/billing bloqueado | `/account-suspended` o `/billing` |
+| Caso                                                              | Comportamiento                          |
+| ----------------------------------------------------------------- | --------------------------------------- |
+| Ruta pública (`login`, `onboarding`, reset, `about`, `not-found`) | Entra sin JWT                           |
+| Ruta protegida sin access JWT                                     | Redirect a `/login?redirect=<ruta>`     |
+| Path desconocido                                                  | `NotFoundView` (404; sin navbar/footer) |
+| Alias `/home`                                                     | Redirect a `/` (home autenticado)       |
+| JWT ok + sin permiso UX                                           | Alerta y se cancela la navegación       |
+| JWT ok + tenant/billing bloqueado                                 | `/account-suspended` o `/billing`       |
 
 El login, tras éxito, navega a `redirect` si es un path relativo seguro (`/…`); si no, a `/`.
 
@@ -454,17 +456,17 @@ El menú del shell (`NavbarComponent`) **no lista módulos** si no hay sesión (
 
 #### Variables de entorno (VPS: `envs/backend.env`)
 
-| Variable | Default | Notas |
-| -------- | ------- | ----- |
-| `AUTH_ACCESS_TOKEN_MINUTES` | `30` | Vida del access (30 minutos) |
-| `AUTH_REFRESH_TOKEN_DAYS` | `7` | Vida del refresh / cookie `Max-Age` |
-| `AUTH_USE_REFRESH_COOKIE` | `True` | Preferido multi-tab (mismo origen vía Nginx) |
-| `AUTH_REFRESH_COOKIE_SECURE` | `True` si `DEBUG=False` | En prod HTTPS debe ser `True` |
-| `AUTH_REFRESH_COOKIE_NAME` | `jr_refresh` | |
-| `AUTH_REFRESH_COOKIE_PATH` | `/api/auth/` | |
-| `AUTH_REFRESH_COOKIE_SAMESITE` | `Lax` | |
-| `DJANGO_SECRET_KEY` | obligatoria | Sin esta variable el proceso no arranca. No hay clave de respaldo en el código |
-| `CORS_ALLOW_ALL_ORIGINS` | `False` | Orígenes explícitos (`jobrhythm.net`, landing y, en `DEBUG`, la red local). No combinarlo con credenciales en `True` |
+| Variable                       | Default                 | Notas                                                                                                                |
+| ------------------------------ | ----------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `AUTH_ACCESS_TOKEN_MINUTES`    | `30`                    | Vida del access (30 minutos)                                                                                         |
+| `AUTH_REFRESH_TOKEN_DAYS`      | `7`                     | Vida del refresh / cookie `Max-Age`                                                                                  |
+| `AUTH_USE_REFRESH_COOKIE`      | `True`                  | Preferido multi-tab (mismo origen vía Nginx)                                                                         |
+| `AUTH_REFRESH_COOKIE_SECURE`   | `True` si `DEBUG=False` | En prod HTTPS debe ser `True`                                                                                        |
+| `AUTH_REFRESH_COOKIE_NAME`     | `jr_refresh`            |                                                                                                                      |
+| `AUTH_REFRESH_COOKIE_PATH`     | `/api/auth/`            |                                                                                                                      |
+| `AUTH_REFRESH_COOKIE_SAMESITE` | `Lax`                   |                                                                                                                      |
+| `DJANGO_SECRET_KEY`            | obligatoria             | Sin esta variable el proceso no arranca. No hay clave de respaldo en el código                                       |
+| `CORS_ALLOW_ALL_ORIGINS`       | `False`                 | Orígenes explícitos (`jobrhythm.net`, landing y, en `DEBUG`, la red local). No combinarlo con credenciales en `True` |
 
 #### Cierres de seguridad (sept. 2026)
 
@@ -956,10 +958,10 @@ El repositorio Git se movió de `/opt/chalanpro/app/` a `/opt/chalanpro/` para i
 
 ### 4.1.1 Branches actuales (junio 2026)
 
-| Rama | Uso |
-|------|-----|
-| **`main_deploy`** | Producción VPS — `deploy-vps.sh` / `deploy-landing-vps.sh` |
-| **`dev_local_status`** | Desarrollo ubuntu-house |
+| Rama                                               | Uso                                                              |
+| -------------------------------------------------- | ---------------------------------------------------------------- |
+| **`main_deploy`**                                  | Producción VPS — `deploy-vps.sh` / `deploy-landing-vps.sh`       |
+| **`dev_local_primevue`**                           | Desarrollo ubuntu-house                                          |
 | **`main`**, **`develop`**, **`dev_local_inv-img`** | Históricas (no desplegar; incluyen búsqueda semántica archivada) |
 
 ```bash
@@ -1088,19 +1090,19 @@ psql -h localhost -p 5432 -U chalanpro_user -d chalanpro
 
 ### 6.1 Estado Actual de Seguridad
 
-| Aspecto                  | Estado                  | Nivel | Notas                                             |
-| ------------------------ | ----------------------- | ----- | ------------------------------------------------- |
-| **HTTPS/SSL**            | ✅ Activo               | Alto  | Certificados Let's Encrypt, renovación automática |
-| **Firewall**             | ⚠️ Parcial              | Medio | Solo puertos 80, 443, 5432, 5050 abiertos         |
+| Aspecto                  | Estado                  | Nivel | Notas                                                                              |
+| ------------------------ | ----------------------- | ----- | ---------------------------------------------------------------------------------- |
+| **HTTPS/SSL**            | ✅ Activo               | Alto  | Certificados Let's Encrypt, renovación automática                                  |
+| **Firewall**             | ⚠️ Parcial              | Medio | Solo puertos 80, 443, 5432, 5050 abiertos                                          |
 | **Autenticación Django** | ✅ Activo               | Alto  | JWT tenant-bound, cookie HttpOnly, refresh solo mismo origen, WebSocket con ticket |
-| **ALLOWED_HOSTS**        | ✅ Dinámico             | Alto  | Actualización automática vía middleware           |
-| **CSRF Protection**      | ✅ Dinámico             | Alto  | Actualización automática vía middleware           |
-| **DEBUG Mode**           | ✅ Deshabilitado        | Alto  | `DEBUG=False` en producción                       |
-| **Secret Keys**          | ✅ Variables de entorno | Alto  | No hardcodeadas en código                         |
-| **PostgreSQL Acceso**    | ⚠️ Expuesto             | Medio | Puerto 5432 abierto (considerar restringir)       |
-| **pgAdmin Acceso**       | ✅ Localhost            | Alto  | `127.0.0.1:5050` en compose; entrar por túnel SSH |
-| **Headers de Seguridad** | ✅ Configurados         | Alto  | HSTS, X-Frame-Options, X-Content-Type-Options     |
-| **Backups Automáticos**  | ❌ No configurado       | Bajo  | Requiere configuración de cron job                |
+| **ALLOWED_HOSTS**        | ✅ Dinámico             | Alto  | Actualización automática vía middleware                                            |
+| **CSRF Protection**      | ✅ Dinámico             | Alto  | Actualización automática vía middleware                                            |
+| **DEBUG Mode**           | ✅ Deshabilitado        | Alto  | `DEBUG=False` en producción                                                        |
+| **Secret Keys**          | ✅ Variables de entorno | Alto  | No hardcodeadas en código                                                          |
+| **PostgreSQL Acceso**    | ⚠️ Expuesto             | Medio | Puerto 5432 abierto (considerar restringir)                                        |
+| **pgAdmin Acceso**       | ✅ Localhost            | Alto  | `127.0.0.1:5050` en compose; entrar por túnel SSH                                  |
+| **Headers de Seguridad** | ✅ Configurados         | Alto  | HSTS, X-Frame-Options, X-Content-Type-Options                                      |
+| **Backups Automáticos**  | ❌ No configurado       | Bajo  | Requiere configuración de cron job                                                 |
 
 ### 6.2 Mejoras Recomendadas
 
@@ -1732,11 +1734,11 @@ El campo incluye **tooltip** (`v-tt` + `data-title`) según las guías del proye
 
 **Solución:** en `DocumentType` existen flags de intención (Nivel 1), independientes del código:
 
-| Campo | Intención | Uso en Assistant |
-|-------|-----------|------------------|
-| `counts_as_net_invoiced_spend` | Net invoiced spending | Tools de spend (list/sum/by vendor/compare/graph). Suma `Document.total_amount` de docs activos de esos tipos. |
-| `counts_as_job_material_issue` | Job / house material issue | Salida a obra (p. ej. picking / PK). Reservado para tools de costo a Work Account. |
-| `counts_as_purchase_return` | Purchase return | Devoluciones a proveedor (p. ej. PRN). **No** se mezcla en el gasto neto facturado. |
+| Campo                          | Intención                  | Uso en Assistant                                                                                               |
+| ------------------------------ | -------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `counts_as_net_invoiced_spend` | Net invoiced spending      | Tools de spend (list/sum/by vendor/compare/graph). Suma `Document.total_amount` de docs activos de esos tipos. |
+| `counts_as_job_material_issue` | Job / house material issue | Salida a obra (p. ej. picking / PK). Reservado para tools de costo a Work Account.                             |
+| `counts_as_purchase_return`    | Purchase return            | Devoluciones a proveedor (p. ej. PRN). **No** se mezcla en el gasto neto facturado.                            |
 
 Reglas de producto:
 
@@ -1769,20 +1771,20 @@ docker compose exec backend python manage.py migrate_schemas
 
 Cada tipo maestro puede tener un workflow lineal de `DocumentStatus` (`sequence`, un `is_initial`, un terminal). El flag `uses_status_tracking` queda **OFF** por defecto: los statuses se siembran listos, y el admin los activa en `/document-types` cuando quiera tracking en documentos nuevos. **MR** es protegido (siempre trackea; no se siembra desde este catálogo).
 
-| Tipo | Workflow (codes) |
-|------|------------------|
-| PR | requested → approved → ordered → closed |
-| PO | draft → submitted → approved → ordered → closed |
-| GRN | draft → received → inspected → posted → closed |
-| PINV | draft → submitted → approved → posted → closed |
-| PRN | draft → approved → returned → closed |
-| SQ | draft → sent → accepted → closed |
-| SO | draft → confirmed → allocated → closed |
-| DN | draft → packed → shipped → delivered → closed |
-| INV | draft → submitted → posted → closed |
-| CRN | draft → approved → posted → closed |
-| PK | requested → approved → preparing → picked → closed |
-| MR | requested → approved → preparing → delivered → closed *(sistema)* |
+| Tipo | Workflow (codes)                                                  |
+| ---- | ----------------------------------------------------------------- |
+| PR   | requested → approved → ordered → closed                           |
+| PO   | draft → submitted → approved → ordered → closed                   |
+| GRN  | draft → received → inspected → posted → closed                    |
+| PINV | draft → submitted → approved → posted → closed                    |
+| PRN  | draft → approved → returned → closed                              |
+| SQ   | draft → sent → accepted → closed                                  |
+| SO   | draft → confirmed → allocated → closed                            |
+| DN   | draft → packed → shipped → delivered → closed                     |
+| INV  | draft → submitted → posted → closed                               |
+| CRN  | draft → approved → posted → closed                                |
+| PK   | requested → approved → preparing → picked → closed                |
+| MR   | requested → approved → preparing → delivered → closed _(sistema)_ |
 
 **Sembrar tenants existentes** (idempotente; no sobrescribe si el tipo ya tiene statuses):
 

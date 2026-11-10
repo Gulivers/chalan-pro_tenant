@@ -99,8 +99,8 @@
             :work-account-id="workAccountId" />
           <JREmptyState
             v-else
-            title="Chat unavailable"
-            description="This work account has no linked schedule event yet. Create a schedule event to start chatting." />
+            :title="$t('workOrderViewer.chatUnavailable')"
+            :description="$t('workOrderViewer.chatUnavailableDesc')" />
         </TabPanel>
 
         <TabPanel value="status">
@@ -112,8 +112,8 @@
             @progress-changed="$emit('progress-changed', $event)" />
           <JREmptyState
             v-else
-            title="Status unavailable"
-            description="This work account has no linked schedule event yet. Create a schedule event to track its status and progress." />
+            :title="$t('workOrderViewer.statusUnavailable')"
+            :description="$t('workOrderViewer.statusUnavailableDesc')" />
         </TabPanel>
 
         <TabPanel value="notes">
@@ -124,8 +124,8 @@
             :work-account-id="workAccountId" />
           <JREmptyState
             v-else
-            title="Notes unavailable"
-            description="Notes are tied to a schedule event. Link this work account to a schedule event to add notes." />
+            :title="$t('workOrderViewer.notesUnavailable')"
+            :description="$t('workOrderViewer.notesUnavailableDesc')" />
         </TabPanel>
 
         <TabPanel value="folder">
@@ -135,8 +135,8 @@
             :event-id="eventId" />
           <JREmptyState
             v-else
-            title="Folder unavailable"
-            description="Project files are stored per schedule event. Link this work account to a schedule event to upload or view files." />
+            :title="$t('workOrderViewer.folderUnavailable')"
+            :description="$t('workOrderViewer.folderUnavailableDesc')" />
         </TabPanel>
 
         <TabPanel value="contracts">
@@ -159,8 +159,8 @@
             :work-account-id="workAccountId" />
           <JREmptyState
             v-else
-            title="Missing Material unavailable"
-            description="Open a work order linked to a schedule event to request material." />
+            :title="$t('workOrderViewer.materialsUnavailable')"
+            :description="$t('workOrderViewer.materialsUnavailableDesc')" />
         </TabPanel>
       </TabPanels>
     </Tabs>
@@ -169,6 +169,7 @@
 
 <script>
 import { computed, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import Tab from "primevue/tab";
 import TabList from "primevue/tablist";
@@ -228,13 +229,29 @@ export default {
   setup(props) {
     const route = useRoute();
     const router = useRouter();
+    const { t } = useI18n();
+
+    const TAB_LABEL_KEYS = {
+      chat: "workOrderViewer.tabChat",
+      status: "workOrderViewer.tabStatus",
+      notes: "workOrderViewer.tabNotes",
+      folder: "workOrderViewer.tabFolder",
+      contracts: "workOrderViewer.tabContracts",
+      transactions: "workOrderViewer.tabTransactions",
+      materials: "workOrderViewer.tabMaterials",
+    };
 
     const normalizeTab = (tab) =>
       WORK_ORDER_VIEWER_TAB_IDS.includes(tab) ? tab : "chat";
 
     const activeTab = ref(normalizeTab(props.initialTab || route.query.tab));
 
-    const visibleTabs = computed(() => WORK_ORDER_VIEWER_TABS);
+    const visibleTabs = computed(() =>
+      WORK_ORDER_VIEWER_TABS.map((tab) => ({
+        ...tab,
+        label: TAB_LABEL_KEYS[tab.id] ? t(TAB_LABEL_KEYS[tab.id]) : tab.label,
+      }))
+    );
 
     const syncTabToRoute = (tab) => {
       if (!props.syncRoute) return;

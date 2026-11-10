@@ -1,12 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader title="House Models">
+    <JRPageHeader :title="$t('parties.houseModelsTitle')">
       <template #actions>
         <JRButton
           v-if="hasPermission('ctrctsapp.add_housemodel')"
           type="button"
           @click="goToCreateForm">
-          + New House Model
+          {{ $t("parties.houseModelsNew") }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -15,7 +15,7 @@
       <template #start>
         <div class="jr-master-list__search">
           <label class="jr-sr-only" for="hm-filter-input">
-            Search house models
+            {{ $t("parties.houseModelsSearchLabel") }}
           </label>
           <span class="jr-master-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -24,19 +24,19 @@
             inputId="hm-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search by name or community..." />
+            :placeholder="$t('parties.houseModelsSearchPlaceholder')" />
         </div>
       </template>
 
       <template #stats>
         <div class="jr-master-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
+          <JRBadge :value="$t('common.badgeTotal', { count: stats.total })" severity="secondary" />
         </div>
       </template>
 
       <template #actions>
         <label class="jr-sr-only" for="hm-per-page">
-          Entries per page
+          {{ $t("common.entriesPerPage") }}
         </label>
         <JRSelect
           class="jr-master-list__entries"
@@ -52,7 +52,7 @@
           class="jr-master-list__refresh"
           @click="refreshTable">
           <RefreshIcon />
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -68,7 +68,7 @@
           variant="ghost"
           size="sm"
           @click="refreshTable">
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
         <JRButton
           v-else-if="hasSearch"
@@ -76,17 +76,17 @@
           variant="ghost"
           size="sm"
           @click="clearSearch">
-          Clear search
+          {{ $t("common.clearSearch") }}
         </JRButton>
       </JREmptyState>
       <p v-if="isLoading && !pagedItems.length" class="jr-master-list__loading">
-        Loading house models…
+        {{ $t("common.loadingLabel", { label: $t("parties.houseModelsTitle") }) }}
       </p>
       <p
         v-else-if="isLoading && pagedItems.length"
         class="jr-master-list__loading"
         aria-live="polite">
-        Updating…
+        {{ $t("common.updating") }}
       </p>
       <ul
         v-if="pagedItems.length"
@@ -167,7 +167,7 @@
               variant="ghost"
               size="sm"
               @click="refreshTable">
-              Refresh
+              {{ $t("common.refresh") }}
             </JRButton>
             <JRButton
               v-else-if="hasSearch"
@@ -175,16 +175,16 @@
               variant="ghost"
               size="sm"
               @click="clearSearch">
-              Clear search
+              {{ $t("common.clearSearch") }}
             </JRButton>
           </JREmptyState>
         </template>
-        <Column field="id" header="ID" sortable>
+        <Column field="id" :header="$t('crews.colId')" sortable>
           <template #body="{ data }">
             {{ data.id }}
           </template>
         </Column>
-        <Column field="name" header="House Model Name" sortable>
+        <Column field="name" :header="$t('parties.colHouseModelName')" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
@@ -196,7 +196,7 @@
             <span v-else>{{ data.name }}</span>
           </template>
         </Column>
-        <Column field="jobs" header="Communities" :sortable="false">
+        <Column field="jobs" :header="$t('parties.colCommunities')" :sortable="false">
           <template #body="{ data }">
             <div v-if="jobList(data).length" class="jr-hm-jobs">
               <JRBadge
@@ -210,7 +210,7 @@
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="
             isTablet
@@ -380,15 +380,15 @@ export default {
       Boolean(filter.value && filter.value.trim())
     );
     const emptyTitle = computed(() => {
-      if (loadError.value) return "Could not load house models";
-      if (hasSearch.value) return "No matching house models";
-      return "No house models";
+      if (loadError.value) return proxy?.$t?.("parties.houseModelsEmptyLoadError");
+      if (hasSearch.value) return proxy?.$t?.("parties.houseModelsEmptySearch");
+      return proxy?.$t?.("parties.houseModelsEmptyNone");
     });
     const emptyDescription = computed(() => {
-      if (loadError.value) return "Try Refresh.";
+      if (loadError.value) return proxy?.$t?.("common.tryRefresh");
       const query = filter.value.trim();
-      if (query) return `No house models match “${query}”.`;
-      return "No house models yet.";
+      if (query) return proxy?.$t?.("parties.houseModelsEmptySearchDesc", { query });
+      return proxy?.$t?.("parties.houseModelsEmptyNoneDesc");
     });
 
     const clearSearch = () => {
@@ -466,7 +466,7 @@ export default {
       if (proxy?.hasPermission?.("ctrctsapp.view_housemodel")) {
         actions.push({
           key: "view",
-          label: "View",
+          label: proxy?.$t?.("common.view"),
           severity: "success",
           icon: EyeIcon,
           command: () => viewItem(item.id),
@@ -475,7 +475,7 @@ export default {
       if (proxy?.hasPermission?.("ctrctsapp.change_housemodel")) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: proxy?.$t?.("common.edit"),
           severity: "primary",
           icon: PencilIcon,
           command: () => editItem(item.id),
@@ -484,7 +484,7 @@ export default {
       if (proxy?.hasPermission?.("ctrctsapp.delete_housemodel")) {
         actions.push({
           key: "delete",
-          label: "Delete",
+          label: proxy?.$t?.("common.delete"),
           severity: "danger",
           icon: TrashIcon,
           command: () => deleteHouseModel(item.id, item.name),
@@ -495,8 +495,8 @@ export default {
 
     const deleteHouseModel = (id, name) => {
       proxy?.confirmDelete?.(
-        "Are you sure?",
-        `Delete "${name}"? This action cannot be undone.`,
+        proxy?.$t?.("common.confirmDeleteTitle"),
+        proxy?.$t?.("parties.houseModelsDeleteConfirm", { name }),
         async () => {
           try {
             await axios.delete(`${ENDPOINT}${id}/`);

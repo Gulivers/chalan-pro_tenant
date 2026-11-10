@@ -1,12 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Truck Assignments">
+    <JRPageHeader :title="$t('crews.truckAssignmentsTitle')">
       <template #actions>
         <JRButton
           v-if="hasPermission('crewsapp.add_truckassignment')"
           type="button"
           @click="goToCreateForm">
-          + New Truck Assignment
+          {{ $t("crews.truckAssignmentsNew") }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -15,7 +15,7 @@
       <template #start>
         <div class="jr-master-list__search">
           <label class="jr-sr-only" for="ta-filter-input">
-            Search truck assignments
+            {{ $t("crews.truckAssignmentsSearchLabel") }}
           </label>
           <span class="jr-master-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -24,18 +24,18 @@
             inputId="ta-filter-input"
             v-model="filter"
             type="search"
-            placeholder="Search by crew or truck..." />
+            :placeholder="$t('crews.truckAssignmentsSearchPlaceholder')" />
         </div>
       </template>
 
       <template #stats>
         <div class="jr-master-list__summary" aria-live="polite">
-          <JRBadge :value="`${stats.total} Total`" severity="secondary" />
+          <JRBadge :value="$t('common.badgeTotal', { count: stats.total })" severity="secondary" />
         </div>
       </template>
 
       <template #actions>
-        <label class="jr-sr-only" for="ta-per-page">Entries per page</label>
+        <label class="jr-sr-only" for="ta-per-page">{{ $t("common.entriesPerPage") }}</label>
         <JRSelect
           class="jr-master-list__entries"
           inputId="ta-per-page"
@@ -50,7 +50,7 @@
           class="jr-master-list__refresh"
           @click="refreshTable">
           <RefreshIcon />
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
       </template>
     </JRToolbar>
@@ -66,7 +66,7 @@
           variant="ghost"
           size="sm"
           @click="refreshTable">
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
         <JRButton
           v-else-if="hasSearch"
@@ -74,17 +74,17 @@
           variant="ghost"
           size="sm"
           @click="clearSearch">
-          Clear search
+          {{ $t("common.clearSearch") }}
         </JRButton>
       </JREmptyState>
       <p v-if="isLoading && !pagedItems.length" class="jr-master-list__loading">
-        Loading truck assignments…
+        {{ $t("common.loadingLabel", { label: $t("crews.truckAssignmentsTitle") }) }}
       </p>
       <p
         v-else-if="isLoading && pagedItems.length"
         class="jr-master-list__loading"
         aria-live="polite">
-        Updating…
+        {{ $t("common.updating") }}
       </p>
       <ul
         v-if="pagedItems.length"
@@ -159,7 +159,7 @@
               variant="ghost"
               size="sm"
               @click="refreshTable">
-              Refresh
+              {{ $t("common.refresh") }}
             </JRButton>
             <JRButton
               v-else-if="hasSearch"
@@ -167,12 +167,12 @@
               variant="ghost"
               size="sm"
               @click="clearSearch">
-              Clear search
+              {{ $t("common.clearSearch") }}
             </JRButton>
           </JREmptyState>
         </template>
-        <Column field="id" header="ID" sortable style="width: 4.5rem" />
-        <Column field="crew_name" header="Assigned Crew" sortable>
+        <Column field="id" :header="$t('crews.colId')" sortable style="width: 4.5rem" />
+        <Column field="crew_name" :header="$t('crews.colAssignedCrew')" sortable>
           <template #body="{ data }">
             <router-link
               v-if="canView"
@@ -184,17 +184,17 @@
             <span v-else>{{ data.crew_name || "—" }}</span>
           </template>
         </Column>
-        <Column field="trucks_display" header="Assigned Trucks" sortable>
+        <Column field="trucks_display" :header="$t('crews.colAssignedTrucks')" sortable>
           <template #body="{ data }">
             {{ data.trucks_display }}
           </template>
         </Column>
-        <Column field="assigned_at" header="Assigned At" sortable>
+        <Column field="assigned_at" :header="$t('crews.colAssignedAt')" sortable>
           <template #body="{ data }">
             {{ formatDate(data.assigned_at) }}
           </template>
         </Column>
-        <Column field="unassigned_at" header="Unassigned At" sortable>
+        <Column field="unassigned_at" :header="$t('crews.colUnassignedAt')" sortable>
           <template #body="{ data }">
             {{
               data.unassigned_at ? formatDate(data.unassigned_at) : "—"
@@ -203,7 +203,7 @@
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="
             isTablet
@@ -238,6 +238,7 @@ import {
   getCurrentInstance,
 } from "vue";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import Column from "primevue/column";
 import Paginator from "primevue/paginator";
 import EyeIcon from "@primevue/icons/eye";
@@ -311,6 +312,7 @@ function compareValues(a, b, field) {
 }
 
 const router = useRouter();
+const { t } = useI18n();
 const { proxy } = getCurrentInstance();
 
 const items = ref([]);
@@ -385,15 +387,15 @@ const pagedItems = computed(() => {
 
 const hasSearch = computed(() => Boolean(filter.value && filter.value.trim()));
 const emptyTitle = computed(() => {
-  if (loadError.value) return "Could not load truck assignments";
-  if (hasSearch.value) return "No matching truck assignments";
-  return "No truck assignments";
+  if (loadError.value) return t("crews.truckAssignmentsEmptyLoadError");
+  if (hasSearch.value) return t("crews.truckAssignmentsEmptySearch");
+  return t("crews.truckAssignmentsEmptyNone");
 });
 const emptyDescription = computed(() => {
-  if (loadError.value) return "Try Refresh.";
+  if (loadError.value) return t("common.tryRefresh");
   const query = filter.value.trim();
-  if (query) return `No truck assignments match “${query}”.`;
-  return "No truck assignments yet.";
+  if (query) return t("crews.truckAssignmentsEmptySearchDesc", { query });
+  return t("crews.truckAssignmentsEmptyNoneDesc");
 });
 
 const clearSearch = () => {
@@ -466,7 +468,7 @@ const getRowActions = (item) => {
   if (proxy?.hasPermission?.("crewsapp.view_truckassignment")) {
     actions.push({
       key: "view",
-      label: "View",
+      label: t("common.view"),
       severity: "success",
       icon: EyeIcon,
       command: () => viewItem(item.id),
@@ -475,7 +477,7 @@ const getRowActions = (item) => {
   if (proxy?.hasPermission?.("crewsapp.change_truckassignment")) {
     actions.push({
       key: "edit",
-      label: "Edit",
+      label: t("common.edit"),
       severity: "primary",
       icon: PencilIcon,
       command: () => editItem(item.id),
@@ -484,7 +486,7 @@ const getRowActions = (item) => {
   if (proxy?.hasPermission?.("crewsapp.delete_truckassignment")) {
     actions.push({
       key: "delete",
-      label: "Delete",
+      label: t("common.delete"),
       severity: "danger",
       icon: TrashIcon,
       command: () => deleteItem(item.id),
@@ -495,8 +497,8 @@ const getRowActions = (item) => {
 
 const deleteItem = (id) => {
   proxy?.confirmDelete?.(
-    "Are you sure?",
-    "This action cannot be undone.",
+    t("common.confirmDeleteTitle"),
+    t("crews.truckAssignmentsDeleteConfirm"),
     async () => {
       try {
         await axios.delete(`${ENDPOINT}${id}/`);

@@ -1,12 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Piece Work Prices">
+    <JRPageHeader :title="$t('workPrices.title')">
       <template #actions>
         <JRButton
           v-if="hasPermission('ctrctsapp.add_workprice')"
           type="button"
           @click="createPrice">
-          + New Price
+          {{ $t("workPrices.new") }}
         </JRButton>
       </template>
     </JRPageHeader>
@@ -15,7 +15,7 @@
       <template #start>
         <div class="jr-workprice-list__search">
           <label class="jr-sr-only" for="workprice-filter-input">
-            Search piece work prices
+            {{ $t("workPrices.searchLabel") }}
           </label>
           <span class="jr-workprice-list__search-icon" aria-hidden="true">
             <SearchIcon />
@@ -24,7 +24,7 @@
             inputId="workprice-filter-input"
             v-model="search"
             type="search"
-            placeholder="Search piece work prices..."
+            :placeholder="$t('workPrices.searchPlaceholder')"
             autocomplete="off"
             :spellcheck="false"
             autocapitalize="none"
@@ -36,7 +36,7 @@
       <template v-if="!isMobile" #stats>
         <div class="jr-workprice-list__summary" aria-live="polite">
           <JRBadge
-            :value="`${filteredPrices.length} Total`"
+            :value="$t('common.badgeTotal', { count: filteredPrices.length })"
             severity="secondary" />
         </div>
       </template>
@@ -46,7 +46,7 @@
           <JRSelect
             class="jr-workprice-list__entries"
             inputId="workprice-per-page"
-            ariaLabel="Entries per page"
+            :ariaLabel="$t('common.entriesPerPage')"
             v-model="perPage"
             :options="pageOptions"
             optionLabel="label"
@@ -58,7 +58,7 @@
             class="jr-workprice-list__refresh"
             @click="fetchPrices">
             <RefreshIcon />
-            Refresh
+            {{ $t("common.refresh") }}
           </JRButton>
         </template>
         <template v-else>
@@ -66,7 +66,7 @@
             id="workprice-list-tools-trigger"
             type="button"
             class="jr-icon-btn"
-            aria-label="List tools"
+            :aria-label="$t('common.listTools')"
             aria-haspopup="menu"
             :aria-expanded="toolsMenuOpen ? 'true' : 'false'"
             aria-controls="workprice-list-tools-menu"
@@ -88,7 +88,7 @@
             class="jr-overlay jr-row-menu"
             :model="toolsMenuModel"
             :popup="true"
-            ariaLabel="List tools"
+            :ariaLabel="$t('common.listTools')"
             @show="toolsMenuOpen = true"
             @hide="toolsMenuOpen = false" />
         </template>
@@ -106,7 +106,7 @@
           variant="ghost"
           size="sm"
           @click="fetchPrices">
-          Refresh
+          {{ $t("common.refresh") }}
         </JRButton>
         <JRButton
           v-else-if="hasSearch"
@@ -114,17 +114,17 @@
           variant="ghost"
           size="sm"
           @click="clearSearch">
-          Clear search
+          {{ $t("common.clearSearch") }}
         </JRButton>
       </JREmptyState>
       <p v-if="loading && !prices.length" class="jr-workprice-list__loading">
-        Loading piece work prices…
+        {{ $t("common.loadingLabel", { label: $t("workPrices.title") }) }}
       </p>
       <p
         v-else-if="loading && prices.length"
         class="jr-workprice-list__loading"
         aria-live="polite">
-        Updating…
+        {{ $t("common.updating") }}
       </p>
       <ul
         v-if="pagedPrices.length"
@@ -199,7 +199,7 @@
               variant="ghost"
               size="sm"
               @click="fetchPrices">
-              Refresh
+              {{ $t("common.refresh") }}
             </JRButton>
             <JRButton
               v-else-if="hasSearch"
@@ -207,13 +207,13 @@
               variant="ghost"
               size="sm"
               @click="clearSearch">
-              Clear search
+              {{ $t("common.clearSearch") }}
             </JRButton>
           </JREmptyState>
         </template>
         <Column
           field="name"
-          header="Description"
+          :header="$t('workPrices.colDescription')"
           sortable
           headerClass="jr-col-name"
           bodyClass="jr-col-name">
@@ -230,7 +230,7 @@
         </Column>
         <Column
           field="trim"
-          header="Trim"
+          :header="$t('workPrices.colTrim')"
           sortable
           headerClass="jr-col-num"
           bodyClass="jr-col-num">
@@ -240,7 +240,7 @@
         </Column>
         <Column
           field="rough"
-          header="Rough"
+          :header="$t('workPrices.colRough')"
           sortable
           headerClass="jr-col-num"
           bodyClass="jr-col-num">
@@ -248,14 +248,17 @@
             {{ formatMoney(data.rough) }}
           </template>
         </Column>
-        <Column field="unit_price" header="Unit Price" sortable>
+        <Column
+          field="unit_price"
+          :header="$t('workPrices.colUnitPrice')"
+          sortable>
           <template #body="{ data }">
             {{ data.unit_price || "—" }}
           </template>
         </Column>
         <Column
           v-if="hasRowActions"
-          header="Actions"
+          :header="$t('common.actions')"
           :sortable="false"
           :headerClass="
             isTablet
@@ -386,7 +389,7 @@ export default {
 
     const toolsMenuModel = computed(() => [
       {
-        label: "Refresh",
+        label: proxy?.$t?.("common.refresh"),
         icon: "pi pi-refresh",
         command: () => fetchPrices(),
       },
@@ -434,14 +437,14 @@ export default {
 
     const hasSearch = computed(() => Boolean(search.value && search.value.trim()));
     const emptyTitle = computed(() => {
-      if (loadError.value) return "Could not load piece work prices";
-      if (hasSearch.value) return "No matching prices";
-      return "No piece work prices";
+      if (loadError.value) return proxy?.$t?.("workPrices.emptyLoadError");
+      if (hasSearch.value) return proxy?.$t?.("workPrices.emptySearch");
+      return proxy?.$t?.("workPrices.emptyNone");
     });
     const emptyDescription = computed(() => {
-      if (loadError.value) return "Try Refresh.";
-      if (hasSearch.value) return `No prices match “${search.value.trim()}”.`;
-      return "No piece work prices yet.";
+      if (loadError.value) return proxy?.$t?.("common.tryRefresh");
+      if (hasSearch.value) return proxy?.$t?.("workPrices.emptySearchDesc", { query: search.value.trim() });
+      return proxy?.$t?.("workPrices.emptyNoneDesc");
     });
 
     const canView = computed(() =>
@@ -491,7 +494,7 @@ export default {
       if (proxy?.hasPermission?.("ctrctsapp.view_workprice")) {
         actions.push({
           key: "view",
-          label: "View",
+          label: proxy?.$t?.("common.view"),
           severity: "success",
           icon: EyeIcon,
           command: () => viewPrice(item.id),
@@ -500,7 +503,7 @@ export default {
       if (proxy?.hasPermission?.("ctrctsapp.change_workprice")) {
         actions.push({
           key: "edit",
-          label: "Edit",
+          label: proxy?.$t?.("common.edit"),
           severity: "primary",
           icon: PencilIcon,
           command: () => editPrice(item.id),
