@@ -33,13 +33,13 @@
             v-for="(item, index) in categoryTotals"
             :key="index"
             :value="`${removeEmojis(item.crew__category__name)}: ${item.total}`"
-            severity="secondary" />
+            severity="success" />
         </div>
       </template>
 
       <template #actions>
         <div class="jr-schedule__jump">
-          <label class="jr-sr-only" for="schedule-jump-date">{{
+          <label class="jr-schedule__jump-label" for="schedule-jump-date">{{
             $t("schedule.goToDate")
           }}</label>
           <JRDatePicker
@@ -111,7 +111,7 @@
         v-else-if="!allResources.length"
         :title="$t('schedule.emptyCrewsTitle')"
         :description="$t('schedule.emptyCrewsDesc')" />
-      <div v-else class="jr-schedule__pane">
+      <div v-else ref="schedulePane" class="jr-schedule__pane">
         <FullCalendar
           ref="calendarRef"
           class="jr-schedule__calendar"
@@ -210,6 +210,8 @@ export default {
       calendar_start: null,
       calendar_end: null,
       resizeObserver: null,
+      paneResizeObserver: null,
+      paneResizeRaf: 0,
       allResources: [],
       events: [],
       showModal: false,
@@ -380,7 +382,8 @@ export default {
         ...this.initialCalendarOptions,
         locales: [esLocale],
         locale: lang === "es" ? "es" : "en",
-        firstDay: lang === "es" ? 1 : 0,
+        // Always Monday-first (ISO week), including English UI.
+        firstDay: 1,
         buttonText: {
           today: this.$t("schedule.today"),
           resourceTimelineDay: this.$t("schedule.day"),
@@ -402,7 +405,7 @@ export default {
       const api = this.$refs.calendarRef?.getApi?.();
       if (!api) return;
       api.setOption("locale", lang === "es" ? "es" : "en");
-      api.setOption("firstDay", lang === "es" ? 1 : 0);
+      api.setOption("firstDay", 1);
       api.setOption("resourceAreaHeaderContent", this.$t("schedule.crewColumn"));
       api.setOption("buttonText", {
         today: this.$t("schedule.today"),
@@ -447,8 +450,8 @@ export default {
     },
     /**
      * Densidad del timeline según viewport.
-     * ≤440px (iPhone 16 Pro Max logical width e inferior): más compacto para ver más semana;
-     * el pinch-zoom del navegador sigue habilitado (viewport sin maximum-scale=1).
+     * PC/Laptop (≥992px): columnas fijas + scroll horizontal (no estirar/reducir días).
+     * ≤440px: más compacto; el pinch-zoom del navegador sigue habilitado.
      */
     updateCalendarDensity() {
       if (typeof window === "undefined") return;
@@ -456,8 +459,9 @@ export default {
       const phone = window.matchMedia("(max-width: 440px)").matches;
 
       if (wide) {
-        this.resourceAreaWidthCurrent = "15%";
-        this.slotMinWidthCurrent = 110;
+        // Fixed day columns on desktop/laptop — overflow scrolls horizontally.
+        this.resourceAreaWidthCurrent = "220px";
+        this.slotMinWidthCurrent = 140;
         this.eventMinHeightCurrent = 180;
         this.slotLabelFormatCurrent = {
           weekday: "long",
@@ -467,7 +471,6 @@ export default {
       } else if (phone) {
         /* 56px × 1.5 → más letras del nombre del crew */
         this.resourceAreaWidthCurrent = "84px";
-        /* Días un poco más anchos → tarjetas legibles; el resto se ve con scroll/pinch */
         this.slotMinWidthCurrent = 80;
         this.eventMinHeightCurrent = 100;
         this.slotLabelFormatCurrent = {
@@ -487,16 +490,15 @@ export default {
 
       this.$nextTick(() => {
         const api = this.$refs.calendarRef?.getApi?.();
-        if (api) {
-          try {
-            api.setOption("resourceAreaWidth", this.resourceAreaWidthCurrent);
-            api.setOption("slotMinWidth", this.slotMinWidthCurrent);
-            api.setOption("eventMinHeight", this.eventMinHeightCurrent);
-            api.setOption("slotLabelFormat", this.slotLabelFormatCurrent);
-            api.updateSize();
-          } catch (e) {
-            // Calendar not ready
-          }
+        if (!api) return;
+        try {
+          api.setOption("resourceAreaWidth", this.resourceAreaWidthCurrent);
+          api.setOption("slotMinWidth", this.slotMinWidthCurrent);
+          api.setOption("eventMinHeight", this.eventMinHeightCurrent);
+          api.setOption("slotLabelFormat", this.slotLabelFormatCurrent);
+          api.updateSize();
+        } catch (_) {
+          /* calendar not ready */
         }
       });
     },
@@ -592,9 +594,13 @@ export default {
             // Calendar API not ready yet
           }
         }
+        this.observeCalendarPane();
+        this.updateCalendarDensity();
       } catch (error) {
         console.error("❌ Error fetching crews data:", error);
         this.showFullCalendar = true;
+        await this.$nextTick();
+        this.observeCalendarPane();
         Swal.fire({
           icon: "error",
           title: "Error loading crews",
@@ -848,6 +854,57 @@ export default {
         this.resizeObserver.disconnect();
         this.resizeObserver = null;
       }
+      if (this.paneResizeObserver) {
+        this.paneResizeObserver.disconnect();
+        this.paneResizeObserver = null;
+      }
+      if (this.paneResizeRaf) {
+        cancelAnimationFrame(this.paneResizeRaf);
+        this.paneResizeRaf = 0;
+      }
+    },
+
+    /**
+     * PC/Laptop: sidebar collapse changes pane size without a window resize.
+     * Only refresh FullCalendar metrics — keep fixed column widths + horizontal scroll.
+     */
+    observeCalendarPane() {
+      if (typeof ResizeObserver === "undefined") return;
+      const pane = this.$refs.schedulePane;
+      if (!pane) return;
+
+      if (this.paneResizeObserver) {
+        this.paneResizeObserver.disconnect();
+        this.paneResizeObserver = null;
+      }
+
+      let lastWidth = Math.round(pane.clientWidth);
+      this.paneResizeObserver = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        const nextWidth = Math.round(entry.contentRect.width);
+        if (Math.abs(nextWidth - lastWidth) < 2) return;
+        lastWidth = nextWidth;
+        if (this.paneResizeRaf) cancelAnimationFrame(this.paneResizeRaf);
+        this.paneResizeRaf = requestAnimationFrame(() => {
+          this.paneResizeRaf = requestAnimationFrame(() => {
+            this.paneResizeRaf = 0;
+            try {
+              this.$refs.calendarRef?.getApi?.()?.updateSize?.();
+            } catch (_) {
+              /* calendar not ready */
+            }
+          });
+        });
+      });
+      this.paneResizeObserver.observe(pane);
+      this.$nextTick(() => {
+        try {
+          this.$refs.calendarRef?.getApi?.()?.updateSize?.();
+        } catch (_) {
+          /* ignore */
+        }
+      });
     },
 
     async publishAllDrafts() {
@@ -989,9 +1046,30 @@ export default {
 }
 
 .jr-schedule__jump {
-  min-width: 10.5rem;
-  max-width: 12.5rem;
-  flex: 1 1 10.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 14rem;
+  max-width: 18rem;
+  flex: 0 1 16rem;
+}
+
+.jr-schedule__jump-label {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-jr-muted, #4b5563);
+  line-height: 1.2;
+}
+
+.jr-schedule__jump :deep(.p-datepicker),
+.jr-schedule__jump :deep(.jr-control) {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .jr-schedule__excel-icon,
@@ -1064,6 +1142,14 @@ export default {
 .jr-schedule__pane :deep(.fc),
 .jr-schedule__pane :deep(.fc-view-harness) {
   height: 100% !important;
+}
+
+/* Desktop/laptop: keep FC horizontal scroll for fixed day columns. */
+@media (min-width: 992px) {
+  .jr-schedule__pane :deep(.fc-scroller),
+  .jr-schedule__pane :deep(.fc-scrollgrid-section-body .fc-scroller) {
+    overflow-x: auto !important;
+  }
 }
 
 .jr-schedule__pane :deep(.jr-schedule-event-card--draft),
