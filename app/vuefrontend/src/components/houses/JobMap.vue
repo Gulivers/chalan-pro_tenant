@@ -1,11 +1,11 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Communities Map" />
+    <JRPageHeader :title="$t('parties.communitiesMap')" />
 
     <div class="jr-job-map__filters">
       <JRField
         v-slot="{ describedby }"
-        label="First community"
+        :label="$t('parties.firstCommunity')"
         inputId="jr-map-first">
         <JRSelect
           v-model="firstCommunityId"
@@ -13,7 +13,7 @@
           :options="optionsExcept(secondCommunityId)"
           optionLabel="name"
           optionValue="id"
-          placeholder="Select a community"
+          :placeholder="$t('parties.selectACommunity')"
           filter
           showClear
           :disabled="loading || loadError"
@@ -21,7 +21,7 @@
       </JRField>
       <JRField
         v-slot="{ describedby }"
-        label="Second community"
+        :label="$t('parties.secondCommunity')"
         inputId="jr-map-second">
         <JRSelect
           v-model="secondCommunityId"
@@ -29,7 +29,7 @@
           :options="optionsExcept(firstCommunityId)"
           optionLabel="name"
           optionValue="id"
-          placeholder="Select a community"
+          :placeholder="$t('parties.selectACommunity')"
           filter
           showClear
           :disabled="loading || loadError"
@@ -38,10 +38,10 @@
     </div>
 
     <p v-if="loading" class="jr-job-map__status" role="status">
-      Loading communities…
+      {{ $t("parties.loadingCommunities") }}
     </p>
     <p v-else-if="loadError" class="jr-job-map__status" role="alert">
-      Could not load communities. Refresh the page and try again.
+      {{ $t("parties.loadCommunitiesError") }}
     </p>
     <p
       v-else

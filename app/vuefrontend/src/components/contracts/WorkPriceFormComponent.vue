@@ -3,24 +3,24 @@
     <JRPageHeader :title="pageTitle">
       <template v-if="canEditFromView" #actions>
         <JRButton variant="primary" size="sm" @click="goToEdit">
-          Edit piece work price
+          {{ $t('workPrices.editPrice') }}
         </JRButton>
       </template>
     </JRPageHeader>
 
     <form class="jr-workprice-form" @submit.prevent="createOrUpdatePrice" novalidate>
-      <JRSection title="Details">
+      <JRSection :title="$t('workPrices.details')">
         <div class="jr-form-grid">
           <JRField
             v-slot="{ describedby, invalid }"
-            label="Name"
+            :label="$t('workPrices.name')"
             required
             inputId="workprice-name"
             :error="fieldErrors.name">
             <JRInput
               inputId="workprice-name"
               v-model="newPrice.name"
-              placeholder="Enter description"
+              :placeholder="$t('workPrices.enterDescription')"
               :disabled="isReadOnly"
               :invalid="invalid"
               :ariaDescribedby="describedby" />
@@ -28,7 +28,7 @@
 
           <JRField
             v-slot="{ describedby, invalid }"
-            label="Trim"
+            :label="$t('workPrices.trim')"
             inputId="workprice-trim"
             :error="fieldErrors.trim"
             class="jr-workprice-form__money">
@@ -49,7 +49,7 @@
 
           <JRField
             v-slot="{ describedby, invalid }"
-            label="Rough"
+            :label="$t('workPrices.rough')"
             inputId="workprice-rough"
             :error="fieldErrors.rough"
             class="jr-workprice-form__money">
@@ -70,7 +70,7 @@
 
           <JRField
             v-slot="{ describedby, invalid }"
-            label="Unit Price Type"
+            :label="$t('workPrices.unitPriceType')"
             required
             inputId="workprice-unit"
             :error="fieldErrors.unit_price">
@@ -80,7 +80,7 @@
               :options="unitPriceOptions"
               optionLabel="label"
               optionValue="value"
-              placeholder="Select unit price type"
+              :placeholder="$t('workPrices.selectUnitPriceType')"
               :disabled="isReadOnly"
               :invalid="invalid"
               :ariaDescribedby="describedby" />
@@ -88,7 +88,7 @@
         </div>
       </JRSection>
 
-      <JRSection title="Builders">
+      <JRSection :title="$t('workPrices.builders')">
         <p
           v-if="fieldErrors.builders"
           id="workprice-builders-error"
@@ -99,15 +99,15 @@
         <div class="jr-workprice-form__toolbar">
           <div class="jr-workprice-form__search">
             <label class="jr-sr-only" for="workprice-builder-filter">
-              Filter builders
+              {{ $t('workPrices.filterBuilders') }}
             </label>
             <JRInput
               inputId="workprice-builder-filter"
               v-model="builderFilter"
               type="search"
-              placeholder="Filter builders..."
+              :placeholder="$t('workPrices.filterBuildersPlaceholder')"
               autocomplete="off"
-              :disabled="isReadOnly || buildersLoading" />
+              :disabled="isReadOnly" />
           </div>
           <div v-if="!isReadOnly" class="jr-workprice-form__bulk">
             <JRButton
@@ -116,7 +116,7 @@
               size="sm"
               :disabled="buildersLoading || !filteredBuilders.length"
               @click="selectAll">
-              Select All
+              {{ $t('workPrices.selectAll') }}
             </JRButton>
             <JRButton
               type="button"
@@ -124,13 +124,13 @@
               size="sm"
               :disabled="buildersLoading || !selectedIds.length"
               @click="clearAll">
-              Clear
+              {{ $t('workPrices.clear') }}
             </JRButton>
           </div>
         </div>
 
         <p v-if="buildersLoading" class="jr-workprice-form__status" role="status">
-          Loading builders…
+          {{ $t('workPrices.loadingBuilders') }}
         </p>
 
         <div
@@ -159,14 +159,14 @@
       <div class="jr-workprice-form__actions">
         <template v-if="!isReadOnly">
           <JRButton type="submit" variant="primary" :disabled="saving">
-            {{ saving ? "Saving..." : "Save" }}
+            {{ saving ? $t('common.saving') : $t('common.save') }}
           </JRButton>
           <JRButton type="button" variant="secondary" :disabled="saving" @click="goList">
-            Cancel
+            {{ $t('common.cancel') }}
           </JRButton>
         </template>
         <JRButton v-else type="button" variant="secondary" @click="goList">
-          Back to list
+          {{ $t('common.backToList') }}
         </JRButton>
       </div>
     </form>

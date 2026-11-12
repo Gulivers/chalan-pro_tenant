@@ -38,10 +38,10 @@
       <div class="jr-form-grid">
         <JRField
           v-slot="{ describedby, invalid }"
-          label="Product"
+          :label="$t('inventory.product')"
           required
           inputId="serialized-product"
-          hint="Product with SERIALIZED tracking (equipment/tool)."
+          :hint="$t('inventory.hintSerializedProduct')"
           :error="fieldErrors.product">
           <JRInput
             v-if="id"
@@ -56,7 +56,7 @@
             :options="productOptions"
             optionLabel="label"
             optionValue="id"
-            placeholder="Select product"
+            :placeholder="$t('inventory.selectProduct')"
             :disabled="submitting"
             :invalid="invalid"
             :required="true"
@@ -68,7 +68,7 @@
 
         <JRField
           v-slot="{ describedby }"
-          label="Serial Number"
+          :label="$t('inventory.serialNumber')"
           inputId="serialized-asset-tag"
           :hint="serialHint"
           :error="fieldErrors.asset_tag">
@@ -76,17 +76,17 @@
             inputId="serialized-asset-tag"
             v-model="form.asset_tag"
             maxlength="100"
-            placeholder="e.g. LQCH020233"
+            :placeholder="$t('inventory.serialNumberPlaceholder')"
             disabled
             :ariaDescribedby="describedby" />
         </JRField>
 
         <JRField
           v-slot="{ describedby, invalid }"
-          label="Current warehouse"
+          :label="$t('inventory.currentWarehouse')"
           required
           inputId="serialized-warehouse"
-          hint="Warehouse where the equipment is located."
+          :hint="$t('inventory.hintWarehouseLocated')"
           :error="fieldErrors.current_warehouse">
           <JRInput
             v-if="id"
@@ -101,7 +101,7 @@
             :options="warehouses"
             optionLabel="name"
             optionValue="id"
-            placeholder="Select warehouse"
+            :placeholder="$t('inventory.selectWarehouse')"
             :disabled="submitting"
             :invalid="invalid"
             :required="true"
@@ -113,7 +113,7 @@
 
         <JRField
           v-slot="{ describedby }"
-          label="Document"
+          :label="$t('inventory.document')"
           inputId="serialized-document">
           <JRInput
             inputId="serialized-document"
@@ -124,7 +124,7 @@
 
         <JRField
           v-slot="{ describedby }"
-          label="Document line"
+          :label="$t('inventory.documentLine')"
           inputId="serialized-document-line">
           <JRInput
             inputId="serialized-document-line"
@@ -135,7 +135,7 @@
 
         <JRField
           v-slot="{ describedby, invalid }"
-          label="Status"
+          :label="$t('common.status')"
           required
           inputId="serialized-status"
           :error="fieldErrors.status">
@@ -145,7 +145,7 @@
             :options="statusOptions"
             optionLabel="label"
             optionValue="value"
-            placeholder="Select status"
+            :placeholder="$t('inventory.selectStatus')"
             :disabled="isViewMode || submitting"
             :invalid="invalid"
             :required="true"
@@ -155,7 +155,7 @@
 
         <JRField
           v-slot="{ describedby, invalid }"
-          label="Condition"
+          :label="$t('inventory.colCondition')"
           required
           inputId="serialized-condition"
           :error="fieldErrors.condition">
@@ -165,7 +165,7 @@
             :options="conditionOptions"
             optionLabel="label"
             optionValue="value"
-            placeholder="Select condition"
+            :placeholder="$t('inventory.selectCondition')"
             :disabled="isViewMode || submitting"
             :invalid="invalid"
             :required="true"
@@ -175,7 +175,7 @@
 
         <JRField
           v-slot="{ describedby }"
-          label="Purchase date"
+          :label="$t('inventory.purchaseDate')"
           inputId="serialized-purchase-date"
           :error="fieldErrors.purchase_date">
           <JRInput
@@ -189,14 +189,14 @@
         <JRField
           class="jr-serialized-form__notes"
           v-slot="{ describedby, invalid }"
-          label="Notes"
+          :label="$t('inventory.notes')"
           inputId="serialized-notes"
           :error="fieldErrors.notes">
           <JRTextarea
             inputId="serialized-notes"
             :modelValue="form.notes"
             rows="7"
-            placeholder="Notes here..."
+            :placeholder="$t('inventory.notesPlaceholder')"
             :disabled="isViewMode || submitting"
             :invalid="invalid"
             :ariaDescribedby="describedby"
@@ -214,20 +214,20 @@
           type="submit"
           variant="primary"
           :disabled="submitting">
-          {{ submitting ? "Saving..." : "Save" }}
+          {{ submitting ? $t("common.saving") : $t("common.save") }}
         </JRButton>
         <JRButton
           type="button"
           variant="secondary"
           :disabled="submitting"
           @click="goList">
-          {{ isViewMode ? "Back to list" : "Cancel" }}
+          {{ isViewMode ? $t("common.backToList") : $t("common.cancel") }}
         </JRButton>
       </div>
 
       <p class="jr-serialized-form__required-note">
         <span class="jr-serialized-form__required-mark" aria-hidden="true">*</span>
-        Indicates required fields.
+        {{ $t("common.requiredFieldsNote") }}
       </p>
     </form>
   </JRPage>
@@ -237,6 +237,7 @@
 import axios from "axios";
 import { onMounted, ref, computed, getCurrentInstance } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import {
   JRPage,
   JRPageHeader,
@@ -248,6 +249,7 @@ import {
 } from "@ui";
 
 const { proxy } = getCurrentInstance();
+const { t } = useI18n({ useScope: "global" });
 const route = useRoute();
 const router = useRouter();
 const id = route.params.id;
@@ -294,21 +296,19 @@ const form = ref({
 });
 
 const formTitle = computed(() => {
-  if (isViewMode.value) return "View Serialized Item";
-  if (isEditMode.value) return "Edit Serialized Item";
-  return "Add Serialized Item";
+  if (isViewMode.value) return t("inventory.viewSerializedItemTitle");
+  if (isEditMode.value) return t("inventory.editSerializedItemTitle");
+  return t("inventory.addSerializedItemTitle");
 });
 
 const formDescription = computed(() => {
-  if (isViewMode.value) return "Review equipment status and location details.";
-  if (isEditMode.value) return "Update status, condition, and notes.";
-  return "Create a serialized equipment unit.";
+  if (isViewMode.value) return t("inventory.formDescView");
+  if (isEditMode.value) return t("inventory.formDescEdit");
+  return t("inventory.formDescCreate");
 });
 
 const serialHint = computed(() =>
-  id
-    ? "Unique serial; cannot be changed."
-    : "Assigned when the item is created from a purchase."
+  id ? t("inventory.hintSerialUnique") : t("inventory.hintSerialAssigned")
 );
 
 const productOptions = computed(() =>

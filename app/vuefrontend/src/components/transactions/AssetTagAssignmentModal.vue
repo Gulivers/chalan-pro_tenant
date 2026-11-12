@@ -71,7 +71,7 @@
                   <JRInput
                     :inputId="`asset-tag-${idx}`"
                     :modelValue="item._asset_tag"
-                    placeholder="Optional"
+                    :placeholder="$t('common.optional')"
                     :invalid="item._validation === 'invalid'"
                     @update:modelValue="
                       (v) => {
@@ -111,7 +111,7 @@
                 <JRInput
                   :inputId="`asset-notes-${idx}`"
                   :modelValue="item._notes"
-                  placeholder="Notes"
+                  :placeholder="$t('common.notes')"
                   @update:modelValue="
                     (v) => {
                       item._notes = (v || '').trim();

@@ -17,8 +17,8 @@
     </p>
 
     <JRField
-      label="Apply to inventory"
-      hint="Use a .xlsx file from the template. This can overwrite existing sale prices.">
+      :label="$t('inventory.applyToInventory')"
+      :hint="$t('inventory.bulkExcelFileHint')">
       <FileUpload
         ref="fileUpload"
         class="jr-bulk-excel__upload"
@@ -28,7 +28,7 @@
         :auto="false"
         customUpload
         :disabled="busy || optionsLoading"
-        chooseLabel="Choose .xlsx"
+        :chooseLabel="$t('inventory.chooseXlsx')"
         :chooseButtonProps="{ fluid: true, class: 'p-button p-component jr-button' }"
         @select="onFileSelect" />
     </JRField>
@@ -45,7 +45,7 @@
         width="20"
         height="20"
         class="jr-bulk-excel__excel-icon" />
-      Download Excel template
+      {{ $t("inventory.downloadExcelTemplate") }}
     </JRButton>
   </div>
 </template>

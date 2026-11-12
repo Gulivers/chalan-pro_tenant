@@ -2,7 +2,7 @@
   <div class="jr-bjh jr-bjh-grid" :class="{ 'jr-bjh--stacked': stacked }">
     <JRField
       v-slot="{ describedby, invalid }"
-      label="Builder"
+      :label="$t('parties.colBuilder')"
       required
       inputId="bjh-builder">
       <JRSelectAddon
@@ -11,7 +11,7 @@
         :options="builders"
         optionLabel="name"
         optionValue="id"
-        placeholder="Select Builder"
+        :placeholder="$t('parties.selectBuilder')"
         filter
         showClear
         :disabled="!isEditing"
@@ -21,15 +21,15 @@
         :showEdit="isEditing && !!builderValue"
         :addDisabled="!isEditing"
         :editDisabled="!isEditing || !builderValue"
-        addLabel="Add a new party to the system"
-        editLabel="Edit the currently selected party"
+        :addLabel="$t('parties.addParty')"
+        :editLabel="$t('parties.editParty')"
         @add="openBuilderDialog('add')"
         @edit="openBuilderDialog('edit')" />
     </JRField>
 
     <JRField
       v-slot="{ describedby, invalid }"
-      label="Community"
+      :label="$t('parties.colCommunity')"
       required
       inputId="bjh-job">
       <JRSelectAddon
@@ -38,7 +38,7 @@
         :options="filteredJobs"
         optionLabel="name"
         optionValue="id"
-        placeholder="Select Community"
+        :placeholder="$t('parties.selectCommunity')"
         filter
         showClear
         :disabled="!isEditing || !builderValue"
@@ -48,19 +48,19 @@
         :showEdit="isEditing && !!jobValue"
         :addDisabled="!isEditing"
         :editDisabled="!isEditing || !jobValue"
-        addLabel="Add a new community"
-        editLabel="Edit the currently selected community"
+        :addLabel="$t('parties.addCommunity')"
+        :editLabel="$t('parties.editCommunity')"
         @add="openJobDialog('add')"
         @edit="openJobDialog('edit')" />
     </JRField>
 
     <JRField
       v-slot="{ describedby, invalid }"
-      label="House Model"
+      :label="$t('parties.houseModel')"
       inputId="bjh-house-model"
       :hint="
         isEditing && jobValue
-          ? 'Filtered by the selected Community.'
+          ? $t('parties.hintFilteredByCommunity')
           : ''
       ">
       <JRSelectAddon
@@ -69,7 +69,7 @@
         :options="filteredHouses"
         optionLabel="name"
         optionValue="id"
-        placeholder="Select House Model"
+        :placeholder="$t('parties.selectHouseModel')"
         filter
         showClear
         :disabled="!isEditing || !jobValue"
@@ -79,8 +79,8 @@
         :showEdit="isEditing && !!houseModelValue"
         :addDisabled="!isEditing"
         :editDisabled="!isEditing || !houseModelValue"
-        addLabel="Add a new house model"
-        editLabel="Edit the currently selected house model"
+        :addLabel="$t('parties.addHouseModel')"
+        :editLabel="$t('parties.editHouseModel')"
         @add="openHouseDialog('add')"
         @edit="openHouseDialog('edit')" />
     </JRField>

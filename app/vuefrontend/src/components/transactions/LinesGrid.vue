@@ -247,10 +247,10 @@
                     :options="optionsForProduct(row)"
                     optionLabel="label"
                     optionValue="value"
-                    placeholder="Search product…"
+                    :placeholder="$t('transactions.lines.searchProductPlaceholder')"
                     filter
-                    filterPlaceholder="Type at least 2 characters…"
-                    emptyFilterMessage="Type at least 2 characters to search…"
+                    :filterPlaceholder="$t('transactions.lines.filterMinChars')"
+                    :emptyFilterMessage="$t('transactions.lines.emptyFilterMessage')"
                     :loading="!!loading.products[idx]"
                     :disabled="disabled"
                     :invalid="!!row._errors?.product"
@@ -307,7 +307,7 @@
                     :options="unitsOptions"
                     optionLabel="label"
                     optionValue="value"
-                    placeholder="Unit…"
+                    :placeholder="$t('transactions.lines.unitPlaceholder')"
                     filter
                     :disabled="disabled"
                     :invalid="!!row._errors?.unit"
@@ -375,7 +375,7 @@
                     :options="warehousesOptions"
                     optionLabel="label"
                     optionValue="value"
-                    placeholder="Warehouse…"
+                    :placeholder="$t('transactions.lines.warehousePlaceholder')"
                     filter
                     showClear
                     :disabled="disabled"
@@ -394,7 +394,7 @@
                     :options="priceTypesOptions"
                     optionLabel="label"
                     optionValue="value"
-                    placeholder="Price type…"
+                    :placeholder="$t('transactions.lines.priceTypePlaceholder')"
                     filter
                     showClear
                     :disabled="disabled"
@@ -442,19 +442,23 @@
       <p
         v-if="hideToolbar && linesLocal.length"
         class="jr-lines__count jr-lines__count--footer">
-        Rows: {{ linesLocal.length }}
+        {{ $t("transactions.lines.rowsCount", { count: linesLocal.length }) }}
       </p>
     </div>
 
     <JRDrawer
       class="jr-lines-drawer"
       :visible="sheetOpen"
-      :header="disabled ? 'Line' : 'Edit line'"
+      :header="
+        disabled
+          ? $t('transactions.lines.sheetHeaderLine')
+          : $t('transactions.lines.sheetHeaderEdit')
+      "
       position="right"
       @update:visible="onSheetVisible">
       <div v-if="sheetRow" class="jr-lines-sheet">
         <JRField
-          label="Product"
+          :label="$t('transactions.lines.colProduct')"
           :inputId="`sheet-product`"
           required
           :error="rowErrorText(sheetRow._errors?.product)">
@@ -465,10 +469,10 @@
             :options="optionsForProduct(sheetRow)"
             optionLabel="label"
             optionValue="value"
-            placeholder="Search product…"
+            :placeholder="$t('transactions.lines.searchProductPlaceholder')"
             filter
-            filterPlaceholder="Type at least 2 characters…"
-            emptyFilterMessage="Type at least 2 characters to search…"
+            :filterPlaceholder="$t('transactions.lines.filterMinChars')"
+            :emptyFilterMessage="$t('transactions.lines.emptyFilterMessage')"
             :loading="sheetIndex != null && !!loading.products[sheetIndex]"
             :disabled="disabled"
             :invalid="!!sheetRow._errors?.product"
@@ -492,7 +496,7 @@
 
         <div class="jr-lines-sheet__grid">
           <JRField
-            label="Qty"
+            :label="$t('transactions.lines.colQty')"
             inputId="sheet-qty"
             :error="rowErrorText(sheetRow._errors?.quantity)">
             <div
@@ -517,7 +521,7 @@
             </div>
           </JRField>
           <JRField
-            label="Unit"
+            :label="$t('transactions.lines.colUnit')"
             inputId="sheet-unit"
             :error="rowErrorText(sheetRow._errors?.unit)">
             <JRSelect
@@ -526,7 +530,7 @@
               :options="unitsOptions"
               optionLabel="label"
               optionValue="value"
-              placeholder="Unit…"
+              :placeholder="$t('transactions.lines.unitPlaceholder')"
               filter
               :disabled="disabled"
               @update:modelValue="
@@ -534,7 +538,7 @@
               " />
           </JRField>
           <JRField
-            label="Unit Price"
+            :label="$t('transactions.lines.colUnitPrice')"
             inputId="sheet-unit-price"
             :error="rowErrorText(sheetRow._errors?.unit_price)">
             <JRInput
@@ -555,7 +559,7 @@
                 }
               " />
           </JRField>
-          <JRField label="Disc %" inputId="sheet-disc">
+          <JRField :label="$t('transactions.lines.colDisc')" inputId="sheet-disc">
             <JRInput
               inputId="sheet-disc"
               type="number"
@@ -578,7 +582,7 @@
         </div>
 
         <JRField
-          label="Warehouse"
+          :label="$t('transactions.lines.colWarehouse')"
           inputId="sheet-warehouse"
           :error="rowErrorText(sheetRow._errors?.warehouse)">
           <JRSelect
@@ -587,20 +591,20 @@
             :options="warehousesOptions"
             optionLabel="label"
             optionValue="value"
-            placeholder="Warehouse…"
+            :placeholder="$t('transactions.lines.warehousePlaceholder')"
             filter
             showClear
             :disabled="disabled" />
         </JRField>
 
-        <JRField label="Price Type" inputId="sheet-price-type">
+        <JRField :label="$t('transactions.lines.colPriceType')" inputId="sheet-price-type">
           <JRSelect
             inputId="sheet-price-type"
             v-model="sheetRow.price_type"
             :options="priceTypesOptions"
             optionLabel="label"
             optionValue="value"
-            placeholder="Price type…"
+            :placeholder="$t('transactions.lines.priceTypePlaceholder')"
             filter
             showClear
             :disabled="disabled"
@@ -616,7 +620,7 @@
 
         <JRField
           v-if="documentTypeIsSales"
-          label="Margin %"
+          :label="$t('transactions.lines.colMargin')"
           inputId="sheet-margin">
           <JRInput
             inputId="sheet-margin"
@@ -637,14 +641,14 @@
         </JRField>
 
         <p class="jr-lines-sheet__total">
-          Line total:
+          {{ $t("transactions.lines.sheetLineTotal") }}
           <strong>{{ currency(lineTotalAfterDiscount(sheetRow)) }}</strong>
         </p>
       </div>
       <template #footer>
         <div class="jr-lines-sheet__footer">
           <JRButton type="button" variant="primary" @click="closeSheet">
-            Done
+            {{ $t("common.done") }}
           </JRButton>
           <JRRowActions
             v-if="!disabled && sheetIndex != null"
@@ -658,9 +662,9 @@
 
     <JRDialog
       :visible="deleteDialogVisible"
-      header="Delete line"
-      message="Delete this line?"
-      confirmLabel="Delete"
+      :header="$t('transactions.lines.deleteDialogHeader')"
+      :message="$t('transactions.lines.deleteDialogMessage')"
+      :confirmLabel="$t('common.delete')"
       confirmVariant="danger"
       @update:visible="onDeleteVisible"
       @confirm="confirmPendingDelete" />

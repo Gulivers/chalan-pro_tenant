@@ -6,7 +6,7 @@
       :options="options"
       optionLabel="name"
       optionValue="id"
-      placeholder="Search party..."
+      :placeholder="$t('parties.searchPlaceholder')"
       filter
       showClear
       :disabled="disabled"
@@ -17,8 +17,8 @@
       :showEdit="!!selectedValue"
       :addDisabled="disabled || !canAdd"
       :editDisabled="disabled || !canEdit"
-      addLabel="Add a new party to the system"
-      editLabel="Edit the currently selected party"
+      :addLabel="$t('parties.addParty')"
+      :editLabel="$t('parties.editParty')"
       @update:modelValue="onSelect"
       @show="onShow"
       @add="openDialog('add')"

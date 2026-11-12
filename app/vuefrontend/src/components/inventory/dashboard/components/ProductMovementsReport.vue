@@ -25,14 +25,14 @@
           />
         </JRField>
 
-        <JRField v-slot="{ describedby, invalid }" label="Document Type" inputId="dash-mov-doctype">
+        <JRField v-slot="{ describedby, invalid }" :label="$t('transactions.colDocType')" inputId="dash-mov-doctype">
           <JRSelect
             inputId="dash-mov-doctype"
             v-model="filters.documentType"
             :options="documentTypeOptions"
             optionLabel="label"
             optionValue="value"
-            placeholder="All"
+            :placeholder="$t('common.all')"
             showClear
             :invalid="invalid"
             :ariaDescribedby="describedby"
@@ -40,14 +40,14 @@
           />
         </JRField>
 
-        <JRField v-slot="{ describedby, invalid }" label="Warehouse" inputId="dash-mov-warehouse">
+        <JRField v-slot="{ describedby, invalid }" :label="$t('inventory.colWarehouse')" inputId="dash-mov-warehouse">
           <JRSelect
             inputId="dash-mov-warehouse"
             v-model="filters.warehouseId"
             :options="warehouseOptions"
             optionLabel="label"
             optionValue="value"
-            placeholder="All"
+            :placeholder="$t('common.all')"
             showClear
             :invalid="invalid"
             :ariaDescribedby="describedby"
@@ -57,26 +57,26 @@
       </div>
 
       <div class="jr-dash-filters__actions">
-        <JRButton variant="primary" size="sm" @click="applyFilters">Search</JRButton>
-        <JRButton variant="secondary" size="sm" @click="resetFilters">Clear</JRButton>
+        <JRButton variant="primary" size="sm" @click="applyFilters">{{ $t("common.search") }}</JRButton>
+        <JRButton variant="secondary" size="sm" @click="resetFilters">{{ $t("common.clear") }}</JRButton>
       </div>
     </div>
 
     <div class="jr-dash-results">
       <div class="jr-dash-results__header">
-        <h4 class="jr-dash-results__title">Product Movements</h4>
+        <h4 class="jr-dash-results__title">{{ $t("reports.reportsExports") }}</h4>
         <JRButton variant="secondary" size="sm" :disabled="loading" @click="exportToExcel">
           <img src="@/assets/img/microsoft-excel-icon.svg" alt="" width="16" height="16" class="excel-icon" />
-          Download Excel
+          {{ $t("schedule.downloadExcel") }}
         </JRButton>
       </div>
 
-      <div v-if="loading" class="jr-dash-state">Loading…</div>
+      <div v-if="loading" class="jr-dash-state">{{ $t("common.loading") }}</div>
 
       <JREmptyState
         v-else-if="movements.length === 0"
-        title="No movements found"
-        description="No movements found with the applied filters"
+        :title="$t('inventory.noMovementsFound')"
+        :description="$t('inventory.noMovementsFoundDesc')"
       />
 
       <div v-else class="jr-dash-table-wrap">
