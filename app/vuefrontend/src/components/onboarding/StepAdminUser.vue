@@ -34,7 +34,6 @@
             :aria-describedby="describedby || undefined"
             maxlength="254"
             autocomplete="email"
-            :placeholder="t('onboarding.admin.emailPlaceholder')"
             @blur="validateField('email')" />
         </template>
       </JRField>
