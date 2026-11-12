@@ -18,6 +18,7 @@
         </template>
       </JRField>
 
+      <!-- TEMP: onboarding limited to Electric; restore Trade select when multi-trade opens.
       <JRField
         label="Trade / business type"
         required
@@ -36,6 +37,7 @@
             @update:modelValue="validateField('business_type')" />
         </template>
       </JRField>
+      -->
 
       <UploadLogo v-model="localData.logo" :error="errors.logo || ''" />
 
@@ -113,6 +115,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'validate'])
 
+/* TEMP: restore with Trade / business type JRField above.
 const businessTypeOptions = [
   { value: 'electric', label: 'Electric' },
   { value: 'air_conditioning', label: 'Air Conditioning' },
@@ -124,6 +127,7 @@ const businessTypeOptions = [
   },
   { value: 'general', label: 'General (Other)' },
 ]
+*/
 
 const monthlyOperationsOptions = [
   { value: '0-10', label: '0–10 homes per month' },
@@ -135,7 +139,8 @@ const monthlyOperationsOptions = [
 
 const localData = reactive({
   business_name: props.modelValue.business_name || '',
-  business_type: props.modelValue.business_type || '',
+  // TEMP default: Electric-only onboarding (client_type still editable in Django admin).
+  business_type: props.modelValue.business_type || 'electric',
   logo: props.modelValue.logo || null,
   address: props.modelValue.address || '',
   monthly_operations: props.modelValue.monthly_operations || '',
