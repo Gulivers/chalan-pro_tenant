@@ -97,13 +97,18 @@ def unsign_media_token(token: str) -> tuple[str, str]:
     return str(schema), str(path)
 
 
-def build_signed_media_url(request, file_field_or_name) -> Optional[str]:
+def build_signed_media_url(
+    request,
+    file_field_or_name,
+    *,
+    schema_name: Optional[str] = None,
+) -> Optional[str]:
     """URL absoluta firmada para <img>/fetch sin Bearer."""
     rel = media_relative_name(file_field_or_name)
     if not rel:
         return None
     try:
-        token = sign_media_path(rel)
+        token = sign_media_path(rel, schema_name=schema_name)
     except ValueError:
         return None
     path = f'/media/s/{token}/'

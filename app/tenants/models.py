@@ -282,7 +282,11 @@ class Tenant(TenantMixin):
         return f"{self.name} ({self.schema_name})"
     
     def get_logo_url(self, request=None):
-        """URL firmada del logo (vida corta) o None si no hay archivo."""
+        """URL firmada del logo (vida corta) o None si no hay archivo.
+
+        Tenant.logo vive en el schema público; firma siempre con public para que
+        el Admin global y hosts públicos puedan servir el preview.
+        """
         if not self.logo:
             return None
         try:
@@ -290,9 +294,14 @@ class Tenant(TenantMixin):
                 return None
         except Exception:
             return None
+        from django_tenants.utils import get_public_schema_name
         from project.media_access import build_signed_media_url
 
-        return build_signed_media_url(request, self.logo)
+        return build_signed_media_url(
+            request,
+            self.logo,
+            schema_name=get_public_schema_name(),
+        )
 
 
 class OnboardingPendingRegistration(models.Model):
