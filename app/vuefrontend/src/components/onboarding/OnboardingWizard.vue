@@ -84,31 +84,6 @@
           </header>
 
           <div class="jr-onboard__panel">
-            <!-- Keep email visible on every step; on Admin the same field also lives in StepAdminUser. -->
-            <div
-              v-if="currentStep !== 2"
-              class="jr-onboard__email">
-              <JRField
-                :label="t('onboarding.admin.workEmail')"
-                required
-                inputId="admin_email_persistent"
-                :hint="t('onboarding.admin.workEmailHint')"
-                :error="stepErrors.adminUser.email || ''">
-                <template #default="{ invalid, describedby }">
-                  <JRInput
-                    inputId="admin_email_persistent"
-                    type="email"
-                    v-model="formData.adminUser.email"
-                    :invalid="invalid"
-                    :aria-describedby="describedby || undefined"
-                    maxlength="254"
-                    autocomplete="email"
-                    :placeholder="t('onboarding.admin.emailPlaceholder')"
-                    @blur="validateEmailField" />
-                </template>
-              </JRField>
-            </div>
-
             <transition name="jr-onboard-fade" mode="out-in">
               <div :key="currentStep" class="jr-onboard__step-panel">
                 <StepCompanyInfo
@@ -186,7 +161,7 @@ import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import Check from "@primeicons/vue/check";
-import { JRButton, JRField, JRInput } from "@ui";
+import { JRButton } from "@ui";
 import LocaleToggle from "@/components/LocaleToggle.vue";
 import StepCompanyInfo from "./StepCompanyInfo.vue";
 import StepAdminUser from "./StepAdminUser.vue";
@@ -373,18 +348,6 @@ const getEmailError = () => {
   if (!email) return t("onboarding.errors.emailRequired");
   if (!emailRegex.test(email)) return t("onboarding.errors.emailInvalid");
   return "";
-};
-
-const validateEmailField = () => {
-  const emailError = getEmailError();
-  if (emailError) {
-    stepErrors.adminUser = { ...stepErrors.adminUser, email: emailError };
-  } else {
-    const next = { ...stepErrors.adminUser };
-    delete next.email;
-    stepErrors.adminUser = next;
-  }
-  return !emailError;
 };
 
 const getStep2Errors = () => {
@@ -777,18 +740,6 @@ const handleFinalSubmit = async (turnstileToken) => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-
-.jr-onboard__email {
-  padding-bottom: 1rem;
-  margin-bottom: 0.25rem;
-  border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
-}
-
-.jr-onboard__email :deep(.jr-control),
-.jr-onboard__email :deep(.p-inputtext) {
-  width: 100%;
-  min-height: 2.75rem;
 }
 
 .jr-onboard__actions {
