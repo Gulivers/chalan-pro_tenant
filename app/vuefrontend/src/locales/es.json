@@ -189,7 +189,7 @@
     "bannerContinue": "Continuar configuración",
     "wizardHeader": "Asistente de configuración inicial",
     "companyLogoAlt": "Logo de la empresa",
-    "welcomeLead": "Bienvenido a JobRhythm{name}. El Asistente de administración te guiará para configurar el sistema para contratistas residenciales. Empieza con inventario, luego maestros esenciales y después tu primer flujo de campo.",
+    "welcomeLead": "Bienvenido a JobRhythm{name}. El Admin Assistant te guiará para configurar el sistema para contratistas residenciales. Empieza con inventario, luego maestros esenciales y después tu primer flujo de campo.",
     "loading": "Cargando configuración…",
     "stepInventory": "Inventario inicial",
     "stepMasters": "Maestros esenciales",

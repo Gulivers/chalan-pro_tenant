@@ -532,7 +532,9 @@ export default {
   align-items: flex-start;
   gap: 0.75rem 1rem;
   width: 100%;
-  padding-bottom: 0.15rem;
+  padding-bottom: 1rem;
+  margin-bottom: 0.15rem;
+  border-bottom: 1px solid var(--color-jr-border);
 }
 
 .jr-setup-wizard__logo {
@@ -551,7 +553,7 @@ export default {
 }
 
 .jr-setup-wizard__brand-name {
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.35rem;
   font-size: 1rem;
   font-weight: 600;
   line-height: 1.3;
@@ -560,8 +562,9 @@ export default {
 
 .jr-setup-wizard__lead {
   margin: 0;
+  width: 100%;
   font-size: 0.875rem;
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--color-jr-muted);
 }
 
