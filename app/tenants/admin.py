@@ -53,23 +53,25 @@ class TenantAdmin(PublicSchemaOnlyAdminMixin, TenantAdminMixin, admin.ModelAdmin
     get_domain.short_description = 'Domain'
 
     def logo_thumbnail(self, obj):
-        if obj.logo:
+        url = obj.get_logo_url() if obj.logo else None
+        if url:
             return format_html(
                 '<img src="{}" width="50" height="50" '
                 'style="object-fit: contain; border-radius: 4px; '
                 'box-shadow: 0 2px 4px rgba(0,0,0,0.1);"/>',
-                obj.logo.url,
+                url,
             )
         return format_html('<span style="color: #999;">No logo</span>')
     logo_thumbnail.short_description = 'Logo'
 
     def logo_preview(self, obj):
-        if obj.logo:
+        url = obj.get_logo_url() if obj.logo else None
+        if url:
             return format_html(
                 '<img src="{}" width="200" '
                 'style="object-fit: contain; border-radius: 8px; '
                 'box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-top: 10px;"/>',
-                obj.logo.url,
+                url,
             )
         return format_html('<span style="color: #999;">No logo uploaded</span>')
     logo_preview.short_description = 'Logo preview'
