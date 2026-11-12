@@ -1,5 +1,5 @@
 <template>
-  <div class="jr-onboard">
+  <div class="jr-onboard jr-pilot">
     <div class="jr-onboard__form-pane">
       <header class="jr-onboard__chrome">
         <router-link
@@ -84,22 +84,25 @@
           </header>
 
           <div class="jr-onboard__panel">
-            <div class="jr-onboard__email">
+            <!-- Keep email visible on every step; on Admin the same field also lives in StepAdminUser. -->
+            <div
+              v-if="currentStep !== 2"
+              class="jr-onboard__email">
               <JRField
                 :label="t('onboarding.admin.workEmail')"
                 required
-                inputId="admin_email"
+                inputId="admin_email_persistent"
                 :hint="t('onboarding.admin.workEmailHint')"
                 :error="stepErrors.adminUser.email || ''">
                 <template #default="{ invalid, describedby }">
                   <JRInput
-                    inputId="admin_email"
+                    inputId="admin_email_persistent"
                     type="email"
                     v-model="formData.adminUser.email"
                     :invalid="invalid"
                     :aria-describedby="describedby || undefined"
                     maxlength="254"
-                    autocomplete="username"
+                    autocomplete="email"
                     :placeholder="t('onboarding.admin.emailPlaceholder')"
                     @blur="validateEmailField" />
                 </template>
@@ -778,7 +781,14 @@ const handleFinalSubmit = async (turnstileToken) => {
 
 .jr-onboard__email {
   padding-bottom: 1rem;
+  margin-bottom: 0.25rem;
   border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
+}
+
+.jr-onboard__email :deep(.jr-control),
+.jr-onboard__email :deep(.p-inputtext) {
+  width: 100%;
+  min-height: 2.75rem;
 }
 
 .jr-onboard__actions {
