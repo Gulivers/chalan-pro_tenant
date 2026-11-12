@@ -84,6 +84,28 @@
           </header>
 
           <div class="jr-onboard__panel">
+            <div class="jr-onboard__email">
+              <JRField
+                :label="t('onboarding.admin.workEmail')"
+                required
+                inputId="admin_email"
+                :hint="t('onboarding.admin.workEmailHint')"
+                :error="stepErrors.adminUser.email || ''">
+                <template #default="{ invalid, describedby }">
+                  <JRInput
+                    inputId="admin_email"
+                    type="email"
+                    v-model="formData.adminUser.email"
+                    :invalid="invalid"
+                    :aria-describedby="describedby || undefined"
+                    maxlength="254"
+                    autocomplete="username"
+                    :placeholder="t('onboarding.admin.emailPlaceholder')"
+                    @blur="validateEmailField" />
+                </template>
+              </JRField>
+            </div>
+
             <transition name="jr-onboard-fade" mode="out-in">
               <div :key="currentStep" class="jr-onboard__step-panel">
                 <StepCompanyInfo
@@ -161,7 +183,7 @@ import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import Check from "@primeicons/vue/check";
-import { JRButton } from "@ui";
+import { JRButton, JRField, JRInput } from "@ui";
 import LocaleToggle from "@/components/LocaleToggle.vue";
 import StepCompanyInfo from "./StepCompanyInfo.vue";
 import StepAdminUser from "./StepAdminUser.vue";
@@ -342,19 +364,34 @@ const validateStep1 = () => {
   return Object.keys(errors).length === 0;
 };
 
+const getEmailError = () => {
+  const email = (formData.adminUser.email || "").trim();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email) return t("onboarding.errors.emailRequired");
+  if (!emailRegex.test(email)) return t("onboarding.errors.emailInvalid");
+  return "";
+};
+
+const validateEmailField = () => {
+  const emailError = getEmailError();
+  if (emailError) {
+    stepErrors.adminUser = { ...stepErrors.adminUser, email: emailError };
+  } else {
+    const next = { ...stepErrors.adminUser };
+    delete next.email;
+    stepErrors.adminUser = next;
+  }
+  return !emailError;
+};
+
 const getStep2Errors = () => {
   const errors = {};
   const name = formData.adminUser.name?.trim() || "";
   if (!name || name.length < 2) {
     errors.name = t("onboarding.errors.adminName");
   }
-  const email = (formData.adminUser.email || "").trim();
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email) {
-    errors.email = t("onboarding.errors.emailRequired");
-  } else if (!emailRegex.test(email)) {
-    errors.email = t("onboarding.errors.emailInvalid");
-  }
+  const emailError = getEmailError();
+  if (emailError) errors.email = emailError;
   const pwd = formData.adminUser.password || "";
   if (!pwd || pwd.length < 8) {
     errors.password = t("onboarding.errors.passwordMin");
@@ -737,6 +774,11 @@ const handleFinalSubmit = async (turnstileToken) => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.jr-onboard__email {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
 }
 
 .jr-onboard__actions {
