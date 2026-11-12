@@ -210,7 +210,8 @@ const debugVerifyUrl = ref("");
 const formData = reactive({
   companyInfo: {
     business_name: "",
-    business_type: "",
+    // TEMP: Electric-only onboarding; restore Trade select when multi-trade opens.
+    business_type: "electric",
     logo: null,
     address: "",
     monthly_operations: "",
@@ -300,10 +301,12 @@ const getStep1Errors = () => {
   if (!bn || bn.length < 3) {
     errors.business_name = "Enter your company name (at least 3 characters).";
   }
-  if (!formData.companyInfo.business_type) {
-    errors.business_type =
-      "Choose the trade that best describes your business.";
-  }
+  // TEMP: business_type fixed to electric in the UI; skip empty-field check.
+  // if (!formData.companyInfo.business_type) {
+  //   errors.business_type =
+  //     "Choose the trade that best describes your business.";
+  // }
+  formData.companyInfo.business_type = "electric";
   if (!formData.companyInfo.monthly_operations) {
     errors.monthly_operations =
       "Select how many jobs or homes you typically handle each month.";
@@ -463,6 +466,8 @@ const loadFromLocalStorage = () => {
       if (data.formData) {
         if (data.formData.companyInfo) {
           Object.assign(formData.companyInfo, data.formData.companyInfo);
+          // TEMP: force Electric while multi-trade onboarding is paused.
+          formData.companyInfo.business_type = "electric";
         }
         if (data.formData.adminUser) {
           Object.assign(formData.adminUser, {
@@ -499,7 +504,7 @@ const handleFinalSubmit = async (turnstileToken) => {
     formData.preferences = normalizeStoredPreferences(formData.preferences);
     const payload = {
       business_name: formData.companyInfo.business_name.trim(),
-      business_type: formData.companyInfo.business_type,
+      business_type: formData.companyInfo.business_type || "electric",
       logo: formData.companyInfo.logo,
       address: formData.companyInfo.address,
       monthly_operations: formData.companyInfo.monthly_operations,
