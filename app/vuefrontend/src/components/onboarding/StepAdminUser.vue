@@ -13,27 +13,9 @@
             :invalid="invalid"
             :aria-describedby="describedby || undefined"
             maxlength="150"
+            autocomplete="name"
             :placeholder="t('onboarding.admin.fullNamePlaceholder')"
             @blur="validateField('name')" />
-        </template>
-      </JRField>
-
-      <JRField
-        :label="t('onboarding.admin.workEmail')"
-        required
-        inputId="admin_email"
-        :hint="t('onboarding.admin.workEmailHint')"
-        :error="errors.email || ''">
-        <template #default="{ invalid, describedby }">
-          <JRInput
-            inputId="admin_email"
-            type="email"
-            v-model="localData.email"
-            :invalid="invalid"
-            :aria-describedby="describedby || undefined"
-            maxlength="254"
-            :placeholder="t('onboarding.admin.emailPlaceholder')"
-            @blur="validateField('email')" />
         </template>
       </JRField>
 
@@ -186,7 +168,6 @@ const emit = defineEmits(['update:modelValue', 'validate'])
 
 const localData = reactive({
   name: props.modelValue.name || '',
-  email: props.modelValue.email || '',
   password: props.modelValue.password || '',
   password_confirm: props.modelValue.password_confirm || '',
 })
@@ -197,7 +178,13 @@ const showPasswordConfirm = ref(false)
 watch(
   localData,
   () => {
-    emit('update:modelValue', { ...localData })
+    // Preserve email owned by the persistent wizard field.
+    emit('update:modelValue', {
+      ...props.modelValue,
+      name: localData.name,
+      password: localData.password,
+      password_confirm: localData.password_confirm,
+    })
   },
   { deep: true }
 )
