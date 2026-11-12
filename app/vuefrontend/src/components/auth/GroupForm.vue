@@ -27,19 +27,19 @@
       </div>
 
       <p v-if="loading" class="jr-user-admin-form__status" role="status">
-        Loading role…
+        {{ $t('permissions.loadingRole') }}
       </p>
 
       <template v-else>
-        <JRSection title="Role">
+        <JRSection :title="$t('permissions.sectionRole')">
           <div class="jr-form-grid jr-form-grid--identity">
             <JRField
               v-slot="{ describedby, invalid }"
               class="jr-user-admin-form__identity-field"
-              label="Name"
+              :label="$t('permissions.roleName')"
               required
               inputId="group-name"
-              hint="Name of this role (Django Group)."
+              :hint="$t('permissions.roleNameHint')"
               :error="fieldErrors.name">
               <JRInput
                 inputId="group-name"
@@ -54,19 +54,19 @@
           </div>
         </JRSection>
 
-        <JRSection title="Permissions">
+        <JRSection :title="$t('permissions.sectionPermissions')">
           <div class="jr-user-admin-form__assignments">
             <p class="jr-user-admin-form__note">
-              Members of this role receive every permission listed on the right.
+              {{ $t("permissions.roleMembersNote") }}
             </p>
             <div class="jr-user-admin-form__pick">
               <DualListPick
                 v-model="permissionLists"
-                source-header="Available permissions"
-                target-header="Chosen permissions"
-                filter-placeholder="Filter"
+                :source-header="$t('permissions.availablePermissions')"
+                :target-header="$t('permissions.chosenPermissions')"
+                :filter-placeholder="$t('common.filter')"
                 :disabled="isReadOnly"
-                hint="Hold Ctrl (Windows) or ⌘ (Mac) to select more than one, then move with the arrows." />
+                :hint="$t('permissions.dualListHint')" />
             </div>
           </div>
         </JRSection>
@@ -76,10 +76,10 @@
             type="submit"
             variant="primary"
             :disabled="isReadOnly || submitting">
-            {{ submitting ? 'Saving…' : groupId ? 'Update' : 'Save' }}
+            {{ submitting ? $t('common.saving') : groupId ? $t('common.update') : $t('common.save') }}
           </JRButton>
           <JRButton type="button" variant="secondary" @click="goBack">
-            {{ isReadOnly ? 'Back to list' : 'Cancel' }}
+            {{ isReadOnly ? $t('common.backToList') : $t('common.cancel') }}
           </JRButton>
           <JRButton
             v-if="groupId && !isReadOnly"
@@ -87,7 +87,7 @@
             variant="danger"
             :disabled="submitting"
             @click="confirmRemove">
-            Delete
+            {{ $t('common.delete') }}
           </JRButton>
         </div>
       </template>

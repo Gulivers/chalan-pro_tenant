@@ -1,56 +1,61 @@
 <template>
   <div class="jr-onboard-review">
     <section class="jr-onboard-review__callout">
-      <h2 class="jr-onboard-review__heading">Your 30-day free trial</h2>
+      <h2 class="jr-onboard-review__heading">
+        {{ t('onboarding.review.trialTitle') }}
+      </h2>
       <p class="jr-onboard-review__text">
-        You start with <strong>full access</strong> to the modules listed below.
-        Connect scheduling, materials, contracts, and field updates so job
-        progress is visible without the usual back-and-forth.
+        {{ t('onboarding.review.trialTextBefore') }}
+        <strong>{{ t('onboarding.review.trialTextStrong') }}</strong>
+        {{ t('onboarding.review.trialTextAfter') }}
       </p>
       <p class="jr-onboard-review__note">
-        Company details and modules can change later in Settings. Billing starts
-        only when you choose a paid plan.
+        {{ t('onboarding.review.trialNote') }}
       </p>
     </section>
 
     <section v-if="landingSelectedPlan" class="jr-onboard-review__block">
-      <h2 class="jr-onboard-review__heading">Selected plan</h2>
+      <h2 class="jr-onboard-review__heading">
+        {{ t('onboarding.review.selectedPlan') }}
+      </h2>
       <p class="jr-onboard-review__plan">{{ landingSelectedPlan }}</p>
       <p class="jr-onboard-review__note">
-        Carried from pricing. You can confirm or change it when you upgrade.
+        {{ t('onboarding.review.selectedPlanNote') }}
       </p>
     </section>
 
     <section class="jr-onboard-review__block">
-      <h2 class="jr-onboard-review__heading">Company</h2>
+      <h2 class="jr-onboard-review__heading">
+        {{ t('onboarding.review.companyHeading') }}
+      </h2>
       <dl class="jr-onboard-review__dl">
         <div class="jr-onboard-review__row">
-          <dt>Company name</dt>
+          <dt>{{ t('onboarding.review.companyName') }}</dt>
           <dd>{{ companyInfo.business_name }}</dd>
         </div>
         <!-- TEMP: still show fixed Electric while multi-trade onboarding is paused. -->
         <div class="jr-onboard-review__row">
-          <dt>Trade / type</dt>
+          <dt>{{ t('onboarding.review.tradeType') }}</dt>
           <dd>{{ getBusinessTypeLabel(companyInfo.business_type || 'electric') }}</dd>
         </div>
         <div v-if="companyInfo.address" class="jr-onboard-review__row">
-          <dt>Address</dt>
+          <dt>{{ t('onboarding.review.address') }}</dt>
           <dd>{{ companyInfo.address }}</dd>
         </div>
         <div class="jr-onboard-review__row">
-          <dt>Monthly job volume</dt>
+          <dt>{{ t('onboarding.review.monthlyVolume') }}</dt>
           <dd>{{ getMonthlyOperationsLabel(companyInfo.monthly_operations) }}</dd>
         </div>
         <div class="jr-onboard-review__row">
-          <dt>Active crews</dt>
+          <dt>{{ t('onboarding.review.activeCrews') }}</dt>
           <dd>{{ companyInfo.crew_count ?? '—' }}</dd>
         </div>
         <div v-if="companyInfo.logo && logoPreview" class="jr-onboard-review__row">
-          <dt>Logo</dt>
+          <dt>{{ t('onboarding.review.logo') }}</dt>
           <dd>
             <img
               :src="logoPreview"
-              alt="Company logo"
+              :alt="t('onboarding.review.logoAlt')"
               class="jr-onboard-review__logo" />
           </dd>
         </div>
@@ -58,43 +63,52 @@
     </section>
 
     <section v-if="recommendedPlan" class="jr-onboard-review__block">
-      <h2 class="jr-onboard-review__heading">Recommended plan (team size)</h2>
+      <h2 class="jr-onboard-review__heading">
+        {{ t('onboarding.review.recommendedHeading') }}
+      </h2>
       <p class="jr-onboard-review__text">
-        Based on active crews, a good fit is often
-        <strong>{{ recommendedPlan }}</strong>. For reference when you
-        subscribe—not a lock-in during trial.
+        {{ t('onboarding.review.recommendedBefore') }}
+        <strong>{{ recommendedPlan }}</strong>{{ t('onboarding.review.recommendedAfter') }}
       </p>
     </section>
 
     <section class="jr-onboard-review__block">
-      <h2 class="jr-onboard-review__heading">Administrator</h2>
+      <h2 class="jr-onboard-review__heading">
+        {{ t('onboarding.review.adminHeading') }}
+      </h2>
       <dl class="jr-onboard-review__dl">
         <div class="jr-onboard-review__row">
-          <dt>Name</dt>
+          <dt>{{ t('onboarding.review.name') }}</dt>
           <dd>{{ adminUser.name }}</dd>
         </div>
         <div class="jr-onboard-review__row">
-          <dt>Email</dt>
+          <dt>{{ t('onboarding.review.email') }}</dt>
           <dd>{{ (adminUser.email || '').trim() }}</dd>
         </div>
         <div class="jr-onboard-review__row">
-          <dt>Password</dt>
+          <dt>{{ t('onboarding.review.password') }}</dt>
           <dd>
             <span class="jr-onboard-review__masked">••••••••</span>
-            <span class="jr-onboard-review__note"> (saved securely)</span>
+            <span class="jr-onboard-review__note">
+              {{ t('onboarding.review.passwordSaved') }}
+            </span>
           </dd>
         </div>
       </dl>
     </section>
 
     <section class="jr-onboard-review__block">
-      <h2 class="jr-onboard-review__heading">Modules included</h2>
+      <h2 class="jr-onboard-review__heading">
+        {{ t('onboarding.review.modulesHeading') }}
+      </h2>
       <ul v-if="preferences.length" class="jr-onboard-review__modules">
         <li v-for="pref in preferences" :key="pref">
           {{ getModuleLabel(pref) }}
         </li>
       </ul>
-      <p v-else class="jr-onboard-review__note">No modules selected</p>
+      <p v-else class="jr-onboard-review__note">
+        {{ t('onboarding.review.noModules') }}
+      </p>
     </section>
 
     <p v-if="errorMessage" class="jr-onboard-review__error" role="alert">
@@ -102,8 +116,7 @@
     </p>
 
     <p class="jr-onboard-review__secure">
-      We email a confirmation link. Your workspace is created only after you
-      verify your email.
+      {{ t('onboarding.review.secureNote') }}
     </p>
 
     <div class="jr-onboard-review__captcha">
@@ -122,15 +135,15 @@
         variant="secondary"
         :disabled="isSubmitting"
         @click="handleGoBack">
-        ← Back
+        {{ t('onboarding.back') }}
       </JRButton>
       <JRButton
         type="button"
         variant="primary"
         :disabled="isSubmitting"
         @click="handleSubmit">
-        <span v-if="isSubmitting">Sending verification email…</span>
-        <span v-else>Send verification email</span>
+        <span v-if="isSubmitting">{{ t('onboarding.review.sendingEmail') }}</span>
+        <span v-else>{{ t('onboarding.review.sendEmail') }}</span>
       </JRButton>
     </footer>
   </div>
@@ -138,8 +151,11 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { JRButton } from '@ui'
 import TurnstileWidget from './TurnstileWidget.vue'
+
+const { t, te } = useI18n({ useScope: 'global' })
 
 const props = defineProps({
   companyInfo: {
@@ -190,47 +206,26 @@ if (props.companyInfo.logo) {
   reader.readAsDataURL(props.companyInfo.logo)
 }
 
-const businessTypeLabels = {
-  electric: 'Electric',
-  air_conditioning: 'Air Conditioning',
-  solar: 'Solar',
-  plumbing: 'Plumbing',
-  hvac: 'HVAC (Heating, Ventilation, Air Conditioning)',
-  general: 'General (Other)',
+const getBusinessTypeLabel = (value) => {
+  const key = `onboarding.company.trades.${value}`
+  return te(key) ? t(key) : value
 }
 
-const getBusinessTypeLabel = (value) => businessTypeLabels[value] || value
-
-const monthlyOperationsLabels = {
-  '0-10': '0–10 homes per month',
-  '11-25': '11–25 homes per month',
-  '26-50': '26–50 homes per month',
-  '51-100': '51–100 homes per month',
-  '100+': '100+ homes per month',
+const getMonthlyOperationsLabel = (value) => {
+  if (!value) return t('onboarding.review.notSpecified')
+  const key = `onboarding.company.monthly.${value}`
+  return te(key) ? t(key) : value
 }
 
-const getMonthlyOperationsLabel = (value) =>
-  monthlyOperationsLabels[value] || value || 'Not specified'
-
-const moduleLabels = {
-  operations: 'Operations',
-  inventory: 'Inventory',
-  contracts_pricing: 'Contracts & Pricing (piece work)',
-  entities: 'Entities',
-  crews_fleet: 'Crews and Fleet',
-  communities: 'Communities',
-  contracts: 'Contracts',
-  schedule: 'Schedule',
-  crews: 'Crews',
-  notes: 'Notes',
+const getModuleLabel = (id) => {
+  const key = `onboarding.modules.labels.${id}`
+  return te(key) ? t(key) : id
 }
-
-const getModuleLabel = (id) => moduleLabels[id] || id
 
 const handleSubmit = () => {
   turnstileError.value = ''
   if (props.turnstileSiteKey && !turnstileToken.value) {
-    turnstileError.value = 'Please complete the CAPTCHA verification.'
+    turnstileError.value = t('onboarding.review.captchaRequired')
     return
   }
   emit('submit', turnstileToken.value)

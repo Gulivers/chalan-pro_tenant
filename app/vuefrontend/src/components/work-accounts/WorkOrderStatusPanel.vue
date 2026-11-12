@@ -1,21 +1,21 @@
 <template>
   <div class="jr-wo-status">
     <p v-if="loading" class="jr-wo-status__muted" role="status">
-      Loading status and progress…
+      {{ $t("workOrderViewer.loadingStatusProgress") }}
     </p>
 
     <JREmptyState
       v-else-if="notApplicable"
-      title="Status does not apply here"
-      description="This entry is not an active work order, so it has no status or progress checklist." />
+      :title="$t('workOrderViewer.statusNotApplicable')"
+      :description="$t('workOrderViewer.statusNotApplicableDesc')" />
 
     <JREmptyState
       v-else-if="forbidden"
-      title="You cannot view work order status"
-      description="You do not have permission to view the status and progress of this work order. The rest of this viewer still works." />
+      :title="$t('workOrderViewer.statusForbidden')"
+      :description="$t('workOrderViewer.statusForbiddenDesc')" />
 
     <template v-else-if="tracking">
-      <JRSection title="Work Order Status">
+      <JRSection :title="$t('workOrderViewer.title')">
         <template #actions>
           <JRButton
             type="button"
@@ -23,17 +23,17 @@
             size="sm"
             :disabled="loading || savingTransition"
             @click="reloadAll">
-            Refresh
+            {{ $t("common.refresh") }}
           </JRButton>
         </template>
 
         <div class="jr-wo-status__current">
           <div class="jr-wo-status__current-main">
-            <span class="jr-wo-status__label">Current status</span>
+            <span class="jr-wo-status__label">{{ $t("workOrderViewer.currentStatus") }}</span>
             <div class="jr-wo-status__current-row">
               <strong class="jr-wo-status__current-name">{{ tracking.status_name }}</strong>
               <JRBadge
-                :value="tracking.is_terminal ? 'Closed' : 'Active'"
+                :value="tracking.is_terminal ? $t('workOrderViewer.statusClosed') : $t('workOrderViewer.statusActive')"
                 :severity="currentSeverity" />
             </div>
             <p v-if="statusMeta" class="jr-wo-status__meta">{{ statusMeta }}</p>
@@ -44,7 +44,7 @@
         </div>
 
         <div v-if="allStatuses.length" class="jr-wo-status__actions">
-          <span class="jr-wo-status__label" id="wo-status-group-label">Work order status</span>
+          <span class="jr-wo-status__label" id="wo-status-group-label">{{ $t("workOrderViewer.title") }}</span>
           <div
             class="jr-wo-status__action-row"
             role="group"
@@ -58,24 +58,24 @@
               :class="{ 'jr-wo-status__status-btn--current': target.isCurrent }"
               :disabled="target.isCurrent || !canChange || savingTransition || savingCheckId !== null"
               :aria-current="target.isCurrent ? 'true' : undefined"
-              :title="target.isCurrent ? 'Current status' : undefined"
+              :title="target.isCurrent ? $t('workOrderViewer.currentStatus') : undefined"
               @click="openConfirm(target)">
               {{ target.name }}{{ target.isCurrent ? ' · Current' : '' }}
             </JRButton>
           </div>
         </div>
         <p v-if="tracking.is_terminal" class="jr-wo-status__muted">
-          This work order is closed.
-          <template v-if="!canChange">Ask a supervisor if it needs to reopen.</template>
+          {{ $t("workOrderViewer.workOrderStatusClosed") }}
+          <template v-if="!canChange">{{ $t("workOrderViewer.askSupervisorReopen") }}</template>
         </p>
         <p v-else-if="!canChange" class="jr-wo-status__muted">
-          You can view this status, but you do not have permission to change it.
+          {{ $t("workOrderViewer.noStatusPermission") }}
         </p>
 
         <p v-if="error" class="jr-wo-status__error" role="alert">{{ error }}</p>
       </JRSection>
 
-      <JRSection title="Progress Checklist">
+      <JRSection :title="$t('workOrderViewer.progressChecklist')">
         <div v-if="progress.length" class="jr-wo-status__progress-head">
           <p class="jr-wo-status__count" role="status">
             {{ doneCount }} of {{ progress.length }} progress items done
@@ -94,21 +94,21 @@
           v-if="progress.length && (missingForInspection.length || missingForCompletion.length)"
           class="jr-wo-status__needed-group">
           <p v-if="missingForInspection.length" class="jr-wo-status__needed">
-            <strong>Still needed before inspection:</strong>
+            <strong>{{ $t("workOrderViewer.neededBeforeInspection") }}</strong>
             {{ namesOf(missingForInspection) }}
           </p>
           <p v-if="missingForCompletion.length" class="jr-wo-status__needed">
-            <strong>Still needed before closing:</strong>
+            <strong>{{ $t("workOrderViewer.neededBeforeClosing") }}</strong>
             {{ namesOf(missingForCompletion) }}
           </p>
         </div>
         <p v-if="progressLoading" class="jr-wo-status__muted" role="status">
-          Loading checklist…
+          {{ $t("workOrderViewer.loadingChecklist") }}
         </p>
         <JREmptyState
           v-else-if="!progress.length"
-          title="No checklist for this work order"
-          description="There is no progress checklist for this crew category yet. Status changes still work; an admin can add a checklist in Django Admin." />
+          :title="$t('workOrderViewer.noChecklistTitle')"
+          :description="$t('workOrderViewer.noChecklistDesc')" />
         <ol v-else class="jr-wo-status__checks">
           <li
             v-for="check in sortedProgress"
@@ -169,7 +169,7 @@
         </Message>
       </JRSection>
 
-      <JRSection title="Status History">
+      <JRSection :title="$t('workOrderViewer.statusHistory')">
         <template #actions>
           <JRButton
             type="button"
@@ -186,8 +186,8 @@
           </p>
           <JREmptyState
             v-else-if="!history.length"
-            title="No status changes yet"
-            description="Changes appear here when this work order moves to another status." />
+            :title="$t('workOrderViewer.noStatusChangesTitle')"
+            :description="$t('workOrderViewer.noStatusChangesDesc')" />
           <ol v-else class="jr-wo-status__history">
             <li v-for="row in historyNewestFirst" :key="row.id">
               <strong>
@@ -242,13 +242,13 @@
         You can go back and check them off in the Progress Checklist.
       </Message>
 
-      <JRField label="Notes" inputId="wo-status-notes" hint="Optional">
+      <JRField :label="$t('common.notes')" inputId="wo-status-notes" :hint="$t('common.optional')">
         <JRTextarea
           inputId="wo-status-notes"
           v-model="transitionNotes"
           :rows="2"
           :disabled="savingTransition"
-          placeholder="Optional note for this status change" />
+          :placeholder="$t('workOrderViewer.statusNotePlaceholder')" />
       </JRField>
 
       <div v-if="confirmError" class="jr-wo-status__confirm-error" role="alert">

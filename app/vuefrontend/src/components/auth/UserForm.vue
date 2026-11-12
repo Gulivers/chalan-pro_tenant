@@ -27,19 +27,19 @@
       </div>
 
       <p v-if="loading" class="jr-user-admin-form__status" role="status">
-        Loading user…
+        {{ $t('permissions.loadingUser') }}
       </p>
 
       <template v-else>
-        <JRSection title="Account">
+        <JRSection :title="$t('permissions.sectionAccount')">
           <div class="jr-form-grid jr-form-grid--identity">
             <JRField
               v-slot="{ describedby, invalid }"
               class="jr-user-admin-form__identity-field"
-              label="Username"
+              :label="$t('permissions.username')"
               required
               inputId="user-username"
-              hint="Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+              :hint="$t('permissions.usernameHint')"
               :error="fieldErrors.username">
               <JRInput
                 inputId="user-username"
@@ -60,7 +60,7 @@
             <JRField
               v-slot="{ describedby, invalid }"
               class="jr-user-admin-form__password-field"
-              :label="userId ? 'New password' : 'Password'"
+              :label="userId ? $t('permissions.newPassword') : $t('permissions.password')"
               :required="!userId"
               inputId="user-password"
               :hint="passwordHint"
@@ -79,13 +79,13 @@
             <JRField
               v-slot="{ describedby, invalid }"
               class="jr-user-admin-form__password-confirm"
-              label="Password confirmation"
+              :label="$t('permissions.passwordConfirmation')"
               :required="!userId || !!form.password"
               inputId="user-password-confirm"
               :hint="
                 userId
-                  ? 'Enter the same password as before, for verification. Leave blank if you are not changing the password.'
-                  : 'Enter the same password as before, for verification.'
+                  ? $t('permissions.passwordConfirmHintExisting')
+                  : $t('permissions.passwordConfirmHintNew')
               "
               :error="fieldErrors.password_confirm">
               <JRInput
@@ -101,11 +101,11 @@
           </div>
         </JRSection>
 
-        <JRSection title="Personal info">
+        <JRSection :title="$t('permissions.sectionPersonal')">
           <div class="jr-form-grid jr-form-grid--personal">
             <JRField
               v-slot="{ describedby, invalid }"
-              label="First name"
+              :label="$t('permissions.firstName')"
               required
               inputId="user-first-name"
               :error="fieldErrors.first_name">
@@ -122,7 +122,7 @@
             </JRField>
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Last name"
+              :label="$t('permissions.lastName')"
               required
               inputId="user-last-name"
               :error="fieldErrors.last_name">
@@ -140,10 +140,10 @@
             <JRField
               v-slot="{ describedby, invalid }"
               class="jr-user-admin-form__email-field"
-              label="Email address"
+              :label="$t('permissions.emailAddress')"
               required
               inputId="user-email"
-              hint="Required. Must be unique for this organization."
+              :hint="$t('permissions.emailAddressHint')"
               :error="fieldErrors.email">
               <JRInput
                 inputId="user-email"
@@ -160,27 +160,27 @@
           </div>
         </JRSection>
 
-        <JRSection title="Permissions">
+        <JRSection :title="$t('permissions.sectionPermissions')">
           <div class="jr-user-admin-form__access">
             <div class="jr-form-checks">
               <JRField
-                label="Active"
+                :label="$t('permissions.active')"
                 inputId="user-is-active"
-                hint="Uncheck to disable login without deleting the account.">
+                :hint="$t('permissions.activeHint')">
                 <JRCheckbox
                   inputId="user-is-active"
                   v-model="form.is_active"
-                  ariaLabel="Active"
+                  :ariaLabel="$t('permissions.active')"
                   :disabled="isReadOnly" />
               </JRField>
               <JRField
-                label="Staff status"
+                :label="$t('permissions.staffStatus')"
                 inputId="user-is-staff"
-                hint="Staff can access User permissions and other admin tools in JobRhythm.">
+                :hint="$t('permissions.staffStatusHint')">
                 <JRCheckbox
                   inputId="user-is-staff"
                   v-model="form.is_staff"
-                  ariaLabel="Staff status"
+                  :ariaLabel="$t('permissions.staffStatus')"
                   :disabled="isReadOnly" />
               </JRField>
             </div>
@@ -191,38 +191,38 @@
 
           <div class="jr-user-admin-form__assignments">
             <div class="jr-user-admin-form__pick">
-              <h3 class="jr-user-admin-form__pick-title">Groups</h3>
+              <h3 class="jr-user-admin-form__pick-title">{{ $t('permissions.groups') }}</h3>
               <DualListPick
                 v-model="groupLists"
                 label-key="name"
                 filter-by="name"
-                source-header="Available groups"
-                target-header="Chosen groups"
+                :source-header="$t('permissions.availableGroups')"
+                :target-header="$t('permissions.chosenGroups')"
                 :disabled="isReadOnly"
-                hint="The groups this user belongs to. A user gets all permissions granted to each of their groups." />
+                :hint="$t('permissions.groupsHint')" />
             </div>
 
             <div class="jr-user-admin-form__pick">
-              <h3 class="jr-user-admin-form__pick-title">User permissions</h3>
+              <h3 class="jr-user-admin-form__pick-title">{{ $t('permissions.userPermissions') }}</h3>
               <DualListPick
                 v-model="permissionLists"
-                source-header="Available user permissions"
-                target-header="Chosen user permissions"
+                :source-header="$t('permissions.availablePermissions')"
+                :target-header="$t('permissions.chosenPermissions')"
                 :disabled="isReadOnly"
-                hint="Specific permissions for this user, in addition to group permissions." />
+                :hint="$t('permissions.userPermissionsHint')" />
             </div>
           </div>
         </JRSection>
 
-        <JRSection v-if="userId" title="Important dates">
+        <JRSection v-if="userId" :title="$t('permissions.sectionDates')">
           <div class="jr-form-grid jr-form-grid--dates">
-            <JRField label="Last login" inputId="user-last-login">
+            <JRField :label="$t('permissions.lastLogin')" inputId="user-last-login">
               <JRInput
                 inputId="user-last-login"
                 :modelValue="formatWhen(form.last_login)"
                 disabled />
             </JRField>
-            <JRField label="Date joined" inputId="user-date-joined">
+            <JRField :label="$t('permissions.dateJoined')" inputId="user-date-joined">
               <JRInput
                 inputId="user-date-joined"
                 :modelValue="formatWhen(form.date_joined)"
@@ -236,10 +236,10 @@
             type="submit"
             variant="primary"
             :disabled="isReadOnly || submitting || !canEditTarget">
-            {{ submitting ? 'Saving…' : userId ? 'Update' : 'Save' }}
+            {{ submitting ? $t('common.saving') : userId ? $t('common.update') : $t('common.save') }}
           </JRButton>
           <JRButton type="button" variant="secondary" @click="goBack">
-            {{ isReadOnly ? 'Back to list' : 'Cancel' }}
+            {{ isReadOnly ? $t('common.backToList') : $t('common.cancel') }}
           </JRButton>
           <JRButton
             v-if="userId && !isReadOnly && canEditTarget && !isSelf"
@@ -247,7 +247,7 @@
             variant="danger"
             :disabled="submitting"
             @click="confirmRemove">
-            Delete
+            {{ $t('common.delete') }}
           </JRButton>
         </div>
       </template>

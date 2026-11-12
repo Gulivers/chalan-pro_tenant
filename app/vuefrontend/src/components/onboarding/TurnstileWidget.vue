@@ -9,6 +9,9 @@
 
 <script setup>
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n({ useScope: 'global' })
 
 const props = defineProps({
   siteKey: {
@@ -31,7 +34,11 @@ const loadTurnstileScript = () => new Promise((resolve, reject) => {
   const existing = document.querySelector('script[data-turnstile="1"]')
   if (existing) {
     existing.addEventListener('load', () => resolve(), { once: true })
-    existing.addEventListener('error', () => reject(new Error('Could not load CAPTCHA.')), { once: true })
+    existing.addEventListener(
+      'error',
+      () => reject(new Error(t('onboarding.review.captchaLoadFailed'))),
+      { once: true }
+    )
     return
   }
   const script = document.createElement('script')
@@ -40,7 +47,7 @@ const loadTurnstileScript = () => new Promise((resolve, reject) => {
   script.defer = true
   script.dataset.turnstile = '1'
   script.onload = () => resolve()
-  script.onerror = () => reject(new Error('Could not load CAPTCHA.'))
+  script.onerror = () => reject(new Error(t('onboarding.review.captchaLoadFailed')))
   document.head.appendChild(script)
 })
 
@@ -59,7 +66,7 @@ const renderWidget = async () => {
   loadError.value = ''
   destroyWidget()
   if (!props.siteKey) {
-    loadError.value = 'CAPTCHA is not configured.'
+    loadError.value = t('onboarding.review.captchaNotConfigured')
     emit('error', loadError.value)
     return
   }
@@ -73,14 +80,14 @@ const renderWidget = async () => {
       callback: (token) => emit('update:token', token),
       'expired-callback': () => emit('update:token', ''),
       'error-callback': () => {
-        loadError.value = 'CAPTCHA verification failed. Please try again.'
+        loadError.value = t('onboarding.review.captchaVerifyFailed')
         emit('error', loadError.value)
         emit('update:token', '')
       },
     })
     emit('ready')
   } catch (error) {
-    loadError.value = error.message || 'Could not load CAPTCHA.'
+    loadError.value = error.message || t('onboarding.review.captchaLoadFailed')
     emit('error', loadError.value)
   }
 }

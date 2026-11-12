@@ -13,16 +13,21 @@
             width="220"
             height="56" />
         </router-link>
-        <p class="jr-onboard__signin">
-          Have an account?
-          <router-link to="/login" class="jr-onboard__signin-link">
-            Sign In
-          </router-link>
-        </p>
+        <div class="jr-onboard__chrome-actions">
+          <LocaleToggle :persist="false" class="jr-onboard__locale" />
+          <p class="jr-onboard__signin">
+            {{ t("onboarding.haveAccount") }}
+            <router-link to="/login" class="jr-onboard__signin-link">
+              {{ t("onboarding.signIn") }}
+            </router-link>
+          </p>
+        </div>
       </header>
 
       <div class="jr-onboard__body">
-        <nav class="jr-onboard__steps" aria-label="Onboarding progress">
+        <nav
+          class="jr-onboard__steps"
+          :aria-label="t('onboarding.progressLabel')">
           <ol class="jr-onboard__step-list">
             <li
               v-for="step in steps"
@@ -52,21 +57,23 @@
           v-if="verificationPending"
           class="jr-onboard__verify"
           role="status">
-          <h1 class="jr-onboard__title">Check your email</h1>
+          <h1 class="jr-onboard__title">
+            {{ t("onboarding.verifyPending.title") }}
+          </h1>
           <p class="jr-onboard__lead">
-            We sent a confirmation link to
-            <strong>{{ verificationEmail }}</strong>
-            . Open it to create your workspace and start your trial.
+            {{ t("onboarding.verifyPending.leadBefore") }}
+            <strong>{{ verificationEmail }}</strong
+            >{{ t("onboarding.verifyPending.leadAfter") }}
           </p>
           <p v-if="debugVerifyUrl" class="jr-onboard__hint">
-            Dev link:
+            {{ t("onboarding.verifyPending.devLink") }}
             <a :href="debugVerifyUrl">{{ debugVerifyUrl }}</a>
           </p>
           <JRButton
             type="button"
             variant="secondary"
             @click="router.push('/login')">
-            Go to Sign In
+            {{ t("onboarding.verifyPending.goToSignIn") }}
           </JRButton>
         </div>
 
@@ -117,7 +124,7 @@
                 variant="secondary"
                 :disabled="isSubmitting"
                 @click="goToPreviousStep">
-                ← Back
+                {{ t("onboarding.back") }}
               </JRButton>
               <span v-else class="jr-onboard__actions-spacer" />
               <JRButton
@@ -125,7 +132,7 @@
                 variant="primary"
                 :disabled="isSubmitting || !canProceed"
                 @click="goToNextStep">
-                Next Step →
+                {{ t("onboarding.nextStep") }}
               </JRButton>
             </footer>
           </div>
@@ -142,8 +149,7 @@
         height="1200" />
       <div class="jr-onboard__visual-scrim">
         <p class="jr-onboard__visual-quote">
-          Run residential jobs with clear schedules, materials, and crews—in one
-          workspace.
+          {{ t("onboarding.visualQuote") }}
         </p>
       </div>
     </aside>
@@ -153,8 +159,10 @@
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { useI18n } from "vue-i18n";
 import Check from "@primeicons/vue/check";
 import { JRButton } from "@ui";
+import LocaleToggle from "@/components/LocaleToggle.vue";
 import StepCompanyInfo from "./StepCompanyInfo.vue";
 import StepAdminUser from "./StepAdminUser.vue";
 import StepPreferences from "./StepPreferences.vue";
@@ -171,32 +179,14 @@ import heroImageUrl from "@/assets/img/onboarding-supervisor2.png";
 
 const router = useRouter();
 const route = useRoute();
+const { t, locale } = useI18n({ useScope: "global" });
 
-const steps = [
-  { number: 1, label: "Company" },
-  { number: 2, label: "Admin" },
-  { number: 3, label: "Modules" },
-  { number: 4, label: "Review" },
-];
-
-const STEP_COPY = {
-  1: {
-    title: "Tell us about your company",
-    lead: "A few details so we can size your workspace for residential trade operations in Florida and beyond.",
-  },
-  2: {
-    title: "Create your admin account",
-    lead: "This account owns settings, users, and data for your company subdomain.",
-  },
-  3: {
-    title: "Modules for your trial",
-    lead: "Your 30-day trial includes the full operational menu—so you can feel the real workflow.",
-  },
-  4: {
-    title: "Review & launch",
-    lead: "Confirm everything looks right. We email a verification link before your workspace goes live.",
-  },
-};
+const steps = computed(() => [
+  { number: 1, label: t("onboarding.steps.company") },
+  { number: 2, label: t("onboarding.steps.admin") },
+  { number: 3, label: t("onboarding.steps.modules") },
+  { number: 4, label: t("onboarding.steps.review") },
+]);
 
 const landingSelectedPlan = ref(null);
 const currentStep = ref(1);
@@ -277,6 +267,17 @@ onMounted(async () => {
     },
     { deep: true }
   );
+
+  // Re-translate visible field errors when the guest switches EN/ES.
+  watch(locale, () => {
+    if (currentStep.value === 1) {
+      stepErrors.companyInfo = getStep1Errors();
+    } else if (currentStep.value === 2) {
+      stepErrors.adminUser = getStep2Errors();
+    } else if (currentStep.value === 3) {
+      stepErrors.preferences = getStep3Errors();
+    }
+  });
 });
 
 const recommendedPlan = computed(() => {
@@ -288,28 +289,27 @@ const recommendedPlan = computed(() => {
   return null;
 });
 
-const progressRatio = computed(() => currentStep.value / steps.length);
+const progressRatio = computed(() => currentStep.value / steps.value.length);
 
 const stepTitle = computed(
-  () => STEP_COPY[currentStep.value]?.title || "Start your free trial"
+  () =>
+    t(`onboarding.copy.${currentStep.value}.title`) ||
+    t("onboarding.startTrialFallback")
 );
-const stepLead = computed(() => STEP_COPY[currentStep.value]?.lead || "");
+const stepLead = computed(() =>
+  t(`onboarding.copy.${currentStep.value}.lead`)
+);
 
 const getStep1Errors = () => {
   const errors = {};
   const bn = formData.companyInfo.business_name?.trim() || "";
   if (!bn || bn.length < 3) {
-    errors.business_name = "Enter your company name (at least 3 characters).";
+    errors.business_name = t("onboarding.errors.companyName");
   }
   // TEMP: business_type fixed to electric in the UI; skip empty-field check.
-  // if (!formData.companyInfo.business_type) {
-  //   errors.business_type =
-  //     "Choose the trade that best describes your business.";
-  // }
   formData.companyInfo.business_type = "electric";
   if (!formData.companyInfo.monthly_operations) {
-    errors.monthly_operations =
-      "Select how many jobs or homes you typically handle each month.";
+    errors.monthly_operations = t("onboarding.errors.monthlyOps");
   }
   const rawCrew = formData.companyInfo.crew_count;
   const crewParsed =
@@ -317,21 +317,20 @@ const getStep1Errors = () => {
       ? null
       : Number(rawCrew);
   if (crewParsed === null || Number.isNaN(crewParsed)) {
-    errors.crew_count =
-      "Enter how many crews you run (whole number, at least 1).";
+    errors.crew_count = t("onboarding.errors.crewCount");
   } else if (!Number.isInteger(crewParsed)) {
-    errors.crew_count = "Use a whole number for active crews.";
+    errors.crew_count = t("onboarding.errors.crewWhole");
   } else if (crewParsed < 1) {
-    errors.crew_count = "Enter at least 1 active crew.";
+    errors.crew_count = t("onboarding.errors.crewMin");
   }
   if (formData.companyInfo.logo) {
     const maxSize = 5 * 1024 * 1024;
     if (formData.companyInfo.logo.size > maxSize) {
-      errors.logo = "Logo must be 5MB or smaller.";
+      errors.logo = t("onboarding.errors.logoSize");
     }
     const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif"];
     if (!allowedTypes.includes(formData.companyInfo.logo.type)) {
-      errors.logo = "Use a PNG, JPG, or GIF image.";
+      errors.logo = t("onboarding.errors.logoType");
     }
   }
   return errors;
@@ -347,32 +346,31 @@ const getStep2Errors = () => {
   const errors = {};
   const name = formData.adminUser.name?.trim() || "";
   if (!name || name.length < 2) {
-    errors.name = "Enter your full name (at least 2 characters).";
+    errors.name = t("onboarding.errors.adminName");
   }
   const email = (formData.adminUser.email || "").trim();
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email) {
-    errors.email = "Enter your work email address.";
+    errors.email = t("onboarding.errors.emailRequired");
   } else if (!emailRegex.test(email)) {
-    errors.email =
-      "That does not look like a valid email address. Check for typos.";
+    errors.email = t("onboarding.errors.emailInvalid");
   }
   const pwd = formData.adminUser.password || "";
   if (!pwd || pwd.length < 8) {
-    errors.password = "Use at least 8 characters.";
+    errors.password = t("onboarding.errors.passwordMin");
   } else {
     const hasUpperCase = /[A-Z]/.test(pwd);
     const hasLowerCase = /[a-z]/.test(pwd);
     const hasNumber = /[0-9]/.test(pwd);
     if (!hasUpperCase || !hasLowerCase || !hasNumber) {
-      errors.password = "Include uppercase, lowercase, and a number.";
+      errors.password = t("onboarding.errors.passwordComplexity");
     }
   }
   const pwd2 = formData.adminUser.password_confirm || "";
   if (!pwd2) {
-    errors.password_confirm = "Confirm your password.";
+    errors.password_confirm = t("onboarding.errors.passwordConfirm");
   } else if (pwd !== pwd2) {
-    errors.password_confirm = "Passwords do not match—try again.";
+    errors.password_confirm = t("onboarding.errors.passwordMismatch");
   }
   return errors;
 };
@@ -388,8 +386,7 @@ const getStep3Errors = () => {
   const p = formData.preferences || [];
   const missing = ONBOARDING_MODULE_IDS.some((id) => !p.includes(id));
   if (!p.length || p.length !== ONBOARDING_MODULE_IDS.length || missing) {
-    errors.preferences =
-      "Module list is incomplete. Refresh the page to continue—all trial modules should be listed.";
+    errors.preferences = t("onboarding.errors.modulesIncomplete");
   }
   return errors;
 };
@@ -419,7 +416,7 @@ const goToNextStep = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     return;
   }
-  if (currentStep.value < steps.length) {
+  if (currentStep.value < steps.value.length) {
     currentStep.value++;
     saveToLocalStorage();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -490,7 +487,7 @@ const loadFromLocalStorage = () => {
 
 const handleFinalSubmit = async (turnstileToken) => {
   if (!validateStep1() || !validateStep2() || !validateStep3()) {
-    submitError.value = "Please fix the highlighted fields before continuing.";
+    submitError.value = t("onboarding.errors.fixFields");
     if (!validateStep1()) currentStep.value = 1;
     else if (!validateStep2()) currentStep.value = 2;
     else if (!validateStep3()) currentStep.value = 3;
@@ -543,8 +540,7 @@ const handleFinalSubmit = async (turnstileToken) => {
   } catch (error) {
     console.error("Error creating tenant:", error);
     submitError.value =
-      error.message ||
-      "We could not create your workspace. Please try again in a moment.";
+      error.message || t("onboarding.errors.createFailed");
   } finally {
     isSubmitting.value = false;
   }
@@ -587,6 +583,18 @@ const handleFinalSubmit = async (turnstileToken) => {
   gap: 1rem;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--color-jr-border, #e5e7eb);
+}
+
+.jr-onboard__chrome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem 1rem;
+}
+
+.jr-onboard__locale {
+  flex-shrink: 0;
 }
 
 .jr-onboard__brand {

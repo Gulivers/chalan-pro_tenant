@@ -26,14 +26,14 @@
         <div class="jr-form-grid">
           <JRField
             v-slot="{ describedby, invalid }"
-            label="Name"
+            :label="$t('inventory.warehouseName')"
             inputId="warehouse-name"
             required
             :error="fieldErrors.name">
             <JRInput
               inputId="warehouse-name"
               v-model="warehouse.name"
-              placeholder="Warehouse name"
+              :placeholder="$t('inventory.warehouseNamePlaceholder')"
               :disabled="isDisabled"
               :invalid="invalid"
               required
@@ -43,36 +43,36 @@
 
           <JRField
             v-slot="{ describedby, invalid }"
-            label="Location"
+            :label="$t('inventory.warehouseLocation')"
             inputId="warehouse-location"
             :error="fieldErrors.location">
             <JRInput
               inputId="warehouse-location"
               v-model="warehouse.location"
-              placeholder="Warehouse location"
+              :placeholder="$t('inventory.warehouseLocationPlaceholder')"
               :disabled="isDisabled"
               :invalid="invalid"
               :ariaDescribedby="describedby"
               @update:modelValue="clearFieldError('location')" />
           </JRField>
 
-          <JRField label="Active" inputId="warehouse-is-active">
+          <JRField :label="$t('common.active')" inputId="warehouse-is-active">
             <JRCheckbox
               inputId="warehouse-is-active"
               v-model="warehouse.is_active"
-              ariaLabel="Active"
+              :ariaLabel="$t('common.active')"
               :disabled="isDisabled" />
           </JRField>
 
           <JRField
-            label="Default warehouse"
+            :label="$t('inventory.defaultWarehouse')"
             inputId="warehouse-is-default"
-            hint="Only one warehouse can be default"
+            :hint="$t('inventory.hintDefaultWarehouse')"
             :error="fieldErrors.is_default">
             <JRCheckbox
               inputId="warehouse-is-default"
               v-model="warehouse.is_default"
-              ariaLabel="Default warehouse"
+              :ariaLabel="$t('inventory.defaultWarehouse')"
               :disabled="isDisabled"
               @update:modelValue="onDefaultChange" />
           </JRField>
@@ -87,11 +87,11 @@
               {{
                 submitting
                   ? isEditMode
-                    ? "Updating..."
-                    : "Saving..."
+                    ? $t("common.updating")
+                    : $t("common.saving")
                   : isEditMode
-                    ? "Update"
-                    : "Save"
+                    ? $t("common.update")
+                    : $t("common.save")
               }}
             </JRButton>
             <JRButton
@@ -99,7 +99,7 @@
               variant="secondary"
               :disabled="submitting"
               @click="goBack">
-              Cancel
+              {{ $t("common.cancel") }}
             </JRButton>
           </template>
           <JRButton
@@ -108,7 +108,7 @@
             variant="secondary"
             :disabled="submitting"
             @click="goBack">
-            Back
+            {{ $t("common.back") }}
           </JRButton>
         </div>
       </form>

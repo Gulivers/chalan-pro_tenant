@@ -6,7 +6,7 @@
       :options="options"
       optionLabel="title"
       optionValue="id"
-      placeholder="Search work account..."
+      :placeholder="$t('workAccounts.searchPlaceholder')"
       filter
       showClear
       :disabled="disabled"
@@ -17,8 +17,8 @@
       :showEdit="!!selectedValue"
       :addDisabled="disabled || !canAdd"
       :editDisabled="disabled || !canEdit"
-      addLabel="Add a new work account to the system"
-      editLabel="Edit the currently selected work account"
+      :addLabel="$t('workAccounts.form.addWorkAccount')"
+      :editLabel="$t('workAccounts.form.editWorkAccount')"
       @update:modelValue="onSelect"
       @show="onShow"
       @add="openDialog('add')"

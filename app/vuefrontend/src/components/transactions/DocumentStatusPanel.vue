@@ -1,6 +1,6 @@
 <template>
   <section v-if="showPanel" class="jr-doc-status-panel">
-    <JRSection title="Status tracking">
+    <JRSection :title="$t('transactions.form.statusTracking')">
       <p v-if="loading" class="jr-doc-status-panel__status" role="status">
         Loading status…
       </p>
@@ -52,14 +52,14 @@
       </template>
     </JRSection>
 
-    <JRSection v-if="tracking || history.length" title="Status History">
+    <JRSection v-if="tracking || history.length" :title="$t('workOrderViewer.statusHistory')">
       <p v-if="historyLoading" class="jr-doc-status-panel__status" role="status">
         Loading history…
       </p>
       <JREmptyState
         v-else-if="!history.length"
-        title="No status changes yet."
-        description="Changes appear here when the document moves to another status." />
+        :title="$t('workOrderViewer.noStatusChangesTitle')"
+        :description="$t('workOrderViewer.noStatusChangesDesc')" />
       <ol v-else class="jr-doc-status-panel__history">
         <li v-for="row in historyNewestFirst" :key="row.id">
           <strong>
@@ -80,28 +80,28 @@
     <JRDialog
       :visible="confirmOpen"
       :header="confirmHeader"
-      confirm-label="Confirm"
-      cancel-label="Cancel"
+      :confirm-label="$t('common.continue')"
+      :cancel-label="$t('common.cancel')"
       :confirm-disabled="saving || !pendingTarget"
       @update:visible="onConfirmVisible"
       @confirm="confirmTransition">
       <dl class="jr-doc-status-panel__confirm">
         <div>
-          <dt>Current Status</dt>
+          <dt>{{ $t('workOrderViewer.currentStatus') }}</dt>
           <dd>{{ tracking?.status_name || '—' }}</dd>
         </div>
         <div>
-          <dt>{{ isRevert ? 'Revert to' : 'New Status' }}</dt>
+          <dt>{{ isRevert ? $t('transactions.form.revertTo') : $t('transactions.form.newStatus') }}</dt>
           <dd>{{ pendingTarget?.name || '—' }}</dd>
         </div>
       </dl>
-      <JRField label="Notes" inputId="doc-status-notes" hint="Optional">
+      <JRField :label="$t('common.notes')" inputId="doc-status-notes" :hint="$t('common.optional')">
         <JRTextarea
           inputId="doc-status-notes"
           v-model="transitionNotes"
           :rows="2"
           :disabled="saving"
-          placeholder="Optional notes for this status change" />
+          :placeholder="$t('transactions.form.statusNotesPlaceholder')" />
       </JRField>
       <p
         v-if="confirmError"

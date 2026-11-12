@@ -2,7 +2,7 @@
   <div class="jr-onboard-step">
     <div class="jr-onboard-step__fields">
       <JRField
-        label="Company name"
+        :label="t('onboarding.company.name')"
         required
         inputId="business_name"
         :error="errors.business_name || ''">
@@ -13,14 +13,14 @@
             :invalid="invalid"
             :aria-describedby="describedby || undefined"
             :maxlength="150"
-            placeholder="e.g. Sunshine Electric LLC"
+            :placeholder="t('onboarding.company.namePlaceholder')"
             @blur="validateField('business_name')" />
         </template>
       </JRField>
 
       <!-- TEMP: onboarding limited to Electric; restore Trade select when multi-trade opens.
       <JRField
-        label="Trade / business type"
+        :label="t('onboarding.company.tradeType')"
         required
         inputId="business_type"
         :error="errors.business_type || ''">
@@ -31,7 +31,7 @@
             :options="businessTypeOptions"
             optionLabel="label"
             optionValue="value"
-            placeholder="Select your trade"
+            :placeholder="t('onboarding.company.tradePlaceholder')"
             :invalid="invalid"
             :aria-describedby="describedby || undefined"
             @update:modelValue="validateField('business_type')" />
@@ -42,9 +42,9 @@
       <UploadLogo v-model="localData.logo" :error="errors.logo || ''" />
 
       <JRField
-        label="Company address"
+        :label="t('onboarding.company.address')"
         inputId="company_address"
-        hint="Optional — helps personalize your workspace later."
+        :hint="t('onboarding.company.addressHint')"
         :error="errors.address || ''">
         <template #default="{ invalid, describedby }">
           <JRTextarea
@@ -53,12 +53,12 @@
             :invalid="invalid"
             :aria-describedby="describedby || undefined"
             :rows="3"
-            placeholder="Street, city, state" />
+            :placeholder="t('onboarding.company.addressPlaceholder')" />
         </template>
       </JRField>
 
       <JRField
-        label="Monthly job volume"
+        :label="t('onboarding.company.monthlyVolume')"
         required
         inputId="monthly_operations"
         :error="errors.monthly_operations || ''">
@@ -69,7 +69,7 @@
             :options="monthlyOperationsOptions"
             optionLabel="label"
             optionValue="value"
-            placeholder="Homes / jobs per month"
+            :placeholder="t('onboarding.company.monthlyPlaceholder')"
             :invalid="invalid"
             :aria-describedby="describedby || undefined"
             @update:modelValue="validateField('monthly_operations')" />
@@ -77,10 +77,10 @@
       </JRField>
 
       <JRField
-        label="Active crews"
+        :label="t('onboarding.company.crewCount')"
         required
         inputId="crew_count"
-        hint="Used to suggest a plan size—not locked during trial."
+        :hint="t('onboarding.company.crewHint')"
         :error="errors.crew_count || ''">
         <template #default="{ invalid, describedby }">
           <JRInput
@@ -89,7 +89,7 @@
             :invalid="invalid"
             :aria-describedby="describedby || undefined"
             inputmode="numeric"
-            placeholder="e.g. 4"
+            :placeholder="t('onboarding.company.crewPlaceholder')"
             @update:modelValue="onCrewCount" />
         </template>
       </JRField>
@@ -99,8 +99,11 @@
 
 <script setup>
 import { reactive, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { JRField, JRInput, JRSelect, JRTextarea } from '@ui'
 import UploadLogo from './UploadLogo.vue'
+
+const { t } = useI18n({ useScope: 'global' })
 
 const props = defineProps({
   modelValue: {
@@ -116,26 +119,23 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'validate'])
 
 /* TEMP: restore with Trade / business type JRField above.
-const businessTypeOptions = [
-  { value: 'electric', label: 'Electric' },
-  { value: 'air_conditioning', label: 'Air Conditioning' },
-  { value: 'solar', label: 'Solar' },
-  { value: 'plumbing', label: 'Plumbing' },
-  {
-    value: 'hvac',
-    label: 'HVAC (Heating, Ventilation, Air Conditioning)',
-  },
-  { value: 'general', label: 'General (Other)' },
-]
+const businessTypeOptions = computed(() => [
+  { value: 'electric', label: t('onboarding.company.trades.electric') },
+  { value: 'air_conditioning', label: t('onboarding.company.trades.air_conditioning') },
+  { value: 'solar', label: t('onboarding.company.trades.solar') },
+  { value: 'plumbing', label: t('onboarding.company.trades.plumbing') },
+  { value: 'hvac', label: t('onboarding.company.trades.hvac') },
+  { value: 'general', label: t('onboarding.company.trades.general') },
+])
 */
 
-const monthlyOperationsOptions = [
-  { value: '0-10', label: '0–10 homes per month' },
-  { value: '11-25', label: '11–25 homes per month' },
-  { value: '26-50', label: '26–50 homes per month' },
-  { value: '51-100', label: '51–100 homes per month' },
-  { value: '100+', label: '100+ homes per month' },
-]
+const monthlyOperationsOptions = computed(() => [
+  { value: '0-10', label: t('onboarding.company.monthly.0-10') },
+  { value: '11-25', label: t('onboarding.company.monthly.11-25') },
+  { value: '26-50', label: t('onboarding.company.monthly.26-50') },
+  { value: '51-100', label: t('onboarding.company.monthly.51-100') },
+  { value: '100+', label: t('onboarding.company.monthly.100+') },
+])
 
 const localData = reactive({
   business_name: props.modelValue.business_name || '',

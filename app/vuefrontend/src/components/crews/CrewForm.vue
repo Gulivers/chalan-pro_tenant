@@ -100,7 +100,7 @@
               v-slot="{ describedby }"
               inputId="crew-type"
               class="jr-form-grid__full"
-              hint="Crew supervisor or punch-out work owns communities. Piece work does not.">
+              :hint="$t('crews.form.crewTypeHint')">
               <JRSelect
                 inputId="crew-type"
                 :modelValue="crewType"
@@ -116,24 +116,24 @@
                 class="jr-crew-form__info"
                 severity="info"
                 :closable="false">
-                No communities assigned. This crew does piece work.
+                {{ $t("crews.form.pieceWorkNoCommunities") }}
               </Message>
             </JRField>
           </div>
         </JRSection>
 
-        <JRSection v-if="crewType === 'supervisor'" title="Communities">
+        <JRSection v-if="crewType === 'supervisor'" :title="$t('parties.communitiesTitle')">
           <div class="jr-form-grid">
             <JRField
               v-slot="{ describedby }"
               inputId="crew-jobs"
               class="jr-form-grid__full"
-              hint="Assign communities (Job) this crew supervises.">
+              :hint="$t('crews.form.assignCommunitiesHint')">
               <div
                 id="crew-jobs"
                 class="jr-crew-form__jobs"
                 role="group"
-                aria-label="Communities"
+                :aria-label="$t('parties.communitiesTitle')"
                 :aria-describedby="
                   [describedby, 'crew-jobs-builder-hint'].filter(Boolean).join(' ')
                 ">
@@ -142,7 +142,7 @@
                     <label
                       class="jr-crew-form__jobs-toolbar-label"
                       for="crew-jobs-builder"
-                      >Builder</label
+                      >{{ $t("parties.colBuilder") }}</label
                     >
                     <div class="jr-crew-form__jobs-toolbar-select">
                       <JRSelect
@@ -151,14 +151,14 @@
                         :options="customerBuilders"
                         optionLabel="name"
                         optionValue="id"
-                        placeholder="All customers"
+                        :placeholder="$t('crews.form.allCustomers')"
                         filter
                         showClear
                         :disabled="isDisabled"
                         ariaDescribedby="crew-jobs-builder-hint" />
                     </div>
                     <p id="crew-jobs-builder-hint" class="jr-crew-form__jobs-toolbar-hint">
-                      Show available communities for this customer
+                      {{ $t("crews.form.showAvailableForCustomer") }}
                     </p>
                   </div>
 
@@ -171,16 +171,20 @@
                     :showTargetControls="false"
                     breakpoint="768px"
                     scrollHeight="18rem"
-                    sourceFilterPlaceholder="Search available…"
-                    targetFilterPlaceholder="Search chosen…"
+                    :sourceFilterPlaceholder="$t('crews.form.searchAvailable')"
+                    :targetFilterPlaceholder="$t('crews.form.searchChosen')"
                     class="jr-crew-form__picklist"
-                    aria-label="Communities"
+                    :aria-label="$t('parties.communitiesTitle')"
                     @update:modelValue="onJobsPickListUpdate">
                     <template #sourceheader>
-                      <span class="jr-crew-form__pick-header">Available</span>
+                      <span class="jr-crew-form__pick-header">{{
+                        $t("crews.form.available")
+                      }}</span>
                     </template>
                     <template #targetheader>
-                      <span class="jr-crew-form__pick-header">Chosen</span>
+                      <span class="jr-crew-form__pick-header">{{
+                        $t("crews.form.chosen")
+                      }}</span>
                     </template>
                     <template #option="{ option }">
                       <div class="jr-crew-form__pick-option">
