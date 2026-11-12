@@ -22,10 +22,10 @@
           <div class="jr-form-grid">
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Unit Number"
+              :label="$t('crews.form.unitNumber')"
               inputId="truck-unit-number"
               required
-              hint="Internal identifier, e.g. TRK-001."
+              :hint="$t('crews.form.hintUnitNumber')"
               :error="fieldErrors.unit_number">
               <JRInput
                 inputId="truck-unit-number"
@@ -40,7 +40,7 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Plate Number"
+              :label="$t('crews.form.plateNumber')"
               inputId="truck-plate-number"
               required
               :error="fieldErrors.plate_number">
@@ -57,10 +57,10 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="VIN"
+              :label="$t('crews.form.vin')"
               inputId="truck-vin"
               required
-              hint="17 alphanumeric characters. Saved in uppercase."
+              :hint="$t('crews.form.hintVin')"
               :error="fieldErrors.vin">
               <JRInput
                 inputId="truck-vin"
@@ -75,7 +75,7 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Make"
+              :label="$t('crews.form.make')"
               inputId="truck-make"
               required
               :error="fieldErrors.make">
@@ -92,7 +92,7 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Model"
+              :label="$t('crews.form.model')"
               inputId="truck-model"
               required
               :error="fieldErrors.model">
@@ -109,7 +109,7 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Year"
+              :label="$t('crews.form.year')"
               inputId="truck-year"
               required
               :error="fieldErrors.year">
@@ -128,7 +128,7 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Status"
+              :label="$t('crews.form.status')"
               inputId="truck-fleet-status"
               required
               :error="fieldErrors.fleet_status">
@@ -138,7 +138,7 @@
                 :options="fleetStatusOptions"
                 optionLabel="label"
                 optionValue="value"
-                placeholder="Select status"
+                :placeholder="$t('crews.form.selectStatus')"
                 :disabled="isDisabled"
                 :invalid="invalid"
                 required
@@ -148,7 +148,7 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Registration Expiration"
+              :label="$t('crews.form.registrationExp')"
               inputId="truck-reg-exp"
               required
               :error="fieldErrors.registration_expiration">
@@ -157,7 +157,7 @@
                 :modelValue="isoToDate(form.registration_expiration)"
                 :disabled="isDisabled"
                 :invalid="invalid"
-                placeholder="Select date"
+                :placeholder="$t('crews.form.selectDate')"
                 @update:modelValue="
                   onDateField('registration_expiration', $event)
                 " />
@@ -165,7 +165,7 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Insurance Expiration"
+              :label="$t('crews.form.insuranceExp')"
               inputId="truck-ins-exp"
               required
               :error="fieldErrors.insurance_expiration">
@@ -174,28 +174,28 @@
                 :modelValue="isoToDate(form.insurance_expiration)"
                 :disabled="isDisabled"
                 :invalid="invalid"
-                placeholder="Select date"
+                :placeholder="$t('crews.form.selectDate')"
                 @update:modelValue="
                   onDateField('insurance_expiration', $event)
                 " />
             </JRField>
 
             <JRField
-              label="Current Mileage"
+              :label="$t('crews.form.currentMileage')"
               inputId="truck-current-mileage"
-              hint="Latest reading by date from assignments (start or return).">
+              :hint="$t('crews.form.hintCurrentMileage')">
               <JRInput
                 inputId="truck-current-mileage"
                 :modelValue="currentMileageLabel"
                 disabled
-                ariaLabel="Current mileage" />
+                :ariaLabel="$t('crews.form.currentMileage')" />
             </JRField>
 
-            <JRField label="Active" inputId="truck-status">
+            <JRField :label="$t('common.active')" inputId="truck-status">
               <JRCheckbox
                 inputId="truck-status"
                 v-model="form.status"
-                ariaLabel="Active"
+                :ariaLabel="$t('common.active')"
                 :disabled="isDisabled" />
             </JRField>
           </div>

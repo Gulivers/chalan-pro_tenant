@@ -30,7 +30,7 @@
           {{ formBannerMessage }}
         </div>
 
-        <JRSection title="Context">
+        <JRSection :title="$t('workAccounts.form.sectionContext')">
           <BuilderJobHouseSelect
             v-model="builderJobHouseData"
             :is-editing="canEditContext"
@@ -41,11 +41,11 @@
             @update:houseModel="onHouseModelChanged($event)" />
         </JRSection>
 
-        <JRSection title="Identity">
+        <JRSection :title="$t('workAccounts.form.sectionIdentity')">
           <div class="jr-form-grid jr-form-grid--identity">
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Lot"
+              :label="$t('contracts.colLot')"
               inputId="wa-lot"
               :error="lotFieldError">
               <JRInput
@@ -55,8 +55,8 @@
                 autocomplete="off"
                 :placeholder="
                   canEditLotAddr
-                    ? 'Enter lot…'
-                    : 'Select Builder and Community first'
+                    ? $t('workAccounts.form.enterLot')
+                    : $t('workAccounts.form.selectBuilderCommunityFirst')
                 "
                 :disabled="!canEditLotAddr || isDisabled"
                 :invalid="invalid"
@@ -101,13 +101,13 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Title"
+              :label="$t('workAccounts.colTitle')"
               required
               inputId="wa-title"
               :hint="
                 isDisabled
                   ? ''
-                  : 'Stored in UPPERCASE. Fills from Lot or Address + Community.'
+                  : $t('workAccounts.form.titleHint')
               "
               :error="fieldError('title')"
               class="jr-form-grid__full">
@@ -117,7 +117,7 @@
                 :modelValue="local.title"
                 maxlength="200"
                 autocomplete="off"
-                placeholder="Will auto-fill from Lot/Address + Community"
+                :placeholder="$t('workAccounts.form.titlePlaceholder')"
                 :disabled="isDisabled"
                 :invalid="invalid"
                 required
@@ -127,11 +127,11 @@
           </div>
         </JRSection>
 
-        <JRSection title="Pricing and location">
+        <JRSection :title="$t('workAccounts.form.sectionPricingLocation')">
           <div class="jr-form-grid jr-form-grid--details">
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Default Price Type"
+              :label="$t('workAccounts.form.defaultPriceType')"
               inputId="wa-price-type"
               :error="fieldError('default_price_type')"
               class="jr-form-grid__price">
@@ -141,7 +141,7 @@
                 :options="priceTypeOptions"
                 optionLabel="name"
                 optionValue="id"
-                placeholder="Select a price type"
+                :placeholder="$t('workAccounts.form.selectPriceType')"
                 filter
                 showClear
                 :disabled="isDisabled"

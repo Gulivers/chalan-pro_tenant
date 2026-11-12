@@ -21,11 +21,11 @@
         class="jr-truck-assignment-form__form"
         @submit.prevent="handleSubmit"
         novalidate>
-        <JRSection title="Assignment">
+        <JRSection :title="$t('crews.form.assignment')">
           <div class="jr-form-grid">
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Assigned Crew"
+              :label="$t('crews.form.assignedCrew')"
               inputId="ta-crew"
               required
               :error="fieldErrors.crew">
@@ -35,7 +35,7 @@
                 :options="crews"
                 optionLabel="name"
                 optionValue="id"
-                placeholder="Select crew"
+                :placeholder="$t('crews.form.selectCrew')"
                 filter
                 showClear
                 :disabled="isDisabled"
@@ -47,7 +47,7 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Assigned Trucks"
+              :label="$t('crews.form.assignedTrucks')"
               inputId="ta-trucks"
               required
               class="jr-form-grid__full"
@@ -59,7 +59,7 @@
                 :options="trucksOptions"
                 optionLabel="label"
                 optionValue="id"
-                placeholder="Select truck(s)"
+                :placeholder="$t('crews.form.selectTrucks')"
                 multiple
                 filter
                 showClear
@@ -71,7 +71,7 @@
               <p
                 v-if="!isViewMode"
                 class="jr-truck-links__note jr-truck-links__note--below-select">
-                Select one or more trucks, then enter mileage for each.
+                {{ $t("crews.form.trucksSelectNote") }}
               </p>
               <ul
                 v-if="selectedTruckLinks.length"
@@ -99,13 +99,13 @@
               <p
                 v-else-if="isViewMode"
                 class="jr-truck-assignment-form__status">
-                No trucks assigned.
+                {{ $t("crews.form.noTrucksAssigned") }}
               </p>
             </JRField>
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Assigned Date"
+              :label="$t('crews.form.assignedDate')"
               inputId="ta-assigned-date"
               required
               :error="fieldErrors.assigned_date">
@@ -122,7 +122,7 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Assigned Time"
+              :label="$t('crews.form.assignedTime')"
               inputId="ta-assigned-time"
               required
               :error="fieldErrors.assigned_time">
@@ -139,9 +139,9 @@
 
             <JRField
               v-slot="{ describedby }"
-              label="Unassigned Date"
+              :label="$t('crews.form.unassignedDate')"
               inputId="ta-unassigned-date"
-              hint="When set, ending mileage is required for each truck.">
+              :hint="$t('crews.form.hintUnassignedDate')">
               <JRInput
                 inputId="ta-unassigned-date"
                 v-model="form.unassigned_date"
@@ -152,9 +152,9 @@
 
             <JRField
               v-slot="{ describedby }"
-              label="Unassigned Time"
+              :label="$t('crews.form.unassignedTime')"
               inputId="ta-unassigned-time"
-              hint="Uses current time if empty when an unassigned date is set">
+              :hint="$t('crews.form.hintUnassignedTime')">
               <JRInput
                 inputId="ta-unassigned-time"
                 v-model="form.unassigned_time"
@@ -167,13 +167,12 @@
 
         <JRSection
           v-if="mileageRows.length"
-          title="Odometer readings (miles)">
+          :title="$t('crews.form.odometerReadings')">
           <Message
             severity="info"
             :closable="false"
             class="jr-truck-assignment-form__info">
-            Enter starting mileage for each truck. Ending mileage is required
-            when registering the return (unassigned date).
+            {{ $t("crews.form.odometerMessage") }}
           </Message>
           <div
             v-for="row in mileageRows"
@@ -196,7 +195,7 @@
             <div class="jr-form-grid">
               <JRField
                 v-slot="{ describedby, invalid }"
-                label="Starting Mileage"
+                :label="$t('crews.form.startingMileage')"
                 :inputId="`ta-start-${row.truck}`"
                 required
                 :error="row.startError">
@@ -214,7 +213,7 @@
               </JRField>
               <JRField
                 v-slot="{ describedby, invalid }"
-                label="Ending Mileage"
+                :label="$t('crews.form.endingMileage')"
                 :inputId="`ta-end-${row.truck}`"
                 :required="!!form.unassigned_date"
                 :error="row.endError">

@@ -1,12 +1,12 @@
 <template>
   <JRPage>
-    <JRPageHeader title="Work Prices per Builder" />
+    <JRPageHeader :title="$t('workPrices.workPricesPerBuilder')" />
 
-    <JRSection title="Builder">
+    <JRSection :title="$t('workPrices.builders')">
       <div class="jr-wp-builder__builder">
         <JRField
           v-slot="{ describedby }"
-          label="Select builder"
+          :label="$t('workPrices.selectBuilder')"
           inputId="wp-builder-select">
           <JRSelect
             inputId="wp-builder-select"
@@ -14,7 +14,7 @@
             :options="builders"
             optionLabel="name"
             optionValue="id"
-            placeholder="Search builder"
+            :placeholder="$t('workPrices.searchBuilder')"
             filter
             showClear
             :disabled="buildersLoading"
@@ -23,11 +23,11 @@
         </JRField>
       </div>
       <p v-if="buildersLoading" class="jr-wp-builder__status" role="status">
-        Loading builders…
+        {{ $t('workPrices.loadingBuilders') }}
       </p>
     </JRSection>
 
-    <JRSection v-if="selectedBuilderId" title="Assigned piece work prices">
+    <JRSection v-if="selectedBuilderId" :title="$t('workPrices.assignedPrices')">
       <p
         v-if="selectionError"
         id="wp-prices-selection-error"
@@ -38,13 +38,13 @@
       <div class="jr-wp-builder__toolbar">
         <div class="jr-wp-builder__search">
           <label class="jr-sr-only" for="wp-builder-filter">
-            Filter work prices
+            {{ $t('workPrices.filterPrices') }}
           </label>
           <JRInput
             inputId="wp-builder-filter"
             v-model="nameFilter"
             type="search"
-            placeholder="Filter by description..."
+            :placeholder="$t('workPrices.filterPricesPlaceholder')"
             autocomplete="off"
             :disabled="loading" />
         </div>
@@ -55,7 +55,7 @@
             size="sm"
             :disabled="loading || !filteredWorkPrices.length"
             @click="selectAll">
-            Select All
+            {{ $t('workPrices.selectAll') }}
           </JRButton>
           <JRButton
             type="button"
@@ -63,13 +63,13 @@
             size="sm"
             :disabled="loading || !selectedIds.length"
             @click="clearAll">
-            Clear
+            {{ $t('workPrices.clear') }}
           </JRButton>
         </div>
       </div>
 
       <p v-if="loading" class="jr-wp-builder__status" role="status">
-        Loading work prices…
+        {{ $t('workPrices.loadingPrices') }}
       </p>
 
       <div
@@ -109,15 +109,15 @@
           variant="primary"
           :disabled="loading || saving || !selectedBuilderId"
           @click="updateWorkPriceAssignments">
-          {{ saving ? "Saving..." : "Save" }}
+          {{ saving ? $t("common.saving") : $t("common.save") }}
         </JRButton>
       </div>
     </JRSection>
 
     <JREmptyState
       v-else-if="!buildersLoading"
-      title="Select a builder"
-      description="Choose a builder to assign piece work prices." />
+      :title="$t('workPrices.selectBuilderTitle')"
+      :description="$t('workPrices.selectBuilderDesc')" />
 
     <p v-if="errorMessage" class="jr-wp-builder__error" role="alert">
       {{ errorMessage }}
@@ -176,15 +176,17 @@ export default {
     },
     pricesEmptyTitle() {
       if (this.nameFilter.trim() && this.workPrices.length) {
-        return "No matching prices";
+        return this.$t("workPrices.emptySearch");
       }
-      return "No piece work prices";
+      return this.$t("workPrices.emptyNone");
     },
     pricesEmptyDescription() {
       if (this.nameFilter.trim() && this.workPrices.length) {
-        return `No prices match “${this.nameFilter.trim()}”.`;
+        return this.$t("workPrices.emptySearchDesc", {
+          query: this.nameFilter.trim(),
+        });
       }
-      return "Create piece work prices first, then assign them here.";
+      return this.$t("workPrices.emptyNoneDesc");
     },
   },
   mounted() {

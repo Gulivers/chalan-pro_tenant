@@ -1,6 +1,6 @@
 <template>
   <AuthShell
-    title="Choose a new password"
+    :title="$t('auth.chooseNewPassword')"
     lead="Enter and confirm a new password for your JobRhythm account.">
     <form class="jr-auth-form" @submit.prevent="confirmResetPassword">
       <Message
@@ -22,7 +22,7 @@
       </Message>
 
       <JRField
-        label="New password"
+        :label="$t('auth.newPassword')"
         required
         inputId="new-password"
         :error="errors.new_password[0] || ''">
@@ -33,7 +33,7 @@
               :type="showPassword ? 'text' : 'password'"
               v-model="newPassword"
               autocomplete="new-password"
-              placeholder="Enter a secure password"
+              :placeholder="$t('auth.newPasswordPlaceholder')"
               :invalid="invalid"
               :disabled="isLoading || !canSubmit"
               :ariaDescribedby="describedby"
@@ -41,7 +41,7 @@
             <button
               type="button"
               class="jr-auth-pw__toggle"
-              :aria-label="showPassword ? 'Hide password' : 'Show password'"
+              :aria-label="showPassword ? $t('auth.hidePassword') : $t('auth.showPassword')"
               :disabled="isLoading || !canSubmit"
               @click="showPassword = !showPassword">
               <EyeSlash v-if="showPassword" class="jr-auth-pw__icon" />
@@ -52,7 +52,7 @@
       </JRField>
 
       <JRField
-        label="Confirm new password"
+        :label="$t('auth.confirmNewPassword')"
         required
         inputId="confirm-password"
         :error="errors.confirm_password[0] || ''">
@@ -63,7 +63,7 @@
               :type="showConfirm ? 'text' : 'password'"
               v-model="confirmPassword"
               autocomplete="new-password"
-              placeholder="Re-enter your password"
+              :placeholder="$t('auth.confirmPasswordPlaceholder')"
               :invalid="invalid"
               :disabled="isLoading || !canSubmit"
               :ariaDescribedby="describedby"
@@ -72,7 +72,7 @@
               type="button"
               class="jr-auth-pw__toggle"
               :aria-label="
-                showConfirm ? 'Hide confirmation' : 'Show confirmation'
+                showConfirm ? $t('auth.hideConfirmation') : $t('auth.showConfirmation')
               "
               :disabled="isLoading || !canSubmit"
               @click="showConfirm = !showConfirm">

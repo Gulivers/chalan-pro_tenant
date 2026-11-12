@@ -12,7 +12,7 @@
 
       <JRField
         v-slot="{ describedby, invalid }"
-        label="Name"
+        :label="$t('common.name')"
         required
         inputId="favorite-name"
         :error="fieldError('name')">
@@ -22,12 +22,12 @@
           :invalid="invalid"
           :required="true"
           :ariaDescribedby="describedby"
-          placeholder="Descriptive name for this favorite" />
+          :placeholder="$t('transactions.form.favoriteNamePlaceholder')" />
       </JRField>
 
       <JRField
         v-slot="{ describedby, invalid }"
-        label="Description"
+        :label="$t('transactions.docTypeForm.description')"
         inputId="favorite-description"
         :error="fieldError('description')">
         <JRTextarea
@@ -36,7 +36,7 @@
           :rows="3"
           :invalid="invalid"
           :ariaDescribedby="describedby"
-          placeholder="Optional description" />
+          :placeholder="$t('transactions.form.favoriteDescPlaceholder')" />
       </JRField>
 
       <section class="jr-favorite-preview" aria-label="Transaction preview">

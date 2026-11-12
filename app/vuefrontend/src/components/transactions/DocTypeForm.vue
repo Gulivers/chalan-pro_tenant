@@ -25,16 +25,16 @@
           <div class="jr-form-grid">
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Type Code"
+              :label="$t('transactions.docTypeForm.typeCode')"
               inputId="doctype-type-code"
               required
-              hint="Unique code to identify the document type"
+              :hint="$t('transactions.docTypeForm.typeCodeHint')"
               :error="fieldErrors.type_code">
               <JRInput
                 inputId="doctype-type-code"
                 :modelValue="form.type_code"
                 maxlength="20"
-                placeholder="Ex: INCOME, SUPRET"
+                :placeholder="$t('transactions.docTypeForm.typeCodePlaceholder')"
                 class="jr-doctype-form__code"
                 :disabled="isDisabled"
                 :invalid="invalid"
@@ -45,7 +45,7 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Description"
+              :label="$t('transactions.docTypeForm.description')"
               inputId="doctype-description"
               required
               :error="fieldErrors.description">
@@ -53,7 +53,7 @@
                 inputId="doctype-description"
                 v-model="form.description"
                 maxlength="200"
-                placeholder="Document type description"
+                :placeholder="$t('transactions.docTypeForm.descriptionPlaceholder')"
                 :disabled="isDisabled"
                 :invalid="invalid"
                 required
@@ -67,9 +67,9 @@
           <div class="jr-form-grid">
             <JRField
               v-slot="{ describedby }"
-              label="Stock Movement"
+              :label="$t('transactions.docTypeForm.stockMovement')"
               inputId="doctype-stock-movement"
-              hint="Defines how this document type affects inventory (entry, exit, or neutral)">
+              :hint="$t('transactions.docTypeForm.stockMovementHint')">
               <JRSelect
                 inputId="doctype-stock-movement"
                 v-model="form.stock_movement"
@@ -82,54 +82,54 @@
           </div>
           <div class="jr-form-checks">
             <JRField
-              label="Physical Inventory"
+              :label="$t('transactions.docTypeForm.physicalInventory')"
               inputId="doctype-affects-physical"
-              hint="Includes this document in the physical on-hand count.">
+              :hint="$t('transactions.docTypeForm.physicalInventoryHint')">
               <JRCheckbox
                 inputId="doctype-affects-physical"
                 v-model="form.affects_physical"
-                ariaLabel="Physical Inventory"
+                :ariaLabel="$t('transactions.docTypeForm.physicalInventory')"
                 :disabled="isDisabled" />
             </JRField>
             <JRField
-              label="Logical Inventory"
+              :label="$t('transactions.docTypeForm.logicalInventory')"
               inputId="doctype-affects-logical"
-              hint="Includes this document in the logical available count.">
+              :hint="$t('transactions.docTypeForm.logicalInventoryHint')">
               <JRCheckbox
                 inputId="doctype-affects-logical"
                 v-model="form.affects_logical"
-                ariaLabel="Logical Inventory"
+                :ariaLabel="$t('transactions.docTypeForm.logicalInventory')"
                 :disabled="isDisabled" />
             </JRField>
             <JRField
-              label="Affects Accounting"
+              :label="$t('transactions.docTypeForm.affectsAccounting')"
               inputId="doctype-affects-accounting"
-              hint="Includes this document in accounting inventory.">
+              :hint="$t('transactions.docTypeForm.affectsAccountingHint')">
               <JRCheckbox
                 inputId="doctype-affects-accounting"
                 v-model="form.affects_accounting"
-                ariaLabel="Affects Accounting"
+                :ariaLabel="$t('transactions.docTypeForm.affectsAccounting')"
                 :disabled="isDisabled" />
             </JRField>
             <JRField
-              label="Warehouse Required"
+              :label="$t('transactions.docTypeForm.warehouseRequired')"
               inputId="doctype-warehouse-required"
-              hint="A warehouse must be selected on the document.">
+              :hint="$t('transactions.docTypeForm.warehouseRequiredHint')">
               <JRCheckbox
                 inputId="doctype-warehouse-required"
                 v-model="form.warehouse_required"
-                ariaLabel="Warehouse Required"
+                :ariaLabel="$t('transactions.docTypeForm.warehouseRequired')"
                 :disabled="isDisabled" />
             </JRField>
             <JRField
-              label="Creates Serialized Items"
+              :label="$t('transactions.docTypeForm.createsSerialized')"
               inputId="doctype-creates-serialized"
-              hint="Opens asset tag assignment when the document has serialized items (e.g. GRN)"
+              :hint="$t('transactions.docTypeForm.createsSerializedHint')"
               class="jr-form-checks__full">
               <JRCheckbox
                 inputId="doctype-creates-serialized"
                 v-model="form.creates_serialized_items"
-                ariaLabel="Creates Serialized Items"
+                :ariaLabel="$t('transactions.docTypeForm.createsSerialized')"
                 :disabled="isDisabled" />
             </JRField>
           </div>
@@ -138,33 +138,33 @@
         <JRSection :title="$t('transactions.docTypeForm.sectionBusiness')">
           <div class="jr-form-checks">
             <JRField
-              label="Purchase Document"
+              :label="$t('transactions.docTypeForm.purchaseDocument')"
               inputId="doctype-is-purchase"
-              hint="Marks the document as a purchase (vendor side).">
+              :hint="$t('transactions.docTypeForm.purchaseDocumentHint')">
               <JRCheckbox
                 inputId="doctype-is-purchase"
                 v-model="form.is_purchase"
-                ariaLabel="Purchase Document"
+                :ariaLabel="$t('transactions.docTypeForm.purchaseDocument')"
                 :disabled="isDisabled" />
             </JRField>
             <JRField
-              label="Sales Document"
+              :label="$t('transactions.docTypeForm.salesDocument')"
               inputId="doctype-is-sales"
-              hint="Marks the document as a sale (customer side).">
+              :hint="$t('transactions.docTypeForm.salesDocumentHint')">
               <JRCheckbox
                 inputId="doctype-is-sales"
                 v-model="form.is_sales"
-                ariaLabel="Sales Document"
+                :ariaLabel="$t('transactions.docTypeForm.salesDocument')"
                 :disabled="isDisabled" />
             </JRField>
             <JRField
-              label="Subject to Taxes"
+              :label="$t('transactions.docTypeForm.subjectToTaxes')"
               inputId="doctype-is-taxable"
-              hint="Tax applies to the lines of this document.">
+              :hint="$t('transactions.docTypeForm.subjectToTaxesHint')">
               <JRCheckbox
                 inputId="doctype-is-taxable"
                 v-model="form.is_taxable"
-                ariaLabel="Subject to Taxes"
+                :ariaLabel="$t('transactions.docTypeForm.subjectToTaxes')"
                 :disabled="isDisabled" />
             </JRField>
           </div>
@@ -173,91 +173,89 @@
         <JRSection :title="$t('transactions.docTypeForm.sectionOperational')">
           <div class="jr-form-checks">
             <JRField
-              label="Operational Document"
+              :label="$t('transactions.docTypeForm.operationalDocument')"
               inputId="doctype-is-operational"
-              hint="Requires a Work Account. Material Request uses this flag.">
+              :hint="$t('transactions.docTypeForm.operationalDocumentHint')">
               <JRCheckbox
                 inputId="doctype-is-operational"
                 v-model="form.is_operational"
-                ariaLabel="Operational Document"
+                :ariaLabel="$t('transactions.docTypeForm.operationalDocument')"
                 :disabled="isDisabled" />
             </JRField>
             <JRField
-              label="Allow Negative Sales"
+              :label="$t('transactions.docTypeForm.allowNegativeSales')"
               inputId="doctype-allow-negative-sales"
-              hint="Allow sales even when stock is insufficient">
+              :hint="$t('transactions.docTypeForm.allowNegativeSalesHint')">
               <JRCheckbox
                 inputId="doctype-allow-negative-sales"
                 v-model="form.allow_negative_sales"
-                ariaLabel="Allow Negative Sales"
+                :ariaLabel="$t('transactions.docTypeForm.allowNegativeSales')"
                 :disabled="isDisabled" />
             </JRField>
           </div>
         </JRSection>
 
-        <JRSection title="JobRhythm Assistant">
+        <JRSection :title="$t('transactions.docTypeForm.sectionAssistant')">
           <p class="jr-doctype-form__note">
-            Map this type to analytics meanings. Codes like PINV or PO-INV can
-            differ per tenant; these flags tell the Assistant how to classify
-            transactions.
+            {{ $t('transactions.docTypeForm.assistantNote') }}
           </p>
           <div class="jr-form-checks">
             <JRField
-              label="Net invoiced spending"
+              :label="$t('transactions.docTypeForm.netInvoicedSpend')"
               inputId="doctype-net-invoiced"
-              hint="Counts toward Assistant net invoiced spending. Leave off for orders and returns.">
+              :hint="$t('transactions.docTypeForm.netInvoicedSpendHint')">
               <JRCheckbox
                 inputId="doctype-net-invoiced"
                 v-model="form.counts_as_net_invoiced_spend"
-                ariaLabel="Net invoiced spending"
+                :ariaLabel="$t('transactions.docTypeForm.netInvoicedSpend')"
                 :disabled="isDisabled"
                 @update:modelValue="onSpendIntentionChange" />
             </JRField>
             <JRField
-              label="Job material issue"
+              :label="$t('transactions.docTypeForm.jobMaterialIssue')"
               inputId="doctype-job-material"
-              hint="Counts as material issued to a job, such as a picking.">
+              :hint="$t('transactions.docTypeForm.jobMaterialIssueHint')">
               <JRCheckbox
                 inputId="doctype-job-material"
                 v-model="form.counts_as_job_material_issue"
-                ariaLabel="Job material issue"
+                :ariaLabel="$t('transactions.docTypeForm.jobMaterialIssue')"
                 :disabled="isDisabled" />
             </JRField>
             <JRField
-              label="Purchase return"
+              :label="$t('transactions.docTypeForm.purchaseReturn')"
               inputId="doctype-purchase-return"
-              hint="Counts as a purchase return, separate from net invoiced spending.">
+              :hint="$t('transactions.docTypeForm.purchaseReturnHint')">
               <JRCheckbox
                 inputId="doctype-purchase-return"
                 v-model="form.counts_as_purchase_return"
-                ariaLabel="Purchase return"
+                :ariaLabel="$t('transactions.docTypeForm.purchaseReturn')"
                 :disabled="isDisabled"
                 @update:modelValue="onReturnIntentionChange" />
             </JRField>
           </div>
         </JRSection>
 
-        <JRSection title="Status">
+        <JRSection :title="$t('transactions.docTypeForm.sectionStatus')">
           <div class="jr-form-checks">
             <JRField
-              label="Active Document Type"
+              :label="$t('transactions.docTypeForm.activeDocumentType')"
               inputId="doctype-is-active"
-              hint="Inactive types cannot be selected on new documents.">
+              :hint="$t('transactions.docTypeForm.activeDocumentTypeHint')">
               <JRCheckbox
                 inputId="doctype-is-active"
                 v-model="form.is_active"
-                ariaLabel="Active Document Type"
+                :ariaLabel="$t('transactions.docTypeForm.activeDocumentType')"
                 :disabled="isDisabled" />
             </JRField>
             <JRField
-              label="Status Tracking"
+              :label="$t('transactions.docTypeForm.statusTracking')"
               inputId="doctype-uses-status-tracking"
-              hint="When on, new documents of this type get a status workflow. Add an initial status below first."
+              :hint="$t('transactions.docTypeForm.statusTrackingHint')"
               :error="fieldErrors.uses_status_tracking">
               <JRCheckbox
                 inputId="doctype-uses-status-tracking"
                 v-model="form.uses_status_tracking"
-                ariaLabel="Status Tracking"
+                :ariaLabel="$t('transactions.docTypeForm.statusTracking')"
                 :disabled="isDisabled" />
             </JRField>
           </div>
@@ -274,7 +272,7 @@
           v-else-if="!isViewMode"
           class="jr-doctype-form__note"
           role="status">
-          Save this document type to define its Document Statuses workflow.
+          {{ $t('transactions.docTypeForm.saveFirstForWorkflow') }}
         </p>
 
         <div

@@ -1,8 +1,8 @@
 <template>
   <JRField
-    label="Company logo"
+    :label="t('onboarding.logo.label')"
     inputId="company_logo"
-    hint="Optional. PNG, JPG, or GIF — max 5MB."
+    :hint="t('onboarding.logo.hint')"
     :error="localRejectMessage || error || ''">
     <div class="jr-onboard-logo">
       <input
@@ -19,18 +19,21 @@
         class="jr-onboard-logo__drop"
         @click="triggerFileInput">
         <Upload class="jr-onboard-logo__icon" aria-hidden="true" />
-        <span class="jr-onboard-logo__title">Upload logo</span>
-        <span class="jr-onboard-logo__hint">Click to choose an image</span>
+        <span class="jr-onboard-logo__title">{{ t('onboarding.logo.upload') }}</span>
+        <span class="jr-onboard-logo__hint">{{ t('onboarding.logo.clickHint') }}</span>
       </button>
 
       <div v-else class="jr-onboard-logo__preview">
-        <img :src="preview" alt="Logo preview" class="jr-onboard-logo__img" />
+        <img
+          :src="preview"
+          :alt="t('onboarding.logo.previewAlt')"
+          class="jr-onboard-logo__img" />
         <div class="jr-onboard-logo__actions">
           <JRButton type="button" variant="secondary" size="sm" @click="triggerFileInput">
-            Change
+            {{ t('onboarding.logo.change') }}
           </JRButton>
           <JRButton type="button" variant="danger" size="sm" @click="removeLogo">
-            Remove
+            {{ t('onboarding.logo.remove') }}
           </JRButton>
         </div>
       </div>
@@ -40,8 +43,11 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Upload from '@primeicons/vue/upload'
 import { JRField, JRButton } from '@ui'
+
+const { t } = useI18n({ useScope: 'global' })
 
 const props = defineProps({
   modelValue: {
@@ -73,8 +79,7 @@ const handleFileChange = (event) => {
 
   const maxSize = 5 * 1024 * 1024
   if (file.size > maxSize) {
-    localRejectMessage.value =
-      'That file is too large. Please use an image under 5MB.'
+    localRejectMessage.value = t('onboarding.logo.tooLarge')
     emit('update:modelValue', null)
     preview.value = null
     return
@@ -82,7 +87,7 @@ const handleFileChange = (event) => {
 
   const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif']
   if (!allowedTypes.includes(file.type)) {
-    localRejectMessage.value = 'Please choose a PNG, JPG, or GIF image.'
+    localRejectMessage.value = t('onboarding.logo.badType')
     emit('update:modelValue', null)
     preview.value = null
     return
