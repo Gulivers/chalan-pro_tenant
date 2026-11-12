@@ -28,9 +28,10 @@
           <dt>Company name</dt>
           <dd>{{ companyInfo.business_name }}</dd>
         </div>
+        <!-- TEMP: still show fixed Electric while multi-trade onboarding is paused. -->
         <div class="jr-onboard-review__row">
           <dt>Trade / type</dt>
-          <dd>{{ getBusinessTypeLabel(companyInfo.business_type) }}</dd>
+          <dd>{{ getBusinessTypeLabel(companyInfo.business_type || 'electric') }}</dd>
         </div>
         <div v-if="companyInfo.address" class="jr-onboard-review__row">
           <dt>Address</dt>
