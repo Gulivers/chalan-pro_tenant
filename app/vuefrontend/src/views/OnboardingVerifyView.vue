@@ -7,10 +7,12 @@
             class="mb-4"
             style="width: 2.5rem; height: 2.5rem"
             strokeWidth="4"
-            aria-label="Confirming email" />
-          <h1 class="mb-2 text-xl font-semibold">Confirming your email…</h1>
+            :aria-label="t('onboarding.verifyPage.confirmingAria')" />
+          <h1 class="mb-2 text-xl font-semibold">
+            {{ t('onboarding.verifyPage.confirmingTitle') }}
+          </h1>
           <p class="mb-0 text-jr-muted">
-            Creating your JobRhythm workspace. This may take a minute.
+            {{ t('onboarding.verifyPage.confirmingLead') }}
           </p>
         </div>
 
@@ -18,22 +20,26 @@
           <span class="mb-3 inline-flex text-jr-success" aria-hidden="true">
             <CheckCircle :size="36" />
           </span>
-          <h1 class="mb-2 text-xl font-semibold">Workspace ready</h1>
-          <p class="text-jr-muted">Redirecting you to sign in…</p>
+          <h1 class="mb-2 text-xl font-semibold">
+            {{ t('onboarding.verifyPage.readyTitle') }}
+          </h1>
+          <p class="text-jr-muted">{{ t('onboarding.verifyPage.readyLead') }}</p>
         </div>
 
         <div v-else>
           <span class="mb-3 inline-flex text-jr-danger" aria-hidden="true">
             <ExclamationTriangle :size="36" />
           </span>
-          <h1 class="mb-2 text-xl font-semibold">Verification failed</h1>
+          <h1 class="mb-2 text-xl font-semibold">
+            {{ t('onboarding.verifyPage.failedTitle') }}
+          </h1>
           <p class="text-jr-muted">{{ errorMessage }}</p>
           <JRButton
             type="button"
             class="mt-4"
             variant="primary"
             @click="router.push('/onboarding')">
-            Start onboarding again
+            {{ t('onboarding.verifyPage.startAgain') }}
           </JRButton>
         </div>
       </div>
@@ -44,12 +50,14 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import ProgressSpinner from 'primevue/progressspinner'
 import CheckCircle from '@primeicons/vue/check-circle'
 import ExclamationTriangle from '@primeicons/vue/exclamation-triangle'
 import { JRPage, JRButton } from '@/ui'
 import { verifyOnboardingEmail } from '@/api/onboarding'
 
+const { t } = useI18n({ useScope: 'global' })
 const route = useRoute()
 const router = useRouter()
 const status = ref('loading')
@@ -59,7 +67,7 @@ onMounted(async () => {
   const token = (route.query.token || '').toString().trim()
   if (!token) {
     status.value = 'error'
-    errorMessage.value = 'Missing verification token.'
+    errorMessage.value = t('onboarding.verifyPage.missingToken')
     return
   }
 
@@ -74,7 +82,8 @@ onMounted(async () => {
     }
   } catch (error) {
     status.value = 'error'
-    errorMessage.value = error.message || 'This verification link is invalid or expired.'
+    errorMessage.value =
+      error.message || t('onboarding.verifyPage.invalidLink')
   }
 })
 </script>

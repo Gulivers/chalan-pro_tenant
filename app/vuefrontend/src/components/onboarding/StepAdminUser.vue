@@ -2,7 +2,7 @@
   <div class="jr-onboard-step">
     <div class="jr-onboard-step__fields">
       <JRField
-        label="Full name"
+        :label="t('onboarding.admin.fullName')"
         required
         inputId="admin_name"
         :error="errors.name || ''">
@@ -13,16 +13,16 @@
             :invalid="invalid"
             :aria-describedby="describedby || undefined"
             maxlength="150"
-            placeholder="Your full name"
+            :placeholder="t('onboarding.admin.fullNamePlaceholder')"
             @blur="validateField('name')" />
         </template>
       </JRField>
 
       <JRField
-        label="Work email"
+        :label="t('onboarding.admin.workEmail')"
         required
         inputId="admin_email"
-        hint="You will use this email to sign in to JobRhythm."
+        :hint="t('onboarding.admin.workEmailHint')"
         :error="errors.email || ''">
         <template #default="{ invalid, describedby }">
           <JRInput
@@ -32,13 +32,13 @@
             :invalid="invalid"
             :aria-describedby="describedby || undefined"
             maxlength="254"
-            placeholder="you@company.com"
+            :placeholder="t('onboarding.admin.emailPlaceholder')"
             @blur="validateField('email')" />
         </template>
       </JRField>
 
       <JRField
-        label="Password"
+        :label="t('onboarding.admin.password')"
         required
         inputId="admin_password"
         :error="errors.password || ''">
@@ -56,7 +56,11 @@
             <button
               type="button"
               class="jr-onboard-pw__toggle"
-              :aria-label="showPassword ? 'Hide password' : 'Show password'"
+              :aria-label="
+                showPassword
+                  ? t('onboarding.admin.hidePassword')
+                  : t('onboarding.admin.showPassword')
+              "
               @click="showPassword = !showPassword">
               <EyeSlash v-if="showPassword" class="jr-onboard-pw__icon" />
               <Eye v-else class="jr-onboard-pw__icon" />
@@ -67,7 +71,9 @@
 
       <div v-if="localData.password" class="jr-onboard-strength" aria-live="polite">
         <div class="jr-onboard-strength__meta">
-          <span class="jr-onboard-strength__label">Password strength</span>
+          <span class="jr-onboard-strength__label">
+            {{ t('onboarding.admin.strengthLabel') }}
+          </span>
           <span
             class="jr-onboard-strength__value"
             :data-level="passwordStrength">
@@ -83,13 +89,13 @@
       </div>
 
       <JRField
-        label="Confirm password"
+        :label="t('onboarding.admin.confirmPassword')"
         required
         inputId="admin_password_confirm"
         :error="errors.password_confirm || ''"
         :hint="
           passwordsMatchSuccess && !errors.password_confirm
-            ? 'Passwords match.'
+            ? t('onboarding.admin.passwordsMatch')
             : ''
         ">
         <template #default="{ invalid, describedby }">
@@ -107,7 +113,9 @@
               type="button"
               class="jr-onboard-pw__toggle"
               :aria-label="
-                showPasswordConfirm ? 'Hide confirmation' : 'Show confirmation'
+                showPasswordConfirm
+                  ? t('onboarding.admin.hideConfirmation')
+                  : t('onboarding.admin.showConfirmation')
               "
               @click="showPasswordConfirm = !showPasswordConfirm">
               <EyeSlash v-if="showPasswordConfirm" class="jr-onboard-pw__icon" />
@@ -117,34 +125,36 @@
         </template>
       </JRField>
 
-      <ul class="jr-onboard-reqs" aria-label="Password requirements">
+      <ul
+        class="jr-onboard-reqs"
+        :aria-label="t('onboarding.admin.reqsLabel')">
         <li :class="{ 'jr-onboard-reqs__item--ok': hasMinLength }">
           <CheckCircle
             v-if="hasMinLength"
             class="jr-onboard-reqs__icon" />
           <span v-else class="jr-onboard-reqs__dot" aria-hidden="true" />
-          At least 8 characters
+          {{ t('onboarding.admin.reqMinLength') }}
         </li>
         <li :class="{ 'jr-onboard-reqs__item--ok': hasUpperCase }">
           <CheckCircle
             v-if="hasUpperCase"
             class="jr-onboard-reqs__icon" />
           <span v-else class="jr-onboard-reqs__dot" aria-hidden="true" />
-          An uppercase letter
+          {{ t('onboarding.admin.reqUpper') }}
         </li>
         <li :class="{ 'jr-onboard-reqs__item--ok': hasLowerCase }">
           <CheckCircle
             v-if="hasLowerCase"
             class="jr-onboard-reqs__icon" />
           <span v-else class="jr-onboard-reqs__dot" aria-hidden="true" />
-          A lowercase letter
+          {{ t('onboarding.admin.reqLower') }}
         </li>
         <li :class="{ 'jr-onboard-reqs__item--ok': hasNumber }">
           <CheckCircle
             v-if="hasNumber"
             class="jr-onboard-reqs__icon" />
           <span v-else class="jr-onboard-reqs__dot" aria-hidden="true" />
-          A number
+          {{ t('onboarding.admin.reqNumber') }}
         </li>
       </ul>
     </div>
@@ -153,10 +163,13 @@
 
 <script setup>
 import { reactive, computed, watch, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Eye from '@primeicons/vue/eye'
 import EyeSlash from '@primeicons/vue/eye-slash'
 import CheckCircle from '@primeicons/vue/check-circle'
 import { JRField, JRInput } from '@ui'
+
+const { t } = useI18n({ useScope: 'global' })
 
 const props = defineProps({
   modelValue: {
@@ -206,11 +219,11 @@ const strengthRatio = computed(() => passwordStrength.value / 5)
 
 const strengthLabel = computed(() => {
   const strength = passwordStrength.value
-  if (strength <= 1) return 'Very weak'
-  if (strength <= 2) return 'Weak'
-  if (strength <= 3) return 'Fair'
-  if (strength <= 4) return 'Strong'
-  return 'Very strong'
+  if (strength <= 1) return t('onboarding.admin.strength.veryWeak')
+  if (strength <= 2) return t('onboarding.admin.strength.weak')
+  if (strength <= 3) return t('onboarding.admin.strength.fair')
+  if (strength <= 4) return t('onboarding.admin.strength.strong')
+  return t('onboarding.admin.strength.veryStrong')
 })
 
 const hasMinLength = computed(() => localData.password.length >= 8)

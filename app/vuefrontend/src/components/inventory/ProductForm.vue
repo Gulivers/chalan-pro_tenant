@@ -43,7 +43,7 @@
         <div class="jr-form-grid jr-form-grid--identity">
           <JRField
             v-slot="{ describedby, invalid }"
-            label="Name"
+            :label="$t('products.form.name')"
             required
             inputId="product-name"
             :error="fieldErrors.name">
@@ -57,10 +57,10 @@
           </JRField>
           <JRField
             v-slot="{ describedby, invalid }"
-            label="SKU"
+            :label="$t('products.form.sku')"
             required
             inputId="product-sku"
-            hint="Must be unique. Used in warehouse and purchasing."
+            :hint="$t('products.form.hintSku')"
             :error="fieldErrors.sku">
             <JRInput
               inputId="product-sku"
@@ -72,7 +72,7 @@
           </JRField>
           <JRField
             v-slot="{ describedby, invalid }"
-            label="Model #"
+            :label="$t('products.form.model')"
             inputId="product-model-number"
             :error="fieldErrors.model_number">
             <JRInput
@@ -91,7 +91,7 @@
         <div class="jr-form-grid jr-form-grid--classification">
           <JRField
             v-slot="{ describedby, invalid }"
-            label="Category"
+            :label="$t('products.form.category')"
             required
             inputId="product-category"
             :error="fieldErrors.category">
@@ -101,7 +101,7 @@
               :options="categories"
               optionLabel="name"
               optionValue="id"
-              placeholder="Select Category"
+              :placeholder="$t('products.form.selectCategory')"
               :disabled="isReadOnly"
               :invalid="invalid"
               :required="true"
@@ -116,8 +116,8 @@
                 isReadOnly ||
                 !hasPermission('appinventory.change_productcategory')
               "
-              addLabel="Add a new category to the system"
-              editLabel="Edit the currently selected category"
+              :addLabel="$t('products.form.addCategory')"
+              :editLabel="$t('products.form.editCategory')"
               filter
               @show="loadCategories"
               @add="openCatalog('category')"
@@ -126,10 +126,10 @@
 
           <JRField
             v-slot="{ describedby, invalid }"
-            label="Brand"
+            :label="$t('products.form.brand')"
             required
             inputId="product-brand"
-            hint="Manufacturer or catalog brand for this SKU."
+            :hint="$t('products.form.hintBrand')"
             :error="fieldErrors.brand">
             <JRSelectAddon
               inputId="product-brand"
@@ -137,7 +137,7 @@
               :options="brands"
               optionLabel="name"
               optionValue="id"
-              placeholder="Select brand"
+              :placeholder="$t('products.form.selectBrand')"
               :disabled="isReadOnly"
               :invalid="invalid"
               :required="true"
@@ -146,7 +146,7 @@
               :addDisabled="
                 isReadOnly || !hasPermission('appinventory.add_productbrand')
               "
-              addLabel="Add a new brand to the system"
+              :addLabel="$t('products.form.addBrand')"
               filter
               @show="loadBrands"
               @add="openCatalog('brand')" />
@@ -154,7 +154,7 @@
 
           <JRField
             v-slot="{ describedby, invalid }"
-            label="Default Unit"
+            :label="$t('products.form.defaultUnit')"
             required
             inputId="product-unit-default"
             :error="fieldErrors.unit_default">
@@ -164,7 +164,7 @@
               :options="units"
               optionLabel="name"
               optionValue="id"
-              placeholder="Select Unit"
+              :placeholder="$t('products.form.selectUnit')"
               :disabled="isReadOnly"
               :invalid="invalid"
               :required="true"
@@ -179,8 +179,8 @@
                 isReadOnly ||
                 !hasPermission('appinventory.change_unitofmeasure')
               "
-              addLabel="Add a new unit of measure to the system"
-              editLabel="Edit the currently selected unit"
+              :addLabel="$t('products.form.addUnit')"
+              :editLabel="$t('products.form.editUnit')"
               filter
               @show="loadUnits"
               @add="openCatalog('unit')"
@@ -189,13 +189,13 @@
         </div>
       </JRSection>
 
-      <JRSection v-if="!productLoading" title="Inventory">
+      <JRSection v-if="!productLoading" :title="$t('products.form.sectionInventory')">
         <div class="jr-form-grid jr-form-grid--inventory">
           <JRField
             v-slot="{ describedby }"
-            label="Tracking Mode"
+            :label="$t('products.form.trackingMode')"
             inputId="product-tracking-mode"
-            hint="Quantity counts stock. Serialized tracks each unit (tools and equipment).">
+            :hint="$t('products.form.hintTrackingMode')">
             <JRSelect
               inputId="product-tracking-mode"
               v-model="product.tracking_mode"
@@ -204,22 +204,21 @@
               optionValue="value"
               :disabled="isReadOnly"
               :ariaDescribedby="describedby"
-              placeholder="Select tracking mode..." />
+              :placeholder="$t('products.form.selectTrackingMode')" />
             <Message
               v-if="product.tracking_mode === 'SERIALIZED'"
               class="jr-product-form__info"
               severity="info"
               :closable="false">
-              Serialized products create one tracked unit per quantity on
-              purchase.
+              {{ $t('products.form.serializedConsequence') }}
             </Message>
           </JRField>
 
           <JRField
             v-slot="{ describedby }"
-            label="Reorder Level"
+            :label="$t('products.form.reorderLevel')"
             inputId="product-reorder-level"
-            hint="In the default warehouse unit.">
+            :hint="$t('products.form.hintReorderLevel')">
             <JRInput
               inputId="product-reorder-level"
               type="number"
@@ -232,17 +231,17 @@
               " />
           </JRField>
 
-          <JRField label="Active" inputId="isActive">
+          <JRField :label="$t('products.form.active')" inputId="isActive">
             <JRCheckbox
               v-model="product.is_active"
               inputId="isActive"
-              ariaLabel="Active"
+              :ariaLabel="$t('products.form.active')"
               :disabled="isReadOnly" />
           </JRField>
         </div>
       </JRSection>
 
-      <JRSection v-if="!productLoading" title="Price and Unit Settings">
+      <JRSection v-if="!productLoading" :title="$t('products.form.sectionPrices')">
         <div class="jr-product-form__price-toolbar">
           <JRButton
             v-if="!isReadOnly"
@@ -250,13 +249,12 @@
             variant="primary-outline"
             size="sm"
             class="jr-product-form__add-price"
-            title="Add a new price and unit row"
+            :title="$t('products.form.addPriceRow')"
             @click="addPriceRow">
-            + Add Row
+            + {{ $t("transactions.lines.addRow") }}
           </JRButton>
           <p class="jr-product-form__note">
-            Price rows can use a unit other than the warehouse default. Only a
-            sale price can be the default.
+            {{ $t('products.form.priceRowsNote') }}
           </p>
         </div>
         <ProductPriceUnitTable
@@ -324,10 +322,11 @@
 
     <JRDialog
       :visible="leaveDialogVisible"
-      header="Leave without saving?"
-      message="Unsaved changes will be lost."
-      confirmLabel="Leave"
+      :header="$t('products.form.leaveWithoutSaving')"
+      :message="$t('common.confirmDeleteText')"
+      :confirmLabel="$t('common.continue')"
       confirmVariant="danger"
+      :cancelLabel="$t('common.cancel')"
       @update:visible="onLeaveVisible"
       @confirm="confirmLeave" />
   </JRPage>
@@ -433,10 +432,6 @@ export default {
         tracking_mode: "QUANTITY",
         is_active: true,
       },
-      trackingModeOptions: [
-        { value: "QUANTITY", label: "Quantity — stock by count" },
-        { value: "SERIALIZED", label: "Serialized — track each unit" },
-      ],
       productPriceUnits: [],
       categories: [],
       brands: [],
@@ -463,6 +458,18 @@ export default {
     };
   },
   computed: {
+    trackingModeOptions() {
+      return [
+        {
+          value: "QUANTITY",
+          label: this.$t("products.form.trackingQuantity"),
+        },
+        {
+          value: "SERIALIZED",
+          label: this.$t("products.form.trackingSerialized"),
+        },
+      ];
+    },
     formIsDirty() {
       return this.isDirty();
     },

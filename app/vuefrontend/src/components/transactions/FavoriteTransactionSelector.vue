@@ -11,12 +11,12 @@
       :disabled="isEditMode || loading"
       :placeholder="
         isEditMode
-          ? 'Cannot import in edit mode'
-          : 'Select a favorite transaction…'
+          ? $t('transactions.form.cannotImportInEdit')
+          : $t('transactions.form.selectFavoritePlaceholder')
       "
       :showEdit="true"
       :editDisabled="!selectedFavorite"
-      editLabel="Edit the selected favorite"
+      :editLabel="$t('transactions.form.editFavorite')"
       @update:modelValue="selectFavorite"
       @show="() => loadFavorites(false)"
       @edit="editSelectedFavorite" />

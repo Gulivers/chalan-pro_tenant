@@ -16,7 +16,9 @@
           <h2 class="jr-onboard-modules__name">{{ mod.name }}</h2>
           <p class="jr-onboard-modules__desc">{{ mod.description }}</p>
         </div>
-        <span class="jr-onboard-modules__badge">Included</span>
+        <span class="jr-onboard-modules__badge">
+          {{ t('onboarding.modules.included') }}
+        </span>
       </li>
     </ul>
   </div>
@@ -24,6 +26,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Cog from '@primeicons/vue/cog'
 import Box from '@primeicons/vue/box'
 import File from '@primeicons/vue/file'
@@ -32,43 +35,15 @@ import Truck from '@primeicons/vue/truck'
 import MapMarker from '@primeicons/vue/map-marker'
 import { ONBOARDING_MODULE_IDS } from './onboardingModuleDefaults.js'
 
-const MODULE_DEFS = {
-  operations: {
-    name: 'Operations',
-    Icon: Cog,
-    description:
-      'Schedule, Work Order Viewer, Transactions, Work Accounts—the day-to-day field and office rhythm.',
-  },
-  inventory: {
-    name: 'Inventory',
-    Icon: Box,
-    description:
-      'Products, warehouses, transfers, dashboards, serialization, pricing units—everything under Inventory in the menu.',
-  },
-  contracts_pricing: {
-    name: 'Contracts & Pricing',
-    Icon: File,
-    description:
-      'Piece work contracts and unit pricing for crews—not the prime agreement between you and the builder.',
-  },
-  entities: {
-    name: 'Entities',
-    Icon: Building,
-    description:
-      'Builders & Parties, Party Types, Party Categories—master data that ties builders and parties together.',
-  },
-  crews_fleet: {
-    name: 'Crews and Fleet',
-    Icon: Truck,
-    description:
-      'Categories, crews, trucks, truck assignments—the people and fleet you send to jobs.',
-  },
-  communities: {
-    name: 'Communities',
-    Icon: MapMarker,
-    description:
-      'Communities Map and Supervisor Communities—where jobs and subdivisions live on the map.',
-  },
+const { t } = useI18n({ useScope: 'global' })
+
+const MODULE_ICONS = {
+  operations: Cog,
+  inventory: Box,
+  contracts_pricing: File,
+  entities: Building,
+  crews_fleet: Truck,
+  communities: MapMarker,
 }
 
 defineProps({
@@ -81,11 +56,9 @@ defineProps({
 const modules = computed(() =>
   ONBOARDING_MODULE_IDS.map((id) => ({
     id,
-    ...(MODULE_DEFS[id] || {
-      name: id,
-      Icon: Box,
-      description: '',
-    }),
+    Icon: MODULE_ICONS[id] || Box,
+    name: t(`onboarding.modules.${id}.name`),
+    description: t(`onboarding.modules.${id}.description`),
   }))
 )
 </script>

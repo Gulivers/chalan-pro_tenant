@@ -116,10 +116,10 @@ Ese texto entra en `aria-describedby` junto al error.
 ```vue
 <JRField
   v-slot="{ describedby, invalid }"
-  label="SKU"
+  :label="$t('products.form.sku')"
   required
   inputId="product-sku"
-  hint="Must be unique. Used in warehouse and purchasing."
+  :hint="$t('products.form.hintSku')"
   :error="fieldErrors.sku">
   <JRInput
     inputId="product-sku"
@@ -129,16 +129,18 @@ Ese texto entra en `aria-describedby` junto al error.
 </JRField>
 ```
 
+Copy visible (hints, placeholders, tooltips/`addLabel`) → `$t` + keys en `locales/en.json` y `es.json`.
+
 ### No un hint en cada campo
 
 Tope: **3–4 reglas que generan tickets** por pantalla. El label basta para Name, Model, Category y equivalentes.
 
-| Product Form | Hint |
+| Product Form | Hint (i18n key) |
 |---|---|
-| SKU | Unique; warehouse and purchasing |
-| Brands | First selected brand is the default for purchasing |
-| Tracking Mode | Quantity vs Serialized |
-| Reorder Level | In the default warehouse unit |
+| SKU | `products.form.hintSku` — único; almacén y compras |
+| Brand | `products.form.hintBrand` — marca de fabricante/catálogo |
+| Tracking Mode | `products.form.hintTrackingMode` — cantidad vs serializado |
+| Reorder Level | `products.form.hintReorderLevel` — unidad del almacén default |
 | Name, Model #, Category, Default Unit, Active | Sin hint |
 
 ### Tooltip: extra, nunca único
@@ -164,9 +166,10 @@ import Message from 'primevue/message';
   v-if="product.tracking_mode === 'SERIALIZED'"
   severity="info"
   :closable="false">
-  Serialized products create one tracked unit per quantity on purchase.
+  {{ $t('products.form.serializedConsequence') }}
 </Message>
 ```
+
 
 Tokens: `--color-jr-info-subtle`, `--color-jr-info-text`. Visible solo cuando aplica.  
 El hint explica la opción; el Message explica la consecuencia.  

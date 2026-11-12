@@ -13,14 +13,14 @@
     <div v-if="isCompact" class="jr-price-unit__compact">
       <JREmptyState
         v-if="!priceUnitRows.length"
-        title="No price rows"
-        description="Add a row to define purchase or sale prices.">
+        :title="$t('products.prices.noPriceRows')"
+        :description="$t('products.prices.addPriceRowDesc')">
         <JRButton
           v-if="!readonly"
           variant="primary-outline"
           size="sm"
           @click="addRowFromToolbar">
-          + Add Row
+          + {{ $t("transactions.lines.addRow") }}
         </JRButton>
       </JREmptyState>
       <ul v-else class="jr-price-row-list">
@@ -41,16 +41,19 @@
               }}</span>
               <JRBadge
                 v-if="row.is_purchase"
-                value="Purchase"
+                :value="$t('products.prices.purchase')"
                 severity="info" />
-              <JRBadge v-if="row.is_sale" value="Sale" severity="success" />
+              <JRBadge
+                v-if="row.is_sale"
+                :value="$t('products.prices.sale')"
+                severity="success" />
               <JRBadge
                 v-if="row.is_default"
-                value="Default"
+                :value="$t('inventory.badgeDefault')"
                 severity="info" />
               <JRBadge
                 v-if="row.is_active === false"
-                value="Inactive"
+                :value="$t('common.inactive')"
                 severity="secondary" />
               <span
                 v-if="dateRangeLabel(row)"
@@ -80,14 +83,14 @@
     <div v-else class="jr-price-unit__table">
       <JREmptyState
         v-if="!priceUnitRows.length"
-        title="No price rows"
-        description="Add a row to define purchase or sale prices.">
+        :title="$t('products.prices.noPriceRows')"
+        :description="$t('products.prices.addPriceRowDesc')">
         <JRButton
           v-if="!readonly"
           variant="primary-outline"
           size="sm"
           @click="addRowFromToolbar">
-          + Add Row
+          + {{ $t("transactions.lines.addRow") }}
         </JRButton>
       </JREmptyState>
       <div v-else class="jr-price-table-scroll">
@@ -121,7 +124,7 @@
                     :options="priceTypes"
                     optionLabel="name"
                     optionValue="id"
-                    placeholder="Select Price Type"
+                    :placeholder="$t('products.prices.selectPriceType')"
                     :disabled="readonly"
                     :invalid="!!rowError(index)"
                     filter
@@ -133,7 +136,7 @@
                     :options="units"
                     optionLabel="name"
                     optionValue="id"
-                    placeholder="Select Unit"
+                    :placeholder="$t('products.prices.selectUnit')"
                     :disabled="readonly"
                     :invalid="!!rowError(index)"
                     filter
@@ -149,14 +152,14 @@
                       :min="0"
                       :minFractionDigits="0"
                       :maxFractionDigits="2"
-                      placeholder="Enter price"
+                      :placeholder="$t('products.prices.enterPrice')"
                       @update:modelValue="setRowPrice(row, $event)" />
                     <span v-if="unitLabel(row)" class="jr-price-suffix">{{
                       unitLabel(row)
                     }}</span>
                     <JRBadge
                       v-if="row.is_active === false"
-                      value="Inactive"
+                      :value="$t('common.inactive')"
                       severity="secondary" />
                   </div>
                   <p
@@ -169,20 +172,20 @@
                   <JRCheckbox
                     :modelValue="row.is_sale"
                     :disabled="readonly"
-                    ariaLabel="Sale"
+                    :ariaLabel="$t('products.prices.sale')"
                     @update:modelValue="setSale(row, $event)" />
                 </td>
                 <td class="jr-price-table__flag">
                   <JRCheckbox
                     v-model="row.is_purchase"
                     :disabled="readonly"
-                    ariaLabel="Purchase" />
+                    :ariaLabel="$t('products.prices.purchase')" />
                 </td>
                 <td class="jr-price-table__flag">
                   <JRCheckbox
                     :modelValue="!!row.is_default"
                     :disabled="readonly || !row.is_sale"
-                    ariaLabel="Default sale price"
+                    :ariaLabel="$t('products.prices.defaultSalePrice')"
                     @update:modelValue="onRowDefault(index, $event)" />
                 </td>
                 <td class="jr-price-table__actions">
@@ -206,50 +209,57 @@
     <JRDrawer
       class="jr-price-row-drawer"
       :visible="sheetOpen"
-      :header="readonly ? 'Price row' : 'Edit price row'"
+      :header="
+        readonly
+          ? $t('products.prices.sheetTitleRow')
+          : $t('products.prices.sheetTitleEdit')
+      "
       position="right"
       @update:visible="onSheetVisible">
       <div v-if="sheetRow" class="jr-price-sheet">
         <p v-if="sheetError" class="jr-price-sheet__banner" role="alert">
           {{ sheetError }}
         </p>
-        <JRField label="Price Type" required inputId="price-sheet-type">
+        <JRField
+          :label="$t('products.prices.priceType')"
+          required
+          inputId="price-sheet-type">
           <JRSelectAddon
             inputId="price-sheet-type"
             v-model="sheetRow.price_type"
             :options="priceTypes"
             optionLabel="name"
             optionValue="id"
-            placeholder="Select Price Type"
+            :placeholder="$t('products.prices.selectPriceType')"
             :disabled="readonly"
             :invalid="!!sheetError"
             :showAdd="true"
             :showEdit="!!sheetRow.price_type"
             :addDisabled="readonly || !hasPermission('appinventory.add_pricetype')"
             :editDisabled="readonly || !hasPermission('appinventory.change_pricetype')"
-            addLabel="Add a new price type"
-            editLabel="Edit selected price type"
+            :addLabel="$t('products.prices.addPriceType')"
+            :editLabel="$t('products.prices.editPriceType')"
             filter
             @show="$emit('refresh-priceTypes')"
             @add="openModal('priceType')"
             @edit="editModal('priceType', sheetRow.price_type)" />
         </JRField>
-        <JRField label="Unit" required inputId="price-sheet-unit">
+        <JRField :label="$t('products.prices.unit')" required inputId="price-sheet-unit">
           <JRSelectAddon
             inputId="price-sheet-unit"
             v-model="sheetRow.unit"
             :options="units"
             optionLabel="name"
             optionValue="id"
-            placeholder="Select Unit"
+            :placeholder="$t('products.prices.selectUnit')"
             :disabled="readonly"
             :invalid="!!sheetError"
             :showAdd="true"
             :showEdit="!!sheetRow.unit"
             :addDisabled="readonly || !hasPermission('appinventory.add_unitofmeasure')"
             :editDisabled="readonly || !hasPermission('appinventory.change_unitofmeasure')"
-            addLabel="Add a new unit"
-            editLabel="Edit selected unit"
+            :addLabel="$t('products.prices.addUnit')"
+            :editLabel="$t('products.prices.editUnit')"
             filter
             @show="$emit('refresh-units')"
             @add="openModal('unit')"
@@ -258,19 +268,19 @@
         <div class="jr-price-sheet__flags">
           <JRCheckbox
             v-model="sheetRow.is_purchase"
-            label="Purchase"
+            :label="$t('products.prices.purchase')"
             :disabled="readonly" />
           <JRCheckbox
             :modelValue="sheetRow.is_sale"
-            label="Sale"
+            :label="$t('products.prices.sale')"
             :disabled="readonly"
             @update:modelValue="setSale(sheetRow, $event)" />
           <JRCheckbox
             v-model="sheetRow.is_active"
-            label="Active"
+            :label="$t('products.prices.active')"
             :disabled="readonly" />
         </div>
-        <JRField label="Price" inputId="price-sheet-price">
+        <JRField :label="$t('products.prices.price')" inputId="price-sheet-price">
           <div class="jr-price-input">
             <JRInput
               inputId="price-sheet-price"
@@ -280,40 +290,42 @@
               :min="0"
               :minFractionDigits="0"
               :maxFractionDigits="2"
-              placeholder="Enter price"
+              :placeholder="$t('products.prices.enterPrice')"
               @update:modelValue="setRowPrice(sheetRow, $event)" />
             <span v-if="unitLabel(sheetRow)" class="jr-price-suffix">{{
               unitLabel(sheetRow)
             }}</span>
           </div>
         </JRField>
-        <JRField label="Default sale price">
+        <JRField :label="$t('products.prices.defaultSalePrice')">
           <JRCheckbox
             :modelValue="!!sheetRow.is_default"
-            label="Use as default sale price"
+            :label="$t('products.prices.useAsDefaultSalePrice')"
             :disabled="readonly || !sheetRow.is_sale"
             @update:modelValue="onDefaultCheck($event)" />
         </JRField>
-        <JRField label="Valid From" inputId="price-sheet-from">
+        <JRField :label="$t('products.prices.validFrom')" inputId="price-sheet-from">
           <JRDatePicker
             inputId="price-sheet-from"
             :modelValue="isoToDate(sheetRow.valid_from)"
             :disabled="readonly"
-            placeholder="Start date"
+            :placeholder="$t('products.prices.startDate')"
             @update:modelValue="setRowDate(sheetRow, 'valid_from', $event)" />
         </JRField>
-        <JRField label="Valid Until" inputId="price-sheet-until">
+        <JRField :label="$t('products.prices.validUntil')" inputId="price-sheet-until">
           <JRDatePicker
             inputId="price-sheet-until"
             :modelValue="isoToDate(sheetRow.valid_until)"
             :disabled="readonly"
-            placeholder="End date"
+            :placeholder="$t('products.prices.endDate')"
             @update:modelValue="setRowDate(sheetRow, 'valid_until', $event)" />
         </JRField>
       </div>
       <template #footer>
         <div class="jr-price-sheet__footer">
-          <JRButton variant="primary" @click="closeSheet">Done</JRButton>
+          <JRButton variant="primary" @click="closeSheet">{{
+            $t("common.done")
+          }}</JRButton>
           <JRRowActions
             v-if="!readonly && sheetIndex != null"
             :compact="false"
@@ -326,10 +338,11 @@
 
     <JRDialog
       :visible="deleteDialogVisible"
-      header="Delete price row"
-      message="Delete this price row?"
-      confirmLabel="Delete"
+      :header="$t('products.prices.deletePriceRow')"
+      :message="$t('products.prices.deleteDialogMessage')"
+      :confirmLabel="$t('common.delete')"
       confirmVariant="danger"
+      :cancelLabel="$t('common.cancel')"
       @update:visible="onDeleteVisible"
       @confirm="confirmPendingDelete" />
   </div>

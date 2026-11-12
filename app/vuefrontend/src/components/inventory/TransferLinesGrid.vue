@@ -25,7 +25,7 @@
     <div v-if="isCompact" class="jr-transfer-lines__compact">
       <JREmptyState
         v-if="!linesLocal.length"
-        title="No transfer lines"
+        :title="$t('inventory.noTransferLines')"
         description="Add a row to move products between warehouses.">
         <JRButton
           v-if="!isReadOnly"
@@ -33,7 +33,7 @@
           variant="primary-outline"
           size="sm"
           @click="addLine">
-          + Add Row
+          + {{ $t("transactions.lines.addRow") }}
         </JRButton>
       </JREmptyState>
       <ul v-else class="jr-transfer-line-list">
@@ -53,8 +53,8 @@
               @update:modelValue="(v) => (row.selected = v)" />
           </div>
           <div class="jr-transfer-line-item__main">
-              <JRField
-              :label="`Product`"
+            <JRField
+              :label="$t('inventory.product')"
               :inputId="`product-m-${idx}`"
               required
               :error="rowErrorText(row._errors?.product)">
@@ -65,10 +65,10 @@
                 :options="optionsForProduct(row)"
                 optionLabel="label"
                 optionValue="value"
-                placeholder="Search product…"
+                :placeholder="$t('transactions.lines.searchProductPlaceholder')"
                 filter
-                filterPlaceholder="Type at least 2 characters…"
-                emptyFilterMessage="Type at least 2 characters to search…"
+                :filterPlaceholder="$t('transactions.lines.filterMinChars')"
+                :emptyFilterMessage="$t('transactions.lines.emptyFilterMessage')"
                 :loading="!!loading.products[idx]"
                 :disabled="isReadOnly"
                 :invalid="!!row._errors?.product"
@@ -90,7 +90,7 @@
 
             <div class="jr-transfer-line-item__grid">
               <JRField
-                label="Quantity"
+                :label="$t('inventory.quantity')"
                 :inputId="`quantity-m-${idx}`"
                 :error="rowErrorText(row._errors?.quantity)">
                 <JRInput
@@ -107,7 +107,7 @@
               </JRField>
 
               <JRField
-                label="Unit"
+                :label="$t('inventory.unit')"
                 :inputId="`unit-m-${idx}`"
                 :error="rowErrorText(row._errors?.unit)">
                 <JRSelect
@@ -116,7 +116,7 @@
                   :options="unitsOptions"
                   optionLabel="label"
                   optionValue="value"
-                  placeholder="Select unit…"
+                  :placeholder="$t('inventory.selectUnit')"
                   filter
                   :disabled="isReadOnly"
                   :invalid="!!row._errors?.unit" />
@@ -125,7 +125,7 @@
 
             <JRField
               v-if="row.isSerialized"
-              label="Serialized item"
+              :label="$t('inventory.serializedItem')"
               :inputId="`serialized-m-${idx}`"
               required
               :error="rowErrorText(row._errors?.serialized_item)">
@@ -136,7 +136,7 @@
                 :options="row.serializedOptions || []"
                 optionLabel="label"
                 optionValue="value"
-                placeholder="Select serial number…"
+                :placeholder="$t('inventory.selectSerialNumber')"
                 filter
                 filterPlaceholder="Search serial…"
                 :loading="!!loading.serialized[idx]"
@@ -167,9 +167,9 @@
               type="button"
               variant="ghost"
               size="sm"
-              aria-label="Remove line"
+              :aria-label="$t('inventory.removeLine')"
               @click="removeRow(idx)">
-              Remove
+              {{ $t("inventory.removeLine") }}
             </JRButton>
           </div>
         </li>
@@ -188,14 +188,17 @@
                   ariaLabel="Select all lines"
                   @update:modelValue="onSelectAll" />
               </th>
-              <th>Product <span class="jr-transfer-req" aria-hidden="true">*</span></th>
-              <th>From</th>
-              <th>To</th>
-              <th>Quantity</th>
-              <th>Unit</th>
-              <th>Serialized item</th>
-              <th class="jr-transfer-table__center">Status</th>
-              <th class="jr-transfer-table__center">Condition</th>
+              <th>
+                {{ $t("inventory.product") }}
+                <span class="jr-transfer-req" aria-hidden="true">*</span>
+              </th>
+              <th>{{ $t("inventory.colFrom") }}</th>
+              <th>{{ $t("inventory.colTo") }}</th>
+              <th>{{ $t("inventory.quantity") }}</th>
+              <th>{{ $t("inventory.unit") }}</th>
+              <th>{{ $t("inventory.serializedItem") }}</th>
+              <th class="jr-transfer-table__center">{{ $t("common.status") }}</th>
+              <th class="jr-transfer-table__center">{{ $t("inventory.colCondition") }}</th>
               <th class="jr-transfer-table__actions"></th>
             </tr>
           </thead>
@@ -222,10 +225,10 @@
                   :options="optionsForProduct(row)"
                   optionLabel="label"
                   optionValue="value"
-                  placeholder="Search product…"
+                  :placeholder="$t('transactions.lines.searchProductPlaceholder')"
                   filter
-                  filterPlaceholder="Type at least 2 characters…"
-                  emptyFilterMessage="Type at least 2 characters to search…"
+                  :filterPlaceholder="$t('transactions.lines.filterMinChars')"
+                  :emptyFilterMessage="$t('transactions.lines.emptyFilterMessage')"
                   :loading="!!loading.products[idx]"
                   :disabled="isReadOnly"
                   :invalid="!!row._errors?.product"
@@ -282,7 +285,7 @@
                   :options="unitsOptions"
                   optionLabel="label"
                   optionValue="value"
-                  placeholder="Select unit…"
+                  :placeholder="$t('inventory.selectUnit')"
                   filter
                   :disabled="isReadOnly"
                   :invalid="!!row._errors?.unit" />
@@ -301,7 +304,7 @@
                   :options="row.serializedOptions || []"
                   optionLabel="label"
                   optionValue="value"
-                  placeholder="Select serial number…"
+                  :placeholder="$t('inventory.selectSerialNumber')"
                   filter
                   :loading="!!loading.serialized[idx]"
                   :disabled="!row.product || !row.isSerialized || isReadOnly"
@@ -342,9 +345,9 @@
                   type="button"
                   variant="ghost"
                   size="sm"
-                  aria-label="Remove line"
+                  :aria-label="$t('inventory.removeLine')"
                   @click="removeRow(idx)">
-                  Remove
+                  {{ $t("inventory.removeLine") }}
                 </JRButton>
               </td>
             </tr>

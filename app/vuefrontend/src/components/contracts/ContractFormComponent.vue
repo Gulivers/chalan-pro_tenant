@@ -56,7 +56,7 @@
               <JRField
                 class="jr-contract-form__field--type"
                 v-slot="{ describedby, invalid }"
-                label="Job Type"
+                :label="$t('contracts.form.jobType')"
                 required
                 inputId="type"
                 :error="validationErrors.type">
@@ -68,7 +68,7 @@
                     :options="jobTypeOptions"
                     optionLabel="label"
                     optionValue="value"
-                    placeholder="Select type"
+                    :placeholder="$t('contracts.form.jobTypePlaceholder')"
                     :disabled="isReadOnly"
                     :invalid="invalid"
                     :ariaDescribedby="describedby"
@@ -80,7 +80,7 @@
               <JRField
                 class="jr-contract-form__field--wa"
                 v-slot="{ describedby, invalid }"
-                label="Work Account"
+                :label="$t('contracts.form.workAccount')"
                 required
                 inputId="work-account"
                 :error="validationErrors.work_account">
@@ -100,7 +100,7 @@
               <JRField
                 class="jr-contract-form__field--hm"
                 v-slot="{ describedby, invalid }"
-                label="House Model"
+                :label="$t('contracts.form.houseModel')"
                 required
                 inputId="houseModel"
                 :error="validationErrors.house_model">
@@ -111,7 +111,7 @@
                     :options="houseModels"
                     optionLabel="name"
                     optionValue="id"
-                    placeholder="Select House Model"
+                    :placeholder="$t('contracts.form.houseModelPlaceholder')"
                     filter
                     showClear
                     :disabled="isReadOnly"
@@ -128,22 +128,22 @@
                       isReadOnly ||
                       !hasPermission('ctrctsapp.change_housemodel')
                     "
-                    addLabel="Add a new house model to the system"
-                    editLabel="Edit the currently selected house model"
+                    :addLabel="$t('contracts.form.addHouseModel')"
+                    :editLabel="$t('contracts.form.editHouseModel')"
                     @add="openModal('add')"
                     @edit="openModal('edit', newContract.house_model)" />
                 </div>
               </JRField>
 
               <!-- 4. Address or Lot -->
-              <div class="jr-contract-form__location" role="group" aria-label="Address or Lot">
+              <div class="jr-contract-form__location" role="group" :aria-label="$t('contracts.form.addressOrLot')">
                 <JRField
                   v-slot="{ describedby, invalid }"
-                  label="Address"
+                  :label="$t('contracts.form.address')"
                   required
                   inputId="address"
                   :error="validationErrors.address"
-                  hint="Required for Spot Lot (empty lot + address).">
+                  :hint="$t('contracts.form.hintAddress')">
                   <div data-jr-focus="address">
                     <JRInput
                       inputId="address"
@@ -157,10 +157,10 @@
 
                 <JRField
                   v-slot="{ describedby, invalid }"
-                  label="Lot"
+                  :label="$t('contracts.form.lot')"
                   inputId="lot"
                   :error="validationErrors.lot"
-                  hint="Optional for Spot Lot. Whole numbers only (max 10 digits).">
+                  :hint="$t('contracts.form.hintLot')">
                   <div data-jr-focus="lot">
                     <JRInput
                       inputId="lot"
@@ -199,7 +199,7 @@
           <div class="jr-form-grid jr-contract-form__grid--pricing">
             <JRField
               v-slot="{ describedby, invalid }"
-              label="SqFt"
+              :label="$t('contracts.form.sqFt')"
               required
               inputId="sqft"
               :error="validationErrors.sqft">
@@ -219,7 +219,7 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Travel Price"
+              :label="$t('contracts.form.travelPrice')"
               required
               inputId="travelPrice"
               :error="validationErrors.travel_price">
@@ -241,7 +241,7 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Job Price"
+              :label="$t('contracts.form.jobPrice')"
               required
               inputId="jobPrice"
               :error="validationErrors.job_price">
@@ -260,7 +260,7 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Total Options"
+              :label="$t('contracts.form.totalOptions')"
               required
               inputId="totalOptions"
               :error="validationErrors.total_options">
@@ -279,7 +279,7 @@
 
             <JRField
               v-slot="{ describedby, invalid }"
-              label="Total"
+              :label="$t('contracts.form.total')"
               required
               inputId="total"
               :error="validationErrors.total">
@@ -297,7 +297,7 @@
 
             <JRField
               v-slot="{ describedby }"
-              label="Comment"
+              :label="$t('contracts.form.comment')"
               inputId="comment"
               class="jr-contract-form__comment-field">
               <JRTextarea
@@ -500,10 +500,10 @@
 
     <JRDialog
       :visible="sqftConfirmVisible"
-      header="Confirm large SqFt"
+      :header="$t('contracts.form.confirmLargeSqFtHeader')"
       :message="sqftConfirmMessage"
-      confirmLabel="Continue"
-      cancelLabel="Cancel"
+      :confirmLabel="$t('common.continue')"
+      :cancelLabel="$t('common.cancel')"
       @update:visible="onSqftConfirmVisible"
       @confirm="confirmLargeSqft" />
   </JRPage>

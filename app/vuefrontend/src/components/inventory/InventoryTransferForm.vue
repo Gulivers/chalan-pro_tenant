@@ -53,10 +53,10 @@
         <div class="jr-form-grid">
           <JRField
             v-slot="{ describedby, invalid }"
-            label="From Warehouse"
+            :label="$t('inventory.fromWarehouse')"
             inputId="transfer-from-warehouse"
             required
-            hint="Origin warehouse. Must differ from To Warehouse."
+            :hint="$t('inventory.hintFromWarehouse')"
             :error="fieldErrors.from_warehouse">
             <JRSelect
               inputId="transfer-from-warehouse"
@@ -64,7 +64,7 @@
               :options="warehousesOptions"
               optionLabel="label"
               optionValue="value"
-              placeholder="Select warehouse…"
+              :placeholder="$t('inventory.selectWarehouse')"
               :disabled="isReadOnly"
               :invalid="invalid"
               :required="true"
@@ -75,10 +75,10 @@
 
           <JRField
             v-slot="{ describedby, invalid }"
-            label="To Warehouse"
+            :label="$t('inventory.toWarehouse')"
             inputId="transfer-to-warehouse"
             required
-            hint="Destination warehouse. Must differ from From Warehouse."
+            :hint="$t('inventory.hintToWarehouse')"
             :error="fieldErrors.to_warehouse">
             <JRSelect
               inputId="transfer-to-warehouse"
@@ -86,7 +86,7 @@
               :options="warehousesOptions"
               optionLabel="label"
               optionValue="value"
-              placeholder="Select warehouse…"
+              :placeholder="$t('inventory.selectWarehouse')"
               :disabled="isReadOnly"
               :invalid="invalid"
               :required="true"
@@ -97,14 +97,14 @@
 
           <JRField
             v-slot="{ describedby, invalid }"
-            label="Description"
+            :label="$t('inventory.description')"
             inputId="transfer-description"
-            hint="Optional reference for this transfer."
+            :hint="$t('inventory.hintTransferDesc')"
             :error="fieldErrors.description">
             <JRInput
               inputId="transfer-description"
               v-model="form.description"
-              placeholder="Description of the transfer"
+              :placeholder="$t('inventory.transferDescriptionPlaceholder')"
               :disabled="isReadOnly"
               :invalid="invalid"
               :ariaDescribedby="describedby"
@@ -138,16 +138,15 @@
           severity="warn"
           :closable="false"
           class="jr-transfer-form__message">
-          This transfer is reverted and cannot be edited.
+          {{ $t("inventory.transferRevertedMessage") }}
         </Message>
 
         <section class="jr-transfer-form__lines" aria-labelledby="transfer-lines-heading">
           <h2 id="transfer-lines-heading" class="jr-transfer-form__lines-title">
-            Lines
+            {{ $t("transactions.form.sectionLines") }}
           </h2>
           <p class="jr-transfer-form__lines-hint">
-            Each line creates an OUT movement from the origin warehouse and an
-            IN movement to the destination warehouse.
+            {{ $t("inventory.transferLinesHint") }}
           </p>
 
           <TransferLinesGrid
@@ -164,8 +163,7 @@
             severity="info"
             :closable="false"
             class="jr-transfer-form__message">
-            Select From Warehouse and To Warehouse (they must be different) to
-            add lines.
+            {{ $t("inventory.transferSelectWarehousesMessage") }}
           </Message>
         </section>
 
@@ -175,14 +173,14 @@
             type="submit"
             variant="primary"
             :disabled="submitting">
-            {{ submitting ? "Saving..." : "Save" }}
+            {{ submitting ? $t("common.saving") : $t("common.save") }}
           </JRButton>
           <JRButton
             type="button"
             variant="secondary"
             :disabled="submitting"
             @click="goBack">
-            {{ isViewMode || isReverted ? "Back" : "Cancel" }}
+            {{ isViewMode || isReverted ? $t("common.back") : $t("common.cancel") }}
           </JRButton>
         </div>
 
@@ -190,7 +188,7 @@
           <span class="jr-transfer-form__required-mark" aria-hidden="true"
             >*</span
           >
-          Indicates required fields.
+          {{ $t("common.requiredFieldsNote") }}
         </p>
       </form>
     </div>

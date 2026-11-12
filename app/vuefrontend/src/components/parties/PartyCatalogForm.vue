@@ -19,7 +19,7 @@
 
       <JRField
         v-slot="{ describedby, invalid }"
-        label="Name"
+        :label="$t('parties.partyCatalogName')"
         inputId="party-catalog-name"
         required
         :error="fieldErrors.name">
@@ -36,35 +36,35 @@
 
       <JRField
         v-slot="{ describedby }"
-        label="Description"
+        :label="$t('parties.partyCatalogDescription')"
         inputId="party-catalog-description">
         <JRTextarea
           inputId="party-catalog-description"
           v-model="form.description"
           :rows="3"
-          placeholder="Optional description..."
+          :placeholder="$t('parties.partyCatalogDescriptionPlaceholder')"
           :disabled="submitting"
           :ariaDescribedby="describedby" />
       </JRField>
 
-      <JRField label="Active" inputId="party-catalog-active">
+      <JRField :label="$t('parties.partyCatalogActive')" inputId="party-catalog-active">
         <JRCheckbox
           inputId="party-catalog-active"
           v-model="form.is_active"
-          ariaLabel="Active"
+          :ariaLabel="$t('parties.partyCatalogActive')"
           :disabled="submitting" />
       </JRField>
 
       <div class="jr-party-catalog-form__actions">
         <JRButton type="submit" variant="primary" :disabled="submitting">
-          {{ submitting ? "Saving..." : "Save" }}
+          {{ submitting ? $t("common.saving") : $t("common.save") }}
         </JRButton>
         <JRButton
           type="button"
           variant="secondary"
           :disabled="submitting"
           @click="$emit('cancel')">
-          Cancel
+          {{ $t("common.cancel") }}
         </JRButton>
       </div>
     </form>

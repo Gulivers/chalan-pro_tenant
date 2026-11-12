@@ -1,10 +1,6 @@
 <template>
   <JRPage>
     <div class="jr-about">
-      <div class="jr-about__toolbar">
-        <LocaleToggle />
-      </div>
-
       <section class="jr-about__hero" aria-labelledby="about-hero-title">
         <div class="jr-about__hero-main">
           <img
@@ -87,7 +83,6 @@
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { JRPage, JRSection } from "@ui";
-import LocaleToggle from "@/components/LocaleToggle.vue";
 
 const { t, tm, locale } = useI18n({ useScope: "global" });
 const base = import.meta.env.BASE_URL || "/";
@@ -119,11 +114,6 @@ const valuePoints = computed(() => {
   flex-direction: column;
   gap: 1.5rem;
   text-align: left;
-}
-
-.jr-about__toolbar {
-  display: flex;
-  justify-content: flex-end;
 }
 
 .jr-about__hero {
