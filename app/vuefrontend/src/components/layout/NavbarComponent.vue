@@ -406,8 +406,14 @@ export default {
     return {
       MOBILE_NAV_ITEM_SIZE,
       isLoggedIn: false,
-      isMobile: false,
-      sidebarOpen: false,
+      isMobile:
+        typeof window !== "undefined"
+          ? window.innerWidth < MOBILE_BREAKPOINT
+          : false,
+      sidebarOpen:
+        typeof window !== "undefined"
+          ? window.innerWidth >= MOBILE_BREAKPOINT
+          : true,
       menuItems: [
         {
           text: "Schedule",
@@ -765,7 +771,7 @@ export default {
     syncViewport() {
       const mobile = window.innerWidth < MOBILE_BREAKPOINT;
       if (!mobile && this.isMobile) {
-        this.sidebarOpen = false;
+        this.sidebarOpen = true;
       }
       if (mobile && !this.isMobile) {
         this.sidebarOpen = false;
