@@ -81,6 +81,17 @@ export default {
         ? this.$t("common.accountMenuFor", { name })
         : this.$t("common.accountMenu");
     },
+    authUser() {
+      const raw = useAuthStore().user;
+      return raw && typeof raw === "object" && "value" in raw ? raw.value : raw;
+    },
+    scheduleShowCrewResources() {
+      return this.authUser?.schedule_show_crew_resources !== false;
+    },
+    /** Owner del tenant o superuser (mismo criterio que PATCH /api/auth/me/). */
+    canManageScheduleCrewLayout() {
+      return !!this.isTenantOwner || !!this.authUser?.is_superuser;
+    },
     userMenuModel() {
       const items = [
         {
@@ -133,6 +144,16 @@ export default {
           command: () => this.$emit("navigate", "/inventory-master-data-setup"),
         },
       );
+
+      if (this.canManageScheduleCrewLayout) {
+        const showCrewResources = this.scheduleShowCrewResources;
+        items.push({
+          label: showCrewResources
+            ? this.$t("common.showCrewResourcesOn")
+            : this.$t("common.showCrewResourcesOff"),
+          command: () => this.toggleScheduleCrewResources(),
+        });
+      }
 
       if (this.isStaff || this.isTenantOwner) {
         items.push({
@@ -199,6 +220,40 @@ export default {
         if (data) useAuthStore().setUser?.(data, { syncLocale: false });
       } catch (_) {
         /* keep local locale even if persist fails */
+      }
+    },
+    async toggleScheduleCrewResources() {
+      try {
+        this.$refs.userMenu?.hide?.();
+      } catch (_) {
+        /* ignore */
+      }
+      this.userMenuOpen = false;
+
+      const next = !this.scheduleShowCrewResources;
+      try {
+        const { data } = await axios.patch("/api/auth/me/", {
+          schedule_show_crew_resources: next,
+        });
+        if (data) useAuthStore().setUser?.(data, { syncLocale: false });
+        if (typeof this.$toast?.add === "function") {
+          this.$toast.add({
+            severity: "success",
+            summary: this.$t("common.showCrewResourcesUpdated"),
+            life: 2500,
+          });
+        }
+      } catch (err) {
+        const detail =
+          err?.response?.data?.detail ||
+          this.$t("common.showCrewResourcesError");
+        if (typeof this.$toast?.add === "function") {
+          this.$toast.add({
+            severity: "error",
+            summary: detail,
+            life: 3500,
+          });
+        }
       }
     },
   },

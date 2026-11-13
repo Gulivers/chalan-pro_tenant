@@ -49,6 +49,7 @@ from weasyprint import (
 from weasyprint.text.fonts import FontConfiguration
 from channels.layers import get_channel_layer
 from utils.tenant_branding import get_tenant_logo_url
+from appauth.services.tenant import resolve_request_tenant
 
 from django.http import HttpResponse
 import openpyxl
@@ -427,7 +428,6 @@ class EventChatViewSet(viewsets.ViewSet):
 def download_schedule_pdf(request):
     start_at = request.GET.get('start_at')
     end_at = request.GET.get('end_at')
-    # print(f"🗕️ Dates: {start_at} - {end_at}")
 
     if not start_at or not end_at:
         return Response({'error': 'start_at and end_at are required'}, status=400)
@@ -442,10 +442,6 @@ def download_schedule_pdf(request):
         days.append(current)
         current += timedelta(days=1)
 
-    # print("🗖 Days to render:")
-    for d in days:
-        d.strftime('%A, %b %d')
-
     # Consulta eventos cruzados en el rango
     q = Q()
     q &= (Q(date__lte=start_date, end_dt__gte=start_date) |
@@ -455,57 +451,133 @@ def download_schedule_pdf(request):
           Q(date__gte=start_date, date__lte=end_date) |
           Q(end_dt__gte=start_date, end_dt__lte=end_date))
 
-    events = Event.objects.select_related('crew', 'crew__category').filter(q, deleted=False)
+    events = Event.objects.select_related(
+        'crew', 'crew__category', 'absence_reason'
+    ).filter(q, deleted=False)
 
-    # Todos los crews activos agrupados por categoría
-    all_crews = Crew.objects.select_related('category').filter(status=True)
-    categorized_events = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-
-    for crew in all_crews:
-        if crew.category:
-            categorized_events[crew.category.name][crew.name]  # inicializar aunque no tenga eventos
-
-    for event in events:
-        if not event.crew or not event.crew.category:
-            continue
-
-        crew_name = event.crew.name
-        category_name = event.crew.category.name
-
-        # Expande cualquier evento, marcando inicio y fin
-        current = event.date
-        while current < event.end_dt:
-            if start_date <= current <= end_date:
-                if event.is_absence and event.absence_reason:
-                    absence_text = f"🛑 Absence: {event.absence_reason.name}"
-                    if event.description:
-                        absence_text += f" – {event.description}"
-                    categorized_events[category_name][crew_name][current].append(absence_text)
-                else:
-                    if current == event.date:
-                        categorized_events[category_name][crew_name][current].append(event)
-                    else:
-                        categorized_events[category_name][crew_name][current].append("Finishing up work")
-            current += timedelta(days=1)
-
-    categorized_events_clean = {
-        cat: {
-            crew: dict(days)
-            for crew, days in crews.items()
-        }
-        for cat, crews in categorized_events.items()
-    }
+    tenant = resolve_request_tenant(request)
+    show_crew_resources = bool(
+        getattr(tenant, 'schedule_show_crew_resources', True)
+    ) if tenant is not None else True
 
     logo_url = get_tenant_logo_url(request)
+    date_range = (
+        f"{start_date.strftime('%b %d')} – "
+        f"{(end_date - timedelta(days=1)).strftime('%b %d, %Y')}"
+    )
 
-    context = {
-        'categorized_events': categorized_events_clean,
-        'date_range': f"{start_date.strftime('%b %d')} – {(end_date - timedelta(days=1)).strftime('%b %d, %Y')}",
-        'days': days,
-        'logo_url': logo_url
-    }
+    if show_crew_resources:
+        all_crews = Crew.objects.select_related('category').filter(status=True)
+        categorized_events = defaultdict(
+            lambda: defaultdict(lambda: defaultdict(list))
+        )
 
-    html = render_to_string('schedule_pdf.html', context)
+        for crew in all_crews:
+            if crew.category:
+                categorized_events[crew.category.name][crew.name]
+
+        for event in events:
+            if not event.crew or not event.crew.category:
+                continue
+
+            crew_name = event.crew.name
+            category_name = event.crew.category.name
+            current = event.date
+            while current < event.end_dt:
+                if start_date <= current <= end_date:
+                    if event.is_absence and event.absence_reason:
+                        absence_text = f"🛑 Absence: {event.absence_reason.name}"
+                        if event.description:
+                            absence_text += f" – {event.description}"
+                        categorized_events[category_name][crew_name][current].append(
+                            absence_text
+                        )
+                    else:
+                        if current == event.date:
+                            categorized_events[category_name][crew_name][current].append(
+                                event
+                            )
+                        else:
+                            categorized_events[category_name][crew_name][current].append(
+                                "Finishing up work"
+                            )
+                current += timedelta(days=1)
+
+        categorized_events_clean = {
+            cat: {
+                crew: dict(day_map)
+                for crew, day_map in crews.items()
+            }
+            for cat, crews in categorized_events.items()
+        }
+        template_name = 'schedule_pdf.html'
+        context = {
+            'categorized_events': categorized_events_clean,
+            'date_range': date_range,
+            'days': days,
+            'logo_url': logo_url,
+        }
+    else:
+        # No Crew column: group by category → day; crew name inside each cell entry
+        categorized_by_day = defaultdict(lambda: defaultdict(list))
+        category_order = []
+
+        all_crews = Crew.objects.select_related('category').filter(status=True)
+        for crew in all_crews:
+            if crew.category and crew.category.name not in category_order:
+                category_order.append(crew.category.name)
+                categorized_by_day[crew.category.name]
+
+        for event in events:
+            if not event.crew or not event.crew.category:
+                continue
+
+            crew_name = event.crew.name
+            category_name = event.crew.category.name
+            if category_name not in category_order:
+                category_order.append(category_name)
+
+            current = event.date
+            while current < event.end_dt:
+                if start_date <= current <= end_date:
+                    if event.is_absence and event.absence_reason:
+                        absence_text = f"🛑 Absence: {event.absence_reason.name}"
+                        if event.description:
+                            absence_text += f" – {event.description}"
+                        categorized_by_day[category_name][current].append({
+                            'crew_name': crew_name,
+                            'kind': 'absence',
+                            'text': absence_text,
+                        })
+                    elif current == event.date:
+                        categorized_by_day[category_name][current].append({
+                            'crew_name': crew_name,
+                            'kind': 'event',
+                            'title': event.title,
+                            'description': event.description or '',
+                            'extended_service': bool(event.extended_service),
+                        })
+                    else:
+                        categorized_by_day[category_name][current].append({
+                            'crew_name': crew_name,
+                            'kind': 'finishing',
+                            'text': 'Finishing up work',
+                        })
+                current += timedelta(days=1)
+
+        categorized_events_clean = {
+            cat: dict(categorized_by_day[cat])
+            for cat in category_order
+        }
+        template_name = 'schedule_pdf_no_crew.html'
+        context = {
+            'categorized_events': categorized_events_clean,
+            'date_range': date_range,
+            'days': days,
+            'logo_url': logo_url,
+        }
+
+    html = render_to_string(template_name, context)
     font_config = FontConfiguration()
     pdf_file = HTML(string=html).write_pdf(font_config=font_config)
 
