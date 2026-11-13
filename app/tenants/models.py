@@ -284,8 +284,10 @@ class Tenant(TenantMixin):
     def get_logo_url(self, request=None):
         """URL firmada del logo (vida corta) o None si no hay archivo.
 
-        Tenant.logo vive en el schema público; firma siempre con public para que
-        el Admin global y hosts públicos puedan servir el preview.
+        El archivo vive en MEDIA_ROOT compartido, pero serve_signed_media exige
+        que el schema del token coincida con el schema activo del Host:
+        - Admin / public → firma con public
+        - SPA del tenant → firma con el schema del tenant (connection actual)
         """
         if not self.logo:
             return None
@@ -295,12 +297,14 @@ class Tenant(TenantMixin):
         except Exception:
             return None
         from django_tenants.utils import get_public_schema_name
-        from project.media_access import build_signed_media_url
+        from project.media_access import build_signed_media_url, current_schema_name
 
+        # Match the request host schema; never hard-code public (breaks tenant SPA).
+        schema = current_schema_name() or get_public_schema_name()
         return build_signed_media_url(
             request,
             self.logo,
-            schema_name=get_public_schema_name(),
+            schema_name=schema,
         )
 
 
