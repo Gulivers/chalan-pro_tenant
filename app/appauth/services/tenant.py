@@ -13,6 +13,23 @@ def resolve_request_tenant(request):
     return _resolve_tenant(request)
 
 
+def _same_origin_media_url(logo_url: str | None) -> str | None:
+    """Prefer relative /media/s/... for SPA <img> (same host + port).
+
+    Absolute URLs from request.build_absolute_uri() often omit the Vite/dev
+    port because the proxy strips it from Host, so the browser requests :80
+    and the logo fails → JobRhythm fallback.
+    """
+    if not logo_url:
+        return None
+    if logo_url.startswith(('http://', 'https://')):
+        from urllib.parse import urlparse
+
+        parsed = urlparse(logo_url)
+        return parsed.path or logo_url
+    return logo_url
+
+
 def tenant_branding_payload(tenant, request=None) -> dict:
     """Public branding fields derived from the active tenant."""
     if tenant is None:
@@ -28,9 +45,11 @@ def tenant_branding_payload(tenant, request=None) -> dict:
     get_logo = getattr(tenant, 'get_logo_url', None)
     if callable(get_logo):
         try:
-            logo_url = get_logo(request=request)
+            # Relative path: SPA/Vite serve /media via same-origin proxy.
+            logo_url = get_logo(request=None)
         except TypeError:
             logo_url = get_logo()
+        logo_url = _same_origin_media_url(logo_url)
 
     return {
         'tenant_name': tenant.name,

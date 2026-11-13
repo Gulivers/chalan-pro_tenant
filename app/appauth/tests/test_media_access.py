@@ -87,6 +87,24 @@ class SignedMediaUrlTests(TenantTestCase):
             if tenant.logo:
                 tenant.logo.delete(save=False)
 
+    def test_branding_logo_url_is_same_origin_relative(self):
+        """SPA branding must not emit absolute URLs (port-stripped Host breaks :8080)."""
+        from appauth.services.tenant import tenant_branding_payload
+
+        tenant = self._attach_logo()
+        try:
+            payload = tenant_branding_payload(tenant, request=None)
+            url = payload.get('tenant_logo_url')
+            self.assertIsNotNone(url)
+            self.assertTrue(
+                url.startswith('/media/s/'),
+                msg=f'expected relative media URL, got {url!r}',
+            )
+            self.assertFalse(url.startswith('http'))
+        finally:
+            if tenant.logo:
+                tenant.logo.delete(save=False)
+
     def test_tenant_logo_url_signed_for_public_admin_preview(self):
         """Django Admin (public schema) keeps a public-scoped signed preview."""
         tenant = self._attach_logo()
