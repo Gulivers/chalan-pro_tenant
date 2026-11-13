@@ -19,7 +19,7 @@ class TenantAdmin(PublicSchemaOnlyAdminMixin, TenantAdminMixin, admin.ModelAdmin
     )
     list_filter = (
         'is_active', 'on_trial', 'client_type', 'setup_completed',
-        'seed_inventory_done', 'created_on',
+        'schedule_show_crew_resources', 'seed_inventory_done', 'created_on',
     )
     search_fields = ('name', 'schema_name', 'tenant_id', 'email')
     readonly_fields = ('schema_name', 'tenant_id', 'created_on', 'logo_preview')
@@ -40,6 +40,9 @@ class TenantAdmin(PublicSchemaOnlyAdminMixin, TenantAdminMixin, admin.ModelAdmin
                 'setup_completed',
                 'setup_progress',
             ),
+        }),
+        ('Schedule', {
+            'fields': ('schedule_show_crew_resources',),
         }),
         ('Metadata', {
             'fields': ('created_on',),

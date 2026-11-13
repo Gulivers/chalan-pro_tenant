@@ -51,7 +51,7 @@
         </div>
 
         <JRButton
-          v-if="hasPermission('appschedule.view_event')"
+          v-if="showCrewResources && hasPermission('appschedule.view_event')"
           type="button"
           variant="ghost"
           size="sm"
@@ -108,11 +108,12 @@
         {{ $t("schedule.loading") }}
       </p>
       <JREmptyState
-        v-else-if="!allResources.length"
+        v-else-if="showCrewResources && !allResources.length"
         :title="$t('schedule.emptyCrewsTitle')"
         :description="$t('schedule.emptyCrewsDesc')" />
       <div v-else ref="schedulePane" class="jr-schedule__pane">
         <FullCalendar
+          :key="showCrewResources ? 'schedule-crew-resources' : 'schedule-daygrid'"
           ref="calendarRef"
           class="jr-schedule__calendar"
           :options="calendarOptions" />
@@ -122,6 +123,8 @@
     <EventModal
       ref="eventModal"
       :formData="formData"
+      :show-crew-select="!showCrewResources"
+      :crew-options="crewSelectOptions"
       @save-event="handleSaveEvent" />
   </JRPage>
 </template>
@@ -130,6 +133,7 @@
 import FullCalendar from "@fullcalendar/vue3";
 import interactionPlugin from "@fullcalendar/interaction";
 import resourceTimelinePlugin from "@fullcalendar/resource-timeline";
+import dayGridPlugin from "@fullcalendar/daygrid";
 import esLocale from "@fullcalendar/core/locales/es";
 import "@assets/css/schedule.css";
 import EventModal from "./ScheduleEventModal.vue";
@@ -225,6 +229,13 @@ export default {
         extendedService: false,
       },
       userId: null,
+      // Permisos de supervisor (reactivos para crewSelectOptions)
+      userCrewCategoryName: null,
+      can_create_event: false,
+      is_coordinator: null,
+      crewId: null,
+      crewName: null,
+      clickedCrewId: null,
       publishing: false,
       categoryTotals: [],
       /** Ancho columna crew: estrecho en phone ≤440px, 22% tablet, 15% desktop ≥992px */
@@ -238,34 +249,11 @@ export default {
       },
       websocket: null,
       wsUrl: null,
-      initialCalendarOptions: {
-        plugins: [interactionPlugin, resourceTimelinePlugin],
-        schedulerLicenseKey: "GPL-My-Project-Is-Open-Source",
-        initialView: "resourceTimelineWeek",
-        firstDay: 1,
-        headerToolbar: {
-          left: "prev,next today",
-          center: "title",
-          right: "resourceTimelineDay,resourceTimelineWeek",
-        },
-        buttonText: {
-          today: "Today",
-          resourceTimelineDay: "Day",
-          resourceTimelineWeek: "Week",
-        },
-        locales: [esLocale],
-        locale: "en",
+      /** Opciones compartidas por ambos modos (resources / dayGrid). Mutadas por updateCalendarPermissions. */
+      calendarInteractionDefaults: {
         editable: false,
         eventResizableFromStart: false,
         droppable: false,
-        resourceAreaHeaderContent: "Crew",
-        height: "100%",
-        stickyHeaderDates: true,
-        slotLabelInterval: { days: 1 },
-        slotDuration: { days: 1 },
-        resourceGroupField: "category",
-        resourceOrder: "category",
-        resources: [],
         eventDrop: () => {
           return false;
         },
@@ -274,63 +262,6 @@ export default {
         },
         dateClick: () => {
           return false;
-        },
-        eventClick: this.handleEventClick,
-        datesSet: this.handleDatesSet,
-        eventContent: function (arg) {
-          const event_date = dayjs(arg.event.extendedProps.updated_at);
-          const isAbsence = arg.event.extendedProps?.is_absence;
-          const isDraft =
-            arg.event.extendedProps?.is_draft === true ||
-            arg.event.id?.startsWith("draft_id_") ||
-            arg.event.extendedProps?.deleted === undefined;
-          let cardClass = "jr-schedule-event-card";
-          if (isDraft) {
-            cardClass += " jr-schedule-event-card--draft";
-            if (isAbsence) {
-              cardClass += " jr-schedule-event-card--absence";
-            }
-          } else if (
-            arg.event.extendedProps?.deleted !== undefined &&
-            arg.event.extendedProps?.deleted
-          ) {
-            cardClass += " jr-schedule-event-card--deleted";
-            if (isAbsence) {
-              cardClass += " jr-schedule-event-card--absence";
-            }
-          } else if (isAbsence) {
-            cardClass += " jr-schedule-event-card--absence";
-          } else {
-            cardClass += " jr-schedule-event-card--posted";
-          }
-          const title = escapeScheduleHtml(arg.event.title || "");
-          const description = escapeScheduleHtml(
-            arg.event.extendedProps.description || ""
-          );
-          const statusBadge = workOrderStatusBadgeHtml(
-            arg.event.extendedProps,
-            isDraft
-          );
-          const extServiceBadge = arg.event.extendedProps?.extended_service
-            ? `<span class="jr-schedule-event-card__badge">Ext. Service</span>`
-            : "";
-          const flags =
-            statusBadge || extServiceBadge
-              ? `<div class="jr-schedule-event-card__flags">${statusBadge}${extServiceBadge}</div>`
-              : "";
-          const absencePrefix = isAbsence
-            ? `<span class="jr-schedule-event-card__absence-mark" aria-hidden="true"></span>`
-            : "";
-          return {
-            html: `<div class="${cardClass}">
-                     <span class="jr-schedule-event-card__title">${absencePrefix}${title}</span>
-                     <div class="jr-schedule-event-card__desc">${description}</div>
-                     ${flags}
-                     <div class="jr-schedule-event-card__meta">${escapeScheduleHtml(
-                       event_date.format("lll")
-                     )}</div>
-                   </div>`,
-          };
         },
       },
     };
@@ -376,26 +307,94 @@ export default {
         this.$i18n?.locale?.value ?? this.$i18n?.locale ?? "en"
       );
     },
+    /** Flag del tenant (auth store): TRUE por defecto → timeline por Crew. */
+    showCrewResources() {
+      const raw = useAuthStore().user;
+      const user = raw?.value ?? raw;
+      return user?.schedule_show_crew_resources !== false;
+    },
+    /** Opciones del select de crew en el modal (modo sin resources). */
+    crewSelectOptions() {
+      const all = (this.allResources || []).map((r) => ({
+        id: r.id,
+        name: r.title,
+        category: r.category,
+        label: `${r.category} · ${r.title}`,
+      }));
+      if (this.is_coordinator === false && this.crewId != null) {
+        return all.filter((o) => Number(o.id) === Number(this.crewId));
+      }
+      return all;
+    },
     calendarOptions() {
       const lang = this.uiLocale;
-      return {
-        ...this.initialCalendarOptions,
+      const interaction = this.calendarInteractionDefaults;
+      // Handlers always from the instance (data()-captured refs can be stale/undefined).
+      const common = {
+        editable: interaction.editable,
+        eventResizableFromStart: interaction.eventResizableFromStart,
+        droppable: interaction.droppable,
+        eventDrop: interaction.eventDrop,
+        eventResize: interaction.eventResize,
+        dateClick: interaction.dateClick,
+        eventClick: this.handleEventClick,
+        datesSet: this.handleDatesSet,
+        firstDay: 1,
         locales: [esLocale],
         locale: lang === "es" ? "es" : "en",
-        // Always Monday-first (ISO week), including English UI.
-        firstDay: 1,
+        eventContent: this.renderEventContent,
+        events: this.filteredEvents,
+      };
+
+      if (!this.showCrewResources) {
+        return {
+          ...common,
+          plugins: [interactionPlugin, dayGridPlugin],
+          initialView: "dayGridWeek",
+          height: "auto",
+          headerToolbar: {
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridDay,dayGridWeek",
+          },
+          buttonText: {
+            today: this.$t("schedule.today"),
+            dayGridDay: this.$t("schedule.day"),
+            dayGridWeek: this.$t("schedule.week"),
+          },
+          dayMaxEvents: false,
+          eventDisplay: "block",
+          dayHeaderFormat: this.slotLabelFormatCurrent,
+        };
+      }
+
+      return {
+        ...common,
+        plugins: [interactionPlugin, resourceTimelinePlugin],
+        schedulerLicenseKey: "GPL-My-Project-Is-Open-Source",
+        initialView: "resourceTimelineWeek",
+        height: "100%",
+        headerToolbar: {
+          left: "prev,next today",
+          center: "title",
+          right: "resourceTimelineDay,resourceTimelineWeek",
+        },
         buttonText: {
           today: this.$t("schedule.today"),
           resourceTimelineDay: this.$t("schedule.day"),
           resourceTimelineWeek: this.$t("schedule.week"),
         },
+        stickyHeaderDates: true,
+        slotLabelInterval: { days: 1 },
+        slotDuration: { days: 1 },
+        resourceGroupField: "category",
+        resourceOrder: "category",
         resourceAreaHeaderContent: this.$t("schedule.crewColumn"),
         resourceAreaWidth: this.resourceAreaWidthCurrent,
         slotMinWidth: this.slotMinWidthCurrent,
         eventMinHeight: this.eventMinHeightCurrent,
         slotLabelFormat: this.slotLabelFormatCurrent,
         resources: this.resources,
-        events: this.filteredEvents,
       };
     },
   },
@@ -406,12 +405,29 @@ export default {
       if (!api) return;
       api.setOption("locale", lang === "es" ? "es" : "en");
       api.setOption("firstDay", 1);
-      api.setOption("resourceAreaHeaderContent", this.$t("schedule.crewColumn"));
-      api.setOption("buttonText", {
-        today: this.$t("schedule.today"),
-        resourceTimelineDay: this.$t("schedule.day"),
-        resourceTimelineWeek: this.$t("schedule.week"),
-      });
+      if (this.showCrewResources) {
+        api.setOption(
+          "resourceAreaHeaderContent",
+          this.$t("schedule.crewColumn")
+        );
+        api.setOption("buttonText", {
+          today: this.$t("schedule.today"),
+          resourceTimelineDay: this.$t("schedule.day"),
+          resourceTimelineWeek: this.$t("schedule.week"),
+        });
+      } else {
+        api.setOption("buttonText", {
+          today: this.$t("schedule.today"),
+          dayGridDay: this.$t("schedule.day"),
+          dayGridWeek: this.$t("schedule.week"),
+        });
+      }
+    },
+    async showCrewResources() {
+      await this.updateCalendarPermissions();
+      await this.$nextTick();
+      this.observeCalendarPane();
+      this.updateCalendarDensity();
     },
   },
   async mounted() {
@@ -492,10 +508,14 @@ export default {
         const api = this.$refs.calendarRef?.getApi?.();
         if (!api) return;
         try {
-          api.setOption("resourceAreaWidth", this.resourceAreaWidthCurrent);
-          api.setOption("slotMinWidth", this.slotMinWidthCurrent);
-          api.setOption("eventMinHeight", this.eventMinHeightCurrent);
-          api.setOption("slotLabelFormat", this.slotLabelFormatCurrent);
+          if (this.showCrewResources) {
+            api.setOption("resourceAreaWidth", this.resourceAreaWidthCurrent);
+            api.setOption("slotMinWidth", this.slotMinWidthCurrent);
+            api.setOption("eventMinHeight", this.eventMinHeightCurrent);
+            api.setOption("slotLabelFormat", this.slotLabelFormatCurrent);
+          } else {
+            api.setOption("dayHeaderFormat", this.slotLabelFormatCurrent);
+          }
           api.updateSize();
         } catch (_) {
           /* calendar not ready */
@@ -534,16 +554,93 @@ export default {
           this.hasPermission("appschedule.add_eventdraft") ||
           (data.can_create_event && !data.is_coordinator)
         ) {
-          this.initialCalendarOptions.editable = true;
-          this.initialCalendarOptions.eventResizableFromStart = true;
-          this.initialCalendarOptions.droppable = true;
-          this.initialCalendarOptions.eventDrop = this.handleEventDrop;
-          this.initialCalendarOptions.eventResize = this.handleEventDrop;
-          this.initialCalendarOptions.dateClick = this.handleDateClick;
+          this.calendarInteractionDefaults.editable = true;
+          this.calendarInteractionDefaults.eventResizableFromStart = true;
+          this.calendarInteractionDefaults.droppable = true;
+          this.calendarInteractionDefaults.eventDrop = this.handleEventDrop;
+          this.calendarInteractionDefaults.eventResize = this.handleEventDrop;
+          this.calendarInteractionDefaults.dateClick = this.handleDateClick;
         }
       } catch (error) {
         console.error("🚫 Error al cargar permisos de supervisor:", error);
       }
+    },
+
+    /** Contenido HTML de la tarjeta de evento (muestra crew cuando no hay columna de resources). */
+    renderEventContent(arg) {
+      const event_date = dayjs(arg.event.extendedProps.updated_at);
+      const isAbsence = arg.event.extendedProps?.is_absence;
+      const isDraft =
+        arg.event.extendedProps?.is_draft === true ||
+        arg.event.id?.startsWith("draft_id_") ||
+        arg.event.extendedProps?.deleted === undefined;
+      let cardClass = "jr-schedule-event-card";
+      if (isDraft) {
+        cardClass += " jr-schedule-event-card--draft";
+        if (isAbsence) {
+          cardClass += " jr-schedule-event-card--absence";
+        }
+      } else if (
+        arg.event.extendedProps?.deleted !== undefined &&
+        arg.event.extendedProps?.deleted
+      ) {
+        cardClass += " jr-schedule-event-card--deleted";
+        if (isAbsence) {
+          cardClass += " jr-schedule-event-card--absence";
+        }
+      } else if (isAbsence) {
+        cardClass += " jr-schedule-event-card--absence";
+      } else {
+        cardClass += " jr-schedule-event-card--posted";
+      }
+      const title = escapeScheduleHtml(arg.event.title || "");
+      const description = escapeScheduleHtml(
+        arg.event.extendedProps.description || ""
+      );
+      const statusBadge = workOrderStatusBadgeHtml(
+        arg.event.extendedProps,
+        isDraft
+      );
+      const extServiceBadge = arg.event.extendedProps?.extended_service
+        ? `<span class="jr-schedule-event-card__badge">Ext. Service</span>`
+        : "";
+      const flags =
+        statusBadge || extServiceBadge
+          ? `<div class="jr-schedule-event-card__flags">${statusBadge}${extServiceBadge}</div>`
+          : "";
+      const absencePrefix = isAbsence
+        ? `<span class="jr-schedule-event-card__absence-mark" aria-hidden="true"></span>`
+        : "";
+      let crewLine = "";
+      if (!this.showCrewResources) {
+        const fromList = this.findCrewResource(
+          arg.event.extendedProps?.crew
+        );
+        const crewTitle =
+          arg.event.extendedProps?.crew_title || fromList?.title || "";
+        const crewCategory =
+          arg.event.extendedProps?.crew_category || fromList?.category || "";
+        const crewLabel = [crewCategory, crewTitle]
+          .map((part) => String(part || "").trim())
+          .filter(Boolean)
+          .join(" · ");
+        if (crewLabel) {
+          crewLine = `<span class="jr-schedule-event-card__crew">${escapeScheduleHtml(
+            crewLabel
+          )}</span>`;
+        }
+      }
+      return {
+        html: `<div class="${cardClass}">
+                 <span class="jr-schedule-event-card__title">${absencePrefix}${title}</span>
+                 ${crewLine}
+                 <div class="jr-schedule-event-card__desc">${description}</div>
+                 ${flags}
+                 <div class="jr-schedule-event-card__meta">${escapeScheduleHtml(
+                   event_date.format("lll")
+                 )}</div>
+               </div>`,
+      };
     },
 
     handleDatesSet(info) {
@@ -653,14 +750,69 @@ export default {
       await axios_method(url, payload);
     },
 
+    /** Busca un crew en allResources por id. */
+    findCrewResource(id) {
+      if (id == null || id === "") return null;
+      return this.allResources.find((r) => Number(r.id) === Number(id)) || null;
+    },
+
+    /**
+     * Crew de un evento FullCalendar: resource (modo timeline) o extendedProps.crew (dayGrid).
+     * Devuelve { id, title, category }.
+     */
+    resolveEventCrew(event) {
+      let resource = null;
+      try {
+        resource = event?.getResources?.()?.[0] || null;
+      } catch (_) {
+        resource = null;
+      }
+      const rawId =
+        resource?.id ??
+        event?.extendedProps?.crew ??
+        event?.resourceId ??
+        null;
+      const id = rawId != null && rawId !== "" ? parseInt(rawId, 10) : null;
+      const fromList = this.findCrewResource(id);
+      return {
+        id: Number.isNaN(id) ? null : id,
+        title:
+          resource?.title ??
+          fromList?.title ??
+          event?.extendedProps?.crew_title ??
+          "",
+        category:
+          resource?.extendedProps?.category ??
+          resource?.category ??
+          fromList?.category ??
+          event?.extendedProps?.crew_category ??
+          "",
+      };
+    },
+
     handleDateClick(info) {
       try {
         const isCoordinator = this.is_coordinator;
         const canCreateEvent = this.can_create_event;
         const crewCategoryName = this.userCrewCategoryName?.toLowerCase();
-        const clickedCrewId = parseInt(info.resource.id);
         const crewId = this.crewId;
         const crewName = this.crewName;
+
+        let clickedCrewId = null;
+        let crewTitle = "";
+        let crewCategory = "";
+
+        if (info.resource) {
+          clickedCrewId = parseInt(info.resource.id);
+          crewTitle = info.resource.title;
+          crewCategory = info.resource.category ?? "";
+        } else if (!isCoordinator && crewId != null) {
+          // Sin resources: supervisor/no coordinador usa su propio crew.
+          const own = this.findCrewResource(crewId);
+          clickedCrewId = parseInt(crewId);
+          crewTitle = own?.title ?? crewName ?? "";
+          crewCategory = own?.category ?? "";
+        }
         this.clickedCrewId = clickedCrewId;
 
         if (!canCreateEvent && !isCoordinator) {
@@ -672,7 +824,7 @@ export default {
           return;
         }
 
-        if (!isCoordinator && crewId !== clickedCrewId) {
+        if (info.resource && !isCoordinator && crewId !== clickedCrewId) {
           Swal.fire(
             "Permission Denied",
             `You can only create events for your category (${
@@ -689,9 +841,9 @@ export default {
             title: "",
             description: "",
             work_account: null,
-            crew: parseInt(info.resource.id),
-            crewTitle: info.resource.title,
-            crewCategory: info.resource.category ?? "",
+            crew: clickedCrewId,
+            crewTitle,
+            crewCategory,
             extended_service: false,
             canCreateEvent: this.can_create_event,
             clickedCrewId: this.clickedCrewId,
@@ -711,43 +863,56 @@ export default {
     },
 
     handleEventClick(info) {
-      // Release focus from the FullCalendar event before the modal hides the grid.
-      if (info?.el instanceof HTMLElement) {
-        info.el.blur();
-      } else if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
+      try {
+        // Release focus from the FullCalendar event before the modal hides the grid.
+        if (info?.el instanceof HTMLElement) {
+          info.el.blur();
+        } else if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        const crew = this.resolveEventCrew(info.event);
+        this.clickedCrewId = crew.id;
+        const modal = this.$refs.eventModal;
+        if (!modal?.open) {
+          console.error("Schedule event modal ref missing");
+          return;
+        }
+        modal.open(
+          {
+            id: parseInt(info.event.extendedProps?.id, 10),
+            title: info.event.title,
+            date: info.event.startStr,
+            description: info.event.extendedProps?.description,
+            work_account: info.event.extendedProps?.work_account || null,
+            crew: crew.id,
+            crewTitle: crew.title ?? "",
+            crewCategory: crew.category ?? "",
+            extended_service: info.event.extendedProps?.extended_service,
+            isAbsence: info.event.extendedProps?.is_absence || false,
+            absence_reason: info.event.extendedProps?.absence_reason || null,
+            extendedProps: info.event.extendedProps,
+            canCreateEvent: this.can_create_event,
+            clickedCrewId: this.clickedCrewId,
+            crewId: this.crewId,
+            isCoordinator: this.is_coordinator,
+          },
+          false
+        );
+      } catch (error) {
+        console.error("💥 Error in handleEventClick:", error);
+        Swal.fire(
+          "Oops!",
+          "Something went wrong while trying to open the event.",
+          "error"
+        );
       }
-      const clickedCrewId = parseInt(info.event.getResources()[0].id);
-      this.clickedCrewId = clickedCrewId;
-      const resource = info.event.getResources()[0];
-      this.$refs.eventModal.open(
-        {
-          id: parseInt(info.event.extendedProps?.id),
-          title: info.event.title,
-          date: info.event.startStr,
-          description: info.event.extendedProps?.description,
-          work_account: info.event.extendedProps?.work_account || null,
-          crew: resource?.id,
-          crewTitle: resource?.title ?? "",
-          crewCategory:
-            resource?.category ?? info.event.extendedProps?.crew_category ?? "",
-          extended_service: info.event.extendedProps?.extended_service,
-          isAbsence: info.event.extendedProps?.is_absence || false,
-          absence_reason: info.event.extendedProps?.absence_reason || null,
-          extendedProps: info.event.extendedProps,
-          canCreateEvent: this.can_create_event,
-          clickedCrewId: this.clickedCrewId,
-          crewId: this.crewId,
-          isCoordinator: this.is_coordinator,
-        },
-        false
-      );
     },
 
     async handleEventDrop(info) {
       const isCoordinator = this.is_coordinator;
       const crewId = this.crewId;
-      const clickedCrewId = parseInt(info.event.getResources()[0].id);
+      const eventCrew = this.resolveEventCrew(info.event);
+      const clickedCrewId = eventCrew.id;
       const crewName = this.crewName;
 
       if (!isCoordinator && crewId !== clickedCrewId) {
@@ -770,7 +935,7 @@ export default {
             date: info.event.startStr,
             end_dt: info.event.endStr,
             work_account: info.event.extendedProps?.work_account || null,
-            crew: info.event.getResources()[0].id,
+            crew: eventCrew.id,
             extended_service: info.event.extendedProps?.extended_service,
             is_absence: info.event.extendedProps?.is_absence || false,
           };
@@ -784,7 +949,7 @@ export default {
           payload.event = info.event.extendedProps?.id;
           payload.date = info.event.startStr;
           payload.end_dt = info.event.endStr;
-          payload.crew = info.event.getResources()[0].id;
+          payload.crew = eventCrew.id;
           payload._post = true;
           payload._deleted = info.event.extendedProps?.deleted;
           await this.updateEvent(`/api/schedule/`, payload, "post");
