@@ -21,6 +21,7 @@ def tenant_branding_payload(tenant, request=None) -> dict:
             'tenant_logo_url': None,
             'client_type': None,
             'schema_name': None,
+            'schedule_show_crew_resources': True,
         }
 
     logo_url = None
@@ -36,6 +37,9 @@ def tenant_branding_payload(tenant, request=None) -> dict:
         'tenant_logo_url': logo_url,
         'client_type': getattr(tenant, 'client_type', None) or 'general',
         'schema_name': getattr(tenant, 'schema_name', None),
+        'schedule_show_crew_resources': bool(
+            getattr(tenant, 'schedule_show_crew_resources', True)
+        ),
     }
 
 

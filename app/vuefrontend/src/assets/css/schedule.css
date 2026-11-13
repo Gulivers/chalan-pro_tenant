@@ -181,7 +181,8 @@
   height: 80px !important;
 }
 
-.jr-schedule .fc-event {
+/* Timeline events (resource mode) */
+.jr-schedule .fc-timeline-event {
   height: auto !important;
   display: flex;
   align-items: stretch;
@@ -195,11 +196,36 @@
   overflow: visible;
   white-space: normal;
   box-shadow: none;
+  cursor: pointer;
 }
 
-.jr-schedule .fc-event .fc-event-main {
+.jr-schedule .fc-timeline-event .fc-event-main {
   padding: 0;
   width: 100%;
+}
+
+/* Day-grid events (no crew resources mode) — keep clickable block layout */
+.jr-schedule .fc-daygrid-event {
+  margin: 1px 2px;
+  padding: 0;
+  border: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  font-weight: 500;
+  overflow: visible;
+  white-space: normal;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.jr-schedule .fc-daygrid-event .fc-event-main {
+  padding: 0;
+  width: 100%;
+  color: inherit;
+}
+
+.jr-schedule .fc-daygrid-block-event .fc-event-main {
+  padding: 0;
 }
 
 .jr-schedule .fc-timeline-event-harness {
@@ -304,6 +330,17 @@
   font-weight: 600;
   line-height: 1.3;
   text-transform: none;
+  word-break: break-word;
+}
+
+.jr-schedule-event-card__crew {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-jr-muted, #4b5563);
   word-break: break-word;
 }
 

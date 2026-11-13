@@ -39,13 +39,24 @@ class TenantContextView(APIView):
         return Response(payload)
 
 
+def _coerce_bool(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        return value.strip().lower() in ('1', 'true', 'yes', 'on')
+    return bool(value)
+
+
 class MeView(APIView):
     """
     GET /api/auth/me/
     PATCH /api/auth/me/
 
     Authenticated user context for the current tenant schema.
-    PATCH currently supports preferred_language (en|es).
+    PATCH supports preferred_language (en|es) and, for tenant admins,
+    schedule_show_crew_resources.
     """
 
     permission_classes = [IsAuthenticated]
@@ -71,15 +82,42 @@ class MeView(APIView):
         return Response(self._payload(request))
 
     def patch(self, request):
-        if 'preferred_language' not in request.data:
+        data = request.data
+        updated = False
+
+        if 'preferred_language' in data:
+            try:
+                set_preferred_language(request.user, data.get('preferred_language'))
+            except ValueError as exc:
+                return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            updated = True
+
+        if 'schedule_show_crew_resources' in data:
+            tenant = resolve_request_tenant(request)
+            if tenant is None:
+                return Response(
+                    {'detail': 'No tenant context.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if not (
+                request.user.is_superuser
+                or is_tenant_owner(request.user, tenant)
+            ):
+                return Response(
+                    {'detail': 'Only the tenant admin can change schedule settings.'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            tenant.schedule_show_crew_resources = _coerce_bool(
+                data.get('schedule_show_crew_resources')
+            )
+            tenant.save(update_fields=['schedule_show_crew_resources'])
+            updated = True
+
+        if not updated:
             return Response(
                 {'detail': 'No updatable fields provided.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        try:
-            set_preferred_language(request.user, request.data.get('preferred_language'))
-        except ValueError as exc:
-            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(self._payload(request))
 
 

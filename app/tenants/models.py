@@ -150,6 +150,16 @@ class Tenant(TenantMixin):
         verbose_name="Admin setup progress",
         help_text="Step statuses, panel/banner dismiss flags for the Welcome assistant.",
     )
+
+    # Schedule UI: show Crews as FullCalendar resource rows vs assign via modal select
+    schedule_show_crew_resources = models.BooleanField(
+        default=True,
+        verbose_name="Show crews as schedule resources",
+        help_text=(
+            "When True, the schedule uses a Crew resource column. "
+            "When False, crews are assigned in the event modal and named on event cards / PDF cells."
+        ),
+    )
     
     # Configuración de django-tenants
     auto_create_schema = True
