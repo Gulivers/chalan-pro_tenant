@@ -68,6 +68,26 @@
           </JRField>
 
           <JRField
+            v-if="showCrewSelect"
+            v-slot="{ labelledby }"
+            :label="$t('schedule.event.crew')"
+            inputId="jr-schedule-event-crew"
+            :use-for="false"
+            required>
+            <JRSelect
+              inputId="jr-schedule-event-crew"
+              :model-value="localFormData.crew"
+              :options="crewOptions"
+              option-label="label"
+              option-value="id"
+              :disabled="!isEditing || crewSelectLocked"
+              :ariaLabelledby="labelledby"
+              :placeholder="$t('schedule.event.selectCrew')"
+              filter
+              @update:model-value="onCrewSelect" />
+          </JRField>
+
+          <JRField
             v-if="isAbsence"
             v-slot="{ labelledby }"
             :label="$t('schedule.event.absenceReason')"
@@ -252,7 +272,13 @@ import {
 
 export default {
   name: "ScheduleEventModal",
-  props: ["formData"],
+  props: {
+    formData: { type: Object, default: () => ({}) },
+    /** Modo sin resources: mostrar select de crew en el formulario. */
+    showCrewSelect: { type: Boolean, default: false },
+    /** Opciones { id, name, category, label } para el select de crew. */
+    crewOptions: { type: Array, default: () => [] },
+  },
   emits: ["save-event", "delete-event"],
   components: {
     WorkAccountSelector,
@@ -376,10 +402,25 @@ export default {
       if (!this.canCreateEvent && !this.isCoordinator) {
         return false;
       }
+      if (this.showCrewSelect) {
+        // Sin resources: el crew se elige en el select; solo bloquear si el
+        // evento pertenece a otro crew y el usuario no es coordinador.
+        if (
+          !this.isCoordinator &&
+          this.clickedCrewId != null &&
+          this.crewId !== this.clickedCrewId
+        ) {
+          return false;
+        }
+        return true;
+      }
       if (!this.isCoordinator && this.crewId !== this.clickedCrewId) {
         return false;
       }
       return true;
+    },
+    crewSelectLocked() {
+      return !this.isCoordinator && this.crewId != null && this.crewId !== "";
     },
     discussionEventId() {
       const id = this.event_data?.id;
@@ -428,6 +469,21 @@ export default {
     },
     onDateChange(value) {
       this.localFormData.date = this.dateToIso(value);
+    },
+    onCrewSelect(value) {
+      const id = value != null && value !== "" ? parseInt(value) : null;
+      this.localFormData.crew = id;
+      this.clickedCrewId = id;
+      const opt = this.crewOptions.find((o) => Number(o.id) === id);
+      this.crewTitle = opt?.name ?? "";
+      this.crewCategory = opt?.category ?? "";
+      if (this.eventMeta) {
+        this.eventMeta = {
+          ...this.eventMeta,
+          crew_title: opt?.name ?? null,
+          crew_category: opt?.category ?? null,
+        };
+      }
     },
     onVisibleChange(next) {
       this.visible = next;
@@ -611,6 +667,16 @@ export default {
           const new_end = new_start.add(duration, "days");
           this.localFormData.end_dt = new_end.format("YYYY-MM-DD");
         }
+      }
+
+      if (this.showCrewSelect && !this.localFormData.crew) {
+        Swal.fire(
+          this.$t("schedule.event.missingFieldsTitle"),
+          this.$t("schedule.event.missingCrew"),
+          "warning"
+        );
+        this.loading = false;
+        return;
       }
 
       if (!this.isAbsence) {

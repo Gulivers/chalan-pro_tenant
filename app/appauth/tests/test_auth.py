@@ -155,6 +155,63 @@ class AuthLoginJWTTests(TenantTestCase):
         self.assertEqual(again.status_code, status.HTTP_200_OK)
         self.assertEqual(again.data['preferred_language'], 'es')
 
+    def test_me_includes_schedule_show_crew_resources(self):
+        with override_settings(DEBUG=True, AUTH_USE_REFRESH_COOKIE=False):
+            login = self.client.post(
+                self.login_url,
+                {'username': 'jwtuser', 'password': 'ValidPass123!'},
+                format='json',
+            )
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {login.data['access']}")
+        response = self.client.get('/api/auth/me/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('schedule_show_crew_resources', response.data)
+        self.assertTrue(response.data['schedule_show_crew_resources'])
+
+    def test_me_patch_schedule_show_crew_resources_owner_only(self):
+        owner = User.objects.create_user(
+            username='tenantowner',
+            email='owner@example.com',
+            password='ValidPass123!',
+            is_staff=True,
+        )
+        with override_settings(DEBUG=True, AUTH_USE_REFRESH_COOKIE=False):
+            login = self.client.post(
+                self.login_url,
+                {'username': 'tenantowner', 'password': 'ValidPass123!'},
+                format='json',
+            )
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {login.data['access']}")
+
+        allowed = self.client.patch(
+            '/api/auth/me/',
+            {'schedule_show_crew_resources': False},
+            format='json',
+        )
+        self.assertEqual(allowed.status_code, status.HTTP_200_OK)
+        self.assertFalse(allowed.data['schedule_show_crew_resources'])
+        self.tenant.refresh_from_db()
+        self.assertFalse(self.tenant.schedule_show_crew_resources)
+
+        with override_settings(DEBUG=True, AUTH_USE_REFRESH_COOKIE=False):
+            other_login = self.client.post(
+                self.login_url,
+                {'username': 'jwtuser', 'password': 'ValidPass123!'},
+                format='json',
+            )
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {other_login.data['access']}"
+        )
+        forbidden = self.client.patch(
+            '/api/auth/me/',
+            {'schedule_show_crew_resources': True},
+            format='json',
+        )
+        self.assertEqual(forbidden.status_code, status.HTTP_403_FORBIDDEN)
+        self.tenant.refresh_from_db()
+        self.assertFalse(self.tenant.schedule_show_crew_resources)
+        self.assertTrue(owner.is_staff)
+
     def test_refresh_rotates(self):
         with override_settings(DEBUG=True, AUTH_USE_REFRESH_COOKIE=False):
             login = self.client.post(
