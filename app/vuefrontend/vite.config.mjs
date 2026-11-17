@@ -45,12 +45,9 @@ export default defineConfig({
       includeAssets: [
         'img/icons/favicon.ico',
         'img/icons/apple-touch-icon.png',
-        'img/icons/favicon-96x96.png',
         'img/icons/icon-192.png',
         'img/icons/icon-512.png',
         'img/icons/icon-maskable-512.png',
-        'img/icons/icon-192x192.png',
-        'img/icons/icon-512x512.png',
         'img/jobrhythm-logo.png',
       ],
       manifest: {
