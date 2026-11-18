@@ -200,8 +200,8 @@ const debugVerifyUrl = ref("");
 const formData = reactive({
   companyInfo: {
     business_name: "",
-    // TEMP: Electric-only onboarding; restore Trade select when multi-trade opens.
-    business_type: "electric",
+    business_type: "",
+    business_type_other: "",
     logo: null,
     address: "",
     monthly_operations: "",
@@ -306,8 +306,25 @@ const getStep1Errors = () => {
   if (!bn || bn.length < 3) {
     errors.business_name = t("onboarding.errors.companyName");
   }
-  // TEMP: business_type fixed to electric in the UI; skip empty-field check.
-  formData.companyInfo.business_type = "electric";
+  const allowedTrades = [
+    "electric",
+    "air_conditioning",
+    "solar",
+    "plumbing",
+    "hvac",
+    "general",
+  ];
+  if (!allowedTrades.includes(formData.companyInfo.business_type)) {
+    errors.business_type = t("onboarding.errors.tradeType");
+  }
+  if (formData.companyInfo.business_type === "general") {
+    const other = formData.companyInfo.business_type_other?.trim() || "";
+    if (!other) {
+      errors.business_type_other = t("onboarding.errors.tradeOther");
+    } else if (other.length > 50) {
+      errors.business_type_other = t("onboarding.errors.tradeOtherMax");
+    }
+  }
   if (!formData.companyInfo.monthly_operations) {
     errors.monthly_operations = t("onboarding.errors.monthlyOps");
   }
@@ -466,8 +483,6 @@ const loadFromLocalStorage = () => {
       if (data.formData) {
         if (data.formData.companyInfo) {
           Object.assign(formData.companyInfo, data.formData.companyInfo);
-          // TEMP: force Electric while multi-trade onboarding is paused.
-          formData.companyInfo.business_type = "electric";
         }
         if (data.formData.adminUser) {
           Object.assign(formData.adminUser, {
@@ -504,7 +519,11 @@ const handleFinalSubmit = async (turnstileToken) => {
     formData.preferences = normalizeStoredPreferences(formData.preferences);
     const payload = {
       business_name: formData.companyInfo.business_name.trim(),
-      business_type: formData.companyInfo.business_type || "electric",
+      business_type: formData.companyInfo.business_type,
+      business_type_other:
+        formData.companyInfo.business_type === "general"
+          ? (formData.companyInfo.business_type_other || "").trim()
+          : "",
       logo: formData.companyInfo.logo,
       address: formData.companyInfo.address,
       monthly_operations: formData.companyInfo.monthly_operations,
