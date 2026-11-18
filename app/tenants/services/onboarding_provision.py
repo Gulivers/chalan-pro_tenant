@@ -73,6 +73,7 @@ def provision_tenant_workspace(data: OnboardingFormData, logo=None) -> dict[str,
     company_name = data.company_name
     email = data.email
     client_type = data.client_type
+    client_type_other = data.client_type_other if client_type == 'general' else None
     address = data.address
     preferences = data.preferences
     monthly_operations = data.monthly_operations
@@ -100,6 +101,7 @@ def provision_tenant_workspace(data: OnboardingFormData, logo=None) -> dict[str,
         name=company_name,
         email=email,
         client_type=client_type,
+        client_type_other=client_type_other,
         logo=logo,
         address=address,
         preferences=preferences,

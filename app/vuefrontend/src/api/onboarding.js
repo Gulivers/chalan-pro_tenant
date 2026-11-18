@@ -31,6 +31,10 @@ export const createTenantWorkspace = async (data, turnstileToken = '') => {
 
   formData.append('company_name', data.business_name || data.company_name)
   formData.append('client_type', data.business_type || data.client_type)
+  const clientTypeOther = (data.business_type_other || data.client_type_other || '').trim()
+  if (clientTypeOther) {
+    formData.append('client_type_other', clientTypeOther)
+  }
   formData.append('email', data.admin?.email || data.email)
 
   if (turnstileToken) {

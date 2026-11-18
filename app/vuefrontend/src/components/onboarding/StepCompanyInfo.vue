@@ -18,7 +18,6 @@
         </template>
       </JRField>
 
-      <!-- TEMP: onboarding limited to Electric; restore Trade select when multi-trade opens.
       <JRField
         :label="t('onboarding.company.tradeType')"
         required
@@ -34,10 +33,28 @@
             :placeholder="t('onboarding.company.tradePlaceholder')"
             :invalid="invalid"
             :aria-describedby="describedby || undefined"
-            @update:modelValue="validateField('business_type')" />
+            @update:modelValue="onBusinessTypeChange" />
         </template>
       </JRField>
-      -->
+
+      <JRField
+        v-if="localData.business_type === 'general'"
+        :label="t('onboarding.company.tradeOther')"
+        required
+        inputId="business_type_other"
+        :hint="t('onboarding.company.tradeOtherHint')"
+        :error="errors.business_type_other || ''">
+        <template #default="{ invalid, describedby }">
+          <JRInput
+            inputId="business_type_other"
+            v-model="localData.business_type_other"
+            :invalid="invalid"
+            :aria-describedby="describedby || undefined"
+            :maxlength="50"
+            :placeholder="t('onboarding.company.tradeOtherPlaceholder')"
+            @blur="validateField('business_type_other')" />
+        </template>
+      </JRField>
 
       <UploadLogo v-model="localData.logo" :error="errors.logo || ''" />
 
@@ -118,7 +135,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'validate'])
 
-/* TEMP: restore with Trade / business type JRField above.
 const businessTypeOptions = computed(() => [
   { value: 'electric', label: t('onboarding.company.trades.electric') },
   { value: 'air_conditioning', label: t('onboarding.company.trades.air_conditioning') },
@@ -127,7 +143,6 @@ const businessTypeOptions = computed(() => [
   { value: 'hvac', label: t('onboarding.company.trades.hvac') },
   { value: 'general', label: t('onboarding.company.trades.general') },
 ])
-*/
 
 const monthlyOperationsOptions = computed(() => [
   { value: '0-10', label: t('onboarding.company.monthly.0-10') },
@@ -139,8 +154,8 @@ const monthlyOperationsOptions = computed(() => [
 
 const localData = reactive({
   business_name: props.modelValue.business_name || '',
-  // TEMP default: Electric-only onboarding (client_type still editable in Django admin).
-  business_type: props.modelValue.business_type || 'electric',
+  business_type: props.modelValue.business_type || '',
+  business_type_other: props.modelValue.business_type_other || '',
   logo: props.modelValue.logo || null,
   address: props.modelValue.address || '',
   monthly_operations: props.modelValue.monthly_operations || '',
@@ -160,6 +175,13 @@ const crewCountDisplay = computed(() =>
     ? ''
     : String(localData.crew_count)
 )
+
+const onBusinessTypeChange = () => {
+  if (localData.business_type !== 'general') {
+    localData.business_type_other = ''
+  }
+  validateField('business_type')
+}
 
 const onCrewCount = (val) => {
   const raw = val === null || val === undefined ? '' : String(val).trim()
