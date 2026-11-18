@@ -28,7 +28,7 @@ class TenantAdmin(PublicSchemaOnlyAdminMixin, TenantAdminMixin, admin.ModelAdmin
         ('Tenant information', {
             'fields': (
                 'name', 'schema_name', 'tenant_id', 'email', 'client_type',
-                'logo', 'logo_preview', 'is_active',
+                'client_type_other', 'logo', 'logo_preview', 'is_active',
             ),
         }),
         ('Billing & trial', {

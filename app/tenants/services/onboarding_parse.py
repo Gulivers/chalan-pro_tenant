@@ -23,6 +23,7 @@ class OnboardingFormData:
     company_name: str
     email: str
     client_type: str = 'general'
+    client_type_other: Optional[str] = None
     address: Optional[str] = None
     monthly_operations: Optional[str] = None
     crew_count: Optional[int] = None
@@ -98,6 +99,7 @@ def _parse_admin_fields(request) -> tuple[Optional[str], Optional[str], str]:
 def parse_onboarding_request(request) -> OnboardingFormData:
     company_name = (request.data.get('company_name') or '').strip()
     client_type = request.data.get('client_type', 'general')
+    client_type_other = (request.data.get('client_type_other') or '').strip() or None
     address = (request.data.get('address') or '').strip() or None
     monthly_operations = (request.data.get('monthly_operations') or '').strip() or None
     crew_count_raw = request.data.get('crew_count', None)
@@ -148,10 +150,23 @@ def parse_onboarding_request(request) -> OnboardingFormData:
     if client_type not in valid_client_types:
         client_type = 'general'
 
+    if client_type == 'general':
+        if not client_type_other:
+            raise OnboardingValidationError(
+                'Please describe your trade / business type.'
+            )
+        if len(client_type_other) > 50:
+            raise OnboardingValidationError(
+                'Other business type must be 50 characters or fewer.'
+            )
+    else:
+        client_type_other = None
+
     return OnboardingFormData(
         company_name=company_name,
         email=email,
         client_type=client_type,
+        client_type_other=client_type_other,
         address=address,
         monthly_operations=monthly_operations,
         crew_count=crew_count,
@@ -168,6 +183,7 @@ def form_data_to_payload(data: OnboardingFormData, sealed_password: str) -> dict
         'company_name': data.company_name,
         'email': data.email,
         'client_type': data.client_type,
+        'client_type_other': data.client_type_other,
         'address': data.address,
         'monthly_operations': data.monthly_operations,
         'crew_count': data.crew_count,
@@ -183,10 +199,16 @@ def payload_to_form_data(payload: dict[str, Any]) -> OnboardingFormData:
     from tenants.services.onboarding_secrets import safe_unseal_admin_password
 
     sealed = payload.get('admin_password_sealed') or ''
+    client_type = payload.get('client_type') or 'general'
+    client_type_other = (payload.get('client_type_other') or '').strip() or None
+    if client_type != 'general':
+        client_type_other = None
+
     return OnboardingFormData(
         company_name=payload['company_name'],
         email=payload['email'],
-        client_type=payload.get('client_type') or 'general',
+        client_type=client_type,
+        client_type_other=client_type_other,
         address=payload.get('address'),
         monthly_operations=payload.get('monthly_operations'),
         crew_count=payload.get('crew_count'),
