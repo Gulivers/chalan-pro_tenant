@@ -45,6 +45,14 @@ class Tenant(TenantMixin):
         default='general',
         verbose_name="Client type"
     )
+    # Free-text trade when client_type is "general" (Other)
+    client_type_other = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name="Other business type",
+        help_text="Required when Client type is General: the trade the company typed in onboarding.",
+    )
     
     # Logo del cliente
     # Django guarda el archivo en tenant_logos/; si ya existe otro con el mismo nombre,

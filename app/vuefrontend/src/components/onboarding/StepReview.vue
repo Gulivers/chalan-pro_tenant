@@ -33,10 +33,9 @@
           <dt>{{ t('onboarding.review.companyName') }}</dt>
           <dd>{{ companyInfo.business_name }}</dd>
         </div>
-        <!-- TEMP: still show fixed Electric while multi-trade onboarding is paused. -->
         <div class="jr-onboard-review__row">
           <dt>{{ t('onboarding.review.tradeType') }}</dt>
-          <dd>{{ getBusinessTypeLabel(companyInfo.business_type || 'electric') }}</dd>
+          <dd>{{ tradeReviewLabel }}</dd>
         </div>
         <div v-if="companyInfo.address" class="jr-onboard-review__row">
           <dt>{{ t('onboarding.review.address') }}</dt>
@@ -150,7 +149,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { JRButton } from '@ui'
 import TurnstileWidget from './TurnstileWidget.vue'
@@ -210,6 +209,15 @@ const getBusinessTypeLabel = (value) => {
   const key = `onboarding.company.trades.${value}`
   return te(key) ? t(key) : value
 }
+
+const tradeReviewLabel = computed(() => {
+  const base = getBusinessTypeLabel(props.companyInfo.business_type)
+  const other = (props.companyInfo.business_type_other || '').trim()
+  if (props.companyInfo.business_type === 'general' && other) {
+    return `${base}: ${other}`
+  }
+  return base
+})
 
 const getMonthlyOperationsLabel = (value) => {
   if (!value) return t('onboarding.review.notSpecified')
