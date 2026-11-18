@@ -23,11 +23,11 @@ export default {
     },
     formTitle() {
       if (this.isViewMode) {
-        return 'View Community'
+        return this.$t('parties.viewCommunity')
       } else if (this.$route.params.id) {
-        return 'Edit Community'
+        return this.$t('parties.editCommunityTitle')
       } else {
-        return 'Create Community'
+        return this.$t('parties.createCommunity')
       }
     }
   }
