@@ -1,16 +1,16 @@
 export const BUILDER_FORM_SECTIONS = [
   {
-    title: "Roles",
+    titleKey: "parties.sectionRoles",
     grid: "flags",
     fields: ["customer_rank", "supplier_rank", "is_active"],
   },
   {
-    title: "Identity",
+    titleKey: "parties.sectionIdentity",
     grid: "identity",
     fields: ["name", "rfc", "types", "category"],
   },
   {
-    title: "Pricing",
+    titleKey: "parties.sectionPricing",
     grid: "pricing",
     fields: [
       "trim_amount",
@@ -20,7 +20,7 @@ export const BUILDER_FORM_SECTIONS = [
     ],
   },
   {
-    title: "Address",
+    titleKey: "parties.sectionAddress",
     grid: "address",
     fields: [
       "street",
@@ -32,7 +32,7 @@ export const BUILDER_FORM_SECTIONS = [
     ],
   },
   {
-    title: "Contact",
+    titleKey: "parties.sectionContact",
     grid: "contact",
     fields: ["phone", "email"],
   },

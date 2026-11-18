@@ -409,7 +409,7 @@ export default {
         console.error("Error fetching party types", error);
         loadError.value = true;
         partyTypes.value = [];
-        proxy?.notifyError?.("Error loading party types.");
+        proxy?.notifyError?.(proxy?.$t?.("parties.loadPartyTypesError"));
       } finally {
         setTimeout(() => {
           isLoading.value = false;
@@ -487,10 +487,10 @@ export default {
           try {
             await axios.delete(`${ENDPOINT}${id}/`);
             partyTypes.value = partyTypes.value.filter((p) => p.id !== id);
-            proxy?.notifyToastSuccess?.("The party type has been deleted.");
+            proxy?.notifyToastSuccess?.(proxy?.$t?.("parties.partyTypeDeleted"));
           } catch (err) {
             console.error("Error deleting party type", err);
-            proxy?.notifyError?.("Error deleting the party type.");
+            proxy?.notifyError?.(proxy?.$t?.("parties.deletePartyTypeError"));
           }
         }
       );
