@@ -159,13 +159,13 @@ export default {
       const name = (this.form.name || "").trim();
       const description = (this.form.description || "").trim();
       if (!name) {
-        this.fieldErrors = { name: "Name is required." };
-        this.formBanner = "Name is required.";
+        this.fieldErrors = { name: this.$t("common.nameRequired") };
+        this.formBanner = this.$t("common.nameRequired");
         return;
       }
       if (name.length > 150) {
-        this.fieldErrors = { name: "Name cannot exceed 150 characters." };
-        this.formBanner = "Name cannot exceed 150 characters.";
+        this.fieldErrors = { name: this.$t("common.nameMax150") };
+        this.formBanner = this.$t("common.nameMax150");
         return;
       }
 
@@ -183,8 +183,8 @@ export default {
         const { data } = await axios[method](url, payload);
         this.notifyToastSuccess?.(
           this.objectId
-            ? `${this.entityLabel[0].toUpperCase()}${this.entityLabel.slice(1)} updated.`
-            : `${this.entityLabel[0].toUpperCase()}${this.entityLabel.slice(1)} created.`
+            ? this.$t("common.recordUpdated")
+            : this.$t("common.recordCreated")
         );
         this.$emit("saved", data);
       } catch (error) {
@@ -200,11 +200,11 @@ export default {
           this.formBanner =
             next.name ||
             data.detail ||
-            `There were validation errors saving the ${this.entityLabel}.`;
+            this.$t("common.validationErrorsGeneric");
         } else if (status === 403) {
-          this.formBanner = "You do not have permission for this action.";
+          this.formBanner = this.$t("common.permissionDenied");
         } else {
-          this.formBanner = `Error saving the ${this.entityLabel}.`;
+          this.formBanner = this.$t("common.saveRecordError");
         }
         this.notifyToastError?.(this.formBanner);
       } finally {

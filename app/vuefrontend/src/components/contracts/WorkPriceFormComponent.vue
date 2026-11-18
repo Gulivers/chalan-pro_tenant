@@ -138,7 +138,7 @@
           class="jr-assign-grid"
           :class="{ 'jr-assign-grid--invalid': !!fieldErrors.builders }"
           role="group"
-          aria-label="Builders"
+          :aria-label="$t('workPrices.ariaBuilders')"
           :aria-describedby="fieldErrors.builders ? 'workprice-builders-error' : undefined">
           <JRCheckbox
             v-for="builder in filteredBuilders"
@@ -244,8 +244,10 @@ export default {
       );
     },
     pageTitle() {
-      if (this.isReadOnly) return "View Piece Work Price";
-      return this.isNewPrice ? "New Piece Work Price" : "Edit Piece Work Price";
+      if (this.isReadOnly) return this.$t("workPrices.viewTitle");
+      return this.isNewPrice
+        ? this.$t("workPrices.newTitle")
+        : this.$t("workPrices.editTitle");
     },
     filteredBuilders() {
       const q = this.builderFilter.trim().toLowerCase();
@@ -256,15 +258,17 @@ export default {
     },
     buildersEmptyTitle() {
       if (this.builderFilter.trim() && this.availableBuilders.length) {
-        return "No matching builders";
+        return this.$t("workPrices.noMatchingBuilders");
       }
-      return "No builders";
+      return this.$t("workPrices.noBuilders");
     },
     buildersEmptyDescription() {
       if (this.builderFilter.trim() && this.availableBuilders.length) {
-        return `No builders match “${this.builderFilter.trim()}”.`;
+        return this.$t("workPrices.noBuildersMatch", {
+          query: this.builderFilter.trim(),
+        });
       }
-      return "No builders available yet.";
+      return this.$t("workPrices.noBuildersYet");
     },
   },
   mounted() {
@@ -342,7 +346,7 @@ export default {
         })
         .catch((error) => {
           console.error("Error fetching data for editing:", error);
-          this.notifyError?.("Error loading piece work price.");
+          this.notifyError?.(this.$t("workPrices.loadOneError"));
         });
     },
     fetchAvailableBuilders() {
@@ -356,7 +360,7 @@ export default {
         })
         .catch((error) => {
           console.error("Error fetching available builders:", error);
-          this.notifyError?.("Error loading builders.");
+          this.notifyError?.(this.$t("workPrices.loadBuildersError"));
         })
         .finally(() => {
           this.buildersLoading = false;
@@ -386,16 +390,16 @@ export default {
       this.fieldErrors = {};
       let ok = true;
       if (!this.newPrice.name || !String(this.newPrice.name).trim()) {
-        this.fieldErrors.name = "Name is required";
+        this.fieldErrors.name = this.$t("workPrices.nameRequired");
         ok = false;
       }
       if (!this.newPrice.unit_price) {
-        this.fieldErrors.unit_price = "Unit price type is required";
+        this.fieldErrors.unit_price = this.$t("workPrices.unitPriceRequired");
         ok = false;
       }
       // New Piece Work Price must assign at least one builder
       if (this.isNewPrice && !this.selectedIds.length) {
-        this.fieldErrors.builders = "Select at least one builder.";
+        this.fieldErrors.builders = this.$t("workPrices.buildersRequired");
         ok = false;
       }
       return ok;
@@ -405,7 +409,7 @@ export default {
       if (!this.validate()) {
         const msg =
           this.fieldErrors.builders ||
-          "Please fix the highlighted fields.";
+          this.$t("common.fixHighlightedFields");
         this.notifyError?.(msg);
         this.focusFirstInvalid();
         return;
@@ -425,14 +429,16 @@ export default {
       axios[idToUpdate ? "put" : "post"](url, dataToSend)
         .then(() => {
           this.notifyToastSuccess?.(
-            idToUpdate ? "Piece work price updated." : "Piece work price created."
+            idToUpdate
+              ? this.$t("workPrices.updated")
+              : this.$t("workPrices.created")
           );
           this.$router.push("/work-prices");
         })
         .catch((error) => {
           console.error("Error saving price:", error);
           const data = error?.response?.data;
-          let detail = "Error saving piece work price.";
+          let detail = this.$t("workPrices.saveError");
           if (data) {
             if (typeof data === "string") detail = data;
             else if (data.detail)

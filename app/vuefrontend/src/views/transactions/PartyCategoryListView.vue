@@ -409,7 +409,7 @@ export default {
         console.error("Error fetching party categories", error);
         loadError.value = true;
         categories.value = [];
-        proxy?.notifyError?.("Error loading party categories.");
+        proxy?.notifyError?.(proxy?.$t?.("parties.loadPartyCategoriesError"));
       } finally {
         setTimeout(() => {
           isLoading.value = false;
@@ -488,11 +488,11 @@ export default {
             await axios.delete(`${ENDPOINT}${id}/`);
             categories.value = categories.value.filter((cat) => cat.id !== id);
             proxy?.notifyToastSuccess?.(
-              "The party category has been deleted."
+              proxy?.$t?.("parties.partyCategoryDeleted")
             );
           } catch (err) {
             console.error("Error deleting party category", err);
-            proxy?.notifyError?.("Error deleting the party category.");
+            proxy?.notifyError?.(proxy?.$t?.("parties.deletePartyCategoryError"));
           }
         }
       );

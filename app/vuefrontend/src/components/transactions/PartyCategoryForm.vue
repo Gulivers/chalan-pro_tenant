@@ -182,7 +182,7 @@ function validateLocal() {
   form.value.name = name;
   form.value.description = (form.value.description || "").trim();
   if (!name) {
-    fieldErrors.value = { name: "Name is required." };
+    fieldErrors.value = { name: t("common.nameRequired") };
     Swal.fire(
       t("common.validationError"),
       t("parties.partyCategoryForm.swalNameRequired"),
@@ -191,8 +191,12 @@ function validateLocal() {
     return false;
   }
   if (name.length > 150) {
-    fieldErrors.value = { name: "Name must be at most 150 characters." };
-    Swal.fire("Validation", "Name must be at most 150 characters.", "warning");
+    fieldErrors.value = { name: t("common.nameMax150") };
+    Swal.fire(
+      t("common.validation"),
+      t("parties.partyCategoryForm.swalNameMax"),
+      "warning"
+    );
     return false;
   }
   return true;
@@ -228,18 +232,22 @@ async function handleSubmit() {
         )
         .join("\n");
       await Swal.fire(
-        "Oops!",
-        messages || "There were validation errors.",
+        t("common.oops"),
+        messages || t("common.validationErrorsGeneric"),
         "error"
       );
     } else if (status === 403) {
       await Swal.fire(
-        "Forbidden",
-        "You do not have permission for this action.",
+        t("common.forbidden"),
+        t("common.permissionDenied"),
         "error"
       );
     } else {
-      await Swal.fire("Oops!", "Error saving the party category.", "error");
+      await Swal.fire(
+        t("common.oops"),
+        t("parties.partyCategoryForm.swalSaveError"),
+        "error"
+      );
     }
   } finally {
     submitting.value = false;

@@ -23,11 +23,11 @@ export default {
     },
     formTitle() {
       if (this.isViewMode) {
-        return 'View House Model'
+        return this.$t('parties.viewHouseModel')
       } else if (this.$route.params.id) {
-        return 'Edit House Model'
+        return this.$t('parties.editHouseModelTitle')
       } else {
-        return 'Create House Model'
+        return this.$t('parties.createHouseModel')
       }
     }
   }
