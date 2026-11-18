@@ -120,13 +120,13 @@ def weekly_summary_list(request): # WeeklySummaryListComponent.vue component
 @api_view(['GET'])
 # @permission_classes([IsAuthenticated])
 def weekly_summary(request): # AreaChart.vue component
-    # Calcular la fecha de hace 52 semanas desde hoy
-    one_year_ago = timezone.now() - timezone.timedelta(weeks=52)
+    # Home dashboard: last ~6 months of weekly contract totals (~26 weeks).
+    six_months_ago = timezone.now() - timezone.timedelta(weeks=26)
 
     # Consulta que agrupa por semana y tipo de contrato (Trim o Rough)
     data = (
         Contract.objects
-        .filter(doc_type="Contract")
+        .filter(doc_type="Contract", date_created__gte=six_months_ago)
         .annotate(week=TruncWeek('date_created'))
         .values('week', 'type')
         .annotate(total=Sum('total'), total_contracts=Count('id'))
