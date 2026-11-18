@@ -14,10 +14,19 @@ export default {
             const res = await axios.get(config.optionsEndpoint);
             const rawOptions = res.data;
 
-            this.optionsMap[key] = rawOptions.map((opt) => ({
-              value: opt.id || opt.value,
-              label: opt.name || opt.label,
-            }));
+            this.optionsMap[key] = rawOptions.map((opt) => {
+              const name = opt.name || opt.label || "";
+              const builderName = (opt.builder_name || "").trim();
+              // Communities (Job): "PALM GROVE — Pulte" so MultiSelect filter matches builder.
+              const label =
+                key === "jobs" && builderName
+                  ? `${name} — ${builderName}`
+                  : name;
+              return {
+                value: opt.id || opt.value,
+                label,
+              };
+            });
             console.log(
               // `📥 Options loaded for "${key}":`,
               this.optionsMap[key]

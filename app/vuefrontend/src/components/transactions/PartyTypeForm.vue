@@ -202,7 +202,7 @@ const handleSubmit = async () => {
     form.value.description = (form.value.description ?? "").trim();
 
     if (!form.value.name) {
-      fieldErrors.value = { name: "Name is required." };
+      fieldErrors.value = { name: t("common.nameRequired") };
       await Swal.fire(
         t("common.validationError"),
         t("parties.partyTypeForm.swalNameRequired"),
@@ -211,10 +211,10 @@ const handleSubmit = async () => {
       return;
     }
     if (form.value.name.length > 150) {
-      fieldErrors.value = { name: "Name cannot exceed 150 characters." };
+      fieldErrors.value = { name: t("common.nameMax150") };
       await Swal.fire(
-        "Validation",
-        "Name cannot exceed 150 characters.",
+        t("common.validation"),
+        t("parties.partyTypeForm.swalNameMax"),
         "warning"
       );
       return;
@@ -245,18 +245,22 @@ const handleSubmit = async () => {
         )
         .join("\n");
       await Swal.fire(
-        "Oops!",
-        messages || "There were validation errors.",
+        t("common.oops"),
+        messages || t("common.validationErrorsGeneric"),
         "error"
       );
     } else if (status === 403) {
       await Swal.fire(
-        "Forbidden",
-        "You do not have permission for this action.",
+        t("common.forbidden"),
+        t("common.permissionDenied"),
         "error"
       );
     } else {
-      await Swal.fire("Oops!", "Error saving the party type.", "error");
+      await Swal.fire(
+        t("common.oops"),
+        t("parties.partyTypeForm.swalSaveError"),
+        "error"
+      );
     }
   } finally {
     submitting.value = false;

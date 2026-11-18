@@ -98,7 +98,7 @@
               v-if="canView"
               class="jr-master-row__name jr-master-row__name--link"
               :to="viewTo(item.id)"
-              :aria-label="`View ${item.name}`">
+              :aria-label="$t('common.viewItem', { label: item.name })">
               {{ item.name }}
             </router-link>
             <span v-else class="jr-master-row__name">{{ item.name }}</span>
@@ -190,7 +190,7 @@
               v-if="canView"
               class="jr-master-row__name jr-master-row__name--link"
               :to="viewTo(data.id)"
-              :aria-label="`View ${data.name}`">
+              :aria-label="$t('common.viewItem', { label: data.name })">
               {{ data.name }}
             </router-link>
             <span v-else>{{ data.name }}</span>
@@ -410,8 +410,14 @@ export default {
 
     const mobileMeta = (item) => {
       const jobs = jobList(item);
-      if (!jobs.length) return "No communities linked";
-      return `${jobs.length} ${jobs.length === 1 ? "community" : "communities"}`;
+      if (!jobs.length) {
+        return proxy?.$t?.("parties.noCommunitiesLinked");
+      }
+      const key =
+        jobs.length === 1
+          ? "parties.communitiesCountOne"
+          : "parties.communitiesCountMany";
+      return proxy?.$t?.(key, { count: jobs.length });
     };
 
     const loadItems = async () => {
@@ -429,7 +435,7 @@ export default {
         console.error("Error fetching house models", error);
         loadError.value = true;
         houseModels.value = [];
-        proxy?.notifyError?.("Error loading house models.");
+        proxy?.notifyError?.(proxy?.$t?.("parties.loadHouseModelsError"));
       } finally {
         setTimeout(() => {
           isLoading.value = false;
@@ -501,12 +507,12 @@ export default {
           try {
             await axios.delete(`${ENDPOINT}${id}/`);
             houseModels.value = houseModels.value.filter((p) => p.id !== id);
-            proxy?.notifyToastSuccess?.("The house model has been deleted.");
+            proxy?.notifyToastSuccess?.(proxy?.$t?.("parties.houseModelDeleted"));
           } catch (err) {
             console.error("Error deleting house model", err);
             const detail =
               err?.response?.data?.detail ||
-              "Error deleting the house model.";
+              proxy?.$t?.("parties.deleteHouseModelError");
             proxy?.notifyError?.(detail);
           }
         }

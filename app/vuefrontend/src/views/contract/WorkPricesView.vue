@@ -136,7 +136,7 @@
               v-if="canView"
               class="jr-workprice-row__name jr-workprice-row__name--link"
               :to="viewTo(item.id)"
-              :aria-label="`View ${item.name}`">
+              :aria-label="$t('common.viewItem', { label: item.name })">
               {{ item.name }}
             </router-link>
             <span v-else class="jr-workprice-row__name">{{ item.name }}</span>
@@ -222,7 +222,7 @@
               v-if="canView"
               class="jr-workprice-row__name jr-workprice-row__name--link"
               :to="viewTo(data.id)"
-              :aria-label="`View ${data.name}`">
+              :aria-label="$t('common.viewItem', { label: data.name })">
               {{ data.name }}
             </router-link>
             <span v-else class="jr-workprice-row__name">{{ data.name }}</span>
@@ -476,7 +476,7 @@ export default {
           console.error("Error fetching work prices:", error);
           loadError.value = true;
           prices.value = [];
-          proxy?.notifyError?.("Error loading piece work prices.");
+          proxy?.notifyError?.(proxy?.$t?.("workPrices.loadError"));
         })
         .finally(() => {
           loading.value = false;

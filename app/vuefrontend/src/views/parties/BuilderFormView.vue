@@ -31,12 +31,12 @@ export default {
     },
     formTitle() {
       if (this.isViewMode) {
-        return "View Party";
+        return this.$t("parties.viewParty");
       }
       if (this.$route.params.id) {
-        return "Edit Party";
+        return this.$t("parties.editPartyTitle");
       }
-      return "Create Party";
+      return this.$t("parties.createParty");
     },
   },
 };

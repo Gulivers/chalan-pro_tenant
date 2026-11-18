@@ -98,7 +98,7 @@
               v-if="canView"
               class="jr-master-row__name jr-master-row__name--link"
               :to="viewTo(item.id)"
-              :aria-label="`View ${item.name}`">
+              :aria-label="$t('common.viewItem', { label: item.name })">
               {{ item.name }}
             </router-link>
             <span v-else class="jr-master-row__name">{{ item.name }}</span>
@@ -181,7 +181,7 @@
               v-if="canView"
               class="jr-master-row__name jr-master-row__name--link"
               :to="viewTo(data.id)"
-              :aria-label="`View ${data.name}`">
+              :aria-label="$t('common.viewItem', { label: data.name })">
               {{ data.name }}
             </router-link>
             <span v-else>{{ data.name }}</span>
@@ -451,7 +451,7 @@ export default {
         console.error("Error fetching jobs", error);
         loadError.value = true;
         jobs.value = [];
-        proxy?.notifyError?.("Error loading communities.");
+        proxy?.notifyError?.(proxy?.$t?.("parties.loadCommunitiesErrorToast"));
       } finally {
         setTimeout(() => {
           isLoading.value = false;
@@ -523,11 +523,11 @@ export default {
           try {
             await axios.delete(`${ENDPOINT}${id}/`);
             jobs.value = jobs.value.filter((p) => p.id !== id);
-            proxy?.notifyToastSuccess?.("The community has been deleted.");
+            proxy?.notifyToastSuccess?.(proxy?.$t?.("parties.communityDeleted"));
           } catch (err) {
             console.error("Error deleting community", err);
             const detail =
-              err?.response?.data?.detail || "Error deleting the community.";
+              err?.response?.data?.detail || proxy?.$t?.("parties.deleteCommunityError");
             proxy?.notifyError?.(detail);
           }
         }

@@ -180,10 +180,10 @@
             <JRButton type="submit" variant="primary" :disabled="isDisabled">
               {{
                 submitting
-                  ? "Saving..."
+                  ? $t("common.savingEllipsis")
                   : isEditMode
-                    ? "Update"
-                    : "Save"
+                    ? $t("common.update")
+                    : $t("common.save")
               }}
             </JRButton>
             <JRButton
@@ -191,7 +191,7 @@
               variant="secondary"
               :disabled="submitting"
               @click="cancelForm">
-              Cancel
+              {{ $t("common.cancel") }}
             </JRButton>
           </template>
           <JRButton
@@ -200,7 +200,7 @@
             variant="secondary"
             :disabled="submitting"
             @click="cancelForm">
-            {{ usePageChrome ? "Back to list" : "Back" }}
+            {{ usePageChrome ? $t("common.backToList") : $t("common.back") }}
           </JRButton>
         </div>
       </form>
@@ -250,13 +250,39 @@ const MONEY_FIELD_KEYS = new Set([
   "travel_price_amount",
 ]);
 
-const LABEL_OVERRIDES = {
-  zipcode: "ZIP Code",
+/** Schema field → i18n key. Context-specific `name` resolved in fieldLabel(). */
+const LABEL_OVERRIDE_KEYS = {
+  trim_amount: "parties.fields.trimAmount",
+  rough_amount: "parties.fields.roughAmount",
+  travel_price_amount: "parties.fields.travelAmount",
+  rfc: "parties.fields.rfc",
+  street: "parties.fields.street",
+  floor_office: "parties.fields.floorOffice",
+  city: "parties.fields.city",
+  state: "parties.fields.state",
+  zipcode: "parties.fields.zipcode",
+  country: "parties.fields.country",
+  phone: "parties.fields.phone",
+  email: "parties.fields.email",
+  types: "parties.fields.types",
+  category: "parties.fields.category",
+  default_price_type: "parties.fields.defaultPriceType",
+  customer_rank: "parties.fields.isCustomer",
+  supplier_rank: "parties.fields.isSupplier",
+  is_active: "parties.fields.isActive",
+  crews: "parties.fields.crews",
+  builder: "parties.fields.builder",
+  address: "parties.fields.address",
+  latitude: "parties.fields.latitude",
+  longitude: "parties.fields.longitude",
+  // Job model in API; UI glossary → Community / Comunidad
+  jobs: "parties.fields.jobs",
 };
 
-const HINT_OVERRIDES = {
-  name: "Must be unique within this organization.",
-  crews: "Assign supervisor crews that own this community.",
+const HINT_OVERRIDE_KEYS = {
+  name: "parties.hintNameUnique",
+  crews: "parties.hintCrews",
+  jobs: "parties.hintHouseModelCommunities",
 };
 
 const PARTY_ROLE_KEYS = ["customer_rank", "supplier_rank"];
@@ -272,19 +298,19 @@ const CATALOG_FIELDS = {
     kind: "type",
     addPerm: "apptransactions.add_partytype",
     changePerm: "apptransactions.change_partytype",
-    addLabel: "Add a new party type",
-    editLabel: "Edit the selected party type",
-    addHeader: "Add Party Type",
-    editHeader: "Edit Party Type",
+    addLabelKey: "parties.addPartyType",
+    editLabelKey: "parties.editPartyType",
+    addHeaderKey: "parties.addPartyTypeHeader",
+    editHeaderKey: "parties.editPartyTypeHeader",
   },
   category: {
     kind: "category",
     addPerm: "apptransactions.add_partycategory",
     changePerm: "apptransactions.change_partycategory",
-    addLabel: "Add a new party category",
-    editLabel: "Edit the selected party category",
-    addHeader: "Add Party Category",
-    editHeader: "Edit Party Category",
+    addLabelKey: "parties.addPartyCategory",
+    editLabelKey: "parties.editPartyCategory",
+    addHeaderKey: "parties.addPartyCategoryHeader",
+    editHeaderKey: "parties.editPartyCategoryHeader",
   },
 };
 
@@ -307,9 +333,7 @@ function normalizeSchema(schema) {
     ) {
       next.type = "decimal";
     }
-    if (LABEL_OVERRIDES[key]) {
-      next.label = LABEL_OVERRIDES[key];
-    }
+    // Labels localized in fieldLabel() via LABEL_OVERRIDE_KEYS
     out[key] = next;
   }
   return out;
@@ -437,12 +461,12 @@ export default {
     pricingGuidanceText() {
       if (!this.hasBuilderPricingFields()) return "";
       if (this.isCustomerRole) {
-        return "Customer parties need at least one of Trim, Rough, or Travel Amount greater than 0.";
+        return this.$t("parties.pricingHintCustomer");
       }
       if (this.isSupplierOnly) {
-        return "Supplier-only parties can leave Trim, Rough, and Travel at 0.";
+        return this.$t("parties.pricingHintSupplierOnly");
       }
-      return "Choose Is Customer and/or Is Supplier. Pricing amounts are required only when the party is a customer.";
+      return this.$t("parties.pricingHintChooseRoles");
     },
     catalogKind() {
       return CATALOG_FIELDS[this.catalogFieldKey]?.kind || null;
@@ -454,7 +478,9 @@ export default {
     catalogDrawerHeader() {
       const cfg = CATALOG_FIELDS[this.catalogFieldKey];
       if (!cfg) return "";
-      return this.catalogMode === "edit" ? cfg.editHeader : cfg.addHeader;
+      const key =
+        this.catalogMode === "edit" ? cfg.editHeaderKey : cfg.addHeaderKey;
+      return key ? this.$t(key) : "";
     },
     catalogFormKey() {
       const id = this.catalogObjectId || "new";
@@ -492,7 +518,9 @@ export default {
             });
             if (!fields.length) return null;
             return {
-              title: section.title || "Details",
+              title: section.titleKey
+                ? this.$t(section.titleKey)
+                : section.title || this.$t("common.sectionDetails"),
               fields,
               gridClass: gridClassFor(section.grid || "default"),
             };
@@ -502,7 +530,7 @@ export default {
         const leftover = keys.filter((key) => !used.has(key));
         if (leftover.length) {
           mapped.push({
-            title: "Other",
+            title: this.$t("parties.sectionOther"),
             fields: leftover,
             gridClass: gridClassFor("default"),
           });
@@ -512,7 +540,7 @@ export default {
 
       return [
         {
-          title: this.isModal ? "" : "Details",
+          title: this.isModal ? "" : this.$t("common.sectionDetails"),
           fields: keys,
           gridClass: gridClassFor("default"),
         },
@@ -546,28 +574,47 @@ export default {
     } catch (err) {
       console.error("Error initializing schema:", err);
       this.schemaReady = false;
-      this.notifyToastError?.("Error initializing the form schema.");
+      this.notifyToastError?.(this.$t("common.initSchemaError"));
     }
   },
   methods: {
     fieldLabel(key) {
+      if (key === "name") {
+        if (this.internalSchema.jobs) {
+          return this.$t("parties.fields.houseModelName");
+        }
+        if (this.internalSchema.builder || this.internalSchema.crews) {
+          return this.$t("parties.fields.communityName");
+        }
+        if (
+          this.internalSchema.customer_rank ||
+          this.internalSchema.supplier_rank ||
+          this.internalSchema.trim_amount
+        ) {
+          return this.$t("parties.fields.partyName");
+        }
+        return this.$t("parties.fields.name");
+      }
+      const overrideKey = LABEL_OVERRIDE_KEYS[key];
+      if (overrideKey) return this.$t(overrideKey);
       return this.internalSchema[key]?.label || key;
     },
     fieldHint(key) {
       if (this.isViewMode) return "";
       if (this.isPartyRoleField(key)) {
-        return "At least one role is required.";
+        return this.$t("parties.roleRequired");
       }
       // One pricing hint only (Message already teaches the rule).
       if (key === "trim_amount" && this.hasBuilderPricingFields()) {
         if (this.isCustomerRole) {
-          return "At least one of Trim, Rough, or Travel Amount must be greater than 0.";
+          return this.$t("parties.pricingAmountRequired");
         }
         if (this.isSupplierOnly) {
-          return "Optional for supplier-only parties (defaults to 0).";
+          return this.$t("parties.pricingOptionalSupplier");
         }
       }
-      return HINT_OVERRIDES[key] || "";
+      const hintKey = HINT_OVERRIDE_KEYS[key];
+      return hintKey ? this.$t(hintKey) : "";
     },
     isPartyRoleField(key) {
       return this.hasPartyRoleFields() && PARTY_ROLE_KEYS.includes(key);
@@ -589,10 +636,12 @@ export default {
       return !!perm && !!this.hasPermission?.(perm);
     },
     catalogAddLabel(key) {
-      return CATALOG_FIELDS[key]?.addLabel || "Add";
+      const k = CATALOG_FIELDS[key]?.addLabelKey;
+      return k ? this.$t(k) : this.$t("common.open");
     },
     catalogEditLabel(key) {
-      return CATALOG_FIELDS[key]?.editLabel || "Edit";
+      const k = CATALOG_FIELDS[key]?.editLabelKey;
+      return k ? this.$t(k) : this.$t("common.edit");
     },
     resolveCatalogEditId(key) {
       const value = this.form?.[key];
@@ -632,9 +681,18 @@ export default {
       this.closeCatalogDrawer();
       if (!key || !saved?.id) return;
 
+      const savedName = saved.name || `#${saved.id}`;
+      const savedBuilder = (
+        saved.builder_name ||
+        saved.builder?.name ||
+        ""
+      ).trim();
       const option = {
         value: saved.id,
-        label: saved.name || `#${saved.id}`,
+        label:
+          key === "jobs" && savedBuilder
+            ? `${savedName} — ${savedBuilder}`
+            : savedName,
       };
       const current = Array.isArray(this.optionsMap[key])
         ? [...this.optionsMap[key]]
@@ -752,7 +810,7 @@ export default {
         }
       } catch (err) {
         console.error("Error loading record:", err);
-        this.notifyToastError?.("Error loading the record.");
+        this.notifyToastError?.(this.$t("common.loadRecordError"));
       }
     },
 
@@ -803,8 +861,7 @@ export default {
       );
       if (hasPositive) return true;
 
-      const message =
-        "Enter at least one amount greater than 0 for Trim, Rough, or Travel.";
+      const message = this.$t("parties.pricingEnterAmount");
       PRICING_AMOUNT_KEYS.forEach((key) => {
         this.validationErrors[key] = message;
       });
@@ -820,7 +877,7 @@ export default {
 
       if (this.form.customer_rank || this.form.supplier_rank) return true;
 
-      const message = "At least one role is required.";
+      const message = this.$t("parties.roleRequired");
       PARTY_ROLE_KEYS.forEach((key) => {
         this.validationErrors[key] = message;
       });
@@ -873,7 +930,7 @@ export default {
       }
 
       if (lower.includes("rfc") && this.internalSchema.rfc) {
-        fieldErrors.rfc = "A party with this RFC already exists.";
+        fieldErrors.rfc = this.$t("parties.rfcExists");
       }
       if (
         (lower.includes("name") ||
@@ -881,7 +938,7 @@ export default {
           (lower.includes("unique") && !fieldErrors.rfc)) &&
         this.internalSchema.name
       ) {
-        fieldErrors.name = "A party with this name already exists.";
+        fieldErrors.name = this.$t("parties.nameExists");
       }
 
       return fieldErrors;
@@ -904,7 +961,9 @@ export default {
           (Array.isArray(value) && value.length === 0);
 
         if (config.required && isEmpty) {
-          this.validationErrors[key] = `${label} is required.`;
+          this.validationErrors[key] = this.$t("parties.fieldRequired", {
+            label,
+          });
           hasErrors = true;
           continue;
         }
@@ -917,20 +976,20 @@ export default {
             trimmedValue.length > 0 &&
             trimmedValue.length < 2
           ) {
-            this.validationErrors[key] = "Must be at least 2 characters.";
+            this.validationErrors[key] = this.$t("parties.min2Chars");
             hasErrors = true;
           }
 
           if (key === "email" && trimmedValue.length > 0) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(trimmedValue)) {
-              this.validationErrors[key] = "Enter a valid email address.";
+              this.validationErrors[key] = this.$t("parties.invalidEmail");
               hasErrors = true;
             }
           }
 
           if (key === "rfc" && trimmedValue.length > 50) {
-            this.validationErrors[key] = "Must be 50 characters or fewer.";
+            this.validationErrors[key] = this.$t("parties.max50Chars");
             hasErrors = true;
           }
         }
@@ -945,7 +1004,7 @@ export default {
       }
 
       if (hasErrors) {
-        this.formBanner = "Fix the highlighted fields before saving.";
+        this.formBanner = this.$t("parties.fixBeforeSave");
         this.$nextTick(() => {
           this.$refs.formBannerRef?.focus?.();
         });
@@ -981,7 +1040,7 @@ export default {
             duplicate &&
             duplicate.name?.toLowerCase() === name.toLowerCase()
           ) {
-            const message = "A party with this name already exists.";
+            const message = this.$t("parties.nameExists");
             errors.push(message);
             this.validationErrors = {
               ...this.validationErrors,
@@ -995,7 +1054,7 @@ export default {
           if (this.objectId) params.append("exclude_id", this.objectId);
           const duplicate = await this._findDuplicateRecord(params);
           if (duplicate && duplicate.rfc === rfc) {
-            const message = "A party with this RFC already exists.";
+            const message = this.$t("parties.rfcExists");
             errors.push(message);
             this.validationErrors = {
               ...this.validationErrors,
@@ -1041,7 +1100,9 @@ export default {
         const response = await axios[method](url, payload);
 
         this.notifyToastSuccess?.(
-          this.objectId ? "Record updated." : "Record created."
+          this.objectId
+            ? this.$t("common.recordUpdated")
+            : this.$t("common.recordCreated")
         );
 
         if (this.redirectAfterSave) {
@@ -1091,17 +1152,15 @@ export default {
             fieldErrors.name ||
             fieldErrors.rfc ||
             fieldErrors.customer_rank ||
-            "There were validation errors.";
+            this.$t("common.validationErrorsGeneric");
           this.formBanner = banner;
           this.notifyToastError?.(banner);
         } else if (status === 403) {
-          this.formBanner = "You do not have permission for this action.";
-          this.notifyToastError?.(
-            "You do not have permission for this action."
-          );
+          this.formBanner = this.$t("common.permissionDenied");
+          this.notifyToastError?.(this.$t("common.permissionDenied"));
         } else {
           const errorMessage =
-            data?.detail || data?.message || "Error saving the record.";
+            data?.detail || data?.message || this.$t("common.saveRecordError");
           this.formBanner = errorMessage;
           this.notifyToastError?.(errorMessage);
         }

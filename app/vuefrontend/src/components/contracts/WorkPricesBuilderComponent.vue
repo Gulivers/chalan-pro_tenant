@@ -77,7 +77,7 @@
         class="jr-assign-grid"
         :class="{ 'jr-assign-grid--invalid': !!selectionError }"
         role="group"
-        aria-label="Piece work prices"
+        :aria-label="$t('workPrices.ariaPieceWorkPrices')"
         :aria-describedby="selectionError ? 'wp-prices-selection-error' : undefined">
         <div
           v-for="wp in filteredWorkPrices"
@@ -236,7 +236,7 @@ export default {
           }
         }
       } catch (error) {
-        this.errorMessage = "Failed to load builders.";
+        this.errorMessage = this.$t("workPrices.loadBuildersFailed");
         console.error("Error fetching builders:", error);
       } finally {
         this.buildersLoading = false;
@@ -267,7 +267,7 @@ export default {
           : assignedResponse.data?.results || [];
         this.selectedIds = assigned.map((wp) => wp.id).filter((id) => id != null);
       } catch (error) {
-        this.errorMessage = "Error loading work prices.";
+        this.errorMessage = this.$t("workPrices.loadPricesError");
         console.error("Error fetching work prices:", error);
       } finally {
         this.loading = false;
@@ -276,7 +276,7 @@ export default {
     async updateWorkPriceAssignments() {
       if (!this.selectedBuilderId) return;
       if (!this.selectedIds.length) {
-        this.selectionError = "Select at least one piece work price.";
+        this.selectionError = this.$t("workPrices.selectPriceRequired");
         this.notifyError?.(this.selectionError);
         this.$nextTick(() => {
           document.getElementById("wp-builder-filter")?.focus();
@@ -291,11 +291,11 @@ export default {
           `/api/builder/${this.selectedBuilderId}/assign-workprices/`,
           { work_price_ids: [...this.selectedIds] }
         );
-        this.notifyToastSuccess?.("Assignments updated successfully.");
+        this.notifyToastSuccess?.(this.$t("workPrices.assignmentsUpdated"));
       } catch (error) {
-        this.errorMessage = "Error updating assignments.";
+        this.errorMessage = this.$t("workPrices.assignmentsUpdateError");
         console.error("Error updating assignments:", error);
-        this.notifyError?.("Error updating assignments.");
+        this.notifyError?.(this.$t("workPrices.assignmentsUpdateError"));
       } finally {
         this.saving = false;
       }

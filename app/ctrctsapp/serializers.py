@@ -190,6 +190,7 @@ class CrewMiniSerializer(serializers.ModelSerializer):
 
 class JobSerializer(serializers.ModelSerializer):
     builder = serializers.PrimaryKeyRelatedField(queryset=Builder.objects.all())
+    builder_name = serializers.CharField(source="builder.name", read_only=True)
 
     # M2M Crew ↔ Job (Assigned Jobs en Crew / Area Supervisor en Community)
     crews = serializers.PrimaryKeyRelatedField(
@@ -207,7 +208,7 @@ class JobSerializer(serializers.ModelSerializer):
     class Meta:
         model = Job
         fields = [
-            "id", "name", "builder", "address", "latitude", "longitude",
+            "id", "name", "builder", "builder_name", "address", "latitude", "longitude",
             "crews",          # << === escribe M2M
             "crews_detail",   # << === lee M2M (id+name)
             "crew_leaders",   # << === legacy read-only
