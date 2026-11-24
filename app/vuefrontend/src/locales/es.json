@@ -1694,12 +1694,12 @@
   },
   "billing": {
     "title": "Facturación",
-    "description": "Mantén tus operaciones conectadas después del periodo de prueba.",
+    "description": "Activa tu plan para mantener cuadrillas, agendas y materiales conectados.",
     "loading": "Cargando facturación",
-    "trialLead": "Prueba gratuita:",
+    "trialLead": "Prueba:",
     "trialDays": "{days} día(s) restante(s). Actualiza antes de que expire la prueba para evitar interrupciones.",
-    "actionRequired": "Acción requerida.",
-    "actionRequiredText": "Tu prueba terminó o el pago necesita atención. Elige un plan abajo para continuar.",
+    "actionRequired": "Activa tu plan.",
+    "actionRequiredText": "No hay periodo de prueba después de la demo. Elige un plan abajo para seguir operando en JobRhythm.",
     "gracePeriod": "El pago falló. Tienes un periodo de gracia corto para actualizar tu método de pago.",
     "currentStatus": "Estado actual",
     "subscription": "Suscripción:",
@@ -1749,7 +1749,7 @@
     "back": "← Atrás",
     "nextStep": "Siguiente →",
     "visualQuote": "Gestiona trabajos residenciales con calendarios, materiales y cuadrillas claros—en un solo espacio de trabajo.",
-    "startTrialFallback": "Empieza tu prueba gratuita",
+    "startTrialFallback": "Crea tu espacio de trabajo",
     "steps": {
       "company": "Empresa",
       "admin": "Admin",
@@ -1766,8 +1766,8 @@
         "lead": "Esta cuenta controla la configuración, usuarios y datos de tu subdominio de empresa."
       },
       "3": {
-        "title": "Módulos de tu prueba",
-        "lead": "Tu prueba de 30 días incluye el menú operativo completo—para que sientas el flujo real de trabajo."
+        "title": "Módulos incluidos",
+        "lead": "Tu espacio de trabajo incluye el menú operativo completo—agendas, materiales, contratos y cuadrillas."
       },
       "4": {
         "title": "Revisa y lanza",
@@ -1777,9 +1777,8 @@
     "verifyPending": {
       "title": "Revisa tu correo",
       "leadBefore": "Enviamos un enlace de confirmación a",
-      "leadAfter": ". Ábrelo para crear tu espacio de trabajo e iniciar tu prueba.",
-      "devLink": "Enlace de desarrollo:",
-      "goToSignIn": "Ir a iniciar sesión"
+      "leadAfter": ". Ábrelo para crear tu espacio de trabajo; luego inicia sesión para activar tu plan.",
+      "devLink": "Enlace de desarrollo:"
     },
     "company": {
       "name": "Nombre de la empresa",
@@ -1790,7 +1789,7 @@
       "monthlyVolume": "Volumen mensual de trabajos",
       "monthlyPlaceholder": "Casas / trabajos por mes",
       "crewCount": "Cuadrillas activas",
-      "crewHint": "Se usa para sugerir el tamaño del plan—no queda fijo durante la prueba.",
+      "crewHint": "Se usa para sugerir el tamaño del plan—no queda fijo al suscribirte.",
       "crewPlaceholder": "p. ej. 4",
       "tradeType": "Oficio / tipo de negocio",
       "tradePlaceholder": "Selecciona tu oficio",
@@ -1891,13 +1890,13 @@
       }
     },
     "review": {
-      "trialTitle": "Tu prueba gratuita de 30 días",
-      "trialTextBefore": "Empiezas con",
-      "trialTextStrong": "acceso completo",
-      "trialTextAfter": "a los módulos listados abajo. Conecta agenda, materiales, contratos y actualizaciones de campo para ver el avance del trabajo sin el ir y venir de siempre.",
-      "trialNote": "Los datos de la empresa y los módulos se pueden cambiar después en Configuración. La facturación empieza solo cuando eliges un plan de pago.",
+      "trialTitle": "Activa tu plan tras la demo",
+      "trialTextBefore": "Tu espacio de trabajo incluye",
+      "trialTextStrong": "el menú operativo completo",
+      "trialTextAfter": "abajo. Después de verificar tu correo e iniciar sesión, activarás un plan de pago para operar—no hay prueba gratuita después de la demo comercial.",
+      "trialNote": "Los datos de la empresa y los módulos se pueden cambiar después en Configuración. Elige tu plan en Facturación justo después de iniciar sesión.",
       "selectedPlan": "Plan seleccionado",
-      "selectedPlanNote": "Viene del precio. Puedes confirmarlo o cambiarlo al actualizar.",
+      "selectedPlanNote": "Viene del precio. Puedes confirmarlo o cambiarlo al suscribirte.",
       "companyHeading": "Empresa",
       "companyName": "Nombre de la empresa",
       "tradeType": "Oficio / tipo",
@@ -1908,7 +1907,7 @@
       "logoAlt": "Logo de la empresa",
       "recommendedHeading": "Plan recomendado (tamaño del equipo)",
       "recommendedBefore": "Según las cuadrillas activas, un buen ajuste suele ser",
-      "recommendedAfter": ". Solo como referencia al suscribirte—no queda fijo durante la prueba.",
+      "recommendedAfter": ". Solo como referencia al suscribirte—no queda fijo.",
       "adminHeading": "Administrador",
       "name": "Nombre",
       "email": "Correo",
@@ -1943,7 +1942,7 @@
       "passwordComplexity": "Incluye mayúscula, minúscula y un número.",
       "passwordConfirm": "Confirma tu contraseña.",
       "passwordMismatch": "Las contraseñas no coinciden—inténtalo de nuevo.",
-      "modulesIncomplete": "La lista de módulos está incompleta. Actualiza la página para continuar—deben aparecer todos los módulos de la prueba.",
+      "modulesIncomplete": "La lista de módulos está incompleta. Actualiza la página para continuar—deben aparecer todos los módulos incluidos.",
       "fixFields": "Corrige los campos resaltados antes de continuar.",
       "createFailed": "No pudimos crear tu espacio de trabajo. Inténtalo de nuevo en un momento."
     },

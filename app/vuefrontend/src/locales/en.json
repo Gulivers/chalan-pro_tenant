@@ -1694,12 +1694,12 @@
   },
   "billing": {
     "title": "Billing",
-    "description": "Keep your operations connected after your trial ends.",
+    "description": "Activate your plan to keep crews, schedules, and materials connected.",
     "loading": "Loading billing",
-    "trialLead": "Free trial:",
+    "trialLead": "Trial:",
     "trialDays": "{days} day(s) remaining. Upgrade before your trial expires to avoid interruption.",
-    "actionRequired": "Action required.",
-    "actionRequiredText": "Your trial has ended or payment needs attention. Choose a plan below to continue.",
+    "actionRequired": "Activate your plan.",
+    "actionRequiredText": "There is no free trial after your demo. Choose a plan below to continue operating in JobRhythm.",
     "gracePeriod": "Payment failed. You have a short grace period to update your payment method.",
     "currentStatus": "Current status",
     "subscription": "Subscription:",
@@ -1749,7 +1749,7 @@
     "back": "← Back",
     "nextStep": "Next Step →",
     "visualQuote": "Run residential jobs with clear schedules, materials, and crews—in one workspace.",
-    "startTrialFallback": "Start your free trial",
+    "startTrialFallback": "Create your workspace",
     "steps": {
       "company": "Company",
       "admin": "Admin",
@@ -1766,8 +1766,8 @@
         "lead": "This account owns settings, users, and data for your company subdomain."
       },
       "3": {
-        "title": "Modules for your trial",
-        "lead": "Your 30-day trial includes the full operational menu—so you can feel the real workflow."
+        "title": "Modules included",
+        "lead": "Your workspace includes the full operational menu—schedules, materials, contracts, and crews."
       },
       "4": {
         "title": "Review & launch",
@@ -1777,9 +1777,8 @@
     "verifyPending": {
       "title": "Check your email",
       "leadBefore": "We sent a confirmation link to",
-      "leadAfter": ". Open it to create your workspace and start your trial.",
-      "devLink": "Dev link:",
-      "goToSignIn": "Go to Sign In"
+      "leadAfter": ". Open it to create your workspace, then sign in to activate your plan.",
+      "devLink": "Dev link:"
     },
     "company": {
       "name": "Company name",
@@ -1790,7 +1789,7 @@
       "monthlyVolume": "Monthly job volume",
       "monthlyPlaceholder": "Homes / jobs per month",
       "crewCount": "Active crews",
-      "crewHint": "Used to suggest a plan size—not locked during trial.",
+      "crewHint": "Used to suggest a plan size—not locked when you subscribe.",
       "crewPlaceholder": "e.g. 4",
       "tradeType": "Trade / business type",
       "tradePlaceholder": "Select your trade",
@@ -1891,13 +1890,13 @@
       }
     },
     "review": {
-      "trialTitle": "Your 30-day free trial",
-      "trialTextBefore": "You start with",
-      "trialTextStrong": "full access",
-      "trialTextAfter": "to the modules listed below. Connect scheduling, materials, contracts, and field updates so job progress is visible without the usual back-and-forth.",
-      "trialNote": "Company details and modules can change later in Settings. Billing starts only when you choose a paid plan.",
+      "trialTitle": "Activate after your demo",
+      "trialTextBefore": "Your workspace includes",
+      "trialTextStrong": "the full operational menu",
+      "trialTextAfter": "below. After you verify your email and sign in, you will activate a paid plan to start operating—there is no free trial after the sales demo.",
+      "trialNote": "Company details and modules can change later in Settings. Choose your plan on Billing right after sign-in.",
       "selectedPlan": "Selected plan",
-      "selectedPlanNote": "Carried from pricing. You can confirm or change it when you upgrade.",
+      "selectedPlanNote": "Carried from pricing. You can confirm or change it when you subscribe.",
       "companyHeading": "Company",
       "companyName": "Company name",
       "tradeType": "Trade / type",
@@ -1908,7 +1907,7 @@
       "logoAlt": "Company logo",
       "recommendedHeading": "Recommended plan (team size)",
       "recommendedBefore": "Based on active crews, a good fit is often",
-      "recommendedAfter": ". For reference when you subscribe—not a lock-in during trial.",
+      "recommendedAfter": ". For reference when you subscribe—not a lock-in.",
       "adminHeading": "Administrator",
       "name": "Name",
       "email": "Email",
@@ -1943,7 +1942,7 @@
       "passwordComplexity": "Include uppercase, lowercase, and a number.",
       "passwordConfirm": "Confirm your password.",
       "passwordMismatch": "Passwords do not match—try again.",
-      "modulesIncomplete": "Module list is incomplete. Refresh the page to continue—all trial modules should be listed.",
+      "modulesIncomplete": "Module list is incomplete. Refresh the page to continue—all included modules should be listed.",
       "fixFields": "Please fix the highlighted fields before continuing.",
       "createFailed": "We could not create your workspace. Please try again in a moment."
     },
