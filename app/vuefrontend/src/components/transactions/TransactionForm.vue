@@ -431,6 +431,7 @@ import AssetTagAssignmentModal from "@/components/transactions/AssetTagAssignmen
 import FavoriteTransactionSelector from "@/components/transactions/FavoriteTransactionSelector.vue";
 import DocumentStatusPanel from "@/components/transactions/DocumentStatusPanel.vue";
 import { documentStatusSeverity } from "@/utils/documentStatus";
+import { downloadTransactionPdfJob } from "@/utils/downloadPdfJob";
 import {
   JRPage,
   JRPageHeader,
@@ -1395,66 +1396,9 @@ async function promptPrintAndRedirect(documentId) {
   router.push({ name: "transactions" }).catch(() => {});
 }
 
-// Función helper para detectar si es dispositivo móvil
-function isMobileDevice() {
-  return (
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
-    ) || window.innerWidth <= 768
-  );
-}
-
-// Función para manejar PDF de transacción (abrir en nueva ventana o descargar)
 async function downloadTransactionPDF(documentId) {
   try {
-    const response = await axios.get(`/api/documents/${documentId}/pdf/`, {
-      headers: {
-        Authorization: `Bearer ${getAccessToken()}`,
-      },
-    });
-
-    if (!response.data || !response.data.file) {
-      throw new Error("No PDF file was returned from the server.");
-    }
-
-    // Decodificar base64 y crear blob
-    const byteCharacters = atob(response.data.file);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: "application/pdf" });
-    const url = window.URL.createObjectURL(blob);
-
-    if (isMobileDevice()) {
-      // En móvil: descargar directamente
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = response.data.filename || `transaction_${documentId}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      // En desktop: abrir en nueva ventana
-      const newWindow = window.open(url, "_blank");
-      if (!newWindow) {
-        // Si no se puede abrir nueva ventana (bloqueador de popups), descargar
-        const link = document.createElement("a");
-        link.href = url;
-        link.download =
-          response.data.filename || `transaction_${documentId}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    }
-
-    // Limpiar la URL después de un tiempo
-    setTimeout(() => {
-      window.URL.revokeObjectURL(url);
-    }, 1000);
-
+    await downloadTransactionPdfJob(documentId);
     return true;
   } catch (error) {
     console.error("Error al descargar PDF:", error);

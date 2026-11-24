@@ -512,7 +512,7 @@
 <script>
 import axios from 'axios';
 import DynamicForm from '@/components/parties/DynamicForm.vue';
-import { openPdf } from "@helpers";
+import { downloadContractPdfJob } from '@/utils/downloadPdfJob';
 import WorkAccountSelector from '@/components/transactions/WorkAccountSelector.vue';
 import {
   JRPage,
@@ -2070,36 +2070,31 @@ export default {
               .replace(/"/g, '&quot;');
       },
 
-      downloadContract(id) {
-          this.loading = true; // Activa el spinner
+      async downloadContract(id) {
+          this.loading = true;
           this.loading_text = this.$t('contracts.form.downloadingPdf', { id });
-          axios.get(`/api/contract-pdf/${id}/`)
-              .then((response) => {
-                  openPdf(response.data);
-                  this.loading = false;
-                  // Resetear formulario solo después de que el PDF se abra correctamente
-                  const idToUpdate = this.$route.params.id;
-                  if (!idToUpdate) {
-                      this.resetForm();
-                  }
-                  setTimeout(() => {
-                      this.$router.push('/contracts');
-                  }, 210); // Asegúrate de que el PDF se abra antes de redirigir
-              })
-              .catch(error => {
-                  console.error('Error fetching contract PDF:', error);
-                  this.loading = false; // Asegúrate de que el spinner se desactive si hay un error
-                  
-                  // Mostrar mensaje al usuario pero no bloquear - el contrato ya se guardó
-                  this.notifyError?.(
-                      `Contract ${id} was saved, but the PDF could not be generated. Open it from the contracts list.`
-                  );
-                  const idToUpdate = this.$route.params.id;
-                  if (!idToUpdate) {
-                      this.resetForm();
-                  }
+          try {
+              await downloadContractPdfJob(id);
+              this.loading = false;
+              const idToUpdate = this.$route.params.id;
+              if (!idToUpdate) {
+                  this.resetForm();
+              }
+              setTimeout(() => {
                   this.$router.push('/contracts');
-              });
+              }, 210);
+          } catch (error) {
+              console.error('Error fetching contract PDF:', error);
+              this.loading = false;
+              this.notifyError?.(
+                  `Contract ${id} was saved, but the PDF could not be generated. Open it from the contracts list.`
+              );
+              const idToUpdate = this.$route.params.id;
+              if (!idToUpdate) {
+                  this.resetForm();
+              }
+              this.$router.push('/contracts');
+          }
       }
   }
 };

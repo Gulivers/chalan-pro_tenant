@@ -185,6 +185,7 @@ import Column from 'primevue/column';
 import UploadIcon from '@primevue/icons/upload';
 import Swal from 'sweetalert2';
 import { getAccessToken } from '@/auth/tokenHelpers';
+import { downloadMaterialRequestPdfJob } from '@/utils/downloadPdfJob';
 import { JRPageHeader, JRButton, JRBadge, JRField, JRTextarea, JRDataTable } from '@/ui';
 
 function isMobileDevice() {
@@ -386,49 +387,7 @@ export default {
       this.printing = true;
       this.error = '';
       try {
-        const response = await axios.get(
-          `/api/material-requests/${this.request.id}/pdf/`,
-          {
-            headers: {
-              Authorization: `Bearer ${getAccessToken()}`,
-            },
-          }
-        );
-        if (!response.data?.file) {
-          throw new Error('No PDF file was returned from the server.');
-        }
-        const byteCharacters = atob(response.data.file);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i += 1) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const blob = new Blob([new Uint8Array(byteNumbers)], {
-          type: 'application/pdf',
-        });
-        const url = window.URL.createObjectURL(blob);
-        const filename =
-          response.data.filename ||
-          `${this.request.document_number || this.request.id}_requested.pdf`;
-
-        if (isMobileDevice()) {
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = filename;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } else {
-          const newWindow = window.open(url, '_blank');
-          if (!newWindow) {
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          }
-        }
-        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+        await downloadMaterialRequestPdfJob(this.request.id);
       } catch (err) {
         console.error('Material Request PDF error:', err);
         this.error = this.readError(err, 'Could not generate the requested materials PDF.');

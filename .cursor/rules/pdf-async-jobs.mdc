@@ -1,0 +1,62 @@
+---
+description: Patrón obligatorio para PDFs WeasyPrint (jobs async + Redis, sin CDN)
+globs: "**/pdf_*.py,**/*pdf*.html,**/downloadPdfJob.js,**/*Pdf*.vue,**/ContractFormComponent.vue,**/ScheduleComponent.vue,**/ContractListView.vue"
+alwaysApply: false
+---
+
+
+# PDFs JobRhythm — jobs async (no bloquear Daphne)
+
+## Regla
+
+Cualquier PDF generado con **WeasyPrint** en este proyecto debe seguir el patrón **async job + poll**. No añadir nuevos `GET` síncronos largos que ejecuten `HTML(...).write_pdf()` en el hilo de la request como único camino de la SPA.
+
+## Por qué
+
+Un solo Daphne saturado por PDF/save pesado congela el SaaS multi-tenant. Producción corre **2× Daphne + Redis**.
+
+## Backend (contrato)
+
+1. **Builder puro** en `<app>/pdf_service.py`:
+   - Firma: `build_*(…, request=None, *, logo_url=None) -> (pdf_bytes, filename)`
+   - Sin side-effects de HTTP salvo leer datos / render.
+2. **Encolar** con `apptransactions.pdf_jobs.enqueue_pdf_job`:
+   - `builder_args=(…)`, `kind=…`, `schema_name`, `logo_url` precomputado, `host`/`scheme`.
+   - Hilo daemon + `schema_context` + archivo en `media/pdf_jobs/`.
+3. **Endpoints**:
+   - `POST …/jobs/` → `202 { job_id }`
+   - Poll compartido: `GET /api/pdf/jobs/<job_id>/` (auth + schema)
+   - `GET` sync opcional solo como **compat** / fallback SPA.
+4. **Plantillas HTML**: CSS **autocontenido**. Prohibido Bootstrap/CDN u otros `<link href="https://…">` (WeasyPrint no debe hacer red).
+
+Referencias existentes:
+
+- Jobs: `app/apptransactions/pdf_jobs.py`
+- Transacciones / MR: `apptransactions/pdf_service.py`, `views.py`, `material_request_api.py`
+- Schedule: `appschedule/pdf_service.py`, `POST /api/schedule-report/jobs/`
+- Contratos: `ctrctsapp/pdf_service.py`, `POST /api/contract-pdf/<id>/jobs/`
+
+## Frontend
+
+Usar `app/vuefrontend/src/utils/downloadPdfJob.js`:
+
+- `downloadTransactionPdfJob` / `downloadMaterialRequestPdfJob` / `downloadContractPdfJob` / `downloadSchedulePdfJob`
+- o `downloadPdfViaJob({ jobsUrl, syncUrl, jobsBody? })`
+- Poll en `/api/pdf/jobs/<id>/`; timeout ~90s; fallback sync si `503/404/405` en enqueue.
+
+No copiar atob/Blob a mano en cada vista.
+
+## Infra relacionada (no reinventar)
+
+- `REDIS_URL` obligatorio para jobs y Channels.
+- Compose: `--scale backend=2` (`scripts/deploy-vps.sh`).
+- Nginx: timeouts largos (~180s) solo en paths PDF sync; API genérica ~120s; `/ws/` 86400.
+
+## Checklist al añadir un PDF nuevo
+
+- [ ] `pdf_service.build_*` extraído
+- [ ] `POST …/jobs/` + poll `/api/pdf/jobs/`
+- [ ] Template sin CDN
+- [ ] SPA vía `downloadPdfJob.js`
+- [ ] Sync GET solo compat
+- [ ] Permisos iguales al sync anterior

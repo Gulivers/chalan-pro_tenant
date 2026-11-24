@@ -1,6 +1,6 @@
-import base64
 import logging
 from datetime import datetime
+from django.db import connection
 from django.db.models import Q, Prefetch, Count, ProtectedError
 from django.utils.dateparse import parse_datetime
 from django.shortcuts import render, get_object_or_404
@@ -14,15 +14,18 @@ from rest_framework.decorators import action, api_view, permission_classes
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions, AllowAny
-from django.template.loader import render_to_string
-from weasyprint import HTML
-from weasyprint.text.fonts import FontConfiguration
 from utils.tenant_branding import get_tenant_logo_url
-from .material_request_api import _line_product_image_pdf_uri
 from .models import (
     DocumentType, PartyType, PartyCategory, Party, Document, DocumentLine,
     PriceType, WorkAccount, TransactionFavorite
 )
+from .pdf_jobs import (
+    PdfJobError,
+    enqueue_pdf_job,
+    get_job,
+    job_result_payload,
+)
+from .pdf_service import build_transaction_pdf, pdf_response_payload
 from .serializers import (
     DocumentTypeSerializer, PartyTypeSerializer, PartyCategorySerializer, PartySerializer,
     DocumentSerializer, DocumentListSerializer, DocumentLineSerializer, WorkAccountSerializer,
@@ -622,86 +625,25 @@ class TransactionFavoriteViewSet(viewsets.ModelViewSet):
             )
 
 
+def _active_schema_name():
+    tenant = getattr(connection, 'tenant', None)
+    return getattr(tenant, 'schema_name', None) or connection.schema_name
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def download_transaction_pdf(request, document_id):
     """
-    Vista para generar y descargar el PDF de una transacción.
-    Similar a download_contract_pdf pero para documentos de transacciones.
+    Sync PDF (compat / scripts). SPA should use create_transaction_pdf_job + poll.
     """
     if not request.user.has_perm('apptransactions.view_document'):
         raise PermissionDenied('You do not have permission to view documents.')
     try:
-        # Obtener el documento con todas las relaciones necesarias
-        document = get_object_or_404(
-            Document.objects.select_related(
-                'document_type', 
-                'builder', 
-                'created_by',
-                'work_account',
-                'work_account__builder',
-                'work_account__job',
-                'work_account__house_model'
-            ).prefetch_related(
-                Prefetch(
-                    'lines',
-                    queryset=DocumentLine.objects.select_related(
-                        'product',
-                        'product__brand',
-                        'unit',
-                        'price_type',
-                        'brand',
-                        'warehouse',
-                    ).prefetch_related(
-                        'serialized_items_created',
-                        'product__images',
-                    )
-                )
-            ),
-            id=document_id
+        pdf_bytes, filename = build_transaction_pdf(document_id, request)
+        return Response(
+            pdf_response_payload(pdf_bytes, filename),
+            status=status.HTTP_200_OK,
         )
-
-        logo_url = get_tenant_logo_url(request)
-        show_product_images = bool(
-            getattr(document.document_type, 'is_sales', False)
-        )
-        line_rows = []
-        for line in document.lines.all():
-            line_rows.append({
-                'line': line,
-                'image_url': (
-                    _line_product_image_pdf_uri(line, request)
-                    if show_product_images
-                    else None
-                ),
-            })
-
-        # Preparar el contexto para el template
-        context = {
-            'document': document,
-            'logo_url': logo_url,
-            'show_product_images': show_product_images,
-            'line_rows': line_rows,
-        }
-
-        # Configurar fuentes
-        font_config = FontConfiguration()
-
-        # Renderizar el HTML
-        html = render_to_string('transaction_pdf.html', context)
-
-        # Generar el PDF
-        pdf_file = HTML(string=html).write_pdf(font_config=font_config)
-
-        # Preparar la respuesta
-        response = {
-            'file': base64.b64encode(pdf_file).decode('utf-8'),
-            'filename': f'{document.document_type.type_code}_{document.id}.pdf',
-            'file_type': 'application/pdf'
-        }
-
-        return Response(response, status=status.HTTP_200_OK)
-
     except Http404:
         raise
     except Document.DoesNotExist:
@@ -715,3 +657,58 @@ def download_transaction_pdf(request, document_id):
             {"detail": "An unexpected error occurred."},
             status=500
         )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_transaction_pdf_job(request, document_id):
+    """Enqueue async PDF generation; returns 202 { job_id }."""
+    if not request.user.has_perm('apptransactions.view_document'):
+        raise PermissionDenied('You do not have permission to view documents.')
+    if not Document.objects.filter(id=document_id).exists():
+        raise Http404
+    try:
+        logo_url = get_tenant_logo_url(request)
+        scheme = 'https' if request.is_secure() else 'http'
+        job_id = enqueue_pdf_job(
+            schema_name=_active_schema_name(),
+            kind='transaction',
+            host=request.get_host(),
+            scheme=scheme,
+            logo_url=logo_url,
+            builder=build_transaction_pdf,
+            builder_args=(document_id,),
+            ref_id=document_id,
+        )
+        return Response({'job_id': job_id}, status=status.HTTP_202_ACCEPTED)
+    except PdfJobError as exc:
+        logger.warning('PDF job enqueue failed: %s', exc)
+        return Response({'detail': str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    except Exception:
+        logger.exception('Error enqueueing transaction PDF job document_id=%s', document_id)
+        return Response(
+            {'detail': 'Could not start PDF job.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_pdf_job(request, job_id):
+    """
+    Shared poll for any PDF job (transactions, MR, schedule, contracts).
+    Auth + matching tenant schema is enough (job id is unguessable UUID).
+    """
+    try:
+        job = get_job(job_id)
+    except PdfJobError as exc:
+        return Response({'detail': str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    if not job:
+        return Response({'detail': 'Job not found or expired.'}, status=status.HTTP_404_NOT_FOUND)
+    if job.get('schema') and job.get('schema') != _active_schema_name():
+        return Response({'detail': 'Job not found or expired.'}, status=status.HTTP_404_NOT_FOUND)
+    payload = job_result_payload({**job, 'job_id': job_id})
+    http_status = status.HTTP_200_OK
+    if payload.get('status') == 'error':
+        http_status = status.HTTP_500_INTERNAL_SERVER_ERROR
+    return Response(payload, status=http_status)

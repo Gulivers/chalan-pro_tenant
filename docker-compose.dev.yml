@@ -19,6 +19,20 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # Redis: Channels + PDF jobs (mismo contrato que prod; 1 Daphne basta en local)
+  redis:
+    image: redis:7-alpine
+    container_name: chalanpro_redis
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks:
+      - chalanpro_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
   backend:
     build:
       context: ./app
@@ -26,12 +40,17 @@ services:
     container_name: chalanpro_backend
     env_file:
       - ./envs/backend.dev.env
+    environment:
+      DJANGO_CONN_MAX_AGE: "0"
+      REDIS_URL: redis://redis:6379/0
     volumes:
       - ./app:/app
       - staticfiles_volume:/app/staticfiles
       - media_volume:/app/media
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - chalanpro_network

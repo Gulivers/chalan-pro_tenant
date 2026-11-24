@@ -11,19 +11,14 @@ Características principales de esta API:
 - Integra validaciones y reglas de negocio para asegurar la trazabilidad y control de los movimientos de inventario originados por una solicitud de materiales.
 """
 
-import base64
-
-from django.core.exceptions import ObjectDoesNotExist
+from django.db import connection
 from django.db.models import Prefetch, ProtectedError, Q
 from django.shortcuts import get_object_or_404
-from django.template.loader import render_to_string
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
-from weasyprint import HTML
-from weasyprint.text.fonts import FontConfiguration
 
 from appinventory.models import Product, ProductImage
 from appinventory.serializers import ProductListSerializer
@@ -34,6 +29,8 @@ from apptransactions.models import (
     DocumentStatus,
     DocumentTrackingHistory,
 )
+from apptransactions.pdf_helpers import phase_name as _phase_name
+from apptransactions.pdf_jobs import PdfJobError, enqueue_pdf_job
 from apptransactions.services.material_request import (
     MR_TYPE_CODE,
     create_material_request,
@@ -42,57 +39,7 @@ from apptransactions.services.material_request import (
     update_material_request_lines,
 )
 from appauth.authentication import TenantJWTAuthentication
-from utils.tenant_branding import file_field_to_pdf_uri, get_tenant_logo_url
-
-
-def _select_product_image(product, brand_id=None):
-    """Primary image of the product, else first available. brand_id is ignored."""
-    if product is None:
-        return None
-    images = list(product.images.all())
-    if not images:
-        return None
-    for image in images:
-        if image.is_primary:
-            return image
-    return images[0]
-
-
-def _line_product_image_pdf_uri(line, request):
-    product = getattr(line, 'product', None)
-    brand_id = getattr(line, 'brand_id', None)
-    # Prefer line brand (same idea as ProductListSerializer brand_id context),
-    # then fall back to default/any image so the PDF still shows a thumb when
-    # the product has photos under another brand.
-    image = _select_product_image(product, brand_id=brand_id)
-    if image is None and brand_id is not None:
-        image = _select_product_image(product, brand_id=None)
-    if image is None or not getattr(image, 'image', None):
-        return None
-    return file_field_to_pdf_uri(image.image, request=request)
-
-
-def _current_status_for_pdf(document):
-    """
-    Current workflow status for the PDF.
-
-    Prefer DocumentTracking.current_status; if missing, use the latest
-    DocumentTrackingHistory.to_status (already prefetched oldest→newest).
-    """
-    tracking = None
-    try:
-        tracking = document.tracking
-    except ObjectDoesNotExist:
-        tracking = None
-
-    if tracking is not None and getattr(tracking, 'current_status_id', None):
-        return tracking.current_status, tracking.status_changed_at
-
-    history = list(document.tracking_history.all())
-    if history:
-        last = history[-1]
-        return last.to_status, last.changed_at
-    return None, None
+from utils.tenant_branding import get_tenant_logo_url
 
 
 class MaterialRequestPermission(BasePermission):
@@ -100,7 +47,7 @@ class MaterialRequestPermission(BasePermission):
         user = request.user
         if not user or not user.is_authenticated:
             return False
-        if view.action in ('list', 'retrieve', 'pdf'):
+        if view.action in ('list', 'retrieve', 'pdf', 'pdf_jobs'):
             return user.has_perm('apptransactions.view_document')
         if view.action == 'create':
             return user.has_perm('apptransactions.add_document')
@@ -175,15 +122,6 @@ class MaterialRequestCreateSerializer(serializers.Serializer):
             notes=validated_data.get('notes') or '',
             user=self.context['request'].user,
         )
-
-
-def _phase_name(document):
-    event = getattr(document, 'work_order', None)
-    if not event or not getattr(event, 'crew_id', None):
-        return ''
-    crew = event.crew
-    category = getattr(crew, 'category', None)
-    return category.name if category else ''
 
 
 class MaterialRequestLineSerializer(serializers.Serializer):
@@ -436,113 +374,61 @@ class MaterialRequestViewSet(viewsets.GenericViewSet):
     @action(detail=True, methods=['get'], url_path='pdf')
     def pdf(self, request, pk=None):
         """
-        PDF pick list for Missing Material / Requested materials.
-
-        Same contract as transaction PDFs:
-        { file: base64, filename, file_type: application/pdf }
+        Sync PDF (compat). SPA should use pdf-jobs + shared poll endpoint.
         """
-        document = get_object_or_404(
-            Document.objects.filter(document_type__type_code=MR_TYPE_CODE)
-            .select_related(
-                'document_type',
-                'created_by',
-                'work_account',
-                'work_account__builder',
-                'work_account__job',
-                'work_account__house_model',
-                'work_order__crew__category',
-                'tracking__current_status',
-            )
-            .prefetch_related(
-                Prefetch(
-                    'lines',
-                    queryset=DocumentLine.objects.select_related(
-                        'product',
-                        'product__brand',
-                        'unit',
-                        'brand',
-                    ).prefetch_related(
-                        Prefetch(
-                            'product__images',
-                            queryset=ProductImage.objects.order_by(
-                                '-is_primary', '-uploaded_at'
-                            ),
-                        ),
-                    ).order_by('id'),
-                ),
-                Prefetch(
-                    'tracking_history',
-                    queryset=DocumentTrackingHistory.objects.select_related(
-                        'to_status',
-                        'changed_by',
-                    ).order_by('changed_at', 'id'),
-                ),
-            ),
-            pk=pk,
-        )
-
-        requested_event = None
-        for row in document.tracking_history.all():
-            if getattr(row.to_status, 'code', None) == 'requested':
-                requested_event = row
-                break
-
-        requested_by = ''
-        if requested_event and requested_event.changed_by_id:
-            requested_by = requested_event.changed_by.username
-        elif document.created_by_id:
-            requested_by = document.created_by.username
-
-        line_rows = [
-            {
-                'line': line,
-                'image_url': _line_product_image_pdf_uri(line, request),
-            }
-            for line in document.lines.all()
-        ]
-
-        current_status, status_changed_at = _current_status_for_pdf(document)
-        status_label = (
-            (getattr(current_status, 'name', None) or '').strip()
-            or (getattr(current_status, 'code', None) or '').strip()
-            or 'Requested'
-        )
-        status_code = (
-            (getattr(current_status, 'code', None) or '').strip() or 'requested'
+        from apptransactions.pdf_service import (
+            build_material_request_pdf,
+            pdf_response_payload,
         )
 
         try:
-            html = render_to_string(
-                'material_request_pdf.html',
-                {
-                    'document': document,
-                    'line_rows': line_rows,
-                    'logo_url': get_tenant_logo_url(request),
-                    'status_label': status_label,
-                    'status_code': status_code,
-                    'status_changed_at': status_changed_at,
-                    'phase': _phase_name(document),
-                    'requested_by': requested_by,
-                    'requested_at': (
-                        requested_event.changed_at if requested_event else None
-                    ),
-                },
-            )
-            pdf_file = HTML(string=html).write_pdf(
-                font_config=FontConfiguration()
-            )
-            number = document.document_number or f'MR-{document.id}'
+            pdf_bytes, filename = build_material_request_pdf(pk, request)
             return Response(
-                {
-                    'file': base64.b64encode(pdf_file).decode('utf-8'),
-                    'filename': f'{number}_{status_code}.pdf',
-                    'file_type': 'application/pdf',
-                },
+                pdf_response_payload(pdf_bytes, filename),
                 status=status.HTTP_200_OK,
             )
         except Exception as exc:
             return Response(
                 {'error': f'Could not generate PDF: {exc}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    @action(detail=True, methods=['post'], url_path='pdf-jobs')
+    def pdf_jobs(self, request, pk=None):
+        """Enqueue async material-request PDF; returns 202 { job_id }."""
+        from apptransactions.pdf_service import build_material_request_pdf
+
+        if not Document.objects.filter(
+            pk=pk, document_type__type_code=MR_TYPE_CODE
+        ).exists():
+            return Response(
+                {'detail': 'Not found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        tenant = getattr(connection, 'tenant', None)
+        schema_name = getattr(tenant, 'schema_name', None) or connection.schema_name
+        try:
+            logo_url = get_tenant_logo_url(request)
+            scheme = 'https' if request.is_secure() else 'http'
+            job_id = enqueue_pdf_job(
+                schema_name=schema_name,
+                kind='material_request',
+                host=request.get_host(),
+                scheme=scheme,
+                logo_url=logo_url,
+                builder=build_material_request_pdf,
+                builder_args=(int(pk),),
+                ref_id=int(pk),
+            )
+            return Response({'job_id': job_id}, status=status.HTTP_202_ACCEPTED)
+        except PdfJobError as exc:
+            return Response(
+                {'detail': str(exc)},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        except Exception as exc:
+            return Response(
+                {'detail': f'Could not start PDF job: {exc}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 

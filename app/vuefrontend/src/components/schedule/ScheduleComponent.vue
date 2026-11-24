@@ -144,7 +144,7 @@ import localizedFormat from "dayjs/plugin/localizedFormat";
 import "dayjs/locale/es";
 import Swal from "sweetalert2";
 import { useAuthStore } from "@stores/auth";
-import { openPdf } from "@helpers";
+import { downloadSchedulePdfJob } from "@/utils/downloadPdfJob";
 import SearchIcon from "@components/icons/searchIcon.vue";
 import { appMixin } from "@mixins/appMixin";
 import { workOrderStatusSeverity } from "@/utils/workOrderStatus";
@@ -1121,12 +1121,7 @@ export default {
 
     async generateSchedulePDF() {
       try {
-        const url = `/api/schedule-report/?start_at=${this.calendar_start}&end_at=${this.calendar_end}`;
-        const response = await axios.get(url);
-
-        if (response.status === 200) {
-          openPdf(response.data);
-        }
+        await downloadSchedulePdfJob(this.calendar_start, this.calendar_end);
       } catch (error) {
         console.error("❌ Error downloading schedule PDF:", error);
         Swal.fire("Error", "Could not generate the PDF.", "error");
