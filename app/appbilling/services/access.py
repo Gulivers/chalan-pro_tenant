@@ -31,16 +31,9 @@ class BillingAccess:
 
 
 def _trial_bounds(tenant):
-    from datetime import datetime, time as dt_time
-
+    """Return explicit trial_start/trial_end only — never invent a free window."""
     start = getattr(tenant, 'trial_start', None)
     end = getattr(tenant, 'trial_end', None)
-    if end is None and getattr(tenant, 'created_on', None):
-        if start is None:
-            start = datetime.combine(tenant.created_on, dt_time.min)
-        if timezone.is_naive(start):
-            start = timezone.make_aware(start)
-        end = start + timedelta(days=30)
     return start, end
 
 
@@ -76,7 +69,7 @@ def _stripe_access(sub: Subscription | None, now) -> tuple[bool, str, bool]:
 def get_billing_access(tenant) -> BillingAccess:
     now = timezone.now()
     suggested = get_suggested_plan_slug(tenant)
-    trial_start, trial_end = _trial_bounds(tenant)
+    _trial_start, trial_end = _trial_bounds(tenant)
 
     trial_active = False
     trial_days_left = None
@@ -86,7 +79,8 @@ def get_billing_access(tenant) -> BillingAccess:
         if timezone.is_naive(trial_end):
             trial_end = timezone.make_aware(trial_end)
         trial_end_iso = trial_end.isoformat()
-        if getattr(tenant, 'on_trial', True) and now < trial_end:
+        # Require explicit on_trial=True (Admin / start_trial_for_tenant).
+        if getattr(tenant, 'on_trial', False) and now < trial_end:
             trial_active = True
             trial_days_left = max(0, (trial_end.date() - now.date()).days)
 

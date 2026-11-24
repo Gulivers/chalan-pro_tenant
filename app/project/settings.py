@@ -629,6 +629,8 @@ STRIPE_CANCEL_URL = os.environ.get('STRIPE_CANCEL_URL', '')
 STRIPE_CUSTOMER_PORTAL_RETURN_URL = os.environ.get('STRIPE_CUSTOMER_PORTAL_RETURN_URL', '')
 BILLING_PAST_DUE_GRACE_DAYS = int(os.environ.get('BILLING_PAST_DUE_GRACE_DAYS', '7'))
 BILLING_ENFORCEMENT_ENABLED = _env_bool('BILLING_ENFORCEMENT_ENABLED', True)
+# Onboarding is sales-led: new tenants are payment-required (no free trial).
+# Multi-day trial remains available via Admin / start_trial_for_tenant.
 
 # Landing (getjobrhythm.com) contact form — inbox that receives submissions
 LANDING_CONTACT_TO_EMAIL = _env_email('LANDING_CONTACT_TO_EMAIL', 'team@jobrhythm.net')
