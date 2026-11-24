@@ -60,14 +60,18 @@ if [ "$DO_BUILD" -eq 1 ]; then
 fi
 
 # --- Orden de arranque y migraciones
-echo "$LOG_PREFIX Bringing up postgres..."
-docker compose -f "$COMPOSE_FILE" up -d postgres
+echo "$LOG_PREFIX Bringing up postgres + redis..."
+docker compose -f "$COMPOSE_FILE" up -d postgres redis
 
 echo "$LOG_PREFIX Waiting for Postgres (15s)..."
 sleep 15
 
-echo "$LOG_PREFIX Bringing up backend..."
-docker compose -f "$COMPOSE_FILE" up -d backend
+# Two Daphne replicas so a heavy PDF/save does not freeze the whole SaaS.
+# Remove legacy single-name container if present (pre-scale).
+docker rm -f chalanpro_backend 2>/dev/null || true
+
+echo "$LOG_PREFIX Bringing up backend (scale=2)..."
+docker compose -f "$COMPOSE_FILE" up -d --scale backend=2 backend
 
 if [ "$DO_MIGRATE" -eq 1 ]; then
     echo "$LOG_PREFIX Running migrations (multi-tenant: migrate_schemas)..."
@@ -88,8 +92,9 @@ sleep 30
 echo "$LOG_PREFIX Bringing up nginx..."
 docker compose -f "$COMPOSE_FILE" up -d nginx
 
-echo "$LOG_PREFIX Restarting backend, frontend, nginx..."
-docker compose -f "$COMPOSE_FILE" restart backend frontend nginx
+echo "$LOG_PREFIX Restarting backend (scale=2), frontend, nginx..."
+docker compose -f "$COMPOSE_FILE" up -d --scale backend=2 backend
+docker compose -f "$COMPOSE_FILE" restart frontend nginx
 
 echo "$LOG_PREFIX Deploy finished — $(date -Iseconds)"
 echo "$LOG_PREFIX Check: docker compose -f $COMPOSE_FILE ps"
