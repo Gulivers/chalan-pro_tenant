@@ -264,13 +264,24 @@ Así, al entrar por SSH y abrir `chalanpro-vps.code-workspace`, tendrás el mism
 - [ ] Documentación/runbooks actualizados si cambia el flujo.
 
 
+#### Backend: Daphne scale + Redis (PDF async)
+
+- Compose: servicio `redis` + `backend` **sin** `container_name`, arrancado con `--scale backend=2` (ver `scripts/deploy-vps.sh`).
+- `REDIS_URL=redis://redis:6379/0` (Channels + jobs PDF en `apptransactions/pdf_jobs.py`).
+- SPA: `POST .../pdf/jobs/` + poll `/api/pdf/jobs/<id>/` (transacciones, MR, schedule, contratos); sync GET queda como compat. Regla agentes: `.cursor/rules/pdf-async-jobs.mdc`.
+- Nginx: `proxy_read_timeout` 120s en `/api`/`/admin`/`/stripe`; 180s en PDF sync; `/ws/` sigue en 86400.
+
 #### Renovación wildcard automática (API DNS Hostinger)
 
 Hostinger expone una **API** para gestionar DNS (documentación: [developers.hostinger.com](https://developers.hostinger.com)). Con un token de API se puede automatizar el desafío DNS y renovar el wildcard sin tocar el panel.
 
+**Producción:** lineage `jobrhythm.net-0001` (`jobrhythm.net` + `*.jobrhythm.net`). Legacy: `jobrithm.net`. Detalle en `app/readme/README_RESUMEN_GENERAL.md` §2.2.2.1.
+
 **Requisitos**
 
 1. Token de API en Hostinger: hPanel → Perfil → [API](https://hpanel.hostinger.com/profile/api).
+   - `/root/.hostinger-api-token` — scripts/cron.
+   - `/root/.hostinger-api.env` (`HOSTINGER_API_TOKEN=...`) — `certbot.service` vía drop-in.
 2. En el VPS (donde corre certbot), instalar el SDK y dejar el token disponible:
 
    ```bash
@@ -282,7 +293,7 @@ Hostinger expone una **API** para gestionar DNS (documentación: [developers.hos
    **Dependencia operativa requerida (obligatoria):**
    - El virtualenv `/opt/chalanpro/.venv-hostinger` debe existir y contener `hostinger_api`.
    - Los hooks `scripts/certbot_hostinger_auth.py` y `scripts/certbot_hostinger_cleanup.py` dependen de ese entorno para ejecutar la renovación DNS-01.
-   - Si este virtualenv no está disponible, la renovación SSL wildcard fallará.
+   - Si este virtualenv no está disponible, o `certbot.service` no tiene `HOSTINGER_API_TOKEN`, la renovación SSL wildcard fallará.
 
 3. Scripts en el repo:
    - `scripts/certbot_hostinger_auth.py` — manual-auth-hook: añade el TXT `_acme-challenge` vía API.
@@ -290,22 +301,30 @@ Hostinger expone una **API** para gestionar DNS (documentación: [developers.hos
    - `scripts/renew_wildcard_certbot_auto.sh` — ejecuta certbot con esos hooks (sin preguntar Enter).
    - `scripts/renew_wildcard_certbot_auto_domain.sh` — variante parametrizable por dominio/email (recomendada para multi-dominio).
 
-**Uso (renovación manual con API)**
+**Vía principal (automática):** `certbot.timer` → `certbot renew` (≤30 días). Requiere drop-in:
 
-```bash
-HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrithm.net --email admin@jobrhythm.net
+```ini
+# /etc/systemd/system/certbot.service.d/hostinger-dns.conf
+[Service]
+EnvironmentFile=/root/.hostinger-api.env
 ```
 
-**Cron (renovación automática del wildcard)**
+Deploy hook: `/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh` (reload/restart del contenedor nginx).
 
-Si el token está en un archivo (p. ej. `/root/.hostinger-api-token`, `chmod 600`):
+**Uso (renovación manual forzada con API)**
 
 ```bash
-# Renovar wildcard de jobrithm.net el día 1 de cada mes a las 03:00 (cert válido ~90 días)
-0 3 1 * * HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrithm.net --email admin@jobrhythm.net
+HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) \
+  /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh \
+  --domain jobrhythm.net --email admin@jobrhythm.net
 ```
 
-O definir `HOSTINGER_API_TOKEN` en `/etc/environment` o en el cron y usar `sudo -E` en el script (el script ya usa `sudo -E certbot` para pasar el token a certbot y a los hooks).
+**Cron de respaldo (día 1 de cada mes, 03:00)**
+
+```bash
+0 3 1 * * HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrhythm.net --email admin@jobrhythm.net
+0 3 1 * * HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrithm.net --email admin@jobrithm.net
+```
 
 #### Post-migración y retiro de `chalanpro.net`
 

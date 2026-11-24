@@ -27,7 +27,7 @@ from datetime import datetime, timedelta
 
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.models import User
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.template.loader import render_to_string
 from .utils import geocode_address
 from utils.datatable import handle_datatable_query
@@ -564,53 +564,21 @@ def lighting_circuits(sqft):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def download_contract_pdf(request, contract_id):
+    """Sync contract PDF (compat). SPA should use create_contract_pdf_job."""
+    from apptransactions.pdf_service import pdf_response_payload
+    from .pdf_service import build_contract_pdf
+
     if not request.user.has_perm('ctrctsapp.view_contract'):
         raise PermissionDenied('You do not have permission to view contracts.')
     try:
-        contract = Contract.objects.get(id=contract_id)
-
-        if contract.type == "Trim":
-            details = contract.contract_details.filter(cdtrim__gt=0)
-        else:  # If type is "Rough"
-            details = contract.contract_details.filter(cdrough__gt=0)
-            
-        mid_index = details.count() // 2  # Integer division
-        left_details = details[:mid_index]
-        right_details = details[mid_index:]
-        
-        logo_url = get_tenant_logo_url(request)
-        tenant = _resolve_tenant(request)
-        show_lighting_circuits = (
-            tenant is not None
-            and getattr(tenant, 'client_type', None) == 'electric'
+        pdf_bytes, filename = build_contract_pdf(contract_id, request)
+        return Response(
+            pdf_response_payload(pdf_bytes, filename),
+            status=status.HTTP_200_OK,
         )
-
-        # Prepare the data to return
-        context = {
-            'contract': contract,
-            'left_details': left_details,
-            'right_details': right_details,
-            'lighting_circuits': (
-                lighting_circuits(contract.sqft) if show_lighting_circuits else None
-            ),
-            'show_lighting_circuits': show_lighting_circuits,
-            'logo_url': logo_url,
-        }
-        font_config = FontConfiguration()
-
-        html = render_to_string('contract_pdf.html', context)
-
-        pdf_file = HTML(string=html).write_pdf(font_config=font_config)
-        
-        # Convert bytes to base64 string (not bytes object)
-        pdf_base64 = base64.b64encode(pdf_file).decode('utf-8')
-        
-        response_data = {
-            'file': pdf_base64,
-            'filename': f'contract_{contract.pk}.pdf',
-            'file_type': 'application/pdf'
-        }
-        return Response(response_data, status=status.HTTP_200_OK)
+    except Http404:
+        logger.error("Contract with id %s not found", contract_id)
+        return JsonResponse({"error": "Contract not found"}, status=404)
     except Contract.DoesNotExist:
         logger.error("Contract with id %s not found", contract_id)
         return JsonResponse({"error": "Contract not found"}, status=404)
@@ -618,6 +586,45 @@ def download_contract_pdf(request, contract_id):
         logger.exception("Error generating PDF for contract %s", contract_id)
         return JsonResponse({"detail": "An unexpected error occurred."}, status=500)
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_contract_pdf_job(request, contract_id):
+    """Enqueue async contract PDF; returns 202 { job_id }."""
+    from django.db import connection as db_connection
+
+    from apptransactions.pdf_jobs import PdfJobError, enqueue_pdf_job
+    from .pdf_service import build_contract_pdf
+
+    if not request.user.has_perm('ctrctsapp.view_contract'):
+        raise PermissionDenied('You do not have permission to view contracts.')
+    if not Contract.objects.filter(id=contract_id).exists():
+        return JsonResponse({"error": "Contract not found"}, status=404)
+
+    schema_tenant = getattr(db_connection, 'tenant', None)
+    schema_name = getattr(schema_tenant, 'schema_name', None) or db_connection.schema_name
+    try:
+        logo_url = get_tenant_logo_url(request)
+        scheme = 'https' if request.is_secure() else 'http'
+        job_id = enqueue_pdf_job(
+            schema_name=schema_name,
+            kind='contract',
+            host=request.get_host(),
+            scheme=scheme,
+            logo_url=logo_url,
+            builder=build_contract_pdf,
+            builder_args=(contract_id,),
+            ref_id=contract_id,
+        )
+        return Response({'job_id': job_id}, status=status.HTTP_202_ACCEPTED)
+    except PdfJobError as exc:
+        return Response({'detail': str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    except Exception:
+        logger.exception('Error enqueueing contract PDF job %s', contract_id)
+        return Response(
+            {'detail': 'Could not start PDF job.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 class BuilderReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
     """
