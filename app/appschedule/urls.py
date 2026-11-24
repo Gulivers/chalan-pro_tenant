@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import ( 
     EventViewSet, EventsListView, EventNoteViewSet, 
-    EventChatViewSet, download_schedule_pdf, MyEventsView, 
+    EventChatViewSet, download_schedule_pdf, create_schedule_pdf_job, MyEventsView, 
     export_schedule_excel, AbsenceReasonViewSet, WeeklySupervisorStatsChartView,
     WeeklySupervisorStatsExcelView, unread_chat_counts, mark_chat_read,
     EventImageViewSet, EventReadViewSet
@@ -92,6 +92,11 @@ urlpatterns = [
         name='work-account-work-order-progress',
     ),
     path('api/schedule-report/', download_schedule_pdf, name='download_schedule_pdf'),
+    path(
+        'api/schedule-report/jobs/',
+        create_schedule_pdf_job,
+        name='create_schedule_pdf_job',
+    ),
     path('api/my-events/', MyEventsView.as_view(), name='my_events'),
     path('api/schedule-excel/', export_schedule_excel, name='export_schedule_excel'),
     path('api/supervisor-stats/', WeeklySupervisorStatsChartView.as_view(), name='supervisor-stats'),
