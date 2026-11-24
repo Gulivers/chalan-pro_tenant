@@ -213,6 +213,7 @@
 import { getAccessToken } from '@/auth/tokenHelpers';
 import axios from "axios";
 import Swal from "sweetalert2";
+import { downloadTransactionPdfJob } from "@/utils/downloadPdfJob";
 import dayjs from "dayjs";
 import Column from "primevue/column";
 import EyeIcon from "@primevue/icons/eye";
@@ -567,59 +568,8 @@ export default {
     },
     async printTransaction(documentId) {
       try {
-        const response = await axios.get(`/api/documents/${documentId}/pdf/`, {
-          headers: {
-            Authorization: `Bearer ${getAccessToken()}`,
-          },
-          responseType: "json",
-        });
-
-        if (!response.data || !response.data.file) {
-          throw new Error("No PDF file received");
-        }
-
-        const byteCharacters = atob(response.data.file);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: "application/pdf" });
-        const url = window.URL.createObjectURL(blob);
-
-        const isMobile =
-          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent
-          ) || window.innerWidth <= 768;
-
-        if (isMobile) {
-          const link = document.createElement("a");
-          link.href = url;
-          link.download =
-            response.data.filename || `transaction_${documentId}.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          this.notifyToastSuccess?.("PDF downloaded successfully.");
-        } else {
-          const newWindow = window.open(url, "_blank");
-          if (!newWindow) {
-            const link = document.createElement("a");
-            link.href = url;
-            link.download =
-              response.data.filename || `transaction_${documentId}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            this.notifyToastSuccess?.("PDF downloaded successfully.");
-          } else {
-            this.notifyToastSuccess?.("PDF opened in new window.");
-          }
-        }
-
-        setTimeout(() => {
-          window.URL.revokeObjectURL(url);
-        }, 1000);
+        await downloadTransactionPdfJob(documentId);
+        this.notifyToastSuccess?.("PDF generated successfully.");
       } catch (error) {
         console.error("Error downloading PDF:", error);
         await Swal.fire({
