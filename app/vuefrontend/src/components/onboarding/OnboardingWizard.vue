@@ -15,7 +15,7 @@
         </router-link>
         <div class="jr-onboard__chrome-actions">
           <LocaleToggle :persist="false" class="jr-onboard__locale" />
-          <p class="jr-onboard__signin">
+          <p v-if="!verificationPending" class="jr-onboard__signin">
             {{ t("onboarding.haveAccount") }}
             <router-link to="/login" class="jr-onboard__signin-link">
               {{ t("onboarding.signIn") }}
@@ -69,12 +69,6 @@
             {{ t("onboarding.verifyPending.devLink") }}
             <a :href="debugVerifyUrl">{{ debugVerifyUrl }}</a>
           </p>
-          <JRButton
-            type="button"
-            variant="secondary"
-            @click="router.push('/login')">
-            {{ t("onboarding.verifyPending.goToSignIn") }}
-          </JRButton>
         </div>
 
         <template v-else>

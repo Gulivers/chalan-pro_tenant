@@ -1778,8 +1778,7 @@
       "title": "Revisa tu correo",
       "leadBefore": "Enviamos un enlace de confirmación a",
       "leadAfter": ". Ábrelo para crear tu espacio de trabajo; luego inicia sesión para activar tu plan.",
-      "devLink": "Enlace de desarrollo:",
-      "goToSignIn": "Ir a iniciar sesión"
+      "devLink": "Enlace de desarrollo:"
     },
     "company": {
       "name": "Nombre de la empresa",

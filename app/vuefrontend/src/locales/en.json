@@ -1778,8 +1778,7 @@
       "title": "Check your email",
       "leadBefore": "We sent a confirmation link to",
       "leadAfter": ". Open it to create your workspace, then sign in to activate your plan.",
-      "devLink": "Dev link:",
-      "goToSignIn": "Go to Sign In"
+      "devLink": "Dev link:"
     },
     "company": {
       "name": "Company name",
