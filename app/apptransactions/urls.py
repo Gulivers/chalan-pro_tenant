@@ -4,6 +4,7 @@ from .views import (
     DocumentTypeViewSet, PartyTypeViewSet, PartyCategoryViewSet, PartyViewSet,
     DocumentViewSet, DocumentListProviderAPIView, DocumentLineViewSet, WorkAccountViewSet,
     TransactionFavoriteViewSet, download_transaction_pdf,
+    create_transaction_pdf_job, get_pdf_job,
 )
 from .material_request_api import MaterialRequestViewSet
 from .document_status_api import DocumentStatusViewSet
@@ -24,4 +25,12 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/documents-provider/', DocumentListProviderAPIView.as_view(), name='documents-provider'),
     path('api/documents/<int:document_id>/pdf/', download_transaction_pdf, name='download-transaction-pdf'),
+    path(
+        'api/documents/<int:document_id>/pdf/jobs/',
+        create_transaction_pdf_job,
+        name='create-transaction-pdf-job',
+    ),
+    path('api/documents/pdf/jobs/<str:job_id>/', get_pdf_job, name='get-pdf-job'),
+    # Canonical shared poll (schedule/contracts/transactions/MR)
+    path('api/pdf/jobs/<str:job_id>/', get_pdf_job, name='get-pdf-job-shared'),
 ]

@@ -234,6 +234,7 @@ import SearchIcon from "@primevue/icons/search";
 import TrashIcon from "@primevue/icons/trash";
 import UploadIcon from "@primevue/icons/upload";
 import { getAccessToken } from "@/auth/tokenHelpers";
+import { downloadMaterialRequestPdfJob } from "@/utils/downloadPdfJob";
 import {
   JRPage,
   JRPageHeader,
@@ -364,61 +365,10 @@ function editTo(id) {
   };
 }
 
-function isMobileUa() {
-  return (
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
-    ) || window.innerWidth <= 768
-  );
-}
-
 async function printRequest(documentId) {
   try {
-    const response = await axios.get(`${ENDPOINT}${documentId}/pdf/`, {
-      headers: {
-        Authorization: `Bearer ${getAccessToken()}`,
-      },
-    });
-    if (!response.data?.file) {
-      throw new Error("No PDF file received");
-    }
-    const byteCharacters = atob(response.data.file);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i += 1) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const blob = new Blob([new Uint8Array(byteNumbers)], {
-      type: "application/pdf",
-    });
-    const url = window.URL.createObjectURL(blob);
-    const filename =
-      response.data.filename || `material_request_${documentId}.pdf`;
-
-    if (isMobileUa()) {
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      proxy?.notifyToastSuccess?.("PDF generated and downloaded successfully.");
-    } else {
-      const newWindow = window.open(url, "_blank");
-      if (!newWindow) {
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        proxy?.notifyToastSuccess?.(
-          "PDF generated and downloaded successfully."
-        );
-      } else {
-        proxy?.notifyToastSuccess?.("PDF opened in new window.");
-      }
-    }
-    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    await downloadMaterialRequestPdfJob(documentId);
+    proxy?.notifyToastSuccess?.("PDF generated successfully.");
   } catch (error) {
     console.error("Error generating material request PDF:", error);
     proxy?.notifyError?.(

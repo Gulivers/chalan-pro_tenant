@@ -7,6 +7,7 @@
   - [1.1 Diagrama de Contenedores y Servicios](#11-diagrama-de-contenedores-y-servicios)
   - [1.2 Descripción de Servicios](#12-descripción-de-servicios)
   - [1.3 Flujo de Peticiones](#13-flujo-de-peticiones)
+- [Escalabilidad y mejoras pendientes](./README_ESCALABILIDAD_MEJORAS.md) (backlog P0–P3 por tipo)
 - [2. Estructura General del Proyecto](#2-estructura-general-del-proyecto)
   - [2.1 Diagrama de Estructura de Archivos](#21-diagrama-de-estructura-de-archivos)
   - [2.2 Descripción de Archivos Clave](#22-descripción-de-archivos-clave)
@@ -102,6 +103,8 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
 
 ### 1.1 Diagrama de Contenedores y Servicios
 
+Horizontal scaling del API: Nginx hace round-robin a **2 réplicas Daphne** (`--scale backend=2`). Misma DB/media; Redis comparte Channels y jobs PDF async.
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        INTERNET                                 │
@@ -111,8 +114,8 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
         │                   │                   │
    ┌────▼────┐        ┌─────▼─────┐      ┌─────▼─────┐
    │  DNS    │        │   DNS     │      │   DNS     │
-   │  @      │        │   api     │      │   *.      │
-   │chalanpro│        │chalanpro  │      │chalanpro  │
+   │  @ / www│        │   api     │      │   *.      │
+   │jobrhythm│        │jobrhythm  │      │jobrhythm  │
    │  .net   │        │  .net     │      │  .net     │
    └────┬────┘        └─────┬─────┘      └─────┬─────┘
         │                   │                   │
@@ -122,20 +125,24 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
                     │   NGINX        │
                     │  (Puerto 80/443)│
                     │  Reverse Proxy │
-                    │  SSL/TLS       │
+                    │  SSL + LB      │
                     └───────┬────────┘
                             │
         ┌───────────────────┼───────────────────┐
         │                   │                   │
-   ┌────▼────┐        ┌─────▼─────┐      ┌─────▼─────┐
-   │ Frontend│        │  Backend  │      │ PostgreSQL│
-   │ Vue.js  │        │  Django   │      │    15     │
-   │         │        │ Daphne    │      │           │
-   │  Build  │        │ (ASGI)    │      │  :5432    │
-   │  Static │        │  :8000    │      │           │
-   │         │        │ WebSocket │      │           │
-   └─────────┘        └─────┬─────┘      └─────┬─────┘
+   ┌────▼────┐     ┌────────▼────────┐   ┌─────▼─────┐
+   │ Frontend│     │  Backend ×2     │   │ PostgreSQL│
+   │ Vue.js  │     │  Daphne ASGI    │   │    15     │
+   │  Build  │     │  backend-1/2    │   │  :5432    │
+   │  Static │     │  :8000 (int.)   │   │           │
+   └─────────┘     └────────┬────────┘   └─────┬─────┘
                             │                   │
+                     ┌──────▼──────┐            │
+                     │    Redis    │            │
+                     │ Channels +  │            │
+                     │ PDF jobs    │            │
+                     │  :6379      │            │
+                     └──────┬──────┘            │
                             │                   │
                     ┌───────▼───────────────────▼───────┐
                     │      Docker Network               │
@@ -144,45 +151,46 @@ Sistema multi-tenant Django con frontend Vue.js desplegado en VPS Hostinger con 
                             │
                     ┌───────▼────────┐
                     │   pgAdmin      │
-                    │   (Puerto 5050)│
-                    │   Web UI       │
+                    │ 127.0.0.1:5050 │
+                    │   (túnel SSH)  │
                     └────────────────┘
 ```
 
 ### 1.2 Descripción de Servicios
 
-| Servicio       | Contenedor           | Puerto         | Descripción                                                   |
-| -------------- | -------------------- | -------------- | ------------------------------------------------------------- |
-| **Nginx**      | `chalanpro_nginx`    | 80, 443        | Reverse proxy, SSL/TLS termination, enrutamiento de requests  |
-| **Backend**    | `chalanpro_backend`  | 8000 (interno) | API Django REST + Admin, Daphne (ASGI) para soporte WebSocket |
-| **Frontend**   | `chalanpro_frontend` | -              | Build de Vue.js, archivos estáticos servidos por Nginx        |
-| **PostgreSQL** | `chalanpro_postgres` | 5432           | Base de datos multi-tenant con schemas aislados               |
-| **pgAdmin**    | `chalanpro_pgadmin`  | 127.0.0.1:5050 | PostgreSQL web; solo localhost del VPS (túnel SSH)            |
+| Servicio       | Contenedor                         | Puerto         | Descripción                                                              |
+| -------------- | ---------------------------------- | -------------- | ------------------------------------------------------------------------ |
+| **Nginx**      | `chalanpro_nginx`                  | 80, 443        | Reverse proxy, SSL/TLS, round-robin a las réplicas `backend`             |
+| **Backend**    | `chalanpro-backend-1`, `-2` (scale)| 8000 (interno) | API Django REST + Admin + WebSocket; 2× Daphne (ASGI)                    |
+| **Redis**      | `chalanpro_redis`                  | 6379 (interno) | Channel layer + estado de jobs PDF async (`REDIS_URL`)                   |
+| **Frontend**   | `chalanpro_frontend`               | -              | Build de Vue.js; estáticos servidos por Nginx                            |
+| **PostgreSQL** | `chalanpro_postgres`               | 5432           | Base de datos multi-tenant con schemas aislados (única para ambos backends) |
+| **pgAdmin**    | `chalanpro_pgadmin`                | 127.0.0.1:5050 | PostgreSQL web; solo localhost del VPS (túnel SSH)                       |
 
 ### 1.3 Flujo de Peticiones
 
-1. **Frontend (chalanpro.net, www.chalanpro.net):**
+1. **Frontend (`jobrhythm.net` / `www`):**
    - Cliente → Nginx (443) → Archivos estáticos Vue.js
-   - `/api/*` → Nginx → Backend (8000)
+   - `/api/*` → Nginx → `backend-1` o `backend-2` (:8000)
 
-2. **API/Admin (api.chalanpro.net):**
-   - Cliente → Nginx (443) → Backend (8000)
+2. **API/Admin (`api.jobrhythm.net`):**
+   - Cliente → Nginx (443) → una de las réplicas Daphne
    - Rutas: `/api/*`, `/admin/*`
 
-3. **Tenants (\*.chalanpro.net):**
+3. **Tenants (`*.jobrhythm.net`):**
    - Cliente → Nginx (443) → Archivos estáticos Vue.js
-   - `/api/*` → Nginx → Backend (8000) → Middleware detecta tenant → Schema específico
+   - `/api/*` → Nginx → Daphne → Middleware detecta tenant → Schema específico
 
-4. **WebSocket (Actualizaciones en tiempo real):**
+4. **PDF async:**
+   - SPA: `POST …/pdf/jobs/` → hilo en un Daphne → estado en Redis → poll `GET /api/pdf/jobs/<id>/`
+   - Puede atender el poll la otra réplica; ambos leen el mismo Redis/media
+
+5. **WebSocket (tiempo real):**
    - El SPA pide `POST /api/auth/ws-ticket/` con el access JWT y abre `/ws/*?ticket=`
    - El ticket dura 60 s, es de un solo uso y fija el schema. Sin ticket el socket cierra (4401)
-   - Cada grupo de Channels lleva el schema (`{schema}.calendar_updates`, etc.)
+   - Groups de Channels vía **Redis** (`{schema}.calendar_updates`, etc.) para fan-out entre réplicas
    - Nginx reescribe `X-Forwarded-Host` con `$host`. El origen del handshake se valida contra `ALLOWED_HOSTS`
-   - Rutas WebSocket:
-     - `/ws/calendar-updates/` - Actualizaciones del calendario
-     - `/ws/schedule/event/{id}/` - Notas de eventos
-     - `/ws/schedule/event/{id}/chat/` - Chat de eventos
-     - `/ws/schedule/unread/user/{id}/` - Notificaciones no leídas
+   - Rutas: `/ws/calendar-updates/`, `/ws/schedule/event/{id}/`, `/ws/schedule/event/{id}/chat/`, `/ws/schedule/unread/user/{id}/`
 
 ---
 
@@ -670,9 +678,19 @@ Este certificado cubre:
 
 Hostinger expone una **API** para gestionar DNS (documentación: [developers.hostinger.com](https://developers.hostinger.com)). Con un token de API se puede automatizar el desafío DNS y renovar el wildcard sin tocar el panel.
 
+**Certificados relevantes en el VPS**
+
+| Lineage Certbot | Dominios | Uso nginx | Notas |
+|-----------------|----------|-----------|-------|
+| `jobrhythm.net-0001` | `jobrhythm.net`, `*.jobrhythm.net` | Tenants / API / frontend SaaS | **Producción** (wildcard) |
+| `jobrhythm.net` | hosts concretos vía webroot | No es el wildcard | Renueva solo con HTTP-01 |
+| `jobrithm.net` | `jobrithm.net`, `*.jobrithm.net` | Legacy | Mantener mientras haya redirects |
+
 **Requisitos**
 
-1. Token de API en Hostinger: hPanel → Perfil → [API](https://hpanel.hostinger.com/profile/api).
+1. Token de API en Hostinger: hPanel → Perfil → [API](https://hpanel.hostinger.com/profile/api). Guardarlo en:
+   - `/root/.hostinger-api-token` (solo el valor; `chmod 600`) — usado por cron/scripts.
+   - `/root/.hostinger-api.env` (`HOSTINGER_API_TOKEN=...`; `chmod 600`) — usado por `certbot.service`.
 2. En el VPS (donde corre certbot), instalar el SDK y dejar el token disponible:
 
    ```bash
@@ -684,7 +702,7 @@ Hostinger expone una **API** para gestionar DNS (documentación: [developers.hos
    **Dependencia operativa requerida (obligatoria):**
    - El virtualenv `/opt/chalanpro/.venv-hostinger` debe existir y contener `hostinger_api`.
    - Los hooks `scripts/certbot_hostinger_auth.py` y `scripts/certbot_hostinger_cleanup.py` dependen de ese entorno para la validación DNS-01.
-   - Sin este virtualenv, la renovación del wildcard de ``jobrhythm.net` (legacy `jobrithm.net`) fallará.
+   - Sin este virtualenv (o sin `HOSTINGER_API_TOKEN` en el entorno de certbot), la renovación del wildcard de `jobrhythm.net` (y legacy `jobrithm.net`) fallará.
 
 3. Scripts en el repo (en el VPS, típicamente en `scripts/`):
    - `certbot_hostinger_auth.py` — manual-auth-hook: añade el TXT `_acme-challenge` vía API.
@@ -692,22 +710,51 @@ Hostinger expone una **API** para gestionar DNS (documentación: [developers.hos
    - `renew_wildcard_certbot_auto.sh` — script histórico para `chalanpro.net`.
    - `renew_wildcard_certbot_auto_domain.sh` — script parametrizable por dominio/email (recomendado).
 
-**Uso (renovación manual con API)**
+**Cómo se renueva solo (vía principal)**
 
-```bash
-HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrithm.net --email admin@jobrhythm.net
+Ubuntu corre `certbot.timer` (~2×/día), que ejecuta `certbot renew`. Los wildcards usan DNS-01 con los hooks de Hostinger, así que el servicio **debe** recibir el token:
+
+```ini
+# /etc/systemd/system/certbot.service.d/hostinger-dns.conf
+[Service]
+EnvironmentFile=/root/.hostinger-api.env
 ```
 
-**Cron (renovación automática del wildcard)**
+Tras editar: `sudo systemctl daemon-reload`.
 
-Si el token está en un archivo (p. ej. `/root/.hostinger-api-token`, `chmod 600`):
+Tras un renew exitoso, el hook de deploy recarga nginx:
 
 ```bash
-# Renovar wildcard de jobrithm.net el día 1 de cada mes a las 03:00 (cert válido ~90 días)
-0 3 1 * * HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrithm.net --email admin@jobrhythm.net
+# /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+# → docker compose exec nginx nginx -s reload (fallback: restart)
 ```
 
-O definir `HOSTINGER_API_TOKEN` en `/etc/environment` o en el cron y usar `sudo -E` en el script (el script ya usa `sudo -E certbot` para pasar el token a certbot y a los hooks).
+Certbot solo renueva cuando faltan ≤30 días (`renew_before_expiry`). Comprobar:
+
+```bash
+systemctl list-timers certbot.timer
+journalctl -u certbot.service -n 50 --no-pager
+sudo -E bash -c 'set -a; source /root/.hostinger-api.env; set +a; certbot renew --dry-run --cert-name jobrhythm.net-0001'
+```
+
+**Uso (renovación manual forzada con API)**
+
+```bash
+HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) \
+  /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh \
+  --domain jobrhythm.net --email admin@jobrhythm.net
+```
+
+**Cron de respaldo (día 1 de cada mes, 03:00)**
+
+Complementa al timer (por si systemd falla). Incluir **producción** y, si aún aplica, legacy:
+
+```bash
+0 3 1 * * HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrhythm.net --email admin@jobrhythm.net
+0 3 1 * * HOSTINGER_API_TOKEN=$(cat /root/.hostinger-api-token) /opt/chalanpro/scripts/renew_wildcard_certbot_auto_domain.sh --domain jobrithm.net --email admin@jobrithm.net
+```
+
+> Nota histórica (nov 2026): el cron solo tenía `jobrithm.net` y `certbot.timer` renovaba wildcards **sin** token → `jobrhythm.net-0001` venció (`NET::ERR_CERT_DATE_INVALID`). Se corrigió renovando el cert, cableando `EnvironmentFile` al servicio y añadiendo el cron de `jobrhythm.net`.
 
 ### 2.2.3 Configuración de Tenant en Django
 
@@ -1424,7 +1471,7 @@ Checklist:
 - [x] `TENANT_BASE_DOMAIN=jobrhythm.net` en `envs/backend.env` (recrear backend tras cambiar env: `docker compose up -d --force-recreate backend`).
 - [ ] Confirmar operación estable en producción (login tenants, onboarding, API, correo).
 - [ ] Opcional: DNS de dominios de cliente (ej. `phoenixelectricandair.net`) → VPS para un único 301 directo a `*.jobrhythm.net`.
-- [ ] Renovar wildcard: `renew_wildcard_certbot_auto_domain.sh --domain jobrhythm.net` (cron + `/root/.hostinger-api-token`).
+- [x] Renovar wildcard: `renew_wildcard_certbot_auto_domain.sh --domain jobrhythm.net` + `certbot.timer` con `EnvironmentFile=/root/.hostinger-api.env` + cron día 1 (nov 2026).
 
 ---
 

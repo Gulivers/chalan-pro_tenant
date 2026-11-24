@@ -30,7 +30,11 @@ envs/*.env
 
 # Ignore IDE / agent tooling (local; no versionar)
 .idea/
-.cursor/
+# .cursor/ no se ignora entero: hace falta un-ignore de rules (git no re-incluye bajo dir excluido)
+.cursor/*
+!.cursor/rules/
+.cursor/rules/*
+!.cursor/rules/pdf-async-jobs.mdc
 .impeccable/
 .impeccable-evidence/
 *.swp
