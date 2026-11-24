@@ -5,6 +5,7 @@ from .views import (
     BuilderViewSet, JobViewSet, HouseModelViewSet,
     weekly_summary, weekly_summary_list,
     monthly_summary, get_house_model_jobs, geocode_view, download_contract_pdf,
+    create_contract_pdf_job,
     BuilderReadOnlyViewSet, JobReadOnlyViewSet, HouseReadOnlyViewSet
 )
 from .views_schema import BuilderSchemaView, JobSchemaView, HouseModelSchemaView
@@ -30,6 +31,11 @@ urlpatterns = [
     path('api/monthly_summary/', monthly_summary, name='monthly_summary'),
     path('api/geocode/', geocode_view, name='geocode'),
     path('api/contract-pdf/<int:contract_id>/', download_contract_pdf, name='contract-pdf'),
+    path(
+        'api/contract-pdf/<int:contract_id>/jobs/',
+        create_contract_pdf_job,
+        name='create-contract-pdf-job',
+    ),
     path('api/builder/<int:pk>/workprices/', BuilderViewSet.as_view({'get': 'workprices'}), name='builder-workprices'),
     path('api/builder/<int:pk>/assign-workprices/', BuilderViewSet.as_view({'post': 'assign-workprices'}), name='assign-workprices'),
     

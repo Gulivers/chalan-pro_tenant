@@ -26,22 +26,38 @@ services:
       retries: 5
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    container_name: chalanpro_redis
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks:
+      - chalanpro_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
   backend:
     build:
       context: ./app
       dockerfile: Dockerfile.backend
-    container_name: chalanpro_backend
+    # No fixed container_name: deploy uses --scale backend=2
     env_file:
       - ./envs/backend.env
     environment:
       # ASGI/Daphne: must stay 0 (persistent conns leak under ASGI). See 6451ed4.
       DJANGO_CONN_MAX_AGE: "0"
+      REDIS_URL: redis://redis:6379/0
     volumes:
       - ./app:/app
       - staticfiles_volume:/app/staticfiles
       - media_volume:/app/media
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - chalanpro_network

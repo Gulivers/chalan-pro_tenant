@@ -37,41 +37,38 @@ El sistema detecta automáticamente el logo según el dominio:
 **Archivo**: `apptransactions/templates/transaction_pdf.html`
 
 Template profesional con:
-- Bootstrap 5 para estilos
-- CSS personalizado para PDF
-- Estructura responsive
+- CSS autocontenido (sin Bootstrap CDN; WeasyPrint no debe hacer HTTP externo)
 - Formato de tabla para productos
 - Secciones organizadas
 
-### 2. Vista de Generación
-**Archivo**: `apptransactions/views.py` (función `download_transaction_pdf`)
-
-Funcionalidades:
-- Autenticación requerida
-- Optimización de consultas con `select_related` y `prefetch_related`
-- Manejo de errores robusto
-- Generación de PDF con WeasyPrint
-- Codificación base64 para respuesta
+### 2. Generación
+- Sync (compat): `download_transaction_pdf` → `pdf_service.build_transaction_pdf`
+- Async (SPA): `POST /api/documents/<id>/pdf/jobs/` + poll `GET /api/documents/pdf/jobs/<job_id>/`
+  (Redis + hilo daemon; ver `pdf_jobs.py`)
 
 ### 3. URL de Acceso
 **Archivo**: `apptransactions/urls.py`
 
-Endpoint agregado:
 ```python
-path('api/documents/<int:document_id>/pdf/', download_transaction_pdf, name='download-transaction-pdf')
+path('api/documents/<int:document_id>/pdf/', ...)
+path('api/documents/<int:document_id>/pdf/jobs/', ...)
+path('api/documents/pdf/jobs/<str:job_id>/', ...)
 ```
 
 ## Uso del Sistema
 
-### Endpoint
+### Endpoints
 ```
-GET /api/documents/{document_id}/pdf/
+POST /api/documents/{document_id}/pdf/jobs/   → 202 { job_id }
+GET  /api/documents/pdf/jobs/{job_id}/       → pending | ready (+ file base64) | error
+GET  /api/documents/{document_id}/pdf/       → sync compat
 ```
 
+Frontend helper: `vuefrontend/src/utils/downloadPdfJob.js`.
+
 ### Autenticación
-Requiere token de autenticación en el header:
 ```
-Authorization: Token {your_token}
+Authorization: Bearer {jwt}
 ```
 
 ### Respuesta
