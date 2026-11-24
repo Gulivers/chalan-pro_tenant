@@ -111,12 +111,11 @@ def provision_tenant_workspace(data: OnboardingFormData, logo=None) -> dict[str,
         landing_selected_plan=landing_selected_plan,
         schema_name=schema_name,
         tenant_id=tenant_id,
-        on_trial=True,
         is_active=True,
     )
-    from appbilling.services.trial import start_trial_for_tenant
+    from appbilling.services.trial import mark_payment_required_for_tenant
 
-    start_trial_for_tenant(tenant)
+    mark_payment_required_for_tenant(tenant)
 
     try:
         tenant.full_clean()

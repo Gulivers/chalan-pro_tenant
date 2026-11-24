@@ -28,6 +28,9 @@ class Command(BaseCommand):
                 access = get_billing_access(tenant)
                 if not tenant.email:
                     continue
+                # Sales-led workspaces (no trial_start) never get trial cadence emails.
+                if not tenant.trial_start:
+                    continue
                 days = access.trial_days_left
                 if days is None:
                     continue
@@ -39,7 +42,12 @@ class Command(BaseCommand):
                     template = 'appbilling/email/trial_10_days.html'
                 elif access.trial_active and days == 3:
                     template = 'appbilling/email/trial_3_days.html'
-                elif not access.allowed and access.reason == 'trial_expired':
+                elif (
+                    not access.allowed
+                    and access.reason == 'trial_expired'
+                    and tenant.on_trial
+                ):
+                    # Only for tenants that had an explicit trial window (Admin / legacy).
                     template = 'appbilling/email/trial_expired.html'
 
                 if not template:
@@ -56,7 +64,7 @@ class Command(BaseCommand):
                     'appbilling/email/trial_started.html': f'Your JobRhythm trial has started — {tenant.name}',
                     'appbilling/email/trial_10_days.html': f'10 days left on your JobRhythm trial',
                     'appbilling/email/trial_3_days.html': f'3 days left — keep your crews connected',
-                    'appbilling/email/trial_expired.html': f'Your JobRhythm trial has ended',
+                    'appbilling/email/trial_expired.html': f'Activate your JobRhythm plan — {tenant.name}',
                 }
                 subject = subject_map.get(template, 'JobRhythm billing')
                 html = render_to_string(template, ctx)
