@@ -370,6 +370,7 @@ import {
 } from "@ui";
 import { documentStatusSeverity } from "@/utils/documentStatus";
 import { tStatus } from "@/utils/statusI18n";
+import { downloadTransactionPdfJob } from "@/utils/downloadPdfJob";
 
 const ENDPOINT = "/api/documents-provider/";
 const PHONE_MQ = "(max-width: 767.98px)";
@@ -601,64 +602,10 @@ export default {
     const viewItem = (id) => router.push(transactionViewTo(id));
     const editItem = (id) => router.push(transactionEditTo(id));
 
-    const isMobileUa = () =>
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      ) || window.innerWidth <= 768;
-
     const printItem = async (documentId) => {
       try {
-        const response = await axios.get(`/api/documents/${documentId}/pdf/`, {
-          headers: {
-            Authorization: `Bearer ${getAccessToken()}`,
-          },
-        });
-
-        if (!response.data?.file) {
-          throw new Error("No PDF file received");
-        }
-
-        const byteCharacters = atob(response.data.file);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i += 1) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: "application/pdf" });
-        const url = window.URL.createObjectURL(blob);
-        const filename =
-          response.data.filename || `transaction_${documentId}.pdf`;
-
-        if (isMobileUa()) {
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = filename;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          proxy?.notifyToastSuccess?.(
-            "PDF generated and downloaded successfully."
-          );
-        } else {
-          const newWindow = window.open(url, "_blank");
-          if (!newWindow) {
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            proxy?.notifyToastSuccess?.(
-              "PDF generated and downloaded successfully."
-            );
-          } else {
-            proxy?.notifyToastSuccess?.("PDF opened in new window.");
-          }
-        }
-
-        setTimeout(() => {
-          window.URL.revokeObjectURL(url);
-        }, 1000);
+        await downloadTransactionPdfJob(documentId);
+        proxy?.notifyToastSuccess?.("PDF generated successfully.");
       } catch (error) {
         console.error("Error generating transaction PDF:", error);
         proxy?.notifyError?.(

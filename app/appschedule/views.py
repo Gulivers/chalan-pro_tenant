@@ -426,166 +426,60 @@ class EventChatViewSet(viewsets.ViewSet):
 @permission_classes([IsAuthenticated])
 @api_view(['GET'])
 def download_schedule_pdf(request):
+    """Sync schedule PDF (compat). SPA should use create_schedule_pdf_job."""
+    from apptransactions.pdf_service import pdf_response_payload
+    from .pdf_service import build_schedule_pdf
+
     start_at = request.GET.get('start_at')
     end_at = request.GET.get('end_at')
+    if not start_at or not end_at:
+        return Response({'error': 'start_at and end_at are required'}, status=400)
+    try:
+        pdf_bytes, filename = build_schedule_pdf(start_at, end_at, request)
+        return Response(pdf_response_payload(pdf_bytes, filename), status=200)
+    except ValueError as exc:
+        return Response({'error': str(exc)}, status=400)
+    except Exception:
+        logger = __import__('logging').getLogger(__name__)
+        logger.exception('Error generating schedule PDF')
+        return Response({'detail': 'An unexpected error occurred.'}, status=500)
 
+
+@permission_classes([IsAuthenticated])
+@api_view(['POST'])
+def create_schedule_pdf_job(request):
+    """Enqueue async schedule PDF; returns 202 { job_id }."""
+    from apptransactions.pdf_jobs import PdfJobError, enqueue_pdf_job
+    from utils.tenant_branding import get_tenant_logo_url
+    from .pdf_service import build_schedule_pdf
+
+    start_at = request.data.get('start_at') or request.GET.get('start_at')
+    end_at = request.data.get('end_at') or request.GET.get('end_at')
     if not start_at or not end_at:
         return Response({'error': 'start_at and end_at are required'}, status=400)
 
-    start_date = parse_date(start_at)
-    end_date = parse_date(end_at)
-
-    # end_date se toma como tope, no inclusive
-    days = []
-    current = start_date
-    while current < end_date:
-        days.append(current)
-        current += timedelta(days=1)
-
-    # Consulta eventos cruzados en el rango
-    q = Q()
-    q &= (Q(date__lte=start_date, end_dt__gte=start_date) |
-          Q(date__gte=start_date, date__lt=end_date) |
-          Q(date__lte=start_date, end_dt__lt=end_date))
-    q &= (Q(date__lte=end_date, end_dt__gte=end_date) |
-          Q(date__gte=start_date, date__lte=end_date) |
-          Q(end_dt__gte=start_date, end_dt__lte=end_date))
-
-    events = Event.objects.select_related(
-        'crew', 'crew__category', 'absence_reason'
-    ).filter(q, deleted=False)
-
-    tenant = resolve_request_tenant(request)
-    show_crew_resources = bool(
-        getattr(tenant, 'schedule_show_crew_resources', True)
-    ) if tenant is not None else True
-
-    logo_url = get_tenant_logo_url(request)
-    date_range = (
-        f"{start_date.strftime('%b %d')} – "
-        f"{(end_date - timedelta(days=1)).strftime('%b %d, %Y')}"
-    )
-
-    if show_crew_resources:
-        all_crews = Crew.objects.select_related('category').filter(status=True)
-        categorized_events = defaultdict(
-            lambda: defaultdict(lambda: defaultdict(list))
+    tenant = getattr(connection, 'tenant', None)
+    schema_name = getattr(tenant, 'schema_name', None) or connection.schema_name
+    try:
+        logo_url = get_tenant_logo_url(request)
+        scheme = 'https' if request.is_secure() else 'http'
+        job_id = enqueue_pdf_job(
+            schema_name=schema_name,
+            kind='schedule',
+            host=request.get_host(),
+            scheme=scheme,
+            logo_url=logo_url,
+            builder=build_schedule_pdf,
+            builder_args=(start_at, end_at),
+            ref_id=f'{start_at}:{end_at}',
         )
-
-        for crew in all_crews:
-            if crew.category:
-                categorized_events[crew.category.name][crew.name]
-
-        for event in events:
-            if not event.crew or not event.crew.category:
-                continue
-
-            crew_name = event.crew.name
-            category_name = event.crew.category.name
-            current = event.date
-            while current < event.end_dt:
-                if start_date <= current <= end_date:
-                    if event.is_absence and event.absence_reason:
-                        absence_text = f"🛑 Absence: {event.absence_reason.name}"
-                        if event.description:
-                            absence_text += f" – {event.description}"
-                        categorized_events[category_name][crew_name][current].append(
-                            absence_text
-                        )
-                    else:
-                        if current == event.date:
-                            categorized_events[category_name][crew_name][current].append(
-                                event
-                            )
-                        else:
-                            categorized_events[category_name][crew_name][current].append(
-                                "Finishing up work"
-                            )
-                current += timedelta(days=1)
-
-        categorized_events_clean = {
-            cat: {
-                crew: dict(day_map)
-                for crew, day_map in crews.items()
-            }
-            for cat, crews in categorized_events.items()
-        }
-        template_name = 'schedule_pdf.html'
-        context = {
-            'categorized_events': categorized_events_clean,
-            'date_range': date_range,
-            'days': days,
-            'logo_url': logo_url,
-        }
-    else:
-        # No Crew column: group by category → day; crew name inside each cell entry
-        categorized_by_day = defaultdict(lambda: defaultdict(list))
-        category_order = []
-
-        all_crews = Crew.objects.select_related('category').filter(status=True)
-        for crew in all_crews:
-            if crew.category and crew.category.name not in category_order:
-                category_order.append(crew.category.name)
-                categorized_by_day[crew.category.name]
-
-        for event in events:
-            if not event.crew or not event.crew.category:
-                continue
-
-            crew_name = event.crew.name
-            category_name = event.crew.category.name
-            if category_name not in category_order:
-                category_order.append(category_name)
-
-            current = event.date
-            while current < event.end_dt:
-                if start_date <= current <= end_date:
-                    if event.is_absence and event.absence_reason:
-                        absence_text = f"🛑 Absence: {event.absence_reason.name}"
-                        if event.description:
-                            absence_text += f" – {event.description}"
-                        categorized_by_day[category_name][current].append({
-                            'crew_name': crew_name,
-                            'kind': 'absence',
-                            'text': absence_text,
-                        })
-                    elif current == event.date:
-                        categorized_by_day[category_name][current].append({
-                            'crew_name': crew_name,
-                            'kind': 'event',
-                            'title': event.title,
-                            'description': event.description or '',
-                            'extended_service': bool(event.extended_service),
-                        })
-                    else:
-                        categorized_by_day[category_name][current].append({
-                            'crew_name': crew_name,
-                            'kind': 'finishing',
-                            'text': 'Finishing up work',
-                        })
-                current += timedelta(days=1)
-
-        categorized_events_clean = {
-            cat: dict(categorized_by_day[cat])
-            for cat in category_order
-        }
-        template_name = 'schedule_pdf_no_crew.html'
-        context = {
-            'categorized_events': categorized_events_clean,
-            'date_range': date_range,
-            'days': days,
-            'logo_url': logo_url,
-        }
-
-    html = render_to_string(template_name, context)
-    font_config = FontConfiguration()
-    pdf_file = HTML(string=html).write_pdf(font_config=font_config)
-
-    return Response({
-        'file': base64.b64encode(pdf_file),
-        'filename': f'schedule_{start_at}_to_{end_at}.pdf',
-        'file_type': 'application/pdf'
-    }, status=200)
+        return Response({'job_id': job_id}, status=status.HTTP_202_ACCEPTED)
+    except PdfJobError as exc:
+        return Response({'detail': str(exc)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    except Exception:
+        logger = __import__('logging').getLogger(__name__)
+        logger.exception('Error enqueueing schedule PDF job')
+        return Response({'detail': 'Could not start PDF job.'}, status=500)
 
 
 class MyEventsView(APIView):
