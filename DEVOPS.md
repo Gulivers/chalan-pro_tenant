@@ -185,7 +185,7 @@ sudo /opt/chalanpro/scripts/restore_backup_VPS.sh YYYYMMDD_HHMMSS
 - **Un solo compose en producción:** `docker-compose.yml`. No exponer PgAdmin a internet si no es necesario; restringir por firewall o no mapear puerto en producción.
 - **Logs:** usar `docker compose logs`; si se centraliza en ficheros, rotar con logrotate.
 - **Actualizaciones de seguridad:** mantener Ubuntu y las imágenes base (postgres, nginx, python) actualizadas; revisar CVE y renovar imágenes cuando proceda.
-- **Healthchecks:** el compose ya define healthcheck para `postgres`; `depends_on` con `condition: service_healthy` para el backend. Mantener este patrón.
+- **Healthchecks:** `postgres` y `redis` (arranque + `depends_on`); `backend` → `GET /api/health/` (~30 s); `nginx` → `GET /healthz` en puerto 80 interno. Todos con `restart: unless-stopped`. Uptime externo: Better Stack (solo web) → ver `app/readme/README_RESUMEN_GENERAL.md` §1.4.
 
 ### PostgreSQL: puerto y conexiones (VPS)
 

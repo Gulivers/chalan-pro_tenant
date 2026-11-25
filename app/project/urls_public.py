@@ -12,6 +12,7 @@ from rest_framework.response import Response
 import os
 
 from project.media_access import serve_signed_media
+from project.health import health
 
 # Vista raíz del API
 @api_view(['GET'])
@@ -42,6 +43,7 @@ def api_root(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
+    path('api/health/', health, name='api-health-public'),
     path('api/', api_root, name='api-root'),  # Vista raíz del API
     # Incluir URLs de las apps (ya tienen el prefijo api/ en sus rutas)
     path('', include('appcore.urls')),
