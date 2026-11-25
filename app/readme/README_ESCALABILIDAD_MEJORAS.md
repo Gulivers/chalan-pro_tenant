@@ -59,6 +59,7 @@ Orden sugerido de ataque (no escalar cajas a ciegas):
 | P1 | A-02 | Workers dedicados a WeasyPrint (separar de Daphne) | A / H | pendiente | prod |
 | P1 | V-01 | Optimizar `DocumentSerializer.create/update` (bulk, menos logs, menos round-trips) | V | pendiente | ambos |
 | P1 | O-01 | Métricas Daphne/Redis/Postgres + alertas de cola PDF | O | pendiente | prod |
+| P2 | O-02 | Autoheal de contenedores `unhealthy` (opcional; Compose no reinicia solo por unhealthy) | O | pendiente | prod |
 | P2 | D-01 | Auditoría índices y `EXPLAIN` en tenants demo (docs 50+ líneas) | D / V | pendiente | ambos |
 | P2 | H-01 | Evaluar Daphne ×3 solo si VPS ≥4 vCPU y métricas lo justifican | H | pendiente | prod |
 | P2 | D-02 | Política de limpieza `media/pdf_jobs/` (TTL disco) | D | pendiente | ambos |
@@ -138,7 +139,12 @@ Orden sugerido de ataque (no escalar cajas a ciegas):
 - **Prioridad:** P1  
 - **Estado:** pendiente  
 - **Qué medir:** duración PDF jobs, cola Redis, latencia `/api/documents/`, saturación Daphne, conexiones Postgres.  
-- **Base ya hecha:** timeouts Nginx API 120s / PDF sync 180s / WS 86400.
+- **Base ya hecha:** timeouts Nginx API 120s / PDF sync 180s / WS 86400; healthchecks Docker + Better Stack Uptime (email).
+
+#### O-02 — Autoheal opcional
+- **Prioridad:** P2  
+- **Estado:** pendiente  
+- **Contexto:** `restart: unless-stopped` cubre crash; Compose no recrea por `unhealthy`. Sidecar liviano (`willfarrell/autoheal`) solo si hay hung reales sin crash.
 
 ---
 
@@ -149,6 +155,7 @@ Orden sugerido de ataque (no escalar cajas a ciegas):
 | 2026-11 | H-00 | Daphne ×2 (`--scale backend=2`) + Redis Channels | H |
 | 2026-11 | A-00 | PDF async (transacciones, MR, schedule, contratos) + CSS sin CDN | A |
 | 2026-11 | O-00 | Timeouts Nginx API/PDF; cron wildcard `jobrhythm.net` | O |
+| 2026-11 | O-00b | `GET /api/health/` + healthcheck backend/nginx; docs Better Stack Uptime (§1.4) | O |
 | 2026-11 | DOC-00 | Diagrama §1.1 README_RESUMEN_GENERAL + regla `pdf-async-jobs.mdc` | — |
 
 Detalle operativo: `docker-compose.yml`, `scripts/deploy-vps.sh`, `apptransactions/pdf_jobs.py`, `vuefrontend/src/utils/downloadPdfJob.js`.

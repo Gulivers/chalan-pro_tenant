@@ -59,6 +59,16 @@ services:
     command: >
       sh -c "python manage.py collectstatic --noinput &&
              daphne -b 0.0.0.0 -p 8000 project.asgi:application"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8000/api/health/', headers={'Host': 'localhost'}), timeout=5).read()\"",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
     restart: unless-stopped
 
   # Servicio opcional para desarrollo frontend con hot-reload

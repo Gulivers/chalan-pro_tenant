@@ -7,7 +7,8 @@
   - [1.1 Diagrama de Contenedores y Servicios](#11-diagrama-de-contenedores-y-servicios)
   - [1.2 Descripción de Servicios](#12-descripción-de-servicios)
   - [1.3 Flujo de Peticiones](#13-flujo-de-peticiones)
-- [Escalabilidad y mejoras pendientes](./README_ESCALABILIDAD_MEJORAS.md) (backlog P0–P3 por tipo)
+  - [1.4 Salud de contenedores y Better Stack Uptime](#14-salud-de-contenedores-y-better-stack-uptime)
+    - [Escalabilidad y mejoras pendientes](./README_ESCALABILIDAD_MEJORAS.md) (backlog P0–P3 por tipo)
 - [2. Estructura General del Proyecto](#2-estructura-general-del-proyecto)
   - [2.1 Diagrama de Estructura de Archivos](#21-diagrama-de-estructura-de-archivos)
   - [2.2 Descripción de Archivos Clave](#22-descripción-de-archivos-clave)
@@ -160,8 +161,8 @@ Horizontal scaling del API: Nginx hace round-robin a **2 réplicas Daphne** (`--
 
 | Servicio       | Contenedor                         | Puerto         | Descripción                                                              |
 | -------------- | ---------------------------------- | -------------- | ------------------------------------------------------------------------ |
-| **Nginx**      | `chalanpro_nginx`                  | 80, 443        | Reverse proxy, SSL/TLS, round-robin a las réplicas `backend`             |
-| **Backend**    | `chalanpro-backend-1`, `-2` (scale)| 8000 (interno) | API Django REST + Admin + WebSocket; 2× Daphne (ASGI)                    |
+| **Nginx**      | `chalanpro_nginx`                  | 80, 443        | Reverse proxy, SSL/TLS, LB; healthcheck interno `GET /healthz`           |
+| **Backend**    | `chalanpro-backend-1`, `-2` (scale)| 8000 (interno) | API Django + WS; 2× Daphne; healthcheck `GET /api/health/`               |
 | **Redis**      | `chalanpro_redis`                  | 6379 (interno) | Channel layer + estado de jobs PDF async (`REDIS_URL`)                   |
 | **Frontend**   | `chalanpro_frontend`               | -              | Build de Vue.js; estáticos servidos por Nginx                            |
 | **PostgreSQL** | `chalanpro_postgres`               | 5432           | Base de datos multi-tenant con schemas aislados (única para ambos backends) |
@@ -192,6 +193,70 @@ Horizontal scaling del API: Nginx hace round-robin a **2 réplicas Daphne** (`--
    - Nginx reescribe `X-Forwarded-Host` con `$host`. El origen del handshake se valida contra `ALLOWED_HOSTS`
    - Rutas: `/ws/calendar-updates/`, `/ws/schedule/event/{id}/`, `/ws/schedule/event/{id}/chat/`, `/ws/schedule/unread/user/{id}/`
 
+### 1.4 Salud de contenedores y Better Stack Uptime
+
+Objetivo con poca RAM: **recuperar** caídas de proceso (Docker) y **avisar** caídas visibles desde Internet (Better Stack), sin agentes ni Prometheus en el VPS.
+
+#### 1.4.1 Autorreparación nativa (Docker)
+
+| Pieza | Qué hace |
+|-------|----------|
+| `restart: unless-stopped` | Si el contenedor **sale** (crash), Docker lo vuelve a levantar |
+| `healthcheck` | Marca `healthy` / `unhealthy` en `docker compose ps` (probe liviano, intervalo ~30 s) |
+
+**Probes (no generan PDF ni lógica de negocio):**
+
+| Servicio | Probe | Notas |
+|----------|-------|--------|
+| Postgres / Redis | `pg_isready` / `redis-cli ping` | Ya existían; `depends_on` del backend |
+| Backend | `GET /api/health/` (Host `api.jobrhythm.net`) | `SELECT 1`; 200=`ok`, 503=DB down. Código: `app/project/health.py` |
+| Nginx | `GET http://127.0.0.1/healthz` | Server `default_server` en puerto 80; sin TLS ni redirect |
+
+```bash
+# Estado de salud
+cd /opt/chalanpro && docker compose ps
+
+# Probar endpoint público (uptime / curl)
+curl -sS https://api.jobrhythm.net/api/health/
+# {"status":"ok"}
+
+# Logs si algo falló (el “porqué” sigue en consola)
+docker compose logs --tail=200 backend nginx
+```
+
+**Límites:** Compose **no** reinicia solo por estado `unhealthy` (sí por crash + `restart`). Un Daphne “colgado” pero vivo puede quedar unhealthy hasta reinicio manual (`docker compose restart backend`) o un sidecar tipo autoheal (no desplegado aún; ver backlog). Better Stack no sustituye estos logs.
+
+#### 1.4.2 Better Stack Uptime (solo web) — cómo usarlo
+
+Servicio externo: pega a una URL HTTPS desde fuera. **Cero RAM** en el VPS. No explica PDF/N+1/RAM; solo “¿responde el sitio?”. El detalle → `docker compose logs`.
+
+**Cuenta y alerta (email al móvil):**
+
+1. Crear cuenta en [https://betterstack.com](https://betterstack.com) (plan Free de Uptime basta: monitors + email).
+2. Usar / verificar el email **`getjobrhythm@gmail.com`** (Gmail en el teléfono).
+3. En el monitor o en la política de escalado, activar notificación por **E-mail** hacia esa cuenta.
+4. En Gmail: filtrar/whitelist remitentes `@betterstack.com` para que no vaya a spam; activar notificaciones de la app Gmail en el móvil.
+
+**Monitores recomendados (HTTP status 2xx):**
+
+| Monitor | URL | Intervalo sugerido | Qué cubre |
+|---------|-----|--------------------|-----------|
+| API health | `https://api.jobrhythm.net/api/health/` | 1–3 min | Daphne + Postgres (vía `SELECT 1`) |
+| SPA / login | `https://jobrhythm.net/` o `/login/` | 3–5 min | Nginx + estáticos frontend |
+| Landing (opcional) | `https://www.getjobrhythm.com/` | 5–10 min | Marketing |
+
+No hace falta monitorear `/healthz` desde Internet (solo Docker interno).
+
+**Al crear cada monitor en Better Stack:**
+
+1. **URL** = una de la tabla.
+2. Esperar status **2xx** (o “status code” 200).
+3. **How should we notify** → **E-mail** (y opcional Slack más adelante).
+4. Guardar → **Send test alert** para confirmar que llega a `getjobrhythm@gmail.com`.
+5. Cuando haya incidente: el email enlaza al panel; en el VPS revisar logs como arriba.
+
+**Qué no hace Uptime:** causa raíz (PDF sync, N+1, OOM, Redis). Para telemetría interna ver `README_ESCALABILIDAD_MEJORAS.md` (O-01).
+
 ---
 
 ## 2. Estructura General del Proyecto
@@ -210,6 +275,7 @@ Horizontal scaling del API: Nginx hace round-robin a **2 réplicas Daphne** (`--
 │   │
 │   ├── project/                           # Configuración principal de Django
 │   │   ├── settings.py                    # Configuración Django (ALLOWED_HOSTS, CSRF, etc.)
+│   │   ├── health.py                      # GET /api/health/ (probe liviano Docker/Uptime)
 │   │   ├── urls.py                        # URLs principales (tenant-specific)
 │   │   ├── urls_public.py                 # URLs para schema público (onboarding, admin global)
 │   │   ├── wsgi.py                        # WSGI application (legacy, no usado)
@@ -1393,6 +1459,7 @@ En tablas DNS de este documento, `<IP-VPS>` significa la IP pública actual del 
 | **Frontend (www)**     | `https://www.jobrhythm.net`                        | Frontend Vue.js (www)            |
 | **Onboarding**         | `https://www.jobrhythm.net/onboarding`             | Formulario de creación de tenant |
 | **API REST**           | `https://api.jobrhythm.net/api/`                   | API REST de Django               |
+| **Health (probe)**     | `https://api.jobrhythm.net/api/health/`            | Liveness liviano (Docker + Better Stack) |
 | **Admin Django**       | `https://api.jobrhythm.net/admin/`                 | Panel de administración          |
 | **Tenant Login**       | `https://{tenant}.jobrhythm.net/login/`            | Login de tenant específico       |
 | **Landing**            | `https://getjobrhythm.com`                         | Web de marketing                 |

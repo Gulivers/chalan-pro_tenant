@@ -19,10 +19,12 @@ from django.contrib import admin
 from django.conf import settings
 from django.urls import path, include
 
+from project.health import health
 from tenants.views_setup import TenantSetupView
 
 urlpatterns = [
     path('admin/', admin.site.urls, name='admin'),
+    path('api/health/', health, name='api-health'),
     path('', include('appauth.urls')),
     path('', include('appcore.urls')),
     path('', include('ctrctsapp.urls')),
