@@ -53,10 +53,12 @@
         </p>
         <ul v-if="summary.phases?.length" class="jr-wa-progress__phases">
           <li v-for="phase in summary.phases" :key="phase.template_id || phase.category_id">
-            <span class="jr-wa-progress__phase-name">{{ phase.category_name || phase.template_name }}</span>
+            <span class="jr-wa-progress__phase-name">{{
+              phaseName(phase)
+            }}</span>
             <JRBadge
-              :value="stateLabel(phase.state)"
-              :severity="stateSeverity(phase.state)" />
+              :value="phaseStatusLabel(phase)"
+              :severity="phaseStatusSeverity(phase)" />
           </li>
         </ul>
         <p v-if="summary.overall_state !== 'completed' && hasMissingPhase" class="jr-wa-progress__muted">
@@ -70,9 +72,11 @@
 <script>
 import axios from 'axios';
 import { JRBadge } from '@/ui';
+import { tStatus } from '@/utils/statusI18n';
 import {
   workAccountStateLabel,
   workAccountStateSeverity,
+  workOrderStatusSeverity,
 } from '@/utils/workOrderStatus';
 
 export default {
@@ -129,8 +133,27 @@ export default {
     this.alive = false;
   },
   methods: {
-    stateLabel: workAccountStateLabel,
-    stateSeverity: workAccountStateSeverity,
+    phaseName(phase) {
+      const raw = phase?.category_name || phase?.template_name || '';
+      return String(raw).trim().toUpperCase();
+    },
+    phaseStatusLabel(phase) {
+      // Prefer the leading Work Order's real status (e.g. Corrections Required)
+      // over the coarse phase rollup (not_started / in_progress / completed).
+      if (phase?.status_code || phase?.status_name) {
+        return tStatus(phase.status_code, phase.status_name);
+      }
+      return workAccountStateLabel(phase?.state);
+    },
+    phaseStatusSeverity(phase) {
+      if (phase?.status_code || phase?.status_name) {
+        return workOrderStatusSeverity({
+          status_code: phase.status_code,
+          is_terminal: !!phase.status_is_terminal,
+        });
+      }
+      return workAccountStateSeverity(phase?.state);
+    },
     async load() {
       if (!this.workAccountId) {
         this.summary = null;

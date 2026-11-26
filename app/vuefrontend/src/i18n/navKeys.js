@@ -4,6 +4,7 @@ export const NAV_LABEL_KEYS = {
   Transactions: 'nav.transactions',
   'Piece Work Contracts': 'nav.pieceWorkContracts',
   'Work Accounts': 'nav.workAccounts',
+  'Work Accounts Viewer': 'nav.workAccountsViewer',
   'Work Order Viewer': 'nav.workOrderViewer',
   'Missing Material': 'nav.missingMaterial',
   'Measure the Operation': 'nav.measureOperation',

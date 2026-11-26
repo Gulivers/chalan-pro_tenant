@@ -6,9 +6,16 @@
 
     <div class="jr-house-chat__window">
       <div class="jr-house-chat__header">
-        <h3 class="jr-house-chat__title">Chat for Job</h3>
+        <h3 class="jr-house-chat__title">
+          {{ $t("workOrderViewer.chatForWorkOrder") }}
+        </h3>
         <span v-if="messages.length" class="jr-house-chat__count">
-          {{ messages.length }} {{ messages.length === 1 ? 'message' : 'messages' }}
+          {{ messages.length }}
+          {{
+            messages.length === 1
+              ? $t("workOrderViewer.messagesOne")
+              : $t("workOrderViewer.messagesMany")
+          }}
         </span>
       </div>
 
@@ -21,8 +28,8 @@
           aria-live="polite">
           <JREmptyState
             v-if="!messages.length"
-            title="No messages yet"
-            description="Start the conversation for this work order." />
+            :title="$t('workOrderViewer.chatEmptyTitle')"
+            :description="$t('workOrderViewer.chatEmptyDesc')" />
           <div
             v-for="message in messages"
             :key="message.id"
@@ -47,15 +54,15 @@
           inputId="house-chat-input"
           v-model="newMessage"
           type="text"
-          placeholder="Type a message…"
+          :placeholder="$t('workOrderViewer.chatPlaceholder')"
           autocomplete="off"
           :disabled="!canSendMessage" />
         <JRButton
           type="submit"
           size="sm"
           :disabled="!canSendMessage || !newMessage.trim()"
-          aria-label="Send message">
-          Send
+          :aria-label="$t('workOrderViewer.chatSend')">
+          {{ $t("workOrderViewer.chatSend") }}
         </JRButton>
       </form>
     </div>
