@@ -34,155 +34,229 @@
     </template>
 
     <template v-else>
-      <!-- Page Header (reactive to selected Work Order) -->
-      <header class="jr-wov__header">
-        <div class="jr-wov__header-main">
-          <div class="jr-wov__header-text">
-            <span class="jr-wov__label">
-              {{
-                isGeneralMode && !workAccount
-                  ? $t("workOrderViewer.operations")
-                  : $t("workOrderViewer.workAccount")
-              }}
-            </span>
-            <h1 class="jr-wov__title">{{ displayHeaderTitle }}</h1>
-            <p
-              v-if="!headerMetaItems.length && displayHeaderSubtitle"
-              class="jr-wov__desc">
-              {{ displayHeaderSubtitle }}
-            </p>
-          </div>
+      <nav
+        v-if="breadcrumbItems.length"
+        class="jr-wov__crumb"
+        :aria-label="$t('workOrderViewer.crumbWorkAccounts')">
+        <template
+          v-for="(item, index) in breadcrumbItems"
+          :key="`${item.label}-${index}`">
+          <RouterLink
+            v-if="item.to"
+            class="jr-wov__crumb-link"
+            :to="item.to">
+            {{ item.label }}
+          </RouterLink>
+          <span v-else class="jr-wov__crumb-current">{{ item.label }}</span>
+          <span
+            v-if="index < breadcrumbItems.length - 1"
+            class="jr-wov__crumb-sep"
+            aria-hidden="true">
+            /
+          </span>
+        </template>
+      </nav>
 
-          <div class="jr-wov__header-actions">
-            <JRButton
-              type="button"
-              variant="ghost"
-              size="sm"
-              class="jr-wov__back-btn"
-              @click="goToList">
-              <svg
-                class="jr-wov__btn-icon"
-                width="20"
-                height="20"
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.75"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <path d="M10 12L6 8l4-4" />
-              </svg>
-              {{ $t("common.backToList") }}
-            </JRButton>
-            <JRButton
-              v-if="canEdit && effectiveWorkAccountId"
-              type="button"
-              variant="secondary"
-              size="sm"
-              @click="goToEdit">
-              {{ $t("common.edit") }}
-            </JRButton>
-          </div>
-        </div>
-
-        <div class="jr-wov__meta-row">
-          <dl v-if="headerMetaItems.length" class="jr-wov__meta">
-            <div
-              v-for="item in headerMetaItems"
-              :key="item.label"
-              class="jr-wov__meta-item">
-              <dt class="jr-wov__meta-label">{{ item.label }}</dt>
-              <dd class="jr-wov__meta-value" :title="item.value">
-                {{ item.value }}
-              </dd>
-            </div>
-          </dl>
-          <div class="jr-wov__meta-actions">
-            <JRButton
-              type="button"
-              :variant="sidebarOpen ? 'primary' : 'secondary'"
-              size="sm"
-              :aria-expanded="sidebarOpen ? 'true' : 'false'"
-              :aria-controls="
-                isMobile ? 'jr-wov-orders-drawer' : 'jr-wov-orders-sidebar'
-              "
-              @click="toggleSidebar">
-              <svg
-                class="jr-wov__btn-icon jr-wov__btn-icon--sidebar"
-                width="20"
-                height="20"
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true">
-                <rect x="1.75" y="2" width="12.5" height="12" rx="0" />
-                <line x1="10.5" y1="2" x2="10.5" y2="14" />
-                <path
-                  d="M10.5 2H14.25V14H10.5Z"
-                  :fill="sidebarOpen ? 'currentColor' : 'transparent'"
-                  :opacity="sidebarOpen ? '0.35' : '0'"
-                  stroke="none" />
-              </svg>
-              {{ $t("workOrderViewer.workOrders") }}
-              <JRBadge
-                v-if="ordersBadgeCount"
-                class="jr-wov__orders-badge"
-                :value="ordersBadgeCount"
-                :severity="sidebarOpen ? 'secondary' : 'info'" />
-            </JRButton>
-          </div>
-        </div>
-      </header>
-
-      <!-- 2-Column Responsive Layout (desktop: tabs left, sidebar right; mobile: tabs full width) -->
+      <!--
+        Desktop: sidebar aligns with header top (taller orders list).
+        Left column = WA head + tabs; right = Work Orders rail.
+      -->
       <div
         class="jr-wov__layout"
         :class="{
           'jr-wov__layout--sidebar-collapsed': !sidebarOpen || isMobile,
         }">
         <div class="jr-wov__main-col">
+          <header class="jr-wov__header">
+            <div class="jr-wov__header-main">
+              <div class="jr-wov__header-text">
+                <span class="jr-wov__label">
+                  {{
+                    isGeneralMode && !workAccount
+                      ? $t("workOrderViewer.operations")
+                      : $t("workOrderViewer.workAccount")
+                  }}
+                </span>
+                <h1 class="jr-wov__title">{{ displayHeaderTitle }}</h1>
+
+                <div
+                  v-if="activeOrderChip"
+                  class="jr-wov__active-order"
+                  role="status"
+                  :aria-label="$t('workOrderViewer.activeOrder')">
+                  <span class="jr-wov__active-order-label">
+                    {{ $t("workOrderViewer.activeOrder") }}
+                  </span>
+                  <span class="jr-wov__active-order-id">
+                    {{
+                      $t("workOrderViewer.orderChip", {
+                        id: activeOrderChip.id,
+                      })
+                    }}
+                  </span>
+                  <template v-if="activeOrderChip.phase">
+                    <span class="jr-wov__active-order-sep" aria-hidden="true"
+                      >·</span
+                    >
+                    <JRBadge :value="activeOrderChip.phase" severity="info" />
+                  </template>
+                  <template v-if="activeOrderChip.crew">
+                    <span class="jr-wov__active-order-sep" aria-hidden="true"
+                      >·</span
+                    >
+                    <strong>{{ activeOrderChip.crew }}</strong>
+                  </template>
+                  <template v-if="activeOrderChip.date">
+                    <span class="jr-wov__active-order-sep" aria-hidden="true"
+                      >·</span
+                    >
+                    <span>{{ activeOrderChip.date }}</span>
+                  </template>
+                  <template v-if="activeOrderChip.status">
+                    <span class="jr-wov__active-order-sep" aria-hidden="true"
+                      >·</span
+                    >
+                    <JRBadge
+                      :value="activeOrderChip.status"
+                      :severity="activeOrderChip.statusSeverity" />
+                  </template>
+                </div>
+
+                <p
+                  v-else-if="!headerMetaItems.length && displayHeaderSubtitle"
+                  class="jr-wov__desc">
+                  {{ displayHeaderSubtitle }}
+                </p>
+              </div>
+
+              <div class="jr-wov__header-actions">
+                <JRButton
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  class="jr-wov__back-btn"
+                  @click="goToList">
+                  <svg
+                    class="jr-wov__btn-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true">
+                    <path d="M10 12L6 8l4-4" />
+                  </svg>
+                  {{ $t("common.backToList") }}
+                </JRButton>
+                <JRButton
+                  v-if="canEdit && effectiveWorkAccountId"
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  @click="goToEdit">
+                  {{ $t("common.edit") }}
+                </JRButton>
+              </div>
+            </div>
+
+            <div class="jr-wov__meta-row">
+              <dl v-if="headerMetaItems.length" class="jr-wov__meta">
+                <div
+                  v-for="item in headerMetaItems"
+                  :key="item.label"
+                  class="jr-wov__meta-item">
+                  <dt class="jr-wov__meta-label">{{ item.label }}</dt>
+                  <dd class="jr-wov__meta-value" :title="item.value">
+                    {{ item.value }}
+                  </dd>
+                </div>
+              </dl>
+              <div class="jr-wov__meta-actions">
+                <JRButton
+                  type="button"
+                  class="jr-wov__orders-toggle"
+                  :variant="sidebarOpen ? 'secondary' : 'primary'"
+                  size="sm"
+                  :aria-expanded="sidebarOpen ? 'true' : 'false'"
+                  :aria-controls="
+                    isMobile ? 'jr-wov-orders-drawer' : 'jr-wov-orders-sidebar'
+                  "
+                  @click="toggleSidebar">
+                  <svg
+                    class="jr-wov__btn-icon jr-wov__btn-icon--sidebar"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true">
+                    <rect x="1.75" y="2" width="12.5" height="12" rx="0" />
+                    <line x1="10.5" y1="2" x2="10.5" y2="14" />
+                    <path
+                      d="M10.5 2H14.25V14H10.5Z"
+                      :fill="sidebarOpen ? 'currentColor' : 'transparent'"
+                      :opacity="sidebarOpen ? '0.35' : '0'"
+                      stroke="none" />
+                  </svg>
+                  {{ $t("workOrderViewer.workOrders") }}
+                  <JRBadge
+                    v-if="ordersBadgeCount"
+                    class="jr-wov__orders-badge"
+                    :value="ordersBadgeCount"
+                    :severity="sidebarOpen ? 'info' : 'secondary'" />
+                </JRButton>
+              </div>
+            </div>
+
+            <WorkAccountProgressSummary
+              v-if="effectiveWorkAccountId"
+              class="jr-wov__header-progress"
+              :work-account-id="effectiveWorkAccountId"
+              :refresh-key="rollupRefreshKey" />
+          </header>
+
+          <JREmptyState
+            v-if="!scheduleEventId"
+            :title="$t('workOrderViewer.selectOrderGuideTitle')"
+            :description="$t('workOrderViewer.selectOrderGuideDesc')">
+            <JRButton
+              type="button"
+              variant="secondary"
+              size="sm"
+              @click="sidebarOpen = true">
+              {{ $t("workOrderViewer.workOrders") }}
+            </JRButton>
+          </JREmptyState>
           <WorkOrderViewerTabs
+            v-else
             :work-account-id="effectiveWorkAccountId"
             :event-id="scheduleEventId"
             :initial-tab="initialTab"
             @status-changed="onWorkOrderStatusChanged" />
         </div>
 
-        <!-- Desktop Right Sidebar (in-flow on desktop when sidebarOpen is true) -->
         <aside
           v-if="!isMobile && sidebarOpen"
           id="jr-wov-orders-sidebar"
           class="jr-wov__sidebar-col"
           :aria-label="$t('workOrderViewer.workOrders')">
-          <WorkAccountProgressSummary
-            v-if="effectiveWorkAccountId"
-            :work-account-id="effectiveWorkAccountId"
-            :refresh-key="rollupRefreshKey" />
           <WorkOrderSidebar
-            :work-account="workAccount"
-            :events="events"
-            :selected-event-id="scheduleEventId"
-            :total-count="totalEventsCount"
-            :loading="isEventsLoading"
-            :has-previous="hasPrevious"
-            :has-next="hasNext"
-            :current-page="currentPage"
-            :is-general-mode="browseAllWorkOrders"
-            :work-account-filter-active="workAccountFilterActive"
-            :unread-map="unreadMap"
+            v-bind="sidebarBindings"
             @select-event="handleSelectEvent"
             @search="handleSearch"
             @prev-page="handlePrevPage"
             @next-page="handleNextPage"
-            @clear-work-account-filter="clearWorkAccountFilter" />
+            @clear-work-account-filter="clearWorkAccountFilter"
+            @update:ops-scope="onOpsScope" />
         </aside>
       </div>
 
-      <!-- Mobile Offcanvas Drawer (overlay, right, backdrop) -->
       <JRDrawer
         v-if="isMobile"
         id="jr-wov-orders-drawer"
@@ -194,28 +268,36 @@
         :block-scroll="true"
         :header="$t('workOrderViewer.workOrders')"
         @update:visible="onSidebarVisible">
-        <WorkAccountProgressSummary
-          v-if="effectiveWorkAccountId"
-          :work-account-id="effectiveWorkAccountId"
-          :refresh-key="rollupRefreshKey" />
         <WorkOrderSidebar
-          :work-account="workAccount"
-          :events="events"
-          :selected-event-id="scheduleEventId"
-          :total-count="totalEventsCount"
-          :loading="isEventsLoading"
-          :has-previous="hasPrevious"
-          :has-next="hasNext"
-          :current-page="currentPage"
-          :is-general-mode="browseAllWorkOrders"
-          :work-account-filter-active="workAccountFilterActive"
-          :unread-map="unreadMap"
+          v-bind="sidebarBindings"
           @select-event="handleSelectEvent"
           @search="handleSearch"
           @prev-page="handlePrevPage"
           @next-page="handleNextPage"
-          @clear-work-account-filter="clearWorkAccountFilter" />
+          @clear-work-account-filter="clearWorkAccountFilter"
+          @update:ops-scope="onOpsScope" />
       </JRDrawer>
+
+      <div
+        v-if="isMobile"
+        class="jr-wov__mobile-sticky"
+        :aria-label="$t('workOrderViewer.workOrders')">
+        <JRButton
+          type="button"
+          class="jr-wov__orders-toggle jr-wov__orders-toggle--sticky"
+          :variant="sidebarOpen ? 'secondary' : 'primary'"
+          size="sm"
+          :aria-expanded="sidebarOpen ? 'true' : 'false'"
+          aria-controls="jr-wov-orders-drawer"
+          @click="toggleSidebar">
+          {{ $t("workOrderViewer.workOrders") }}
+          <JRBadge
+            v-if="ordersBadgeCount"
+            class="jr-wov__orders-badge"
+            :value="ordersBadgeCount"
+            :severity="sidebarOpen ? 'info' : 'secondary'" />
+        </JRButton>
+      </div>
     </template>
   </JRPage>
 </template>
@@ -233,6 +315,7 @@ import {
 } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
+import dayjs from "dayjs";
 import WorkOrderSidebar from "@components/work-accounts/WorkOrderSidebar.vue";
 import WorkAccountProgressSummary from "@components/work-accounts/WorkAccountProgressSummary.vue";
 import WorkOrderViewerTabs from "@components/work-accounts/WorkOrderViewerTabs.vue";
@@ -241,6 +324,13 @@ import {
   resolveScheduleEventForWorkAccount,
   WORK_ORDER_VIEWER_TAB_IDS,
 } from "@/utils/resolveScheduleEventForWorkAccount";
+import {
+  pickPreferredWorkOrder,
+  resolveOrderQueryId,
+} from "@/utils/pickPreferredWorkOrder";
+import { trackWov } from "@/utils/wovTelemetry";
+import { tStatus } from "@/utils/statusI18n";
+import { workOrderStatusSeverity } from "@/utils/workOrderStatus";
 import {
   JRPage,
   JRPageHeader,
@@ -279,7 +369,16 @@ const buildWsUrl = (path) => {
 
 const isNarrowViewport = () =>
   typeof window !== "undefined" &&
-  window.matchMedia("(max-width: 1024px)").matches;
+  window.matchMedia("(max-width: 1100px)").matches;
+
+const formatPhaseLabel = (cat, fallbackGeneral) => {
+  if (!cat) return String(fallbackGeneral || "").toUpperCase();
+  const cleaned = String(cat)
+    .replace(/^[\p{Emoji}\s\d]+/u, "")
+    .trim();
+  if (!cleaned) return String(cat).toUpperCase();
+  return cleaned.toUpperCase();
+};
 
 export default {
   name: "WorkOrderViewerView",
@@ -307,7 +406,9 @@ export default {
     const isLoading = ref(true);
     const isEventsLoading = ref(false);
     const loadError = ref("");
-    const searchQuery = ref("");
+    const searchQuery = ref(
+      typeof route.query.q === "string" ? route.query.q : ""
+    );
     const currentPage = ref(1);
     const totalEventsCount = ref(0);
     const hasPrevious = ref(false);
@@ -319,6 +420,10 @@ export default {
     const sidebarOpen = ref(!isNarrowViewport());
     /** When true on a WA route, list all work orders (like /viewer). */
     const listAllWorkOrders = ref(false);
+    /** Operations inbox scope: active | leaves | all */
+    const opsScope = ref("active");
+    const sessionStartedAt = ref(Date.now());
+    const firstActionTracked = ref(false);
 
     const handleResize = () => {
       const narrow = isNarrowViewport();
@@ -467,6 +572,92 @@ export default {
       proxy?.hasPermission?.("apptransactions.change_workaccount")
     );
 
+    const activeOrderChip = computed(() => {
+      const event = selectedEvent.value;
+      if (!event?.id) return null;
+      const phase = formatPhaseLabel(
+        event.phase || event.crew_category,
+        t("workOrderViewer.generalCategory")
+      );
+      const statusCode = event.status_code || event.work_order_status_code;
+      const statusName = event.work_order_status_name;
+      const status = statusCode || statusName
+        ? tStatus(statusCode, statusName)
+        : "";
+      const dateStr = event.date;
+      const d = dateStr ? dayjs(dateStr) : null;
+      return {
+        id: event.id,
+        phase,
+        crew: event.crew_title || "",
+        date: d?.isValid() ? d.format("MM/DD") : dateStr || "",
+        status,
+        statusSeverity: workOrderStatusSeverity({
+          status_code: statusCode,
+          is_terminal: !!event.work_order_status_is_terminal,
+        }),
+      };
+    });
+
+    const breadcrumbItems = computed(() => {
+      const items = [
+        {
+          label: t("workOrderViewer.crumbWorkAccounts"),
+          to: { name: "work-accounts" },
+        },
+      ];
+      if (workAccount.value?.title) {
+        items.push({
+          label: workAccount.value.title,
+          to: workAccountId.value
+            ? {
+                name: "work-order-viewer",
+                params: { id: workAccountId.value },
+              }
+            : null,
+        });
+      } else if (isGeneralMode.value) {
+        items.push({ label: t("workOrderViewer.operations"), to: null });
+      }
+      if (activeOrderChip.value) {
+        items.push({
+          label: t("workOrderViewer.crumbOrder", {
+            id: activeOrderChip.value.id,
+            phase: activeOrderChip.value.phase,
+          }),
+          to: null,
+        });
+      }
+      return items;
+    });
+
+    const sidebarBindings = computed(() => ({
+      workAccount: workAccount.value,
+      events: events.value,
+      selectedEventId: scheduleEventId.value,
+      totalCount: totalEventsCount.value,
+      loading: isEventsLoading.value,
+      hasPrevious: hasPrevious.value,
+      hasNext: hasNext.value,
+      currentPage: currentPage.value,
+      isGeneralMode: browseAllWorkOrders.value,
+      workAccountFilterActive: workAccountFilterActive.value,
+      opsScope: opsScope.value,
+      unreadMap: unreadMap.value,
+      // Persist lupa filter across sidebar remount / order switches
+      searchQuery: searchQuery.value,
+    }));
+
+    const markFirstAction = (action) => {
+      if (firstActionTracked.value) return;
+      firstActionTracked.value = true;
+      trackWov("first_action", {
+        action,
+        ms: Date.now() - sessionStartedAt.value,
+        mode: browseAllWorkOrders.value ? "operations" : "work_account",
+      });
+    };
+
     const onWorkOrderStatusChanged = (tracking) => {
       rollupRefreshKey.value += 1;
       if (!tracking) return;
@@ -486,16 +677,20 @@ export default {
 
     const toggleSidebar = () => {
       sidebarOpen.value = !sidebarOpen.value;
+      trackWov("toggle_orders", {
+        open: sidebarOpen.value,
+        mobile: isMobile.value,
+      });
     };
 
     const onSidebarVisible = (visible) => {
       sidebarOpen.value = visible;
     };
 
-    const closeSidebarIfNarrow = () => {
-      if (isNarrowViewport()) {
-        sidebarOpen.value = false;
-      }
+    const onOpsScope = (scope) => {
+      opsScope.value = scope || "active";
+      trackWov("ops_scope", { scope: opsScope.value });
+      loadEvents(1);
     };
 
     const loadUnreadCounts = async () => {
@@ -532,12 +727,48 @@ export default {
       }
     };
 
+    const syncViewerQuery = ({
+      orderId = scheduleEventId.value,
+      search = searchQuery.value,
+    } = {}) => {
+      const nextQuery = { ...route.query };
+      if (orderId) {
+        nextQuery.order = String(orderId);
+        delete nextQuery.event;
+      } else {
+        delete nextQuery.order;
+        delete nextQuery.event;
+      }
+      const term = typeof search === "string" ? search.trim() : "";
+      if (term) {
+        nextQuery.q = term;
+      } else {
+        delete nextQuery.q;
+      }
+      const sameOrder =
+        String(route.query.order || route.query.event || "") ===
+        String(nextQuery.order || "");
+      const sameQ = String(route.query.q || "") === String(nextQuery.q || "");
+      if (sameOrder && sameQ) return;
+      router.replace({ query: nextQuery }).catch(() => {});
+    };
+
+    const applySelectedEvent = (event, { syncQuery = true } = {}) => {
+      selectedEvent.value = event || null;
+      scheduleEventId.value = event?.id ?? null;
+      if (syncQuery) {
+        syncViewerQuery({ orderId: event?.id ?? null });
+      }
+    };
+
     const loadEvents = async (page = 1) => {
       isEventsLoading.value = true;
       try {
         let url = `/api/my-events/?page=${page}`;
         if (workAccountFilterActive.value) {
           url += `&work_account=${workAccountId.value}`;
+        } else if (browseAllWorkOrders.value && opsScope.value !== "all") {
+          url += `&scope=${encodeURIComponent(opsScope.value)}`;
         }
         if (searchQuery.value.trim()) {
           url += `&search=${encodeURIComponent(searchQuery.value.trim())}`;
@@ -556,29 +787,27 @@ export default {
         hasNext.value = Boolean(data?.next);
         currentPage.value = page;
 
-        // Auto-select event
-        const targetEventId = Number(route.query.event);
-        if (targetEventId) {
-          const match = list.find((e) => e.id === targetEventId);
-          if (match) {
-            selectedEvent.value = match;
-            scheduleEventId.value = match.id;
-          } else if (list.length > 0) {
-            selectedEvent.value = list[0];
-            scheduleEventId.value = list[0].id;
-          }
-        } else if (list.length > 0) {
-          selectedEvent.value = list[0];
-          scheduleEventId.value = list[0].id;
+        const preferredId = resolveOrderQueryId(route.query);
+        const preferred = pickPreferredWorkOrder(list, preferredId);
+
+        if (preferred) {
+          applySelectedEvent(preferred, {
+            syncQuery: preferredId !== preferred.id,
+          });
         } else if (workAccountId.value && workAccountFilterActive.value) {
-          // Fallback to resolver
-          scheduleEventId.value = await resolveScheduleEventForWorkAccount(
+          const resolvedId = await resolveScheduleEventForWorkAccount(
             workAccountId.value,
             workAccount.value?.title || ""
           );
+          if (resolvedId) {
+            applySelectedEvent({ id: resolvedId }, { syncQuery: true });
+          } else {
+            applySelectedEvent(null, { syncQuery: false });
+          }
+        } else {
+          applySelectedEvent(null, { syncQuery: false });
         }
 
-        // When browsing all orders, load WA details for the selected event
         if (browseAllWorkOrders.value && selectedEvent.value?.work_account) {
           loadAccountForEvent(selectedEvent.value.work_account);
         }
@@ -603,27 +832,26 @@ export default {
 
     const handleSelectEvent = (event) => {
       if (!event) return;
-      selectedEvent.value = event;
-      scheduleEventId.value = event.id;
+      const switched =
+        selectedEvent.value?.id && selectedEvent.value.id !== event.id;
+      applySelectedEvent(event, { syncQuery: true });
 
-      // Mark as read
       axios.post(`/api/mark-chat-read/${event.id}/`).catch(() => {});
       unreadMap.value[event.id] = 0;
       chatStore.markEventAsRead(event.id);
 
-      // Keep tab query parameter intact, update event parameter
-      router.replace({
-        query: {
-          ...route.query,
-          event: event.id,
-        },
-      });
+      if (switched) {
+        trackWov("order_change", {
+          event_id: event.id,
+          work_account_id: event.work_account || effectiveWorkAccountId.value,
+        });
+      }
+      markFirstAction("select_order");
 
       if (browseAllWorkOrders.value && event.work_account) {
         loadAccountForEvent(event.work_account);
       }
 
-      // Offcanvas: close on mobile after selection; keep open on desktop
       if (isMobile.value) {
         sidebarOpen.value = false;
       }
@@ -631,12 +859,16 @@ export default {
 
     const handleSearch = (term) => {
       searchQuery.value = term;
+      // Persist in URL so remounts / order switches keep the lupa filter
+      syncViewerQuery({ search: term });
       loadEvents(1);
     };
 
     const clearWorkAccountFilter = () => {
       if (!workAccountId.value) return;
       listAllWorkOrders.value = true;
+      opsScope.value = "active";
+      trackWov("show_all", { work_account_id: workAccountId.value });
       loadEvents(1);
     };
 
@@ -689,6 +921,12 @@ export default {
     const initView = async () => {
       isLoading.value = true;
       loadError.value = "";
+      sessionStartedAt.value = Date.now();
+      firstActionTracked.value = false;
+      // Restore lupa filter after remount (router-view keys on fullPath)
+      if (typeof route.query.q === "string") {
+        searchQuery.value = route.query.q;
+      }
 
       if (workAccountId.value) {
         await loadWorkAccountData();
@@ -696,6 +934,12 @@ export default {
 
       await Promise.all([loadEvents(1), loadUnreadCounts()]);
       isLoading.value = false;
+      trackWov("view_open", {
+        mode: browseAllWorkOrders.value ? "operations" : "work_account",
+        work_account_id: workAccountId.value,
+        order: resolveOrderQueryId(route.query),
+        q: searchQuery.value || null,
+      });
       connectWebSocket();
     };
 
@@ -751,6 +995,9 @@ export default {
       displayHeaderTitle,
       displayHeaderSubtitle,
       headerMetaItems,
+      activeOrderChip,
+      breadcrumbItems,
+      sidebarBindings,
       ordersBadgeCount,
       sidebarOpen,
       isMobile,
@@ -766,6 +1013,7 @@ export default {
       goToEdit,
       toggleSidebar,
       onSidebarVisible,
+      onOpsScope,
       handleSelectEvent,
       handleSearch,
       handlePrevPage,
@@ -809,12 +1057,86 @@ export default {
   }
 }
 
+.jr-wov__crumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 0.65rem;
+  font-size: 0.8125rem;
+  color: var(--color-jr-muted, #4b5563);
+}
+
+.jr-wov__crumb-link {
+  color: var(--color-jr-primary, #2563eb);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.jr-wov__crumb-link:hover {
+  text-decoration: underline;
+}
+
+.jr-wov__crumb-current {
+  color: var(--color-jr-text, #111827);
+  font-weight: 500;
+}
+
+.jr-wov__crumb-sep {
+  color: var(--color-jr-muted, #4b5563);
+}
+
 .jr-wov__header {
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   padding: 1.125rem 1.25rem;
   border: 1px solid var(--color-jr-border, #e5e7eb);
-  border-radius: var(--radius-jr-control, 0);
+  border-radius: var(--radius-jr-panel, 0.75rem);
   background: var(--color-jr-surface, #ffffff);
+}
+
+.jr-wov__active-order {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.45rem;
+  margin-top: 0.55rem;
+  padding: 0.45rem 0.65rem;
+  max-width: 100%;
+  background: color-mix(
+    in srgb,
+    var(--color-jr-primary, #2563eb) 8%,
+    var(--color-jr-surface, #ffffff)
+  );
+  border: 1px solid color-mix(
+    in srgb,
+    var(--color-jr-primary, #2563eb) 22%,
+    var(--color-jr-border, #e5e7eb)
+  );
+  font-size: 0.8125rem;
+  color: var(--color-jr-text, #111827);
+}
+
+.jr-wov__active-order-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-jr-primary, #2563eb);
+}
+
+.jr-wov__active-order-id {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.jr-wov__active-order-sep {
+  color: var(--color-jr-muted, #4b5563);
+}
+
+.jr-wov__header-progress {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-jr-border, #e5e7eb);
 }
 
 .jr-wov__header-main {
@@ -916,6 +1238,25 @@ export default {
   margin-left: auto;
 }
 
+.jr-wov__orders-toggle--sticky {
+  width: 100%;
+  justify-content: center;
+}
+
+.jr-wov__mobile-sticky {
+  display: flex;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+  background: var(--color-jr-surface, #ffffff);
+  border-top: 1px solid var(--color-jr-border, #e5e7eb);
+  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
+}
+
 .jr-wov__meta-item {
   display: flex;
   flex-direction: column;
@@ -942,7 +1283,7 @@ export default {
 
 .jr-wov__layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 22.5rem;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 22.5rem);
   gap: 1rem;
   align-items: start;
 }
@@ -953,31 +1294,75 @@ export default {
 
 .jr-wov__main-col {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .jr-wov__sidebar-col {
   min-width: 0;
   position: sticky;
   top: calc(var(--jr-shell-topbar, 3rem) + 1rem);
+  /* Full viewport under topbar — rail starts next to WA header */
+  height: calc(100vh - var(--jr-shell-topbar, 3rem) - 2rem);
   max-height: calc(100vh - var(--jr-shell-topbar, 3rem) - 2rem);
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .jr-wov__sidebar-col :deep(.jr-wov-sidebar) {
   flex: 1 1 auto;
   min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-@media (max-width: 1024px) {
+.jr-wov__sidebar-col :deep(.jr-wov-sidebar__list) {
+  max-height: none;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+@media (max-width: 1100px) {
   .jr-wov__layout {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .jr-wov__meta {
     gap: 0.625rem 1.25rem;
+  }
+}
+
+@media (max-width: 800px) {
+  .jr-wov__header {
+    padding: 0.85rem 0.9rem;
+  }
+
+  .jr-wov__meta-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .jr-wov__meta-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .jr-wov__meta-actions :deep(.jr-wov__orders-toggle),
+  .jr-wov__meta-actions :deep(.p-button) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .jr-wov__active-order {
+    width: 100%;
+  }
+
+  /* Room for sticky mobile orders bar */
+  .jr-wov__layout {
+    padding-bottom: 4.5rem;
   }
 }
 </style>
@@ -993,11 +1378,6 @@ export default {
   flex-direction: column;
   overflow: hidden;
   padding: 0 0.75rem 0.75rem;
-}
-
-.p-drawer.jr-wov__drawer .jr-wa-progress {
-  flex: 0 0 auto;
-  margin-bottom: 0.75rem;
 }
 
 .p-drawer.jr-wov__drawer .jr-wov-sidebar {
