@@ -256,3 +256,13 @@ class WorkOrderStatusTests(TenantTestCase):
         )
         self.assertEqual(rollup.status_code, status.HTTP_200_OK)
         self.assertIn('overall_state', rollup.data)
+        phases = rollup.data.get('phases') or []
+        self.assertTrue(phases)
+        phase_with_wo = next(
+            (p for p in phases if p.get('leading_event_id') == event.id),
+            None,
+        )
+        self.assertIsNotNone(phase_with_wo)
+        self.assertEqual(phase_with_wo['state'], 'in_progress')
+        self.assertEqual(phase_with_wo['status_code'], 'in_progress')
+        self.assertTrue(phase_with_wo.get('status_name'))

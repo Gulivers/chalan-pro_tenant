@@ -490,11 +490,17 @@ class MyEventsView(APIView):
     def get(self, request, format=None):
         search = self.request.query_params.get('search')
         work_account = self.request.query_params.get('work_account')
+        # Operations inbox scopes: active (WA work orders), leaves, all
+        scope = (self.request.query_params.get('scope') or '').strip().lower()
         user = request.user
 
         q = Q(deleted=False)
         if work_account:
             q &= Q(work_account_id=work_account)
+        elif scope == 'leaves':
+            q &= Q(is_absence=True)
+        elif scope == 'active':
+            q &= Q(is_absence=False) & Q(work_account__isnull=False)
 
         #  Detecta si el usuario es supervisor (tiene jobs asignados)
         jobs = Job.objects.filter(crews__members=user).values_list('id', flat=True)

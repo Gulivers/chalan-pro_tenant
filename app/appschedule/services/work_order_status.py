@@ -568,6 +568,17 @@ def work_account_status_summary(work_account):
         else:
             bucket['has_active'] = True
 
+    def _leading_work_order(work_orders):
+        """Prefer latest non-terminal WO; else latest terminal (for display status)."""
+        if not work_orders:
+            return None
+        active = [wo for wo in work_orders if not wo.get('is_terminal')]
+        pool = active or work_orders
+        return max(
+            pool,
+            key=lambda wo: (wo.get('date') or '', wo.get('event_id') or 0),
+        )
+
     phases = []
     expected_done = 0
     expected_total = 0
@@ -583,17 +594,24 @@ def work_account_status_summary(work_account):
             expected_done += 1
             work_orders = bucket['work_orders']
         elif bucket['work_orders']:
+            # Coarse rollup state stays in_progress while any WO is open.
+            # Display badge uses the leading WO's real status (e.g. Corrections Required).
             phase_state = 'in_progress'
             work_orders = bucket['work_orders']
         else:
             phase_state = 'not_started'
             work_orders = []
+        leading = _leading_work_order(work_orders)
         phases.append({
             'template_id': template.id,
             'template_name': template.name,
             'category_id': category.id,
             'category_name': category.name,
             'state': phase_state,
+            'status_code': leading.get('status_code') if leading else None,
+            'status_name': leading.get('status_name') if leading else None,
+            'status_is_terminal': bool(leading.get('is_terminal')) if leading else False,
+            'leading_event_id': leading.get('event_id') if leading else None,
             'work_orders': work_orders,
         })
 

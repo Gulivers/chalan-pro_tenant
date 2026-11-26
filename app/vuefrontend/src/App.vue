@@ -22,7 +22,7 @@ const shellLocaleKey = computed(() => `shell-${locale.value}`);
     v-else
     class="jr-app-shell--no-nav"
     :class="{ 'jr-app-shell--onboard': route.meta.hideFooter }">
-    <router-view :key="route.fullPath" />
+    <router-view :key="route.path" />
     <Layout.FooterComponent v-if="showShellFooter" />
   </div>
   <AssistantPanel />

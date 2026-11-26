@@ -27,6 +27,11 @@ class EventSerializer(serializers.ModelSerializer):
     work_order_status_code = serializers.SerializerMethodField()
     work_order_status_name = serializers.SerializerMethodField()
     work_order_status_is_terminal = serializers.SerializerMethodField()
+    # Stable WOV contract aliases (Oleada 4)
+    event_id = serializers.IntegerField(source='id', read_only=True)
+    work_account_id = serializers.IntegerField(read_only=True, allow_null=True)
+    phase = serializers.SerializerMethodField()
+    status_code = serializers.SerializerMethodField()
 
     def _work_order_status(self, obj):
         """Effective Work Order status for display (read-only, no writes).
@@ -66,8 +71,15 @@ class EventSerializer(serializers.ModelSerializer):
     def get_crew_category(self, obj):
         if obj.crew and obj.crew.category:
             return obj.crew.category.name
-        return None 
-    
+        return None
+
+    def get_phase(self, obj):
+        """Crew category / phase label for Work Order Viewer cards."""
+        return self.get_crew_category(obj)
+
+    def get_status_code(self, obj):
+        return self.get_work_order_status_code(obj)
+
     def get_work_account_title(self, obj):
         if obj.work_account:
             return obj.work_account.title

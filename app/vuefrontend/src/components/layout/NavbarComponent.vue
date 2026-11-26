@@ -281,7 +281,7 @@
           Passing <router-view> through App → Navbar → PrimeVue SidebarMain slots
           stalls page updates after an i18n locale change (URL changes, view does not).
         -->
-        <router-view :key="$route.fullPath" />
+        <router-view :key="routerViewKey" />
       </main>
       <FooterComponent />
     </SidebarMain>
@@ -437,19 +437,20 @@ export default {
           group: "workflow",
         },
         {
-          text: "Work Accounts",
+          text: "Work Accounts Viewer",
           route: "/work-accounts",
           icon: "workAccounts",
           permission: "apptransactions.view_workaccount",
           group: "workflow",
         },
-        {
-          text: "Work Order Viewer",
-          route: "/work-accounts/viewer",
-          icon: "workOrderViewer",
-          permission: "apptransactions.view_workaccount",
-          group: "workflow",
-        },
+        // Hidden: Operations inbox is less useful than list → WA viewer flow.
+        // {
+        //   text: "Work Order Viewer",
+        //   route: "/work-accounts/viewer",
+        //   icon: "workOrderViewer",
+        //   permission: "apptransactions.view_workaccount",
+        //   group: "workflow",
+        // },
         {
           text: "Missing Material",
           route: "/material-requests",
@@ -625,6 +626,22 @@ export default {
     };
   },
   computed: {
+    /**
+     * Remount on path change for WOV, but keep the same instance when only
+     * in-view query params change (order, tab, lupa `q`). Those are handled
+     * inside WorkOrderViewerView — remounting caused a full-page flicker.
+     */
+    routerViewKey() {
+      const route = this.$route;
+      const path = route.path || "";
+      const isWov =
+        path === "/work-accounts/viewer" ||
+        /^\/work-accounts\/[^/]+\/view\/?$/.test(path);
+      if (isWov) {
+        return path;
+      }
+      return route.fullPath;
+    },
     jobrhythmLogoUrl() {
       const base = import.meta.env.BASE_URL || "/";
       return `${base}img/jobrhythm-logo.png`;
