@@ -143,10 +143,16 @@
               v-if="canView"
               class="jr-wa-row__name jr-wa-row__name--link"
               :to="waViewTo(item.id)"
+              :title="item.title"
               :aria-label="viewWorkAccountAria(item)">
-              {{ item.title }}
+              {{ truncateTitle(item.title) }}
             </router-link>
-            <span v-else class="jr-wa-row__name">{{ item.title }}</span>
+            <span
+              v-else
+              class="jr-wa-row__name"
+              :title="item.title">
+              {{ truncateTitle(item.title) }}
+            </span>
             <p class="jr-wa-row__meta">
               <span v-if="item.builder_name">{{ item.builder_name }}</span>
               <span v-if="item.builder_name && item.job_name" aria-hidden="true">
@@ -241,10 +247,13 @@
               v-if="canView"
               class="jr-wa-row__name jr-wa-row__name--link"
               :to="waViewTo(data.id)"
+              :title="data.title"
               :aria-label="viewWorkAccountAria(data)">
-              {{ data.title }}
+              {{ truncateTitle(data.title) }}
             </router-link>
-            <strong v-else>{{ data.title }}</strong>
+            <strong v-else :title="data.title">{{
+              truncateTitle(data.title)
+            }}</strong>
           </template>
         </Column>
         <Column field="builder_name" :header="$t('workAccounts.colBuilder')" sortable>
@@ -449,6 +458,14 @@ export default {
       }
       return proxy?.$t?.("workAccounts.emptyNoneDesc");
     });
+
+    const TITLE_MAX_LEN = 35;
+
+    const truncateTitle = (value) => {
+      const text = String(value ?? "").trim();
+      if (text.length <= TITLE_MAX_LEN) return text;
+      return `${text.slice(0, TITLE_MAX_LEN).trimEnd()}...`;
+    };
 
     const viewWorkAccountAria = (item) =>
       proxy?.$t?.("common.viewItem", { label: item?.title ?? "" });
@@ -724,6 +741,7 @@ export default {
       toolsMenuModel,
       toggleToolsMenu,
       viewWorkAccountAria,
+      truncateTitle,
     };
   },
 };
