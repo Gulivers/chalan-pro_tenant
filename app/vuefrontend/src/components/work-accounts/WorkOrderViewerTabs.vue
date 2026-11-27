@@ -1,6 +1,12 @@
 <template>
   <div class="jr-wov-tabs">
+    <JREmptyState
+      v-if="!visibleTabs.length"
+      :title="$t('workOrderViewer.tabsForbiddenTitle')"
+      :description="$t('workOrderViewer.tabsForbiddenDesc')" />
+
     <Tabs
+      v-else
       v-model:value="activeTab"
       lazy
       scrollable
@@ -91,7 +97,7 @@
         </Tab>
       </TabList>
       <TabPanels>
-        <TabPanel value="chat">
+        <TabPanel v-if="canViewTab('chat')" value="chat">
           <ScheduleHouseChatComponent
             v-if="eventId"
             :key="eventId"
@@ -103,7 +109,7 @@
             :description="$t('workOrderViewer.chatUnavailableDesc')" />
         </TabPanel>
 
-        <TabPanel value="status">
+        <TabPanel v-if="canViewTab('status')" value="status">
           <WorkOrderStatusPanel
             v-if="eventId"
             :key="eventId"
@@ -116,7 +122,7 @@
             :description="$t('workOrderViewer.statusUnavailableDesc')" />
         </TabPanel>
 
-        <TabPanel value="notes">
+        <TabPanel v-if="canViewTab('notes')" value="notes">
           <ScheduleHouseNotesComponent
             v-if="eventId"
             :key="eventId"
@@ -128,7 +134,7 @@
             :description="$t('workOrderViewer.notesUnavailableDesc')" />
         </TabPanel>
 
-        <TabPanel value="folder">
+        <TabPanel v-if="canViewTab('folder')" value="folder">
           <EventImageAdmin
             v-if="eventId"
             :key="eventId"
@@ -139,19 +145,19 @@
             :description="$t('workOrderViewer.folderUnavailableDesc')" />
         </TabPanel>
 
-        <TabPanel value="contracts">
+        <TabPanel v-if="canViewTab('contracts')" value="contracts">
           <ScheduleHouseContractsComponent
             :event-id="eventId"
             :work-account-id="workAccountId" />
         </TabPanel>
 
-        <TabPanel value="transactions">
+        <TabPanel v-if="canViewTab('transactions')" value="transactions">
           <ScheduleHouseTransactionsComponent
             :event-id="eventId"
             :work-account-id="workAccountId" />
         </TabPanel>
 
-        <TabPanel value="materials">
+        <TabPanel v-if="canViewTab('materials')" value="materials">
           <MissingMaterialPanel
             v-if="eventId && workAccountId"
             :key="`${workAccountId}-${eventId}`"
@@ -188,6 +194,36 @@ import {
   WORK_ORDER_VIEWER_TABS,
   WORK_ORDER_VIEWER_TAB_IDS,
 } from "@/utils/resolveScheduleEventForWorkAccount";
+
+/** View permission required to show each WOV tab. */
+const TAB_VIEW_PERMISSIONS = {
+  chat: "appschedule.view_eventchatmessage",
+  status: "appschedule.view_event",
+  notes: "appschedule.view_eventnote",
+  folder: "appschedule.view_eventimage",
+  contracts: "ctrctsapp.view_contract",
+  transactions: "apptransactions.view_document",
+  materials: "apptransactions.view_document",
+};
+
+/**
+ * Same UX gate as appMixin / house tables.
+ * Read localStorage directly: mixin methods are not reliable via proxy in setup().
+ */
+function hasStoredPermission(permission) {
+  if (!permission) return true;
+  try {
+    const raw = localStorage.getItem("userPermissions");
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    return (
+      Array.isArray(parsed?.permissions) &&
+      parsed.permissions.includes(permission)
+    );
+  } catch {
+    return false;
+  }
+}
 
 export default {
   name: "WorkOrderViewerTabs",
@@ -241,17 +277,35 @@ export default {
       materials: "workOrderViewer.tabMaterials",
     };
 
-    const normalizeTab = (tab) =>
-      WORK_ORDER_VIEWER_TAB_IDS.includes(tab) ? tab : "chat";
+    const canViewTab = (tabId) =>
+      hasStoredPermission(TAB_VIEW_PERMISSIONS[tabId]);
+
+    const normalizeTab = (tab) => {
+      const candidate = WORK_ORDER_VIEWER_TAB_IDS.includes(tab) ? tab : null;
+      if (candidate && canViewTab(candidate)) return candidate;
+      const firstAllowed = WORK_ORDER_VIEWER_TABS.find((item) =>
+        canViewTab(item.id)
+      );
+      return firstAllowed?.id || "chat";
+    };
 
     const activeTab = ref(normalizeTab(props.initialTab || route.query.tab));
 
     const visibleTabs = computed(() =>
-      WORK_ORDER_VIEWER_TABS.map((tab) => ({
+      WORK_ORDER_VIEWER_TABS.filter((tab) => canViewTab(tab.id)).map((tab) => ({
         ...tab,
         label: TAB_LABEL_KEYS[tab.id] ? t(TAB_LABEL_KEYS[tab.id]) : tab.label,
       }))
     );
+
+    const ensureActiveTabAllowed = () => {
+      const allowedIds = visibleTabs.value.map((tab) => tab.id);
+      if (!allowedIds.length) return;
+      if (!allowedIds.includes(activeTab.value)) {
+        activeTab.value = allowedIds[0];
+        syncTabToRoute(allowedIds[0]);
+      }
+    };
 
     const syncTabToRoute = (tab) => {
       if (!props.syncRoute) return;
@@ -265,6 +319,10 @@ export default {
     };
 
     const onTabChange = (tab) => {
+      if (!canViewTab(tab)) {
+        ensureActiveTabAllowed();
+        return;
+      }
       syncTabToRoute(tab);
     };
 
@@ -290,9 +348,16 @@ export default {
       }
     );
 
+    watch(visibleTabs, () => {
+      ensureActiveTabAllowed();
+    });
+
+    ensureActiveTabAllowed();
+
     return {
       activeTab,
       visibleTabs,
+      canViewTab,
       onTabChange,
     };
   },

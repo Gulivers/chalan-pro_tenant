@@ -65,6 +65,7 @@
                     class="jr-event-folder__badge" />
                 </button>
                 <button
+                  v-if="canDeleteImage"
                   type="button"
                   class="jr-event-folder__delete"
                   aria-label="Delete file"
@@ -93,6 +94,7 @@
                     class="jr-event-folder__badge" />
                 </button>
                 <button
+                  v-if="canDeleteImage"
                   type="button"
                   class="jr-event-folder__delete"
                   aria-label="Delete file"
@@ -120,6 +122,7 @@
                     class="jr-event-folder__badge" />
                 </div>
                 <button
+                  v-if="canDeleteImage"
                   type="button"
                   class="jr-event-folder__delete"
                   aria-label="Delete file"
@@ -138,6 +141,7 @@
                   <img :src="img.image_url" alt="" class="jr-event-folder__img" />
                 </button>
                 <button
+                  v-if="canDeleteImage"
                   type="button"
                   class="jr-event-folder__delete"
                   aria-label="Delete image"
@@ -202,6 +206,11 @@ export default {
       selectedImageUrl: null,
       isDragging: false,
     };
+  },
+  computed: {
+    canDeleteImage() {
+      return this.hasPermission("appschedule.delete_eventimage");
+    },
   },
   watch: {
     eventId: {
@@ -313,6 +322,7 @@ export default {
       }
     },
     async deleteImage(imageId) {
+      if (!this.canDeleteImage) return;
       const confirm = await Swal.fire({
         title: "Are you sure?",
         text: "This image will be deleted permanently.",

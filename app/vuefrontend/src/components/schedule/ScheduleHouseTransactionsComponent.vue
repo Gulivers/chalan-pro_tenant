@@ -218,6 +218,7 @@ import dayjs from "dayjs";
 import Column from "primevue/column";
 import EyeIcon from "@primevue/icons/eye";
 import PencilIcon from "@primevue/icons/pencil";
+import TrashIcon from "@primevue/icons/trash";
 import RefreshIcon from "@primevue/icons/refresh";
 import SearchIcon from "@primevue/icons/search";
 import {
@@ -237,6 +238,7 @@ export default {
     Column,
     EyeIcon,
     PencilIcon,
+    TrashIcon,
     RefreshIcon,
     SearchIcon,
     JRBadge,
@@ -282,8 +284,11 @@ export default {
     canChange() {
       return this.hasPermission("apptransactions.change_document");
     },
+    canDelete() {
+      return this.hasPermission("apptransactions.delete_document");
+    },
     hasRowActions() {
-      return this.canView || this.canChange;
+      return this.canView || this.canChange || this.canDelete;
     },
     filteredTransactions() {
       const rows = this.transactions.filter((item) => !this.isMaterialRequest(item));
@@ -381,6 +386,15 @@ export default {
           severity: "primary",
           icon: PencilIcon,
           command: () => this.goToTransactionForm(item.id),
+        });
+      }
+      if (this.canDelete) {
+        actions.push({
+          key: "delete",
+          label: this.$t("common.delete"),
+          severity: "danger",
+          icon: TrashIcon,
+          command: () => this.deleteTransaction(item),
         });
       }
       return actions;
@@ -579,6 +593,26 @@ export default {
           confirmButtonText: "OK",
         });
       }
+    },
+    deleteTransaction(item) {
+      if (!this.canDelete) return;
+      const label = item?.document_type_code || `#${item?.id}`;
+      this.confirmDelete(
+        this.$t("common.confirmDeleteTitle"),
+        this.$t("transactions.deleteConfirm", { label }),
+        async () => {
+          try {
+            await axios.delete(`/api/documents/${item.id}/`);
+            this.notifyToastSuccess?.("The transaction has been deleted.");
+            this.refreshTable();
+          } catch (err) {
+            console.error("Error deleting transaction", err);
+            const detail =
+              err?.response?.data?.detail || "Error deleting the transaction.";
+            this.notifyError?.(detail);
+          }
+        }
+      );
     },
   },
 };
