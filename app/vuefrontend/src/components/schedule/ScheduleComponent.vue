@@ -700,12 +700,12 @@ export default {
         this.observeCalendarPane();
         Swal.fire({
           icon: "error",
-          title: "Error loading crews",
+          title: this.$t("schedule.loadCrewsError"),
           text:
             error.response?.data?.detail ||
             error.message ||
-            "Could not load crews data. Please refresh the page.",
-          confirmButtonText: "OK",
+            this.$t("schedule.loadCrewsErrorText"),
+          confirmButtonText: this.$t("common.ok"),
         });
       }
     },
@@ -817,8 +817,8 @@ export default {
 
         if (!canCreateEvent && !isCoordinator) {
           Swal.fire(
-            "Permission Denied",
-            "You do not have permission to create events.",
+            this.$t("schedule.permissionDeniedTitle"),
+            this.$t("schedule.noCreatePermission"),
             "error"
           );
           return;
@@ -826,10 +826,13 @@ export default {
 
         if (info.resource && !isCoordinator && crewId !== clickedCrewId) {
           Swal.fire(
-            "Permission Denied",
-            `You can only create events for your category (${
-              crewCategoryName?.toUpperCase() || "UNKNOWN"
-            }) with your assigned crew (${crewName || "No Crew"}).`,
+            this.$t("schedule.permissionDeniedTitle"),
+            this.$t("schedule.createOnlyOwnCrew", {
+              category:
+                crewCategoryName?.toUpperCase() ||
+                this.$t("schedule.unknownCategory"),
+              crew: crewName || this.$t("schedule.noCrew"),
+            }),
             "warning"
           );
           return;
@@ -855,8 +858,8 @@ export default {
       } catch (error) {
         console.error("💥 Error inesperado en handleDateClick:", error);
         Swal.fire(
-          "Oops!",
-          "Something went wrong while trying to open the event modal.",
+          this.$t("schedule.oops"),
+          this.$t("schedule.openModalError"),
           "error"
         );
       }
@@ -901,8 +904,8 @@ export default {
       } catch (error) {
         console.error("💥 Error in handleEventClick:", error);
         Swal.fire(
-          "Oops!",
-          "Something went wrong while trying to open the event.",
+          this.$t("schedule.oops"),
+          this.$t("schedule.openEventError"),
           "error"
         );
       }
@@ -917,10 +920,10 @@ export default {
 
       if (!isCoordinator && crewId !== clickedCrewId) {
         Swal.fire(
-          "Permission Denied",
-          `You can only move events of your assigned crew (${
-            crewName || "Unknown Crew"
-          }).`,
+          this.$t("schedule.permissionDeniedTitle"),
+          this.$t("schedule.moveOnlyOwnCrew", {
+            crew: crewName || this.$t("schedule.unknownCrew"),
+          }),
           "warning"
         );
         info.revert();
@@ -963,8 +966,8 @@ export default {
               err.non_field_errors.includes("Duplicate Event Detected")
             ) {
               Swal.fire(
-                "Duplicate Event Detected",
-                "An event with the same title (Lot, Community, or Address) already exists in this Crew Category.",
+                this.$t("schedule.duplicateEventTitle"),
+                this.$t("schedule.duplicateEvent"),
                 "error"
               );
               return;
@@ -974,8 +977,8 @@ export default {
         }
         if (e.response.status === 403) {
           Swal.fire(
-            "Action not allowed",
-            "You do not have permission to publish events",
+            this.$t("schedule.actionNotAllowed"),
+            this.$t("schedule.noPublishPermission"),
             "error"
           );
           return;
@@ -1124,7 +1127,11 @@ export default {
         await downloadSchedulePdfJob(this.calendar_start, this.calendar_end);
       } catch (error) {
         console.error("❌ Error downloading schedule PDF:", error);
-        Swal.fire("Error", "Could not generate the PDF.", "error");
+        Swal.fire(
+          this.$t("common.error"),
+          this.$t("schedule.pdfError"),
+          "error"
+        );
       }
     },
     async downloadScheduleExcel() {

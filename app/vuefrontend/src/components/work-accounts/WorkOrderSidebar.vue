@@ -359,7 +359,7 @@ export default {
     const formatDate = (dateStr) => {
       if (!dateStr) return "—";
       const d = dayjs(dateStr);
-      return d.isValid() ? d.format("MM/DD") : dateStr;
+      return d.isValid() ? d.format("MM/DD/YYYY") : dateStr;
     };
 
     const unreadCount = (eventId) => {
