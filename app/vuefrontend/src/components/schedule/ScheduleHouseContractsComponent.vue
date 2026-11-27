@@ -169,6 +169,7 @@ import { downloadContractPdfJob } from "@/utils/downloadPdfJob";
 import Column from "primevue/column";
 import EyeIcon from "@primevue/icons/eye";
 import PencilIcon from "@primevue/icons/pencil";
+import TrashIcon from "@primevue/icons/trash";
 import RefreshIcon from "@primevue/icons/refresh";
 import SearchIcon from "@primevue/icons/search";
 import {
@@ -188,6 +189,7 @@ export default {
     Column,
     EyeIcon,
     PencilIcon,
+    TrashIcon,
     RefreshIcon,
     SearchIcon,
     JRBadge,
@@ -230,8 +232,11 @@ export default {
     canChange() {
       return this.hasPermission("ctrctsapp.change_contract");
     },
+    canDelete() {
+      return this.hasPermission("ctrctsapp.delete_contract");
+    },
     hasRowActions() {
-      return this.canView || this.canChange;
+      return this.canView || this.canChange || this.canDelete;
     },
     filteredContracts() {
       const q = this.search.trim().toLowerCase();
@@ -310,6 +315,15 @@ export default {
           severity: "primary",
           icon: PencilIcon,
           command: () => this.editContract(contract.id),
+        });
+      }
+      if (this.canDelete) {
+        actions.push({
+          key: "delete",
+          label: this.$t("common.delete"),
+          severity: "danger",
+          icon: TrashIcon,
+          command: () => this.deleteContract(contract),
         });
       }
       return actions;
@@ -421,6 +435,36 @@ export default {
           confirmButtonText: "OK",
         });
       }
+    },
+    deleteContract(contract) {
+      if (!this.canDelete) return;
+      this.confirmDelete(
+        this.$t("common.confirmDeleteTitle"),
+        this.$t("contracts.deleteConfirm", { id: contract.id }),
+        async () => {
+          try {
+            await axios.delete(`/api/contract/${contract.id}/`);
+            this.notifyToastSuccess?.("The contract has been deleted.");
+            this.refreshTable();
+          } catch (error) {
+            console.error("Error deleting contract:", error);
+            const status = error?.response?.status;
+            const data = error?.response?.data;
+            if (status === 403) {
+              this.notifyError?.("You do not have permission for this action.");
+            } else if (status === 409) {
+              this.notifyError?.(
+                data?.detail ||
+                  "Cannot delete this contract because it is being used elsewhere."
+              );
+            } else {
+              this.notifyError?.(
+                data?.detail || "Error deleting the contract."
+              );
+            }
+          }
+        }
+      );
     },
     closeOpenJrDialog() {
       const masks = document.querySelectorAll(".p-dialog-mask");
