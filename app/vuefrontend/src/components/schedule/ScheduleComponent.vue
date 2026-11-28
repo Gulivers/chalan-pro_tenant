@@ -45,6 +45,7 @@
           <JRDatePicker
             inputId="schedule-jump-date"
             :model-value="jumpDate"
+            date-format="mm/dd/yy"
             :placeholder="$t('schedule.goToDate')"
             :show-button-bar="true"
             @update:model-value="onJumpDate" />
